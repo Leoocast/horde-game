@@ -13,6 +13,7 @@ import { Card } from "./Card";
 import { GameTooltip } from "./GameTooltip";
 import { GraveyardViewerModal } from "./GraveyardViewerModal";
 import { remainingArchiveDiscardPreview } from "./hostArchiveCounter";
+import { playerAttackHostHitDelay } from "./playerAttackPresentation";
 
 export function DuelHud({ game }: { game: GameState }) {
   const t = useTranslation();
@@ -69,11 +70,23 @@ export function DuelHud({ game }: { game: GameState }) {
     if (lastPlayerAttackEvent.current === eventKey) return;
     lastPlayerAttackEvent.current = eventKey;
     setHostTakingDamage(false);
-    const frame = window.requestAnimationFrame(() => setHostTakingDamage(true));
-    const timeout = window.setTimeout(() => setHostTakingDamage(false), 430);
+    const impactDelay = playerAttackHostHitDelay(playerAttackAnimation.customAnimation);
+    let frame: number | undefined;
+    let impactTimeout: number | undefined;
+    let clearTimeout: number | undefined;
+    const startImpact = () => {
+      setHostTakingDamage(true);
+      clearTimeout = window.setTimeout(() => setHostTakingDamage(false), 430);
+    };
+    if (impactDelay > 0) {
+      impactTimeout = window.setTimeout(startImpact, impactDelay);
+    } else {
+      frame = window.requestAnimationFrame(startImpact);
+    }
     return () => {
-      window.cancelAnimationFrame(frame);
-      window.clearTimeout(timeout);
+      if (frame !== undefined) window.cancelAnimationFrame(frame);
+      if (impactTimeout !== undefined) window.clearTimeout(impactTimeout);
+      if (clearTimeout !== undefined) window.clearTimeout(clearTimeout);
     };
   }, [playerAttackAnimation]);
 

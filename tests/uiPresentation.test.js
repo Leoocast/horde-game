@@ -7,6 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { activeDefenseArrowLinks, isBehindInStackOrder, isFrontOfCardStack, visibleDefenseArrowLinks } from "../src/components/battlefieldLayout";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
+import { playerAttackHostHitDelay } from "../src/components/playerAttackPresentation";
 import { CardTraitTooltipBadge } from "../src/components/Card";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
 import { PreviewStatsBadge, TraitPills } from "../src/components/CardPreview";
@@ -85,6 +86,14 @@ test("Vaelor's direct Host attack resolves to the shared emerald fireball preset
     },
   });
   assert.equal(resolvePersonalAttackAnimation(customCard("ordinary-attacker", "player"), 1), undefined);
+});
+
+test("the Host panel reacts when a personal attack impacts, not when it starts", () => {
+  const vaelor = cardFromDeck("vaelor_emerald_guardian", "player");
+  const customAnimation = resolvePersonalAttackAnimation(vaelor, 6);
+
+  assert.equal(playerAttackHostHitDelay(customAnimation), 638);
+  assert.equal(playerAttackHostHitDelay(undefined), 0);
 });
 
 test("defense arrows disappear as soon as either combat endpoint leaves the field", () => {

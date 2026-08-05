@@ -168,8 +168,9 @@ Current registration:
   keeps the default combat animation.
 - When Vaelor attacks the Host directly, `resolvePersonalAttackAnimation` reuses the same preset,
   keeps his card stationary, and targets the element marked with `data-host-life-emblem`. The first
-  Host mill preview starts at the 638ms projectile impact; later attackers wait for both the preset
-  clock and any longer mill sequence.
+  Host mill preview and the Host panel's hit reaction start at the 638ms projectile impact; later
+  attackers wait for both the preset clock and any longer mill sequence. Default lunge attacks keep
+  their immediate panel reaction.
 - The preset reuses `BurnAnimator`'s canonical fireball clock and source-to-target geometry, with
   an emerald material, `scale: 1.5`, and `sourceMoves: false`. Combat damage is committed at the
   fireball's 638ms impact; the beat remains locked until the 1220ms completion.

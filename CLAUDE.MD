@@ -234,7 +234,8 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
 - Las presentaciones personales de pelea y ataque directo se registran en
   `src/store/combatAnimation.ts` por identidad estable y contexto ya resuelto. El preset de Vaelor
   reemplaza el movimiento por una bola de fuego esmeralda a escala 1.5 cuando defiende, mata al
-  atacante y sobrevive, o cuando ataca directamente el panel de vida de la Hueste.
+  atacante y sobrevive, o cuando ataca directamente el panel de vida de la Hueste. En ataques con
+  proyectil, la reacción de golpe del panel espera el `impactMs` del preset.
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado
   aunque los impactos visuales se escalonen.
 
