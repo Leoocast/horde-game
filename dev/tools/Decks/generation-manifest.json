@@ -744,11 +744,11 @@
       ]
     },
     "court_of_the_crimson_eclipse": {
-      "inputHash": "530cd7d7bc34ae118b5a684045579ab5de771c8e8a58537e5bc4db19ac8de021",
+      "inputHash": "de3494ffaf261af8eccc61950eb225b89c15713519e3a47daa55b8eb30bc2a45",
       "sources": [
         {
           "path": "dev/tools/Decks/court_of_the_crimson_eclipse/deck-data.generated.js",
-          "sha256": "7e93d434d7bc6060609b0013d7dad0b52be49ad19487425321852579c289b6b1"
+          "sha256": "ce97227c1fe02f6a9399b5b09ff61c790956cac725fbdfaf5bfeebbc266f4b33"
         },
         {
           "path": "dev/tools/Decks/court_of_the_crimson_eclipse/index.html",
@@ -864,7 +864,7 @@
         },
         {
           "path": "src/data/decks/player/court_of_the_crimson_eclipse/court_of_the_crimson_eclipse.json",
-          "sha256": "cfe6f8103d711d3bb50b16a846da49c8b97c3f0565705d2b3326499aac64b9a1"
+          "sha256": "9473ef926d576d931c9709e182d57a1ff3ab7e3c58648c2f1ec8bed16d8c0a47"
         },
         {
           "path": "src/data/decks/player/court_of_the_crimson_eclipse/court_of_the_crimson_eclipse_images.json",
@@ -882,7 +882,7 @@
         {
           "id": "blood_page",
           "path": "public/cards/court_of_the_crimson_eclipse/blood_page.png",
-          "sha256": "7dbaba89e8cbf3299717350bcf8d200fa5a98d3fa359daeeec0a758737d164e6",
+          "sha256": "b38cd9408765d52949df1de7289b95a7c079db8aba085e30e3d0779d67e416d8",
           "width": 976,
           "height": 1360
         },
@@ -903,70 +903,70 @@
         {
           "id": "duelist_of_the_eclipse",
           "path": "public/cards/court_of_the_crimson_eclipse/duelist_of_the_eclipse.png",
-          "sha256": "1c82bbd274cdcc3df73115c67f59f15ae7222041147b71592d6cfce824deb1f7",
+          "sha256": "ad2eeead01b7b77938086ee80d140739124435d8ce50d4eb9f821a4e1e966bdf",
           "width": 976,
           "height": 1360
         },
         {
           "id": "guardian_of_the_night_threshold",
           "path": "public/cards/court_of_the_crimson_eclipse/guardian_of_the_night_threshold.png",
-          "sha256": "771608ed3b548d2c7b0a7e824ba23bbe52ecb6453abb88f3793f91066ae35f5c",
+          "sha256": "2deaff718a598f305a3dedc0cbe8a856a590349b078a05cc2f3dfb9f1f7f1b65",
           "width": 976,
           "height": 1360
         },
         {
           "id": "assassin_of_the_black_veil",
           "path": "public/cards/court_of_the_crimson_eclipse/assassin_of_the_black_veil.png",
-          "sha256": "3c1472264934feaf003a13f02d85ae0071760e3681190d157b994a817a1de916",
+          "sha256": "8f5906fa184fb13be177f834c2d1bc1e85607998a0459908b122cb7114280983",
           "width": 976,
           "height": 1360
         },
         {
           "id": "sentinel_of_the_lunar_eye",
           "path": "public/cards/court_of_the_crimson_eclipse/sentinel_of_the_lunar_eye.png",
-          "sha256": "10be3ad0e1f4bb7ae5685c55c585f37c8cba616e7d4899ab78350f9a80675b5b",
+          "sha256": "05fa3024380cf38e1faa72c1d9a6bee1d55052e012dbf8a01ddc3bca8205c80f",
           "width": 976,
           "height": 1360
         },
         {
           "id": "mirevna_countess_of_the_crimson_eclipse",
           "path": "public/cards/court_of_the_crimson_eclipse/mirevna_countess_of_the_crimson_eclipse.png",
-          "sha256": "3d8df4409cbe033efad03b706e243600f87c083f1147992c980cb824ed106dd4",
+          "sha256": "6ac9f78d216b44310f9d777e2e4a936aedda2c8356ec70ee1b054f2096b61c05",
           "width": 976,
           "height": 1360
         },
         {
           "id": "midnight_pact",
           "path": "public/cards/court_of_the_crimson_eclipse/midnight_pact.png",
-          "sha256": "8610673d1757b1c26d86fe502f607e634b19a5a50776845771e3e323e80cf939",
+          "sha256": "291230cd3d0fb73cea61876104acd42c15bc1ef778f1f89786c113d039b002e5",
           "width": 976,
           "height": 1360
         },
         {
           "id": "crimson_impulse",
           "path": "public/cards/court_of_the_crimson_eclipse/crimson_impulse.png",
-          "sha256": "8de4ceceb06e13c3fd8db191162571f0d8233456a28c13293cdcd90387033756",
+          "sha256": "f2873de3804990e8f036c70e471ecee2ebfd8d9975930399997306211bf73554",
           "width": 976,
           "height": 1360
         },
         {
           "id": "drain_essence",
           "path": "public/cards/court_of_the_crimson_eclipse/drain_essence.png",
-          "sha256": "e09abe6e950ff4a8a05d3e77f5eceab2d80c56dae9f1a08365851b4a4066b23e",
+          "sha256": "2bf784c7e559cc95368eeeb5f87b90926eee0492c0ddfdefa1c948eb1da8da3c",
           "width": 976,
           "height": 1360
         },
         {
           "id": "hunt_beneath_the_red_moon",
           "path": "public/cards/court_of_the_crimson_eclipse/hunt_beneath_the_red_moon.png",
-          "sha256": "92dc5bffe0755e563134b60cd7a34a295d9de8980a212bea1ecbbcfded7837cf",
+          "sha256": "8a070ab99d8325f4a29d8b7e9b40cf728ad6619e0cc7af147edf9b81ea8e8131",
           "width": 976,
           "height": 1360
         },
         {
           "id": "verdict_of_the_eclipse",
           "path": "public/cards/court_of_the_crimson_eclipse/verdict_of_the_eclipse.png",
-          "sha256": "6cd72a1da9c8ba1261a77877be3f36c4428c10f6e47ebe8eb26975ac7b46fe98",
+          "sha256": "952f8fdd24cd9274863d8be7e7939085b051ad240ed5d8c7188da63858f8672e",
           "width": 976,
           "height": 1360
         }

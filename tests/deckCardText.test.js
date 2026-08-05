@@ -302,6 +302,11 @@ test("Card Studio removes preview chrome and focus-mode overflow", () => {
     /\.game-preview-title\s*\{[^}]*background:\s*linear-gradient\(90deg, var\(--game-title-start\) 0%, var\(--game-title-end\) 65%, var\(--game-title-end\) 100%\);/u,
     "the Studio cropped-card header must remain opaque across its full width",
   );
+  assert.match(
+    studioShell,
+    /\.game-preview\[data-deck="uprising_of_the_graveless"\]\s*\{[^}]*--game-title-start:\s*#625d6b;[^}]*--game-title-end:\s*#37323f;[^}]*--game-stat-start:\s*#777081;[^}]*--game-stat-mid:\s*#56515e;[^}]*--game-stat-end:\s*#211e28;/u,
+    "the Studio cropped Zombie card must share the game's violet-gray title and stats palette",
+  );
   assert.match(studioApp, /fullArtOverrides/u);
   assert.match(studioApp, /headerFadeOverrides/u);
   assert.match(studioApp, /battlefieldArtFrames/u);

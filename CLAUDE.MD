@@ -121,6 +121,10 @@ Decks vigentes:
 
 Cazadores es sólo un preview de Card Studio: no tiene deck runtime ni lote final de PNG.
 
+Contratos particulares de la Corte: Paje de la Sed exige estar preparado en la primera pérdida
+de Vida del turno; Duelista del Eclipse no puede actuar mientras está Estabilizándose; Mirevna
+paga la mitad de la Vida actual redondeada hacia arriba.
+
 Chaos Mode está deprecated y oculto. Se conserva únicamente por compatibilidad y pruebas; no debe
 recibir features sin una decisión explícita.
 

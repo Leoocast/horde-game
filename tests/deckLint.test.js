@@ -307,10 +307,27 @@ test("Vampires keep Hostfall card kinds, modifiers and traits through authored n
   );
 
   const rawById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card]));
+  const rulesById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card.gameText.es]));
   assert.deepEqual(rawById.mirevna_countess_of_the_crimson_eclipse.modifiers, ["CHRONICLE"]);
   assert.deepEqual(rawById.mirevna_countess_of_the_crimson_eclipse.traits, ["FLYING", "ALERT"]);
   assert.equal(rawById.mirevna_countess_of_the_crimson_eclipse.abilities[0].effects[0].keyword, "DRAIN");
   assert.equal(rawById.blood_page.abilities[0].conditions[1].type, "SOURCE_IS_READY");
+  assert.deepEqual(rulesById, {
+    sanctuary_of_the_red_moon: "Agota esta carta; agrega 1 de Energía.",
+    blood_page: "La primera vez que pierdas Vida en cada turno: si este Eco está preparado, gana +2/+0 hasta el final del turno.",
+    herald_of_the_eclipse: "Sin efecto adicional.",
+    midnight_collector: "Agota esta carta y paga 5 de Vida; agrega 1 de Energía.",
+    duelist_of_the_eclipse: "Una vez durante tu turno, si este Eco no está Estabilizándose: paga 3 de Vida; este Eco gana +3/+1 hasta tu próximo turno.",
+    guardian_of_the_night_threshold: "Cuando este Eco reciba daño y sobreviva: gana 2 de Vida.",
+    assassin_of_the_black_veil: "Sin efecto adicional.",
+    sentinel_of_the_lunar_eye: "Sin efecto adicional.",
+    mirevna_countess_of_the_crimson_eclipse: "Coste adicional: paga la mitad de tu Vida, redondeada hacia arriba.\nDurante tu turno: este Eco tiene Drenar.",
+    midnight_pact: "Coste adicional: paga 5 de Vida.\nRoba 2 cartas.",
+    crimson_impulse: "Coste adicional: paga 2 de Vida.\nElige un aliado; ese aliado gana +2/+2 y Volar hasta el final del turno.",
+    drain_essence: "Elige un Eco; inflige 3 de daño a ese Eco. Gana 2 de Vida.",
+    hunt_beneath_the_red_moon: "Todos tus aliados ganan Drenar hasta el final del turno.",
+    verdict_of_the_eclipse: "Elige un enemigo; destrúyelo. Después, pierdes Vida igual a la Fuerza que tenía.",
+  });
 
   const normalizedAuthoring = normalizeAuthoredDeck(entry.raw);
   const byId = Object.fromEntries(normalizedAuthoring.cards.map((card) => [card.id, card]));
