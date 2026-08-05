@@ -13,7 +13,6 @@ import { cardStatFrameCssVariables } from "../utils/cardStatFrame";
 import { cardTraits, cardStatState } from "../utils/selectors";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
-import { useAudioStore } from "../store/useAudioStore";
 import { Heart, Shield, Sword, Swords, Zap } from "lucide-react";
 import { CardTraitIcon } from "./CardTraitIcon";
 import { GameTooltip } from "./GameTooltip";
@@ -63,7 +62,6 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   const language = useLanguageStore((state) => state.language);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
-  const playSfx = useAudioStore((state) => state.playSfx);
   const heldStaticAuraBonus = useGameStore((state) => state.heldStaticAuraBonuses[card.instanceId]);
   const stats = cardStatState(game, card, visualDamageMarked, heldStaticAuraBonus);
   const visibleTraits = visibleCardTraits(game, card);
@@ -181,7 +179,6 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         event.preventDefault();
         onContextMenu?.(event);
         if (suppressContextMenu) return;
-        playSfx("rightClickCard");
         setHoveredCardId(undefined);
         setFocusedCardId(card.instanceId);
       }}

@@ -994,7 +994,7 @@ test("El Juicio de Elarion cuts the target before its normal destruction fade", 
     assert.deepEqual(duringCut.specialDeadCardIds, []);
     assert.equal(duringCut.game.host.field.some((card) => card.instanceId === target.instanceId), true);
     assert.equal(duringCut.game.player.hand.some((card) => card.instanceId === spell.instanceId), true);
-    assert.deepEqual(playedSfx, ["play"]);
+    assert.deepEqual(playedSfx, []);
 
     timers.releaseExpiredAt(419);
     assert.deepEqual(useGameStore.getState().specialDeadCardIds, []);
@@ -1003,7 +1003,7 @@ test("El Juicio de Elarion cuts the target before its normal destruction fade", 
     const atImpact = useGameStore.getState();
     assert.deepEqual(atImpact.specialDeadCardIds, [target.instanceId]);
     assert.equal(atImpact.game.host.field.some((card) => card.instanceId === target.instanceId), true);
-    assert.deepEqual(playedSfx, ["play", "attack"]);
+    assert.deepEqual(playedSfx, ["attack"]);
 
     timers.releaseExpiredAt(680);
     const afterFade = useGameStore.getState();

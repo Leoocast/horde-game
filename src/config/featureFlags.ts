@@ -6,21 +6,11 @@ export const UI_FEATURE_FLAGS = {
   useNativeHdHandImageRendering: true,
 } as const;
 
-/** Temporary rollout switches for the new SFX pass. Audio Lab reads the manifest directly, so
- * every clip remains available there even when its gameplay integration is disabled here. */
+/** Rollout switches for the retained SFX from the latest review pass. Audio Lab reads the
+ * manifest directly, so a disabled gameplay cue remains available there for comparison. */
 export const AUDIO_FEATURE_FLAGS = {
-  defendDie: true,
-  defendSurvive: false,
-  drawCard: false,
-  endTurn: true,
-  firstDraw: false,
-  lightningBolt: true,
-  noEnergyToPlayCard: true,
-  play: true,
-  rightClickCard: true,
   selectAttacker: true,
   stoneCrash: true,
-  surge: true,
   vaelorLinePlay: true,
 } as const;
 

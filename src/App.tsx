@@ -6,7 +6,6 @@ import { ENCOUNTER_IMPACT_MS, ENCOUNTER_TRANSITION_MS, EncounterTransition } fro
 import { GameLoadingScreen } from "./components/GameLoadingScreen";
 import { StartMenu } from "./components/StartMenu";
 import { findInspectableDeck, hostInspectableDecks, playerInspectableDecks } from "./data/deckCatalog";
-import { AUDIO_FEATURE_FLAGS } from "./config/featureFlags";
 import type { GameMode } from "./engine/GameTypes";
 import { useAudioStore } from "./store/useAudioStore";
 import { useGameStore } from "./store/useGameStore";
@@ -236,7 +235,7 @@ export default function App() {
             setPlayerName(options.playerName);
             setSetupTurns(options.setupTurns);
             stopMusic();
-            playSfx(AUDIO_FEATURE_FLAGS.firstDraw ? "firstDraw" : "draw");
+            playSfx("draw");
             playSfx("playMonsterHeavy", { rate: 0.92 });
             reset(
               options.seed,

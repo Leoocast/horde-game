@@ -9,7 +9,6 @@ import { isQuickSpell } from "../engine/hostfallVocabulary";
 import { useGameStore } from "../store/useGameStore";
 import { useTranslation } from "../i18n/useTranslation";
 import { useToastStore } from "../store/useToastStore";
-import { useAudioStore } from "../store/useAudioStore";
 import { shouldShowFullCardImage } from "../utils/cardImages";
 import { Card } from "./Card";
 import {
@@ -86,7 +85,6 @@ export function Hand({ game }: { game: GameState }) {
   const lockTributeOfTheFourSorrowsSelectionTarget = useGameStore((state) => state.lockTributeOfTheFourSorrowsSelectionTarget);
   const selectHandLimitDiscard = useGameStore((state) => state.selectHandLimitDiscard);
   const pushToast = useToastStore((state) => state.pushToast);
-  const playSfx = useAudioStore((state) => state.playSfx);
   const [hoveredHandId, setHoveredHandId] = useState<string | undefined>();
   const [suppressedClickId, setSuppressedClickId] = useState<string | undefined>();
   const [draggingCardId, setDraggingCardId] = useState<string | undefined>();
@@ -251,9 +249,6 @@ export function Hand({ game }: { game: GameState }) {
       return;
     }
     if (releasedInPlayZone && !playable) {
-      if (cardPlayBlockedByEnergy(game, card, unresolvedTriggerCount)) {
-        playSfx("noEnergyToPlayCard");
-      }
       pushToast({
         title: t("error.cannotPlay"),
         message: getUnplayableReason(game, card, unresolvedTriggerCount, t),
@@ -489,13 +484,6 @@ function isPlayableFromHand(game: GameState, card: CardInstance, pendingTriggere
   if (!canPayLifeCost(game, card.additionalCost)) return false;
   if (!canPayWithAutomaticEnergy(game, totalEnergyCost(card.energyCost, card.variableCost?.hasX ? 1 : 0))) return false;
   return hasValidTargetSequence(game, "player", card.requiresTargets);
-}
-
-export function cardPlayBlockedByEnergy(game: GameState, card: CardInstance, pendingTriggeredEffectCount = 0): boolean {
-  if (pendingTriggeredEffectCount > 0 || card.kinds.includes("SOURCE")) return false;
-  if (!canPlayCardAtCurrentTiming(game, card) || !canPayLifeCost(game, card.additionalCost)) return false;
-  if (!hasValidTargetSequence(game, "player", card.requiresTargets)) return false;
-  return !canPayWithAutomaticEnergy(game, totalEnergyCost(card.energyCost, card.variableCost?.hasX ? 1 : 0));
 }
 
 function isEnergyRecyclable(game: GameState, card: CardInstance, pendingTriggeredEffectCount = 0): boolean {

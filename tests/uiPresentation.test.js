@@ -9,7 +9,6 @@ import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCou
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { CardTraitTooltipBadge } from "../src/components/Card";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
-import { cardPlayBlockedByEnergy } from "../src/components/Hand";
 import { PreviewStatsBadge, TraitPills } from "../src/components/CardPreview";
 import { cardLabelCamelCase } from "../src/i18n/cardLocalization";
 import { addCard, createTestGame, customCard } from "./engineTestUtils";
@@ -20,17 +19,6 @@ test("the Host Archive counter counts attack discards down without displaying ze
   assert.equal(remainingArchiveDiscardPreview(7, 6), 1);
   assert.equal(remainingArchiveDiscardPreview(7, 7), undefined);
   assert.equal(remainingArchiveDiscardPreview(0, 0), undefined);
-});
-
-test("an attempted hand play distinguishes Energy shortage from other unavailable reasons", () => {
-  const game = createTestGame("hand-energy-feedback");
-  const expensive = customCard("expensive_hand_card", "player", { zone: "hand", energyCost: 2 });
-  const source = customCard("source_card", "player", { zone: "hand", kinds: ["SOURCE"] });
-
-  assert.equal(cardPlayBlockedByEnergy(game, expensive), true);
-  assert.equal(cardPlayBlockedByEnergy(game, source), false);
-  game.phase = "combat";
-  assert.equal(cardPlayBlockedByEnergy(game, expensive), false);
 });
 
 test("defense arrows disappear as soon as either combat endpoint leaves the field", () => {

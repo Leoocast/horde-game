@@ -15,21 +15,10 @@ import { sfxManifest, sfxMetadata } from "../src/audio/soundManifest.ts";
 import { AUDIO_FEATURE_FLAGS, audioFeatureEnabled } from "../src/config/featureFlags.ts";
 
 const newFeatureSfx = [
-  "defendDie",
-  "defendSurvive",
-  "drawCard",
-  "endTurn",
-  "firstDraw",
-  "lightningBolt",
-  "noEnergyToPlayCard",
-  "play",
-  "rightClickCard",
   "selectAttacker",
   "stoneCrash",
-  "surge",
   "vaelorLinePlay",
 ];
-const disabledFeatureSfx = new Set(["defendSurvive", "drawCard", "firstDraw"]);
 
 test("the checked-in audio mix covers every manifest entry", () => {
   assert.deepEqual(projectAudioMixProblems, []);
@@ -49,7 +38,7 @@ test("an exported audio mix round-trips without corrections", () => {
 test("new gameplay cues remain individually flagged and visible in Audio Lab", () => {
   assert.deepEqual(Object.keys(AUDIO_FEATURE_FLAGS), newFeatureSfx);
   for (const id of newFeatureSfx) {
-    assert.equal(audioFeatureEnabled(id), !disabledFeatureSfx.has(id));
+    assert.equal(audioFeatureEnabled(id), true);
     assert.equal(sfxMetadata[id].group, "new");
     assert.equal(typeof sfxManifest[id], "string");
     assert.equal(Number.isFinite(projectAudioMix.sfx[id]), true);

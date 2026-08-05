@@ -7,7 +7,6 @@ import { useLanguageStore } from "./useLanguageStore";
 import { useToastStore } from "./useToastStore";
 import { useGameStore, type GameStore, type HostMillAnimationItem } from "./useGameStore";
 import type { BuffAnimationVariant } from "./buffAnimation";
-import { AUDIO_FEATURE_FLAGS } from "../config/featureFlags";
 
 // Shared presentation plumbing for the store and its sequence modules: localized text, SFX
 // policy, toast policy, and the small timed visual beats (buff pulse, auto-paid land flash)
@@ -58,12 +57,8 @@ export function monsterSfx(card: CardInstance) {
 
 export function playDrawOneIfPlayerDrew(previous: GameState, next: GameState): void {
   if (next.player.hand.length > previous.player.hand.length && next.player.archive.length < previous.player.archive.length) {
-    playPlayerDrawSfx();
+    useAudioStore.getState().playSfx("drawOne");
   }
-}
-
-export function playPlayerDrawSfx(): void {
-  useAudioStore.getState().playSfx(AUDIO_FEATURE_FLAGS.drawCard ? "drawCard" : "drawOne");
 }
 
 export function findBattlefieldCard(game: GameState, id: string): CardInstance | undefined {
