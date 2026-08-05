@@ -1,7 +1,8 @@
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
 import { activatedAbilityFailureReason } from "../engine/GameActions";
 import { blockRestrictionReason, canAttack, canBlockAttacker, hasTrait } from "../engine/Traits";
-import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
+import { findPermanent, targetCandidates, targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
+import { manualInvokedTargetRequirement } from "../engine/EffectResolver";
 import { getPowerEndurance } from "../engine/StaticEffects";
 import { MAX_PLAYER_LANDS } from "../engine/GameRules";
 import { STORED_ENERGY_CAP } from "../engine/EnergySystem";
@@ -171,6 +172,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
   // targeting states (see CounterTargetingOverlay/SpellTargetingOverlay/TributeOfTheFourSorrowsSelectionOverlay)
   // don't force a full Battlefield re-render on every pointer event.
   const counterTargetingActive = useGameStore((state) => Boolean(state.counterTargeting));
+  const counterTargetingSourceId = useGameStore((state) => state.counterTargeting?.sourceId);
   const counterTargetingTargetId = useGameStore((state) => state.counterTargeting?.targetId);
   const tributeOfTheFourSorrowsSelectionActive = useGameStore((state) => Boolean(state.tributeOfTheFourSorrowsSelection));
   const tributeOfTheFourSorrowsSelectionKind = useGameStore((state) => state.tributeOfTheFourSorrowsSelection?.kind);
@@ -193,6 +195,16 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
   const hostCombatDeadCardIds = useGameStore((state) => state.hostCombatDeadCardIds);
   const specialDeadCardIds = useGameStore((state) => state.specialDeadCardIds);
   const autoPaidLandAnimation = useGameStore((state) => state.autoPaidLandAnimation);
+  const counterTargetingSource = counterTargetingSourceId
+    ? findPermanent(game, counterTargetingSourceId)
+    : undefined;
+  const counterTargetingRequirement = manualInvokedTargetRequirement(counterTargetingSource);
+  const counterTargetCandidateIds = new Set(
+    counterTargetingSource && counterTargetingRequirement
+      ? targetCandidates(game, counterTargetingSource.controller, counterTargetingRequirement)
+          .map((candidate) => candidate.instanceId)
+      : [],
+  );
   // Only the blocker id is used here; blockDrag.x/y update on every mousemove while
   // dragging and are consumed by CombatArrows, not here — same rationale as the
   // targeting selectors above.
@@ -860,7 +872,11 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
     const effectActive = activeEffectCardId === card.instanceId;
     const effectClosing = closingEffectCardId === card.instanceId;
     const effectActivating = activatingEffectCardId === card.instanceId;
-    const counterTargetable = Boolean(counterTargetingActive && !counterTargetingTargetId && card.kinds.includes("ECHO"));
+    const counterTargetable = Boolean(
+      counterTargetingActive &&
+      !counterTargetingTargetId &&
+      counterTargetCandidateIds.has(card.instanceId)
+    );
     const counterTargetLocked = counterTargetingTargetId === card.instanceId;
     const spellCard = spellTargetingActive ? game.player.hand.find((item) => item.instanceId === spellTargetingHandId) : undefined;
     const spellReq = spellCard?.requiresTargets[spellTargetingStepIndex ?? 0];

@@ -111,10 +111,11 @@ function deckPaths(deckId) {
 }
 
 function energySymbols(text) {
-  return text.replace(/Gana (\d+) Energías?/giu, (_match, rawAmount) => {
+  return text.replace(/Agrega (\d+) de Energía/giu, (_match, rawAmount) => {
     const amount = Number(rawAmount);
+    const verb = _match.startsWith("A") ? "Agrega" : "agrega";
     return amount > 0 && Number.isSafeInteger(amount)
-      ? `Gana ${"{E}".repeat(amount)}`
+      ? `${verb} ${"{E}".repeat(amount)}`
       : _match;
   });
 }

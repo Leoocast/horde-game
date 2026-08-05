@@ -37,11 +37,30 @@ test("every deck ability is either fully engine-supported or explicitly marked",
   assert.equal(errors.length, 0, `Deck lint found silent gaps:\n${details}`);
 });
 
-test("pending abilities are reported as WIP, not as errors", () => {
+test("active demo decks contain no pending abilities", () => {
   const { reports } = lintDecks();
+  const pending = [];
   for (const report of reports) {
     for (const row of report.cards) {
-      if (row.pending.length > 0) assert.equal(row.status, "partial");
+      for (const abilityId of row.pending) pending.push(`${report.deckId}/${row.cardId}/${abilityId}`);
+    }
+  }
+  assert.deepEqual(pending, []);
+});
+
+test("active card text uses the canonical verb for adding Energy", () => {
+  for (const entry of DECK_REGISTRY) {
+    for (const card of [...entry.raw.cards, ...(entry.raw.tokens ?? [])]) {
+      assert.doesNotMatch(
+        card.gameText.es,
+        /\bGana \d+ (?:de )?Energías?\b/iu,
+        `${entry.raw.id}/${card.id} must use Agrega for Energy`,
+      );
+      assert.doesNotMatch(
+        card.gameText.en,
+        /\bGain \d+ Energy\b/iu,
+        `${entry.raw.id}/${card.id} must use add for Energy`,
+      );
     }
   }
 });
@@ -226,6 +245,7 @@ test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored 
 
   const normalizedAuthoring = normalizeAuthoredDeck(entry.raw);
   const byId = Object.fromEntries(normalizedAuthoring.cards.map((card) => [card.id, card]));
+  const rulesById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card.gameText.es]));
   assert.equal(normalizedAuthoring.name, "El Pacto de Elarion");
   assert.deepEqual(byId.kaelor_stormcaller.energyCost, { amount: 4 });
   assert.equal(byId.kaelor_stormcaller.power, 3);
@@ -235,6 +255,7 @@ test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored 
   assert.equal(byId.maela_watcher_of_the_heights.endurance, 3);
   assert.deepEqual(byId.hydra_of_the_black_bough.traits, ["LETHAL", "POISON_1"]);
   assert.deepEqual(byId.aelyra_heir_of_elarion.modifiers, ["CHRONICLE"]);
+  assert.equal(byId.aelyra_heir_of_elarion.abilities[0].targets[0].controller, "SELF");
   assert.equal(byId.aelyra_heir_of_elarion.abilities[0].effects[1].amount, 3);
   assert.deepEqual(byId.kaelor_stormcaller.traits, []);
   assert.deepEqual(byId.echo_of_the_forgotten_city.traits, ["SKYGUARD"]);
@@ -246,6 +267,21 @@ test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored 
   assert.deepEqual(byId.river_of_elarion.kinds, ["SOURCE"]);
   assert.deepEqual(byId.echo_of_the_forgotten_city.energyCost, { amount: 4 });
   assert.equal(byId.echo_of_the_forgotten_city.endurance, 5);
+  assert.deepEqual(rulesById, {
+    veiled_dawn_flower: "Agota esta carta; agrega 1 de Energía.",
+    aelyra_heir_of_elarion: "Al ser invocada: elige un aliado; pon un contador +1/+1 sobre ese aliado y gana 3 de Vida.",
+    liora_keeper_of_the_grove: "Agota esta carta; agrega 1 de Energía.",
+    hydra_of_the_black_bough: "Sin efecto adicional.",
+    kaelor_stormcaller: "La primera vez que otro aliado sea invocado durante tu turno: Kaelor gana +1/+1 hasta tu próximo turno.",
+    maela_watcher_of_the_heights: "Sin efecto adicional.",
+    echo_of_the_forgotten_city: "Sin efecto adicional.",
+    vaelor_emerald_guardian: "Sin efecto adicional.",
+    clash_of_echoes: "Elige un aliado y un enemigo; el aliado inflige al enemigo daño igual a su Fuerza.",
+    shield_of_the_heir: "Elige un aliado y un enemigo; el aliado gana +1/+2 hasta el final del turno. Después, ese aliado lucha contra ese enemigo.",
+    the_judgment_of_elarion: "Elige un Apoyo enemigo o un Eco enemigo con Volar; destrúyelo.",
+    elixir_of_the_first_leaf: "Elige un Eco; el Eco elegido gana +3/+3 hasta el final del turno.",
+    river_of_elarion: "Agota esta carta; agrega 1 de Energía.",
+  });
 
   const energyAction = byId.veiled_dawn_flower.abilities[0];
   assert.equal(energyAction.zone, "field");
@@ -313,8 +349,8 @@ test("Zombies keep Hostfall card kinds and traits through authored normalization
   assert.deepEqual(rawById.graveless_soldier.kinds, ["ECHO", "TOKEN"]);
   assert.deepEqual(rawById.graveless_soldier.energyCost, { amount: 2 });
   assert.deepEqual(rawById.the_broken_headstone.kinds, ["SUPPORT"]);
+  assert.equal(rawById.the_broken_headstone.abilities.length, 1);
   assert.equal(rawById.the_broken_headstone.abilities[0].effects[0].keyword, "DAUNTING");
-  assert.equal(rawById.the_broken_headstone.abilities[1].trigger.event, "BEGIN_READY");
   assert.deepEqual(rawById.spore_infested.traits, ["LETHAL", "FURTIVE"]);
   assert.deepEqual(rawById.return_to_memory.traits, []);
   assert.equal(rawById.return_to_memory.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");
@@ -340,7 +376,6 @@ test("Zombies keep Hostfall card kinds and traits through authored normalization
   assert.equal(byId.the_broken_headstone.abilities[0].effects[0].scope.controller, "HOST");
   assert.deepEqual(byId.the_broken_headstone.abilities[0].effects[0].scope.filters.kinds, ["ECHO"]);
   assert.equal(byId.the_broken_headstone.abilities[0].effects[0].keyword, "DAUNTING");
-  assert.equal(byId.the_broken_headstone.abilities[1].trigger.event, "BEGIN_READY");
   assert.deepEqual(byId.spore_infested.traits, ["LETHAL", "FURTIVE"]);
   assert.deepEqual(byId.return_to_memory.traits, []);
   assert.equal(byId.return_to_memory.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");

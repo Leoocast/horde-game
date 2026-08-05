@@ -140,7 +140,11 @@ function normalizeStaticAbility(ability: NewDeckAbility): EffectDefinition[] {
 
 function normalizeTargets(abilities: NewDeckAbility[]) {
   const spell = abilities.find((ability) => ability.kind === "SPELL");
-  return (spell?.targets ?? []).map((target) => {
+  return spell ? normalizeAbilityTargets(spell) : [];
+}
+
+function normalizeAbilityTargets(ability: NewDeckAbility) {
+  return (ability.targets ?? []).map((target) => {
     const req = target as Record<string, unknown>;
     return {
       id: String(req.id ?? "target"),
@@ -164,6 +168,7 @@ function normalizeTriggeredAbility(ability: NewDeckAbility): EffectDefinition[] 
     trigger,
     condition: normalizeTriggerCondition(ability),
     effect,
+    requiresTargets: normalizeAbilityTargets(ability),
   };
   return [normalized];
 }

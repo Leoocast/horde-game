@@ -133,73 +133,8 @@
               "keyword": "DAUNTING"
             }
           ]
-        },
-        {
-          "id": "the_broken_headstone_upkeep",
-          "kind": "TRIGGERED",
-          "zone": "FIELD",
-          "trigger": {
-            "event": "BEGIN_READY"
-          },
-          "conditions": [
-            {
-              "type": "NOT",
-              "value": {
-                "type": "MEMORY_HAS_TOKEN_ECHO_AND_NON_TOKEN_ECHO",
-                "controller": "HOST"
-              }
-            }
-          ],
-          "effects": [
-            {
-              "type": "SACRIFICE_SELF"
-            }
-          ],
-          "engineSupport": "pending",
-          "implementationNote": "The engine has no BEGIN_READY event yet; this trigger has never been active."
-        },
-        {
-          "id": "the_broken_headstone_activated",
-          "kind": "ACTIVATED",
-          "zone": "FIELD",
-          "activationMode": "HOST_DIRECTIVE_ONLY",
-          "cost": {
-            "type": "EXHAUST_HOST_ECHOS_FOR_ENERGY",
-            "requiredEnergy": 4,
-            "sourceFilter": {
-              "controller": "HOST",
-              "kinds": [
-                "ECHO"
-              ],
-              "isToken": false
-            },
-            "selectionRule": "LOWEST_EXCESS_ENERGY_THEN_LOWEST_EXHAUST_PRIORITY"
-          },
-          "effects": [
-            {
-              "type": "CREATE_TOKEN",
-              "controller": "HOST",
-              "tokenId": "graveless_soldier",
-              "amount": 1
-            }
-          ],
-          "engineSupport": "pending",
-          "additionalCost": {
-            "type": "BANISH_CARD_FROM_MEMORY",
-            "controller": "HOST",
-            "filter": {
-              "kinds": [
-                "ECHO"
-              ]
-            },
-            "selectionRule": "LOWEST_ENERGY_COST_THEN_RANDOM"
-          }
         }
       ],
-      "hostDirective": {
-        "type": "REPEAT_ACTIVATION_WHILE_POSSIBLE",
-        "description": "If The Broken Headstone is on the Field and the Host controls non-token Echoes with combined Energy cost at least 4, activate The Broken Headstone. Repeat while enough non-token Echoes and valid Memory targets exist."
-      },
       "kinds": [
         "SUPPORT"
       ],

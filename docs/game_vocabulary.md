@@ -94,7 +94,7 @@ Una Fuente es una carta permanente; Energía es el recurso que produce. Se escri
 Fuente`, nunca `Sacrifica una Energía`.
 
 En `+N/+N`, el primer valor siempre es Fuerza y el segundo Aguante. La Energía generada se imprime
-como `Gana {E}` o `Gana {E}{E}`, sin un número junto al símbolo.
+como `Agrega {E}` o `Agrega {E}{E}`, sin un número junto al símbolo.
 
 ## Fases y ventanas
 
@@ -187,9 +187,10 @@ engine. Trampa también es un subtipo preview de Eco, no un tipo de carta adicio
 3. Usar `este Eco` o `esta carta` sólo cuando el sujeto no sea inequívoco.
 4. Las entradas usan `Al ser invocado/a`, con concordancia respecto al sujeto visible.
 5. `Hasta el final del turno` y `hasta tu próximo turno` son duraciones normativas.
-6. `Gana` se reserva para modificadores temporales y Rasgos; los contadores se colocan.
+6. `Agrega` aumenta la Energía; `gana` se usa para Vida, modificadores temporales y Rasgos; los
+   contadores se colocan.
 7. Vida es singular: `Paga 3 de Vida`, `pierde 3 de Vida`, `gana 3 de Vida`.
-8. Los costes van antes de dos puntos: `Agota y paga 2 de Vida: ...`.
+8. Los costes y elecciones van antes de punto y coma: `Agota esta carta y paga 2 de Vida; ...`.
 9. Un Rasgo se imprime como nombre; su tooltip contiene la definición.
 10. Español e inglés deben describir exactamente la misma regla.
 11. El flavor nunca completa una regla.
@@ -199,7 +200,7 @@ Plantillas preferidas:
 - `Al ser invocada, ...`
 - `Invoca dos Esbirros de Varka.` cuando la Ficha tenga una identidad visible propia.
 - `Invoca un Eco Ficha Zombi 2/2.` cuando la Ficha no tenga un nombre propio.
-- `Agota: Gana {E}.`
+- `Agota esta carta; agrega {E}.`
 - `Un aliado gana +2/+3 hasta el final del turno.`
 - `Destierra una carta de la Memoria al Olvido.`
 

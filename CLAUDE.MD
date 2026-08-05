@@ -88,7 +88,9 @@ Separación obligatoria:
 ## Vocabulario Hostfall
 
 Leer `docs/game_vocabulary.md` antes de cambiar nombres, tipos, zonas, fases, Rasgos, reglas o
-tooltips.
+tooltips. Leer también `docs/card_text_rules.md` antes de redactar o modificar texto impreso,
+puntuación de reglas o elecciones de objetivos.
+La gramática de cartas es propia de Hostfall y no depende de convenciones o reglas externas.
 
 Contratos principales:
 
@@ -179,6 +181,7 @@ No programar cartas por nombre. La excepción bespoke actual es `tribute_of_the_
 
 Para agregar o implementar cartas, seguir `docs/adding_cards.md`. Documentación específica:
 
+- `docs/card_text_rules.md`
 - `docs/chronicle_pact_of_elarion.md`
 - `docs/chronicle_court_of_the_crimson_eclipse.md`
 - `docs/host_uprising_of_the_graveless.md`
@@ -305,7 +308,8 @@ Leer el archivo específico y sus consumidores. Como rutas de entrada:
 
 - Reglas: `src/engine/GameTypes.ts`, `GameActions.ts`, `EffectResolver.ts`.
 - Secuencias: `src/store/useGameStore.ts`, `hostBeats.ts`, `presentationEffects.ts`.
-- Cartas: `docs/adding_cards.md`, JSON del deck, `normalizeDeck.ts`, `deckLint.ts`.
+- Cartas: `docs/adding_cards.md`, `docs/card_text_rules.md`, JSON del deck, `normalizeDeck.ts`,
+  `deckLint.ts`.
 - Campo: `Battlefield.tsx`, `battlefieldLayout.ts` y sus tests.
 - Targeting: `Targeting.ts` y el overlay correspondiente.
 - Combate: `CombatResolver.ts` y `docs/animation_contracts.md`.

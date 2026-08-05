@@ -28,7 +28,7 @@ import {
 import { finishHostTurn, revealHostCardFromTop, runHostMain as runHostMainPhase } from "../engine/HostController";
 import { canAttack, hasTrait } from "../engine/Traits";
 import { getPowerEndurance, hostInSurge } from "../engine/StaticEffects";
-import { EFFECT_ANNOUNCEMENTS, destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, findManualInvokedTargetTrigger, hasEffectPresentation, resolveEffect, resolveEffects, triggerConditionMet } from "../engine/EffectResolver";
+import { EFFECT_ANNOUNCEMENTS, destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, findManualInvokedTargetTrigger, hasEffectPresentation, manualInvokedTargetRequirement, resolveEffect, resolveEffects, triggerConditionMet } from "../engine/EffectResolver";
 import { type StaticAura } from "../engine/StaticAuras";
 import { drainEventQueue } from "../engine/EventQueue";
 import { targetCandidates, targetRequirementIsBuff } from "../engine/Targeting";
@@ -711,7 +711,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const next = structuredClone(game) as GameState;
       const source = findBattlefieldCard(next, counterTargeting.sourceId);
       const target = findBattlefieldCard(next, counterTargeting.targetId);
-      if (!source || !target) {
+      const requirement = manualInvokedTargetRequirement(source);
+      const targetIsValid = Boolean(
+        source &&
+        target &&
+        requirement &&
+        targetCandidates(next, source.controller, requirement)
+          .some((candidate) => candidate.instanceId === target.instanceId)
+      );
+      if (!source || !target || !targetIsValid) {
         return {
           counterTargeting: undefined,
           pendingTriggeredEffectCount: Math.max(0, get().pendingTriggeredEffectCount - 1),

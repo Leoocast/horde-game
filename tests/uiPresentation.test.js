@@ -208,6 +208,15 @@ test("main menu reserves enough width and breathing room for the Hostfall title"
   assert.match(styles, /\.main-menu-title\s*\{[^}]*margin:\s*16px 0 0;/u);
 });
 
+test("deck setup panels and deck cards opt into shared click audio", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const decksView = readFileSync(new URL("../src/components/DecksView.tsx", import.meta.url), "utf8");
+
+  assert.match(startMenu, /<article\s+data-audio-click="valid"\s+className=\{`expedition-combatant/u);
+  assert.match(decksView, /<button\s+data-audio-click="off"\s+className=\{`deck-key-card/u);
+  assert.match(decksView, /onClick=\{\(\) => \{\s*playSfx\("click"\);\s*onOpen\(\);/u);
+});
+
 test("deck detail close buttons inherit their deck palette", () => {
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
   assert.match(styles, /\.deck-collection-modal-close\s*\{[^}]*var\(--deck-accent,[^}]*var\(--deck-accent-bright,[^}]*var\(--deck-accent-soft,/u);

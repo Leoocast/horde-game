@@ -74,16 +74,15 @@ test("deck card text consistently highlights gameplay terms and separates abilit
     "Volar. Drenar. Alerta.\nCoste adicional: Paga la mitad de tu Vida.",
   );
   const numberedTrait = formatEffectText("Letal\nVeneno 1");
-  const repeatedEnergy = formatEffectText("Gana {E}{E}.", {
+  const repeatedEnergy = formatEffectText("Agrega {E}{E}.", {
     energyIconHtml: '<span class="energy-icon"></span>',
   });
-  const exhaustAction = formatEffectText("Agota: Gana {E}.", {
+  const exhaustAction = formatEffectText("Agota esta carta; agrega {E}.", {
     energyIconHtml: '<span class="energy-icon"></span>',
   });
   const acolyteCost = formatEffectText(
-    "{{T}} y paga 5 de Vida: Gana {E}.",
+    "Agota esta carta y paga 5 de Vida; agrega {E}.",
     {
-      tapIconHtml: '<span class="tap-icon"></span>',
       energyIconHtml: '<span class="energy-icon"></span>',
     },
   );
@@ -133,11 +132,11 @@ test("deck card text consistently highlights gameplay terms and separates abilit
     /class="effect-keyword">Veneno <span class="effect-keyword-value">1<\/span><\/strong>/,
   );
   assert.equal((repeatedEnergy.match(/class="energy-icon"/g) ?? []).length, 2);
-  assert.doesNotMatch(repeatedEnergy, /Gana\s+\d/u);
-  assert.match(exhaustAction, /<strong class="effect-action">Agota<\/strong>:/u);
+  assert.doesNotMatch(repeatedEnergy, /Agrega\s+\d/u);
+  assert.match(exhaustAction, /<strong class="effect-action">Agota<\/strong> esta carta;/u);
   assert.equal((inlineTraits.match(/class="effect-paragraph"/g) ?? []).length, 2);
-  assert.match(acolyteCost, /<span class="tap-icon"><\/span> y <strong class="effect-life-cost">paga 5 de Vida<\/strong>:/);
-  assert.match(acolyteCost, /Gana <span class="energy-icon"><\/span>\./);
+  assert.match(acolyteCost, /<strong class="effect-action">Agota<\/strong> esta carta y <strong class="effect-life-cost">paga 5 de Vida<\/strong>;/);
+  assert.match(acolyteCost, /agrega <span class="energy-icon"><\/span>\./);
   assert.equal((acolyteCost.match(/class="effect-paragraph"/g) ?? []).length, 1);
 });
 
@@ -815,7 +814,7 @@ test("battlefield art framing is canonical, bounded and independent from print f
   );
 });
 
-test("full-art Vampire life costs and damage use the same pink as their keywords", () => {
+test("full-art Vampire life costs and damage use the same pink as their Traits", () => {
   const css = fs.readFileSync(
     new URL("../dev/tools/Decks/deck-card-studio.css", import.meta.url),
     "utf8",
@@ -903,7 +902,7 @@ test("El Pacto de Elarion studio cards use Hostfall vocabulary and stay aligned"
   const studioSources = [
     { label: "generated studio projection", cards: buildStudioCards("pact_of_elarion") },
   ];
-  const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|Agrega|entra|obtiene)\b|Robo de vida|Toque mortal|\{\{T\}\}|\{G\})/iu;
+  const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|entra|obtiene)\b|Robo de vida|Toque mortal|\{\{T\}\}|\{G\})/iu;
   const keywordLabels = {
     FLYING: "Volar",
     LETHAL: "Letal",
@@ -1185,7 +1184,7 @@ test("La Legión de Varka studio cards use Hostfall vocabulary and stay aligned"
 test("Hunter preview sources use Hostfall vocabulary and stay aligned", () => {
   const indexUrl = new URL("../dev/tools/Decks/hunters/index.html", import.meta.url);
   const previewCards = buildStudioCards("hunters");
-  const retiredStudioVocabulary = /(?:\b(?:Tierras?|Criaturas?|Instantáneos?|Conjuros?|Encantamientos?|Horda|Alcance|Menace|Defensor|monstruos?|obtiene|entra|Agrega|vidas)\b|\{\{T\}\})/iu;
+  const retiredStudioVocabulary = /(?:\b(?:Tierras?|Criaturas?|Instantáneos?|Conjuros?|Encantamientos?|Horda|Alcance|Menace|Defensor|monstruos?|obtiene|entra|vidas)\b|\{\{T\}\})/iu;
   const expectedTypes = {
     territorio_de_caza: "Fuente — Territorio",
     trampa_de_mandibulas: "Eco — Trampa",
@@ -1241,7 +1240,7 @@ test("authored rules use ally and enemy as compact Echo nouns", () => {
     ["Goblins", buildStudioCards("legion_of_varka")],
     ["Hunters", buildStudioCards("hunters")],
   ];
-  const verboseEchoProse = /(?:\bCuando este Eco es invocad[oa]\b|\bEcos? aliad[oa]s?\b|\bEcos? enemig[oa]s?\b|\bEcos? de la Hueste\b)/iu;
+  const verboseEchoProse = /(?:\bCuando este Eco es invocad[oa]\b|\bEcos aliad[oa]s\b|\bEcos enemig[oa]s\b|\bEcos? de la Hueste\b)/iu;
 
   for (const [deckName, cards] of studioDecks) {
     for (const card of cards) {
@@ -1280,7 +1279,7 @@ test("Vampire gameplay cards use their full-image faction presentation", () => {
 function normalizeVampireEffect(text) {
   return String(text ?? "")
     .replaceAll("{{T}}", "Agota")
-    .replace(/(?:\{E\})+/g, (icons) => `${icons.length / 3} Energía`)
+    .replace(/(?:\{E\})+/g, (icons) => `${icons.length / 3} de Energía`)
     .replace(/\s+/g, " ")
     .trim()
     .toLocaleLowerCase("es");
@@ -1289,7 +1288,7 @@ function normalizeVampireEffect(text) {
 function normalizePactOfElarionEffect(text) {
   return String(text ?? "")
     .replaceAll("{{T}}", "Agota")
-    .replace(/(?:\{E\})+/g, (icons) => `${icons.length / 3} Energía`)
+    .replace(/(?:\{E\})+/g, (icons) => `${icons.length / 3} de Energía`)
     .replace(/\s+/g, " ")
     .trim()
     .toLocaleLowerCase("es");

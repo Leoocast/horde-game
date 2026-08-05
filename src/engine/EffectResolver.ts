@@ -1,4 +1,4 @@
-import type { CardFilter, CardInstance, EffectDefinition, EventItem, GameState, Side } from "./GameTypes";
+import type { CardFilter, CardInstance, EffectDefinition, EventItem, GameState, Side, TargetRequirement } from "./GameTypes";
 import { createToken, drawCards, recordFieldEntry } from "./GameState";
 import { findCardDefinition } from "../data/decks";
 import { enqueue } from "./EventQueue";
@@ -791,6 +791,11 @@ export function findManualInvokedTargetTrigger(card?: CardInstance): EffectDefin
       effect.trigger === "INVOKED" &&
       effectNeedsManualTarget(effect.effect),
   );
+}
+
+export function manualInvokedTargetRequirement(card?: CardInstance): TargetRequirement | undefined {
+  const requirements = findManualInvokedTargetTrigger(card)?.requiresTargets;
+  return Array.isArray(requirements) ? requirements[0] as TargetRequirement | undefined : undefined;
 }
 
 function discardPlayer(game: GameState, amount: number): void {

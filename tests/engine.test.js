@@ -9,7 +9,7 @@ import { buildHostRules } from "../src/engine/HostRules";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
 import { chaosTraitPool, prepareChaosDeck } from "../src/engine/ChaosMode";
 import { applyHostAttackEvent, buildHostAttackEvents, isHostAttackEventCurrent, prepareHostAttackers, previewPlayerAttackDrain, refreshHostAttackEvent, resolveHostCombat, resolvePlayerAttackerDrain, resolvePlayerAttackerPoison, resolvePlayerCombat } from "../src/engine/CombatResolver";
-import { destroyMarkedCreatures, destroyPermanent, findManualInvokedTargetTrigger, pendingTriggerSources, resolveEffect, resolveEffects, resolveTriggeredEvent, runInvokedTriggers } from "../src/engine/EffectResolver";
+import { destroyMarkedCreatures, destroyPermanent, findManualInvokedTargetTrigger, manualInvokedTargetRequirement, pendingTriggerSources, resolveEffect, resolveEffects, resolveTriggeredEvent, runInvokedTriggers } from "../src/engine/EffectResolver";
 import { drainEventQueue, enqueue } from "../src/engine/EventQueue";
 import { collectStaticAuras, newlyCoveredAuras, snapshotStaticAuras } from "../src/engine/StaticAuras";
 import { acceptOpeningHand, createInitialGame, expandDeck, mulliganOpeningHand, recordFieldEntry } from "../src/engine/GameState";
@@ -17,7 +17,7 @@ import { finishHostTurn, revealHostCardFromTop, runHostMain } from "../src/engin
 import { canAttack, hasTrait } from "../src/engine/Traits";
 import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
 import { getPowerEndurance, hostInSurge } from "../src/engine/StaticEffects";
-import { targetCandidates } from "../src/engine/Targeting";
+import { targetCandidates, targetCandidatesWithSelectedTargets } from "../src/engine/Targeting";
 import { queueUnusedNormalEnergy, releasePendingStoredEnergy } from "../src/engine/EnergySystem";
 import { performPlayerDraw, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
 import { cardStatState, sortTraitsForDisplay } from "../src/utils/selectors";
@@ -1689,6 +1689,8 @@ test("El Juicio de Elarion only offers legal permanent types and destroys The Br
   const grafHarvest = addCard(game, cardFromDeck("the_broken_headstone", "host"));
   const flyer = addCard(game, customCard("test_flyer", "host", { traits: ["FLYING"] }));
   const groundCreature = addCard(game, customCard("test_ground_creature", "host"));
+  const alliedSupport = addCard(game, customCard("allied_support", "player", { kinds: ["SUPPORT"] }));
+  const alliedFlyer = addCard(game, customCard("allied_flyer", "player", { traits: ["FLYING"] }));
   const spell = addCard(game, cardFromDeck("the_judgment_of_elarion", "player", "hand"), "player", "hand");
   const requirement = spell.requiresTargets[0];
 
@@ -1696,6 +1698,8 @@ test("El Juicio de Elarion only offers legal permanent types and destroys The Br
   assert.equal(candidateIds.includes(grafHarvest.instanceId), true);
   assert.equal(candidateIds.includes(flyer.instanceId), true);
   assert.equal(candidateIds.includes(groundCreature.instanceId), false);
+  assert.equal(candidateIds.includes(alliedSupport.instanceId), false);
+  assert.equal(candidateIds.includes(alliedFlyer.instanceId), false);
 
   const result = castCard(game, spell.instanceId, { targets: { targetPermanent: grafHarvest.instanceId } });
   assert.equal(result.host.field.some((card) => card.instanceId === grafHarvest.instanceId), false);
@@ -1706,8 +1710,19 @@ test("Choque de Ecos deals source power and preserves deathtouch for death clean
   const game = createTestGame();
   addSources(game, 2);
   const source = addCard(game, customCard("deathtouch_source", "player", { traits: ["LETHAL"], power: 1, endurance: 1 }));
+  const otherAlly = addCard(game, customCard("other_ally", "player"));
   const target = addCard(game, customCard("large_target", "host", { power: 0, endurance: 8 }));
   const spell = addCard(game, cardFromDeck("clash_of_echoes", "player", "hand"), "player", "hand");
+
+  const targetIds = targetCandidatesWithSelectedTargets(
+    game,
+    "player",
+    spell.requiresTargets[1],
+    { sourceCreature: source.instanceId },
+  ).map((card) => card.instanceId);
+  assert.equal(targetIds.includes(target.instanceId), true);
+  assert.equal(targetIds.includes(source.instanceId), false);
+  assert.equal(targetIds.includes(otherAlly.instanceId), false);
 
   const result = castCard(game, spell.instanceId, {
     targets: { sourceCreature: source.instanceId, damageTarget: target.instanceId },
@@ -1786,12 +1801,18 @@ test("Escudo de la Heredera can stage its buff before the deferred fight impact"
 test("Aelyra can target herself, adds one counter, and gains three Life", () => {
   const game = createTestGame();
   addSources(game, 1);
+  const enemy = addCard(game, customCard("aelyra_enemy_target", "host"));
   const iria = addCard(game, cardFromDeck("aelyra_heir_of_elarion", "player", "hand"), "player", "hand");
 
   const result = castCard(game, iria.instanceId);
   const permanent = result.player.field.find((card) => card.instanceId === iria.instanceId);
   const manualTrigger = findManualInvokedTargetTrigger(permanent);
   assert.ok(manualTrigger, "Aelyra should expose her manual Invoked trigger");
+  const requirement = manualInvokedTargetRequirement(permanent);
+  assert.ok(requirement, "Aelyra should preserve her authored target requirement");
+  const candidateIds = targetCandidates(result, "player", requirement).map((card) => card.instanceId);
+  assert.equal(candidateIds.includes(permanent.instanceId), true);
+  assert.equal(candidateIds.includes(enemy.instanceId), false);
   resolveEffect(result, manualTrigger.effect, {
     source: permanent,
     side: "player",

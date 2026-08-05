@@ -21,8 +21,8 @@
       "name": "Sanctuary of the Red Moon",
       "displayNameEs": "Santuario de la Luna Roja",
       "gameText": {
-        "en": "Exhaust: Gain 1 Energy.",
-        "es": "Agota: Gana 1 Energía."
+        "en": "Exhaust this card; add 1 Energy.",
+        "es": "Agota esta carta; agrega 1 de Energía."
       },
       "flavorText": {
         "en": "During the eclipse, every tower casts a shadow pointing toward Mirevna's throne.",
@@ -155,8 +155,8 @@
       "name": "Midnight Collector",
       "displayNameEs": "Recaudador de Medianoche",
       "gameText": {
-        "en": "Exhaust and pay 5 Life: Gain 1 Energy.",
-        "es": "Agota y paga 5 de Vida: Gana 1 Energía."
+        "en": "Exhaust this card and pay 5 Life; add 1 Energy.",
+        "es": "Agota esta carta y paga 5 de Vida; agrega 1 de Energía."
       },
       "flavorText": {
         "en": "Mirevna collects no gold. She collects the years you still thought you would live.",

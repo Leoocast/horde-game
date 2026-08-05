@@ -8,7 +8,7 @@ window.HostfallDeckData = [
     "costo": 0,
     "atk": null,
     "def": null,
-    "desc": "Agota: Gana {E}.",
+    "desc": "Agota esta carta; agrega {E}.",
     "lore": "Toda presa deja un rastro. Todo rastro termina aquí.",
     "cantidad": 12,
     "isEnergy": true,
