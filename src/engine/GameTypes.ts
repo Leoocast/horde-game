@@ -136,6 +136,8 @@ export type HostRulesProfile = {
   swarmTokenSubtypes: string[];
 };
 
+export type ActionFailureCode = "NOT_ENOUGH_ENERGY";
+
 export type CardInstance = {
   instanceId: string;
   definitionId: string;
@@ -273,7 +275,7 @@ export type GameState = {
   log: string[];
   /** Outcome of the most recent player-initiated action. The store reads this instead of
    *  sniffing log strings; `reason` is the player-facing failure message. */
-  lastActionResult?: { ok: boolean; reason?: string };
+  lastActionResult?: { ok: boolean; reason?: string; code?: ActionFailureCode };
   winner?: Side;
 };
 

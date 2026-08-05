@@ -262,6 +262,8 @@ antes de crear otra implementación.
 - Overlays y previews deben respetar los z-index documentados en los propios componentes/CSS.
 - El audio pasa por el sistema central y respeta mute/volumen. No crear `Audio` dispersos en
   componentes.
+- Los SFX del pase nuevo permanecen registrados en el Taller de Sonidos y se activan de forma
+  individual mediante `AUDIO_FEATURE_FLAGS`; apagar un flag no debe ocultar su clip del Taller.
 - La música cambia al tema de clímax cuando la Vida del Cronista baja del umbral configurado.
 
 ## Developer mode

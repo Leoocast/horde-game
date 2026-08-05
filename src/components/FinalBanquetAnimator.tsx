@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { gsap } from "gsap";
 import * as THREE from "three";
+import { AUDIO_FEATURE_FLAGS } from "../config/featureFlags";
 import { useAudioStore } from "../store/useAudioStore";
 import { useGameStore } from "../store/useGameStore";
 import { shouldShowFullCardImage } from "../utils/cardImages";
@@ -585,7 +586,10 @@ export function FinalBanquetAnimator() {
         ease: "power2.out",
       }, 0.1)
       .call(() => beginStrike(active.id), [], LIGHTNING_LAUNCH_SECONDS - 0.02)
-      .call(() => playSfx("activateEffect", { rate: 1.18 }), [], LIGHTNING_LAUNCH_SECONDS)
+      .call(() => {
+        if (AUDIO_FEATURE_FLAGS.lightningBolt) playSfx("lightningBolt");
+        else playSfx("activateEffect", { rate: 1.18 });
+      }, [], LIGHTNING_LAUNCH_SECONDS)
       .to(cardElement, {
         scale: 1.075,
         filter: "brightness(1.48) saturate(1.2) drop-shadow(0 0 34px rgba(164, 55, 255, 0.96))",

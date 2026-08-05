@@ -1,5 +1,6 @@
 import { Skull } from "lucide-react";
 import { useEffect } from "react";
+import { AUDIO_FEATURE_FLAGS } from "../config/featureFlags";
 import { useAudioStore } from "../store/useAudioStore";
 import { useTranslation } from "../i18n/useTranslation";
 
@@ -12,7 +13,8 @@ export function SurgeTransition({ onComplete }: Props) {
   const playSfx = useAudioStore((state) => state.playSfx);
 
   useEffect(() => {
-    playSfx("playMonsterHeavy", { rate: 0.88 });
+    if (AUDIO_FEATURE_FLAGS.surge) playSfx("surge");
+    else playSfx("playMonsterHeavy", { rate: 0.88 });
   }, [playSfx]);
 
   return (

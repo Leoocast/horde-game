@@ -25,13 +25,27 @@ export const sfxManifest = {
   fireballCast2: new URL("../../assets/sounds/fireball_cast_2.wav", import.meta.url).href,
   fireballCast3: new URL("../../assets/sounds/fireball_cast_3.wav", import.meta.url).href,
   fireballHit: new URL("../../assets/sounds/fireball_hit.wav", import.meta.url).href,
+  defendDie: new URL("../../assets/sounds/new/defend_die.wav", import.meta.url).href,
+  defendSurvive: new URL("../../assets/sounds/new/defend_survive.wav", import.meta.url).href,
+  drawCard: new URL("../../assets/sounds/new/draw_card.wav", import.meta.url).href,
+  endTurn: new URL("../../assets/sounds/new/end_turn.wav", import.meta.url).href,
+  firstDraw: new URL("../../assets/sounds/new/first_draw.wav", import.meta.url).href,
+  lightningBolt: new URL("../../assets/sounds/new/lightning_bolt.wav", import.meta.url).href,
+  noEnergyToPlayCard: new URL("../../assets/sounds/new/no_energy_to_play_card.wav", import.meta.url).href,
+  play: new URL("../../assets/sounds/new/play.wav", import.meta.url).href,
+  rightClickCard: new URL("../../assets/sounds/new/right_click_card.wav", import.meta.url).href,
+  selectAttacker: new URL("../../assets/sounds/new/select_attacker.wav", import.meta.url).href,
+  stoneCrash: new URL("../../assets/sounds/new/stone_crash.wav", import.meta.url).href,
+  surge: new URL("../../assets/sounds/new/surge.wav", import.meta.url).href,
+  vaelorLinePlay: new URL("../../assets/sounds/new/vaelor_line_play.mp3", import.meta.url).href,
 } as const;
 
 export type SfxId = keyof typeof sfxManifest;
 
-export type SfxGroupId = "interface" | "summoning" | "combat" | "effects" | "countess" | "fireball";
+export type SfxGroupId = "new" | "interface" | "summoning" | "combat" | "effects" | "countess" | "fireball";
 
 export const sfxGroups: Array<{ id: SfxGroupId; label: string }> = [
+  { id: "new", label: "New feature cues" },
   { id: "interface", label: "Interface & cards" },
   { id: "summoning", label: "Summoning" },
   { id: "combat", label: "Combat" },
@@ -67,6 +81,19 @@ export const sfxMetadata: Record<SfxId, { label: string; group: SfxGroupId }> = 
   fireballCast2: { label: "Fireball cast 2", group: "fireball" },
   fireballCast3: { label: "Fireball cast 3", group: "fireball" },
   fireballHit: { label: "Fireball hit", group: "fireball" },
+  defendDie: { label: "Defender destroyed", group: "new" },
+  defendSurvive: { label: "Defender survives", group: "new" },
+  drawCard: { label: "Draw card", group: "new" },
+  endTurn: { label: "End turn", group: "new" },
+  firstDraw: { label: "First draw", group: "new" },
+  lightningBolt: { label: "Lightning bolt", group: "new" },
+  noEnergyToPlayCard: { label: "Not enough Energy", group: "new" },
+  play: { label: "Play card", group: "new" },
+  rightClickCard: { label: "Inspect card (right click)", group: "new" },
+  selectAttacker: { label: "Select attacker", group: "new" },
+  stoneCrash: { label: "Vaelor stone crash", group: "new" },
+  surge: { label: "Host enters Surge", group: "new" },
+  vaelorLinePlay: { label: "Vaelor play line", group: "new" },
 };
 
 // Casts keep varied voices; impact currently has one canonical hit.

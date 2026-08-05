@@ -1,4 +1,4 @@
-import type { AbilityOptions, ActionCost, ActivatedAbility, CardInstance, CastOptions, GameState, Side } from "./GameTypes";
+import type { AbilityOptions, ActionCost, ActionFailureCode, ActivatedAbility, CardInstance, CastOptions, GameState, Side } from "./GameTypes";
 import { lifeCostAmount, lifeCostFailureReason } from "./ActionCosts";
 import { drawCards, recordFieldEntry } from "./GameState";
 import { drainEventQueue, enqueue } from "./EventQueue";
@@ -46,7 +46,9 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
   const lifeFailure = lifeCostFailureReason(next, card.additionalCost, card.name);
   if (lifeFailure) return fail(next, lifeFailure);
   const cost = totalEnergyCost(card.energyCost, options.xValue ?? 0);
-  if (!payEnergyAutomatically(next, cost)) return fail(next, `Not enough available Energy to play ${card.name}.`);
+  if (!payEnergyAutomatically(next, cost)) {
+    return fail(next, `Not enough available Energy to play ${card.name}.`, { code: "NOT_ENOUGH_ENERGY" });
+  }
   payLifeCost(next, card.additionalCost, card.instanceId, card.name);
   card.xValuePaid = options.xValue ?? 0;
   next.player.hand = next.player.hand.filter((item) => item.instanceId !== handId);
@@ -193,8 +195,8 @@ function succeed(game: GameState): GameState {
 }
 
 /** Failed action: records the typed outcome and logs the reason (unless silent). */
-function fail(game: GameState, reason: string, options: { silent?: boolean } = {}): GameState {
-  game.lastActionResult = { ok: false, reason };
+function fail(game: GameState, reason: string, options: { silent?: boolean; code?: ActionFailureCode } = {}): GameState {
+  game.lastActionResult = { ok: false, reason, ...(options.code ? { code: options.code } : {}) };
   if (!options.silent) game.log.unshift(reason);
   return game;
 }

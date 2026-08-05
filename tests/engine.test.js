@@ -512,6 +512,22 @@ test("Stored Energy can pay a creature cost", () => {
   assert.equal(result.player.energyPool.stored, 0);
 });
 
+test("an unaffordable card reports a typed Energy failure for presentation", () => {
+  const game = createTestGame("typed-energy-failure");
+  const card = addCard(
+    game,
+    customCard("too_expensive", "player", { zone: "hand", energyCost: 2 }),
+    "player",
+    "hand",
+  );
+
+  const result = castCard(game, card.instanceId);
+
+  assert.equal(result.lastActionResult?.ok, false);
+  assert.equal(result.lastActionResult?.code, "NOT_ENOUGH_ENERGY");
+  assert.match(result.lastActionResult?.reason ?? "", /not enough available Energy/i);
+});
+
 test("Stored Energy is spent before manually generated Source Energy", () => {
   const game = createTestGame();
   game.player.energyPool.stored = 1;

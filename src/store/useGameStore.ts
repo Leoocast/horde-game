@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { acceptOpeningHand, createInitialGame, mulliganOpeningHand } from "../engine/GameState";
 import type { AbilityOptions, CardInstance, CastOptions, DifficultyMode, EffectDefinition, EventItem, GameMode, GameState, Phase } from "../engine/GameTypes";
 import { DEFAULT_HOST_DECK_ID, DEFAULT_PLAYER_DECK_ID, getHostDeck, getPlayerDeck } from "../data/decks";
+import { AUDIO_FEATURE_FLAGS } from "../config/featureFlags";
 import { advancePhase, endPlayerTurn } from "../engine/PhaseManager";
 import { activateAbility as activateEngineAbility, castCard, playLand, recycleEnergy } from "../engine/GameActions";
 import { lifeCostAmount } from "../engine/ActionCosts";
@@ -59,6 +60,7 @@ import {
   monsterSfx,
   notifyDiscardEffects,
   playDrawOneIfPlayerDrew,
+  playPlayerDrawSfx,
   resumeAfterDiscardPause,
   showActionToast,
   startBuffBeat,
@@ -903,6 +905,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         };
       }
       const next = endPlayerTurn(game);
+      useAudioStore.getState().playSfx("endTurn");
       playDrawOneIfPlayerDrew(game, next);
       return { game: next, handLimitDiscardActive: false, handLimitSelectionId: undefined, hostMillAnimationQueue: appendHostMillAnimations(state, game, next) };
     }),
@@ -921,7 +924,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         : undefined;
       const next = playLand(game, id);
       const playSucceeded = next.lastActionResult?.ok === true;
-      if (playSucceeded) useAudioStore.getState().playSfx("playLand");
+      if (playSucceeded) {
+        useAudioStore.getState().playSfx("play");
+        useAudioStore.getState().playSfx("playLand");
+      }
       else if (card) showActionToast(next.lastActionResult?.reason);
       if (playSucceeded) scheduleLandPlaySummoningSafetyClear();
       return {
@@ -976,7 +982,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (!active) return {};
       const next = recycleEnergy(state.game, active.card.instanceId);
       const succeeded = next.lastActionResult?.ok === true;
-      if (succeeded) useAudioStore.getState().playSfx("drawOne");
+      if (succeeded) playPlayerDrawSfx();
       else showActionToast(next.lastActionResult?.reason);
       return {
         game: next,
@@ -1027,7 +1033,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       revealDraw = phase === "consumed" && animation.phase !== "consumed" && animation.drawnCardIds.length > 0;
       return { bloodPactAnimation: { ...animation, phase } };
     });
-    if (revealDraw) useAudioStore.getState().playSfx("drawOne");
+    if (revealDraw) playPlayerDrawSfx();
   },
   completeBloodPactAnimation: (id) => {
     let afterCommit: (() => void) | undefined;
@@ -1045,7 +1051,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       bloodPactAfterCommit = undefined;
       return { bloodPactAnimation: undefined };
     });
-    if (revealDraw) useAudioStore.getState().playSfx("drawOne");
+    if (revealDraw) playPlayerDrawSfx();
     afterCommit?.();
   },
   completeLifePaymentAnimation: (id) => {
@@ -1092,6 +1098,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     poisonConsumeAnimationSafetyTimer = undefined;
     const previous = get().game;
     const next = endPlayerTurn(previous);
+    useAudioStore.getState().playSfx("endTurn");
     playDrawOneIfPlayerDrew(previous, next);
     let millAnimationQueued = false;
     set((state) => {
@@ -1322,8 +1329,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(({ game }) => {
       const wasAttacking = game.combat.playerAttackers.includes(id);
       const next = togglePlayerAttacker(game, id);
-      const changed = wasAttacking !== next.combat.playerAttackers.includes(id);
-      if (changed) useAudioStore.getState().playSfx("playLand");
+      const isAttacking = next.combat.playerAttackers.includes(id);
+      if (!wasAttacking && isAttacking) {
+        useAudioStore.getState().playSfx(AUDIO_FEATURE_FLAGS.selectAttacker ? "selectAttacker" : "playLand");
+      } else if (wasAttacking && !isAttacking) {
+        useAudioStore.getState().playSfx("playLand");
+      }
       return { game: next };
     }),
   attackAll: () =>
@@ -1699,7 +1710,13 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
     ? currentGame.player.field.find((card) => card.instanceId === event.blockerId)
     : undefined;
   if (blocker) playCardVoiceInteraction({ type: "BLOCKS", card: blocker });
-  if (event.blockerDies) useAudioStore.getState().playSfx("defend");
+  if (event.blockerId) {
+    if (event.blockerDies) {
+      useAudioStore.getState().playSfx(AUDIO_FEATURE_FLAGS.defendDie ? "defendDie" : "defend");
+    } else if (AUDIO_FEATURE_FLAGS.defendSurvive) {
+      useAudioStore.getState().playSfx("defendSurvive");
+    }
+  }
   useGameStore.setState({
     hostCombatVisualDamage: nextVisualDamage(event),
     hostAttackAnimation: {
@@ -2264,8 +2281,14 @@ function buildCastCardPatch(
       .map((buffedCard) => buffAnimationVariantForCard(buffedCard?.definitionId))
       .find((variant) => variant !== "default") ??
     "default";
+  if (castSucceeded) useAudioStore.getState().playSfx("play");
   if (sfx && castSucceeded) useAudioStore.getState().playSfx(sfx);
-  else if (card && !castSucceeded) showActionToast(next.lastActionResult?.reason);
+  else if (card && !castSucceeded) {
+    if (next.lastActionResult?.code === "NOT_ENOUGH_ENERGY") {
+      useAudioStore.getState().playSfx("noEnergyToPlayCard");
+    }
+    showActionToast(next.lastActionResult?.reason);
+  }
   if (castSucceeded && card) playInvokedVoiceInteraction(game, next, card.instanceId);
   if (lostLife && paidLife === 0 && !usesBloodPactAnimation) useAudioStore.getState().playSfx("defend");
   if (castSucceeded && !usesBloodPactAnimation) playDrawOneIfPlayerDrew(game, next);
@@ -2348,6 +2371,24 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
   const usesFinalBanquetAnimation = effectsUseAnimation(card.effects, "FINAL_BANQUET");
   const usesRootsTouchedSkyAnimation = card.definitionId === "the_judgment_of_elarion";
   const destroyTargetIds = isDestroySpell ? Object.values(targets).flatMap((target) => (Array.isArray(target) ? target : [target])).map(String) : [];
+  // Targeted casts may defer their rules commit until a visual impact. Validate against a clone
+  // now so an unaffordable card never starts that presentation, and anchor the generic play cue
+  // to confirmation instead of letting it arrive after a long animation.
+  const castPreview = castCard(game, handId, { targets });
+  if (castPreview.lastActionResult?.ok !== true) {
+    if (castPreview.lastActionResult?.code === "NOT_ENOUGH_ENERGY") {
+      useAudioStore.getState().playSfx("noEnergyToPlayCard");
+    }
+    showActionToast(castPreview.lastActionResult?.reason);
+    return {
+      game: castPreview,
+      spellTargeting: undefined,
+      selectedHandId: undefined,
+      hoveredCardId: undefined,
+      focusedCardId: undefined,
+    };
+  }
+  useAudioStore.getState().playSfx("play");
   const resolveSpell = (
     latest: GameState,
     presentation: {
@@ -2371,7 +2412,12 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
       : 0;
     const gainedLife = castSucceeded && next.player.life > latest.player.life;
     const playerTriggersQueued = castSucceeded && hasQueuedPlayerTriggers(next);
-    if (!castSucceeded) showActionToast(next.lastActionResult?.reason);
+    if (!castSucceeded) {
+      if (next.lastActionResult?.code === "NOT_ENOUGH_ENERGY") {
+        useAudioStore.getState().playSfx("noEnergyToPlayCard");
+      }
+      showActionToast(next.lastActionResult?.reason);
+    }
     if (castSucceeded) playInvokedVoiceInteraction(latest, next, card.instanceId);
     if (lostLife && paidLife === 0 && !presentation.suppressLifeLossPresentation) {
       useAudioStore.getState().playSfx("defend");
@@ -2684,6 +2730,7 @@ function playCardVoiceInteraction(event: CardVoiceEvent): void {
 
 function playCardVoiceCue(cue: CardVoiceCue): void {
   useAudioStore.getState().playSfx(cue.sfx);
+  for (const sfx of cue.additionalSfx ?? []) useAudioStore.getState().playSfx(sfx);
 }
 
 function nextVisualDamage(event: HostAttackEvent): Record<string, number> {
