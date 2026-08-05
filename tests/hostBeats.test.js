@@ -170,6 +170,84 @@ test("Vaelor's winning defense lands on the personal emerald fireball impact", a
   }
 });
 
+test("Vaelor attacks the Host panel with his personal emerald fireball", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { useAudioStore },
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    const game = createTestGame("vaelor-personal-attack-animation");
+    game.activeSide = "player";
+    game.phase = "combat";
+    game.setupTurnsRemaining = 0;
+    const vaelor = addCard(game, cardFromDeck("vaelor_emerald_guardian", "player"));
+    for (let index = 0; index < 3; index += 1) {
+      addCard(game, customCard(`host-archive-${index}`, "host", { zone: "archive" }));
+    }
+    game.combat.playerAttackers = [vaelor.instanceId];
+
+    useGameStore.setState({
+      game,
+      playerAttackAnimation: undefined,
+      burnAnimation: undefined,
+      hostMillAnimationQueue: [],
+      hostMillPreviewCards: [],
+    });
+
+    useGameStore.getState().finishPlayerCombat();
+    timers.releaseExpiredAt(0);
+    const started = useGameStore.getState();
+    assert.equal(started.playerAttackAnimation?.customAnimation?.preset, "emerald-fireball");
+    assert.equal(started.burnAnimation?.sourceId, vaelor.instanceId);
+    assert.equal(started.burnAnimation?.targetKind, "hostLife");
+    assert.equal(started.burnAnimation?.variant, "emerald");
+    assert.equal(started.burnAnimation?.scale, 1.5);
+
+    timers.releaseExpiredAt(637);
+    assert.deepEqual(useGameStore.getState().hostMillPreviewCards, []);
+    assert.equal(useGameStore.getState().game.host.archive.length, 3);
+
+    timers.releaseExpiredAt(638);
+    assert.equal(useGameStore.getState().hostMillPreviewCards.length, 1);
+    assert.equal(useGameStore.getState().game.host.archive.length, 3);
+
+    timers.releaseExpiredAt(1220);
+    assert.equal(useGameStore.getState().burnAnimation, undefined);
+
+    timers.releaseExpiredAt(1903);
+    const completed = useGameStore.getState();
+    assert.equal(completed.game.host.archive.length, 1);
+    assert.equal(completed.game.host.memory.length, 2);
+    assert.equal(completed.playerAttackAnimation, undefined);
+  } finally {
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
 test("a throttled Varka volley consumes its event before the beat finishes", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();

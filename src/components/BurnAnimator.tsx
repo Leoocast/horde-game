@@ -63,9 +63,11 @@ export function BurnAnimator() {
     const targetGeometries = targets.flatMap((target): BurnGeometry[] => {
       const targetElement = target.targetKind === "playerLife"
         ? document.querySelector<HTMLElement>('[data-player-life-panel="true"]')
-        : target.targetId
-          ? document.querySelector<HTMLElement>(`[data-card-slot-id="${target.targetId}"]`)
-          : undefined;
+        : target.targetKind === "hostLife"
+          ? document.querySelector<HTMLElement>('[data-host-life-emblem="true"]')
+          : target.targetId
+            ? document.querySelector<HTMLElement>(`[data-card-slot-id="${target.targetId}"]`)
+            : undefined;
       if (!targetElement) return [];
       const targetRect = targetElement.getBoundingClientRect();
       return [{

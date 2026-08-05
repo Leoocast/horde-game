@@ -11,7 +11,7 @@ import { CardTraitTooltipBadge } from "../src/components/Card";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
 import { PreviewStatsBadge, TraitPills } from "../src/components/CardPreview";
 import { cardLabelCamelCase } from "../src/i18n/cardLocalization";
-import { resolvePersonalCombatAnimation } from "../src/store/combatAnimation";
+import { resolvePersonalAttackAnimation, resolvePersonalCombatAnimation } from "../src/store/combatAnimation";
 import { addCard, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
 
 test("the Host Archive counter counts attack discards down without displaying zero", () => {
@@ -63,6 +63,28 @@ test("Vaelor uses his personal defense animation only when he wins and survives"
     defenderDies: true,
     damageToAttacker: 6,
   }), undefined);
+});
+
+test("Vaelor's direct Host attack resolves to the shared emerald fireball preset", () => {
+  const vaelor = cardFromDeck("vaelor_emerald_guardian", "player");
+
+  assert.deepEqual(resolvePersonalAttackAnimation(vaelor, 6), {
+    preset: "emerald-fireball",
+    sourceId: vaelor.instanceId,
+    targetKind: "hostLife",
+    suppressDefaultMotion: true,
+    castMs: 220,
+    impactMs: 638,
+    durationMs: 1220,
+    effect: {
+      type: "fireball",
+      variant: "emerald",
+      scale: 1.5,
+      amount: 6,
+      sourceMoves: false,
+    },
+  });
+  assert.equal(resolvePersonalAttackAnimation(customCard("ordinary-attacker", "player"), 1), undefined);
 });
 
 test("defense arrows disappear as soon as either combat endpoint leaves the field", () => {

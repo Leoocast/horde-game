@@ -149,11 +149,12 @@ Nerezh, Matriarca Sinsepulcro (`nerezh_graveless_matriarch`) preserves its print
 
 ## Personal combat animations
 
-`src/store/combatAnimation.ts` is the presentation registry for card-specific fights. A
-registration matches a stable card definition, its combat role, and an engine-resolved outcome;
-it returns a preset with source/target ids, impact and completion clocks, and the visual effect to
-play. `useGameStore` still refreshes and resolves the ordinary `HostAttackEvent`. Animators never
-choose a winner or change combat damage.
+`src/store/combatAnimation.ts` is the presentation registry for card-specific fights and direct
+Host attacks. A fight registration matches a stable card definition, its combat role, and an
+engine-resolved outcome. A direct-attack registration matches the card and its destination surface.
+Both return a preset with source/target data, impact and completion clocks, and the visual effect to
+play. `useGameStore` still refreshes and resolves the ordinary `HostAttackEvent` or player combat.
+Animators never choose a winner or change combat damage.
 
 The default Host lunge remains the fallback whenever no registration matches. A preset may
 replace the normal two-card exchange when its source needs a stationary DOM anchor. A targeted
@@ -165,11 +166,15 @@ Current registration:
 - Vaelor, Guardián Esmeralda (`vaelor_emerald_guardian`) uses `emerald-fireball` only as a defender
   when the attacker dies and Vaelor survives. A simultaneous lethal exchange is not a win and
   keeps the default combat animation.
+- When Vaelor attacks the Host directly, `resolvePersonalAttackAnimation` reuses the same preset,
+  keeps his card stationary, and targets the element marked with `data-host-life-emblem`. The first
+  Host mill preview starts at the 638ms projectile impact; later attackers wait for both the preset
+  clock and any longer mill sequence.
 - The preset reuses `BurnAnimator`'s canonical fireball clock and source-to-target geometry, with
   an emerald material, `scale: 1.5`, and `sourceMoves: false`. Combat damage is committed at the
   fireball's 638ms impact; the beat remains locked until the 1220ms completion.
-- Adding another bespoke fight means registering its role/outcome and adding or reusing a preset;
-  do not add card-name branches to `HostAttackAnimator` or resolve combat inside a VFX component.
+- Adding another bespoke fight or direct attack means registering its context and adding or reusing
+  a preset; do not add card-name branches to animator components or resolve combat inside VFX.
 
 ## Static activation
 

@@ -30,10 +30,20 @@ export type PersonalCombatAnimationPlan = {
   };
 };
 
+export type PersonalAttackAnimationPlan = Omit<PersonalCombatAnimationPlan, "targetId"> & {
+  targetKind: "hostLife";
+};
+
 type PersonalCombatAnimationRegistration = {
   definitionId: string;
   role: PersonalCombatRole;
   outcome: PersonalCombatOutcome;
+  preset: PersonalCombatAnimationPreset;
+};
+
+type PersonalAttackAnimationRegistration = {
+  definitionId: string;
+  targetKind: PersonalAttackAnimationPlan["targetKind"];
   preset: PersonalCombatAnimationPreset;
 };
 
@@ -51,6 +61,16 @@ const PERSONAL_COMBAT_ANIMATIONS: readonly PersonalCombatAnimationRegistration[]
     definitionId: "vaelor_emerald_guardian",
     role: "defender",
     outcome: "wins",
+    preset: "emerald-fireball",
+  },
+];
+
+// Direct attacks use the same preset catalog as card-vs-card fights. The registration decides
+// only the presentation and target surface; the engine remains responsible for Host damage.
+const PERSONAL_ATTACK_ANIMATIONS: readonly PersonalAttackAnimationRegistration[] = [
+  {
+    definitionId: "vaelor_emerald_guardian",
+    targetKind: "hostLife",
     preset: "emerald-fireball",
   },
 ];
@@ -124,6 +144,32 @@ export function resolvePersonalCombatAnimation(
   }
 
   return undefined;
+}
+
+/** Selects a card-specific presentation for an unblocked attack against the Host. */
+export function resolvePersonalAttackAnimation(
+  attacker: CardInstance,
+  amount: number,
+): PersonalAttackAnimationPlan | undefined {
+  const registration = PERSONAL_ATTACK_ANIMATIONS.find(
+    (candidate) => candidate.definitionId === attacker.definitionId,
+  );
+  if (!registration) return undefined;
+
+  const recipe = PERSONAL_COMBAT_ANIMATION_RECIPES[registration.preset];
+  return {
+    preset: registration.preset,
+    sourceId: attacker.instanceId,
+    targetKind: registration.targetKind,
+    suppressDefaultMotion: recipe.suppressDefaultMotion,
+    castMs: recipe.castMs,
+    impactMs: recipe.impactMs,
+    durationMs: recipe.durationMs,
+    effect: {
+      ...recipe.effect,
+      amount: Math.max(0, amount),
+    },
+  };
 }
 
 function combatOutcome(selfDies: boolean, opponentDies: boolean): PersonalCombatOutcome {

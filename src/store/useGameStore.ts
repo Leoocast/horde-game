@@ -79,7 +79,9 @@ import {
 } from "./buffAnimation";
 import { playerBuffSfxForAnimation } from "./playerAudioPolicy";
 import {
+  resolvePersonalAttackAnimation,
   resolvePersonalCombatAnimation,
+  type PersonalAttackAnimationPlan,
   type PersonalCombatAnimationPlan,
 } from "./combatAnimation";
 
@@ -304,6 +306,7 @@ type HostAttackAnimation = {
 type PlayerAttackAnimation = {
   attackerId: string;
   eventId: number;
+  customAnimation?: PersonalAttackAnimationPlan;
 };
 
 export type LifestealAttackAnimationState = {
@@ -400,7 +403,7 @@ export type BurnAnimationState = {
   id: string;
   sourceId?: string;
   targetId?: string;
-  targetKind?: "card" | "playerLife";
+  targetKind?: "card" | "playerLife" | "hostLife";
   targets?: BurnAnimationTarget[];
   amount: number;
   projectileCount?: number;
@@ -411,7 +414,7 @@ export type BurnAnimationState = {
 
 export type BurnAnimationTarget = {
   targetId?: string;
-  targetKind: "card" | "playerLife";
+  targetKind: "card" | "playerLife" | "hostLife";
 };
 
 export type BlockDragState = {
@@ -1392,6 +1395,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     const previewMillCards = previewPlayerCombatMillCards(game, attackers);
+    const personalAttackAnimations = new Map<string, PersonalAttackAnimationPlan>(
+      attackers.flatMap((attackerId) => {
+        const attacker = game.player.field.find((candidate) => candidate.instanceId === attackerId);
+        if (!attacker) return [];
+        const animation = resolvePersonalAttackAnimation(
+          attacker,
+          getPowerEndurance(game, attacker).power,
+        );
+        return animation ? [[attackerId, animation] as const] : [];
+      }),
+    );
     const attackVoiceCues = new Map(
       resolveCardVoiceCueBatch(
         attackers.flatMap((attackerId) => {
@@ -1409,14 +1423,48 @@ export const useGameStore = create<GameStore>((set, get) => ({
     let elapsed = 0;
     attackers.forEach((attackerId, index) => {
       const attackerMillCards = previewMillCards.filter((item) => item.attackerIndex === index);
+      const customAnimation = personalAttackAnimations.get(attackerId);
+      const impactOffset = customAnimation?.impactMs ?? PLAYER_ATTACK_MILL_START_MS;
+      const animationDuration = customAnimation?.durationMs ?? PLAYER_ATTACK_ANIMATION_MS;
+      const burnAnimationId = customAnimation
+        ? `personal-player-attack-${attackerId}-${index}`
+        : undefined;
       const startAt = elapsed;
       window.setTimeout(() => {
-        useAudioStore.getState().playSfx("attack");
+        if (!customAnimation) useAudioStore.getState().playSfx("attack");
         const voiceCue = attackVoiceCues.get(attackerId);
         if (voiceCue) playCardVoiceCue(voiceCue);
-        set({ playerAttackAnimation: { attackerId, eventId: index } });
+        set({
+          playerAttackAnimation: { attackerId, eventId: index, customAnimation },
+          burnAnimation: customAnimation?.effect.type === "fireball"
+            ? {
+                id: burnAnimationId!,
+                sourceId: customAnimation.sourceId,
+                targetKind: customAnimation.targetKind,
+                amount: customAnimation.effect.amount,
+                variant: customAnimation.effect.variant,
+                scale: customAnimation.effect.scale,
+                sourceMoves: customAnimation.effect.sourceMoves,
+              }
+            : undefined,
+        });
       }, startAt);
+      if (customAnimation?.effect.type === "fireball") {
+        window.setTimeout(() => {
+          const active = useGameStore.getState().playerAttackAnimation;
+          if (active?.attackerId !== attackerId || active.eventId !== index) return;
+          useAudioStore.getState().playSfx(pickRandomSfx(fireballCastSfx));
+        }, startAt + customAnimation.castMs);
+      }
       window.setTimeout(() => {
+        const active = useGameStore.getState().playerAttackAnimation;
+        if (
+          customAnimation?.effect.type === "fireball" &&
+          active?.attackerId === attackerId &&
+          active.eventId === index
+        ) {
+          useAudioStore.getState().playSfx(fireballHitSfx);
+        }
         useGameStore.setState((state) => {
           const afterLifesteal = resolvePlayerAttackerDrain(state.game, attackerId);
           const lifeGain = afterLifesteal.player.life - state.game.player.life;
@@ -1453,16 +1501,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
             poisonAttackAnimation: poisonAnimation ?? state.poisonAttackAnimation,
           };
         });
-      }, startAt + PLAYER_ATTACK_MILL_START_MS);
+      }, startAt + impactOffset);
       for (const preview of attackerMillCards) {
         window.setTimeout(() => {
           useGameStore.getState().queueHostMillPreview(preview.card);
-        }, startAt + PLAYER_ATTACK_MILL_START_MS + preview.cardIndexInHit * (HOST_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS));
+        }, startAt + impactOffset + preview.cardIndexInHit * (HOST_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS));
       }
-      elapsed +=
-        attackerMillCards.length > 0
-          ? PLAYER_ATTACK_MILL_START_MS + (attackerMillCards.length - 1) * (HOST_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS) + PLAYER_ATTACK_NEXT_AFTER_MILL_MS
-          : PLAYER_ATTACK_ANIMATION_MS;
+      if (burnAnimationId && customAnimation) {
+        window.setTimeout(() => {
+          useGameStore.setState((state) =>
+            state.burnAnimation?.id === burnAnimationId
+              ? { burnAnimation: undefined }
+              : {},
+          );
+        }, startAt + customAnimation.durationMs);
+      }
+      const millDuration = attackerMillCards.length > 0
+        ? impactOffset + (attackerMillCards.length - 1) * (HOST_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS) + PLAYER_ATTACK_NEXT_AFTER_MILL_MS
+        : 0;
+      elapsed += Math.max(animationDuration, millDuration);
     });
 
     window.setTimeout(() => {
@@ -1474,6 +1531,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         handLimitDiscardActive: false,
         handLimitSelectionId: undefined,
         playerAttackAnimation: undefined,
+        burnAnimation: undefined,
         selectedPlayerCreatureId: undefined,
         hostMillPreviewCards: [],
         hostMillAnimationQueue: previewMillCards.length > 0 ? state.hostMillAnimationQueue : appendHostMillAnimations(state, latest, next),
