@@ -11,7 +11,8 @@ import { CardTraitTooltipBadge } from "../src/components/Card";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
 import { PreviewStatsBadge, TraitPills } from "../src/components/CardPreview";
 import { cardLabelCamelCase } from "../src/i18n/cardLocalization";
-import { addCard, createTestGame, customCard } from "./engineTestUtils";
+import { resolvePersonalCombatAnimation } from "../src/store/combatAnimation";
+import { addCard, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
 
 test("the Host Archive counter counts attack discards down without displaying zero", () => {
   assert.equal(remainingArchiveDiscardPreview(7, 0), 7);
@@ -19,6 +20,49 @@ test("the Host Archive counter counts attack discards down without displaying ze
   assert.equal(remainingArchiveDiscardPreview(7, 6), 1);
   assert.equal(remainingArchiveDiscardPreview(7, 7), undefined);
   assert.equal(remainingArchiveDiscardPreview(0, 0), undefined);
+});
+
+test("Vaelor uses his personal defense animation only when he wins and survives", () => {
+  const vaelor = cardFromDeck("vaelor_emerald_guardian", "player");
+  const attacker = customCard("attacker", "host");
+  const winningAnimation = resolvePersonalCombatAnimation({
+    attacker,
+    defender: vaelor,
+    attackerDies: true,
+    defenderDies: false,
+    damageToAttacker: 6,
+  });
+
+  assert.deepEqual(winningAnimation, {
+    preset: "emerald-fireball",
+    sourceId: vaelor.instanceId,
+    targetId: attacker.instanceId,
+    suppressDefaultMotion: true,
+    castMs: 220,
+    impactMs: 638,
+    durationMs: 1220,
+    effect: {
+      type: "fireball",
+      variant: "emerald",
+      scale: 1.5,
+      amount: 6,
+      sourceMoves: false,
+    },
+  });
+  assert.equal(resolvePersonalCombatAnimation({
+    attacker,
+    defender: vaelor,
+    attackerDies: true,
+    defenderDies: true,
+    damageToAttacker: 6,
+  }), undefined);
+  assert.equal(resolvePersonalCombatAnimation({
+    attacker,
+    defender: vaelor,
+    attackerDies: false,
+    defenderDies: true,
+    damageToAttacker: 6,
+  }), undefined);
 });
 
 test("defense arrows disappear as soon as either combat endpoint leaves the field", () => {

@@ -7452,6 +7452,13 @@
     transform: translate(-50%, -50%);
   }
 
+  .burn-charge-visual {
+    position: absolute;
+    inset: 0;
+    transform: scale(var(--burn-vfx-scale, 1));
+    transform-origin: center;
+  }
+
   .burn-charge-glow {
     position: absolute;
     inset: 22px;
@@ -7545,6 +7552,13 @@
     will-change: transform, opacity;
     filter: drop-shadow(0 0 8px rgba(255, 237, 184, 0.52)) drop-shadow(0 0 20px rgba(203, 33, 1, 0.56));
     animation: burn-fireball-flight var(--burn-duration) ease-in both;
+  }
+
+  .burn-projectile-visual {
+    position: absolute;
+    inset: 0;
+    transform: scale(var(--burn-vfx-scale, 1));
+    transform-origin: center;
   }
 
   .burn-trail {
@@ -7678,6 +7692,16 @@
     height: 1px;
     z-index: 13;
     pointer-events: none;
+  }
+
+  .burn-impact-visual {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1px;
+    height: 1px;
+    transform: scale(var(--burn-vfx-scale, 1));
+    transform-origin: 0 0;
   }
 
   .burn-impact-core {
@@ -7943,6 +7967,32 @@
       0 0 30px #1f1226;
   }
 
+  /* Vaelor's personal combat preset reuses the canonical fireball clock and geometry while the
+     recipe supplies its emerald material and a larger visual scale. */
+  .burn-animation-layer-emerald {
+    --burn-flight-impact-filter:
+      drop-shadow(0 0 12px rgba(225, 255, 198, 0.78))
+      drop-shadow(0 0 34px rgba(24, 189, 78, 0.82));
+    --burn-impact-flash-filter: brightness(2.7) saturate(1.35);
+  }
+
+  .burn-animation-layer-emerald .burn-world {
+    filter: hue-rotate(90deg) saturate(1.5) brightness(1.05);
+  }
+
+  .burn-animation-layer-emerald .burn-screen-flash {
+    animation-name: burn-emerald-screen-flash;
+  }
+
+  .burn-animation-layer-emerald .burn-damage-number {
+    color: #edffd0;
+    -webkit-text-stroke-color: #123b14;
+    text-shadow:
+      0 4px 0 #061d08,
+      0 0 14px #c9ff69,
+      0 0 34px #20d85a;
+  }
+
   /* Burn shader on the target itself. The flash is keyed off the impact beat; the scorch
      lingers with the smoke until the end step wipes card.flags.burnSmoke. */
   .burn-card-scorch-flash {
@@ -8118,6 +8168,13 @@
     0%, 57.99% { opacity: 0; background: transparent; }
     58% { opacity: 1; background: radial-gradient(circle at var(--burn-end-x) var(--burn-end-y), rgba(255, 255, 255, 0.88), rgba(255, 128, 50, 0.2) 24%, transparent 48%); }
     59% { opacity: 0.22; }
+    62%, 100% { opacity: 0; }
+  }
+
+  @keyframes burn-emerald-screen-flash {
+    0%, 57.99% { opacity: 0; background: transparent; }
+    58% { opacity: 1; background: radial-gradient(circle at var(--burn-end-x) var(--burn-end-y), rgba(242, 255, 222, 0.94), rgba(42, 224, 91, 0.27) 25%, transparent 50%); }
+    59% { opacity: 0.24; }
     62%, 100% { opacity: 0; }
   }
 

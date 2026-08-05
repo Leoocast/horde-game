@@ -182,7 +182,9 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
   const buffAnimationCardIds = useGameStore((state) => state.buffAnimationCardIds);
   const buffAnimationEventId = useGameStore((state) => state.buffAnimationEventId);
   const buffAnimationVariant = useGameStore((state) => state.buffAnimationVariant);
-  const burnSourceCardId = useGameStore((state) => state.burnAnimation?.sourceId);
+  const burnSourceCardId = useGameStore((state) =>
+    state.burnAnimation?.sourceMoves === false ? undefined : state.burnAnimation?.sourceId,
+  );
   const burnImpactCardId = useGameStore((state) => state.burnImpactCardId);
   const burnImpactCardIds = useGameStore((state) => state.burnImpactCardIds);
   const burnImpactEventId = useGameStore((state) => state.burnImpactEventId);

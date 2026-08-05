@@ -78,6 +78,10 @@ import {
   type BuffAnimationVariant,
 } from "./buffAnimation";
 import { playerBuffSfxForAnimation } from "./playerAudioPolicy";
+import {
+  resolvePersonalCombatAnimation,
+  type PersonalCombatAnimationPlan,
+} from "./combatAnimation";
 
 export type GameStore = {
   game: GameState;
@@ -294,6 +298,7 @@ type HostAttackAnimation = {
   attackerDamageMarked?: number;
   blockerDamageMarked?: number;
   eventId: number;
+  customAnimation?: PersonalCombatAnimationPlan;
 };
 
 type PlayerAttackAnimation = {
@@ -399,7 +404,9 @@ export type BurnAnimationState = {
   targets?: BurnAnimationTarget[];
   amount: number;
   projectileCount?: number;
-  variant?: "fire" | "oil";
+  variant?: "fire" | "oil" | "emerald";
+  scale?: number;
+  sourceMoves?: boolean;
 };
 
 export type BurnAnimationTarget = {
@@ -1700,13 +1707,32 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
     return;
   }
   useAudioStore.getState().playSfx("attack");
+  const attacker = currentGame.host.field.find((card) => card.instanceId === event.attackerId);
   const blocker = event.blockerId
     ? currentGame.player.field.find((card) => card.instanceId === event.blockerId)
     : undefined;
+  const customAnimation = attacker && blocker
+    ? resolvePersonalCombatAnimation({
+        attacker,
+        defender: blocker,
+        attackerDies: event.attackerDies,
+        defenderDies: event.blockerDies,
+        damageToAttacker: event.attackerDamageMarked === undefined
+          ? 0
+          : event.attackerDamageMarked - attacker.damageMarked,
+        damageToDefender: event.blockerDamageMarked === undefined
+          ? 0
+          : event.blockerDamageMarked - blocker.damageMarked,
+      })
+    : undefined;
+  const impactMs = customAnimation?.impactMs ?? HOST_ATTACK_ANIMATION_MS - 35;
+  const durationMs = customAnimation?.durationMs ?? HOST_ATTACK_ANIMATION_MS;
   if (blocker) playCardVoiceInteraction({ type: "BLOCKS", card: blocker });
   if (event.blockerDies) useAudioStore.getState().playSfx("defend");
   useGameStore.setState({
-    hostCombatVisualDamage: nextVisualDamage(event),
+    hostCombatVisualDamage: customAnimation
+      ? useGameStore.getState().hostCombatVisualDamage
+      : nextVisualDamage(event),
     hostAttackAnimation: {
       attackerId: event.attackerId,
       attackerDies: event.attackerDies,
@@ -1716,11 +1742,34 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
       attackerDamageMarked: event.attackerDamageMarked,
       blockerDamageMarked: event.blockerDamageMarked,
       eventId: index,
+      customAnimation,
     },
+    burnAnimation: customAnimation?.effect.type === "fireball"
+      ? {
+          id: `personal-combat-${sequenceId}-${index}`,
+          sourceId: customAnimation.sourceId,
+          targetId: customAnimation.targetId,
+          targetKind: "card",
+          amount: customAnimation.effect.amount,
+          variant: customAnimation.effect.variant,
+          scale: customAnimation.effect.scale,
+          sourceMoves: customAnimation.effect.sourceMoves,
+        }
+      : undefined,
   });
+
+  if (customAnimation?.effect.type === "fireball") {
+    window.setTimeout(() => {
+      if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
+      useAudioStore.getState().playSfx(pickRandomSfx(fireballCastSfx));
+    }, customAnimation.castMs);
+  }
 
   window.setTimeout(() => {
     if (sequenceId !== hostCombatSequenceId) return;
+    if (customAnimation?.effect.type === "fireball") {
+      useAudioStore.getState().playSfx(fireballHitSfx);
+    }
     let gameEnded = false;
     useGameStore.setState((state) => {
       const previous = state.game;
@@ -1735,22 +1784,28 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
       if (gameEnded) return { ...createCleanUiState(), game: next };
       return {
         game: next,
+        hostCombatVisualDamage: nextVisualDamage(event),
         hostCombatDeadCardIds: nextDeadCardIds(event),
         ...(gainedLife ? startLifeBuffBeat() : {}),
       };
     });
     if (gameEnded) useGameStore.getState().stopGamePresentation();
-  }, HOST_ATTACK_ANIMATION_MS - 35);
+  }, impactMs);
 
   window.setTimeout(() => {
     if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
-    useGameStore.setState({ hostAttackAnimation: undefined });
+    useGameStore.setState({
+      hostAttackAnimation: undefined,
+      burnAnimation: undefined,
+      burnImpactCardId: undefined,
+      burnImpactCardIds: [],
+    });
     scheduleQueuedCombatReactions(() => {
       if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
       useGameStore.setState({ hostCombatDeadCardIds: [] });
       runHostCombatEventSequence(events, index + 1, sequenceId);
     });
-  }, HOST_ATTACK_ANIMATION_MS);
+  }, durationMs);
 }
 
 function scheduleQueuedCombatReactions(onComplete: () => void): void {

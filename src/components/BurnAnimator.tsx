@@ -98,6 +98,7 @@ export function BurnAnimator() {
     let lastSpawn = 0;
     let embersSpawned = false;
     const start = performance.now();
+    const visualScale = Math.max(0.5, Math.min(3, burn.scale ?? 1));
 
     // Sparks fly opposite the ball's heading (backward along the travel vector), with a little
     // lateral spread — so they always stream off the tail, whatever the shot angle.
@@ -113,7 +114,7 @@ export function BurnAnimator() {
       const rect = fireballBody.getBoundingClientRect();
       const particle = document.createElement("i");
       particle.className = "burn-trace-particle";
-      const size = 2 + Math.random() * 4;
+      const size = (2 + Math.random() * 4) * visualScale;
       const life = 260 + Math.random() * 480;
       // Anchor sparks to the visible fireball body instead of biasing them toward the right side
       // of the wider projectile/trail box. This stays centered at every flight angle.
@@ -123,8 +124,8 @@ export function BurnAnimator() {
       particle.style.top = `${y}px`;
       particle.style.setProperty("--size", `${size}px`);
       particle.style.setProperty("--life", `${life}ms`);
-      const mag = 24 + Math.random() * 68;
-      const spread = (Math.random() - 0.5) * 42;
+      const mag = (24 + Math.random() * 68) * visualScale;
+      const spread = (Math.random() - 0.5) * 42 * visualScale;
       particle.style.setProperty("--dx", `${backX * mag + perpX * spread}px`);
       particle.style.setProperty("--dy", `${backY * mag + perpY * spread}px`);
       trace.appendChild(particle);
@@ -132,11 +133,11 @@ export function BurnAnimator() {
     };
 
     const spawnEmber = () => {
-      const size = 2.5 + Math.random() * 6;
+      const size = (2.5 + Math.random() * 6) * visualScale;
       const life = 420 + Math.random() * 560;
       const angle = Math.random() * Math.PI * 2;
       // Wide spread so plenty of embers clear the impact core and read against the dark board.
-      const dist = 40 + Math.random() * 220;
+      const dist = (40 + Math.random() * 220) * visualScale;
       const particle = document.createElement("i");
       particle.className = "burn-trace-particle";
       particle.style.left = `${traceGeometry.endX}px`;
@@ -183,6 +184,7 @@ export function BurnAnimator() {
   const style = {
     "--burn-start-x": `${firstGeometry.startX}px`,
     "--burn-start-y": `${firstGeometry.startY}px`,
+    "--burn-vfx-scale": `${Math.max(0.5, Math.min(3, burn.scale ?? 1))}`,
   } as CSSProperties;
   const projectileStyle = (geometry: BurnGeometry, delay: number): CSSProperties => {
     const dx = geometry.endX - geometry.startX;
@@ -211,23 +213,29 @@ export function BurnAnimator() {
   return createPortal(
     <div
       key={burn.id}
-      className={`burn-animation-layer${burn.variant === "oil" ? " burn-animation-layer-oil" : ""}`}
+      className={[
+        "burn-animation-layer",
+        burn.variant === "oil" ? "burn-animation-layer-oil" : "",
+        burn.variant === "emerald" ? "burn-animation-layer-emerald" : "",
+      ].filter(Boolean).join(" ")}
       style={style}
       aria-hidden="true"
     >
       <div className="burn-world">
         {/* Charge build-up at the source card. */}
         <div className="burn-charge">
-          <span className="burn-charge-glow" />
-          <span className="burn-charge-distortion" />
-          <span className="burn-charge-arc" />
-          {CHARGE_PARTICLES.map((particle, index) => (
-            <i
-              key={index}
-              className="burn-charge-particle"
-              style={{ "--a": `${particle.a}deg`, "--r": `${particle.r}px`, "--s": `${particle.s}px` } as CSSProperties}
-            />
-          ))}
+          <div className="burn-charge-visual">
+            <span className="burn-charge-glow" />
+            <span className="burn-charge-distortion" />
+            <span className="burn-charge-arc" />
+            {CHARGE_PARTICLES.map((particle, index) => (
+              <i
+                key={index}
+                className="burn-charge-particle"
+                style={{ "--a": `${particle.a}deg`, "--r": `${particle.r}px`, "--s": `${particle.s}px` } as CSSProperties}
+              />
+            ))}
+          </div>
         </div>
 
         <div ref={traceRef} className="burn-trace-layer" />
@@ -242,27 +250,29 @@ export function BurnAnimator() {
             className="burn-fireball"
             style={projectileStyle(geometry, projectileDelay)}
           >
-            <div className="burn-trail">
-              {TRAIL_RIBBONS.map((t, index) => (
-                <i
-                  key={index}
-                  className="burn-trail-ribbon"
-                  style={{ "--w": `${t.w}px`, "--h": `${t.h}px`, "--y": `${t.y}px`, "--r": `${t.r}deg`, "--blur": `${t.blur}px`, "--o": `${t.o}`, animationDelay: `${projectileDelay}ms` } as CSSProperties}
-                />
-              ))}
-              {TRAIL_STREAKS.map((t, index) => (
-                <i
-                  key={index}
-                  className="burn-trail-streak"
-                  style={{ "--w": `${t.w}px`, "--h": `${t.h}px`, "--y": `${t.y}px`, "--r": `${t.r}deg`, "--blur": `${t.blur}px`, "--o": `${t.o}`, animationDelay: `${projectileDelay}ms` } as CSSProperties}
-                />
-              ))}
-            </div>
-            <div ref={projectileIndex === geometries.length - 1 ? fireballBodyRef : undefined} className="burn-fireball-body">
-              <div className="burn-ball-outer" />
-              <div className="burn-ball-mid" />
-              <div className="burn-ball-core" />
-              <div className="burn-ball-hotspot" />
+            <div className="burn-projectile-visual">
+              <div className="burn-trail">
+                {TRAIL_RIBBONS.map((t, index) => (
+                  <i
+                    key={index}
+                    className="burn-trail-ribbon"
+                    style={{ "--w": `${t.w}px`, "--h": `${t.h}px`, "--y": `${t.y}px`, "--r": `${t.r}deg`, "--blur": `${t.blur}px`, "--o": `${t.o}`, animationDelay: `${projectileDelay}ms` } as CSSProperties}
+                  />
+                ))}
+                {TRAIL_STREAKS.map((t, index) => (
+                  <i
+                    key={index}
+                    className="burn-trail-streak"
+                    style={{ "--w": `${t.w}px`, "--h": `${t.h}px`, "--y": `${t.y}px`, "--r": `${t.r}deg`, "--blur": `${t.blur}px`, "--o": `${t.o}`, animationDelay: `${projectileDelay}ms` } as CSSProperties}
+                  />
+                ))}
+              </div>
+              <div ref={projectileIndex === geometries.length - 1 ? fireballBodyRef : undefined} className="burn-fireball-body">
+                <div className="burn-ball-outer" />
+                <div className="burn-ball-mid" />
+                <div className="burn-ball-core" />
+                <div className="burn-ball-hotspot" />
+              </div>
             </div>
           </div>
           );
@@ -270,26 +280,28 @@ export function BurnAnimator() {
 
         {impacts.map(({ geometry, delay }, impactIndex) => (
           <div key={impactIndex} className="burn-impact" style={impactStyle(geometry)}>
-            <div className="burn-void-disc" style={{ animationDelay: `${delay}ms` }} />
-            <div className="burn-impact-core" style={{ animationDelay: `${delay}ms` }} />
-            <div className="burn-shock-ring one" style={{ "--size": "112px", "--border-size": "7px", "--ring-blur": "1px", animationDelay: `${delay}ms` } as CSSProperties} />
-            <div className="burn-shock-ring two" style={{ "--size": "92px", "--border-size": "3px", "--ring-blur": "2px", animationDelay: `${delay}ms` } as CSSProperties} />
-            {IMPACT_SMOKE.map((puff, index) => (
-              <i
-                key={index}
-                className="burn-impact-smoke"
-                style={{
-                  "--x": `${puff.x}px`,
-                  "--y": `${puff.y}px`,
-                  "--s": `${puff.s}`,
-                  "--drift": `${puff.drift}px`,
-                  "--s2": `${puff.s2}`,
-                  "--s3": `${puff.s3}`,
-                  "--drift2": `${puff.drift2}px`,
-                  animationDelay: `${delay}ms`,
-                } as CSSProperties}
-              />
-            ))}
+            <div className="burn-impact-visual">
+              <div className="burn-void-disc" style={{ animationDelay: `${delay}ms` }} />
+              <div className="burn-impact-core" style={{ animationDelay: `${delay}ms` }} />
+              <div className="burn-shock-ring one" style={{ "--size": "112px", "--border-size": "7px", "--ring-blur": "1px", animationDelay: `${delay}ms` } as CSSProperties} />
+              <div className="burn-shock-ring two" style={{ "--size": "92px", "--border-size": "3px", "--ring-blur": "2px", animationDelay: `${delay}ms` } as CSSProperties} />
+              {IMPACT_SMOKE.map((puff, index) => (
+                <i
+                  key={index}
+                  className="burn-impact-smoke"
+                  style={{
+                    "--x": `${puff.x}px`,
+                    "--y": `${puff.y}px`,
+                    "--s": `${puff.s}`,
+                    "--drift": `${puff.drift}px`,
+                    "--s2": `${puff.s2}`,
+                    "--s3": `${puff.s3}`,
+                    "--drift2": `${puff.drift2}px`,
+                    animationDelay: `${delay}ms`,
+                  } as CSSProperties}
+                />
+              ))}
+            </div>
           </div>
         ))}
       </div>

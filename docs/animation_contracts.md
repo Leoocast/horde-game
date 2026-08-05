@@ -147,6 +147,30 @@ Nerezh, Matriarca Sinsepulcro (`nerezh_graveless_matriarch`) preserves its print
 - Each Zombie death remains a separate trigger and projectile. The follow-up does not repeat the
   Captain's activation pulse.
 
+## Personal combat animations
+
+`src/store/combatAnimation.ts` is the presentation registry for card-specific fights. A
+registration matches a stable card definition, its combat role, and an engine-resolved outcome;
+it returns a preset with source/target ids, impact and completion clocks, and the visual effect to
+play. `useGameStore` still refreshes and resolves the ordinary `HostAttackEvent`. Animators never
+choose a winner or change combat damage.
+
+The default Host lunge remains the fallback whenever no registration matches. A preset may
+replace the normal two-card exchange when its source needs a stationary DOM anchor. A targeted
+Host attacker may still complete its incoming lunge, but it returns to its stored target geometry
+before the projectile lands and never performs its early lethal fade.
+
+Current registration:
+
+- Vaelor, Guardián Esmeralda (`vaelor_emerald_guardian`) uses `emerald-fireball` only as a defender
+  when the attacker dies and Vaelor survives. A simultaneous lethal exchange is not a win and
+  keeps the default combat animation.
+- The preset reuses `BurnAnimator`'s canonical fireball clock and source-to-target geometry, with
+  an emerald material, `scale: 1.5`, and `sourceMoves: false`. Combat damage is committed at the
+  fireball's 638ms impact; the beat remains locked until the 1220ms completion.
+- Adding another bespoke fight means registering its role/outcome and adding or reusing a preset;
+  do not add card-name branches to `HostAttackAnimator` or resolve combat inside a VFX component.
+
 ## Static activation
 
 Static abilities apply continuously, so without a beat the player only ever sees numbers that already changed and has to hunt for the card responsible.

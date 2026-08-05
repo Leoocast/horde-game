@@ -231,6 +231,9 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
 - Una Reacción manual de Invocación con target es obligatoria; no depende del id de Aelyra.
 - El ataque del Cronista y la defensa contra la Hueste usan overlays y estados explícitos. No
   resolver reglas de combate dentro de animadores.
+- Las presentaciones personales de pelea se registran en `src/store/combatAnimation.ts` por
+  identidad estable, rol y resultado ya resuelto. El preset de Vaelor reemplaza el movimiento por
+  una bola de fuego esmeralda a escala 1.5 sólo cuando defiende, mata al atacante y sobrevive.
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado
   aunque los impactos visuales se escalonen.
 

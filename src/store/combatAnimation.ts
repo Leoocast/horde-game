@@ -1,0 +1,134 @@
+import type { CardInstance } from "../engine/GameTypes";
+
+export type PersonalCombatAnimationPreset = "emerald-fireball";
+export type PersonalCombatRole = "attacker" | "defender";
+export type PersonalCombatOutcome = "wins" | "loses" | "draws" | "survives";
+
+export type PersonalCombatAnimationContext = {
+  attacker: CardInstance;
+  defender?: CardInstance;
+  attackerDies: boolean;
+  defenderDies: boolean;
+  damageToAttacker?: number;
+  damageToDefender?: number;
+};
+
+export type PersonalCombatAnimationPlan = {
+  preset: PersonalCombatAnimationPreset;
+  sourceId: string;
+  targetId: string;
+  suppressDefaultMotion: boolean;
+  castMs: number;
+  impactMs: number;
+  durationMs: number;
+  effect: {
+    type: "fireball";
+    variant: "emerald";
+    scale: number;
+    amount: number;
+    sourceMoves: boolean;
+  };
+};
+
+type PersonalCombatAnimationRegistration = {
+  definitionId: string;
+  role: PersonalCombatRole;
+  outcome: PersonalCombatOutcome;
+  preset: PersonalCombatAnimationPreset;
+};
+
+type PersonalCombatAnimationRecipe = Omit<
+  PersonalCombatAnimationPlan,
+  "preset" | "sourceId" | "targetId" | "effect"
+> & {
+  effect: Omit<PersonalCombatAnimationPlan["effect"], "amount">;
+};
+
+// Presentation-only registrations. Rules and combat outcomes remain fully owned by the engine;
+// this table only chooses how an already-decided fight should look.
+const PERSONAL_COMBAT_ANIMATIONS: readonly PersonalCombatAnimationRegistration[] = [
+  {
+    definitionId: "vaelor_emerald_guardian",
+    role: "defender",
+    outcome: "wins",
+    preset: "emerald-fireball",
+  },
+];
+
+const PERSONAL_COMBAT_ANIMATION_RECIPES: Record<
+  PersonalCombatAnimationPreset,
+  PersonalCombatAnimationRecipe
+> = {
+  "emerald-fireball": {
+    suppressDefaultMotion: true,
+    castMs: 220,
+    impactMs: 638,
+    durationMs: 1220,
+    effect: {
+      type: "fireball",
+      variant: "emerald",
+      scale: 1.5,
+      sourceMoves: false,
+    },
+  },
+};
+
+/** Selects a card-specific presentation after combat has already been resolved. The first
+ * matching registration wins, so future presets can be added without branching in the combat
+ * sequencer or an animator component. */
+export function resolvePersonalCombatAnimation(
+  context: PersonalCombatAnimationContext,
+): PersonalCombatAnimationPlan | undefined {
+  const participants = [
+    {
+      role: "attacker" as const,
+      card: context.attacker,
+      target: context.defender,
+      selfDies: context.attackerDies,
+      opponentDies: context.defenderDies,
+      damageToOpponent: context.damageToDefender ?? 0,
+    },
+    {
+      role: "defender" as const,
+      card: context.defender,
+      target: context.attacker,
+      selfDies: context.defenderDies,
+      opponentDies: context.attackerDies,
+      damageToOpponent: context.damageToAttacker ?? 0,
+    },
+  ];
+
+  for (const participant of participants) {
+    if (!participant.card || !participant.target) continue;
+    const outcome = combatOutcome(participant.selfDies, participant.opponentDies);
+    const registration = PERSONAL_COMBAT_ANIMATIONS.find((candidate) =>
+      candidate.definitionId === participant.card?.definitionId &&
+      candidate.role === participant.role &&
+      candidate.outcome === outcome,
+    );
+    if (!registration) continue;
+    const recipe = PERSONAL_COMBAT_ANIMATION_RECIPES[registration.preset];
+    return {
+      preset: registration.preset,
+      sourceId: participant.card.instanceId,
+      targetId: participant.target.instanceId,
+      suppressDefaultMotion: recipe.suppressDefaultMotion,
+      castMs: recipe.castMs,
+      impactMs: recipe.impactMs,
+      durationMs: recipe.durationMs,
+      effect: {
+        ...recipe.effect,
+        amount: Math.max(0, participant.damageToOpponent),
+      },
+    };
+  }
+
+  return undefined;
+}
+
+function combatOutcome(selfDies: boolean, opponentDies: boolean): PersonalCombatOutcome {
+  if (selfDies && opponentDies) return "draws";
+  if (!selfDies && opponentDies) return "wins";
+  if (selfDies) return "loses";
+  return "survives";
+}
