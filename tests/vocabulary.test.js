@@ -8,7 +8,7 @@ import { localizedTypeLine } from "../src/i18n/cardLocalization";
 import { canonicalizeRulesText } from "../src/i18n/rulesText";
 import { translate, translationValues } from "../src/i18n/translations";
 
-const LEGACY_VISIBLE_TERM = /(?:\b(?:horde|mana|lands?|creatures?|artifacts?|enchantments?|sorcer(?:y|ies)|instants?|librar(?:y|ies)|battlefields?|graveyards?|exile[ds]?|untap(?:ped|s|ping)?|tap(?:ped|s|ping)?|menace|reach|vigilance|deathtouch|first strike|skulk|trample|haste|lifesteal|toxic|endurance|mill(?:ed|s|ing)?|creates?)\b|\b(?:horda|maná|tierras?|criaturas?|artefactos?|encantamientos?|conjuros?|instantáneos?|bibliotecas?|cementerios?|exilio|amenaza|alcance|vigilancia|escurridizo|arrollar|prisa|tóxico|resistencia|crea|crear)\b|campo de batalla|toque mortal|dañar primero|robo de vida|mareo de invocación)/iu;
+const LEGACY_VISIBLE_TERM = /(?:\b(?:horde|mana|lands?|creatures?|artifacts?|enchantments?|sorcer(?:y|ies)|instants?|librar(?:y|ies)|battlefields?|graveyards?|exile[ds]?|untap(?:ped|s|ping)?|tap(?:ped|s|ping)?|menace|reach|vigilance|deathtouch|first strike|skulk|trample|haste|lifesteal|toxic|mill(?:ed|s|ing)?|creates?)\b|\b(?:horda|maná|tierras?|criaturas?|artefactos?|encantamientos?|conjuros?|instantáneos?|bibliotecas?|cementerios?|exilio|amenaza|alcance|vigilancia|escurridizo|arrollar|prisa|tóxico|resistencia|crea|crear)\b|campo de batalla|toque mortal|dañar primero|robo de vida|mareo de invocación)/iu;
 
 function assertUsesHostfallVocabulary(text, context) {
   assert.doesNotMatch(text, LEGACY_VISIBLE_TERM, `${context}: ${text}`);

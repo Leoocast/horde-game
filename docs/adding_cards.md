@@ -408,6 +408,9 @@ también es la única fuente de flavor y de su visibilidad impresa. `studio.conf
 únicamente datos de presentación como `artCrop` y `typeLineEs`. No copiar `gameText`, `flavorText`
 ni `showFlavorText` dentro de la configuración del estudio.
 
+Cuando un Eco entra con contadores `+1/+1`, Card Studio suma esos contadores a sus estadísticas
+base para imprimir las estadísticas con las que realmente entra al Campo.
+
 Card Studio deriva del mismo `artCrop` la URL de arte que usan los Ecos recortados del campo. Los
 ajustes opcionales de zoom y traslación para esa vista se guardan en
 `dev/tools/Decks/<deck>/game-art.config.json` y se proyectan a

@@ -1032,15 +1032,22 @@ test("El Alzamiento de los Sinsepulcro studio cards use Hostfall vocabulary and 
         `Zombie studio has a stale cost for ${runtimeCard.id}`,
       );
     }
+    const initialPlusOneCounters = (runtimeCard.entersWithCounters ?? [])
+      .filter((entry) => entry.counterType === "+1/+1")
+      .reduce((total, entry) => total + entry.amount, 0);
     assert.equal(
       studioCard.atk ?? null,
-      runtimeCard.power ?? null,
-      `Zombie studio has stale power for ${runtimeCard.id}`,
+      runtimeCard.power === null || runtimeCard.power === undefined
+        ? null
+        : runtimeCard.power + initialPlusOneCounters,
+      `Zombie studio has stale printed power for ${runtimeCard.id}`,
     );
     assert.equal(
       studioCard.def ?? null,
-      runtimeCard.endurance ?? null,
-      `Zombie studio has stale endurance for ${runtimeCard.id}`,
+      runtimeCard.endurance === null || runtimeCard.endurance === undefined
+        ? null
+        : runtimeCard.endurance + initialPlusOneCounters,
+      `Zombie studio has stale printed endurance for ${runtimeCard.id}`,
     );
 
     if (runtimeCard.kinds.includes("TOKEN")) {

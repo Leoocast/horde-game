@@ -346,6 +346,7 @@ test("Zombies keep Hostfall card kinds and traits through authored normalization
   );
 
   const rawById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card]));
+  const rulesById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card.gameText.es]));
   assert.deepEqual(rawById.graveless_soldier.kinds, ["ECHO", "TOKEN"]);
   assert.deepEqual(rawById.graveless_soldier.energyCost, { amount: 2 });
   assert.deepEqual(rawById.the_broken_headstone.kinds, ["SUPPORT"]);
@@ -357,6 +358,28 @@ test("Zombies keep Hostfall card kinds and traits through authored normalization
   assert.equal(rawById.nerezh_graveless_matriarch.power, 3);
   assert.equal(rawById.nerezh_graveless_matriarch.endurance, 3);
   assert.equal(rawById.nerezh_graveless_matriarch.abilities[1].trigger.event, "ECHO_DIED");
+  assert.deepEqual(rawById.harvester_of_the_fallen.abilities[0].conditions[0].filter, {
+    subtypes: ["Zombie"],
+  });
+  assert.deepEqual(rulesById, {
+    graveless_soldier: "Sin efecto adicional.",
+    graveless_titan: "Sin efecto adicional.",
+    the_broken_headstone: "Los Zombis aliados ganan Imponente.",
+    inexhaustible_ossuary: "Cada vez que se juegue una carta que no sea Ficha: quita un contador +1/+1 de este Eco. Si se quitó un contador de esta manera, Invoca un Eco Ficha Zombi 2/2.",
+    devourer_of_the_last_memory: "Cuando este Eco muera: el Cronista descarta una carta.",
+    memory_thief: "Al ser invocado: el Cronista descarta una carta.",
+    tribute_of_the_four_sorrows: "La Hueste sacrifica uno de sus Ecos con la menor suma de Fuerza y Aguante. El Cronista pierde 1 de Vida, descarta una carta y sacrifica un Eco y una Fuente.",
+    winged_stalker_of_the_crypt: "Sin efecto adicional.",
+    stitched_wing_spawn: "Sin efecto adicional.",
+    ossuary_rider: "Sin efecto adicional.",
+    return_to_memory: "Al ser invocado o al morir: la Hueste descarta las 2 primeras cartas de su Archivo a su Memoria.",
+    barrow_wallbreaker: "Sin efecto adicional.",
+    hound_of_seven_memories: "Mientras la Hueste tenga 7 o más cartas en su Memoria: este Eco gana +1/+1 e Imponente.",
+    mastiff_of_the_overflowing_ossuary: "Mientras la Hueste tenga 7 o más cartas en su Memoria: este Eco gana Imponente.",
+    spore_infested: "Sin efecto adicional.",
+    harvester_of_the_fallen: "Cada vez que otro Zombi aliado muera: pon un contador +1/+1 sobre esta carta.",
+    nerezh_graveless_matriarch: "Los demás Zombis aliados ganan +1/+1.\nCada vez que otro Zombi aliado muera: el Cronista pierde 1 de Vida.",
+  });
   assert.equal(entry.raw.rulesProfile.damagePerArchiveDiscard, 3);
   assert.equal(entry.raw.rulesProfile.poisonPerArchiveDiscard, 3);
   assert.equal(entry.raw.rulesProfile.hostEchosHaveImpetus, true);
@@ -383,6 +406,9 @@ test("Zombies keep Hostfall card kinds and traits through authored normalization
   assert.equal(byId.nerezh_graveless_matriarch.endurance, 3);
   assert.equal(byId.nerezh_graveless_matriarch.abilities[1].trigger.event, "ECHO_DIED");
   assert.equal(byId.nerezh_graveless_matriarch.abilities[1].conditions[0].type, "ANOTHER_ALLIED_ECHO_DIED");
+  assert.deepEqual(byId.harvester_of_the_fallen.abilities[0].conditions[0].filter, {
+    subtypes: ["Zombie"],
+  });
 });
 
 test("Goblins keep Hostfall card kinds, modifiers and traits through authored normalization", () => {

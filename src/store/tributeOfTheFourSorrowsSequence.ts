@@ -1,5 +1,5 @@
 import type { CardInstance, GameState } from "../engine/GameTypes";
-import { destroyPermanent, discardHostArchiveToMemory, losePlayerLife } from "../engine/EffectResolver";
+import { destroyPermanent, losePlayerLife } from "../engine/EffectResolver";
 import { weakestCreature } from "../engine/Targeting";
 import { useAudioStore } from "./useAudioStore";
 import { useToastStore } from "./useToastStore";
@@ -10,7 +10,7 @@ import { hasQueuedPlayerTriggers, scheduleQueuedPlayerTriggers } from "./playerB
 
 // Tribute of the Four Sorrows: revealed by the Host but parked unresolved by HostController (see `pendingCard`)
 // because it needs a bespoke, multi-step, player-interactive resolution — first the Host afflicts
-// itself (mill 1, sacrifice its weakest creature), then it turns on the player (lose 1 life, choose
+// itself (sacrifice its weakest creature), then it turns on the player (lose 1 life, choose
 // a card to discard, choose a creature to sacrifice, choose a land to sacrifice). Everything here is
 // sequential and blocks the board via `hostAutoTriggerCount`, same as other Host reactions.
 export function runTributeOfTheFourSorrowsSequence(card: CardInstance): void {
@@ -25,39 +25,30 @@ export function runTributeOfTheFourSorrowsSequence(card: CardInstance): void {
   useToastStore.getState().pushToast({ title: uiText("toast.hostEffect"), message: uiText("toast.afflictsHost", { card: uiCardName(card) }), tone: "host" });
   window.setTimeout(() => {
     if (resetEpoch !== hostSequenceEpoch()) return;
+    let sacrificedId: string | undefined;
     useGameStore.setState((state) => {
-      const previous = state.game;
-      const next = structuredClone(previous) as GameState;
-      discardHostArchiveToMemory(next, 1);
-      return { game: next, hostMillAnimationQueue: appendHostMillAnimations(state, previous, next) };
+      const next = structuredClone(state.game) as GameState;
+      sacrificedId = weakestCreature(next, "host")?.instanceId;
+      return { game: next };
     });
+    if (!sacrificedId) {
+      window.setTimeout(() => beginTributeOfTheFourSorrowsPlayerRound(resetEpoch), 200);
+      return;
+    }
+    useGameStore.setState({ specialDeadCardIds: [sacrificedId] });
+    useAudioStore.getState().playSfx("attack");
     window.setTimeout(() => {
       if (resetEpoch !== hostSequenceEpoch()) return;
-      let sacrificedId: string | undefined;
       useGameStore.setState((state) => {
         const next = structuredClone(state.game) as GameState;
-        sacrificedId = weakestCreature(next, "host")?.instanceId;
-        return { game: next };
+        const target = next.host.field.find((item) => item.instanceId === sacrificedId);
+        if (target) destroyPermanent(next, target);
+        return { game: next, specialDeadCardIds: [] };
       });
-      if (!sacrificedId) {
-        window.setTimeout(() => beginTributeOfTheFourSorrowsPlayerRound(resetEpoch), 200);
-        return;
-      }
-      useGameStore.setState({ specialDeadCardIds: [sacrificedId] });
-      useAudioStore.getState().playSfx("attack");
-      window.setTimeout(() => {
-        if (resetEpoch !== hostSequenceEpoch()) return;
-        useGameStore.setState((state) => {
-          const next = structuredClone(state.game) as GameState;
-          const target = next.host.field.find((item) => item.instanceId === sacrificedId);
-          if (target) destroyPermanent(next, target);
-          return { game: next, specialDeadCardIds: [] };
-        });
-        scheduleQueuedHostTriggers(() => {
-          window.setTimeout(() => beginTributeOfTheFourSorrowsPlayerRound(resetEpoch), 320);
-        });
-      }, 260);
-    }, 650);
+      scheduleQueuedHostTriggers(() => {
+        window.setTimeout(() => beginTributeOfTheFourSorrowsPlayerRound(resetEpoch), 320);
+      });
+    }, 260);
   }, 700);
 }
 

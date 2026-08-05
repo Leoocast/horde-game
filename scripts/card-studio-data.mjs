@@ -69,6 +69,25 @@ function authoredEndurance(card) {
   return card.endurance ?? null;
 }
 
+function initialPlusOneCounterAmount(card) {
+  return (card.entersWithCounters ?? [])
+    .filter((entry) => entry.counterType === "+1/+1")
+    .reduce((total, entry) => total + Number(entry.amount ?? 0), 0);
+}
+
+function printedPower(card) {
+  return card.power === null || card.power === undefined
+    ? null
+    : card.power + initialPlusOneCounterAmount(card);
+}
+
+function printedEndurance(card) {
+  const endurance = authoredEndurance(card);
+  return endurance === null
+    ? null
+    : endurance + initialPlusOneCounterAmount(card);
+}
+
 function authoredIsToken(card) {
   return Boolean(card.isToken || card.kinds?.includes("TOKEN"));
 }
@@ -470,8 +489,8 @@ export function buildStudioCards(deckId) {
       nombre: runtimeCard.displayNameEs ?? runtimeCard.name,
       tipo: presentation.typeLineEs,
       costo: authoredEnergyAmount(runtimeCard),
-      atk: runtimeCard.power ?? null,
-      def: authoredEndurance(runtimeCard),
+      atk: printedPower(runtimeCard),
+      def: printedEndurance(runtimeCard),
       desc: visibleRules(runtimeCard, presentation, hiddenTraits),
       lore: runtimeFlavor,
       showFlavorText: runtimeCard.showFlavorText,

@@ -2183,6 +2183,27 @@ test("Return to Memory discards two Host Archive cards when Invoked and two more
   assert.equal(game.host.memory.filter((card) => card.definitionId.startsWith("crow_archive_")).length, 4);
 });
 
+test("Harvester of the Fallen grows only when another allied Zombie dies", () => {
+  const game = createTestGame("harvester-zombie-filter");
+  const harvester = addCard(game, cardFromDeck("harvester_of_the_fallen", "host"));
+  const nonZombie = addCard(game, customCard("harvester_non_zombie", "host"));
+  const zombie = addCard(game, cardFromDeck("graveless_soldier", "host"));
+
+  const resolveHarvesterDeathReaction = (deadCard) => {
+    destroyPermanent(game, deadCard);
+    const deathIndex = game.eventQueue.findIndex((event) => event.type === "ECHO_DIED");
+    assert.notEqual(deathIndex, -1);
+    const [deathEvent] = game.eventQueue.splice(deathIndex, 1);
+    resolveTriggeredEvent(game, deathEvent, undefined, harvester.instanceId);
+  };
+
+  resolveHarvesterDeathReaction(nonZombie);
+  assert.equal(harvester.counters["+1/+1"] ?? 0, 0);
+
+  resolveHarvesterDeathReaction(zombie);
+  assert.equal(harvester.counters["+1/+1"], 1);
+});
+
 test("destroying a Support does not emit Echo death events", () => {
   const game = createTestGame("support-destroyed-not-died");
   const support = addCard(game, customCard("destroyed_support", "host", { kinds: ["SUPPORT"] }));

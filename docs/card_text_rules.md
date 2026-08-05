@@ -7,6 +7,9 @@ verbo, signo de puntuación y conector describa una operación concreta del jueg
 sigue siendo la fuente de verdad mecánica: el texto nunca sustituye a los efectos estructurados,
 pero debe describirlos exactamente.
 
+Una habilidad con `engineSupport: "custom"` también debe imprimir todos los pasos que ejecuta su
+secuencia bespoke, aunque esos pasos no pasen por el resolvedor genérico.
+
 Esta gramática pertenece a Hostfall y no presupone reglas, prioridades ni ventanas de otros juegos.
 
 ## Estructura canónica

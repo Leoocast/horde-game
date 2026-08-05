@@ -178,6 +178,7 @@ El deck lint informa las pendientes y rechaza cualquier efecto o handler descono
 No programar cartas por nombre. La excepción bespoke actual es `tribute_of_the_four_sorrows`, declarada
 `engineSupport: "custom"`, cuya secuencia vive en `src/store/tributeOfTheFourSorrowsSequence.ts` y
 `src/components/TributeOfTheFourSorrowsSelectionOverlay.tsx`.
+Su texto impreso debe describir también los pasos de la Hueste que ejecuta esa secuencia custom.
 
 Para agregar o implementar cartas, seguir `docs/adding_cards.md`. Documentación específica:
 
@@ -197,6 +198,8 @@ propia carpeta.
 Card Studio consume `deck-data.generated.js`, generado desde el JSON runtime. No duplicar reglas,
 nombres o flavor en el HTML/configuración. El exportador escribe `exported-png/` y
 `public/cards/`, y registra la huella necesaria para `check-card-assets.mjs`.
+Los contadores `+1/+1` declarados en `entersWithCounters` se suman a los stats base impresos, para
+que la carta muestre las estadísticas con las que entra realmente al Campo.
 
 Los cinco estudios usan `deck-card-studio.js` y `deck-card-studio.css`: existe una sola estructura
 de carta y los decks sólo aportan variables de tema, motivo e insignia. El diseño común usa marco

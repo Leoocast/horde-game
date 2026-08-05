@@ -1650,6 +1650,80 @@ test("a deferred vanilla Host arrival still notifies ECHO_INVOKED observers", as
   }
 });
 
+test("Tribute of the Four Sorrows sacrifices the weakest Host Echo without discarding its Archive", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+    innerWidth: 1280,
+    innerHeight: 720,
+  };
+
+  const [
+    { resetHostSequence },
+    { runTributeOfTheFourSorrowsSequence },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/store/hostBeats"),
+    import("../src/store/tributeOfTheFourSorrowsSequence"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    resetHostSequence();
+    const game = createTestGame("tribute-no-host-archive-discard");
+    const tribute = cardFromDeck("tribute_of_the_four_sorrows", "host");
+    const weakest = addCard(game, customCard("tribute_weakest", "host", { power: 1, endurance: 1 }));
+    addCard(game, customCard("tribute_stronger", "host", { power: 3, endurance: 3 }));
+    const archived = addCard(
+      game,
+      customCard("tribute_archive_witness", "host", { zone: "archive" }),
+      "host",
+      "archive",
+    );
+    game.host.pendingCard = tribute;
+    useGameStore.setState({
+      game,
+      tributeOfTheFourSorrowsCard: undefined,
+      tributeOfTheFourSorrowsSelection: undefined,
+      hostAutoTriggerCount: 0,
+      specialDeadCardIds: [],
+      hostMillAnimationQueue: [],
+    });
+
+    runTributeOfTheFourSorrowsSequence(tribute);
+    timers.releaseExpiredAt(700);
+
+    const awaitingSacrifice = useGameStore.getState();
+    assert.deepEqual(awaitingSacrifice.game.host.archive.map((card) => card.instanceId), [archived.instanceId]);
+    assert.deepEqual(awaitingSacrifice.specialDeadCardIds, [weakest.instanceId]);
+
+    timers.releaseExpiredAt(960);
+    const afterSacrifice = useGameStore.getState();
+    assert.deepEqual(afterSacrifice.game.host.archive.map((card) => card.instanceId), [archived.instanceId]);
+    assert.equal(afterSacrifice.game.host.field.some((card) => card.instanceId === weakest.instanceId), false);
+  } finally {
+    resetHostSequence();
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
 function createThrottledTimerHarness() {
   let now = 0;
   let nextId = 1;
