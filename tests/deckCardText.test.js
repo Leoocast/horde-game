@@ -16,14 +16,18 @@ import {
 import { cardStatFrameCssVariables } from "../src/utils/cardStatFrame";
 import {
   STUDIO_DECKS,
+  DEFAULT_STUDIO_LANGUAGE,
+  STUDIO_LANGUAGES,
   buildStudioCards,
   generatedGameArtData,
   generatedStudioData,
   loadStudioConfig,
   normalizeBattlefieldArtFrame,
+  resolveStudioLanguage,
   resolveStudioFullArt,
   resolveStudioHeaderFade,
   studioGameArt,
+  studioLanguagesForDeck,
   studioSourceFiles,
   syncStudioData,
 } from "../scripts/card-studio-data.mjs";
@@ -86,6 +90,10 @@ test("deck card text consistently highlights gameplay terms and separates abilit
       energyIconHtml: '<span class="energy-icon"></span>',
     },
   );
+  const englishRules = formatEffectText(
+    "Exhaust this card and pay 5 Life; add {E}. Flying. Invoke two Varka's Minions attacking.",
+    { energyIconHtml: '<span class="energy-icon"></span>' },
+  );
 
   assert.match(captain, /class="effect-keyword">Toque mortal<\/strong>/);
   assert.match(captain, /class="effect-stat">\+1\/\+1<\/strong>/);
@@ -138,6 +146,13 @@ test("deck card text consistently highlights gameplay terms and separates abilit
   assert.match(acolyteCost, /<strong class="effect-action">Agota<\/strong> esta carta y <strong class="effect-life-cost">paga 5 de Vida<\/strong>;/);
   assert.match(acolyteCost, /agrega <span class="energy-icon"><\/span>\./);
   assert.equal((acolyteCost.match(/class="effect-paragraph"/g) ?? []).length, 1);
+  assert.match(englishRules, /class="effect-action">Exhaust<\/strong>/u);
+  assert.match(englishRules, /class="effect-life-cost">pay 5 Life<\/strong>/u);
+  assert.match(englishRules, /class="effect-keyword">Flying<\/strong>/u);
+  assert.match(
+    englishRules,
+    /class="effect-token">Invoke two Varka&#039;s Minions attacking<\/strong>/u,
+  );
 });
 
 test("local Vampire studio art paths resolve to real files", () => {
@@ -149,6 +164,89 @@ test("local Vampire studio art paths resolve to real files", () => {
       `${card.id} points to missing art: ${card.art_crop}`,
     );
   }
+});
+
+test("Card Studio projects ES and EN from one extensible language registry", () => {
+  assert.equal(DEFAULT_STUDIO_LANGUAGE, "es");
+  assert.deepEqual(Object.keys(STUDIO_LANGUAGES), ["es", "en"]);
+  assert.deepEqual(studioLanguagesForDeck("pact_of_elarion"), ["es", "en"]);
+  assert.deepEqual(studioLanguagesForDeck("hunters"), ["es"]);
+  assert.equal(resolveStudioLanguage("legion_of_varka", "EN"), "en");
+  assert.throws(
+    () => resolveStudioLanguage("legion_of_varka", "pt"),
+    /Idioma de cartas desconocido "pt"/u,
+  );
+  assert.throws(
+    () => resolveStudioLanguage("hunters", "en"),
+    /todavía no tiene contenido de cartas en en/u,
+  );
+
+  for (const deckId of [
+    "pact_of_elarion",
+    "uprising_of_the_graveless",
+    "legion_of_varka",
+    "court_of_the_crimson_eclipse",
+  ]) {
+    const spanish = buildStudioCards(deckId, "es");
+    const english = buildStudioCards(deckId, "en");
+    assert.deepEqual(
+      english.map((card) => card.id),
+      spanish.map((card) => card.id),
+      `${deckId} must expose the same cards in both languages`,
+    );
+    for (const card of english) {
+      assert.ok(card.nombre.trim(), `${deckId}/${card.id} lacks an English name`);
+      assert.ok(card.tipo.trim(), `${deckId}/${card.id} lacks an English type line`);
+      assert.ok(card.desc.trim(), `${deckId}/${card.id} lacks English rules`);
+      assert.ok(card.lore.trim(), `${deckId}/${card.id} lacks English flavor`);
+    }
+
+    const context = { window: {} };
+    vm.runInNewContext(generatedStudioData(deckId), context);
+    const payload = context.window.HostfallDeckData;
+    assert.equal(payload.defaultLanguage, "es");
+    assert.equal(payload.cardsByLanguage.es.length, spanish.length);
+    assert.equal(payload.cardsByLanguage.en.length, english.length);
+  }
+
+  const englishPact = new Map(
+    buildStudioCards("pact_of_elarion", "en").map((card) => [card.id, card]),
+  );
+  assert.equal(englishPact.get("veiled_dawn_flower")?.nombre, "Veiled-Dawn Flower");
+  assert.equal(englishPact.get("veiled_dawn_flower")?.tipo, "Echo — Plant Spirit");
+  assert.equal(englishPact.get("veiled_dawn_flower")?.desc, "Exhaust this card; add {E}.");
+  assert.equal(
+    englishPact.get("aelyra_heir_of_elarion")?.tipo,
+    "Chronicle Echo — Elf Heir",
+  );
+});
+
+test("Card Studio UI and exporter select a language without replacing Spanish runtime PNGs", () => {
+  const studioHtml = fs.readFileSync(
+    new URL("../dev/tools/Decks/studio.html", import.meta.url),
+    "utf8",
+  );
+  const studioSource = fs.readFileSync(
+    new URL("../dev/tools/Decks/studio.js", import.meta.url),
+    "utf8",
+  );
+  const rendererSource = fs.readFileSync(
+    new URL("../dev/tools/Decks/deck-card-studio.js", import.meta.url),
+    "utf8",
+  );
+  const exporterSource = fs.readFileSync(
+    new URL("../dev/tools/Decks/export_cards.cjs", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(studioHtml, /id="language-select"/u);
+  assert.match(studioSource, /[?&]lang=\$\{encodeURIComponent\(language\)\}/u);
+  assert.match(rendererSource, /cardsByLanguage\?\.\[language\]/u);
+  assert.match(rendererSource, /new URLSearchParams\(window\.location\.search\)/u);
+  assert.match(exporterSource, /argument === '--lang'/u);
+  assert.match(exporterSource, /pageUrl\.searchParams\.set\('lang', language\)/u);
+  assert.match(exporterSource, /path\.join\(defaultOutputDir, language\)/u);
+  assert.match(exporterSource, /if \(writesRuntimeCards\)/u);
 });
 
 test("card studios consume one generated projection instead of embedded or mirrored data", () => {

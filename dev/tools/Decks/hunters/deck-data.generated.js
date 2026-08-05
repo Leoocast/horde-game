@@ -1,209 +1,222 @@
 /* Generado por scripts/card-studio-data.mjs. No editar a mano. */
-window.HostfallDeckData = [
-  {
-    "id": "territorio_de_caza",
-    "art_crop": "../../../../public/cards/hunters/art/territorio_de_caza.jpg",
-    "nombre": "Territorio de Caza",
-    "tipo": "Fuente — Territorio",
-    "costo": 0,
-    "atk": null,
-    "def": null,
-    "desc": "Agota esta carta; agrega {E}.",
-    "lore": "Toda presa deja un rastro. Todo rastro termina aquí.",
-    "cantidad": 12,
-    "isEnergy": true,
-    "fullArt": true,
-    "art_frame": {
-      "zoom": 1.17,
-      "x": -102,
-      "y": -13
+window.HostfallDeckData = {
+  "schemaVersion": "1.0.0",
+  "defaultLanguage": "es",
+  "languages": [
+    {
+      "code": "es",
+      "label": "Español",
+      "htmlLang": "es"
     }
-  },
-  {
-    "id": "trampa_de_mandibulas",
-    "art_crop": "../../../../public/cards/hunters/art/trampa_de_mandibulas.webp",
-    "nombre": "Trampa de Mandíbulas",
-    "tipo": "Eco — Trampa",
-    "costo": 1,
-    "atk": 1,
-    "def": 1,
-    "desc": "Esta carta no puede atacar.\nCuando defienda, el atacante queda Marcado y Aturdido.\nAl final de la Batalla, Sacrifica esta carta.",
-    "lore": "El acero muerde antes de que el cazador desenvaina.",
-    "cantidad": 4
-  },
-  {
-    "id": "red_de_garfios",
-    "art_crop": "../../../../public/cards/hunters/art/red_de_garfios.webp",
-    "nombre": "Red de Garfios",
-    "tipo": "Eco — Trampa",
-    "costo": 1,
-    "atk": 0,
-    "def": 3,
-    "desc": "Esta carta no puede atacar.\nGuardia aérea\nPuede defender por sí sola contra un enemigo Imponente.\nCuando defienda contra un enemigo Marcado, déjalo Aturdido.\nAl final de la Batalla, Sacrifica esta carta.",
-    "lore": "Cuanto más lucha la presa, más profundo entra el hierro.",
-    "cantidad": 3
-  },
-  {
-    "id": "rastreadora_de_huellas",
-    "art_crop": "../../../../public/cards/hunters/art/rastreadora_de_huellas.jpg",
-    "nombre": "Rastreadora de Huellas",
-    "tipo": "Eco — Cazador Rastreador",
-    "costo": 1,
-    "atk": 1,
-    "def": 2,
-    "desc": "Al ser invocada, marca un enemigo.",
-    "lore": "No busca dónde estuvo la bestia, sino dónde tendrá que estar.",
-    "cantidad": 3,
-    "fullArt": true,
-    "art_frame": {
-      "zoom": 1.04,
-      "x": 1,
-      "y": -15
-    }
-  },
-  {
-    "id": "trampero_de_acero",
-    "art_crop": "../../../../public/cards/hunters/art/trampero_de_acero.jpg",
-    "nombre": "Trampero de Acero",
-    "tipo": "Eco — Cazador Trampero",
-    "costo": 2,
-    "atk": 1,
-    "def": 2,
-    "desc": "Al ser invocado, Invoca un Eco Ficha Trampa improvisada 1/1.",
-    "lore": "Dale una cadena rota y regresará con una jaula.",
-    "cantidad": 3,
-    "art_frame": {
-      "zoom": 1.541,
-      "x": -983,
-      "y": -714
-    }
-  },
-  {
-    "id": "lancero_de_la_marca",
-    "art_crop": "../../../../public/cards/hunters/art/lancero_de_la_marca.jpg",
-    "nombre": "Lancero de la Marca",
-    "tipo": "Eco — Cazador Guerrero",
-    "costo": 2,
-    "atk": 2,
-    "def": 2,
-    "desc": "Cuando defienda o luche contra un enemigo Marcado, gana +2/+0 durante ese enfrentamiento.",
-    "lore": "La marca señala el lugar exacto donde termina la cacería.",
-    "cantidad": 3,
-    "fullArt": true,
-    "art_frame": {
-      "zoom": 1.082,
-      "x": 67,
-      "y": 60
-    }
-  },
-  {
-    "id": "lyra_ojo_de_la_caceria",
-    "art_crop": "../../../../public/cards/hunters/art/lyra_ojo_de_la_caceria.jpg",
-    "nombre": "Lyra, Ojo de la Cacería",
-    "tipo": "Eco de Crónica — Cazador",
-    "costo": 4,
-    "atk": 3,
-    "def": 4,
-    "desc": "Al ser invocada, marca un enemigo.\nAgota: Ata a Lyra un enemigo Marcado y Aturdido. Mientras permanezca Atado, no puede atacar ni defender. Libéralo cuando Lyra deje el Campo.",
-    "lore": "Los demás matan monstruos. Lyra les enseña obediencia.",
-    "cantidad": 2,
-    "isChronicle": true,
-    "fullArt": true
-  },
-  {
-    "id": "flecha_sedante",
-    "art_crop": "../../../../public/cards/hunters/art/flecha_sedante.jpg",
-    "nombre": "Flecha Sedante",
-    "tipo": "Hechizo · Rápido",
-    "costo": 1,
-    "atk": null,
-    "def": null,
-    "desc": "Elige un enemigo.\nSi no está Marcado, márcalo. Si ya está Marcado, atúrdelo.",
-    "lore": "La dosis correcta convierte un rugido en un suspiro.",
-    "cantidad": 3,
-    "fullArt": true,
-    "art_frame": {
-      "zoom": 1.082,
-      "x": 71,
-      "y": -23
-    }
-  },
-  {
-    "id": "contra_tu_manada",
-    "art_crop": "../../../../public/cards/hunters/art/contra_tu_manada.jpg",
-    "nombre": "¡Contra tu manada!",
-    "tipo": "Hechizo · Rápido",
-    "costo": 2,
-    "atk": null,
-    "def": null,
-    "desc": "Elige un enemigo Atado y otro enemigo. Ambos luchan.",
-    "lore": "La primera orden siempre es la más difícil.",
-    "cantidad": 2,
-    "art_frame": {
-      "zoom": 1,
-      "x": 18,
-      "y": -149
-    }
-  },
-  {
-    "id": "rodear_a_la_presa",
-    "art_crop": "../../../../public/cards/hunters/art/rodear_a_la_presa.jpg",
-    "nombre": "Rodear a la Presa",
-    "tipo": "Hechizo",
-    "costo": 2,
-    "atk": null,
-    "def": null,
-    "desc": "Elige uno o dos Cazadores aliados y un enemigo Marcado. Los Cazadores infligen daño al enemigo igual a su Fuerza combinada. Después, elige uno de esos Cazadores; el enemigo le inflige daño igual a su Fuerza.",
-    "lore": "Una salida abierta es un error. Dos cazadores son una pared.",
-    "cantidad": 2,
-    "headerFade": false,
-    "art_frame": {
-      "zoom": 0.962,
-      "x": 0,
-      "y": -28
-    }
-  },
-  {
-    "id": "trofeo_de_la_caceria",
-    "art_crop": "../../../../public/cards/hunters/art/trofeo_de_la_caceria.jpg",
-    "nombre": "Trofeo de la Cacería",
-    "tipo": "Apoyo — Trofeo",
-    "costo": 3,
-    "atk": null,
-    "def": null,
-    "desc": "Cada vez que un enemigo Marcado muera, pon un contador de Trofeo sobre este Apoyo.\nQuita tres contadores de Trofeo: elige uno — gana 3 de Vida o roba una carta.",
-    "lore": "Cada pieza recuerda una victoria y el precio que exigió.",
-    "cantidad": 2,
-    "fullArt": true
-  },
-  {
-    "id": "la_gran_batida",
-    "art_crop": "../../../../public/cards/hunters/art/la_gran_batida.webp",
-    "nombre": "La Gran Batida",
-    "tipo": "Hechizo",
-    "costo": 4,
-    "atk": null,
-    "def": null,
-    "desc": "Marca y aturde a todos los enemigos.",
-    "lore": "Cuando arden todas las almenaras, hasta los gigantes buscan dónde esconderse.",
-    "cantidad": 1
-  },
-  {
-    "id": "trampa_improvisada",
-    "art_crop": "../../../../public/cards/hunters/art/trampa_improvisada.webp",
-    "nombre": "Trampa improvisada",
-    "tipo": "Eco · Ficha — Trampa",
-    "costo": null,
-    "atk": 1,
-    "def": 1,
-    "desc": "Esta carta no puede atacar.\nCuando defienda, el atacante queda Aturdido.\nAl final de la Batalla, Sacrifica esta carta.",
-    "lore": "No tiene que durar. Solo tiene que cerrarse una vez.",
-    "cantidad": 0,
-    "isToken": true,
-    "art_frame": {
-      "zoom": 1,
-      "x": 8,
-      "y": -350
-    }
+  ],
+  "cardsByLanguage": {
+    "es": [
+      {
+        "id": "territorio_de_caza",
+        "art_crop": "../../../../public/cards/hunters/art/territorio_de_caza.jpg",
+        "nombre": "Territorio de Caza",
+        "tipo": "Fuente — Territorio",
+        "costo": 0,
+        "atk": null,
+        "def": null,
+        "desc": "Agota esta carta; agrega {E}.",
+        "lore": "Toda presa deja un rastro. Todo rastro termina aquí.",
+        "cantidad": 12,
+        "isEnergy": true,
+        "fullArt": true,
+        "art_frame": {
+          "zoom": 1.17,
+          "x": -102,
+          "y": -13
+        }
+      },
+      {
+        "id": "trampa_de_mandibulas",
+        "art_crop": "../../../../public/cards/hunters/art/trampa_de_mandibulas.webp",
+        "nombre": "Trampa de Mandíbulas",
+        "tipo": "Eco — Trampa",
+        "costo": 1,
+        "atk": 1,
+        "def": 1,
+        "desc": "Esta carta no puede atacar.\nCuando defienda, el atacante queda Marcado y Aturdido.\nAl final de la Batalla, Sacrifica esta carta.",
+        "lore": "El acero muerde antes de que el cazador desenvaina.",
+        "cantidad": 4
+      },
+      {
+        "id": "red_de_garfios",
+        "art_crop": "../../../../public/cards/hunters/art/red_de_garfios.webp",
+        "nombre": "Red de Garfios",
+        "tipo": "Eco — Trampa",
+        "costo": 1,
+        "atk": 0,
+        "def": 3,
+        "desc": "Esta carta no puede atacar.\nGuardia aérea\nPuede defender por sí sola contra un enemigo Imponente.\nCuando defienda contra un enemigo Marcado, déjalo Aturdido.\nAl final de la Batalla, Sacrifica esta carta.",
+        "lore": "Cuanto más lucha la presa, más profundo entra el hierro.",
+        "cantidad": 3
+      },
+      {
+        "id": "rastreadora_de_huellas",
+        "art_crop": "../../../../public/cards/hunters/art/rastreadora_de_huellas.jpg",
+        "nombre": "Rastreadora de Huellas",
+        "tipo": "Eco — Cazador Rastreador",
+        "costo": 1,
+        "atk": 1,
+        "def": 2,
+        "desc": "Al ser invocada, marca un enemigo.",
+        "lore": "No busca dónde estuvo la bestia, sino dónde tendrá que estar.",
+        "cantidad": 3,
+        "fullArt": true,
+        "art_frame": {
+          "zoom": 1.04,
+          "x": 1,
+          "y": -15
+        }
+      },
+      {
+        "id": "trampero_de_acero",
+        "art_crop": "../../../../public/cards/hunters/art/trampero_de_acero.jpg",
+        "nombre": "Trampero de Acero",
+        "tipo": "Eco — Cazador Trampero",
+        "costo": 2,
+        "atk": 1,
+        "def": 2,
+        "desc": "Al ser invocado, Invoca un Eco Ficha Trampa improvisada 1/1.",
+        "lore": "Dale una cadena rota y regresará con una jaula.",
+        "cantidad": 3,
+        "art_frame": {
+          "zoom": 1.541,
+          "x": -983,
+          "y": -714
+        }
+      },
+      {
+        "id": "lancero_de_la_marca",
+        "art_crop": "../../../../public/cards/hunters/art/lancero_de_la_marca.jpg",
+        "nombre": "Lancero de la Marca",
+        "tipo": "Eco — Cazador Guerrero",
+        "costo": 2,
+        "atk": 2,
+        "def": 2,
+        "desc": "Cuando defienda o luche contra un enemigo Marcado, gana +2/+0 durante ese enfrentamiento.",
+        "lore": "La marca señala el lugar exacto donde termina la cacería.",
+        "cantidad": 3,
+        "fullArt": true,
+        "art_frame": {
+          "zoom": 1.082,
+          "x": 67,
+          "y": 60
+        }
+      },
+      {
+        "id": "lyra_ojo_de_la_caceria",
+        "art_crop": "../../../../public/cards/hunters/art/lyra_ojo_de_la_caceria.jpg",
+        "nombre": "Lyra, Ojo de la Cacería",
+        "tipo": "Eco de Crónica — Cazador",
+        "costo": 4,
+        "atk": 3,
+        "def": 4,
+        "desc": "Al ser invocada, marca un enemigo.\nAgota: Ata a Lyra un enemigo Marcado y Aturdido. Mientras permanezca Atado, no puede atacar ni defender. Libéralo cuando Lyra deje el Campo.",
+        "lore": "Los demás matan monstruos. Lyra les enseña obediencia.",
+        "cantidad": 2,
+        "isChronicle": true,
+        "fullArt": true
+      },
+      {
+        "id": "flecha_sedante",
+        "art_crop": "../../../../public/cards/hunters/art/flecha_sedante.jpg",
+        "nombre": "Flecha Sedante",
+        "tipo": "Hechizo · Rápido",
+        "costo": 1,
+        "atk": null,
+        "def": null,
+        "desc": "Elige un enemigo.\nSi no está Marcado, márcalo. Si ya está Marcado, atúrdelo.",
+        "lore": "La dosis correcta convierte un rugido en un suspiro.",
+        "cantidad": 3,
+        "fullArt": true,
+        "art_frame": {
+          "zoom": 1.082,
+          "x": 71,
+          "y": -23
+        }
+      },
+      {
+        "id": "contra_tu_manada",
+        "art_crop": "../../../../public/cards/hunters/art/contra_tu_manada.jpg",
+        "nombre": "¡Contra tu manada!",
+        "tipo": "Hechizo · Rápido",
+        "costo": 2,
+        "atk": null,
+        "def": null,
+        "desc": "Elige un enemigo Atado y otro enemigo. Ambos luchan.",
+        "lore": "La primera orden siempre es la más difícil.",
+        "cantidad": 2,
+        "art_frame": {
+          "zoom": 1,
+          "x": 18,
+          "y": -149
+        }
+      },
+      {
+        "id": "rodear_a_la_presa",
+        "art_crop": "../../../../public/cards/hunters/art/rodear_a_la_presa.jpg",
+        "nombre": "Rodear a la Presa",
+        "tipo": "Hechizo",
+        "costo": 2,
+        "atk": null,
+        "def": null,
+        "desc": "Elige uno o dos Cazadores aliados y un enemigo Marcado. Los Cazadores infligen daño al enemigo igual a su Fuerza combinada. Después, elige uno de esos Cazadores; el enemigo le inflige daño igual a su Fuerza.",
+        "lore": "Una salida abierta es un error. Dos cazadores son una pared.",
+        "cantidad": 2,
+        "headerFade": false,
+        "art_frame": {
+          "zoom": 0.962,
+          "x": 0,
+          "y": -28
+        }
+      },
+      {
+        "id": "trofeo_de_la_caceria",
+        "art_crop": "../../../../public/cards/hunters/art/trofeo_de_la_caceria.jpg",
+        "nombre": "Trofeo de la Cacería",
+        "tipo": "Apoyo — Trofeo",
+        "costo": 3,
+        "atk": null,
+        "def": null,
+        "desc": "Cada vez que un enemigo Marcado muera, pon un contador de Trofeo sobre este Apoyo.\nQuita tres contadores de Trofeo: elige uno — gana 3 de Vida o roba una carta.",
+        "lore": "Cada pieza recuerda una victoria y el precio que exigió.",
+        "cantidad": 2,
+        "fullArt": true
+      },
+      {
+        "id": "la_gran_batida",
+        "art_crop": "../../../../public/cards/hunters/art/la_gran_batida.webp",
+        "nombre": "La Gran Batida",
+        "tipo": "Hechizo",
+        "costo": 4,
+        "atk": null,
+        "def": null,
+        "desc": "Marca y aturde a todos los enemigos.",
+        "lore": "Cuando arden todas las almenaras, hasta los gigantes buscan dónde esconderse.",
+        "cantidad": 1
+      },
+      {
+        "id": "trampa_improvisada",
+        "art_crop": "../../../../public/cards/hunters/art/trampa_improvisada.webp",
+        "nombre": "Trampa improvisada",
+        "tipo": "Eco · Ficha — Trampa",
+        "costo": null,
+        "atk": 1,
+        "def": 1,
+        "desc": "Esta carta no puede atacar.\nCuando defienda, el atacante queda Aturdido.\nAl final de la Batalla, Sacrifica esta carta.",
+        "lore": "No tiene que durar. Solo tiene que cerrarse una vez.",
+        "cantidad": 0,
+        "isToken": true,
+        "art_frame": {
+          "zoom": 1,
+          "x": 8,
+          "y": -350
+        }
+      }
+    ]
   }
-];
+};

@@ -204,9 +204,12 @@ Los manifests de imagen usan sólo `source: "local"`. El arte fuente está separ
 completa, normalmente en `public/cards/<deck>/art/`. Nunca apuntar un generador al PNG final de su
 propia carpeta.
 
-Card Studio consume `deck-data.generated.js`, generado desde el JSON runtime. No duplicar reglas,
-nombres o flavor en el HTML/configuración. El exportador escribe `exported-png/` y
-`public/cards/`, y registra la huella necesaria para `check-card-assets.mjs`.
+Card Studio consume `deck-data.generated.js`, generado desde el JSON runtime. La proyección contiene
+ES/EN y el Taller elige el idioma sin duplicar reglas, nombres o flavor en HTML/configuración.
+Español es el valor predeterminado. `export_cards.cjs <deck> --lang en` escribe sólo en
+`exported-png/en/`; únicamente la exportación española actualiza `public/cards/`, el layout runtime
+y la huella de `check-card-assets.mjs`. Los idiomas futuros se registran de forma central; chino
+requiere una fuente CJK local antes de habilitarse.
 Los contadores `+1/+1` declarados en `entersWithCounters` se suman a los stats base impresos, para
 que la carta muestre las estadísticas con las que entra realmente al Campo.
 

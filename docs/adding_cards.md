@@ -424,10 +424,13 @@ node scripts/card-studio-data.mjs --write
 node scripts/card-studio-data.mjs --check
 ```
 
-`deck-data.generated.js` es un artefacto generado y no se edita a mano. El exportador
-`dev/tools/Decks/export_cards.cjs <deck>` vuelve a producir los PNG y actualiza
-`dev/tools/Decks/generation-manifest.json`. `node scripts/check-card-assets.mjs` falla si cambió el
-deck, la presentación, el renderer, las fuentes tipográficas o el arte después de exportar.
+`deck-data.generated.js` es un artefacto generado y no se edita a mano. Contiene las proyecciones
+ES/EN autorizadas por el mismo JSON runtime; el Taller permite alternarlas sin cambiar el arte ni
+la configuración visual. El exportador `dev/tools/Decks/export_cards.cjs <deck>` produce español
+por defecto y actualiza `public/cards/` junto con `generation-manifest.json`. Para revisar otra
+lengua se usa `--lang en`; esa salida vive en `exported-png/en/` y no reemplaza las cartas del
+juego. `node scripts/check-card-assets.mjs` falla si cambió el deck, la presentación, el renderer,
+las fuentes tipográficas o el arte después de exportar el lote español.
 
 El arte fuente debe vivir separado del PNG final, normalmente en `public/cards/<deck>/art/`. El
 exportador rechaza una carta que use como `artCrop` un PNG de su propia carpeta final para evitar

@@ -30,8 +30,9 @@ implica copiar HTML, JavaScript ni CSS de carta.
 `hunters` todavía es un preview sin deck runtime. Por eso su `studio.config.json` conserva sus
 definiciones completas hasta que se implemente como deck jugable.
 
-Cada carta de un deck jugable declara `flavorText.en`, `flavorText.es` y `showFlavorText` en su JSON
-runtime. El estudio siempre recibe el flavor desde allí. Si `showFlavorText` es `false`, el texto
+Cada carta de un deck jugable declara `gameText.en`, `gameText.es`, `flavorText.en`,
+`flavorText.es` y `showFlavorText` en su JSON runtime. El estudio siempre recibe las reglas y el
+flavor desde allí. Si `showFlavorText` es `false`, el texto
 permanece en la proyección generada pero el renderer no lo imprime para dejar espacio a reglas
 extensas. `studio.config.json` no puede declarar `flavorTextEs` ni `lore` para un deck runtime.
 
@@ -67,10 +68,12 @@ porque una página abierta con `file://` no puede escribir en disco:
 node dev/tools/Decks/studio-server.cjs
 ```
 
-Después, abrir `http://127.0.0.1:5178/dev/tools/Decks/studio.html`. Permite elegir deck y carta,
-cargar la imagen de una carta, encuadrarla dentro de su marco (arrastrar para mover, rueda para
-zoom, o los campos en píxeles), alternar su composición *full art* y desplazar el motivo de
-cabecera, banda de tipo y stats. El coste no usa motivo.
+Después, abrir `http://127.0.0.1:5178/dev/tools/Decks/studio.html`. Permite elegir deck, carta e
+idioma, cargar la imagen de una carta, encuadrarla dentro de su marco (arrastrar para mover, rueda
+para zoom, o los campos en píxeles), alternar su composición *full art* y desplazar el motivo de
+cabecera, banda de tipo y stats. El coste no usa motivo. Español es el idioma predeterminado; los
+decks jugables permiten previsualizar también inglés. Cazadores conserva sólo español mientras
+siga siendo un preview sin datos runtime bilingües.
 
 El zoom se aplica sobre el bitmap completo: `1×` conserva el encuadre `cover` aprobado y los
 valores menores revelan progresivamente los bordes reales de la ilustración, sin partir de una
@@ -130,8 +133,28 @@ Exportar un deck:
 node dev/tools/Decks/export_cards.cjs pact_of_elarion
 ```
 
-El exportador actualiza tanto `exported-png/` como `public/cards/` y registra la huella del lote.
-No necesita servidor ni datos remotos.
+El comando anterior equivale a `--lang es`: actualiza tanto `exported-png/` como `public/cards/` y
+registra la huella del lote que consume el juego. Para exportar otro idioma sin reemplazar las
+cartas runtime:
+
+```powershell
+node dev/tools/Decks/export_cards.cjs pact_of_elarion --lang en
+```
+
+Las cartas inglesas se escriben en `exported-png/en/`; no modifican `public/cards/`, el layout
+runtime ni `generation-manifest.json`. El exportador no necesita servidor ni datos remotos.
+
+## Añadir idiomas en el futuro
+
+El registro canónico vive en `STUDIO_LANGUAGES` dentro de `scripts/card-studio-data.mjs`. Añadir un
+idioma requiere una entrada de registro y contenido completo para nombre, `gameText`, `flavorText`,
+línea de tipo y nombres de Rasgos. El selector y el exportador consumen ese mismo registro, por lo
+que no se agregan ramas por deck ni otro renderer.
+
+Portugués y chino no están habilitados todavía. Portugués puede reutilizar la geometría latina;
+chino necesitará además una fuente CJK local con licencia y cobertura verificadas, junto con una
+revisión de densidad y saltos de línea. No se debe habilitar un código de idioma con traducciones
+parciales ni usar una fuente remota como fallback.
 
 ## Contrato del arte
 

@@ -6,6 +6,11 @@ import { fileURLToPath } from "node:url";
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const GAME_ART_DATA_PATH = path.join(ROOT, "src", "data", "cardStudioGameArt.generated.json");
 export const BATTLEFIELD_ART_VIEWPORT = Object.freeze({ width: 488, height: 434 });
+export const DEFAULT_STUDIO_LANGUAGE = "es";
+export const STUDIO_LANGUAGES = Object.freeze({
+  es: Object.freeze({ code: "es", label: "Español", htmlLang: "es" }),
+  en: Object.freeze({ code: "en", label: "English", htmlLang: "en" }),
+});
 
 export const STUDIO_DECKS = Object.freeze({
   pact_of_elarion: {
@@ -32,26 +37,70 @@ export const STUDIO_DECKS = Object.freeze({
 });
 
 const TRAIT_LABELS = Object.freeze({
-  ALERT: "Alerta",
-  DAUNTING: "Imponente",
-  DEATHTOUCH: "Letal",
-  DRAIN: "Drenar",
-  FIRST_STRIKE: "Reflejos",
-  FLYING: "Volar",
-  FURTIVE: "Furtivo",
-  HASTE: "Ímpetu",
-  IMPETUS: "Ímpetu",
-  LETHAL: "Letal",
-  LIFESTEAL: "Drenar",
-  MENACE: "Imponente",
-  OVERFLOW: "Desborde",
-  REACH: "Guardia aérea",
-  REFLEX: "Reflejos",
-  SKYGUARD: "Guardia aérea",
-  SKULK: "Furtivo",
-  TRAMPLE: "Desborde",
-  VIGILANCE: "Alerta",
+  es: Object.freeze({
+    ALERT: "Alerta",
+    DAUNTING: "Imponente",
+    DEATHTOUCH: "Letal",
+    DRAIN: "Drenar",
+    FIRST_STRIKE: "Reflejos",
+    FLYING: "Volar",
+    FURTIVE: "Furtivo",
+    HASTE: "Ímpetu",
+    IMPETUS: "Ímpetu",
+    LETHAL: "Letal",
+    LIFESTEAL: "Drenar",
+    MENACE: "Imponente",
+    OVERFLOW: "Desborde",
+    REACH: "Guardia aérea",
+    REFLEX: "Reflejos",
+    SKYGUARD: "Guardia aérea",
+    SKULK: "Furtivo",
+    TRAMPLE: "Desborde",
+    VIGILANCE: "Alerta",
+  }),
+  en: Object.freeze({
+    ALERT: "Alert",
+    DAUNTING: "Daunting",
+    DEATHTOUCH: "Lethal",
+    DRAIN: "Drain",
+    FIRST_STRIKE: "Reflex",
+    FLYING: "Flying",
+    FURTIVE: "Furtive",
+    HASTE: "Impetus",
+    IMPETUS: "Impetus",
+    LETHAL: "Lethal",
+    LIFESTEAL: "Drain",
+    MENACE: "Daunting",
+    OVERFLOW: "Overflow",
+    REACH: "Skyguard",
+    REFLEX: "Reflex",
+    SKYGUARD: "Skyguard",
+    SKULK: "Furtive",
+    TRAMPLE: "Overflow",
+    VIGILANCE: "Alert",
+  }),
 });
+
+export function studioLanguagesForDeck(deckId) {
+  const definition = STUDIO_DECKS[deckId];
+  if (!definition) {
+    throw new Error(`Estudio desconocido "${deckId}". Usa: ${Object.keys(STUDIO_DECKS).join(", ")}.`);
+  }
+  return definition.previewOnly ? [DEFAULT_STUDIO_LANGUAGE] : Object.keys(STUDIO_LANGUAGES);
+}
+
+export function resolveStudioLanguage(deckId, value = DEFAULT_STUDIO_LANGUAGE) {
+  const language = String(value || DEFAULT_STUDIO_LANGUAGE).trim().toLowerCase();
+  if (!Object.hasOwn(STUDIO_LANGUAGES, language)) {
+    throw new Error(
+      `Idioma de cartas desconocido "${language}". Usa: ${Object.keys(STUDIO_LANGUAGES).join(", ")}.`,
+    );
+  }
+  if (!studioLanguagesForDeck(deckId).includes(language)) {
+    throw new Error(`${deckId} todavía no tiene contenido de cartas en ${language}.`);
+  }
+  return language;
+}
 
 function authoredEnergyAmount(card) {
   if (typeof card.energyCost === "number") return card.energyCost;
@@ -129,31 +178,74 @@ function deckPaths(deckId) {
   };
 }
 
-function energySymbols(text) {
-  return text.replace(/Agrega (\d+) de Energía/giu, (_match, rawAmount) => {
+function energySymbols(text, language) {
+  const pattern = language === "en"
+    ? /Add (\d+) Energy/giu
+    : /Agrega (\d+) de Energía/giu;
+  return text.replace(pattern, (_match, rawAmount) => {
     const amount = Number(rawAmount);
-    const verb = _match.startsWith("A") ? "Agrega" : "agrega";
+    const verb = language === "en"
+      ? (_match.startsWith("A") ? "Add" : "add")
+      : (_match.startsWith("A") ? "Agrega" : "agrega");
     return amount > 0 && Number.isSafeInteger(amount)
       ? `${verb} ${"{E}".repeat(amount)}`
       : _match;
   });
 }
 
-function visibleRules(runtimeCard, presentation, hiddenTraits) {
+function localizedCardName(runtimeCard, language) {
+  const explicit = runtimeCard.localizedNames?.[language];
+  if (typeof explicit === "string" && explicit.trim()) return explicit.trim();
+  if (language === "en") return String(runtimeCard.name ?? "").trim();
+  if (language === "es") {
+    return String(runtimeCard.displayNameEs ?? runtimeCard.name ?? "").trim();
+  }
+  return "";
+}
+
+function englishTypeLine(runtimeCard) {
+  const kinds = runtimeCard.kinds ?? [];
+  const subtypes = (runtimeCard.subtypes ?? []).join(" ");
+  let type = "Card";
+  if (kinds.includes("ECHO")) {
+    type = authoredIsChronicle(runtimeCard) ? "Chronicle Echo" : "Echo";
+    if (authoredIsToken(runtimeCard)) type += " · Token";
+  } else if (kinds.includes("SOURCE")) {
+    type = "Source";
+  } else if (kinds.includes("SUPPORT")) {
+    type = "Support";
+  } else if (kinds.includes("SPELL")) {
+    type = runtimeCard.modifiers?.includes("QUICK") ? "Spell · Quick" : "Spell";
+  }
+  return subtypes && !kinds.includes("SPELL") && !kinds.includes("SUPPORT")
+    ? `${type} — ${subtypes}`
+    : type;
+}
+
+function localizedTypeLine(runtimeCard, presentation, language) {
+  const explicit = presentation.typeLines?.[language];
+  if (typeof explicit === "string" && explicit.trim()) return explicit.trim();
+  if (language === "en") return englishTypeLine(runtimeCard);
+  if (language === "es") return String(presentation.typeLineEs ?? "").trim();
+  return "";
+}
+
+function visibleRules(runtimeCard, presentation, hiddenTraits, language) {
   if (Object.hasOwn(presentation, "rulesTextEs")) {
     throw new Error(
       `${runtimeCard.id}: rulesTextEs duplicaría las reglas del JSON runtime. Corrige gameText.es.`,
     );
   }
 
-  const rawRules = energySymbols(String(runtimeCard.gameText?.es ?? "").trim());
-  const rules = /^Sin efecto (?:activo )?adicional\.$/u.test(rawRules)
+  const rawRules = energySymbols(String(runtimeCard.gameText?.[language] ?? "").trim(), language);
+  const rules = /^(?:Sin efecto (?:activo )?adicional|No additional effect)\.$/iu.test(rawRules)
     ? []
     : rawRules.split("\n").filter(Boolean);
+  const traitLabels = TRAIT_LABELS[language] ?? {};
   const traits = authoredTraits(runtimeCard)
     .filter((trait) => !hiddenTraits.has(trait))
     .filter((trait) => !/^POISON_\d+$/iu.test(trait))
-    .map((trait) => TRAIT_LABELS[trait] ?? trait);
+    .map((trait) => traitLabels[trait] ?? trait);
   const poison = [
     ...authoredTraits(runtimeCard)
       .map((trait) => String(trait).match(/^POISON_(\d+)$/iu)?.[1]),
@@ -161,7 +253,7 @@ function visibleRules(runtimeCard, presentation, hiddenTraits) {
       .map((ability) => String(ability.customHandler ?? "").match(/^toxic_(\d+)$/iu)?.[1]),
   ]
     .filter((amount, index, amounts) => Boolean(amount) && amounts.indexOf(amount) === index)
-    .map((amount) => `Veneno ${amount}`);
+    .map((amount) => `${language === "en" ? "Poison" : "Veneno"} ${amount}`);
   const visibleTraits = [...traits, ...poison];
   const traitLines = presentation.groupTraits && visibleTraits.length > 0
     ? [`${visibleTraits.join(". ")}.`]
@@ -170,7 +262,7 @@ function visibleRules(runtimeCard, presentation, hiddenTraits) {
   const lines = presentation.traitPlacement === "after-first-rule" && rules.length > 0
     ? [rules[0], ...traitLines, ...rules.slice(1)]
     : [...traitLines, ...rules];
-  return lines.join("\n") || "Sin efecto adicional.";
+  return lines.join("\n") || (language === "en" ? "No additional effect." : "Sin efecto adicional.");
 }
 
 /*
@@ -408,7 +500,8 @@ export function generatedGameArtData() {
   return `${JSON.stringify({ schemaVersion: "1.0.0", cards }, null, 2)}\n`;
 }
 
-export function buildStudioCards(deckId) {
+export function buildStudioCards(deckId, requestedLanguage = DEFAULT_STUDIO_LANGUAGE) {
+  const language = resolveStudioLanguage(deckId, requestedLanguage);
   const { config, paths } = loadStudioConfig(deckId);
   if (config.previewOnly) {
     return config.cards.map((card) => {
@@ -449,9 +542,21 @@ export function buildStudioCards(deckId) {
       );
     }
     const artFrame = normalizeArtFrame(`${deckId}/${presentation.id}`, presentation.artFrame);
-    const runtimeFlavor = String(runtimeCard.flavorText?.es ?? "").trim();
+    const runtimeName = localizedCardName(runtimeCard, language);
+    const runtimeTypeLine = localizedTypeLine(runtimeCard, presentation, language);
+    const runtimeFlavor = String(runtimeCard.flavorText?.[language] ?? "").trim();
+    const runtimeRules = String(runtimeCard.gameText?.[language] ?? "").trim();
+    if (!runtimeName) {
+      throw new Error(`${deckId}/${presentation.id}: falta el nombre localizado para ${language}.`);
+    }
+    if (!runtimeTypeLine) {
+      throw new Error(`${deckId}/${presentation.id}: falta la línea de tipo para ${language}.`);
+    }
+    if (!runtimeRules) {
+      throw new Error(`${deckId}/${presentation.id}: falta gameText.${language} en el JSON runtime.`);
+    }
     if (!runtimeFlavor) {
-      throw new Error(`${deckId}/${presentation.id}: falta flavorText.es en el JSON runtime.`);
+      throw new Error(`${deckId}/${presentation.id}: falta flavorText.${language} en el JSON runtime.`);
     }
     if (typeof runtimeCard.showFlavorText !== "boolean") {
       throw new Error(`${deckId}/${presentation.id}: showFlavorText debe ser booleano en el JSON runtime.`);
@@ -486,12 +591,12 @@ export function buildStudioCards(deckId) {
       collectorId: runtimeCard.collectorId,
       artist,
       art_crop: presentation.artCrop,
-      nombre: runtimeCard.displayNameEs ?? runtimeCard.name,
-      tipo: presentation.typeLineEs,
+      nombre: runtimeName,
+      tipo: runtimeTypeLine,
       costo: authoredEnergyAmount(runtimeCard),
       atk: printedPower(runtimeCard),
       def: printedEndurance(runtimeCard),
-      desc: visibleRules(runtimeCard, presentation, hiddenTraits),
+      desc: visibleRules(runtimeCard, presentation, hiddenTraits, language),
       lore: runtimeFlavor,
       showFlavorText: runtimeCard.showFlavorText,
       cantidad: runtimeCard.quantity,
@@ -514,11 +619,20 @@ export function buildStudioCards(deckId) {
 }
 
 export function generatedStudioData(deckId) {
-  const cards = buildStudioCards(deckId);
+  const languages = studioLanguagesForDeck(deckId);
+  const cardsByLanguage = Object.fromEntries(
+    languages.map((language) => [language, buildStudioCards(deckId, language)]),
+  );
+  const payload = {
+    schemaVersion: "1.0.0",
+    defaultLanguage: DEFAULT_STUDIO_LANGUAGE,
+    languages: languages.map((language) => STUDIO_LANGUAGES[language]),
+    cardsByLanguage,
+  };
   const motif = studioMotif(deckId);
   return [
     "/* Generado por scripts/card-studio-data.mjs. No editar a mano. */",
-    `window.HostfallDeckData = ${JSON.stringify(cards, null, 2)};`,
+    `window.HostfallDeckData = ${JSON.stringify(payload, null, 2)};`,
     ...(motif ? [`window.HostfallDeckMotif = ${JSON.stringify(motif, null, 2)};`] : []),
     "",
   ].join("\n");

@@ -144,7 +144,16 @@ function deckTitle(deckId) {
 }
 
 async function listDecks() {
-    const { STUDIO_DECKS, buildStudioCards, studioGameArt, studioMotif, syncStudioData } = await loadStudioData();
+    const {
+        DEFAULT_STUDIO_LANGUAGE,
+        STUDIO_DECKS,
+        STUDIO_LANGUAGES,
+        buildStudioCards,
+        studioGameArt,
+        studioLanguagesForDeck,
+        studioMotif,
+        syncStudioData,
+    } = await loadStudioData();
 
     /*
      * La lista lee el JSON runtime en vivo, pero el index.html del preview lee
@@ -158,13 +167,30 @@ async function listDecks() {
         const gameArt = studioGameArt(deckId);
         const gameArtConfig = readGameArtConfig(deckId);
         const presentationById = new Map(config.cards.map((card) => [card.id, card]));
-        const cards = buildStudioCards(deckId).map((card) => {
+        const languageCodes = studioLanguagesForDeck(deckId);
+        const cardsByLanguage = Object.fromEntries(
+            languageCodes.map((language) => [language, buildStudioCards(deckId, language)]),
+        );
+        const localizedByLanguage = Object.fromEntries(
+            languageCodes.map((language) => [
+                language,
+                new Map(cardsByLanguage[language].map((card) => [card.id, card])),
+            ]),
+        );
+        const cards = cardsByLanguage[DEFAULT_STUDIO_LANGUAGE].map((card) => {
             const presentation = presentationById.get(card.id) ?? {};
             return {
                 id: card.id,
                 collectorId: card.collectorId ?? null,
                 nombre: card.nombre,
                 tipo: card.tipo,
+                localizations: Object.fromEntries(languageCodes.map((language) => {
+                    const localized = localizedByLanguage[language].get(card.id);
+                    return [language, {
+                        nombre: localized.nombre,
+                        tipo: localized.tipo,
+                    }];
+                })),
                 artCrop: card.art_crop ?? null,
                 artFrame: presentation.artFrame ?? null,
                 fullArt: Boolean(card.fullArt),
@@ -188,6 +214,8 @@ async function listDecks() {
             title: deckTitle(deckId),
             indexUrl: `/dev/tools/Decks/${deckId}/index.html`,
             previewOnly: Boolean(config.previewOnly),
+            defaultLanguage: DEFAULT_STUDIO_LANGUAGE,
+            languages: languageCodes.map((language) => STUDIO_LANGUAGES[language]),
             motif: studioMotif(deckId),
             cards,
         };

@@ -445,6 +445,21 @@
             flex: 1;
         }
 
+        .language-control {
+            display: flex;
+            align-items: center;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 600;
+            gap: 6px;
+        }
+
+        .language-control select {
+            width: auto;
+            min-width: 104px;
+            padding: 5px 28px 5px 8px;
+        }
+
         .stage {
             position: relative;
             display: grid;
@@ -1079,6 +1094,10 @@
                 <button type="button" data-scale="100">100%</button>
             </div>
             <span class="spacer"></span>
+            <label class="language-control" for="language-select">
+                <span>Idioma</span>
+                <select id="language-select" aria-label="Idioma de las cartas"></select>
+            </label>
             <button id="reload-data" type="button" class="ghost" title="Actualizar desde los JSON del deck">
                 Actualizar datos
             </button>
