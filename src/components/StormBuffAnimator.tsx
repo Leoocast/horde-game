@@ -46,6 +46,7 @@ function cardBoxFromOverlay(width: number, height: number): CardBox {
 }
 
 export const STORM_BOLT_TONES: readonly StormBoltTone[] = ["blue", "yellow", "white"];
+const KAELOR_BOLT_TONE: StormBoltTone = "yellow";
 
 /** Each tone carries a whole strike: bolt stroke, its bloom, and the flash that follows.
  *  Presentation only — the buff is already resolved before this component mounts. */
@@ -58,11 +59,11 @@ const TONE_COLORS: Record<StormBoltTone, StormStyle> = {
     "--storm-deep": "rgb(30 118 198 / 0.58)",
   },
   yellow: {
-    "--storm-glow": "rgb(255 191 34 / 0.92)",
-    "--storm-core": "#fff3a6",
-    "--storm-halo": "rgb(255 215 74 / 0.92)",
-    "--storm-flash": "rgb(255 238 166 / 0.76)",
-    "--storm-deep": "rgb(211 125 9 / 0.58)",
+    "--storm-glow": "rgb(238 218 116 / 0.9)",
+    "--storm-core": "#fffef4",
+    "--storm-halo": "rgb(255 239 157 / 0.84)",
+    "--storm-flash": "rgb(255 251 226 / 0.8)",
+    "--storm-deep": "rgb(178 146 48 / 0.42)",
   },
   white: {
     "--storm-glow": "rgb(238 248 255 / 0.95)",
@@ -94,21 +95,13 @@ function makeRng(seed: number): () => number {
   };
 }
 
-/** Both bolts draw their colour from the same three tones, deterministically per event so a
- *  replayed beat looks identical. The answering bolt never repeats the main one's tone. */
+/** Kaelor's paired bolts share the same warm golden charge. */
 export function stormBoltTones(
-  eventId: number,
-  seedKey: string,
+  _eventId: number,
+  _seedKey: string,
   count: number,
 ): StormBoltTone[] {
-  const rng = makeRng(hashString(`${eventId}:${seedKey}:kaelor-bolt-tone`));
-  const pick = (pool: readonly StormBoltTone[]) => pool[Math.floor(rng() * pool.length) % pool.length];
-  const tones = Array.from({ length: count }, () => pick(STORM_BOLT_TONES));
-
-  if (count > 1 && tones.every((tone) => tone === tones[0])) {
-    tones[1] = pick(STORM_BOLT_TONES.filter((tone) => tone !== tones[0]));
-  }
-  return tones;
+  return Array.from({ length: count }, () => KAELOR_BOLT_TONE);
 }
 
 function pointsToPath(points: Point[]): string {
@@ -170,13 +163,16 @@ export type Storm = {
 };
 
 /** Sky strike: one heavy bolt falls from far above the slot and a thinner one answers it. Both
- * converge on the measured center of the card before the whiteout and core flash land. */
+ * converge near Kaelor's raised hand before the whiteout and core flash land. */
 export function buildStorm(eventId: number, seedKey: string, card: CardBox): Storm {
   const rng = makeRng(hashString(`${eventId}:${seedKey}:kaelor-storm`));
   const tones = stormBoltTones(eventId, seedKey, 2);
   const centerX = card.left + card.width / 2;
   const skyY = card.top - card.height * 0.55;
-  const impact: Point = { x: centerX, y: card.top + card.height / 2 };
+  const impact: Point = {
+    x: card.left + card.width * 0.135,
+    y: card.top + card.height * 0.2,
+  };
 
   const mainPoints = buildBolt(
     { x: centerX + card.width * (0.09 + (rng() - 0.5) * 0.05), y: skyY },

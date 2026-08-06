@@ -4906,15 +4906,15 @@
 
   .storm-buff-bolt-glow {
     stroke: var(--storm-glow);
-    stroke-width: 8;
+    stroke-width: 15.5;
     filter:
-      blur(2.4px)
+      blur(1.7px)
       drop-shadow(0 0 9px var(--storm-halo));
   }
 
   .storm-buff-bolt-core {
     stroke: var(--storm-core);
-    stroke-width: 2.1;
+    stroke-width: 4.2;
     filter: drop-shadow(0 0 4px var(--storm-flash));
   }
 
@@ -4925,28 +4925,28 @@
 
   .storm-buff-branch-glow {
     stroke: var(--storm-glow);
-    stroke-width: 4.4;
-    filter: blur(1.6px) drop-shadow(0 0 6px var(--storm-halo));
+    stroke-width: 8;
+    filter: blur(1.1px) drop-shadow(0 0 6px var(--storm-halo));
   }
 
   .storm-buff-branch-core {
     stroke: var(--storm-core);
-    stroke-width: 1.2;
+    stroke-width: 2.4;
   }
 
   .storm-buff-bolt-primary .storm-buff-bolt-glow {
-    stroke-width: 15;
+    stroke-width: 27;
     filter:
-      blur(4px)
+      blur(2.8px)
       drop-shadow(0 0 16px var(--storm-halo));
   }
 
   .storm-buff-bolt-primary .storm-buff-bolt-core {
-    stroke-width: 3.6;
+    stroke-width: 6.6;
   }
 
   .storm-buff-bolt-primary .storm-buff-branch-glow {
-    stroke-width: 5.5;
+    stroke-width: 10;
   }
 
   .storm-buff-core {

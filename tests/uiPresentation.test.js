@@ -7,7 +7,7 @@ import * as THREE from "three";
 
 import { activeDefenseArrowLinks, isBehindInStackOrder, isFrontOfCardStack, visibleDefenseArrowLinks } from "../src/components/battlefieldLayout";
 import { frameLeafRootIndex, frameRootPathSpecs } from "../src/components/GrowthBuffAnimator";
-import { STORM_BOLT_TONES, buildStorm, stormBoltTones } from "../src/components/StormBuffAnimator";
+import { buildStorm, stormBoltTones } from "../src/components/StormBuffAnimator";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { playerAttackHostHitDelay } from "../src/components/playerAttackPresentation";
@@ -286,25 +286,16 @@ test("frame foliage alternates both rails and only every fourth leaf sits on a t
   assert.equal(frameLeafRootIndex(7, 5), 2 + 1);
 });
 
-test("Kaelor's strike draws every bolt from the three storm tones", () => {
+test("Kaelor's strike keeps every bolt in the same golden tone", () => {
   const strike = stormBoltTones(12, "kaelor-a", 7);
 
   assert.equal(strike.length, 7);
   assert.deepEqual(stormBoltTones(12, "kaelor-a", 7), strike);
-  for (const tone of strike) {
-    assert.ok(STORM_BOLT_TONES.includes(tone), `unexpected tone ${tone}`);
-  }
-
-  const seen = new Set();
-  for (let eventId = 0; eventId < 200; eventId += 1) {
-    const pair = stormBoltTones(eventId, "kaelor-b", 2);
-    pair.forEach((tone) => seen.add(tone));
-    assert.equal(new Set(pair).size, 2, `strike ${eventId} came out in a single tone`);
-  }
-  assert.deepEqual([...seen].sort(), ["blue", "white", "yellow"]);
+  assert.deepEqual(strike, Array(7).fill("yellow"));
+  assert.deepEqual(stormBoltTones(99, "kaelor-b", 2), ["yellow", "yellow"]);
 });
 
-test("Kaelor's sky bolts converge on the measured card center without base or rain", () => {
+test("Kaelor's sky bolts converge on the upper-left marked point without base or rain", () => {
   /* Cropped Echo row and tall slot: the strike is authored in measured pixels, so both keep the
      same proportions instead of being stretched by a fixed viewBox. */
   const slots = [
@@ -314,12 +305,14 @@ test("Kaelor's sky bolts converge on the measured card center without base or ra
 
   for (const card of slots) {
     const storm = buildStorm(9, "kaelor-slot", card);
-    const centerX = card.left + card.width / 2;
+    const markedX = card.left + card.width * 0.135;
+    const markedY = card.top + card.height * 0.2;
 
     assert.equal(storm.bolts.length, 2);
     assert.equal(storm.bolts.filter((bolt) => bolt.primary).length, 1);
-    assert.equal(storm.impact.x, centerX);
-    assert.equal(storm.impact.y, card.top + card.height / 2);
+    assert.deepEqual(storm.bolts.map((bolt) => bolt.tone), ["yellow", "yellow"]);
+    assert.equal(storm.impact.x, markedX);
+    assert.equal(storm.impact.y, markedY);
     assert.equal("ground" in storm, false);
     assert.equal("flecks" in storm, false);
   }
