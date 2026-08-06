@@ -84,6 +84,34 @@ test("Vaelor uses his personal defense animation only when he wins and survives"
   }), undefined);
 });
 
+test("the surviving personal combatant owns the animation when Varka attacks Vaelor", () => {
+  const varka = cardFromDeck("varka_infernal_matriarch", "host");
+  const vaelor = cardFromDeck("vaelor_emerald_guardian", "player");
+
+  const animation = resolvePersonalCombatAnimation({
+    attacker: varka,
+    defender: vaelor,
+    attackerDies: true,
+    defenderDies: false,
+    damageToAttacker: 6,
+    damageToDefender: 4,
+  });
+
+  assert.equal(animation?.preset, "emerald-fireball");
+  assert.equal(animation?.sourceId, vaelor.instanceId);
+  assert.equal(animation?.targetId, varka.instanceId);
+  assert.equal(animation?.effect.amount, 6);
+
+  assert.equal(resolvePersonalCombatAnimation({
+    attacker: varka,
+    defender: customCard("ordinary-survivor", "player"),
+    attackerDies: true,
+    defenderDies: false,
+    damageToAttacker: 6,
+    damageToDefender: 4,
+  }), undefined);
+});
+
 test("Vaelor's direct Host attack resolves to the shared emerald fireball preset", () => {
   const vaelor = cardFromDeck("vaelor_emerald_guardian", "player");
 

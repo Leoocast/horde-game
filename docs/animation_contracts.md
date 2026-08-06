@@ -196,6 +196,11 @@ Both return a preset with source/target data, impact and completion clocks, and 
 play. `useGameStore` still refreshes and resolves the ordinary `HostAttackEvent` or player combat.
 Animators never choose a winner or change combat damage.
 
+When exactly one combatant survives, only that winner may claim a personal presentation. If the
+winner has no registered preset, the fight uses the default combat animation instead of playing a
+bespoke animation from the card that died. When both survive or both die, the existing
+attacker-first registration order breaks the visual tie; the rules impact remains simultaneous.
+
 The default Host lunge remains the fallback whenever no registration matches. A preset may
 replace the normal two-card exchange when its source needs a stationary DOM anchor. A targeted
 Host attacker may still complete its incoming lunge, but it returns to its stored target geometry

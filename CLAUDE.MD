@@ -255,6 +255,9 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   atacante y sobrevive, o cuando ataca directamente el panel de vida de la Hueste. En ataques con
   proyectil, la reacción de golpe del panel espera el `impactMs` del preset. El Rasgo canónico de
   Vaelor es `FLYING` (Volar), no `SKYGUARD` (Guardia aérea).
+- Si una pelea con dos presentaciones personales deja una sola carta viva, sólo la ganadora puede
+  reclamar la animación bespoke. Si no tiene preset, se usa la pelea normal; cuando ambas sobreviven
+  o ambas mueren, el atacante conserva la prioridad visual sin cambiar el impacto simultáneo.
 - Varka usa dos bolas de fuego amarillo-doradas simultáneas a escala 0.85 cada vez que ataca:
   nacen de los bordes izquierdo y derecho de su carta, convergen sobre el defensor asignado o, si
   no tiene defensor, sobre el panel de Vida del Cronista, y producen un solo impacto de reglas.

@@ -77,7 +77,7 @@ test("a lethal Host impact stops the remaining attack sequence immediately", asy
   }
 });
 
-test("Vaelor's winning defense lands on the personal emerald fireball impact", async () => {
+test("Vaelor's winning defense overrides Varka's losing personal attack animation", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -116,7 +116,7 @@ test("Vaelor's winning defense lands on the personal emerald fireball impact", a
     const game = createTestGame("vaelor-personal-defense-animation");
     game.activeSide = "host";
     game.phase = "combat";
-    const attacker = addCard(game, customCard("attacker", "host", { power: 3, endurance: 4 }));
+    const attacker = addCard(game, cardFromDeck("varka_infernal_matriarch", "host"));
     addCard(game, customCard("host-bystander", "host"));
     const vaelor = addCard(game, cardFromDeck("vaelor_emerald_guardian", "player"));
     game.combat.hostAttackers = [attacker.instanceId];

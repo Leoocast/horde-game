@@ -150,9 +150,9 @@ export function resolvePersonalProjectileEffect(
   };
 }
 
-/** Selects a card-specific presentation after combat has already been resolved. The first
- * matching registration wins, so future presets can be added without branching in the combat
- * sequencer or an animator component. */
+/** Selects a card-specific presentation after combat has already been resolved. When exactly one
+ * combatant survives, only that winner may own the personal animation; a losing source must not
+ * visually defeat the card that killed it. Ties keep attacker-first registration order. */
 export function resolvePersonalCombatAnimation(
   context: PersonalCombatAnimationContext,
 ): PersonalCombatAnimationPlan | undefined {
@@ -174,8 +174,11 @@ export function resolvePersonalCombatAnimation(
       damageToOpponent: context.damageToAttacker ?? 0,
     },
   ];
+  const presentationParticipants = context.attackerDies !== context.defenderDies
+    ? participants.filter((participant) => !participant.selfDies)
+    : participants;
 
-  for (const participant of participants) {
+  for (const participant of presentationParticipants) {
     if (!participant.card || !participant.target) continue;
     const outcome = combatOutcome(participant.selfDies, participant.opponentDies);
     const registration = PERSONAL_COMBAT_ANIMATIONS.find((candidate) =>
