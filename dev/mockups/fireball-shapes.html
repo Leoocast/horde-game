@@ -1,0 +1,1580 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hostfall — Bolas de fuego: forma, material e impacto</title>
+<style>
+  :root {
+    --gold-soft: rgb(181 134 66 / 0.55);
+    --parch: #e9dcbd;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 24px 22px 70px;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgb(72 52 30 / 0.32), transparent 60%),
+      linear-gradient(180deg, #14100c, #0a0806 60%, #070605);
+    color: var(--parch);
+    font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  }
+
+  h1 { margin: 0 0 6px; font-size: 23px; letter-spacing: 0.04em; color: #f2e2b8; }
+  .intro { max-width: 1040px; margin: 0 0 18px; color: rgb(233 220 189 / 0.72); font-size: 13.5px; line-height: 1.55; }
+  .intro code { color: #f0cf8a; }
+
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 18px;
+    align-items: center;
+    margin-bottom: 18px;
+    padding: 10px 12px;
+    border: 1px solid var(--gold-soft);
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgb(30 22 14 / 0.97), rgb(14 10 7 / 0.99));
+    box-shadow: 0 10px 26px rgb(0 0 0 / 0.6);
+    font-size: 13px;
+  }
+  .toolbar label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  .toolbar select, .toolbar input[type="range"] { accent-color: #d9a441; }
+  .toolbar select {
+    padding: 4px 6px;
+    border: 1px solid var(--gold-soft);
+    border-radius: 6px;
+    background: #1b140d;
+    color: var(--parch);
+    font: inherit;
+  }
+  .toolbar button {
+    padding: 6px 14px;
+    border: 1px solid rgb(217 164 65 / 0.75);
+    border-radius: 7px;
+    background: linear-gradient(180deg, #3a2a16, #201709);
+    color: #f7e6bb;
+    font: inherit;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+  }
+  .toolbar button:hover { background: linear-gradient(180deg, #4b371d, #2a1e0c); }
+  .toolbar .val { min-width: 34px; color: #f0cf8a; font-variant-numeric: tabular-nums; }
+
+  .stages { display: grid; grid-template-columns: repeat(2, minmax(420px, 1fr)); gap: 18px; }
+  @media (max-width: 1000px) { .stages { grid-template-columns: 1fr; } }
+
+  .stage {
+    border: 1px solid rgb(129 96 48 / 0.5);
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgb(24 18 12 / 0.9), rgb(10 8 6 / 0.95));
+    overflow: hidden;
+  }
+  .stage > header {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
+    border-bottom: 1px solid rgb(129 96 48 / 0.4);
+    color: #f2e2b8;
+    font-size: 13.5px;
+    letter-spacing: 0.04em;
+  }
+  .stage > header .tag { color: rgb(233 220 189 / 0.55); font-size: 12px; }
+
+  /* Tablero: el fondo oscuro del campo con dos cartas de referencia. */
+  .board {
+    position: relative;
+    height: 430px;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 50% 120%, rgb(60 40 22 / 0.35), transparent 62%),
+      repeating-linear-gradient(115deg, rgb(255 255 255 / 0.012) 0 3px, transparent 3px 7px),
+      linear-gradient(180deg, #12100d, #080706);
+  }
+  .board canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  .ref-card {
+    position: absolute;
+    width: 96px;
+    height: 134px;
+    border: 1px solid rgb(168 132 70 / 0.72);
+    border-radius: 5px;
+    background: linear-gradient(160deg, #2a2119, #171310 62%, #100d0a);
+    box-shadow: inset 0 0 22px rgb(0 0 0 / 0.75), 0 6px 16px rgb(0 0 0 / 0.6);
+    color: rgb(233 220 189 / 0.5);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-align: center;
+    line-height: 134px;
+  }
+  .ref-card.source { left: 44px; bottom: 46px; }
+  .ref-card.target { right: 58px; top: 42px; }
+
+  .strip-wrap { margin-top: 18px; }
+  .strip {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 50% 120%, rgb(60 40 22 / 0.3), transparent 62%),
+      linear-gradient(180deg, #12100d, #080706);
+  }
+  .strip canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .strip-label {
+    position: absolute;
+    bottom: 9px;
+    transform: translateX(-50%);
+    color: rgb(233 220 189 / 0.6);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+
+  .notes {
+    margin-top: 16px;
+    padding: 12px 14px;
+    max-width: 1040px;
+    border: 1px solid rgb(129 96 48 / 0.4);
+    border-radius: 9px;
+    background: rgb(20 15 10 / 0.7);
+    color: rgb(233 220 189 / 0.78);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .notes b { color: #f0cf8a; font-weight: 600; }
+
+  /* =====================================================================
+     BASELINE — copia literal del efecto actual (src/styles.css .burn-*),
+     re-anclada al tablero en vez de al viewport. Sirve como control A/B.
+     ===================================================================== */
+  .burn-animation-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 190;
+    pointer-events: none;
+    overflow: hidden;
+    --burn-duration: 1100ms;
+  }
+
+  .burn-world { position: absolute; inset: 0; animation: burn-shake var(--burn-duration) linear both; }
+
+  .burn-charge {
+    position: absolute;
+    left: var(--burn-start-x);
+    top: var(--burn-start-y);
+    width: 142px;
+    height: 142px;
+    transform: translate(-50%, -50%);
+  }
+  .burn-charge-visual { position: absolute; inset: 0; transform: scale(var(--burn-vfx-scale, 1)); transform-origin: center; }
+  .burn-charge-glow {
+    position: absolute;
+    inset: 22px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.45) 0 10%, rgba(255, 202, 90, 0.8) 20%, rgba(255, 60, 0, 0.18) 44%, transparent 72%);
+    filter: blur(7px);
+    opacity: 0;
+    transform: scale(0);
+    animation: burn-cast-glow var(--burn-duration) ease-out both;
+  }
+  .burn-charge-distortion {
+    position: absolute;
+    inset: 8px;
+    border: 1px solid rgba(255, 210, 130, 0.4);
+    border-radius: 47% 53% 42% 58% / 56% 43% 57% 44%;
+    filter: blur(0.7px);
+    opacity: 0;
+    transform: scale(0.7);
+    animation: burn-cast-distortion var(--burn-duration) ease-out both;
+  }
+  .burn-charge-arc { position: absolute; inset: 10px; border-radius: 50%; opacity: 1; animation: burn-cast-arc var(--burn-duration) linear both; }
+  .burn-charge-arc::before,
+  .burn-charge-arc::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border-top: 2px solid rgba(255, 220, 135, 0.65);
+    border-right: 1px solid rgba(255, 160, 70, 0.28);
+    border-left: 0;
+    border-bottom: 0;
+    filter: blur(0.3px);
+  }
+  .burn-charge-arc::before { transform: rotate(15deg) scale(1.02); }
+  .burn-charge-arc::after { transform: rotate(205deg) scale(0.88); opacity: 0.7; }
+  .burn-charge-particle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--s);
+    height: var(--s);
+    border-radius: 50%;
+    background: rgba(255, 225, 145, 0.95);
+    box-shadow: 0 0 8px rgba(255, 175, 60, 0.85), 0 0 14px rgba(255, 65, 0, 0.45);
+    opacity: 0;
+    animation: burn-cast-particle var(--burn-duration) ease-in both;
+  }
+
+  .burn-trace-layer { position: absolute; inset: 0; z-index: 7; pointer-events: none; }
+  .burn-trace-particle {
+    position: absolute;
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    box-shadow: 0 0 calc(var(--size) * 1.5) #ffcf83, 0 0 calc(var(--size) * 3) #ff3b00, 0 0 calc(var(--size) * 6) #a11100;
+    mix-blend-mode: screen;
+    animation: burn-trace-life var(--life, 300ms) ease-out forwards;
+  }
+
+  .burn-fireball {
+    position: absolute;
+    left: var(--burn-start-x);
+    top: var(--burn-start-y);
+    width: 124px;
+    height: 78px;
+    z-index: 10;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.05);
+    will-change: transform, opacity;
+    filter: drop-shadow(0 0 8px rgba(255, 237, 184, 0.52)) drop-shadow(0 0 20px rgba(203, 33, 1, 0.56));
+    animation: burn-fireball-flight var(--burn-duration) ease-in both;
+  }
+  .burn-projectile-visual { position: absolute; inset: 0; transform: scale(var(--burn-vfx-scale, 1)); transform-origin: center; }
+  .burn-trail {
+    position: absolute;
+    right: 32px;
+    top: 50%;
+    width: 120px;
+    height: 36px;
+    transform: translateY(-50%);
+    transform-origin: right center;
+    z-index: 0;
+    animation: burn-trail-whip 120ms ease-in-out infinite alternate;
+  }
+  .burn-trail-ribbon,
+  .burn-trail-streak {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    opacity: 0;
+    transform-origin: right center;
+    mix-blend-mode: screen;
+    animation: burn-trail var(--burn-duration) linear both;
+  }
+  .burn-trail-ribbon {
+    width: var(--w);
+    height: var(--h);
+    border-radius: 88% 14% 24% 88% / 66% 38% 62% 34%;
+    transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(0.02);
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(20, 0, 3, 0.86) 12%,
+        rgba(96, 5, 3, 0.88) 33%,
+        rgba(215, 37, 2, 0.96) 64%,
+        rgba(255, 142, 44, 0.98) 84%,
+        rgba(255, 239, 188, 0.9) 95%,
+        transparent 100%);
+    filter: blur(var(--blur));
+  }
+  .burn-trail-ribbon::before {
+    content: "";
+    position: absolute;
+    inset: 24% 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, transparent, rgba(255, 52, 4, 0.2) 22%, rgba(255, 171, 66, 0.74) 68%, #fff4d9 92%, transparent);
+    filter: blur(1px);
+    animation: burn-filament 70ms ease-in-out infinite alternate;
+  }
+  .burn-trail-streak {
+    width: var(--w);
+    height: var(--h);
+    transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(0.02);
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, rgba(255, 45, 2, 0.75) 48%, rgba(255, 213, 125, 0.98) 88%, transparent);
+    box-shadow: 0 0 7px rgba(255, 53, 4, 0.5);
+    filter: blur(var(--blur));
+  }
+
+  .burn-fireball-body { position: absolute; right: 0; top: 50%; width: 44px; height: 36px; transform: translateY(-50%); isolation: isolate; z-index: 3; }
+  .burn-ball-outer, .burn-ball-mid, .burn-ball-core, .burn-ball-hotspot { position: absolute; pointer-events: none; }
+  .burn-ball-outer {
+    inset: 0;
+    border-radius: 43% 57% 52% 48% / 59% 42% 58% 41%;
+    background: radial-gradient(circle at 66% 46%, #fff9e6 0 6%, #ffc267 15%, #f9550d 34%, #e23608 52%, #a71404 68%, rgba(140, 16, 3, 0.5) 80%, transparent 92%);
+    filter: blur(2.4px);
+    animation: burn-blob-one 85ms ease-in-out infinite alternate, burn-outer-flicker 65ms ease-in-out infinite alternate;
+  }
+  .burn-ball-mid {
+    inset: 3px 4px 4px 5px;
+    border-radius: 56% 44% 47% 53% / 45% 59% 41% 55%;
+    background: radial-gradient(circle at 63% 46%, #fff 0 5%, #ffd38b 15%, #ff721b 37%, rgba(160, 22, 2, 0.5) 72%, transparent 88%);
+    filter: blur(1.4px);
+    mix-blend-mode: screen;
+    animation: burn-blob-two 65ms ease-in-out infinite alternate, burn-mid-flicker 58ms ease-in-out infinite alternate;
+  }
+  .burn-ball-core {
+    inset: 8px 8px 8px 13px;
+    border-radius: 49% 51% 42% 58% / 58% 44% 56% 42%;
+    background: radial-gradient(circle at 62% 46%, #fff 0 18%, #fff0c9 36%, #ffb04e 66%, rgba(255, 63, 7, 0.12) 100%);
+    filter: blur(0.9px);
+    mix-blend-mode: screen;
+    animation: burn-blob-three 55ms ease-in-out infinite alternate, burn-ball-core-pulse 72ms ease-in-out infinite alternate;
+  }
+  .burn-ball-hotspot {
+    inset: 11px 9px 11px 18px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 0 45%, rgba(255, 245, 216, 0.72) 70%, transparent);
+    filter: blur(1.6px);
+    animation: burn-hotspot 46ms ease-in-out infinite alternate;
+  }
+
+  .burn-impact { position: absolute; left: var(--burn-end-x); top: var(--burn-end-y); width: 1px; height: 1px; z-index: 13; pointer-events: none; }
+  .burn-impact-visual { position: absolute; left: 0; top: 0; width: 1px; height: 1px; transform: scale(var(--burn-vfx-scale, 1)); transform-origin: 0 0; }
+  .burn-impact-core {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 116px;
+    height: 116px;
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.02);
+    background: radial-gradient(circle, #fff 0 4%, #fff4d0 8%, #ffc066 19%, #ff6317 36%, rgba(182, 19, 1, 0.88) 54%, rgba(25, 0, 4, 0.75) 69%, transparent 82%);
+    filter: blur(3px) drop-shadow(0 0 16px rgba(255, 86, 12, 0.5)) drop-shadow(0 0 34px rgba(185, 16, 0, 0.22));
+    mix-blend-mode: screen;
+    animation: burn-impact-core var(--burn-duration) linear both;
+  }
+  .burn-void-disc {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 108px;
+    height: 108px;
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+    background: radial-gradient(circle, #000 0 34%, rgba(42, 0, 5, 0.98) 48%, rgba(230, 32, 3, 0.9) 62%, rgba(255, 142, 55, 0.45) 68%, transparent 77%);
+    box-shadow: 0 0 0 3px rgba(255, 91, 35, 0.6), 0 0 44px rgba(184, 11, 0, 0.6);
+    filter: blur(1px);
+    animation: burn-void-implosion var(--burn-duration) linear both;
+  }
+  .burn-shock-ring {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--size);
+    height: var(--size);
+    border: var(--border-size) solid rgba(255, 155, 72, 0.76);
+    border-radius: 52% 48% 56% 44% / 47% 61% 39% 53%;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.02);
+    box-shadow: 0 0 14px rgba(255, 52, 2, 0.35), inset 0 0 10px rgba(255, 78, 3, 0.2);
+    filter: blur(var(--ring-blur));
+  }
+  .burn-shock-ring.one { animation: burn-ring-one var(--burn-duration) linear both; }
+  .burn-shock-ring.two { animation: burn-ring-two var(--burn-duration) linear both; }
+  .burn-impact-smoke {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 88px;
+    height: 70px;
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(0.1);
+    background: radial-gradient(circle at 50% 62%, rgba(117, 30, 17, 0.62), rgba(35, 14, 16, 0.78) 44%, rgba(9, 7, 10, 0.44) 68%, transparent 78%);
+    filter: blur(12px);
+    animation: burn-impact-smoke var(--burn-duration) linear both;
+  }
+  .burn-screen-flash { position: absolute; inset: 0; z-index: 20; pointer-events: none; opacity: 0; animation: burn-screen-flash var(--burn-duration) linear both; }
+
+  /* Variante aceite (Nerezh / zombis). */
+  .burn-animation-layer-oil {
+    --burn-flight-impact-filter: drop-shadow(0 0 8px rgba(225, 217, 255, 0.62)) drop-shadow(0 0 24px rgba(36, 12, 64, 0.9));
+    --burn-impact-flash-filter: brightness(1.3) contrast(1.45);
+  }
+  .burn-animation-layer-oil .burn-charge-glow {
+    background: radial-gradient(circle, rgba(246, 241, 255, 0.7) 0 7%, rgba(120, 92, 151, 0.72) 18%, rgba(20, 12, 27, 0.72) 44%, transparent 72%);
+  }
+  .burn-animation-layer-oil .burn-charge-distortion { border-color: rgba(166, 145, 184, 0.52); }
+  .burn-animation-layer-oil .burn-charge-arc::before,
+  .burn-animation-layer-oil .burn-charge-arc::after { border-top-color: rgba(210, 196, 224, 0.68); border-right-color: rgba(83, 57, 105, 0.5); }
+  .burn-animation-layer-oil .burn-charge-particle { background: rgba(220, 209, 230, 0.92); box-shadow: 0 0 8px rgba(103, 77, 126, 0.9), 0 0 15px rgba(5, 3, 8, 0.95); }
+  .burn-animation-layer-oil .burn-trace-particle {
+    background: #ddd4e4;
+    box-shadow: 0 0 calc(var(--size) * 1.5) #7d688e, 0 0 calc(var(--size) * 3) #211329, 0 0 calc(var(--size) * 6) #020203;
+  }
+  .burn-animation-layer-oil .burn-fireball { filter: drop-shadow(0 0 8px rgba(198, 185, 211, 0.48)) drop-shadow(0 0 23px rgba(12, 6, 17, 0.96)); }
+  .burn-animation-layer-oil .burn-trail-ribbon {
+    background: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.94) 14%, rgba(16, 10, 19, 0.98) 38%, rgba(48, 32, 57, 0.96) 67%, rgba(111, 88, 126, 0.86) 86%, rgba(220, 208, 226, 0.68) 96%, transparent 100%);
+  }
+  .burn-animation-layer-oil .burn-trail-ribbon::before {
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.88) 24%, rgba(83, 61, 96, 0.68) 72%, rgba(230, 221, 235, 0.72) 93%, transparent);
+  }
+  .burn-animation-layer-oil .burn-trail-streak {
+    background: linear-gradient(90deg, transparent, rgba(3, 2, 4, 0.96) 46%, rgba(120, 99, 132, 0.88) 87%, transparent);
+    box-shadow: 0 0 8px rgba(18, 8, 24, 0.88);
+  }
+  .burn-animation-layer-oil .burn-ball-outer {
+    background: radial-gradient(circle at 66% 46%, #ede7f1 0 4%, #897498 12%, #3b2945 28%, #17101b 48%, #050406 69%, rgba(0, 0, 0, 0.78) 82%, transparent 94%);
+  }
+  .burn-animation-layer-oil .burn-ball-mid {
+    background: radial-gradient(circle at 63% 46%, #f4eff6 0 4%, #a28cad 13%, #46344f 34%, rgba(4, 3, 5, 0.9) 74%, transparent 89%);
+  }
+  .burn-animation-layer-oil .burn-ball-core {
+    background: radial-gradient(circle at 62% 46%, #f3eef5 0 12%, #9e8aa8 30%, #34273b 58%, rgba(0, 0, 0, 0.72) 100%);
+  }
+  .burn-animation-layer-oil .burn-ball-hotspot { background: radial-gradient(circle, #fff 0 24%, rgba(205, 194, 212, 0.7) 53%, transparent 78%); }
+  .burn-animation-layer-oil .burn-impact-core {
+    background: radial-gradient(circle, #f4eef7 0 3%, #a18baa 9%, #493650 22%, #151019 39%, rgba(0, 0, 0, 0.96) 61%, rgba(43, 27, 48, 0.62) 71%, transparent 83%);
+    filter: blur(3px) drop-shadow(0 0 18px rgba(78, 55, 88, 0.58)) drop-shadow(0 0 38px rgba(0, 0, 0, 0.5));
+  }
+  .burn-animation-layer-oil .burn-void-disc {
+    background: radial-gradient(circle, #000 0 39%, rgba(8, 6, 9, 0.99) 49%, rgba(61, 42, 69, 0.9) 63%, rgba(167, 147, 178, 0.38) 69%, transparent 78%);
+    box-shadow: 0 0 0 3px rgba(105, 81, 116, 0.48), 0 0 46px rgba(0, 0, 0, 0.82);
+  }
+  .burn-animation-layer-oil .burn-shock-ring { border-color: rgba(156, 133, 168, 0.64); box-shadow: 0 0 16px rgba(29, 16, 34, 0.7), inset 0 0 11px rgba(83, 57, 94, 0.34); }
+  .burn-animation-layer-oil .burn-impact-smoke {
+    background: radial-gradient(circle at 50% 62%, rgba(38, 30, 42, 0.82), rgba(12, 10, 14, 0.9) 47%, rgba(0, 0, 0, 0.56) 70%, transparent 80%);
+  }
+  .burn-animation-layer-oil .burn-screen-flash { animation-name: burn-oil-screen-flash; }
+
+  /* Variante esmeralda (Vaelor): rota el tono del mundo completo. */
+  .burn-animation-layer-emerald {
+    --burn-flight-impact-filter: drop-shadow(0 0 12px rgba(225, 255, 198, 0.78)) drop-shadow(0 0 34px rgba(24, 189, 78, 0.82));
+    --burn-impact-flash-filter: brightness(2.7) saturate(1.35);
+  }
+  .burn-animation-layer-emerald .burn-world { filter: hue-rotate(90deg) saturate(1.5) brightness(1.05); }
+  .burn-animation-layer-emerald .burn-screen-flash { animation-name: burn-emerald-screen-flash; }
+
+  /* Variante dorada (Varka). */
+  .burn-animation-layer-golden {
+    --burn-flight-impact-filter: drop-shadow(0 0 10px rgba(255, 255, 207, 0.9)) drop-shadow(0 0 30px rgba(255, 205, 30, 0.85));
+    --burn-impact-flash-filter: brightness(2.9) saturate(1.25);
+  }
+  .burn-animation-layer-golden .burn-charge-glow {
+    background: radial-gradient(circle, rgba(255, 255, 245, 0.8) 0 10%, rgba(255, 244, 109, 0.92) 22%, rgba(255, 194, 24, 0.32) 48%, transparent 74%);
+  }
+  .burn-animation-layer-golden .burn-charge-distortion { border-color: rgba(255, 239, 112, 0.62); }
+  .burn-animation-layer-golden .burn-charge-arc::before,
+  .burn-animation-layer-golden .burn-charge-arc::after { border-top-color: rgba(255, 250, 168, 0.86); border-right-color: rgba(255, 194, 28, 0.48); }
+  .burn-animation-layer-golden .burn-charge-particle { background: rgba(255, 255, 204, 0.98); box-shadow: 0 0 8px rgba(255, 231, 67, 0.96), 0 0 16px rgba(255, 171, 12, 0.66); }
+  .burn-animation-layer-golden .burn-trace-particle {
+    background: #fffbd5;
+    box-shadow: 0 0 calc(var(--size) * 1.5) #fff57c, 0 0 calc(var(--size) * 3) #ffd425, 0 0 calc(var(--size) * 6) #d67a00;
+  }
+  .burn-animation-layer-golden .burn-fireball { filter: drop-shadow(0 0 9px rgba(255, 255, 202, 0.82)) drop-shadow(0 0 24px rgba(255, 194, 18, 0.74)); }
+  .burn-animation-layer-golden .burn-trail-ribbon {
+    background: linear-gradient(90deg, transparent 0%, rgba(100, 45, 0, 0.72) 14%, rgba(211, 116, 0, 0.88) 36%, rgba(255, 184, 12, 0.98) 65%, rgba(255, 230, 62, 0.99) 84%, rgba(255, 255, 204, 0.96) 96%, transparent 100%);
+  }
+  .burn-animation-layer-golden .burn-trail-ribbon::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 165, 0, 0.26) 24%, rgba(255, 226, 51, 0.84) 70%, #fffbd2 93%, transparent);
+  }
+  .burn-animation-layer-golden .burn-trail-streak {
+    background: linear-gradient(90deg, transparent, rgba(255, 177, 0, 0.82) 46%, rgba(255, 248, 137, 1) 88%, transparent);
+    box-shadow: 0 0 8px rgba(255, 210, 24, 0.72);
+  }
+  .burn-animation-layer-golden .burn-ball-outer {
+    background: radial-gradient(circle at 66% 46%, #fffef0 0 7%, #fff68b 17%, #ffda28 36%, #f6ad08 54%, #c96800 70%, rgba(137, 58, 0, 0.48) 82%, transparent 93%);
+  }
+  .burn-animation-layer-golden .burn-ball-mid {
+    background: radial-gradient(circle at 63% 46%, #fff 0 7%, #fff9b0 18%, #ffe33d 40%, rgba(238, 139, 0, 0.56) 74%, transparent 89%);
+  }
+  .burn-animation-layer-golden .burn-ball-core {
+    background: radial-gradient(circle at 62% 46%, #fff 0 20%, #fffbd0 39%, #ffe768 68%, rgba(255, 180, 8, 0.16) 100%);
+  }
+  .burn-animation-layer-golden .burn-ball-hotspot { background: radial-gradient(circle, #fff 0 48%, rgba(255, 255, 208, 0.86) 72%, transparent); }
+  .burn-animation-layer-golden .burn-impact-core {
+    background: radial-gradient(circle, #fff 0 5%, #fffbd1 10%, #ffed63 22%, #ffc21c 40%, rgba(210, 105, 0, 0.84) 58%, rgba(62, 26, 0, 0.7) 71%, transparent 83%);
+    filter: blur(3px) drop-shadow(0 0 18px rgba(255, 226, 67, 0.68)) drop-shadow(0 0 38px rgba(255, 154, 0, 0.3));
+  }
+  .burn-animation-layer-golden .burn-void-disc {
+    background: radial-gradient(circle, #2b1600 0 34%, rgba(92, 47, 0, 0.96) 48%, rgba(255, 182, 10, 0.92) 63%, rgba(255, 241, 101, 0.48) 69%, transparent 78%);
+    box-shadow: 0 0 0 3px rgba(255, 221, 54, 0.68), 0 0 46px rgba(255, 157, 0, 0.54);
+  }
+  .burn-animation-layer-golden .burn-shock-ring { border-color: rgba(255, 239, 99, 0.86); box-shadow: 0 0 16px rgba(255, 192, 11, 0.58), inset 0 0 11px rgba(255, 222, 48, 0.4); }
+  .burn-animation-layer-golden .burn-impact-smoke {
+    background: radial-gradient(circle at 50% 62%, rgba(123, 72, 13, 0.58), rgba(47, 31, 13, 0.78) 46%, rgba(12, 9, 5, 0.42) 69%, transparent 79%);
+  }
+  .burn-animation-layer-golden .burn-screen-flash { animation-name: burn-golden-screen-flash; }
+
+  @keyframes burn-shake {
+    0%, 57.99%, 100% { transform: translate(0, 0) rotate(0); }
+    58% { transform: translate(-14px, 8px) rotate(-0.8deg); }
+    59% { transform: translate(13px, -8px) rotate(0.72deg); }
+    60% { transform: translate(-9px, -5px) rotate(-0.45deg); }
+    61% { transform: translate(7px, 4px) rotate(0.32deg); }
+    63% { transform: translate(-4px, 2px) rotate(-0.16deg); }
+    65% { transform: translate(2px, -1px); }
+    68% { transform: translate(0, 0); }
+  }
+  @keyframes burn-cast-glow {
+    0% { opacity: 0; transform: scale(0.05); }
+    5% { opacity: 0.85; transform: scale(0.55); }
+    13% { opacity: 1; transform: scale(1.18); }
+    18% { opacity: 0.92; transform: scale(0.88); }
+    20% { opacity: 0; transform: scale(0.2); }
+    100% { opacity: 0; }
+  }
+  @keyframes burn-cast-distortion {
+    0% { opacity: 0; transform: scale(0.7) rotate(0); }
+    5% { opacity: 0.65; }
+    17% { opacity: 1; transform: scale(1.08) rotate(180deg); }
+    20% { opacity: 0; transform: scale(0.25) rotate(220deg); }
+    100% { opacity: 0; }
+  }
+  @keyframes burn-cast-arc {
+    0% { opacity: 0; transform: scale(0.5) rotate(0); }
+    5% { opacity: 0.8; }
+    18% { opacity: 1; transform: scale(1) rotate(240deg); }
+    20% { opacity: 0; transform: scale(0.2) rotate(280deg); }
+    100% { opacity: 0; }
+  }
+  @keyframes burn-cast-particle {
+    0%, 2% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a)) translateX(var(--r)) scale(0.1); }
+    8% { opacity: 1; }
+    18% { opacity: 0.95; transform: translate(-50%, -50%) rotate(calc(var(--a) + 140deg)) translateX(12px) scale(1.2); }
+    20% { opacity: 0; transform: translate(-50%, -50%) scale(0.1); }
+    100% { opacity: 0; }
+  }
+  @keyframes burn-fireball-flight {
+    0% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--burn-angle)) scale(0.04); }
+    5% { opacity: 0.45; transform: translate(-50%, -50%) rotate(var(--burn-angle)) scale(0.22); }
+    13% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--burn-angle)) scale(0.82); }
+    18% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--burn-angle)) scale(1); }
+    20% { transform: translate(-50%, -50%) rotate(var(--burn-angle)) scaleX(1.18) scaleY(0.88); }
+    34% { transform: translate(calc(-50% + 0.369 * var(--burn-dx)), calc(-58% + 0.369 * var(--burn-dy))) rotate(calc(var(--burn-angle) - 1.8deg)) scaleX(1.34) scaleY(0.78); }
+    48% { transform: translate(calc(-50% + 0.738 * var(--burn-dx)), calc(-44% + 0.738 * var(--burn-dy))) rotate(calc(var(--burn-angle) + 1.4deg)) scaleX(1.3) scaleY(0.8); }
+    57.95% { opacity: 1; transform: translate(calc(-50% + var(--burn-dx)), calc(-50% + var(--burn-dy))) rotate(var(--burn-angle)) scaleX(1.42) scaleY(0.73); filter: var(--burn-flight-impact-filter, drop-shadow(0 0 8px rgba(255, 237, 184, 0.55)) drop-shadow(0 0 22px rgba(205, 31, 0, 0.62))); }
+    58% { opacity: 0; transform: translate(calc(-50% + var(--burn-dx)), calc(-50% + var(--burn-dy))) rotate(var(--burn-angle)) scaleX(0.22) scaleY(1.65); filter: var(--burn-impact-flash-filter, brightness(2.4)); }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--burn-dx)), calc(-50% + var(--burn-dy))) rotate(var(--burn-angle)); }
+  }
+  @keyframes burn-trail {
+    0%, 17% { opacity: 0; transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(0.02) scaleY(0.55); }
+    20% { opacity: 0.92; transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(0.68) scaleY(0.9); }
+    31%, 50% { opacity: var(--o, 0.95); transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(1) scaleY(1); }
+    57% { opacity: 0.4; transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(0.6) scaleY(0.7); }
+    58%, 100% { opacity: 0; transform: translateY(calc(-50% + var(--y))) rotate(var(--r)) scaleX(0.02) scaleY(0.2); }
+  }
+  @keyframes burn-trace-life {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    60% { opacity: 0.8; }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.1); filter: blur(2px); }
+  }
+  @keyframes burn-impact-core {
+    0%, 57.99% { opacity: 0; transform: translate(-50%, -50%) scale(0.01); border-radius: 50%; }
+    58% { opacity: 1; transform: translate(-50%, -50%) scale(0.2); border-radius: 45% 55% 42% 58% / 55% 45% 58% 42%; filter: blur(2px) brightness(2.4); }
+    59% { opacity: 1; transform: translate(-50%, -50%) scale(0.65, 1.35) rotate(-15deg); border-radius: 75% 25% 88% 12% / 25% 85% 15% 75%; filter: blur(4px) brightness(1.2); }
+    60% { opacity: 0.96; transform: translate(-50%, -50%) scale(1.25, 0.65) rotate(12deg); border-radius: 22% 78% 25% 75% / 78% 22% 85% 15%; }
+    66% { opacity: 0.58; transform: translate(-50%, -50%) scale(0.95, 1.25) rotate(-8deg); border-radius: 60% 40% 70% 30% / 40% 60% 30% 70%; }
+    74% { opacity: 0; transform: translate(-50%, -50%) scale(1.5, 1.1) rotate(5deg); border-radius: 35% 65% 40% 60% / 65% 35% 60% 40%; filter: blur(9px); }
+    100% { opacity: 0; }
+  }
+  @keyframes burn-void-implosion {
+    0%, 57.99% { opacity: 0; transform: translate(-50%, -50%) scale(1.55); }
+    58% { opacity: 1; transform: translate(-50%, -50%) scale(0.08); filter: brightness(2); }
+    59% { opacity: 0.98; transform: translate(-50%, -50%) scale(0.03); }
+    61% { opacity: 0.72; transform: translate(-50%, -50%) scale(1.1); }
+    65% { opacity: 0.25; transform: translate(-50%, -50%) scale(1.45); }
+    75% { opacity: 0; transform: translate(-50%, -50%) scale(1.9); }
+    100% { opacity: 0; }
+  }
+  @keyframes burn-ring-one {
+    0%, 57.99% { opacity: 0; transform: translate(-50%, -50%) scale(0.01); }
+    58% { opacity: 1; transform: translate(-50%, -50%) scale(0.12); }
+    62% { opacity: 0.72; transform: translate(-50%, -50%) scale(1.25); }
+    68% { opacity: 0.22; transform: translate(-50%, -50%) scale(2); }
+    76% { opacity: 0; transform: translate(-50%, -50%) scale(2.5); }
+    100% { opacity: 0; }
+  }
+  @keyframes burn-ring-two {
+    0%, 58.5% { opacity: 0; transform: translate(-50%, -50%) scale(0.01); }
+    59% { opacity: 0.86; transform: translate(-50%, -50%) scale(0.18); }
+    63% { opacity: 0.54; transform: translate(-50%, -50%) scale(1.4); }
+    69% { opacity: 0.12; transform: translate(-50%, -50%) scale(2.2); }
+    78% { opacity: 0; transform: translate(-50%, -50%) scale(2.8); }
+    100% { opacity: 0; }
+  }
+  @keyframes burn-impact-smoke {
+    0%, 59% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(0.1); }
+    62% { opacity: 0.7; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(var(--s)); }
+    70% { opacity: 0.4; transform: translate(calc(-50% + var(--x) + var(--drift)), calc(-50% + var(--y) - 44px)) scale(var(--s2)); }
+    82% { opacity: 0; transform: translate(calc(-50% + var(--x) + var(--drift2)), calc(-50% + var(--y) - 96px)) scale(var(--s3)); }
+    100% { opacity: 0; }
+  }
+  @keyframes burn-screen-flash {
+    0%, 57.99% { opacity: 0; background: transparent; }
+    58% { opacity: 1; background: radial-gradient(circle at var(--burn-end-x) var(--burn-end-y), rgba(255, 255, 255, 0.88), rgba(255, 128, 50, 0.2) 24%, transparent 48%); }
+    59% { opacity: 0.22; }
+    62%, 100% { opacity: 0; }
+  }
+  @keyframes burn-emerald-screen-flash {
+    0%, 57.99% { opacity: 0; background: transparent; }
+    58% { opacity: 1; background: radial-gradient(circle at var(--burn-end-x) var(--burn-end-y), rgba(242, 255, 222, 0.94), rgba(42, 224, 91, 0.27) 25%, transparent 50%); }
+    59% { opacity: 0.24; }
+    62%, 100% { opacity: 0; }
+  }
+  @keyframes burn-golden-screen-flash {
+    0%, 57.99% { opacity: 0; background: transparent; }
+    58% { opacity: 1; background: radial-gradient(circle at var(--burn-end-x) var(--burn-end-y), rgba(255, 255, 226, 0.96), rgba(255, 217, 45, 0.3) 25%, transparent 50%); }
+    59% { opacity: 0.24; }
+    62%, 100% { opacity: 0; }
+  }
+  @keyframes burn-oil-screen-flash {
+    0%, 57.99% { opacity: 0; background: transparent; }
+    58% { opacity: 0.78; background: radial-gradient(circle at var(--burn-end-x) var(--burn-end-y), rgba(226, 216, 232, 0.72), rgba(37, 24, 43, 0.3) 23%, transparent 48%); }
+    59% { opacity: 0.18; }
+    62%, 100% { opacity: 0; }
+  }
+  @keyframes burn-filament { from { opacity: 0.68; transform: translateY(-2px) scaleY(0.78); } to { opacity: 1; transform: translateY(2px) scaleY(1.08); } }
+  @keyframes burn-trail-whip { from { transform: translateY(-56%) rotate(4deg); } to { transform: translateY(-44%) rotate(-4deg); } }
+  @keyframes burn-blob-one {
+    from { border-radius: 43% 57% 52% 48% / 59% 42% 58% 41%; transform: rotate(-12deg) scale(1.05, 0.85); }
+    to { border-radius: 56% 44% 30% 70% / 46% 78% 22% 54%; transform: rotate(15deg) scale(0.9, 1.15); }
+  }
+  @keyframes burn-blob-two {
+    from { border-radius: 56% 44% 47% 53% / 25% 79% 21% 75%; transform: rotate(10deg) scale(0.85, 1.15); }
+    to { border-radius: 25% 75% 78% 22% / 57% 43% 76% 24%; transform: rotate(-14deg) scale(1.18, 0.82); }
+  }
+  @keyframes burn-blob-three {
+    from { border-radius: 39% 61% 32% 68% / 68% 34% 66% 32%; transform: scale(0.88, 1.15) rotate(5deg); }
+    to { border-radius: 78% 22% 74% 26% / 23% 79% 21% 77%; transform: scale(1.18, 0.82) rotate(-8deg); }
+  }
+  @keyframes burn-outer-flicker { from { opacity: 0.84; } to { opacity: 1; } }
+  @keyframes burn-mid-flicker { from { opacity: 0.76; } to { opacity: 1; } }
+  @keyframes burn-ball-core-pulse { from { filter: blur(0.65px) brightness(0.92); } to { filter: blur(1.1px) brightness(1.18); } }
+  @keyframes burn-hotspot { from { opacity: 0.7; transform: scale(0.86); } to { opacity: 1; transform: scale(1.16); } }
+</style>
+</head>
+<body>
+<h1>Bolas de fuego — forma, material e impacto</h1>
+<p class="intro">
+  Izquierda: el efecto <b>tal como está hoy</b> (copia literal de <code>.burn-*</code> de <code>src/styles.css</code> + la
+  estructura de <code>BurnAnimator.tsx</code>). Derecha: propuestas nuevas dibujadas con un shader WebGL — la silueta se
+  erosiona con ruido turbulento y se estira según la trayectoria, así que deja de leerse como una esfera, y la estela se
+  deposita en el aire y se consume donde nació en vez de arrastrarse pegada al proyectil.
+  Los cuatro materiales son los mismos que usa el juego: <code>BURN</code> (goblins), <code>OIL_BURN</code> (zombis),
+  esmeralda (Vaelor) y dorado (Varka, dos proyectiles simultáneos).
+</p>
+
+<div class="toolbar">
+  <label>Material
+    <select id="material">
+      <option value="fire">Fuego — goblins / BURN</option>
+      <option value="oil">Aceite — zombis / OIL_BURN</option>
+      <option value="emerald">Esmeralda — Vaelor</option>
+      <option value="golden">Dorado — Varka (x2)</option>
+    </select>
+  </label>
+  <label>Diseño nuevo
+    <select id="design">
+      <option value="1">B · Cometa turbulento</option>
+      <option value="2">C · Lenguas de llama</option>
+      <option value="3">D · Masa volumétrica</option>
+    </select>
+  </label>
+  <label>Escala <input id="scale" type="range" min="0.6" max="2" step="0.05" value="1" /><span class="val" id="scaleVal">1.00</span></label>
+  <label>Velocidad <input id="speed" type="range" min="0.2" max="1" step="0.05" value="1" /><span class="val" id="speedVal">1.00</span></label>
+  <label><input id="loop" type="checkbox" checked /> Bucle</label>
+  <label>Fotograma <input id="scrub" type="range" min="0" max="100" step="1" value="58" /><span class="val" id="scrubVal">—</span></label>
+  <button id="fire">Lanzar</button>
+</div>
+
+<div class="stages">
+  <section class="stage">
+    <header><span>A · Actual (CSS/DOM)</span><span class="tag">BurnAnimator + .burn-* de styles.css</span></header>
+    <div class="board" id="boardCss">
+      <div class="ref-card source">fuente</div>
+      <div class="ref-card target">objetivo</div>
+    </div>
+  </section>
+  <section class="stage">
+    <header><span id="glTitle">B · Cometa turbulento (WebGL)</span><span class="tag">shader de ruido, mismo reloj de 1100 ms</span></header>
+    <div class="board" id="boardGl">
+      <div class="ref-card source">fuente</div>
+      <div class="ref-card target">objetivo</div>
+      <canvas id="fx"></canvas>
+    </div>
+  </section>
+</div>
+
+<section class="stage strip-wrap">
+  <header><span>Banco de siluetas — los tres diseños con el material elegido</span><span class="tag">suspendidas, avanzando hacia la derecha</span></header>
+  <div class="strip">
+    <canvas id="strip"></canvas>
+    <span class="strip-label" style="left:16.66%">B · Cometa turbulento</span>
+    <span class="strip-label" style="left:50%">C · Lenguas de llama</span>
+    <span class="strip-label" style="left:83.33%">D · Masa volumétrica</span>
+  </div>
+</section>
+
+<div class="notes" id="notes"></div>
+
+<script>
+/* ===================================================================
+   Reloj compartido: el mismo contrato del juego (1100 ms, vuelo desde
+   el 20 %, impacto al 58 %). Ambos paneles se lanzan a la vez.
+   =================================================================== */
+const DURATION = 1100;
+const CHARGE_END = 0.20;
+const IMPACT_AT = 0.58;
+
+const MATERIALS = {
+  fire: {
+    label: "Fuego — goblins",
+    cssClass: "",
+    projectiles: 1,
+    scale: 1,
+    // core / hot / mid / deep / smoke, e "ink" = cuánto tapa el fondo en vez de brillar.
+    core: [1.00, 0.97, 0.86], hot: [1.00, 0.76, 0.28], mid: [0.97, 0.33, 0.05],
+    deep: [0.56, 0.08, 0.02], smoke: [0.10, 0.05, 0.04], ink: 0.16,
+  },
+  oil: {
+    label: "Aceite — zombis",
+    cssClass: "burn-animation-layer-oil",
+    projectiles: 1,
+    scale: 1,
+    core: [0.94, 0.91, 0.96], hot: [0.64, 0.55, 0.71], mid: [0.25, 0.19, 0.30],
+    deep: [0.07, 0.04, 0.09], smoke: [0.02, 0.02, 0.03], ink: 0.92,
+  },
+  emerald: {
+    label: "Esmeralda — Vaelor",
+    cssClass: "burn-animation-layer-emerald",
+    projectiles: 1,
+    scale: 1.5,
+    core: [0.95, 1.00, 0.85], hot: [0.71, 1.00, 0.42], mid: [0.18, 0.83, 0.37],
+    deep: [0.04, 0.37, 0.16], smoke: [0.02, 0.09, 0.05], ink: 0.14,
+  },
+  golden: {
+    label: "Dorado — Varka",
+    cssClass: "burn-animation-layer-golden",
+    projectiles: 2,
+    scale: 0.85,
+    core: [1.00, 0.99, 0.94], hot: [1.00, 0.94, 0.48], mid: [1.00, 0.77, 0.11],
+    deep: [0.73, 0.38, 0.00], smoke: [0.14, 0.07, 0.03], ink: 0.10,
+  },
+};
+
+const DESIGN_NOTES = {
+  1: "<b>B · Cometa turbulento.</b> La cabeza es una gota estirada por la trayectoria, no un círculo: el borde se erosiona con ruido fractal advectado hacia atrás, así que la silueta cambia cada frame. La estela <b>no viaja pegada a la bola</b>: se emite en instantes fijos y cada bocanada queda anclada donde nació, se abre, sube, se enfría y se apaga ahí, igual que la traza de chispas del efecto actual pero con llama en vez de puntos. Es el reemplazo más directo de la bola actual: mismo tamaño aparente, misma legibilidad del núcleo blanco.",
+  2: "<b>C · Lenguas de llama.</b> No hay esfera: tres lóbulos desfasados laten a distinta frecuencia y su radio depende del ángulo, produciendo llamas que lamen hacia atrás. Es lo más 'fuego vivo' y lo menos 'proyectil'; a escala pequeña (Varka, x2) puede leerse algo caótico.",
+  3: "<b>D · Masa volumétrica.</b> Cinco capas de ruido con paralaje dan volumen y humo interno: una bola de fuego densa, con relieve, más pesada. Cuesta un poco más de fill-rate y funciona mejor en escala grande (Vaelor 1.5).",
+};
+
+const cssBoard = document.getElementById("boardCss");
+const glBoard = document.getElementById("boardGl");
+const canvas = document.getElementById("fx");
+const materialSel = document.getElementById("material");
+const designSel = document.getElementById("design");
+const scaleInput = document.getElementById("scale");
+const speedInput = document.getElementById("speed");
+const loopInput = document.getElementById("loop");
+const notes = document.getElementById("notes");
+const glTitle = document.getElementById("glTitle");
+const scrubInput = document.getElementById("scrub");
+// Cuando no es null, ambos paneles quedan congelados en ese punto del beat.
+let frozenAt = null;
+
+function endpoints(board) {
+  const rect = board.getBoundingClientRect();
+  const src = board.querySelector(".ref-card.source").getBoundingClientRect();
+  const dst = board.querySelector(".ref-card.target").getBoundingClientRect();
+  return {
+    src: { x: src.left - rect.left, y: src.top - rect.top, w: src.width, h: src.height },
+    dst: { x: dst.left - rect.left + dst.width / 2, y: dst.top - rect.top + dst.height / 2 },
+  };
+}
+
+/* ===================================================================
+   Panel A — reconstrucción fiel del efecto actual.
+   =================================================================== */
+const CHARGE_PARTICLES = [
+  { a: 12, r: 42, s: 3 }, { a: 86, r: 33, s: 3 }, { a: 155, r: 45, s: 5 },
+  { a: 228, r: 36, s: 3 }, { a: 307, r: 40, s: 4 },
+];
+const TRAIL_RIBBONS = [
+  { w: 84, h: 18, y: 0, r: 0, blur: 6, o: 0.9 },
+  { w: 68, h: 10, y: -10, r: -7, blur: 4, o: 0.9 },
+  { w: 62, h: 9, y: 10, r: 8, blur: 4, o: 0.86 },
+];
+const TRAIL_STREAKS = [
+  { w: 94, h: 3, y: -4, r: -1, blur: 2, o: 0.92 },
+  { w: 78, h: 2, y: 7, r: 2, blur: 1.6, o: 0.96 },
+];
+const IMPACT_SMOKE = [
+  { x: -82, y: -20, s: 0.8, drift: -26, s2: 1.08, s3: 1.376, drift2: -39 },
+  { x: -44, y: -58, s: 1.0, drift: -14, s2: 1.35, s3: 1.72, drift2: -21 },
+  { x: 0, y: -74, s: 1.15, drift: 8, s2: 1.552, s3: 1.978, drift2: 12 },
+  { x: 46, y: -52, s: 0.96, drift: 18, s2: 1.296, s3: 1.651, drift2: 27 },
+  { x: 84, y: -16, s: 0.78, drift: 28, s2: 1.053, s3: 1.342, drift2: 42 },
+  { x: -18, y: -28, s: 0.72, drift: -4, s2: 0.972, s3: 1.238, drift2: -6 },
+];
+
+let cssTeardown = null;
+
+function playCss(material, scale, speed) {
+  if (cssTeardown) cssTeardown();
+  const conf = MATERIALS[material];
+  const { src, dst } = endpoints(cssBoard);
+  const duration = DURATION / speed;
+  const origins = conf.projectiles === 2
+    ? [{ x: 0.08, y: 0.52 }, { x: 0.92, y: 0.52 }]
+    : [{ x: 0.5, y: 0.5 }];
+  const routes = origins.map((o) => ({
+    startX: src.x + src.w * o.x,
+    startY: src.y + src.h * o.y,
+    endX: dst.x,
+    endY: dst.y,
+  }));
+
+  const layer = document.createElement("div");
+  layer.className = ["burn-animation-layer", conf.cssClass].filter(Boolean).join(" ");
+  layer.style.setProperty("--burn-duration", duration + "ms");
+  layer.style.setProperty("--burn-start-x", routes[0].startX + "px");
+  layer.style.setProperty("--burn-start-y", routes[0].startY + "px");
+  layer.style.setProperty("--burn-end-x", dst.x + "px");
+  layer.style.setProperty("--burn-end-y", dst.y + "px");
+  layer.style.setProperty("--burn-vfx-scale", String(scale));
+
+  const world = document.createElement("div");
+  world.className = "burn-world";
+  layer.appendChild(world);
+
+  for (const route of routes) {
+    const charge = document.createElement("div");
+    charge.className = "burn-charge";
+    charge.style.setProperty("--burn-start-x", route.startX + "px");
+    charge.style.setProperty("--burn-start-y", route.startY + "px");
+    charge.innerHTML =
+      '<div class="burn-charge-visual"><span class="burn-charge-glow"></span>' +
+      '<span class="burn-charge-distortion"></span><span class="burn-charge-arc"></span>' +
+      CHARGE_PARTICLES.map((p) =>
+        `<i class="burn-charge-particle" style="--a:${p.a}deg;--r:${p.r}px;--s:${p.s}px"></i>`).join("") +
+      "</div>";
+    world.appendChild(charge);
+    if (conf.projectiles !== 2) break;
+  }
+
+  const trace = document.createElement("div");
+  trace.className = "burn-trace-layer";
+  world.appendChild(trace);
+
+  const bodies = [];
+  for (const route of routes) {
+    const dx = route.endX - route.startX;
+    const dy = route.endY - route.startY;
+    const ball = document.createElement("div");
+    ball.className = "burn-fireball";
+    ball.style.setProperty("--burn-start-x", route.startX + "px");
+    ball.style.setProperty("--burn-start-y", route.startY + "px");
+    ball.style.setProperty("--burn-dx", dx + "px");
+    ball.style.setProperty("--burn-dy", dy + "px");
+    ball.style.setProperty("--burn-angle", (Math.atan2(dy, dx) * 180) / Math.PI + "deg");
+    ball.innerHTML =
+      '<div class="burn-projectile-visual"><div class="burn-trail">' +
+      TRAIL_RIBBONS.map((t) =>
+        `<i class="burn-trail-ribbon" style="--w:${t.w}px;--h:${t.h}px;--y:${t.y}px;--r:${t.r}deg;--blur:${t.blur}px;--o:${t.o}"></i>`).join("") +
+      TRAIL_STREAKS.map((t) =>
+        `<i class="burn-trail-streak" style="--w:${t.w}px;--h:${t.h}px;--y:${t.y}px;--r:${t.r}deg;--blur:${t.blur}px;--o:${t.o}"></i>`).join("") +
+      '</div><div class="burn-fireball-body"><div class="burn-ball-outer"></div>' +
+      '<div class="burn-ball-mid"></div><div class="burn-ball-core"></div>' +
+      '<div class="burn-ball-hotspot"></div></div></div>';
+    world.appendChild(ball);
+    bodies.push({ el: ball.querySelector(".burn-fireball-body"), route });
+  }
+
+  const impact = document.createElement("div");
+  impact.className = "burn-impact";
+  impact.style.setProperty("--burn-end-x", dst.x + "px");
+  impact.style.setProperty("--burn-end-y", dst.y + "px");
+  impact.innerHTML =
+    '<div class="burn-impact-visual"><div class="burn-void-disc"></div><div class="burn-impact-core"></div>' +
+    '<div class="burn-shock-ring one" style="--size:112px;--border-size:7px;--ring-blur:1px"></div>' +
+    '<div class="burn-shock-ring two" style="--size:92px;--border-size:3px;--ring-blur:2px"></div>' +
+    IMPACT_SMOKE.map((p) =>
+      `<i class="burn-impact-smoke" style="--x:${p.x}px;--y:${p.y}px;--s:${p.s};--drift:${p.drift}px;--s2:${p.s2};--s3:${p.s3};--drift2:${p.drift2}px"></i>`).join("") +
+    "</div>";
+  world.appendChild(impact);
+
+  const flash = document.createElement("div");
+  flash.className = "burn-screen-flash";
+  layer.appendChild(flash);
+
+  cssBoard.appendChild(layer);
+
+  // Chispas de estela y anillo de brasas, como en BurnAnimator.
+  const boardRect = cssBoard.getBoundingClientRect();
+  const start = performance.now();
+  let raf = 0;
+  let lastSpawn = 0;
+  let embersDone = false;
+
+  const spawnTrace = (body, route) => {
+    const rect = body.getBoundingClientRect();
+    const len = Math.hypot(route.endX - route.startX, route.endY - route.startY) || 1;
+    const backX = -(route.endX - route.startX) / len;
+    const backY = -(route.endY - route.startY) / len;
+    const particle = document.createElement("i");
+    particle.className = "burn-trace-particle";
+    const size = (2 + Math.random() * 4) * scale;
+    particle.style.left = (rect.left - boardRect.left + rect.width * (0.35 + Math.random() * 0.3)) + "px";
+    particle.style.top = (rect.top - boardRect.top + rect.height * (0.3 + Math.random() * 0.4)) + "px";
+    particle.style.setProperty("--size", size + "px");
+    particle.style.setProperty("--life", (260 + Math.random() * 480) + "ms");
+    const mag = (24 + Math.random() * 68) * scale;
+    const spread = (Math.random() - 0.5) * 42 * scale;
+    particle.style.setProperty("--dx", (backX * mag - backY * spread) + "px");
+    particle.style.setProperty("--dy", (backY * mag + backX * spread) + "px");
+    trace.appendChild(particle);
+    particle.addEventListener("animationend", () => particle.remove(), { once: true });
+  };
+
+  const spawnEmber = () => {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = (40 + Math.random() * 220) * scale;
+    const particle = document.createElement("i");
+    particle.className = "burn-trace-particle";
+    particle.style.left = dst.x + "px";
+    particle.style.top = dst.y + "px";
+    particle.style.setProperty("--size", ((2.5 + Math.random() * 6) * scale) + "px");
+    particle.style.setProperty("--life", (420 + Math.random() * 560) + "ms");
+    particle.style.setProperty("--dx", Math.cos(angle) * dist + "px");
+    particle.style.setProperty("--dy", Math.sin(angle) * dist + "px");
+    trace.appendChild(particle);
+    particle.addEventListener("animationend", () => particle.remove(), { once: true });
+  };
+
+  const tick = (now) => {
+    if (frozenAt !== null) return;   // en modo congelado no se siembran partículas nuevas
+    const elapsed = now - start;
+    if (elapsed >= IMPACT_AT * duration - 30) {
+      if (!embersDone) {
+        embersDone = true;
+        for (let i = 0; i < 32; i++) spawnEmber();
+      }
+    } else if (elapsed >= CHARGE_END * duration && now - lastSpawn > 8) {
+      for (const b of bodies) {
+        const bursts = 2 + Math.floor(Math.random() * 2);
+        for (let i = 0; i < bursts; i++) spawnTrace(b.el, b.route);
+      }
+      lastSpawn = now;
+    }
+    if (!embersDone) raf = requestAnimationFrame(tick);
+  };
+  raf = requestAnimationFrame(tick);
+
+  // El teardown pertenece a esta reproducción: un temporizador viejo no debe matar la siguiente.
+  const teardown = () => {
+    cancelAnimationFrame(raf);
+    layer.remove();
+    if (cssTeardown === teardown) cssTeardown = null;
+  };
+  cssTeardown = teardown;
+  if (frozenAt === null) setTimeout(teardown, duration + 700);
+}
+</script>
+<script id="gl-script">
+/* ===================================================================
+   Panel B — proyectil e impacto por shader. Una sola pasada fullscreen:
+   la forma sale de ruido fractal, no de border-radius, así que la
+   silueta es irregular y se advecta hacia atrás mientras vuela.
+   =================================================================== */
+const VERT = `
+attribute vec2 aPos;
+void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
+`;
+
+const FRAG = `
+precision highp float;
+
+uniform vec2 uRes;
+uniform float uTime;     // reloj continuo (parpadeo de llama)
+uniform float uT;        // 0..1 del beat
+uniform vec2 uStartA;
+uniform vec2 uStartB;
+uniform vec2 uEnd;
+uniform float uCount;    // 1 o 2 proyectiles
+uniform float uScale;
+uniform float uDesign;   // 1 cometa, 2 lenguas, 3 volumen
+uniform float uHover;    // 1 = silueta suspendida para inspección, sin vuelo ni impacto
+uniform vec3 uCore;
+uniform vec3 uHot;
+uniform vec3 uMid;
+uniform vec3 uDeep;
+uniform vec3 uSmoke;
+uniform float uInk;      // 0 llama luminosa, 1 materia densa (aceite)
+
+const float CHARGE_END = 0.20;
+const float IMPACT_AT = 0.58;
+// Cadencia y duración de la estela depositada, en unidades del vuelo (1.0 = trayecto completo).
+const float PUFF_STEP = 0.032;
+const float PUFF_LIFE = 0.62;
+// Las chispas van más espaciadas y viven algo más; su ventana también cabe en su bucle.
+const float SPARK_STEP = 0.042;
+const float SPARK_LIFE = 0.64;
+
+mat2 rot(float a) { float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
+
+float hash13(vec3 p) {
+  p = fract(p * 0.3183099 + vec3(0.71, 0.113, 0.419));
+  p *= 17.0;
+  return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+}
+
+float vnoise(vec3 x) {
+  vec3 i = floor(x);
+  vec3 f = fract(x);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(mix(hash13(i + vec3(0.0, 0.0, 0.0)), hash13(i + vec3(1.0, 0.0, 0.0)), f.x),
+        mix(hash13(i + vec3(0.0, 1.0, 0.0)), hash13(i + vec3(1.0, 1.0, 0.0)), f.x), f.y),
+    mix(mix(hash13(i + vec3(0.0, 0.0, 1.0)), hash13(i + vec3(1.0, 0.0, 1.0)), f.x),
+        mix(hash13(i + vec3(0.0, 1.0, 1.0)), hash13(i + vec3(1.0, 1.0, 1.0)), f.x), f.y), f.z);
+}
+
+float fbm(vec3 p) {
+  float sum = 0.0;
+  float amp = 0.5;
+  for (int i = 0; i < 5; i++) {
+    sum += amp * vnoise(p);
+    p.xy = rot(0.73) * p.xy * 2.03;
+    p.z *= 1.91;
+    amp *= 0.5;
+  }
+  return sum;
+}
+
+float fbm3(vec3 p) {
+  float sum = 0.0;
+  float amp = 0.55;
+  for (int i = 0; i < 3; i++) {
+    sum += amp * vnoise(p);
+    p *= 2.11;
+    amp *= 0.5;
+  }
+  return sum;
+}
+
+// Rampa de calor: negro/humo -> rojo profundo -> cuerpo -> blanco.
+vec3 heat(float h) {
+  vec3 c = mix(uSmoke, uDeep, smoothstep(0.0, 0.14, h));
+  c = mix(c, uMid, smoothstep(0.16, 0.48, h));
+  c = mix(c, uHot, smoothstep(0.44, 0.76, h));
+  c = mix(c, uCore, smoothstep(0.76, 0.97, h));
+  return c;
+}
+
+// Composición premultiplicada: la llama suma luz, el humo y el aceite tapan.
+// cover es cuánta silueta ocupa el fragmento y h su temperatura; van separados para que
+// el blanco quede sólo en el corazón y el resto del cuerpo recorra la rampa de color.
+void addFire(inout vec3 col, inout float alpha, float cover, float h) {
+  if (cover <= 0.002) return;
+  h = clamp(h, 0.0, 1.0);
+  vec3 c = heat(h);
+  float lum = pow(clamp(cover, 0.0, 1.0), 0.85);
+  // cuánto tapa el fondo: casi nada en llama, casi todo en materia densa (aceite)
+  float cvr = clamp(lum * mix(0.22, 0.98, uInk), 0.0, 1.0);
+  col = col * (1.0 - cvr) + c * cvr;
+  alpha = alpha * (1.0 - cvr) + cvr;
+  // la llama es sobre todo emisiva: el cuerpo brilla, no sólo el núcleo
+  col += c * lum * mix(1.25, 0.22, uInk) * (0.35 + 0.9 * h);
+}
+
+float easeInFlight(float x) { return x * x * (3.0 - 2.0 * x) * 0.35 + x * 0.65; }
+
+vec2 pathPoint(vec2 s, vec2 e, float k) {
+  vec2 d = e - s;
+  vec2 perp = normalize(vec2(-d.y, d.x));
+  return mix(s, e, k) + perp * sin(3.14159 * k) * 26.0 * uScale;
+}
+
+// ---------- proyectil ----------
+// Devuelve cobertura y escribe la temperatura del fragmento en heatv.
+float projectileDensity(vec2 p, vec2 P, vec2 dir, float R, float seed, out float heatv) {
+  vec2 rel = p - P;
+  vec2 n = vec2(dot(rel, dir), dot(rel, vec2(-dir.y, dir.x))) / R;
+  float back = max(-n.x, 0.0);
+  float cool = 0.46 + 0.58 * exp(-1.7 * back);   // la cola se enfría; la cabeza conserva el núcleo
+  heatv = 0.0;
+  float dens = 0.0;
+
+  if (uDesign < 1.5) {
+    // B · cometa: gota estirada + erosión creciente hacia la cola
+    // cabeza compacta: el largo lo pone la estela depositada, no un rabo pegado al cuerpo
+    float stretched = n.x > 0.0 ? n.x / 0.85 : n.x / 2.2;
+    float r = length(vec2(stretched, n.y * (1.0 + 0.26 * back)));
+    float turb = fbm(vec3(n.x * 1.7 + uTime * 7.0, n.y * 2.2, uTime * 2.6 + seed * 11.0)) - 0.5;
+    float shred = 0.30 + 1.30 * smoothstep(0.0, 1.0, back);
+    float raw = 1.0 - r - turb * shred * 1.6;
+    dens = smoothstep(0.0, 0.40, raw);
+    // el calor cae desde el centro geométrico: blanco sólo en el corazón
+    heatv = pow(clamp(1.0 - r * 0.9, 0.0, 1.0), 2.0) * cool * 1.15;
+  } else if (uDesign < 2.5) {
+    // C · lenguas: lóbulos con radio dependiente del ángulo, sin círculo base
+    for (int i = 0; i < 3; i++) {
+      float fi = float(i);
+      vec2 c = vec2(-0.52 * fi + 0.12 * sin(uTime * 12.0 + fi * 2.1),
+                    0.24 * sin(uTime * 9.5 + fi * 3.3 + seed));
+      vec2 m = n - c;
+      float rr = length(m);
+      float ang = atan(m.y, m.x);
+      float wob = fbm3(vec3(cos(ang) * 1.5, sin(ang) * 1.5, uTime * 3.6 + fi * 5.0 + seed));
+      float edge = (0.95 - 0.18 * fi) * (0.5 + 1.05 * wob);
+      edge *= 1.0 + smoothstep(0.15, 1.0, -m.x / max(rr, 0.001));
+      float inside = 1.0 - rr / max(edge, 0.001);
+      dens = max(dens, smoothstep(0.0, 0.5, inside) * (1.0 - 0.16 * fi));
+      heatv = max(heatv, pow(clamp(1.0 - rr * 0.85, 0.0, 1.0), 1.8) * cool * 1.15 * (1.0 - 0.12 * fi));
+    }
+  } else {
+    // D · masa volumétrica: capas de ruido con paralaje
+    for (int i = 0; i < 5; i++) {
+      float fi = float(i);
+      float depth = fi / 4.0;
+      vec2 m = (n - vec2(-depth * 0.9, 0.0)) * (1.0 + depth * 0.3);
+      float rr = length(vec2(m.x * 0.82, m.y * (1.0 + 0.3 * depth)));
+      float body = smoothstep(1.2, 0.15, rr);
+      float tn = fbm(vec3(m * 2.1 + vec2(uTime * 4.4, 0.0), uTime * 1.9 + depth * 6.0 + seed));
+      float slab = body * smoothstep(0.44, 0.86, tn + body * 0.4);
+      dens += slab * 0.44;
+      // las capas delanteras son el interior caliente de la masa
+      heatv = max(heatv, pow(body, 1.6) * (1.0 - 0.18 * fi) * cool * 1.2);
+    }
+    dens = clamp(dens, 0.0, 1.0);
+  }
+  return dens;
+}
+
+// ---------- carga en la mano ----------
+float chargeDensity(vec2 p, vec2 S, float R, float k, float seed, out float heatv) {
+  vec2 n = (p - S) / (R * (0.25 + 0.85 * k));
+  float rr = length(n);
+  float ang = atan(n.y, n.x);
+  float wob = fbm3(vec3(cos(ang) * 1.8, sin(ang) * 1.8, uTime * 4.2 + seed)) - 0.5;
+  float edge = max(1.0 + wob * 0.85, 0.05);
+  float inside = 1.0 - rr / edge;
+  heatv = clamp(inside * 1.2, 0.0, 1.0) * (0.5 + 0.5 * k);
+  return smoothstep(0.0, 0.55, inside) * smoothstep(0.0, 0.25, k);
+}
+
+void main() {
+  vec2 p = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);
+  vec3 col = vec3(0.0);
+  float alpha = 0.0;
+
+  float R = 24.0 * uScale;   // radio del cuerpo, comparable al .burn-fireball-body actual
+
+  // Banco de siluetas: el mismo cuerpo, suspendido y avanzando hacia la derecha.
+  if (uHover > 0.5) {
+    // estela ya depositada, vista desde el marco del proyectil: cuanto más atrás, más vieja
+    for (int j = 1; j < 9; j++) {
+      float fj = float(j);
+      float u = fj / 8.0;
+      float rnd = hash13(vec3(fj, 4.0, 1.0));
+      float rnd2 = hash13(vec3(fj, 6.0, 5.0));
+      vec2 Q = uEnd - vec2(R * (1.0 + fj * 0.9), (rnd - 0.5) * R * 1.1 * u + R * 0.5 * u * u);
+      vec2 m = (p - Q) / (R * (0.55 + 0.8 * u) * (0.75 + rnd2 * 0.4));
+      float nz = fbm3(vec3(m * 1.5 + vec2(uTime * 1.4, 0.0), uTime * 2.0 + fj)) - 0.5;
+      float inside = 1.0 - (length(vec2(m.x * 0.88, m.y)) + nz * 0.85);
+      float cov = smoothstep(0.0, 0.5, inside) * (1.0 - smoothstep(0.3, 1.0, u));
+      addFire(col, alpha, cov, pow(clamp(inside, 0.0, 1.0), 1.4) * (0.84 - 0.55 * u));
+
+      float sz = (1.5 + rnd2 * 3.2) * uScale * (1.0 - u * 0.75);
+      vec2 sp = Q - vec2(R * 0.6 * rnd2, (rnd2 - 0.5) * R * 2.4 * u);
+      float g = sz / (length(p - sp) + max(sz, 0.001) * 0.9);
+      float e = pow(clamp(g, 0.0, 1.0), 3.0) * (1.0 - smoothstep(0.55, 1.0, u));
+      addFire(col, alpha, e, (0.72 + 0.28 * e) * (1.0 - 0.35 * u));
+    }
+    float hv;
+    float d = projectileDensity(p, uEnd, vec2(1.0, 0.0), R, 3.0, hv);
+    addFire(col, alpha, d, hv);
+    gl_FragColor = vec4(col, clamp(alpha, 0.0, 1.0));
+    return;
+  }
+
+  float ti = clamp((uT - IMPACT_AT) / (1.0 - IMPACT_AT), 0.0, 1.0);
+
+  // --- carga ---
+  if (uT < CHARGE_END + 0.02) {
+    float ck = clamp(uT / CHARGE_END, 0.0, 1.0);
+    for (int i = 0; i < 2; i++) {
+      if (float(i) >= uCount) break;
+      vec2 S = i == 0 ? uStartA : uStartB;
+      float ch;
+      float d = chargeDensity(p, S, R * 1.1, ck, float(i) * 7.0, ch);
+      addFire(col, alpha, d * (1.0 - smoothstep(0.85, 1.0, ck) * 0.35), ch);
+    }
+  }
+
+  // --- vuelo ---
+  // La estela se EMITE en instantes fijos: cada bocanada queda anclada donde nació, crece,
+  // se enfría y se apaga ahí. El reloj sigue avanzando después del impacto para que la cola
+  // termine de consumirse en el aire en vez de desaparecer con la bola.
+  if (uT >= CHARGE_END) {
+    float fclock = (uT - CHARGE_END) / (IMPACT_AT - CHARGE_END);
+    for (int i = 0; i < 2; i++) {
+      if (float(i) >= uCount) break;
+      vec2 S = i == 0 ? uStartA : uStartB;
+      vec2 dir = normalize(uEnd - S);
+      vec2 perp = vec2(-dir.y, dir.x);
+      float seed = float(i) * 31.7;
+
+      // Bocanadas depositadas: ventana deslizante sobre las últimas emisiones, para que la
+      // emisión no se agote a media trayectoria y la bola nunca se despegue de su estela.
+      float lastPuff = floor(min(fclock, 1.0) / PUFF_STEP);
+      for (int j = 0; j < 20; j++) {
+        float idx = lastPuff - float(j);         // índice absoluto de emisión
+        if (idx < 0.0) continue;
+        float te = idx * PUFF_STEP;              // instante de emisión, en unidades de vuelo
+        float u = (fclock - te) / PUFF_LIFE;     // 0..1 de su propia vida
+        if (u >= 1.0) continue;
+        vec2 Q = pathPoint(S, uEnd, easeInFlight(te));
+        // el azar va atado al índice: cada bocanada conserva su forma mientras envejece
+        float rnd = hash13(vec3(idx, seed, 1.0));
+        float rnd2 = hash13(vec3(idx, seed, 5.0));
+        // deriva propia: se abre de lado y sube mientras se consume
+        Q += perp * (rnd - 0.5) * R * 1.1 * u + vec2(0.0, -R * 0.5 * u * u);
+        vec2 m = (p - Q) / (R * (0.55 + 0.8 * u) * (0.75 + rnd2 * 0.4));
+        float nz = fbm3(vec3(m * 1.5 + vec2(uTime * 1.4, 0.0), uTime * 2.0 + idx)) - 0.5;
+        float rr = length(vec2(m.x * 0.88, m.y)) + nz * 0.85;
+        float inside = 1.0 - rr;
+        float cov = smoothstep(0.0, 0.5, inside) * (1.0 - smoothstep(0.3, 1.0, u));
+        // algo menos caliente que la cabeza, para que el proyectil siga mandando
+        addFire(col, alpha, cov, pow(clamp(inside, 0.0, 1.0), 1.4) * (0.84 - 0.55 * u));
+      }
+
+      // chispas sueltas, también ancladas al punto donde saltaron y con ventana propia
+      float lastSpark = floor(min(fclock, 1.0) / SPARK_STEP);
+      for (int j = 0; j < 16; j++) {
+        float idx = lastSpark - float(j);
+        if (idx < 0.0) continue;
+        float te = idx * SPARK_STEP;
+        float u = (fclock - te) / SPARK_LIFE;
+        if (u >= 1.0) continue;
+        float rnd = hash13(vec3(idx, seed + 3.0, 7.0));
+        float rnd2 = hash13(vec3(idx, seed + 9.0, 2.0));
+        vec2 Q = pathPoint(S, uEnd, easeInFlight(te))
+               + perp * (rnd - 0.5) * R * (0.5 + 3.2 * u)
+               - dir * rnd2 * R * 0.8
+               + vec2(0.0, -R * 0.7 * u * u);
+        float sz = (1.5 + rnd2 * 3.2) * uScale * (1.0 - u * 0.75);
+        float g = sz / (length(p - Q) + max(sz, 0.001) * 0.9);
+        float e = pow(clamp(g, 0.0, 1.0), 3.0) * (1.0 - smoothstep(0.55, 1.0, u));
+        addFire(col, alpha, e, (0.72 + 0.28 * e) * (1.0 - 0.35 * u));
+      }
+
+      // cuerpo del proyectil: sólo mientras vuela
+      if (fclock <= 1.0) {
+        vec2 P = pathPoint(S, uEnd, easeInFlight(fclock));
+        float heatv;
+        float d = projectileDensity(p, P, dir, R, seed, heatv);
+        // aplastado por el impacto inminente
+        d *= 1.0 - smoothstep(0.97, 1.0, fclock) * 0.35;
+        addFire(col, alpha, d, heatv);
+      }
+    }
+  }
+
+  // --- impacto ---
+  if (uT >= IMPACT_AT) {
+    vec2 qn = (p - uEnd) / R;
+    // flotabilidad: la masa sube mientras se abre
+    qn.y += 2.3 * ti * ti;
+    float ang = atan(qn.y, qn.x);
+    // deformación 2D del espacio: el contorno se abolla en vez de crecer como disco
+    float warp = fbm(vec3(qn * 1.25, uTime * 2.2 + 4.0)) - 0.5;
+    float rr = length(qn) * (1.0 + warp * 0.5);
+
+    // humo denso primero (queda por debajo del fuego)
+    float srad = 1.2 + 4.6 * pow(ti, 0.45);
+    float swob = fbm3(vec3(cos(ang) * 2.2, sin(ang) * 2.2, 3.0 + uTime * 1.2)) - 0.5;
+    float sdens = smoothstep(srad * (1.0 + swob * 0.6), srad * 0.2, rr)
+                * smoothstep(0.05, 0.35, ti) * (1.0 - smoothstep(0.45, 1.0, ti));
+    float scover = sdens * 0.55;
+    col = col * (1.0 - scover) + uSmoke * scover;
+    alpha = alpha * (1.0 - scover) + scover;
+
+    // cuerpo: dos frecuencias angulares + rotura interna, para que no quede un círculo
+    float rad = 0.8 + 4.2 * pow(ti, 0.5);
+    float a1 = fbm3(vec3(cos(ang) * 2.0, sin(ang) * 2.0, uTime * 2.4)) - 0.5;
+    float a2 = fbm3(vec3(cos(ang) * 5.5, sin(ang) * 5.5, 7.0 + uTime * 3.8)) - 0.5;
+    float edge = max(rad * (1.0 + a1 * 0.9 + a2 * 0.45), 0.05);
+    float inside = 1.0 - rr / edge;
+    float body = smoothstep(0.0, 0.5, inside);
+    float breakup = fbm(vec3(qn * 1.7, uTime * 3.2 + 9.0));
+    body *= smoothstep(0.28, 0.62, breakup + (1.0 - ti) * 0.4);
+    body *= 1.0 - smoothstep(0.15, 0.85, ti);
+    // el interior arranca blanco y se apaga hacia rojo mientras la bola se abre
+    float bodyHeat = clamp(inside * 1.1, 0.0, 1.0) * (1.12 - 0.72 * ti);
+    addFire(col, alpha, clamp(body, 0.0, 1.0), bodyHeat);
+
+    // lenguas despedidas: rompen la silueta y dan dirección al estallido
+    for (int j = 0; j < 7; j++) {
+      float fj = float(j);
+      float a0 = hash13(vec3(fj, 11.0, 3.0)) * 6.2831;
+      float sp = 0.55 + hash13(vec3(fj, 5.0, 2.0)) * 0.9;
+      vec2 c = vec2(cos(a0), sin(a0) - 0.4) * 3.4 * sp * pow(ti, 0.62);
+      vec2 m = qn - c;
+      float lr = length(m) / max(1.15 * (1.0 - 0.4 * ti) * (0.65 + sp * 0.5), 0.05);
+      float ln = fbm3(vec3(m * 2.4, uTime * 3.0 + fj)) - 0.5;
+      float li = 1.0 - lr - ln * 0.95;
+      float lcov = smoothstep(0.0, 0.45, li) * (1.0 - smoothstep(0.3, 1.0, ti));
+      addFire(col, alpha, lcov, clamp(li * 1.2, 0.0, 1.0) * (1.0 - 0.5 * ti));
+    }
+
+    // anillo de choque turbulento
+    float ring = 0.5 + 5.4 * pow(ti, 0.42);
+    float rw = 0.42 * (1.0 + a1 * 0.85);
+    float rd = smoothstep(rw, 0.0, abs(rr - ring * (1.0 + a1 * 0.22)));
+    addFire(col, alpha, rd * (1.0 - smoothstep(0.05, 0.5, ti)) * 0.7, 0.72 - 0.3 * ti);
+
+    // núcleo blanco del golpe: breve y estrecho, no un halo
+    float flash = exp(-ti * 30.0);
+    col += heat(1.0) * flash * exp(-rr * rr * 1.7) * 1.9;
+
+    // brasas radiales
+    for (int j = 0; j < 22; j++) {
+      float fj = float(j);
+      float a0 = hash13(vec3(fj, 2.0, 4.0)) * 6.2831;
+      float sp = 0.5 + hash13(vec3(fj, 7.0, 1.0));
+      float sz = (1.4 + hash13(vec3(fj, 3.0, 8.0)) * 3.6) * uScale;
+      vec2 pos = uEnd + vec2(cos(a0), sin(a0)) * (R * 5.2 * sp * pow(ti, 0.55))
+               + vec2(0.0, -34.0 * uScale * ti * ti * (0.4 + sp));
+      float d = length(p - pos);
+      float g = sz / (d + sz * 0.85);
+      float e = pow(clamp(g, 0.0, 1.0), 3.0) * (1.0 - smoothstep(0.35, 1.0, ti));
+      addFire(col, alpha, e, 0.7 + 0.3 * e - 0.25 * ti);
+    }
+  }
+
+  gl_FragColor = vec4(col, clamp(alpha, 0.0, 1.0));
+}
+`;
+
+const UNIFORMS = ["uRes", "uTime", "uT", "uStartA", "uStartB", "uEnd", "uCount",
+                  "uScale", "uDesign", "uHover", "uCore", "uHot", "uMid", "uDeep", "uSmoke", "uInk"];
+
+function createRenderer(target, host) {
+  const gl = target.getContext("webgl", { alpha: true, premultipliedAlpha: true, antialias: false });
+  const compile = (type, src) => {
+    const sh = gl.createShader(type);
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+      console.error(gl.getShaderInfoLog(sh));
+      throw new Error("shader");
+    }
+    return sh;
+  };
+  const program = gl.createProgram();
+  gl.attachShader(program, compile(gl.VERTEX_SHADER, VERT));
+  gl.attachShader(program, compile(gl.FRAGMENT_SHADER, FRAG));
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.error(gl.getProgramInfoLog(program));
+    throw new Error("link");
+  }
+  gl.useProgram(program);
+
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(program, "aPos");
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+  const uni = {};
+  for (const name of UNIFORMS) uni[name] = gl.getUniformLocation(program, name);
+
+  gl.disable(gl.DEPTH_TEST);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+  const r = { gl, uni, canvas: target, host };
+  r.resize = () => {
+    const rect = host.getBoundingClientRect();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = Math.max(1, Math.round(rect.width * dpr));
+    const h = Math.max(1, Math.round(rect.height * dpr));
+    if (target.width !== w || target.height !== h) { target.width = w; target.height = h; }
+    gl.viewport(0, 0, w, h);
+    return { w: rect.width, h: rect.height, dpr };
+  };
+  r.material = (conf) => {
+    gl.uniform3fv(uni.uCore, conf.core);
+    gl.uniform3fv(uni.uHot, conf.hot);
+    gl.uniform3fv(uni.uMid, conf.mid);
+    gl.uniform3fv(uni.uDeep, conf.deep);
+    gl.uniform3fv(uni.uSmoke, conf.smoke);
+    gl.uniform1f(uni.uInk, conf.ink);
+  };
+  return r;
+}
+
+const board = createRenderer(canvas, glBoard);
+const stripCanvas = document.getElementById("strip");
+const strip = createRenderer(stripCanvas, stripCanvas.parentElement);
+
+let glState = null;
+let glRaf = 0;
+
+function playGL(material, design, scale, speed) {
+  const conf = MATERIALS[material];
+  const { src, dst } = endpoints(glBoard);
+  const startA = conf.projectiles === 2
+    ? { x: src.x + src.w * 0.08, y: src.y + src.h * 0.52 }
+    : { x: src.x + src.w * 0.5, y: src.y + src.h * 0.5 };
+  const startB = { x: src.x + src.w * 0.92, y: src.y + src.h * 0.52 };
+  glState = {
+    conf, design, scale, speed,
+    startA, startB, end: dst,
+    t0: performance.now(),
+    duration: DURATION / speed,
+  };
+  if (!glRaf) glRaf = requestAnimationFrame(renderFrame);
+}
+
+function renderBoard(now) {
+  const { gl, uni } = board;
+  const view = board.resize();
+  gl.clearColor(0, 0, 0, 0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  if (!glState) return;
+
+  const t = frozenAt !== null ? frozenAt : (now - glState.t0) / glState.duration;
+  if (t > 1.05) { glState = null; return; }
+
+  const s = view.dpr;
+  gl.uniform2f(uni.uRes, board.canvas.width, board.canvas.height);
+  gl.uniform1f(uni.uTime, now / 1000);
+  gl.uniform1f(uni.uT, Math.max(0, Math.min(1, t)));
+  gl.uniform2f(uni.uStartA, glState.startA.x * s, glState.startA.y * s);
+  gl.uniform2f(uni.uStartB, glState.startB.x * s, glState.startB.y * s);
+  gl.uniform2f(uni.uEnd, glState.end.x * s, glState.end.y * s);
+  gl.uniform1f(uni.uCount, glState.conf.projectiles);
+  gl.uniform1f(uni.uScale, glState.scale * s);
+  gl.uniform1f(uni.uDesign, glState.design);
+  gl.uniform1f(uni.uHover, 0);
+  board.material(glState.conf);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+// Tres tercios con tijera: mismo programa, un diseño por región.
+function renderStrip(now) {
+  const { gl, uni } = strip;
+  const view = strip.resize();
+  gl.disable(gl.SCISSOR_TEST);
+  gl.clearColor(0, 0, 0, 0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  const conf = MATERIALS[materialSel.value];
+  const s = view.dpr;
+  const w = strip.canvas.width;
+  const h = strip.canvas.height;
+  gl.uniform2f(uni.uRes, w, h);
+  gl.uniform1f(uni.uTime, now / 1000);
+  gl.uniform1f(uni.uHover, 1);
+  gl.uniform1f(uni.uScale, currentScale() * 1.6 * s);
+  gl.uniform1f(uni.uCount, 1);
+  strip.material(conf);
+
+  gl.enable(gl.SCISSOR_TEST);
+  for (let i = 0; i < 3; i++) {
+    const x0 = Math.floor((w * i) / 3);
+    const x1 = Math.floor((w * (i + 1)) / 3);
+    gl.scissor(x0, 0, x1 - x0, h);
+    // uEnd es el centro del cuerpo suspendido, en píxeles con y hacia abajo
+    gl.uniform2f(uni.uEnd, (x0 + x1) / 2 + w * 0.03, h * 0.44);
+    gl.uniform1f(uni.uDesign, i + 1);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+  gl.disable(gl.SCISSOR_TEST);
+}
+
+function renderFrame(now) {
+  glRaf = requestAnimationFrame(renderFrame);
+  renderBoard(now);
+  renderStrip(now);
+}
+
+/* ===================================================================
+   Control
+   =================================================================== */
+let loopTimer = 0;
+
+function currentScale() { return parseFloat(scaleInput.value); }
+function currentSpeed() { return parseFloat(speedInput.value); }
+
+function launch() {
+  const material = materialSel.value;
+  const design = parseInt(designSel.value, 10);
+  const scale = currentScale();
+  const speed = currentSpeed();
+  playCss(material, scale, speed);
+  playGL(material, design, scale, speed);
+  clearTimeout(loopTimer);
+  if (frozenAt !== null) { freezeCss(); return; }
+  if (loopInput.checked) {
+    loopTimer = setTimeout(launch, DURATION / speed + 620);
+  }
+}
+
+// Congela el panel CSS: retraso negativo equivalente al instante pedido y animaciones en pausa.
+function freezeCss() {
+  const layer = cssBoard.querySelector(".burn-animation-layer");
+  if (!layer || frozenAt === null) return;
+  const offset = frozenAt * (DURATION / currentSpeed());
+  layer.style.animationPlayState = "paused";
+  for (const el of layer.querySelectorAll("*")) {
+    el.style.animationDelay = (-offset) + "ms";
+    el.style.animationPlayState = "paused";
+  }
+}
+
+function setFrozen(value) {
+  frozenAt = value;
+  scrubVal.textContent = value === null ? "—" : Math.round(value * 100) + "%";
+  clearTimeout(loopTimer);
+  launch();
+}
+
+function syncMaterial() {
+  const conf = MATERIALS[materialSel.value];
+  scaleInput.value = String(conf.scale);
+  scaleVal.textContent = conf.scale.toFixed(2);
+}
+
+function syncLabels() {
+  scaleVal.textContent = currentScale().toFixed(2);
+  speedVal.textContent = currentSpeed().toFixed(2);
+  glTitle.textContent = designSel.options[designSel.selectedIndex].text + " (WebGL)";
+  notes.innerHTML = DESIGN_NOTES[designSel.value] +
+    "<br><br><b>Impacto (común a los tres).</b> El estallido no es un disco: el contorno se deforma con dos " +
+    "frecuencias angulares, el interior se rompe con ruido, siete lenguas salen despedidas y la masa sube " +
+    "mientras se apaga, con humo por debajo y un anillo turbulento. La elección de diseño sólo cambia el " +
+    "proyectil en vuelo." +
+    "<br><br>Los tres comparten el reloj actual: carga 0–20 %, vuelo 20–58 %, impacto en el 58 %. " +
+    "El material sólo aporta la rampa de color y cuánta luz tapa (<code>ink</code>): el aceite de los zombis " +
+    "es la misma llama con densidad casi opaca y rampa violeta, así que no hay que duplicar el efecto por deck.";
+}
+
+materialSel.addEventListener("change", () => { syncMaterial(); syncLabels(); launch(); });
+designSel.addEventListener("change", () => { syncLabels(); launch(); });
+scaleInput.addEventListener("input", () => { syncLabels(); if (frozenAt !== null) launch(); });
+speedInput.addEventListener("input", syncLabels);
+loopInput.addEventListener("change", () => { clearTimeout(loopTimer); if (loopInput.checked) { frozenAt = null; scrubVal.textContent = "—"; launch(); } });
+scrubInput.addEventListener("input", () => { loopInput.checked = false; setFrozen(parseInt(scrubInput.value, 10) / 100); });
+document.getElementById("fire").addEventListener("click", () => { frozenAt = null; scrubVal.textContent = "—"; launch(); });
+window.addEventListener("resize", () => { board.resize(); strip.resize(); });
+
+syncMaterial();
+syncLabels();
+launch();
+</script>
+</body>
+</html>
