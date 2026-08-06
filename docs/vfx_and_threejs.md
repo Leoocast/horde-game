@@ -21,10 +21,15 @@ Implementaciones utiles como referencia:
   ramificados entre la carta y el objetivo, nucleo electrico, resplandor aditivo, chispas y anillos
   de impacto. La carta lanzada permanece visible y la criatura conserva el fade de muerte normal
   del campo.
-- `GrowthBuffAnimator.tsx`: canvas Three.js local anclado al slot de una criatura. Revela raices
-  gruesas desde la base, las hace atravesar y abrirse sobre la carta, brota hojas ancladas y eleva
-  una segunda capa de hojas casi rectas con geometria/nervadura propias; tiene intensidades
-  preview, suave, fuerte y feral sin modificar el `transform` que pertenece al battlefield.
+- `GrowthBuffAnimator.tsx`: canvas Three.js local anclado al slot de una criatura. El patron
+  vigente es `frame`: dos ramas salen de la base, trepan por el borde de la carta y cierran en una
+  flor sobre el canto superior, con zarcillos cortos hacia afuera y hojas que brotan siempre del
+  lado exterior (`leafSide`), de modo que arte, stats y badges de Estado siguen legibles durante el
+  beat. Tiene intensidades preview, suave, fuerte y feral sin modificar el `transform` que pertenece
+  al battlefield. El patron `growth` anterior —raices gruesas que atraviesan y se abren sobre la
+  carta— queda disponible en el mismo animador para un efecto futuro que si quiera cubrirla.
+  `frameRootPathSpecs` y `frameLeafRootIndex` son puras y estan cubiertas en
+  `tests/uiPresentation.test.js`.
 - `NatureShieldAnimator.tsx`: conserva la variante de raices que envuelve y cierra el contorno de
   la carta. No esta conectada a ninguna carta: queda lista para un futuro efecto de resistencia,
   proteccion, hexproof o indestructible.

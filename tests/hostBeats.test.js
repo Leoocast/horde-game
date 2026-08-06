@@ -947,7 +947,7 @@ test("Hunt Beneath the Red Moon presents its temporary Lifesteal on every allied
   }
 });
 
-test("Kaelor uses the shared growth animation when the first allied Echo is Invoked", async () => {
+test("Kaelor uses his storm animation when the first allied Echo is Invoked", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -1000,7 +1000,7 @@ test("Kaelor uses the shared growth animation when the first allied Echo is Invo
     assert.equal(buffedKaelor?.untilNextPlayerTurnPower, 1);
     assert.equal(buffedKaelor?.untilNextPlayerTurnEndurance, 1);
     assert.deepEqual(result.buffAnimationCardIds, [ranger.instanceId]);
-    assert.equal(result.buffAnimationVariant, "growth-strong");
+    assert.equal(result.buffAnimationVariant, "storm-strong");
   } finally {
     useAudioStore.setState({ playSfx: originalPlaySfx });
     globalThis.window = originalWindow;

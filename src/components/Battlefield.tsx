@@ -19,6 +19,7 @@ import { cardStatState } from "../utils/selectors";
 import { BuffSurgeAnimator } from "./BuffSurgeAnimator";
 import { Card, CardDefenseBadge, CardTraitIconBadges } from "./Card";
 import { GrowthBuffAnimator } from "./GrowthBuffAnimator";
+import { StormBuffAnimator } from "./StormBuffAnimator";
 import { HeavyCreatureLanding } from "./HeavyCreatureLanding";
 import { Zone } from "./Zone";
 import { Hourglass, Zap } from "lucide-react";
@@ -1050,7 +1051,23 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
                 seedKey={card.instanceId}
               />
             )
-          : (
+          : buffAnimationVariant === "storm-strong"
+            ? (
+                <>
+                  <BuffSurgeAnimator
+                    key={`storm-surge-${buffAnimationEventId}`}
+                    eventId={buffAnimationEventId!}
+                    palette="storm"
+                    seedKey={card.instanceId}
+                  />
+                  <StormBuffAnimator
+                    key={`storm-${buffAnimationEventId}`}
+                    eventId={buffAnimationEventId!}
+                    seedKey={card.instanceId}
+                  />
+                </>
+              )
+            : (
               <>
                 <BuffSurgeAnimator
                   key={`growth-surge-${buffAnimationEventId}`}
@@ -1064,7 +1081,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
                   variant={buffAnimationVariant}
                 />
               </>
-            )
+              )
       )}
       {card.flags.burnSmoke && <span className="burn-card-scorch" aria-hidden="true" />}
       {card.flags.burnSmoke && <span className="burn-card-smoke" aria-hidden="true"><i /><i /><i /></span>}

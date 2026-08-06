@@ -1,7 +1,7 @@
 import type { BuffAnimationVariant } from "../store/buffAnimation";
 import { NatureRootAnimator } from "./GrowthBuffAnimator";
 
-type GrowthBuffVariant = Exclude<BuffAnimationVariant, "default">;
+type GrowthBuffVariant = Exclude<BuffAnimationVariant, "default" | "storm-strong">;
 
 /**
  * Preserved natural-shield VFX. It is intentionally not wired to the current El Pacto de Elarion buffs:

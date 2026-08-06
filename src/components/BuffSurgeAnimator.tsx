@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
 
-export type BuffSurgePalette = "holy" | "nature";
+export type BuffSurgePalette = "holy" | "nature" | "storm";
 
 type BuffSurgeAnimatorProps = {
   eventId: number;
@@ -49,6 +49,12 @@ const SURGE_PALETTES: Record<BuffSurgePalette, SurgePalette> = {
     mid: 0x7fdc4a,
     edge: 0x2f8a34,
     dark: 0x0d240f,
+  },
+  storm: {
+    core: 0xfffff2,
+    mid: 0xffe184,
+    edge: 0xd99d24,
+    dark: 0x3a2707,
   },
 };
 
@@ -243,7 +249,7 @@ export function BuffSurgeAnimator({
     const centerX = width * 0.5;
     const centerY = height * 0.512;
     const cardBottom = centerY - cardHeight * 0.5;
-    const intensity = paletteName === "nature" ? 0.94 : 1;
+    const intensity = paletteName === "nature" ? 0.94 : paletteName === "storm" ? 1.06 : 1;
 
     const columns: SurgeColumn[] = [];
     const columnCount = reducedMotion ? 5 : 9;
@@ -266,7 +272,7 @@ export function BuffSurgeAnimator({
     }
 
     const motes: SurgeMote[] = [];
-    const moteCount = reducedMotion ? 8 : 24;
+    const moteCount = paletteName === "storm" ? 0 : reducedMotion ? 8 : 24;
     for (let index = 0; index < moteCount; index += 1) {
       const { sprite, material } = createSprite(emberTexture);
       material.color.set(rng() > 0.5 ? palette.core : palette.mid);
@@ -284,10 +290,12 @@ export function BuffSurgeAnimator({
       });
     }
 
-    const pulse = createSprite(ringTexture);
-    pulse.sprite.position.set(centerX, centerY, 3);
-    pulse.material.color.set(palette.core);
-    scene.add(pulse.sprite);
+    const pulse = paletteName === "storm" ? undefined : createSprite(ringTexture);
+    if (pulse) {
+      pulse.sprite.position.set(centerX, centerY, 3);
+      pulse.material.color.set(palette.core);
+      scene.add(pulse.sprite);
+    }
 
     let elapsed = 0;
     let lastFrame = performance.now();
@@ -330,7 +338,7 @@ export function BuffSurgeAnimator({
             : 0;
       }
 
-      if (elapsed >= PULSE_AT) {
+      if (pulse && elapsed >= PULSE_AT) {
         const pulseProgress = clamp01(
           (elapsed - PULSE_AT) / (reducedMotion ? 0.13 : 0.42),
         );
@@ -340,7 +348,7 @@ export function BuffSurgeAnimator({
           intensity;
         pulse.sprite.scale.set(pulseSize, pulseSize, 1);
         pulse.material.opacity = (1 - pulseProgress) * 0.72 * intensity;
-      } else {
+      } else if (pulse) {
         pulse.material.opacity = 0;
       }
 
@@ -362,8 +370,10 @@ export function BuffSurgeAnimator({
         scene.remove(mote.sprite);
         mote.material.dispose();
       }
-      scene.remove(pulse.sprite);
-      pulse.material.dispose();
+      if (pulse) {
+        scene.remove(pulse.sprite);
+        pulse.material.dispose();
+      }
       streakTexture.dispose();
       emberTexture.dispose();
       ringTexture.dispose();

@@ -3,8 +3,11 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import * as THREE from "three";
 
 import { activeDefenseArrowLinks, isBehindInStackOrder, isFrontOfCardStack, visibleDefenseArrowLinks } from "../src/components/battlefieldLayout";
+import { frameLeafRootIndex, frameRootPathSpecs } from "../src/components/GrowthBuffAnimator";
+import { STORM_BOLT_TONES, buildStorm, stormBoltTones } from "../src/components/StormBuffAnimator";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { playerAttackHostHitDelay } from "../src/components/playerAttackPresentation";
@@ -243,4 +246,83 @@ test("card names and type lines use initial capitals on every word", () => {
     cardLabelCamelCase("eco de crónica — elfo druida", "es"),
     "Eco De Crónica — Elfo Druida",
   );
+});
+
+test("the Elarion branch buff climbs the card border instead of crossing the art", () => {
+  /* `.growth-three-effect` insets the canvas -34% top, -27% each side and -24% bottom, so a
+     1000x1000 card sits at x 270..1270 and y 240..1240 inside a 1540x1580 canvas. */
+  const width = 1540;
+  const height = 1580;
+  const inner = { left: 270 + 90, right: 1270 - 90, bottom: 240 + 90, top: 1240 - 90 };
+
+  const specs = frameRootPathSpecs(width, height, { duration: 1.08, rootCount: 12 });
+  assert.equal(specs.length, 8);
+  assert.deepEqual(specs.slice(0, 2).map((spec) => spec.leafSide), [1, -1]);
+
+  for (const [index, spec] of specs.entries()) {
+    const curve = new THREE.CatmullRomCurve3(spec.points, false, "centripetal", 0.36);
+    for (let step = 0; step <= 60; step += 1) {
+      const point = curve.getPoint(step / 60);
+      const overArt =
+        point.x > inner.left &&
+        point.x < inner.right &&
+        point.y > inner.bottom &&
+        point.y < inner.top;
+      assert.equal(
+        overArt,
+        false,
+        `strand ${index} covers the portrait at ${point.x.toFixed(0)},${point.y.toFixed(0)}`,
+      );
+    }
+  }
+});
+
+test("frame foliage alternates both rails and only every fourth leaf sits on a tendril", () => {
+  const chosen = Array.from({ length: 12 }, (_, index) => frameLeafRootIndex(index, 8));
+
+  assert.deepEqual(chosen, [0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 4]);
+  assert.equal(chosen.filter((index) => index < 2).length, 9);
+  assert.equal(frameLeafRootIndex(3, 2), 1);
+  assert.equal(frameLeafRootIndex(7, 5), 2 + 1);
+});
+
+test("Kaelor's strike draws every bolt from the three storm tones", () => {
+  const strike = stormBoltTones(12, "kaelor-a", 7);
+
+  assert.equal(strike.length, 7);
+  assert.deepEqual(stormBoltTones(12, "kaelor-a", 7), strike);
+  for (const tone of strike) {
+    assert.ok(STORM_BOLT_TONES.includes(tone), `unexpected tone ${tone}`);
+  }
+
+  const seen = new Set();
+  for (let eventId = 0; eventId < 200; eventId += 1) {
+    const pair = stormBoltTones(eventId, "kaelor-b", 2);
+    pair.forEach((tone) => seen.add(tone));
+    assert.equal(new Set(pair).size, 2, `strike ${eventId} came out in a single tone`);
+  }
+  assert.deepEqual([...seen].sort(), ["blue", "white", "yellow"]);
+});
+
+test("Kaelor's strike is one sky bolt anchored to the measured card box", () => {
+  /* Cropped Echo row and tall slot: the strike is authored in measured pixels, so both keep the
+     same proportions instead of being stretched by a fixed viewBox. */
+  const slots = [
+    { left: 106, top: 58, width: 172, height: 153 },
+    { left: 93, top: 79, width: 150, height: 209 },
+  ];
+
+  for (const card of slots) {
+    const storm = buildStorm(9, "kaelor-slot", card);
+    const centerX = card.left + card.width / 2;
+
+    assert.equal(storm.bolts.length, 2);
+    assert.equal(storm.bolts.filter((bolt) => bolt.primary).length, 1);
+    assert.ok(Math.abs(storm.impact.x - centerX) < card.width * 0.06);
+    assert.ok(storm.impact.y > card.top);
+    assert.ok(storm.impact.y < card.top + card.height * 0.12);
+    assert.ok(storm.ground.cy > card.top + card.height * 0.85);
+    assert.ok(Math.abs(storm.ground.rx / card.width - 0.53) < 0.001);
+    assert.ok(Math.abs(storm.ground.ry / card.height - 0.13) < 0.001);
+  }
 });

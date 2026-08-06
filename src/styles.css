@@ -4776,6 +4776,13 @@
       drop-shadow(0 0 16px rgb(47 138 52 / 0.46));
   }
 
+  .buff-surge-storm .buff-surge-canvas {
+    filter:
+      drop-shadow(0 0 6px rgb(255 255 235 / 0.84))
+      drop-shadow(0 0 17px rgb(255 213 95 / 0.62))
+      drop-shadow(0 0 26px rgb(217 157 36 / 0.3));
+  }
+
   .buff-surge-fallback {
     display: none;
     position: absolute;
@@ -4827,6 +4834,227 @@
 
   .buff-surge-nature .buff-surge-fallback::before {
     border-color: rgb(190 255 118 / 0.66);
+  }
+
+  .buff-surge-storm .buff-surge-fallback {
+    filter: drop-shadow(0 0 8px rgb(255 218 111 / 0.82));
+  }
+
+  .buff-surge-storm .buff-surge-fallback i {
+    background: linear-gradient(to top, transparent, #fffff2 54%, #ffe184 72%, transparent);
+  }
+
+  .buff-surge-storm .buff-surge-fallback::before {
+    display: none;
+  }
+
+  .storm-buff-effect {
+    /* StormBuffAnimator sorts each bolt between blue, yellow and white and writes the winning
+       tone here; these values are only the fallback if the inline variables are missing. */
+    --storm-glow: rgb(255 191 34 / 0.92);
+    --storm-core: #fff3a6;
+    --storm-halo: rgb(255 215 74 / 0.92);
+    --storm-flash: rgb(255 238 166 / 0.76);
+    --storm-deep: rgb(211 125 9 / 0.58);
+    pointer-events: none;
+    position: absolute;
+    inset: -38% -36% -32%;
+    z-index: 123;
+    overflow: visible;
+    isolation: isolate;
+  }
+
+  .storm-buff-svg {
+    position: relative;
+    z-index: 3;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .storm-buff-whiteout {
+    position: absolute;
+    inset: 22.35% 20.9% 18.8%;
+    border-radius: 10px;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    opacity: 0;
+    z-index: 2;
+    background: radial-gradient(
+      ellipse at 50% 42%,
+      rgb(255 255 255 / 0.98),
+      var(--storm-flash) 42%,
+      transparent 76%
+    );
+    animation: storm-buff-whiteout 520ms ease-out 286ms both;
+  }
+
+  .storm-buff-bolt-glow,
+  .storm-buff-bolt-core,
+  .storm-buff-branch-glow,
+  .storm-buff-branch-core {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    vector-effect: non-scaling-stroke;
+    opacity: 0;
+    animation: storm-buff-bolt-strike 1040ms linear var(--storm-delay) both;
+  }
+
+  .storm-buff-bolt-glow {
+    stroke: var(--storm-glow);
+    stroke-width: 8;
+    filter:
+      blur(2.4px)
+      drop-shadow(0 0 9px var(--storm-halo));
+  }
+
+  .storm-buff-bolt-core {
+    stroke: var(--storm-core);
+    stroke-width: 2.1;
+    filter: drop-shadow(0 0 4px var(--storm-flash));
+  }
+
+  .storm-buff-branch-glow,
+  .storm-buff-branch-core {
+    animation-delay: calc(var(--storm-delay) + 48ms);
+  }
+
+  .storm-buff-branch-glow {
+    stroke: var(--storm-glow);
+    stroke-width: 4.4;
+    filter: blur(1.6px) drop-shadow(0 0 6px var(--storm-halo));
+  }
+
+  .storm-buff-branch-core {
+    stroke: var(--storm-core);
+    stroke-width: 1.2;
+  }
+
+  .storm-buff-bolt-primary .storm-buff-bolt-glow {
+    stroke-width: 15;
+    filter:
+      blur(4px)
+      drop-shadow(0 0 16px var(--storm-halo));
+  }
+
+  .storm-buff-bolt-primary .storm-buff-bolt-core {
+    stroke-width: 3.6;
+  }
+
+  .storm-buff-bolt-primary .storm-buff-branch-glow {
+    stroke-width: 5.5;
+  }
+
+  /* Onda plana en la línea de base: el golpe cierra en el suelo del slot, no sobre el arte. */
+  .storm-buff-shock {
+    fill: none;
+    stroke: var(--storm-halo);
+    stroke-width: 2.4;
+    vector-effect: non-scaling-stroke;
+    transform-box: fill-box;
+    transform-origin: center;
+    opacity: 0;
+    filter: drop-shadow(0 0 8px var(--storm-deep));
+    animation: storm-buff-shock-out 760ms cubic-bezier(0.12, 0.75, 0.3, 1) 300ms both;
+  }
+
+  .storm-buff-shock-late {
+    stroke: var(--storm-core);
+    stroke-width: 1.4;
+    animation-delay: 372ms;
+  }
+
+  .storm-buff-fleck {
+    stroke: var(--storm-flash);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+    opacity: 0;
+    filter: drop-shadow(0 0 4px var(--storm-halo));
+    animation: storm-buff-fleck-fall 780ms cubic-bezier(0.3, 0.1, 0.7, 1) var(--storm-delay) both;
+  }
+
+  .storm-buff-core {
+    fill: var(--storm-core);
+    transform-box: fill-box;
+    transform-origin: center;
+    opacity: 0;
+    filter:
+      drop-shadow(0 0 4px #fff)
+      drop-shadow(0 0 11px var(--storm-halo))
+      drop-shadow(0 0 20px var(--storm-deep));
+    animation: storm-buff-core-flash 610ms ease-out 282ms both;
+  }
+
+  @keyframes storm-buff-bolt-strike {
+    0%, 8% { stroke-dashoffset: 1; opacity: 0; }
+    20% { stroke-dashoffset: 0; opacity: 1; }
+    25% { stroke-dashoffset: 0; opacity: 0.24; }
+    30% { stroke-dashoffset: 0; opacity: 1; }
+    48% { stroke-dashoffset: 0; opacity: 0.82; }
+    55% { stroke-dashoffset: 0; opacity: 0.16; }
+    62% { stroke-dashoffset: 0; opacity: 0.68; }
+    72%, 100% { stroke-dashoffset: 0; opacity: 0; }
+  }
+
+  @keyframes storm-buff-whiteout {
+    0% { opacity: 0; }
+    7% { opacity: 1; }
+    22% { opacity: 0.24; }
+    34% { opacity: 0.82; }
+    100% { opacity: 0; }
+  }
+
+  @keyframes storm-buff-shock-out {
+    0% { opacity: 0; transform: scale(0.16); }
+    12% { opacity: 1; }
+    100% { opacity: 0; transform: scale(2.6); }
+  }
+
+  @keyframes storm-buff-fleck-fall {
+    0% { opacity: 0; transform: translateY(-3px) scaleY(0.5); }
+    14% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(var(--storm-drop)) scaleY(1.45); }
+  }
+
+  @keyframes storm-buff-core-flash {
+    0% { opacity: 0; transform: scale(0.25); }
+    13% { opacity: 1; transform: scale(1.35); }
+    26% { opacity: 0.34; transform: scale(0.82); }
+    38% { opacity: 0.94; transform: scale(1.05); }
+    100% { opacity: 0; transform: scale(1.55); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .storm-buff-bolt-glow,
+    .storm-buff-bolt-core,
+    .storm-buff-branch-glow,
+    .storm-buff-branch-core {
+      animation-name: storm-buff-bolt-reduced;
+      animation-duration: 280ms;
+      animation-delay: 40ms;
+    }
+
+    .storm-buff-whiteout,
+    .storm-buff-shock,
+    .storm-buff-core {
+      animation-duration: 300ms;
+      animation-delay: 80ms;
+    }
+
+    .storm-buff-fleck {
+      display: none;
+    }
+  }
+
+  @keyframes storm-buff-bolt-reduced {
+    0% { stroke-dashoffset: 1; opacity: 0; }
+    42% { stroke-dashoffset: 0; opacity: 0.84; }
+    100% { stroke-dashoffset: 0; opacity: 0; }
   }
 
   .growth-buff-effect {

@@ -1,0 +1,1377 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hostfall — Buff de Kaelor: índice de propuestas</title>
+<style>
+  :root {
+    /* Paleta tormenta (la del juego: BuffSurgeAnimator storm + StormBuffAnimator). */
+    --st-core: #f8fff0;
+    --st-hot:  #e9fdff;
+    --st-mid:  #9fe8ff;
+    --st-blue: #4ebeff;
+    --st-deep: #1c78b4;
+    --st-lime: #ade54d;
+    --st-lime-soft: #d8f58a;
+    --st-night: #10263b;
+
+    --gold: #d9a441;
+    --gold-soft: rgb(181 134 66 / 0.55);
+    --parch: #e9dcbd;
+
+    /* Controles globales del taller. */
+    --spd: 1;    /* multiplicador de duración: 1 = velocidad real */
+    --int: 1;    /* intensidad luminosa */
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 26px 24px 90px;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgb(40 72 96 / 0.34), transparent 62%),
+      linear-gradient(180deg, #14100c, #0a0806 60%, #070605);
+    color: var(--parch);
+    font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  }
+
+  h1 { margin: 0 0 6px; font-size: 24px; letter-spacing: 0.04em; color: #f2e2b8; }
+  .intro { max-width: 1000px; margin-bottom: 18px; color: rgb(233 220 189 / 0.74); font-size: 14px; line-height: 1.55; }
+  .intro code { color: #f0cf8a; }
+  .intro b { color: #f2e2b8; font-weight: 600; }
+
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 90;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 18px;
+    align-items: center;
+    margin-bottom: 22px;
+    padding: 10px 14px;
+    border: 1px solid var(--gold-soft);
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgb(30 22 14 / 0.98), rgb(14 10 7 / 0.99));
+    box-shadow: 0 10px 26px rgb(0 0 0 / 0.62);
+    font-size: 13px;
+  }
+  .toolbar label { display: inline-flex; gap: 7px; align-items: center; cursor: pointer; }
+  .toolbar input[type="range"] { accent-color: var(--gold); width: 116px; }
+  .toolbar input[type="checkbox"] { accent-color: var(--gold); }
+  .toolbar .sep { width: 1px; height: 22px; background: var(--gold-soft); }
+  .val { min-width: 34px; color: #f0cf8a; font-variant-numeric: tabular-nums; }
+
+  button {
+    padding: 7px 14px;
+    border: 1px solid var(--gold-soft);
+    border-radius: 8px;
+    background: linear-gradient(180deg, #3a2b18, #22180d);
+    color: #f2e2b8;
+    font: inherit;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgb(255 226 168 / 0.14), 0 2px 6px rgb(0 0 0 / 0.5);
+  }
+  button:hover { border-color: var(--gold); background: linear-gradient(180deg, #4a3720, #2a1e11); }
+  button:active { transform: translateY(1px); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 20px;
+    align-items: start;
+  }
+
+  .tile {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgb(181 134 66 / 0.34);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgb(24 20 15 / 0.95), rgb(10 9 7 / 0.98));
+    box-shadow: 0 8px 22px rgb(0 0 0 / 0.5);
+    overflow: hidden;
+  }
+  .tile.wide { grid-column: 1 / -1; }
+
+  .tile-head {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 11px 14px 8px;
+    border-bottom: 1px solid rgb(181 134 66 / 0.2);
+  }
+  .tile-key {
+    display: inline-grid;
+    place-items: center;
+    width: 22px; height: 22px;
+    border: 1px solid var(--gold-soft);
+    border-radius: 5px;
+    background: #1b140c;
+    color: #f0cf8a;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .tile-title { font-size: 15px; color: #f2e2b8; letter-spacing: 0.02em; }
+  .tile-tag { margin-left: auto; font-size: 11px; color: rgb(233 220 189 / 0.5); text-transform: uppercase; letter-spacing: 0.08em; }
+
+  .stage-wrap {
+    display: grid;
+    place-items: center;
+    padding: 12px 8px 6px;
+    background:
+      radial-gradient(ellipse at 50% 34%, rgb(58 84 104 / 0.2), transparent 66%),
+      repeating-linear-gradient(90deg, rgb(255 255 255 / 0.014) 0 2px, transparent 2px 5px),
+      linear-gradient(180deg, #171310, #0d0b09);
+  }
+  body.plain .stage-wrap { background: #050506; }
+
+  .stage {
+    position: relative;
+    width: 300px;
+    height: 260px;
+    overflow: visible;
+  }
+  .stage.duo { width: 560px; }
+
+  /* ---------- Carta de campo (aprox. del Eco recortado) ---------- */
+  .card {
+    position: absolute;
+    left: 64px; top: 46px;
+    width: 172px; height: 168px;
+    border-radius: 10px;
+    border: 2px solid #b88945;
+    background: #0d0a07;
+    box-shadow: 0 10px 20px rgb(0 0 0 / 0.66), inset 0 0 22px rgb(0 0 0 / 0.6);
+    overflow: hidden;
+    z-index: 20;
+    transition: none;
+  }
+  .stage.duo .card.right { left: 324px; }
+  .stage.duo .card.left  { left: 44px; }
+
+  .card-art {
+    position: absolute; inset: 0;
+    background-image: url("../../public/cards/pact_of_elarion/art/kaelor_stormcaller.jpg");
+    background-size: 190% auto;
+    background-position: 62% 18%;
+    filter: saturate(0.96) contrast(1.03);
+  }
+  .card.ally .card-art {
+    background-image: url("../../public/cards/pact_of_elarion/art/maela_watcher_of_the_heights.jpg");
+    background-size: 150% auto;
+    background-position: 50% 16%;
+  }
+  .card-art.blank { background: linear-gradient(160deg, #2b3a44, #121a20); }
+
+  .card-plate {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 5px 8px 6px;
+    background: linear-gradient(180deg, rgb(10 8 6 / 0), rgb(10 8 6 / 0.86) 44%, rgb(8 6 5 / 0.95));
+    color: #ecd9ab;
+    font-size: 10.5px;
+    letter-spacing: 0.03em;
+    text-align: center;
+    text-shadow: 0 1px 2px #000;
+  }
+
+  .stat {
+    position: absolute; bottom: 5px;
+    display: grid; place-items: center;
+    width: 25px; height: 25px;
+    border: 1px solid #b88945;
+    border-radius: 6px;
+    background: linear-gradient(180deg, #33260f, #150f07);
+    color: #f5e2ac;
+    font-size: 13px; font-weight: 700;
+    text-shadow: 0 1px 2px #000;
+    z-index: 4;
+    transition: none;
+  }
+  .stat.pow { left: 5px; }
+  .stat.end { right: 5px; }
+  .stat.up {
+    animation: stat-pop calc(620ms * var(--spd)) ease-out both;
+  }
+  @keyframes stat-pop {
+    0%   { transform: scale(1); box-shadow: 0 0 0 rgb(159 232 255 / 0); }
+    22%  { transform: scale(1.42); color: #fff; box-shadow: 0 0 14px rgb(159 232 255 / 0.95), 0 0 26px rgb(173 229 77 / 0.7); border-color: #dff6ff; }
+    100% { transform: scale(1); box-shadow: 0 0 0 rgb(159 232 255 / 0); }
+  }
+
+  .plusone {
+    position: absolute;
+    left: 50%; top: 44%;
+    z-index: 60;
+    transform: translate(-50%, 0);
+    color: #f6ffe6;
+    font-size: 22px; font-weight: 700;
+    letter-spacing: 0.04em;
+    text-shadow: 0 0 8px rgb(159 232 255 / 0.95), 0 0 18px rgb(173 229 77 / 0.7), 0 2px 3px #000;
+    pointer-events: none;
+    animation: plusone-rise calc(1000ms * var(--spd)) cubic-bezier(.16,.8,.3,1) both;
+  }
+  @keyframes plusone-rise {
+    0%   { opacity: 0; transform: translate(-50%, 12px) scale(0.6); }
+    18%  { opacity: 1; transform: translate(-50%, -6px) scale(1.14); }
+    46%  { opacity: 1; transform: translate(-50%, -22px) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -52px) scale(0.96); }
+  }
+
+  /* ---------- Capa de efecto ---------- */
+  .fx {
+    position: absolute; inset: 0;
+    z-index: 40;
+    pointer-events: none;
+    overflow: visible;
+    filter: brightness(var(--int));
+  }
+  .fx.under { z-index: 10; }
+  .fx svg { position: absolute; inset: -60px; width: calc(100% + 120px); height: calc(100% + 120px); overflow: visible; }
+
+  /* Rayos genéricos ------------------------------------------------ */
+  .bolt-glow, .bolt-core, .branch-glow, .branch-core {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    opacity: 0;
+    animation: strike calc(1040ms * var(--spd)) linear calc(var(--d, 0ms) * var(--spd)) both;
+  }
+  .bolt-glow  { stroke: rgb(78 190 255 / 0.88); stroke-width: 8; filter: blur(2.4px) drop-shadow(0 0 9px rgb(82 190 255 / 0.92)); }
+  .bolt-core  { stroke: var(--st-hot); stroke-width: 2.1; filter: drop-shadow(0 0 4px rgb(227 255 255 / 0.98)); }
+  .branch-glow, .branch-core { animation-delay: calc((var(--d, 0ms) + 48ms) * var(--spd)); }
+  .branch-glow { stroke: rgb(73 179 243 / 0.74); stroke-width: 4.4; filter: blur(1.6px); }
+  .branch-core { stroke: var(--st-hot); stroke-width: 1.2; }
+  .accent .bolt-glow, .accent .branch-glow { stroke: rgb(173 235 77 / 0.86); filter: blur(2px) drop-shadow(0 0 8px rgb(188 238 88 / 0.86)); }
+  .accent .bolt-core, .accent .branch-core { stroke: #f5ffbf; }
+
+  .bolt-fat .bolt-glow { stroke-width: 15; filter: blur(4px) drop-shadow(0 0 16px rgb(82 190 255 / 0.95)); }
+  .bolt-fat .bolt-core { stroke-width: 3.6; }
+
+  @keyframes strike {
+    0%, 8% { stroke-dashoffset: 1; opacity: 0; }
+    20%    { stroke-dashoffset: 0; opacity: 1; }
+    25%    { opacity: 0.24; }
+    30%    { opacity: 1; }
+    48%    { opacity: 0.82; }
+    55%    { opacity: 0.16; }
+    62%    { opacity: 0.68; }
+    72%, 100% { stroke-dashoffset: 0; opacity: 0; }
+  }
+
+  /* Anillos, núcleo, chispas --------------------------------------- */
+  .ring {
+    fill: none;
+    stroke: rgb(205 247 255 / 0.92);
+    stroke-width: 2;
+    transform-box: fill-box; transform-origin: center;
+    opacity: 0;
+    filter: drop-shadow(0 0 5px rgb(91 201 255 / 0.9));
+    animation: ring-out calc(560ms * var(--spd)) ease-out calc(var(--d, 0ms) * var(--spd)) both;
+  }
+  .ring.lime { stroke: rgb(194 239 91 / 0.86); }
+  @keyframes ring-out {
+    0%   { opacity: 0; transform: scale(0.34); }
+    16%  { opacity: 0.96; }
+    100% { opacity: 0; transform: scale(4.2); }
+  }
+
+  .flatring {
+    fill: none;
+    stroke: rgb(205 247 255 / 0.85);
+    stroke-width: 2.4;
+    transform-box: fill-box; transform-origin: center;
+    opacity: 0;
+    filter: drop-shadow(0 0 8px rgb(91 201 255 / 0.85));
+    animation: flatring-out calc(760ms * var(--spd)) cubic-bezier(.12,.75,.3,1) calc(var(--d, 0ms) * var(--spd)) both;
+  }
+  @keyframes flatring-out {
+    0%   { opacity: 0; transform: scale(0.15); }
+    12%  { opacity: 1; }
+    100% { opacity: 0; transform: scale(2.6); }
+  }
+
+  .corefl {
+    fill: #f9ffff;
+    transform-box: fill-box; transform-origin: center;
+    opacity: 0;
+    filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 14px rgb(122 219 255 / 0.96)) drop-shadow(0 0 24px rgb(178 233 75 / 0.66));
+    animation: core-flash calc(640ms * var(--spd)) ease-out calc(var(--d, 0ms) * var(--spd)) both;
+  }
+  @keyframes core-flash {
+    0%   { opacity: 0; transform: scale(0.22); }
+    13%  { opacity: 1; transform: scale(1.4); }
+    26%  { opacity: 0.34; transform: scale(0.8); }
+    38%  { opacity: 0.94; transform: scale(1.06); }
+    100% { opacity: 0; transform: scale(2.3); }
+  }
+
+  .spark {
+    stroke: #efffff;
+    stroke-width: 2;
+    stroke-linecap: round;
+    opacity: 0;
+    filter: drop-shadow(0 0 4px rgb(112 218 255 / 0.94));
+    animation: spark-out calc(600ms * var(--spd)) ease-out calc(var(--d, 0ms) * var(--spd)) both;
+  }
+  @keyframes spark-out {
+    0%   { opacity: 0; transform: rotate(var(--a)) translateX(0) scaleX(0.2); }
+    14%  { opacity: 1; }
+    100% { opacity: 0; transform: rotate(var(--a)) translateX(var(--dist)) scaleX(0.72); }
+  }
+
+  /* Columnas de subida (equivalente CSS del BuffSurgeAnimator) ------ */
+  .surge i {
+    position: absolute;
+    bottom: 46px;
+    width: 7px; height: 74px;
+    border-radius: 4px;
+    background: linear-gradient(to top, transparent, var(--st-core) 58%, transparent);
+    filter: blur(0.6px) drop-shadow(0 0 8px rgb(159 232 255 / 0.85));
+    opacity: 0;
+    animation: surge-rise calc(950ms * var(--spd)) ease-out calc(var(--d, 0ms) * var(--spd)) both;
+  }
+  @keyframes surge-rise {
+    0%   { opacity: 0; transform: translateY(34px) scaleY(0.35); }
+    22%  { opacity: 0.92; }
+    100% { opacity: 0; transform: translateY(-176px) scaleY(1.15); }
+  }
+
+  /* Sacudida de la carta ------------------------------------------ */
+  .card.recoil { animation: card-recoil calc(560ms * var(--spd)) cubic-bezier(.2,.9,.3,1) both; }
+  @keyframes card-recoil {
+    0% { transform: translateY(0) scale(1); }
+    9% { transform: translateY(6px) scale(0.982); }
+    26% { transform: translateY(-3px) scale(1.014); }
+    52% { transform: translateY(1px) scale(0.996); }
+    100% { transform: translateY(0) scale(1); }
+  }
+  .card.jitter { animation: card-jitter calc(420ms * var(--spd)) linear both; }
+  @keyframes card-jitter {
+    0%,100% { transform: translate(0,0); }
+    12% { transform: translate(-2px, 1px); }
+    28% { transform: translate(2px, -1px); }
+    44% { transform: translate(-1px, -2px); }
+    62% { transform: translate(1px, 1px); }
+    80% { transform: translate(-1px, 0); }
+  }
+
+  /* Blanqueo / silueta -------------------------------------------- */
+  .whiteout {
+    position: absolute; inset: 0;
+    border-radius: 8px;
+    background: radial-gradient(ellipse at 50% 42%, rgb(255 255 255 / 0.98), rgb(200 240 255 / 0.72) 42%, rgb(120 200 255 / 0) 76%);
+    mix-blend-mode: screen;
+    opacity: 0;
+    animation: whiteout calc(520ms * var(--spd)) ease-out calc(var(--d, 0ms) * var(--spd)) both;
+  }
+  @keyframes whiteout {
+    0% { opacity: 0; }
+    7% { opacity: 1; }
+    22% { opacity: 0.25; }
+    32% { opacity: 0.8; }
+    100% { opacity: 0; }
+  }
+
+  .rimlight {
+    position: absolute; inset: -2px;
+    border-radius: 11px;
+    border: 2px solid rgb(224 250 255 / 0.95);
+    box-shadow: 0 0 18px rgb(120 210 255 / 0.9), inset 0 0 22px rgb(150 225 255 / 0.55);
+    opacity: 0;
+    animation: rim-pulse calc(900ms * var(--spd)) ease-out calc(var(--d, 0ms) * var(--spd)) both;
+  }
+  @keyframes rim-pulse {
+    0% { opacity: 0; transform: scale(1.06); }
+    14% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.02); }
+  }
+
+  .dim {
+    position: absolute; inset: -60px;
+    background: radial-gradient(ellipse at 50% 50%, rgb(4 10 18 / 0) 30%, rgb(3 7 14 / 0.72) 100%);
+    opacity: 0;
+    animation: dim-in calc(760ms * var(--spd)) ease-out both;
+  }
+  @keyframes dim-in {
+    0% { opacity: 0; }
+    40% { opacity: 1; }
+    72% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  /* Motas ---------------------------------------------------------- */
+  .mote {
+    position: absolute;
+    width: 8px; height: 8px;
+    margin: -4px 0 0 -4px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 0 22%, var(--st-mid) 46%, rgb(78 190 255 / 0) 76%);
+    opacity: 0;
+    animation: mote-in calc(620ms * var(--spd)) cubic-bezier(.5,0,.85,.4) calc(var(--d, 0ms) * var(--spd)) both;
+  }
+  .mote.lime { background: radial-gradient(circle, #fbffe8 0 22%, var(--st-lime) 48%, rgb(173 229 77 / 0) 76%); }
+  @keyframes mote-in {
+    0%   { opacity: 0; transform: translate(var(--fx0), var(--fy0)) scale(0.5); }
+    18%  { opacity: 1; }
+    100% { opacity: 0.9; transform: translate(0, 0) scale(1.35); }
+  }
+
+  .fleck {
+    position: absolute;
+    width: 3px; height: 12px;
+    border-radius: 2px;
+    background: linear-gradient(to bottom, rgb(255 255 255 / 0.95), rgb(120 200 255 / 0));
+    opacity: 0;
+    animation: fleck-fall calc(880ms * var(--spd)) cubic-bezier(.3,.1,.7,1) calc(var(--d, 0ms) * var(--spd)) both;
+  }
+  @keyframes fleck-fall {
+    0%   { opacity: 0; transform: translateY(-6px) scaleY(0.5); }
+    14%  { opacity: 1; }
+    100% { opacity: 0; transform: translateY(var(--fall)) scaleY(1.4); }
+  }
+
+  /* Órbita --------------------------------------------------------- */
+  .orbit {
+    position: absolute;
+    left: 150px; top: 130px;
+    width: 0; height: 0;
+    transform: scaleY(0.34);
+  }
+  .orbit .spin {
+    position: absolute; left: 0; top: 0;
+    animation: orbit-spin calc(1500ms * var(--spd)) linear calc(var(--d, 0ms) * var(--spd)) both;
+  }
+  .orbit .node {
+    position: absolute;
+    width: 14px; height: 14px;
+    margin: -7px 0 0 -7px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 0 26%, var(--st-mid) 52%, rgb(78 190 255 / 0) 78%);
+    filter: drop-shadow(0 0 10px rgb(140 226 255 / 0.95));
+    transform: translateX(var(--r)) scaleY(2.94);
+    opacity: 0;
+    animation: node-life calc(1500ms * var(--spd)) ease-in-out calc(var(--d, 0ms) * var(--spd)) both;
+  }
+  .orbit .node.lime { background: radial-gradient(circle, #fbffe8 0 26%, var(--st-lime) 52%, rgb(173 229 77 / 0) 78%); }
+  @keyframes orbit-spin { from { transform: rotate(0deg); } to { transform: rotate(var(--turn, 540deg)); } }
+  @keyframes node-life {
+    0% { opacity: 0; transform: translateX(calc(var(--r) * 1.25)) scaleY(2.94) scale(0.5); }
+    16% { opacity: 1; }
+    74% { opacity: 1; transform: translateX(var(--r)) scaleY(2.94) scale(1); }
+    100% { opacity: 0; transform: translateX(calc(var(--r) * 0.12)) scaleY(2.94) scale(1.6); }
+  }
+  .orbit-ring {
+    fill: none;
+    stroke: rgb(159 232 255 / 0.55);
+    stroke-width: 2;
+    stroke-dasharray: 10 16;
+    filter: drop-shadow(0 0 7px rgb(120 210 255 / 0.75));
+    opacity: 0;
+    animation: orbit-ring-life calc(1500ms * var(--spd)) ease-in-out calc(var(--d, 0ms) * var(--spd)) both;
+    transform-box: fill-box; transform-origin: center;
+  }
+  @keyframes orbit-ring-life {
+    0% { opacity: 0; transform: scale(1.3) ; stroke-dashoffset: 0; }
+    18% { opacity: 0.95; transform: scale(1); }
+    76% { opacity: 0.85; transform: scale(0.98); stroke-dashoffset: -180; }
+    100% { opacity: 0; transform: scale(0.16); stroke-dashoffset: -240; }
+  }
+
+  /* Glifo ---------------------------------------------------------- */
+  .glyph {
+    fill: none;
+    stroke: rgb(180 236 255 / 0.95);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    filter: drop-shadow(0 0 8px rgb(96 200 255 / 0.9));
+    animation: glyph-trace calc(1200ms * var(--spd)) ease-out calc(var(--d, 0ms) * var(--spd)) both;
+  }
+  .glyph.lime { stroke: rgb(200 244 118 / 0.92); filter: drop-shadow(0 0 8px rgb(173 229 77 / 0.85)); }
+  @keyframes glyph-trace {
+    0%   { stroke-dashoffset: 1; opacity: 0; }
+    10%  { opacity: 1; }
+    46%  { stroke-dashoffset: 0; opacity: 1; }
+    68%  { opacity: 0.85; }
+    100% { stroke-dashoffset: 0; opacity: 0; }
+  }
+  .pillar {
+    position: absolute;
+    left: 50%; bottom: 44px;
+    width: 118px; height: 232px;
+    margin-left: -59px;
+    border-radius: 60px 60px 12px 12px;
+    background: linear-gradient(to top, rgb(230 252 255 / 0.86), rgb(140 220 255 / 0.42) 42%, rgb(173 229 77 / 0.12) 72%, transparent);
+    filter: blur(5px);
+    mix-blend-mode: screen;
+    opacity: 0;
+    transform-origin: 50% 100%;
+    animation: pillar-rise calc(980ms * var(--spd)) cubic-bezier(.15,.75,.3,1) calc(var(--d, 0ms) * var(--spd)) both;
+  }
+  @keyframes pillar-rise {
+    0%   { opacity: 0; transform: scaleY(0.08) scaleX(0.55); }
+    22%  { opacity: 1; transform: scaleY(1.05) scaleX(1); }
+    56%  { opacity: 0.72; transform: scaleY(1) scaleX(0.92); }
+    100% { opacity: 0; transform: scaleY(1.1) scaleX(0.7); }
+  }
+
+  /* Nube ----------------------------------------------------------- */
+  .cloud { position: absolute; left: 0; top: 0; }
+  .cloud b {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 38%, rgb(96 122 146 / 0.95), rgb(30 46 62 / 0.92) 62%, rgb(16 26 38 / 0) 78%);
+    filter: blur(3px);
+    opacity: 0;
+    animation: cloud-form calc(1500ms * var(--spd)) ease-out calc(var(--d, 0ms) * var(--spd)) both;
+  }
+  @keyframes cloud-form {
+    0%   { opacity: 0; transform: translate(var(--cx0), 6px) scale(0.35); }
+    24%  { opacity: 0.96; transform: translate(0, 0) scale(1); }
+    72%  { opacity: 0.9; transform: translate(calc(var(--drift) * 1px), -1px) scale(1.04); }
+    100% { opacity: 0; transform: translate(calc(var(--drift) * 2px), -4px) scale(1.1); }
+  }
+  .cloud-flash {
+    position: absolute;
+    width: 110px; height: 46px;
+    margin: -23px 0 0 -55px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgb(210 244 255 / 0.95), rgb(120 200 255 / 0.35) 48%, transparent 74%);
+    filter: blur(6px);
+    mix-blend-mode: screen;
+    opacity: 0;
+    animation: cloud-flicker calc(1500ms * var(--spd)) linear calc(var(--d, 0ms) * var(--spd)) both;
+  }
+  @keyframes cloud-flicker {
+    0%, 18% { opacity: 0; }
+    22% { opacity: 0.85; }
+    26% { opacity: 0.1; }
+    32% { opacity: 0.7; }
+    38% { opacity: 0.05; }
+    50% { opacity: 0.95; }
+    58% { opacity: 0.2; }
+    70% { opacity: 0.6; }
+    100% { opacity: 0; }
+  }
+
+  /* Aura sostenida ------------------------------------------------- */
+  .fx svg.aura-border {
+    position: absolute;
+    inset: auto;
+    left: 62px; top: 44px;
+    width: 176px; height: 172px;
+    border-radius: 11px;
+    fill: none;
+  }
+  .aura-border rect {
+    fill: none;
+    stroke: rgb(159 232 255 / 0.82);
+    stroke-width: 2;
+    stroke-dasharray: 16 12;
+    filter: drop-shadow(0 0 7px rgb(110 205 255 / 0.85));
+    animation: aura-march calc(2400ms * var(--spd)) linear infinite;
+  }
+  .aura-border rect.lime {
+    stroke: rgb(194 239 91 / 0.5);
+    stroke-dasharray: 5 26;
+    animation-duration: calc(3400ms * var(--spd));
+    animation-direction: reverse;
+  }
+  @keyframes aura-march { to { stroke-dashoffset: -224; } }
+
+  .aura-tick {
+    position: absolute;
+    padding: 2px 7px;
+    border: 1px solid rgb(159 232 255 / 0.7);
+    border-radius: 6px;
+    background: linear-gradient(180deg, rgb(18 44 62 / 0.95), rgb(8 18 28 / 0.95));
+    color: #dff6ff;
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    text-shadow: 0 0 6px rgb(120 210 255 / 0.8);
+    box-shadow: 0 0 12px rgb(90 190 255 / 0.4);
+    animation: aura-tick-in calc(520ms * var(--spd)) ease-out calc(var(--d, 0ms) * var(--spd)) both;
+  }
+  @keyframes aura-tick-in {
+    0% { opacity: 0; transform: translateY(6px) scale(0.8); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .microarc {
+    fill: none;
+    stroke: #eafcff;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    opacity: 0;
+    filter: drop-shadow(0 0 5px rgb(120 214 255 / 0.95));
+    animation: microarc calc(340ms * var(--spd)) ease-out both;
+  }
+  @keyframes microarc {
+    0% { opacity: 0; }
+    20% { opacity: 1; }
+    45% { opacity: 0.2; }
+    60% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  /* Cadena entre cartas -------------------------------------------- */
+  .ally-pulse { animation: ally-pulse calc(620ms * var(--spd)) ease-out both; }
+  @keyframes ally-pulse {
+    0% { box-shadow: 0 10px 20px rgb(0 0 0 / 0.66), inset 0 0 22px rgb(0 0 0 / 0.6); }
+    26% { box-shadow: 0 0 22px rgb(173 229 77 / 0.9), 0 10px 20px rgb(0 0 0 / 0.66), inset 0 0 26px rgb(120 200 255 / 0.4); }
+    100% { box-shadow: 0 10px 20px rgb(0 0 0 / 0.66), inset 0 0 22px rgb(0 0 0 / 0.6); }
+  }
+
+  .tile-notes {
+    padding: 9px 14px 13px;
+    color: rgb(233 220 189 / 0.66);
+    font-size: 12.2px;
+    line-height: 1.5;
+  }
+  .tile-notes b { color: #e8d5a5; font-weight: 600; }
+  .tile-foot {
+    display: flex; gap: 8px; align-items: center;
+    padding: 0 14px 13px;
+  }
+  .tile-foot .ms { margin-left: auto; font-size: 11px; color: rgb(233 220 189 / 0.42); font-variant-numeric: tabular-nums; }
+  .tile-foot button { padding: 5px 12px; font-size: 12px; }
+
+  .legend {
+    margin: 26px 0 0;
+    padding: 14px 16px;
+    border: 1px dashed rgb(181 134 66 / 0.34);
+    border-radius: 10px;
+    color: rgb(233 220 189 / 0.62);
+    font-size: 12.5px;
+    line-height: 1.6;
+    max-width: 1000px;
+  }
+  .legend b { color: #e8d5a5; }
+  .legend code { color: #f0cf8a; }
+</style>
+</head>
+<body>
+
+<h1>Buff de Kaelor — índice de propuestas</h1>
+<p class="intro">
+  Comparación del beat visual de <b>Kaelor, Convocador de Tormentas</b>
+  («la primera vez que otro aliado sea invocado durante tu turno: gana +1/+1 hasta tu próximo turno»).
+  <b>A</b> reproduce lo que hay hoy en el juego —<code>StormBuffAnimator.tsx</code> (rayos convergentes SVG) más
+  <code>BuffSurgeAnimator</code> con paleta <code>storm</code>— y de <b>B</b> a <b>I</b> son propuestas nuevas.
+  Este archivo es sólo maqueta: no toca <code>src/</code> ni el contrato de beats.
+</p>
+
+<div class="toolbar">
+  <button id="playAll">▶ Reproducir todo</button>
+  <label><input type="checkbox" id="loop" /> Bucle</label>
+  <div class="sep"></div>
+  <label>Velocidad <input type="range" id="speed" min="0.4" max="2.2" step="0.1" value="1" /><span class="val" id="speedVal">1.0×</span></label>
+  <label>Intensidad <input type="range" id="intensity" min="0.5" max="1.6" step="0.05" value="1" /><span class="val" id="intVal">1.00</span></label>
+  <div class="sep"></div>
+  <label><input type="checkbox" id="plain" /> Fondo neutro</label>
+  <label><input type="checkbox" id="stats" checked /> Marcar +1/+1</label>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="legend">
+  <b>Cómo leer esta comparación.</b> Todas las variantes duran menos de 1,6 s a velocidad 1× para no romper la cola de beats
+  (regla → fuente → beat legible → siguiente reacción). Las que se apoyan sólo en SVG/CSS son directamente portables;
+  las que piden partículas densas convienen sobre el canvas Three.js que ya existe.
+  <b>E</b> propone leer la causa (el aliado invocado) y no sólo el efecto, y <b>H</b> propone marcar la
+  <i>duración</i> del buff, que hoy no se comunica en el campo.
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var NS = "http://www.w3.org/2000/svg";
+  var CARD = { x: 64, y: 46, w: 172, h: 168 };
+  CARD.cx = CARD.x + CARD.w / 2;
+  CARD.cy = CARD.y + CARD.h / 2;
+
+  /* ---------- utilidades ---------- */
+
+  function rngFrom(seed) {
+    var s = seed >>> 0 || 1;
+    return function () {
+      s ^= s << 13; s >>>= 0;
+      s ^= s >> 17;
+      s ^= s << 5;  s >>>= 0;
+      return s / 4294967296;
+    };
+  }
+
+  function svg(tag, attrs, parent) {
+    var node = document.createElementNS(NS, tag);
+    for (var key in attrs) {
+      if (key === "style") node.setAttribute("style", attrs[key]);
+      else node.setAttribute(key, attrs[key]);
+    }
+    if (parent) parent.appendChild(node);
+    return node;
+  }
+
+  function el(tag, cls, parent) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (parent) parent.appendChild(node);
+    return node;
+  }
+
+  /* La capa SVG está desplazada -60px respecto al escenario, así que usamos
+     coordenadas de escenario y las corregimos aquí una sola vez. */
+  function layer(fx, viewW, viewH) {
+    var s = svg("svg", {
+      viewBox: "-60 -60 " + (viewW + 120) + " " + (viewH + 120),
+      preserveAspectRatio: "none"
+    }, fx);
+    return s;
+  }
+
+  function boltPoints(a, b, rnd, segments, amp) {
+    var dx = b.x - a.x, dy = b.y - a.y;
+    var len = Math.hypot(dx, dy) || 1;
+    var nx = -dy / len, ny = dx / len;
+    var pts = [];
+    for (var i = 0; i <= segments; i += 1) {
+      var t = i / segments;
+      var lock = Math.sin(t * Math.PI);
+      var jag = (rnd() - 0.5) * (12 + len * (amp || 0.08)) * lock;
+      pts.push({ x: a.x + dx * t + nx * jag, y: a.y + dy * t + ny * jag });
+    }
+    return pts;
+  }
+
+  function pathOf(pts) {
+    return pts.map(function (p, i) {
+      return (i === 0 ? "M" : "L") + " " + p.x.toFixed(2) + " " + p.y.toFixed(2);
+    }).join(" ");
+  }
+
+  function branchOf(pts, rnd, dir, scale) {
+    var i = 3 + Math.floor(rnd() * Math.max(1, pts.length - 6));
+    var p = pts[i], prev = pts[Math.max(0, i - 1)];
+    var dx = p.x - prev.x, dy = p.y - prev.y;
+    var len = Math.hypot(dx, dy) || 1;
+    var reach = (18 + rnd() * 20) * (scale || 1);
+    var end = {
+      x: p.x + (dx / len) * reach - (dy / len) * reach * dir,
+      y: p.y + (dy / len) * reach + (dx / len) * reach * dir
+    };
+    return pathOf(boltPoints(p, end, rnd, 4, 0.12));
+  }
+
+  function bolt(root, a, b, opts) {
+    opts = opts || {};
+    var rnd = opts.rnd;
+    var pts = boltPoints(a, b, rnd, opts.segments || 9, opts.amp);
+    var g = svg("g", { class: "bolt" + (opts.accent ? " accent" : "") + (opts.fat ? " bolt-fat" : "") }, root);
+    g.style.setProperty("--d", (opts.delay || 0) + "ms");
+    svg("path", { class: "bolt-glow", d: pathOf(pts), pathLength: "1" }, g);
+    svg("path", { class: "bolt-core", d: pathOf(pts), pathLength: "1" }, g);
+    var branches = opts.branches === undefined ? 1 : opts.branches;
+    for (var i = 0; i < branches; i += 1) {
+      var d = branchOf(pts, rnd, i % 2 === 0 ? -1 : 1, opts.branchScale);
+      svg("path", { class: "branch-glow", d: d, pathLength: "1" }, g);
+      svg("path", { class: "branch-core", d: d, pathLength: "1" }, g);
+    }
+    return pts;
+  }
+
+  function ring(root, cx, cy, rx, ry, delay, lime) {
+    var node = svg("ellipse", { class: "ring" + (lime ? " lime" : ""), cx: cx, cy: cy, rx: rx, ry: ry }, root);
+    node.style.setProperty("--d", delay + "ms");
+    return node;
+  }
+
+  function coreFlash(root, cx, cy, r, delay) {
+    var node = svg("circle", { class: "corefl", cx: cx, cy: cy, r: r }, root);
+    node.style.setProperty("--d", delay + "ms");
+    return node;
+  }
+
+  function sparkBurst(root, cx, cy, count, delay, rnd, spread) {
+    for (var i = 0; i < count; i += 1) {
+      var a = (i / count) * 360 + (rnd() - 0.5) * 20;
+      var line = svg("line", {
+        class: "spark", x1: cx, y1: cy, x2: cx + 10, y2: cy,
+        style: "transform-origin:" + cx + "px " + cy + "px"
+      }, root);
+      line.style.setProperty("--a", a.toFixed(1) + "deg");
+      line.style.setProperty("--dist", (18 + (i % 4) * (spread || 7)) + "px");
+      line.style.setProperty("--d", (delay + (i % 5) * 26) + "ms");
+    }
+  }
+
+  function surge(fx, count, rnd, baseDelay) {
+    var wrap = el("div", "surge", fx);
+    wrap.style.position = "absolute";
+    wrap.style.inset = "0";
+    for (var i = 0; i < count; i += 1) {
+      var col = el("i", "", wrap);
+      var lane = (i + 0.12 + rnd() * 0.76) / count - 0.5;
+      col.style.left = (CARD.cx + lane * CARD.w * 1.04) + "px";
+      col.style.height = (52 + rnd() * 46) + "px";
+      col.style.width = (4 + rnd() * 6) + "px";
+      col.style.setProperty("--d", ((baseDelay || 0) + rnd() * 320) + "ms");
+    }
+    return wrap;
+  }
+
+  function whiteout(fx, delay) {
+    var node = el("span", "whiteout", fx);
+    node.style.left = CARD.x + "px";
+    node.style.top = CARD.y + "px";
+    node.style.width = CARD.w + "px";
+    node.style.height = CARD.h + "px";
+    node.style.right = "auto";
+    node.style.bottom = "auto";
+    node.style.setProperty("--d", (delay || 0) + "ms");
+    return node;
+  }
+
+  function rimlight(fx, delay) {
+    var node = el("span", "rimlight", fx);
+    node.style.left = (CARD.x - 2) + "px";
+    node.style.top = (CARD.y - 2) + "px";
+    node.style.width = (CARD.w + 4) + "px";
+    node.style.height = (CARD.h + 4) + "px";
+    node.style.right = "auto";
+    node.style.bottom = "auto";
+    node.style.setProperty("--d", (delay || 0) + "ms");
+    return node;
+  }
+
+  function shake(stage, cls, delay, spd) {
+    var card = stage.querySelector(".card.hero") || stage.querySelector(".card");
+    window.setTimeout(function () {
+      card.classList.remove("recoil", "jitter");
+      void card.offsetWidth;
+      card.classList.add(cls);
+    }, delay * spd);
+  }
+
+  /* ---------- variantes ---------- */
+
+  var VARIANTS = [
+
+    {
+      key: "A",
+      name: "Actual (referencia)",
+      tag: "en el juego",
+      impact: 330,
+      duration: 1400,
+      notes: "Seis rayos convergen desde los bordes a un punto bajo del arte, más aura, dos anillos, núcleo y catorce chispas, sobre las columnas del <b>BuffSurgeAnimator</b>. Es rico, pero el foco queda por debajo del centro y los seis trazos compiten entre sí: cuesta leer <b>quién</b> recibe el buff.",
+      build: function (ctx) {
+        var rnd = ctx.rnd, root = ctx.svg, fx = ctx.fx;
+        var target = { x: CARD.cx, y: CARD.y + CARD.h * 0.52 };
+        var starts = [
+          { x: 20, y: 6 }, { x: 106, y: -14 }, { x: 196, y: -12 },
+          { x: 282, y: 12 }, { x: 306, y: 118 }, { x: -6, y: 120 }
+        ];
+        starts.forEach(function (s, i) {
+          bolt(root, s, { x: target.x + (rnd() - 0.5) * 14, y: target.y + (rnd() - 0.5) * 12 }, {
+            rnd: rnd, delay: 55 + i * 24 + Math.round(rnd() * 35), accent: i % 3 === 0
+          });
+        });
+        var aura = svg("ellipse", { class: "corefl", cx: target.x, cy: target.y, rx: 54, ry: 64, style: "opacity:.55" }, root);
+        aura.style.setProperty("--d", "270ms");
+        ring(root, target.x, target.y, 12, 15, 335, false);
+        ring(root, target.x, target.y, 12, 15, 405, true);
+        coreFlash(root, target.x, target.y, 8, 270);
+        sparkBurst(root, target.x, target.y, 14, 350, rnd, 6);
+        surge(fx, 9, rnd, 40);
+      }
+    },
+
+    {
+      key: "B",
+      name: "Impacto celeste",
+      tag: "un solo golpe",
+      impact: 300,
+      duration: 1300,
+      notes: "Un único rayo grueso cae desde muy arriba. Antes, el entorno se oscurece medio segundo; después, blanqueo del arte, onda plana a los pies y retroceso de la carta. <b>Un solo trazo</b> señala la carta sin ambigüedad y deja el resto del campo tranquilo.",
+      build: function (ctx) {
+        var rnd = ctx.rnd, root = ctx.svg, fx = ctx.fx, stage = ctx.stage;
+        el("span", "dim", fx);
+        bolt(root, { x: CARD.cx + 16, y: -58 }, { x: CARD.cx + 2, y: CARD.y + 8 }, {
+          rnd: rnd, delay: 190, segments: 11, amp: 0.05, branches: 2, branchScale: 1.4, fat: true
+        });
+        bolt(root, { x: CARD.cx - 26, y: -58 }, { x: CARD.cx - 8, y: CARD.y + 16 }, {
+          rnd: rnd, delay: 236, segments: 9, amp: 0.06, branches: 1, accent: true
+        });
+        whiteout(fx, 292);
+        var wave = svg("ellipse", { class: "flatring", cx: CARD.cx, cy: CARD.y + CARD.h - 12, rx: 92, ry: 22 }, root);
+        wave.style.setProperty("--d", "300ms");
+        var wave2 = svg("ellipse", { class: "flatring", cx: CARD.cx, cy: CARD.y + CARD.h - 12, rx: 92, ry: 22, style: "stroke:rgb(194 239 91 / .7)" }, root);
+        wave2.style.setProperty("--d", "372ms");
+        coreFlash(root, CARD.cx, CARD.y + 14, 14, 292);
+        for (var i = 0; i < 12; i += 1) {
+          var f = el("span", "fleck", fx);
+          f.style.left = (CARD.x + 12 + rnd() * (CARD.w - 24)) + "px";
+          f.style.top = (CARD.y + 10 + rnd() * 40) + "px";
+          f.style.setProperty("--fall", (60 + rnd() * 90) + "px");
+          f.style.setProperty("--d", (330 + rnd() * 220) + "ms");
+        }
+        shake(stage, "recoil", 300, ctx.spd);
+      }
+    },
+
+    {
+      key: "C",
+      name: "Anillo orbital",
+      tag: "recoge y cierra",
+      impact: 900,
+      duration: 1600,
+      notes: "Un anillo eléctrico orbita la carta en perspectiva con tres nodos; el anillo se cierra sobre Kaelor y descarga. Lee como <b>convocar</b> más que como recibir un golpe, y el colapso da un punto de impacto claro para el +1/+1.",
+      build: function (ctx) {
+        var rnd = ctx.rnd, root = ctx.svg, fx = ctx.fx;
+        var orbit = el("div", "orbit", fx);
+        [[104, 0, false], [104, 500, true], [104, 250, false]].forEach(function (spec, i) {
+          var spin = el("div", "spin", orbit);
+          spin.style.setProperty("--d", spec[1] + "ms");
+          spin.style.setProperty("--turn", (i % 2 ? 540 : 620) + "deg");
+          var node = el("div", "node" + (spec[2] ? " lime" : ""), spin);
+          node.style.setProperty("--r", spec[0] + "px");
+          node.style.setProperty("--d", spec[1] + "ms");
+        });
+        var ellipse = svg("ellipse", { class: "orbit-ring", cx: CARD.cx, cy: CARD.cy, rx: 106, ry: 36 }, root);
+        ellipse.style.setProperty("--d", "60ms");
+        var ellipse2 = svg("ellipse", { class: "orbit-ring", cx: CARD.cx, cy: CARD.cy - 8, rx: 92, ry: 30, style: "stroke:rgb(194 239 91 / .42)" }, root);
+        ellipse2.style.setProperty("--d", "170ms");
+        [0, 1, 2, 3].forEach(function (i) {
+          var a = (i / 4) * Math.PI * 2 + 0.4;
+          bolt(root, { x: CARD.cx + Math.cos(a) * 108, y: CARD.cy + Math.sin(a) * 36 }, { x: CARD.cx, y: CARD.cy }, {
+            rnd: rnd, delay: 820 + i * 45, segments: 7, amp: 0.1, branches: 0
+          });
+        });
+        coreFlash(root, CARD.cx, CARD.cy, 11, 900);
+        ring(root, CARD.cx, CARD.cy, 14, 14, 930, true);
+        rimlight(fx, 900);
+        sparkBurst(root, CARD.cx, CARD.cy, 10, 940, rnd, 8);
+      }
+    },
+
+    {
+      key: "D",
+      name: "Carga y descarga",
+      tag: "dos tiempos",
+      impact: 560,
+      duration: 1450,
+      notes: "Primero las motas <b>entran</b> hacia la carta mientras el fondo se apaga; luego revienta hacia afuera. La anticipación hace que el golpe se sienta más fuerte sin subir el brillo, y el hueco entre tiempos es donde encaja el SFX.",
+      build: function (ctx) {
+        var rnd = ctx.rnd, root = ctx.svg, fx = ctx.fx, stage = ctx.stage;
+        el("span", "dim", fx);
+        for (var i = 0; i < 18; i += 1) {
+          var a = rnd() * Math.PI * 2;
+          var r = 120 + rnd() * 70;
+          var m = el("span", "mote" + (i % 3 === 0 ? " lime" : ""), fx);
+          m.style.left = CARD.cx + "px";
+          m.style.top = (CARD.cy - 6) + "px";
+          m.style.setProperty("--fx0", (Math.cos(a) * r).toFixed(1) + "px");
+          m.style.setProperty("--fy0", (Math.sin(a) * r * 0.72).toFixed(1) + "px");
+          m.style.setProperty("--d", (rnd() * 300) + "ms");
+        }
+        coreFlash(root, CARD.cx, CARD.cy - 6, 9, 520);
+        whiteout(fx, 545);
+        for (var j = 0; j < 8; j += 1) {
+          var ang = (j / 8) * Math.PI * 2 + 0.22;
+          bolt(root, { x: CARD.cx, y: CARD.cy - 6 }, {
+            x: CARD.cx + Math.cos(ang) * 150, y: CARD.cy - 6 + Math.sin(ang) * 128
+          }, { rnd: rnd, delay: 545 + j * 16, segments: 8, amp: 0.12, branches: j % 2, accent: j % 4 === 0 });
+        }
+        ring(root, CARD.cx, CARD.cy - 6, 16, 16, 560, false);
+        ring(root, CARD.cx, CARD.cy - 6, 16, 16, 640, true);
+        surge(fx, 6, rnd, 560);
+        shake(stage, "jitter", 545, ctx.spd);
+      }
+    },
+
+    {
+      key: "E",
+      name: "Arco de cadena (desde el aliado)",
+      tag: "muestra la causa",
+      wide: true,
+      duo: true,
+      impact: 640,
+      duration: 1500,
+      notes: "El aliado recién invocado destella y el arco <b>viaja</b> hasta Kaelor. Hoy el disparador es invisible en el campo: el jugador ve crecer a Kaelor sin ver por qué. Esta variante narra la regla completa en un solo beat y encaja con el contrato (regla → fuente → target → beat).",
+      build: function (ctx) {
+        var rnd = ctx.rnd, root = ctx.svg, fx = ctx.fx, stage = ctx.stage;
+        var ally = stage.querySelector(".card.ally");
+        var allyC = { x: 44 + CARD.w / 2, y: CARD.y + CARD.h / 2 };
+        var heroC = { x: 324 + CARD.w / 2, y: CARD.y + CARD.h / 2 };
+        window.setTimeout(function () {
+          ally.classList.remove("ally-pulse");
+          void ally.offsetWidth;
+          ally.classList.add("ally-pulse");
+        }, 120 * ctx.spd);
+        var lift = svg("ellipse", { class: "flatring", cx: allyC.x, cy: CARD.y + CARD.h - 10, rx: 74, ry: 18, style: "stroke:rgb(194 239 91 / .8)" }, root);
+        lift.style.setProperty("--d", "140ms");
+        bolt(root, { x: allyC.x + 40, y: allyC.y - 10 }, { x: heroC.x - 46, y: heroC.y - 4 }, {
+          rnd: rnd, delay: 420, segments: 13, amp: 0.07, branches: 2, branchScale: 0.9, fat: true
+        });
+        bolt(root, { x: allyC.x + 40, y: allyC.y + 6 }, { x: heroC.x - 46, y: heroC.y + 10 }, {
+          rnd: rnd, delay: 470, segments: 11, amp: 0.09, branches: 1, accent: true
+        });
+        var w = el("span", "whiteout", fx);
+        w.style.left = "324px"; w.style.top = CARD.y + "px";
+        w.style.width = CARD.w + "px"; w.style.height = CARD.h + "px";
+        w.style.right = "auto"; w.style.bottom = "auto";
+        w.style.setProperty("--d", "620ms");
+        coreFlash(root, heroC.x - 40, heroC.y, 11, 620);
+        ring(root, heroC.x, heroC.y, 15, 15, 660, false);
+        ring(root, heroC.x, heroC.y, 15, 15, 730, true);
+        sparkBurst(root, heroC.x - 30, heroC.y, 12, 660, rnd, 8);
+        var rim = el("span", "rimlight", fx);
+        rim.style.left = "322px"; rim.style.top = (CARD.y - 2) + "px";
+        rim.style.width = (CARD.w + 4) + "px"; rim.style.height = (CARD.h + 4) + "px";
+        rim.style.right = "auto"; rim.style.bottom = "auto";
+        rim.style.setProperty("--d", "620ms");
+        var hero = stage.querySelector(".card.hero");
+        window.setTimeout(function () {
+          hero.classList.remove("jitter");
+          void hero.offsetWidth;
+          hero.classList.add("jitter");
+        }, 620 * ctx.spd);
+      }
+    },
+
+    {
+      key: "F",
+      name: "Glifo del Convocador",
+      tag: "identidad de bando",
+      impact: 720,
+      duration: 1600,
+      notes: "Un círculo rúnico se traza a los pies de la carta y se enciende en una columna de luz. Es el más <b>Elarion</b> de los ocho: mezcla la tormenta con el verde del Pacto y da a Kaelor una firma reutilizable por otros Convocadores.",
+      build: function (ctx) {
+        var rnd = ctx.rnd, root = ctx.svg, fx = ctx.fx;
+        var baseY = CARD.y + CARD.h - 14;
+        var outer = svg("ellipse", { class: "glyph", cx: CARD.cx, cy: baseY, rx: 96, ry: 26, pathLength: "1" }, root);
+        outer.style.setProperty("--d", "0ms");
+        var inner = svg("ellipse", { class: "glyph lime", cx: CARD.cx, cy: baseY, rx: 66, ry: 18, pathLength: "1" }, root);
+        inner.style.setProperty("--d", "120ms");
+        for (var i = 0; i < 10; i += 1) {
+          var a = (i / 10) * Math.PI * 2;
+          var x1 = CARD.cx + Math.cos(a) * 66, y1 = baseY + Math.sin(a) * 18;
+          var x2 = CARD.cx + Math.cos(a) * 96, y2 = baseY + Math.sin(a) * 26;
+          var tick = svg("path", { class: "glyph" + (i % 3 === 0 ? " lime" : ""), d: "M " + x1 + " " + y1 + " L " + x2 + " " + y2, pathLength: "1" }, root);
+          tick.style.setProperty("--d", (180 + i * 34) + "ms");
+        }
+        var chev = svg("path", {
+          class: "glyph", pathLength: "1",
+          d: "M " + (CARD.cx - 38) + " " + (baseY - 4) + " L " + CARD.cx + " " + (baseY - 16) +
+             " L " + (CARD.cx + 38) + " " + (baseY - 4)
+        }, root);
+        chev.style.setProperty("--d", "420ms");
+        var pillar = el("span", "pillar", fx);
+        pillar.style.setProperty("--d", "660ms");
+        bolt(root, { x: CARD.cx - 54, y: baseY - 6 }, { x: CARD.cx - 10, y: CARD.y + 26 }, { rnd: rnd, delay: 690, segments: 9, amp: 0.09, branches: 1 });
+        bolt(root, { x: CARD.cx + 54, y: baseY - 6 }, { x: CARD.cx + 12, y: CARD.y + 34 }, { rnd: rnd, delay: 736, segments: 9, amp: 0.09, branches: 1, accent: true });
+        coreFlash(root, CARD.cx, CARD.cy + 6, 10, 720);
+        rimlight(fx, 720);
+        for (var k = 0; k < 10; k += 1) {
+          var m = el("span", "mote" + (k % 2 ? " lime" : ""), fx);
+          m.style.left = (CARD.cx + (rnd() - 0.5) * 150) + "px";
+          m.style.top = (baseY - 4) + "px";
+          m.style.setProperty("--fx0", "0px");
+          m.style.setProperty("--fy0", "0px");
+          m.style.animation = "surge-rise calc(900ms * var(--spd)) ease-out calc(" + (700 + rnd() * 300) + "ms * var(--spd)) both";
+        }
+      }
+    },
+
+    {
+      key: "G",
+      name: "Nube de tempestad",
+      tag: "literal y legible",
+      impact: 860,
+      duration: 1700,
+      notes: "Una nube pequeña se forma sobre la carta, parpadea por dentro y suelta dos rayos. La lectura es inmediata («convoca la tormenta»), y la nube ocupa el aire <b>encima</b> de la carta, no sobre el arte, así que no tapa stats ni Rasgos.",
+      build: function (ctx) {
+        var rnd = ctx.rnd, root = ctx.svg, fx = ctx.fx, stage = ctx.stage;
+        var cloudY = CARD.y - 34;
+        var cloud = el("div", "cloud", fx);
+        var puffs = [[-62, 4, 62, 34], [-26, -10, 78, 44], [16, -6, 72, 40], [50, 6, 56, 30], [-4, 12, 96, 30]];
+        puffs.forEach(function (p, i) {
+          var b = el("b", "", cloud);
+          b.style.left = (CARD.cx + p[0] - p[2] / 2) + "px";
+          b.style.top = (cloudY + p[1] - p[3] / 2) + "px";
+          b.style.width = p[2] + "px";
+          b.style.height = p[3] + "px";
+          b.style.setProperty("--cx0", (p[0] * 0.5).toFixed(0) + "px");
+          b.style.setProperty("--drift", ((rnd() - 0.5) * 8).toFixed(1));
+          b.style.setProperty("--d", (i * 46) + "ms");
+        });
+        var flash = el("span", "cloud-flash", fx);
+        flash.style.left = CARD.cx + "px";
+        flash.style.top = cloudY + "px";
+        flash.style.setProperty("--d", "120ms");
+        bolt(root, { x: CARD.cx - 28, y: cloudY + 10 }, { x: CARD.cx - 12, y: CARD.y + 30 }, {
+          rnd: rnd, delay: 780, segments: 8, amp: 0.11, branches: 1, fat: true
+        });
+        bolt(root, { x: CARD.cx + 34, y: cloudY + 12 }, { x: CARD.cx + 20, y: CARD.y + 52 }, {
+          rnd: rnd, delay: 900, segments: 8, amp: 0.11, branches: 1, accent: true
+        });
+        whiteout(fx, 830);
+        coreFlash(root, CARD.cx - 12, CARD.y + 30, 9, 820);
+        ring(root, CARD.cx, CARD.cy - 20, 12, 12, 860, false);
+        for (var i = 0; i < 14; i += 1) {
+          var f = el("span", "fleck", fx);
+          f.style.left = (CARD.cx - 80 + rnd() * 160) + "px";
+          f.style.top = (cloudY + 16) + "px";
+          f.style.height = (7 + rnd() * 9) + "px";
+          f.style.setProperty("--fall", (90 + rnd() * 110) + "px");
+          f.style.setProperty("--d", (900 + rnd() * 320) + "ms");
+        }
+        shake(stage, "jitter", 830, ctx.spd);
+      }
+    },
+
+    {
+      key: "H",
+      name: "Aura sostenida",
+      tag: "marca la duración",
+      impact: 260,
+      duration: 3200,
+      persistent: true,
+      notes: "Estallido breve y después un <b>borde crepitante que se queda</b> mientras el buff dura, con microarcos aleatorios y una etiqueta «+1/+1 hasta tu próximo turno». Resuelve un hueco real: hoy nada distingue en el campo un buff temporal de uno permanente. Se puede combinar con cualquiera de las anteriores.",
+      build: function (ctx) {
+        var rnd = ctx.rnd, root = ctx.svg, fx = ctx.fx;
+        bolt(root, { x: CARD.cx - 60, y: -30 }, { x: CARD.cx - 6, y: CARD.y + 26 }, { rnd: rnd, delay: 60, segments: 9, amp: 0.07, branches: 1 });
+        bolt(root, { x: CARD.cx + 70, y: -24 }, { x: CARD.cx + 12, y: CARD.y + 34 }, { rnd: rnd, delay: 110, segments: 9, amp: 0.07, branches: 1, accent: true });
+        coreFlash(root, CARD.cx, CARD.cy - 10, 9, 240);
+        ring(root, CARD.cx, CARD.cy - 10, 12, 12, 260, true);
+
+        var border = svg("svg", { class: "aura-border", viewBox: "0 0 176 172" }, fx);
+        border.style.position = "absolute";
+        svg("rect", { x: "3", y: "3", width: "170", height: "166", rx: "10" }, border);
+        svg("rect", { class: "lime", x: "6", y: "6", width: "164", height: "160", rx: "9" }, border);
+        border.style.opacity = "0";
+        window.setTimeout(function () { border.style.transition = "opacity .3s"; border.style.opacity = "1"; }, 300 * ctx.spd);
+
+        var tick = el("div", "aura-tick", fx);
+        tick.textContent = "+1/+1 · hasta tu próximo turno";
+        tick.style.left = "50%";
+        tick.style.top = (CARD.y + CARD.h + 8) + "px";
+        tick.style.transform = "translateX(-50%)";
+        tick.style.setProperty("--d", "360ms");
+
+        var arcs = window.setInterval(function () {
+          var side = Math.floor(rnd() * 4);
+          var t = 0.18 + rnd() * 0.64;
+          var p = side === 0 ? { x: CARD.x + CARD.w * t, y: CARD.y }
+                : side === 1 ? { x: CARD.x + CARD.w, y: CARD.y + CARD.h * t }
+                : side === 2 ? { x: CARD.x + CARD.w * t, y: CARD.y + CARD.h }
+                : { x: CARD.x, y: CARD.y + CARD.h * t };
+          var away = { x: p.x + (p.x - CARD.cx) * 0.16, y: p.y + (p.y - CARD.cy) * 0.16 };
+          var arc = svg("path", { class: "microarc", d: pathOf(boltPoints(p, away, rnd, 4, 0.5)) }, root);
+          window.setTimeout(function () { arc.remove(); }, 400 * ctx.spd);
+        }, 260 * ctx.spd);
+        ctx.onStop(function () { window.clearInterval(arcs); });
+      }
+    },
+
+    {
+      key: "I",
+      name: "Destello de silueta",
+      tag: "mínimo viable",
+      impact: 210,
+      duration: 900,
+      notes: "Dos trazos, un blanqueo y un anillo: ~0,9 s en total y todo SVG/CSS, sin canvas. Es la opción de <b>coste bajo</b> si el buff de Kaelor va a dispararse a menudo en un turno con varias invocaciones y no queremos saturar el campo.",
+      build: function (ctx) {
+        var rnd = ctx.rnd, root = ctx.svg, fx = ctx.fx;
+        bolt(root, { x: CARD.cx - 84, y: -34 }, { x: CARD.cx - 4, y: CARD.cy - 24 }, {
+          rnd: rnd, delay: 40, segments: 9, amp: 0.06, branches: 1, fat: true
+        });
+        bolt(root, { x: CARD.cx + 96, y: -20 }, { x: CARD.cx + 14, y: CARD.cy - 8 }, {
+          rnd: rnd, delay: 90, segments: 8, amp: 0.07, branches: 0, accent: true
+        });
+        whiteout(fx, 190);
+        rimlight(fx, 200);
+        ring(root, CARD.cx, CARD.cy - 12, 13, 13, 220, false);
+        coreFlash(root, CARD.cx, CARD.cy - 12, 8, 200);
+      }
+    }
+  ];
+
+  /* ---------- construcción del índice ---------- */
+
+  var grid = document.getElementById("grid");
+  var speed = document.getElementById("speed");
+  var speedVal = document.getElementById("speedVal");
+  var intensity = document.getElementById("intensity");
+  var intVal = document.getElementById("intVal");
+  var loopBox = document.getElementById("loop");
+  var statsBox = document.getElementById("stats");
+  var plainBox = document.getElementById("plain");
+
+  function spd() { return 1 / parseFloat(speed.value); }
+
+  function makeCard(stage, cls, name, pow, end) {
+    var card = el("div", "card " + cls, stage);
+    el("div", "card-art", card);
+    var plate = el("div", "card-plate", card);
+    plate.textContent = name;
+    var p = el("div", "stat pow", card);
+    p.textContent = pow; p.dataset.base = pow;
+    var e = el("div", "stat end", card);
+    e.textContent = end; e.dataset.base = end;
+    return card;
+  }
+
+  var tiles = [];
+
+  VARIANTS.forEach(function (variant) {
+    var tile = el("div", "tile" + (variant.wide ? " wide" : ""), grid);
+
+    var head = el("div", "tile-head", tile);
+    var key = el("span", "tile-key", head);
+    key.textContent = variant.key;
+    var title = el("span", "tile-title", head);
+    title.textContent = variant.name;
+    var tag = el("span", "tile-tag", head);
+    tag.textContent = variant.tag;
+
+    var wrap = el("div", "stage-wrap", tile);
+    var stage = el("div", "stage" + (variant.duo ? " duo" : ""), wrap);
+    if (variant.duo) {
+      makeCard(stage, "ally left", "Maela, Vigía de las Alturas", 3, 3);
+      makeCard(stage, "hero right", "Kaelor, Convocador de Tormentas", 3, 4);
+    } else {
+      makeCard(stage, "hero", "Kaelor, Convocador de Tormentas", 3, 4);
+    }
+
+    var notes = el("div", "tile-notes", tile);
+    notes.innerHTML = variant.notes;
+
+    var foot = el("div", "tile-foot", tile);
+    var play = el("button", "", foot);
+    play.textContent = "▶ Reproducir";
+    var ms = el("span", "ms", foot);
+    ms.textContent = variant.duration + " ms";
+
+    var state = { timers: [], stoppers: [], fx: null, loopTimer: 0 };
+
+    function stop() {
+      state.timers.forEach(window.clearTimeout);
+      state.timers = [];
+      state.stoppers.forEach(function (fn) { fn(); });
+      state.stoppers = [];
+      window.clearTimeout(state.loopTimer);
+      if (state.fx) { state.fx.remove(); state.fx = null; }
+      Array.prototype.forEach.call(stage.querySelectorAll(".plusone"), function (n) { n.remove(); });
+      Array.prototype.forEach.call(stage.querySelectorAll(".card"), function (c) {
+        c.classList.remove("recoil", "jitter", "ally-pulse");
+      });
+      Array.prototype.forEach.call(stage.querySelectorAll(".stat"), function (s) {
+        s.classList.remove("up");
+        s.textContent = s.dataset.base;
+      });
+    }
+
+    function run() {
+      stop();
+      var fx = el("div", "fx", stage);
+      state.fx = fx;
+      var stageW = variant.duo ? 560 : 300;
+      var root = layer(fx, stageW, 260);
+      var ctx = {
+        fx: fx,
+        svg: root,
+        stage: stage,
+        spd: spd(),
+        rnd: rngFrom(Math.floor(Math.random() * 4294967295)),
+        onStop: function (fn) { state.stoppers.push(fn); }
+      };
+      variant.build(ctx);
+
+      if (statsBox.checked) {
+        state.timers.push(window.setTimeout(function () {
+          var hero = stage.querySelector(".card.hero") || stage.querySelector(".card");
+          var p = hero.querySelector(".stat.pow");
+          var e = hero.querySelector(".stat.end");
+          p.textContent = String(Number(p.dataset.base) + 1);
+          e.textContent = String(Number(e.dataset.base) + 1);
+          p.classList.add("up");
+          e.classList.add("up");
+          var label = el("div", "plusone", stage);
+          label.textContent = "+1/+1";
+          label.style.left = (variant.duo ? 324 + CARD.w / 2 : CARD.cx) + "px";
+          label.style.top = (CARD.y + 34) + "px";
+          state.timers.push(window.setTimeout(function () { label.remove(); }, 1100 * ctx.spd));
+        }, variant.impact * ctx.spd));
+      }
+
+      if (!variant.persistent) {
+        state.timers.push(window.setTimeout(function () {
+          if (state.fx === fx) { fx.remove(); state.fx = null; }
+        }, (variant.duration + 240) * ctx.spd));
+      }
+
+      if (loopBox.checked) {
+        state.loopTimer = window.setTimeout(run, (variant.duration + 700) * ctx.spd);
+      }
+    }
+
+    play.addEventListener("click", run);
+    tiles.push({ run: run, stop: stop, variant: variant });
+  });
+
+  /* ---------- controles ---------- */
+
+  document.getElementById("playAll").addEventListener("click", function () {
+    tiles.forEach(function (tile, index) {
+      window.setTimeout(tile.run, index * 90);
+    });
+  });
+
+  speed.addEventListener("input", function () {
+    document.documentElement.style.setProperty("--spd", (1 / parseFloat(speed.value)).toFixed(3));
+    speedVal.textContent = parseFloat(speed.value).toFixed(1) + "×";
+  });
+
+  intensity.addEventListener("input", function () {
+    document.documentElement.style.setProperty("--int", intensity.value);
+    intVal.textContent = parseFloat(intensity.value).toFixed(2);
+  });
+
+  loopBox.addEventListener("change", function () {
+    if (!loopBox.checked) tiles.forEach(function (tile) { tile.stop(); });
+  });
+
+  plainBox.addEventListener("change", function () {
+    document.body.classList.toggle("plain", plainBox.checked);
+  });
+
+  statsBox.addEventListener("change", function () {
+    tiles.forEach(function (tile) { tile.stop(); });
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === " ") {
+      event.preventDefault();
+      document.getElementById("playAll").click();
+      return;
+    }
+    var match = VARIANTS.findIndex(function (v) { return v.key.toLowerCase() === event.key.toLowerCase(); });
+    if (match >= 0) tiles[match].run();
+  });
+
+  window.setTimeout(function () {
+    tiles.forEach(function (tile, index) { window.setTimeout(tile.run, index * 120); });
+  }, 350);
+})();
+</script>
+
+</body>
+</html>

@@ -1856,9 +1856,10 @@ test("Toxic adds poison on player combat and every three poison mills one card",
   assert.equal(turnResult.host.archive.length, 2);
 });
 
-test("El Pacto de Elarion growth cards select the intended presentation intensity", () => {
+test("El Pacto de Elarion buffs select their intended presentation", () => {
   assert.equal(buffAnimationVariantForCard("aelyra_heir_of_elarion"), "growth-strong");
-  assert.equal(buffAnimationVariantForCard("kaelor_stormcaller"), "growth-strong");
+  assert.equal(buffAnimationVariantForCard("kaelor_stormcaller"), "storm-strong");
+  assert.equal(buffAnimationVariantForCard("kaelor_stormcaller", true), "storm-strong");
   assert.equal(buffAnimationVariantForCard("elixir_of_the_first_leaf"), "growth-strong");
   assert.equal(buffAnimationVariantForCard("shield_of_the_heir"), "growth-strong");
   assert.equal(buffAnimationVariantForCard("shield_of_the_heir", true), "growth-preview");
