@@ -118,21 +118,33 @@
   .strip-wrap { margin-top: 18px; }
   .strip {
     position: relative;
-    height: 200px;
+    height: 340px;
     overflow: hidden;
     background:
       radial-gradient(ellipse at 50% 120%, rgb(60 40 22 / 0.3), transparent 62%),
       linear-gradient(180deg, #12100d, #080706);
   }
   .strip canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  /* Marcas de fuente y objetivo de cada celda, para leer la escala del proyectil. */
+  .strip-node {
+    position: absolute;
+    width: 34px;
+    height: 46px;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgb(168 132 70 / 0.4);
+    border-radius: 4px;
+    background: linear-gradient(160deg, rgb(42 33 25 / 0.9), rgb(16 13 10 / 0.95));
+    box-shadow: inset 0 0 12px rgb(0 0 0 / 0.7);
+  }
   .strip-label {
     position: absolute;
-    bottom: 9px;
     transform: translateX(-50%);
-    color: rgb(233 220 189 / 0.6);
+    color: rgb(233 220 189 / 0.62);
     font-size: 12px;
     letter-spacing: 0.04em;
+    white-space: nowrap;
   }
+  .strip-label code { color: #f0cf8a; }
 
   .notes {
     margin-top: 16px;
@@ -667,7 +679,8 @@
   <label>Material
     <select id="material">
       <option value="fire">Fuego — goblins / BURN</option>
-      <option value="oil">Aceite — zombis / OIL_BURN</option>
+      <option value="slime">Limo verde — Nerezh / OIL_BURN (nuevo)</option>
+      <option value="oil">Brea — Nerezh / OIL_BURN (actual)</option>
       <option value="emerald">Esmeralda — Vaelor</option>
       <option value="golden">Dorado — Varka (x2)</option>
     </select>
@@ -682,6 +695,7 @@
   <label>Escala <input id="scale" type="range" min="0.6" max="2" step="0.05" value="1" /><span class="val" id="scaleVal">1.00</span></label>
   <label>Velocidad <input id="speed" type="range" min="0.2" max="1" step="0.05" value="1" /><span class="val" id="speedVal">1.00</span></label>
   <label><input id="loop" type="checkbox" checked /> Bucle</label>
+  <label><input id="live" type="checkbox" checked /> Banco en acción</label>
   <label>Fotograma <input id="scrub" type="range" min="0" max="100" step="1" value="58" /><span class="val" id="scrubVal">—</span></label>
   <button id="fire">Lanzar</button>
 </div>
@@ -705,12 +719,13 @@
 </div>
 
 <section class="stage strip-wrap">
-  <header><span>Banco de siluetas — los tres diseños con el material elegido</span><span class="tag">suspendidas, avanzando hacia la derecha</span></header>
+  <header><span>Los cuatro presets del juego, con el diseño elegido</span><span class="tag">suspendidos, avanzando hacia la derecha, a su escala real</span></header>
   <div class="strip">
     <canvas id="strip"></canvas>
-    <span class="strip-label" style="left:16.66%">B · Cometa turbulento</span>
-    <span class="strip-label" style="left:50%">C · Lenguas de llama</span>
-    <span class="strip-label" style="left:83.33%">D · Masa volumétrica</span>
+    <span class="strip-label" style="left:25%; top:10px">Goblins · <code>BURN</code> · escala 1.0</span>
+    <span class="strip-label" style="left:75%; top:10px">Varka · dorado · escala 0.85 · dos bolas</span>
+    <span class="strip-label" style="left:25%; top:calc(50% + 10px)">Vaelor · esmeralda · escala 1.5</span>
+    <span class="strip-label" style="left:75%; top:calc(50% + 10px)">Nerezh · limo viscoso · escala 1.0</span>
   </div>
 </section>
 
@@ -731,15 +746,27 @@ const MATERIALS = {
     cssClass: "",
     projectiles: 1,
     scale: 1,
+    kind: 0,
     // core / hot / mid / deep / smoke, e "ink" = cuánto tapa el fondo en vez de brillar.
     core: [1.00, 0.97, 0.86], hot: [1.00, 0.76, 0.28], mid: [0.97, 0.33, 0.05],
     deep: [0.56, 0.08, 0.02], smoke: [0.10, 0.05, 0.04], ink: 0.16,
   },
-  oil: {
-    label: "Aceite — zombis",
+  slime: {
+    // Nerezh no lanza fuego: es materia viscosa. kind = 1 cambia forma, estela e impacto.
+    label: "Limo — Nerezh",
     cssClass: "burn-animation-layer-oil",
     projectiles: 1,
     scale: 1,
+    kind: 1,
+    core: [0.93, 1.00, 0.72], hot: [0.72, 0.97, 0.24], mid: [0.36, 0.74, 0.09],
+    deep: [0.11, 0.34, 0.05], smoke: [0.03, 0.10, 0.03], ink: 0.94,
+  },
+  oil: {
+    label: "Brea — variante actual",
+    cssClass: "burn-animation-layer-oil",
+    projectiles: 1,
+    scale: 1,
+    kind: 0,
     core: [0.94, 0.91, 0.96], hot: [0.64, 0.55, 0.71], mid: [0.25, 0.19, 0.30],
     deep: [0.07, 0.04, 0.09], smoke: [0.02, 0.02, 0.03], ink: 0.92,
   },
@@ -748,6 +775,7 @@ const MATERIALS = {
     cssClass: "burn-animation-layer-emerald",
     projectiles: 1,
     scale: 1.5,
+    kind: 0,
     core: [0.95, 1.00, 0.85], hot: [0.71, 1.00, 0.42], mid: [0.18, 0.83, 0.37],
     deep: [0.04, 0.37, 0.16], smoke: [0.02, 0.09, 0.05], ink: 0.14,
   },
@@ -756,10 +784,19 @@ const MATERIALS = {
     cssClass: "burn-animation-layer-golden",
     projectiles: 2,
     scale: 0.85,
+    kind: 0,
     core: [1.00, 0.99, 0.94], hot: [1.00, 0.94, 0.48], mid: [1.00, 0.77, 0.11],
     deep: [0.73, 0.38, 0.00], smoke: [0.14, 0.07, 0.03], ink: 0.10,
   },
 };
+
+// Los cuatro presets tal como los lanza el juego, para el banco comparativo.
+const PRESETS = [
+  { material: "fire", projectiles: 1, scale: 1 },
+  { material: "golden", projectiles: 2, scale: 0.85 },
+  { material: "emerald", projectiles: 1, scale: 1.5 },
+  { material: "slime", projectiles: 1, scale: 1 },
+];
 
 const DESIGN_NOTES = {
   1: "<b>B · Cometa turbulento.</b> La cabeza es una gota estirada por la trayectoria, no un círculo: el borde se erosiona con ruido fractal advectado hacia atrás, así que la silueta cambia cada frame. La estela <b>no viaja pegada a la bola</b>: se emite en instantes fijos y cada bocanada queda anclada donde nació, se abre, sube, se enfría y se apaga ahí, igual que la traza de chispas del efecto actual pero con llama en vez de puntos. Es el reemplazo más directo de la bola actual: mismo tamaño aparente, misma legibilidad del núcleo blanco.",
@@ -1003,6 +1040,7 @@ uniform float uCount;    // 1 o 2 proyectiles
 uniform float uScale;
 uniform float uDesign;   // 1 cometa, 2 lenguas, 3 volumen
 uniform float uHover;    // 1 = silueta suspendida para inspección, sin vuelo ni impacto
+uniform float uKind;     // 0 = llama, 1 = materia viscosa (limo)
 uniform vec3 uCore;
 uniform vec3 uHot;
 uniform vec3 uMid;
@@ -1094,12 +1132,33 @@ vec2 pathPoint(vec2 s, vec2 e, float k) {
   return mix(s, e, k) + perp * sin(3.14159 * k) * 26.0 * uScale;
 }
 
+// Sombreado de materia viscosa: borde nítido, interior medio y un especular desplazado.
+// No es temperatura, pero recorre la misma rampa, así que el material sigue siendo sólo paleta.
+float gooShade(vec2 m, float inside) {
+  float spec = smoothstep(0.42, 1.0, 1.0 - length(m - vec2(0.34, -0.36)) / 0.62);
+  float rim = smoothstep(0.28, 0.0, inside);   // el canto se oscurece: da volumen de gota
+  return clamp(0.30 + 0.36 * inside + spec * 0.85 - rim * 0.18, 0.0, 1.0);
+}
+
 // ---------- proyectil ----------
 // Devuelve cobertura y escribe la temperatura del fragmento en heatv.
 float projectileDensity(vec2 p, vec2 P, vec2 dir, float R, float seed, out float heatv) {
   vec2 rel = p - P;
   vec2 n = vec2(dot(rel, dir), dot(rel, vec2(-dir.y, dir.x))) / R;
   float back = max(-n.x, 0.0);
+
+  // Limo: gota pesada de frente romo, borde definido y cola que se pellizca en cuentas.
+  // La tensión superficial manda, así que ondula despacio en vez de hervir como la llama.
+  if (uKind > 0.5) {
+    float wob = fbm3(vec3(n * 0.95, uTime * 1.2 + seed)) - 0.5;
+    float stretched = n.x > 0.0 ? n.x / 0.98 : n.x / 2.5;
+    float r = length(vec2(stretched, n.y * (1.0 + 0.45 * back))) + wob * 0.16;
+    float bead = 0.13 * sin(n.x * 5.5 - uTime * 4.0);
+    float inside = 1.0 - r + bead * smoothstep(0.25, 1.1, back);
+    heatv = gooShade(n, inside);
+    return smoothstep(0.0, 0.14, inside);
+  }
+
   float cool = 0.46 + 0.58 * exp(-1.7 * back);   // la cola se enfría; la cabeza conserva el núcleo
   heatv = 0.0;
   float dens = 0.0;
@@ -1177,6 +1236,16 @@ void main() {
       float u = fj / 8.0;
       float rnd = hash13(vec3(fj, 4.0, 1.0));
       float rnd2 = hash13(vec3(fj, 6.0, 5.0));
+      if (uKind > 0.5) {
+        vec2 Qg = uEnd - vec2(R * (0.95 + fj * 0.78), -(rnd - 0.5) * R * 0.55 - R * 1.5 * u * u * (0.55 + rnd2));
+        vec2 mg = (p - Qg) / (R * (0.30 + 0.16 * rnd2) * (1.0 - 0.3 * u));
+        mg.y /= (1.0 + 1.15 * u);
+        float insg = 1.0 - length(mg);
+        addFire(col, alpha, smoothstep(0.0, 0.16, insg) * (1.0 - smoothstep(0.62, 1.0, u)),
+                gooShade(mg, insg));
+        continue;
+      }
+
       vec2 Q = uEnd - vec2(R * (1.0 + fj * 0.9), (rnd - 0.5) * R * 1.1 * u + R * 0.5 * u * u);
       vec2 m = (p - Q) / (R * (0.55 + 0.8 * u) * (0.75 + rnd2 * 0.4));
       float nz = fbm3(vec3(m * 1.5 + vec2(uTime * 1.4, 0.0), uTime * 2.0 + fj)) - 0.5;
@@ -1224,7 +1293,7 @@ void main() {
       vec2 perp = vec2(-dir.y, dir.x);
       float seed = float(i) * 31.7;
 
-      // Bocanadas depositadas: ventana deslizante sobre las últimas emisiones, para que la
+      // Estela depositada: ventana deslizante sobre las últimas emisiones, para que la
       // emisión no se agote a media trayectoria y la bola nunca se despegue de su estela.
       float lastPuff = floor(min(fclock, 1.0) / PUFF_STEP);
       for (int j = 0; j < 20; j++) {
@@ -1237,6 +1306,19 @@ void main() {
         // el azar va atado al índice: cada bocanada conserva su forma mientras envejece
         float rnd = hash13(vec3(idx, seed, 1.0));
         float rnd2 = hash13(vec3(idx, seed, 5.0));
+
+        if (uKind > 0.5) {
+          // El limo no arde: gotea. Cada gota cae, se estira y se queda colgando.
+          Q += perp * (rnd - 0.5) * R * 0.55;
+          Q.y += R * 1.5 * u * u * (0.55 + rnd2);
+          vec2 m = (p - Q) / (R * (0.30 + 0.16 * rnd2) * (1.0 - 0.3 * u));
+          m.y /= (1.0 + 1.15 * u);               // el hilo se alarga al caer
+          float inside = 1.0 - length(m);
+          float cov = smoothstep(0.0, 0.16, inside) * (1.0 - smoothstep(0.62, 1.0, u));
+          addFire(col, alpha, cov, gooShade(m, inside));
+          continue;
+        }
+
         // deriva propia: se abre de lado y sube mientras se consume
         Q += perp * (rnd - 0.5) * R * 1.1 * u + vec2(0.0, -R * 0.5 * u * u);
         vec2 m = (p - Q) / (R * (0.55 + 0.8 * u) * (0.75 + rnd2 * 0.4));
@@ -1248,7 +1330,7 @@ void main() {
         addFire(col, alpha, cov, pow(clamp(inside, 0.0, 1.0), 1.4) * (0.84 - 0.55 * u));
       }
 
-      // chispas sueltas, también ancladas al punto donde saltaron y con ventana propia
+      // chispas sueltas (o salpicaduras finas del limo), ancladas donde saltaron
       float lastSpark = floor(min(fclock, 1.0) / SPARK_STEP);
       for (int j = 0; j < 16; j++) {
         float idx = lastSpark - float(j);
@@ -1258,11 +1340,21 @@ void main() {
         if (u >= 1.0) continue;
         float rnd = hash13(vec3(idx, seed + 3.0, 7.0));
         float rnd2 = hash13(vec3(idx, seed + 9.0, 2.0));
+        // la brasa sube y se apaga; la gota cae y sigue ahí
+        float rise = uKind > 0.5 ? -1.6 : 0.7;
         vec2 Q = pathPoint(S, uEnd, easeInFlight(te))
-               + perp * (rnd - 0.5) * R * (0.5 + 3.2 * u)
+               + perp * (rnd - 0.5) * R * (0.5 + (uKind > 0.5 ? 1.2 : 3.2) * u)
                - dir * rnd2 * R * 0.8
-               + vec2(0.0, -R * 0.7 * u * u);
-        float sz = (1.5 + rnd2 * 3.2) * uScale * (1.0 - u * 0.75);
+               - vec2(0.0, R * rise * u * u);
+        float sz = (1.5 + rnd2 * 3.2) * uScale * (1.0 - u * (uKind > 0.5 ? 0.3 : 0.75));
+        if (uKind > 0.5) {
+          vec2 m = (p - Q) / max(sz * 1.6, 0.001);
+          m.y /= (1.0 + 0.9 * u);
+          float inside = 1.0 - length(m);
+          addFire(col, alpha, smoothstep(0.0, 0.2, inside) * (1.0 - smoothstep(0.7, 1.0, u)),
+                  gooShade(m, inside));
+          continue;
+        }
         float g = sz / (length(p - Q) + max(sz, 0.001) * 0.9);
         float e = pow(clamp(g, 0.0, 1.0), 3.0) * (1.0 - smoothstep(0.55, 1.0, u));
         addFire(col, alpha, e, (0.72 + 0.28 * e) * (1.0 - 0.35 * u));
@@ -1278,6 +1370,49 @@ void main() {
         addFire(col, alpha, d, heatv);
       }
     }
+  }
+
+  // --- impacto viscoso: salpica, chorrea y deja mancha; no estalla ni humea ---
+  if (uT >= IMPACT_AT && uKind > 0.5) {
+    vec2 qn = (p - uEnd) / R;
+    float sp = pow(ti, 0.42);
+    float ang = atan(qn.y, qn.x);
+
+    // cuerpo del salpicón: se aplasta contra el objetivo y se queda escurriendo
+    float lob = fbm3(vec3(cos(ang) * 2.4, sin(ang) * 2.4, 5.0)) - 0.5;  // fijo: la mancha no hierve
+    vec2 qs = qn;
+    qs.y -= 0.55 * sp;                       // escurre hacia abajo
+    float rad = max((0.75 + 2.3 * sp) * (1.0 + lob * 0.5), 0.05);
+    float inside = 1.0 - length(vec2(qs.x, qs.y * 1.3)) / rad;
+    float cov = smoothstep(0.0, 0.14, inside) * (1.0 - smoothstep(0.55, 1.0, ti) * 0.5);
+    addFire(col, alpha, cov, gooShade(qs / rad, inside));
+
+    // dedos y gotas despedidas: se estiran en su dirección de salida y luego caen
+    for (int j = 0; j < 12; j++) {
+      float fj = float(j);
+      float a0 = hash13(vec3(fj, 13.0, 2.0)) * 6.2831;
+      float spd = 0.6 + hash13(vec3(fj, 4.0, 9.0)) * 1.1;
+      float rnd = hash13(vec3(fj, 8.0, 6.0));
+      vec2 outDir = vec2(cos(a0), sin(a0));
+      vec2 c = outDir * 2.6 * spd * sp;
+      c.y += 2.4 * ti * ti * (0.5 + rnd);     // gravedad
+      vec2 rel = qn - c;
+      // marco local del dedo: x a lo largo del radio, y perpendicular
+      vec2 loc = vec2(dot(rel, outDir), dot(rel, vec2(-outDir.y, outDir.x)));
+      loc.x /= (1.0 + 1.7 * sp);              // estirado hacia afuera
+      loc.y *= (1.0 + 0.35 * sp);             // y afinado de lado
+      vec2 m = loc / max(0.46 * (0.6 + rnd * 0.7) * (1.0 - 0.22 * ti), 0.02);
+      m.y /= (1.0 + 0.9 * ti);                // y colgando por la caída
+      float ins = 1.0 - length(m);
+      float dcov = smoothstep(0.0, 0.2, ins) * (1.0 - smoothstep(0.6, 1.0, ti));
+      addFire(col, alpha, dcov, gooShade(m, ins));
+    }
+
+    // destello corto y frío del golpe húmedo
+    col += heat(0.85) * exp(-ti * 34.0) * exp(-length(qn) * length(qn) * 1.4) * 0.9;
+
+    gl_FragColor = vec4(col, clamp(alpha, 0.0, 1.0));
+    return;
   }
 
   // --- impacto ---
@@ -1357,7 +1492,8 @@ void main() {
 `;
 
 const UNIFORMS = ["uRes", "uTime", "uT", "uStartA", "uStartB", "uEnd", "uCount",
-                  "uScale", "uDesign", "uHover", "uCore", "uHot", "uMid", "uDeep", "uSmoke", "uInk"];
+                  "uScale", "uDesign", "uHover", "uKind", "uCore", "uHot", "uMid", "uDeep",
+                  "uSmoke", "uInk"];
 
 function createRenderer(target, host) {
   const gl = target.getContext("webgl", { alpha: true, premultipliedAlpha: true, antialias: false });
@@ -1412,6 +1548,7 @@ function createRenderer(target, host) {
     gl.uniform3fv(uni.uDeep, conf.deep);
     gl.uniform3fv(uni.uSmoke, conf.smoke);
     gl.uniform1f(uni.uInk, conf.ink);
+    gl.uniform1f(uni.uKind, conf.kind || 0);
   };
   return r;
 }
@@ -1464,7 +1601,7 @@ function renderBoard(now) {
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
 
-// Tres tercios con tijera: mismo programa, un diseño por región.
+// Rejilla 2x2 con tijera: un preset del juego por celda, cada uno con su material y su escala.
 function renderStrip(now) {
   const { gl, uni } = strip;
   const view = strip.resize();
@@ -1472,27 +1609,37 @@ function renderStrip(now) {
   gl.clearColor(0, 0, 0, 0);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  const conf = MATERIALS[materialSel.value];
   const s = view.dpr;
   const w = strip.canvas.width;
   const h = strip.canvas.height;
   gl.uniform2f(uni.uRes, w, h);
   gl.uniform1f(uni.uTime, now / 1000);
   gl.uniform1f(uni.uHover, 1);
-  gl.uniform1f(uni.uScale, currentScale() * 1.6 * s);
   gl.uniform1f(uni.uCount, 1);
-  strip.material(conf);
+  gl.uniform1f(uni.uDesign, parseInt(designSel.value, 10));
 
   gl.enable(gl.SCISSOR_TEST);
-  for (let i = 0; i < 3; i++) {
-    const x0 = Math.floor((w * i) / 3);
-    const x1 = Math.floor((w * (i + 1)) / 3);
-    gl.scissor(x0, 0, x1 - x0, h);
-    // uEnd es el centro del cuerpo suspendido, en píxeles con y hacia abajo
-    gl.uniform2f(uni.uEnd, (x0 + x1) / 2 + w * 0.03, h * 0.44);
-    gl.uniform1f(uni.uDesign, i + 1);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-  }
+  PRESETS.forEach((preset, index) => {
+    const col = index % 2;
+    const row = Math.floor(index / 2);
+    const x0 = Math.floor((w * col) / 2);
+    const x1 = Math.floor((w * (col + 1)) / 2);
+    const cellH = Math.floor(h / 2);
+    // la tijera usa el origen abajo-izquierda; las filas se cuentan desde arriba
+    gl.scissor(x0, h - (row + 1) * cellH, x1 - x0, cellH);
+    strip.material(MATERIALS[preset.material]);
+    gl.uniform1f(uni.uScale, preset.scale * 1.35 * s);
+    const cx = (x0 + x1) / 2 + (x1 - x0) * 0.14;
+    const cy = row * cellH + cellH * 0.52;
+    // Varka lanza dos: se muestran separadas en vertical, como salen de sus dos manos
+    const offsets = preset.projectiles === 2
+      ? [-cellH * 0.14, cellH * 0.14]
+      : [0];
+    for (const dy of offsets) {
+      gl.uniform2f(uni.uEnd, cx, cy + dy);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+  });
   gl.disable(gl.SCISSOR_TEST);
 }
 
@@ -1558,9 +1705,16 @@ function syncLabels() {
     "frecuencias angulares, el interior se rompe con ruido, siete lenguas salen despedidas y la masa sube " +
     "mientras se apaga, con humo por debajo y un anillo turbulento. La elección de diseño sólo cambia el " +
     "proyectil en vuelo." +
-    "<br><br>Los tres comparten el reloj actual: carga 0–20 %, vuelo 20–58 %, impacto en el 58 %. " +
-    "El material sólo aporta la rampa de color y cuánta luz tapa (<code>ink</code>): el aceite de los zombis " +
-    "es la misma llama con densidad casi opaca y rampa violeta, así que no hay que duplicar el efecto por deck.";
+    "<br><br><b>Limo de Nerezh.</b> No es llama repintada: es otro estado de materia (<code>kind = 1</code>). " +
+    "El cuerpo es una gota pesada de borde nítido con especular desplazado y cola que se pellizca en cuentas; " +
+    "la estela no arde sino que <b>gotea</b> —cada gota cae, se estira y se queda colgando—; y el impacto no " +
+    "estalla: salpica con dedos estirados hacia afuera, chorrea hacia abajo y deja mancha, sin humo ni onda " +
+    "de choque. Sigue en el mismo reloj y con el mismo <code>impactMs</code>. Queda seleccionable la brea " +
+    "actual para comparar; nota que <code>docs/animation_contracts.md</code> describe hoy el " +
+    "<code>OIL_BURN</code> como brea negra con violeta y habría que actualizarlo." +
+    "<br><br>Los tres diseños comparten el reloj actual: carga 0–20 %, vuelo 20–58 %, impacto en el 58 %. " +
+    "En los materiales de llama, el material sólo aporta la rampa de color y cuánta luz tapa (<code>ink</code>), " +
+    "así que goblins, Vaelor y Varka no duplican el efecto: cambian paleta, escala y número de proyectiles.";
 }
 
 materialSel.addEventListener("change", () => { syncMaterial(); syncLabels(); launch(); });

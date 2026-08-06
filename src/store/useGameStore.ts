@@ -85,6 +85,7 @@ import {
   type PersonalAttackAnimationPlan,
   type PersonalCombatAnimationPlan,
 } from "./combatAnimation";
+import { resolveBurnRenderer, type BurnRenderer, type BurnTrajectory } from "./burnAnimation";
 
 export type GameStore = {
   game: GameState;
@@ -417,6 +418,8 @@ export type BurnAnimationState = {
   sourceMoves?: boolean;
   projectileGapMs?: number;
   impactLabel?: string;
+  renderer?: BurnRenderer;
+  trajectory?: BurnTrajectory;
 };
 
 export type BurnAnimationTarget = {
@@ -1957,6 +1960,7 @@ function runPendingHostCombatVolleyOrFinish(combatSequenceId: number): void {
         targetKind: "playerLife",
         amount: volley.damage,
         projectileCount,
+        renderer: resolveBurnRenderer(source?.definitionId),
       },
     });
     for (let projectileIndex = 0; projectileIndex < projectileCount; projectileIndex += 1) {

@@ -6,7 +6,15 @@ import { renderToStaticMarkup } from "react-dom/server";
 import * as THREE from "three";
 
 import { activeDefenseArrowLinks, isBehindInStackOrder, isFrontOfCardStack, visibleDefenseArrowLinks } from "../src/components/battlefieldLayout";
-import { burnProjectileOriginRatios, burnProjectileParticleTimings } from "../src/components/burnPresentation";
+import {
+  burnProjectileOriginRatios,
+  burnProjectileParticleTimings,
+} from "../src/components/burnPresentation";
+import {
+  burnImpactRoutes,
+  burnMaterialColors,
+  burnRenderBatches,
+} from "../src/components/burnFireball";
 import { frameLeafRootIndex, frameRootPathSpecs } from "../src/components/GrowthBuffAnimator";
 import { buildStorm, stormBoltTones } from "../src/components/StormBuffAnimator";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
@@ -22,6 +30,7 @@ import {
   resolvePersonalAttackAnimation,
   resolvePersonalCombatAnimation,
 } from "../src/store/combatAnimation";
+import { burnPathCurvature, resolveBurnRenderer } from "../src/store/burnAnimation";
 import { addCard, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
 
 test("the Host Archive counter counts attack discards down without displaying zero", () => {
@@ -54,7 +63,7 @@ test("Vaelor uses his personal defense animation only when he wins and survives"
     effect: {
       type: "fireball",
       variant: "emerald",
-      scale: 1.5,
+      scale: 1.8,
       amount: 6,
       sourceMoves: false,
     },
@@ -89,7 +98,7 @@ test("Vaelor's direct Host attack resolves to the shared emerald fireball preset
     effect: {
       type: "fireball",
       variant: "emerald",
-      scale: 1.5,
+      scale: 1.8,
       amount: 6,
       sourceMoves: false,
     },
@@ -97,17 +106,68 @@ test("Vaelor's direct Host attack resolves to the shared emerald fireball preset
   assert.equal(resolvePersonalAttackAnimation(customCard("ordinary-attacker", "player"), 1), undefined);
 });
 
-test("every Burn projectile owns trail and impact particle timing", () => {
-  assert.deepEqual(burnProjectileParticleTimings(3, 0), [
-    { projectileIndex: 0, flightStartMs: 220, impactMs: 638 },
-    { projectileIndex: 1, flightStartMs: 220, impactMs: 638 },
-    { projectileIndex: 2, flightStartMs: 220, impactMs: 638 },
+test("a repeated Burn volley lands as one aggregate impact and explicit targets keep their own", () => {
+  // Descarga repetida contra el mismo objetivo: un solo impacto, en el reloj del último proyectil.
+  assert.deepEqual(burnImpactRoutes(3, false, 90), [{ routeIndex: 2, delayMs: 180 }]);
+  assert.deepEqual(burnImpactRoutes(2, false, 0), [{ routeIndex: 1, delayMs: 0 }]);
+  // Objetivos explícitos: cada ruta conserva su impacto y su número de daño.
+  assert.deepEqual(burnImpactRoutes(3, true, 90), [
+    { routeIndex: 0, delayMs: 0 },
+    { routeIndex: 1, delayMs: 90 },
+    { routeIndex: 2, delayMs: 180 },
   ]);
+  assert.deepEqual(burnImpactRoutes(0, false, 90), []);
+});
+
+test("procedural volleys render every route in bounded shader batches", () => {
+  const explicitImpacts = burnImpactRoutes(14, true, 90);
+  const explicitBatches = burnRenderBatches(14, explicitImpacts, 6);
+  assert.deepEqual(explicitBatches.map((batch) => batch.routeIndexes), [
+    [0, 1, 2, 3, 4, 5],
+    [6, 7, 8, 9, 10, 11],
+    [12, 13],
+  ]);
+  assert.deepEqual(explicitBatches.map((batch) => batch.impacts.length), [6, 6, 2]);
+  assert.deepEqual(explicitBatches[2].impacts, [
+    { routeIndex: 0, delayMs: 1080 },
+    { routeIndex: 1, delayMs: 1170 },
+  ]);
+
+  const aggregateBatches = burnRenderBatches(8, burnImpactRoutes(8, false, 90), 6);
+  assert.deepEqual(aggregateBatches[0].impacts, []);
+  assert.deepEqual(aggregateBatches[1].impacts, [{ routeIndex: 1, delayMs: 630 }]);
+});
+
+test("only Vaelor's entry volley keeps the curved procedural route", () => {
+  assert.equal(burnPathCurvature(undefined), 0);
+  assert.equal(burnPathCurvature("straight"), 0);
+  assert.equal(burnPathCurvature("curved"), 1);
+});
+
+test("Todos contra uno keeps the classic fireball renderer", () => {
+  assert.equal(resolveBurnRenderer("all_against_one"), "classic");
+  assert.equal(resolveBurnRenderer("varka_infernal_matriarch"), "procedural");
+  assert.equal(resolveBurnRenderer(undefined), "procedural");
+});
+
+test("the classic volley keeps an independent particle clock for every projectile", () => {
   assert.deepEqual(burnProjectileParticleTimings(3, 90), [
     { projectileIndex: 0, flightStartMs: 220, impactMs: 638 },
     { projectileIndex: 1, flightStartMs: 310, impactMs: 728 },
     { projectileIndex: 2, flightStartMs: 400, impactMs: 818 },
   ]);
+});
+
+test("each Burn material is only a colour ramp and a density", () => {
+  const emerald = burnMaterialColors("emerald");
+  // Vaelor ya no depende de rotar el tono del mundo: su rampa es verde por derecho propio.
+  assert.ok(emerald.mid[1] > emerald.mid[0] && emerald.mid[1] > emerald.mid[2]);
+  // La brea de Nerezh tapa el fondo; las llamas suman luz.
+  assert.ok(burnMaterialColors("oil").ink > 0.8);
+  for (const variant of ["fire", "emerald", "golden"]) {
+    assert.ok(burnMaterialColors(variant).ink < 0.2);
+  }
+  assert.deepEqual(burnMaterialColors(undefined), burnMaterialColors("fire"));
 });
 
 test("Varka's split projectile origin follows the left and right card edges", () => {

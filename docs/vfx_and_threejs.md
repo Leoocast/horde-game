@@ -36,8 +36,19 @@ Implementaciones utiles como referencia:
 - `ManaFlowAnimator.tsx`: usa SVG y Framer Motion para alinear un ribbon vegetal entre una
   criatura de ramp y el socket de mana almacenado. El store difiere la ganancia hasta que la
   semilla llega al HUD; no requiere Three.js porque ambos extremos son elementos de interfaz.
-- `BurnAnimator.tsx`: ejemplo de que un efecto complejo no siempre necesita Three.js; CSS y DOM
-  funcionan mejor cuando el efecto debe alinearse estrechamente con la interfaz.
+- `BurnAnimator.tsx`: un canvas persistente y un contexto WebGL creado de forma diferida al primer
+  Burn dibujan carga, proyectil, estela
+  depositada e impacto con `ShaderMaterial` sobre planos y `THREE.Camera` sin proyeccion. Cada
+  pasada admite seis rutas; una descarga mayor se divide en varias pasadas dentro del mismo render
+  y ninguna ruta explicita se descarta. El renderer se conserva entre Burns consecutivos y solo se
+  libera al desmontar el campo; su overlay queda oculto cuando no hay un Burn activo, mientras
+  geometria y materiales se renuevan por efecto. El GLSL
+  vive aparte en `burnFireball.ts` y deriva sus constantes del reloj de
+  `burnPresentation.ts`, asi que el material de cada bando es solo una rampa de color. El destello
+  de pantalla, el numero de dano y la chamusquina de la carta siguen siendo DOM porque deben
+  alinearse con la interfaz. Las rutas son rectas salvo la descarga de entrada de Vaelor.
+  `ClassicBurnAnimator.tsx` conserva el renderer DOM/CSS anterior exclusivamente para excepciones
+  registradas como Todos contra uno. Detalles de forma y estela en `docs/animation_contracts.md`.
 
 Para cualquier efecto nuevo:
 

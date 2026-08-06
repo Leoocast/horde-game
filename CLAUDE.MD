@@ -251,7 +251,7 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   resolver reglas de combate dentro de animadores.
 - Las presentaciones personales de pelea y ataque directo se registran en
   `src/store/combatAnimation.ts` por identidad estable y contexto ya resuelto. El preset de Vaelor
-  reemplaza el movimiento por una bola de fuego esmeralda a escala 1.5 cuando defiende, mata al
+  reemplaza el movimiento por una bola de fuego esmeralda a escala 1.8 cuando defiende, mata al
   atacante y sobrevive, o cuando ataca directamente el panel de vida de la Hueste. En ataques con
   proyectil, la reacción de golpe del panel espera el `impactMs` del preset. El Rasgo canónico de
   Vaelor es `FLYING` (Volar), no `SKYGUARD` (Guardia aérea).
@@ -259,10 +259,20 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   nacen de los bordes izquierdo y derecho de su carta, convergen sobre el defensor asignado o, si
   no tiene defensor, sobre el panel de Vida del Cronista, y producen un solo impacto de reglas.
   Todo evento Burn cuyo origen sea Varka usa su material amarillo-dorado, incluida su descarga de
-  entrada contra el Cronista y cada enemigo.
+  entrada contra el Cronista y cada enemigo. Esa descarga muestra una ruta por cada objetivo sin
+  tope visual: el límite de seis pertenece a cada pasada del shader y las descargas mayores se
+  reparten en varias pasadas sobre el mismo canvas y reloj.
   Vaelor, al ser Invocado, captura todos los enemigos actuales y lanza a la vez una bola esmeralda
-  a cada uno usando exactamente el preset de su defensa (mismo diseño y escala 1.5); el impacto
+  a cada uno con el mismo material y escala 1.8 del preset de su defensa; sólo esta descarga de
+  entrada conserva una trayectoria curva. Todas las demás bolas de fuego viajan en línea recta.
+  El impacto
   coloca un contador -1/-1 sobre cada objetivo como un único evento simultáneo, sin daño adicional.
+- Todos contra uno conserva deliberadamente el renderer clásico DOM/CSS de bola de fuego; el resto
+  de Burn usa el renderer procedural salvo otra excepción registrada de presentación.
+- El renderer procedural crea su contexto WebGL de forma diferida al primer Burn y lo conserva
+  durante el resto de la vida del campo. Los ataques
+  consecutivos, incluidas varias Varkas apiladas, no deben forzar la pérdida ni recrear el contexto
+  entre beats. Su overlay debe permanecer oculto mientras no exista un Burn activo.
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado
   aunque los impactos visuales se escalonen.
 

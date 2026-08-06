@@ -1,3 +1,6 @@
+/** Reloj maestro del Burn. El shader, el destello y el número de daño se derivan de estos tres
+ * valores; `--burn-duration` en CSS debe seguir valiendo lo mismo. */
+export const BURN_DURATION_MS = 1100;
 export const BURN_IMPACT_AT_MS = 638;
 export const BURN_FLIGHT_START_MS = 220;
 
@@ -30,8 +33,7 @@ export function burnProjectileOriginRatios(
   }));
 }
 
-/** Gives every rendered route its own particle clock. A zero gap keeps a multi-target volley
- * simultaneous without collapsing its trails and impact embers onto the final projectile. */
+/** The classic renderer still emits DOM particles on each route's original clock. */
 export function burnProjectileParticleTimings(
   projectileCount: number,
   projectileGapMs: number,
@@ -44,3 +46,4 @@ export function burnProjectileParticleTimings(
     impactMs: BURN_IMPACT_AT_MS + projectileIndex * gap,
   }));
 }
+

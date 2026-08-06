@@ -683,6 +683,7 @@ const counterVolleyBeatHandler: HostBeatHandler = {
         sourceMoves: projectileEffect.sourceMoves,
         projectileGapMs: Math.max(0, Number(event.payload?.projectileGapMs ?? 0)),
         impactLabel: counterType,
+        trajectory: "curved",
       },
       hostAutoTriggerCount: 1,
     });

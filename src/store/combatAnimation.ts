@@ -116,7 +116,7 @@ const PERSONAL_COMBAT_ANIMATION_RECIPES: Record<
     effect: {
       type: "fireball",
       variant: "emerald",
-      scale: 1.5,
+      scale: 1.8,
       sourceMoves: false,
     },
   },

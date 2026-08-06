@@ -145,7 +145,7 @@ test("Vaelor's winning defense lands on the personal emerald fireball impact", a
       targetKind: "card",
       amount: 6,
       variant: "emerald",
-      scale: 1.5,
+      scale: 1.8,
       sourceMoves: false,
     });
 
@@ -224,7 +224,7 @@ test("Vaelor attacks the Host panel with his personal emerald fireball", async (
     assert.equal(started.burnAnimation?.sourceId, vaelor.instanceId);
     assert.equal(started.burnAnimation?.targetKind, "hostLife");
     assert.equal(started.burnAnimation?.variant, "emerald");
-    assert.equal(started.burnAnimation?.scale, 1.5);
+    assert.equal(started.burnAnimation?.scale, 1.8);
 
     timers.releaseExpiredAt(637);
     assert.deepEqual(useGameStore.getState().hostMillPreviewCards, []);
@@ -248,7 +248,7 @@ test("Vaelor attacks the Host panel with his personal emerald fireball", async (
   }
 });
 
-test("Varka attacks the Chronicler life panel with two smaller infernal fireballs", async () => {
+test("stacked Varkas attack consecutively with their own infernal fireballs", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -287,8 +287,9 @@ test("Varka attacks the Chronicler life panel with two smaller infernal fireball
     const game = createTestGame("varka-personal-direct-attack-animation");
     game.activeSide = "host";
     game.phase = "combat";
-    const varka = addCard(game, cardFromDeck("varka_infernal_matriarch", "host"));
-    game.combat.hostAttackers = [varka.instanceId];
+    const firstVarka = addCard(game, cardFromDeck("varka_infernal_matriarch", "host"));
+    const secondVarka = addCard(game, cardFromDeck("varka_infernal_matriarch", "host"));
+    game.combat.hostAttackers = [firstVarka.instanceId, secondVarka.instanceId];
 
     useGameStore.setState({
       game,
@@ -304,22 +305,34 @@ test("Varka attacks the Chronicler life panel with two smaller infernal fireball
     useGameStore.getState().resolveHostCombat();
     const started = useGameStore.getState();
     assert.equal(started.hostAttackAnimation?.customAnimation?.preset, "infernal-fireball");
-    assert.equal(started.burnAnimation?.sourceId, varka.instanceId);
+    assert.equal(started.burnAnimation?.sourceId, firstVarka.instanceId);
     assert.equal(started.burnAnimation?.targetKind, "playerLife");
     assert.equal(started.burnAnimation?.variant, "golden");
     assert.equal(started.burnAnimation?.scale, 0.85);
     assert.equal(started.burnAnimation?.projectileCount, 2);
     assert.equal(started.burnAnimation?.projectileOrigin, "split-horizontal");
     assert.equal(started.burnAnimation?.projectileGapMs, 0);
-    assert.equal(started.burnAnimation?.amount, 4);
+    const firstDamage = started.burnAnimation?.amount ?? 0;
+    assert.ok(firstDamage > 0);
 
     timers.releaseExpiredAt(637);
     assert.equal(useGameStore.getState().game.player.life, 30);
 
     timers.releaseExpiredAt(638);
-    assert.equal(useGameStore.getState().game.player.life, 26);
+    assert.equal(useGameStore.getState().game.player.life, 30 - firstDamage);
 
     timers.releaseExpiredAt(1220);
+    const secondStarted = useGameStore.getState();
+    assert.equal(secondStarted.hostAttackAnimation?.customAnimation?.preset, "infernal-fireball");
+    assert.equal(secondStarted.burnAnimation?.sourceId, secondVarka.instanceId);
+    assert.equal(secondStarted.burnAnimation?.projectileCount, 2);
+    const secondDamage = secondStarted.burnAnimation?.amount ?? 0;
+    assert.ok(secondDamage > 0);
+
+    timers.releaseExpiredAt(1858);
+    assert.equal(useGameStore.getState().game.player.life, 30 - firstDamage - secondDamage);
+
+    timers.releaseExpiredAt(2440);
     assert.equal(useGameStore.getState().burnAnimation, undefined);
   } finally {
     resetPlayerTriggerSequence();
@@ -394,7 +407,8 @@ test("Vaelor's entry volley waits for the summon and applies all counters at one
     const started = useGameStore.getState();
     assert.equal(started.burnAnimation?.sourceId, vaelor.instanceId);
     assert.equal(started.burnAnimation?.variant, "emerald");
-    assert.equal(started.burnAnimation?.scale, 1.5);
+    assert.equal(started.burnAnimation?.scale, 1.8);
+    assert.equal(started.burnAnimation?.trajectory, "curved");
     assert.equal(started.burnAnimation?.sourceMoves, false);
     assert.equal(started.burnAnimation?.projectileGapMs, 0);
     assert.equal(started.burnAnimation?.impactLabel, "-1/-1");
