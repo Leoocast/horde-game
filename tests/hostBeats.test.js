@@ -306,7 +306,7 @@ test("Varka attacks the Chronicler life panel with two smaller infernal fireball
     assert.equal(started.hostAttackAnimation?.customAnimation?.preset, "infernal-fireball");
     assert.equal(started.burnAnimation?.sourceId, varka.instanceId);
     assert.equal(started.burnAnimation?.targetKind, "playerLife");
-    assert.equal(started.burnAnimation?.variant, "fire");
+    assert.equal(started.burnAnimation?.variant, "golden");
     assert.equal(started.burnAnimation?.scale, 0.85);
     assert.equal(started.burnAnimation?.projectileCount, 2);
     assert.equal(started.burnAnimation?.projectileOrigin, "split-horizontal");

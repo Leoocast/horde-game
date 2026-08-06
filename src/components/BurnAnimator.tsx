@@ -253,6 +253,7 @@ export function BurnAnimator() {
         "burn-animation-layer",
         burn.variant === "oil" ? "burn-animation-layer-oil" : "",
         burn.variant === "emerald" ? "burn-animation-layer-emerald" : "",
+        burn.variant === "golden" ? "burn-animation-layer-golden" : "",
       ].filter(Boolean).join(" ")}
       style={style}
       aria-hidden="true"

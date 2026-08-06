@@ -8175,6 +8175,164 @@
       0 0 34px #20d85a;
   }
 
+  /* Varka's hand-fire: white-hot centers with lemon-yellow bodies and amber falloff. This is a
+     separate material so ordinary Burn keeps its deeper red/orange identity. */
+  .burn-animation-layer-golden {
+    --burn-flight-impact-filter:
+      drop-shadow(0 0 10px rgba(255, 255, 207, 0.9))
+      drop-shadow(0 0 30px rgba(255, 205, 30, 0.85));
+    --burn-impact-flash-filter: brightness(2.9) saturate(1.25);
+  }
+
+  .burn-animation-layer-golden .burn-charge-glow {
+    background: radial-gradient(circle,
+        rgba(255, 255, 245, 0.8) 0 10%,
+        rgba(255, 244, 109, 0.92) 22%,
+        rgba(255, 194, 24, 0.32) 48%,
+        transparent 74%);
+  }
+
+  .burn-animation-layer-golden .burn-charge-distortion {
+    border-color: rgba(255, 239, 112, 0.62);
+  }
+
+  .burn-animation-layer-golden .burn-charge-arc::before,
+  .burn-animation-layer-golden .burn-charge-arc::after {
+    border-top-color: rgba(255, 250, 168, 0.86);
+    border-right-color: rgba(255, 194, 28, 0.48);
+  }
+
+  .burn-animation-layer-golden .burn-charge-particle {
+    background: rgba(255, 255, 204, 0.98);
+    box-shadow: 0 0 8px rgba(255, 231, 67, 0.96), 0 0 16px rgba(255, 171, 12, 0.66);
+  }
+
+  .burn-animation-layer-golden .burn-trace-particle {
+    background: #fffbd5;
+    box-shadow:
+      0 0 calc(var(--size) * 1.5) #fff57c,
+      0 0 calc(var(--size) * 3) #ffd425,
+      0 0 calc(var(--size) * 6) #d67a00;
+  }
+
+  .burn-animation-layer-golden .burn-fireball {
+    filter:
+      drop-shadow(0 0 9px rgba(255, 255, 202, 0.82))
+      drop-shadow(0 0 24px rgba(255, 194, 18, 0.74));
+  }
+
+  .burn-animation-layer-golden .burn-trail-ribbon {
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(100, 45, 0, 0.72) 14%,
+        rgba(211, 116, 0, 0.88) 36%,
+        rgba(255, 184, 12, 0.98) 65%,
+        rgba(255, 230, 62, 0.99) 84%,
+        rgba(255, 255, 204, 0.96) 96%,
+        transparent 100%);
+  }
+
+  .burn-animation-layer-golden .burn-trail-ribbon::before {
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 165, 0, 0.26) 24%,
+        rgba(255, 226, 51, 0.84) 70%,
+        #fffbd2 93%,
+        transparent);
+  }
+
+  .burn-animation-layer-golden .burn-trail-streak {
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 177, 0, 0.82) 46%,
+        rgba(255, 248, 137, 1) 88%,
+        transparent);
+    box-shadow: 0 0 8px rgba(255, 210, 24, 0.72);
+  }
+
+  .burn-animation-layer-golden .burn-ball-outer {
+    background: radial-gradient(circle at 66% 46%,
+        #fffef0 0 7%,
+        #fff68b 17%,
+        #ffda28 36%,
+        #f6ad08 54%,
+        #c96800 70%,
+        rgba(137, 58, 0, 0.48) 82%,
+        transparent 93%);
+  }
+
+  .burn-animation-layer-golden .burn-ball-mid {
+    background: radial-gradient(circle at 63% 46%,
+        #fff 0 7%,
+        #fff9b0 18%,
+        #ffe33d 40%,
+        rgba(238, 139, 0, 0.56) 74%,
+        transparent 89%);
+  }
+
+  .burn-animation-layer-golden .burn-ball-core {
+    background: radial-gradient(circle at 62% 46%,
+        #fff 0 20%,
+        #fffbd0 39%,
+        #ffe768 68%,
+        rgba(255, 180, 8, 0.16) 100%);
+  }
+
+  .burn-animation-layer-golden .burn-ball-hotspot {
+    background: radial-gradient(circle, #fff 0 48%, rgba(255, 255, 208, 0.86) 72%, transparent);
+  }
+
+  .burn-animation-layer-golden .burn-impact-core {
+    background: radial-gradient(circle,
+        #fff 0 5%,
+        #fffbd1 10%,
+        #ffed63 22%,
+        #ffc21c 40%,
+        rgba(210, 105, 0, 0.84) 58%,
+        rgba(62, 26, 0, 0.7) 71%,
+        transparent 83%);
+    filter:
+      blur(3px)
+      drop-shadow(0 0 18px rgba(255, 226, 67, 0.68))
+      drop-shadow(0 0 38px rgba(255, 154, 0, 0.3));
+  }
+
+  .burn-animation-layer-golden .burn-void-disc {
+    background: radial-gradient(circle,
+        #2b1600 0 34%,
+        rgba(92, 47, 0, 0.96) 48%,
+        rgba(255, 182, 10, 0.92) 63%,
+        rgba(255, 241, 101, 0.48) 69%,
+        transparent 78%);
+    box-shadow: 0 0 0 3px rgba(255, 221, 54, 0.68), 0 0 46px rgba(255, 157, 0, 0.54);
+  }
+
+  .burn-animation-layer-golden .burn-shock-ring {
+    border-color: rgba(255, 239, 99, 0.86);
+    box-shadow: 0 0 16px rgba(255, 192, 11, 0.58), inset 0 0 11px rgba(255, 222, 48, 0.4);
+  }
+
+  .burn-animation-layer-golden .burn-impact-smoke {
+    background: radial-gradient(circle at 50% 62%,
+        rgba(123, 72, 13, 0.58),
+        rgba(47, 31, 13, 0.78) 46%,
+        rgba(12, 9, 5, 0.42) 69%,
+        transparent 79%);
+  }
+
+  .burn-animation-layer-golden .burn-screen-flash {
+    animation-name: burn-golden-screen-flash;
+  }
+
+  .burn-animation-layer-golden .burn-damage-number {
+    color: #fffbd0;
+    -webkit-text-stroke-color: #5e3100;
+    text-shadow:
+      0 4px 0 #2d1700,
+      0 0 14px #fff06a,
+      0 0 34px #ffb000;
+  }
+
   /* Burn shader on the target itself. The flash is keyed off the impact beat; the scorch
      lingers with the smoke until the end step wipes card.flags.burnSmoke. */
   .burn-card-scorch-flash {
@@ -8356,6 +8514,13 @@
   @keyframes burn-emerald-screen-flash {
     0%, 57.99% { opacity: 0; background: transparent; }
     58% { opacity: 1; background: radial-gradient(circle at var(--burn-end-x) var(--burn-end-y), rgba(242, 255, 222, 0.94), rgba(42, 224, 91, 0.27) 25%, transparent 50%); }
+    59% { opacity: 0.24; }
+    62%, 100% { opacity: 0; }
+  }
+
+  @keyframes burn-golden-screen-flash {
+    0%, 57.99% { opacity: 0; background: transparent; }
+    58% { opacity: 1; background: radial-gradient(circle at var(--burn-end-x) var(--burn-end-y), rgba(255, 255, 226, 0.96), rgba(255, 217, 45, 0.3) 25%, transparent 50%); }
     59% { opacity: 0.24; }
     62%, 100% { opacity: 0; }
   }

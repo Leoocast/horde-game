@@ -137,7 +137,7 @@ test("Varka casts two smaller infernal fireballs at defenders and the Chronicler
     durationMs: 1220,
     effect: {
       type: "fireball",
-      variant: "fire",
+      variant: "golden",
       scale: 0.85,
       amount: 4,
       sourceMoves: false,
@@ -158,7 +158,7 @@ test("Varka casts two smaller infernal fireballs at defenders and the Chronicler
     durationMs: 1220,
     effect: {
       type: "fireball",
-      variant: "fire",
+      variant: "golden",
       scale: 0.85,
       amount: 4,
       sourceMoves: false,

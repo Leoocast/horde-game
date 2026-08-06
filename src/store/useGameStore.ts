@@ -411,7 +411,7 @@ export type BurnAnimationState = {
   amount: number;
   projectileCount?: number;
   projectileOrigin?: "split-horizontal";
-  variant?: "fire" | "oil" | "emerald";
+  variant?: "fire" | "oil" | "emerald" | "golden";
   scale?: number;
   sourceMoves?: boolean;
   projectileGapMs?: number;

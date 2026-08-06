@@ -23,7 +23,7 @@ export type PersonalCombatAnimationPlan = {
   durationMs: number;
   effect: {
     type: "fireball";
-    variant: "fire" | "emerald";
+    variant: "fire" | "emerald" | "golden";
     scale: number;
     amount: number;
     sourceMoves: boolean;
@@ -111,7 +111,7 @@ const PERSONAL_COMBAT_ANIMATION_RECIPES: Record<
     durationMs: 1220,
     effect: {
       type: "fireball",
-      variant: "fire",
+      variant: "golden",
       scale: 0.85,
       sourceMoves: false,
       projectileCount: 2,

@@ -81,7 +81,8 @@ modificador. El cambio resuelve la decisión narrativa pendiente sin introducir 
 - El daño de entrada de Varka se resuelve como un único evento para el Cronista y cada enemigo; el
   texto impreso lo expresa como una sola instrucción de daño.
 - Los ataques de Varka conservan el resultado normal del combate, pero se presentan con dos bolas
-  de fuego infernal simultáneas, más pequeñas que la de Vaelor. Nacen de los bordes izquierdo y
+  de fuego amarillo-doradas simultáneas, como las llamas de sus manos y más pequeñas que la de
+  Vaelor. Nacen de los bordes izquierdo y
   derecho de su carta y convergen sobre un mismo destino: con defensor apuntan a ese Eco; sin
   defensor apuntan al panel de Vida del Cronista. Ambas rutas producen un solo impacto de reglas.
 - La cantidad de Esbirros creada por Vardek usa su Fuerza después de colocar el contador +1/+1.
