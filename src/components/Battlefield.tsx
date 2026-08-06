@@ -1226,7 +1226,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
       )}
       {effectActive && primaryAbility && (
         <button
-          data-audio-click="valid"
+          data-audio-click="off"
           className="effect-action-button"
           onClick={(event) => {
             event.stopPropagation();
@@ -1236,7 +1236,9 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
               triggerEffectActivationPulse(card.instanceId);
             }, 180);
             window.setTimeout(() => {
-              useAudioStore.getState().playSfx("playLand");
+              if (primaryAbility.cost?.exhaust) {
+                useAudioStore.getState().playSfx("playLand");
+              }
               activateAbility(card.instanceId, primaryAbility.id);
             }, 620);
           }}

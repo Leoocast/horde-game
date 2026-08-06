@@ -242,6 +242,9 @@ export type GameStore = {
 const SEED_STORAGE_KEY = "hostfall-seed:v2";
 const defaultSeed = readStoredSeed();
 const HOST_ATTACK_ANIMATION_MS = 500;
+// Lead the defender's lethal-hit reaction slightly so the cue arrives with the incoming blow.
+// Rules still commit near the end of the animation, independently from this presentation timing.
+const HOST_ATTACK_CONTACT_MS = HOST_ATTACK_ANIMATION_MS * 0.25;
 const COMBAT_VOLLEY_LEAD_IN_MS = 360;
 const COMBAT_VOLLEY_PROJECTILE_LAUNCH_MS = 220;
 const COMBAT_VOLLEY_IMPACT_MS = 638;
@@ -1794,7 +1797,6 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
   const impactMs = customAnimation?.impactMs ?? HOST_ATTACK_ANIMATION_MS - 35;
   const durationMs = customAnimation?.durationMs ?? HOST_ATTACK_ANIMATION_MS;
   if (blocker) playCardVoiceInteraction({ type: "BLOCKS", card: blocker });
-  if (event.blockerDies) useAudioStore.getState().playSfx("defend");
   useGameStore.setState({
     hostCombatVisualDamage: customAnimation
       ? useGameStore.getState().hostCombatVisualDamage
@@ -1829,6 +1831,13 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
       if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
       useAudioStore.getState().playSfx(pickRandomSfx(fireballCastSfx));
     }, customAnimation.castMs);
+  }
+
+  if (event.blockerDies) {
+    window.setTimeout(() => {
+      if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
+      useAudioStore.getState().playSfx("defend");
+    }, customAnimation?.impactMs ?? HOST_ATTACK_CONTACT_MS);
   }
 
   window.setTimeout(() => {
@@ -2393,7 +2402,6 @@ function buildCastCardPatch(
   if (sfx && castSucceeded) useAudioStore.getState().playSfx(sfx);
   else if (card && !castSucceeded) showActionToast(next.lastActionResult?.reason);
   if (castSucceeded && card) playInvokedVoiceInteraction(game, next, card.instanceId);
-  if (lostLife && paidLife === 0 && !usesBloodPactAnimation) useAudioStore.getState().playSfx("defend");
   if (castSucceeded && !usesBloodPactAnimation) playDrawOneIfPlayerDrew(game, next);
   if (triggeredBuffCardIds.length > 0) {
     useAudioStore.getState().playSfx(playerBuffSfxForAnimation(triggeredBuffVariant));
@@ -2499,9 +2507,6 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     const playerTriggersQueued = castSucceeded && hasQueuedPlayerTriggers(next);
     if (!castSucceeded) showActionToast(next.lastActionResult?.reason);
     if (castSucceeded) playInvokedVoiceInteraction(latest, next, card.instanceId);
-    if (lostLife && paidLife === 0 && !presentation.suppressLifeLossPresentation) {
-      useAudioStore.getState().playSfx("defend");
-    }
     if (gainedLife) useAudioStore.getState().playSfx("buff");
     const triggeredBuffCardIds = findTemporaryBuffedCardIds(latest, next);
     const triggeredBuffVariant = buffAnimationVariantForCard(card.definitionId);
