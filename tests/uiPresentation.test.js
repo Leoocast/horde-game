@@ -304,7 +304,7 @@ test("Kaelor's strike draws every bolt from the three storm tones", () => {
   assert.deepEqual([...seen].sort(), ["blue", "white", "yellow"]);
 });
 
-test("Kaelor's strike is one sky bolt anchored to the measured card box", () => {
+test("Kaelor's sky bolts converge on the measured card center without base or rain", () => {
   /* Cropped Echo row and tall slot: the strike is authored in measured pixels, so both keep the
      same proportions instead of being stretched by a fixed viewBox. */
   const slots = [
@@ -318,11 +318,9 @@ test("Kaelor's strike is one sky bolt anchored to the measured card box", () => 
 
     assert.equal(storm.bolts.length, 2);
     assert.equal(storm.bolts.filter((bolt) => bolt.primary).length, 1);
-    assert.ok(Math.abs(storm.impact.x - centerX) < card.width * 0.06);
-    assert.ok(storm.impact.y > card.top);
-    assert.ok(storm.impact.y < card.top + card.height * 0.12);
-    assert.ok(storm.ground.cy > card.top + card.height * 0.85);
-    assert.ok(Math.abs(storm.ground.rx / card.width - 0.53) < 0.001);
-    assert.ok(Math.abs(storm.ground.ry / card.height - 0.13) < 0.001);
+    assert.equal(storm.impact.x, centerX);
+    assert.equal(storm.impact.y, card.top + card.height / 2);
+    assert.equal("ground" in storm, false);
+    assert.equal("flecks" in storm, false);
   }
 });

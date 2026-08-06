@@ -17,16 +17,8 @@ type Bolt = {
   tone: StormBoltTone;
 };
 
-type Fleck = {
-  x: number;
-  y: number;
-  drop: number;
-  delay: number;
-};
-
 type StormStyle = CSSProperties & {
   "--storm-delay"?: string;
-  "--storm-drop"?: string;
   "--storm-glow"?: string;
   "--storm-core"?: string;
   "--storm-halo"?: string;
@@ -173,20 +165,18 @@ function buildBranch(
 
 export type Storm = {
   bolts: Bolt[];
-  flecks: Fleck[];
   impact: Point;
-  ground: { cx: number; cy: number; rx: number; ry: number };
   coreRadius: number;
 };
 
-/** Sky strike: one heavy bolt falls from far above the slot and a thinner one answers it. Everything
- *  after that is impact — whiteout, shock rings on the base line and debris raining off the card. */
+/** Sky strike: one heavy bolt falls from far above the slot and a thinner one answers it. Both
+ * converge on the measured center of the card before the whiteout and core flash land. */
 export function buildStorm(eventId: number, seedKey: string, card: CardBox): Storm {
   const rng = makeRng(hashString(`${eventId}:${seedKey}:kaelor-storm`));
   const tones = stormBoltTones(eventId, seedKey, 2);
   const centerX = card.left + card.width / 2;
   const skyY = card.top - card.height * 0.55;
-  const impact: Point = { x: centerX + card.width * 0.012, y: card.top + card.height * 0.05 };
+  const impact: Point = { x: centerX, y: card.top + card.height / 2 };
 
   const mainPoints = buildBolt(
     { x: centerX + card.width * (0.09 + (rng() - 0.5) * 0.05), y: skyY },
@@ -197,7 +187,7 @@ export function buildStorm(eventId: number, seedKey: string, card: CardBox): Sto
   );
   const answerPoints = buildBolt(
     { x: centerX - card.width * (0.15 + (rng() - 0.5) * 0.05), y: skyY + card.height * 0.04 },
-    { x: centerX - card.width * 0.05, y: card.top + card.height * 0.1 },
+    impact,
     rng,
     9,
     0.06,
@@ -224,23 +214,9 @@ export function buildStorm(eventId: number, seedKey: string, card: CardBox): Sto
     },
   ];
 
-  const flecks = Array.from({ length: 12 }, () => ({
-    x: card.left + card.width * (0.07 + rng() * 0.86),
-    y: card.top + card.height * (0.06 + rng() * 0.24),
-    drop: card.height * (0.36 + rng() * 0.54),
-    delay: Math.round(330 + rng() * 220),
-  }));
-
   return {
     bolts,
-    flecks,
     impact,
-    ground: {
-      cx: centerX,
-      cy: card.top + card.height * 0.93,
-      rx: card.width * 0.53,
-      ry: card.height * 0.13,
-    },
     coreRadius: card.width * 0.081,
   };
 }
@@ -276,8 +252,8 @@ export function StormBuffAnimator({ eventId, seedKey }: StormBuffAnimatorProps) 
     () => (overlay ? buildStorm(eventId, seedKey, cardBoxFromOverlay(overlay.width, overlay.height)) : undefined),
     [eventId, seedKey, overlay],
   );
-  /* The flash, the shock rings and the core belong to the bolt that actually lands, so the impact
-     never closes on a colour no bolt carried. */
+  /* The flash and core belong to the bolt that actually lands, so the impact never closes on a
+     colour no bolt carried. */
   const impactStyle = TONE_COLORS[stormBoltTones(eventId, seedKey, 2)[0]];
 
   return (
@@ -306,21 +282,6 @@ export function StormBuffAnimator({ eventId, seedKey }: StormBuffAnimatorProps) 
           );
         })}
 
-        <ellipse
-          className="storm-buff-shock"
-          cx={storm.ground.cx}
-          cy={storm.ground.cy}
-          rx={storm.ground.rx}
-          ry={storm.ground.ry}
-        />
-        <ellipse
-          className="storm-buff-shock storm-buff-shock-late"
-          cx={storm.ground.cx}
-          cy={storm.ground.cy}
-          rx={storm.ground.rx}
-          ry={storm.ground.ry}
-        />
-
         <circle
           className="storm-buff-core"
           cx={storm.impact.x}
@@ -328,20 +289,6 @@ export function StormBuffAnimator({ eventId, seedKey }: StormBuffAnimatorProps) 
           r={storm.coreRadius}
         />
 
-        {storm.flecks.map((fleck, index) => (
-          <line
-            key={index}
-            className="storm-buff-fleck"
-            x1={fleck.x}
-            y1={fleck.y}
-            x2={fleck.x}
-            y2={fleck.y + 5}
-            style={{
-              "--storm-drop": `${fleck.drop.toFixed(1)}px`,
-              "--storm-delay": `${fleck.delay}ms`,
-            } as StormStyle}
-          />
-        ))}
       </svg>
       )}
     </span>
