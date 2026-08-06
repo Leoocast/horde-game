@@ -41,6 +41,9 @@ function ProceduralBurnAnimator({ burn }: { burn: BurnAnimationState | undefined
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
 
   useLayoutEffect(() => {
+    // React puede mostrar el portal antes de que el siguiente requestAnimationFrame pinte el
+    // shader. Mantener oculto el buffer WebGL evita exponer su rectángulo de limpieza entre beats.
+    if (canvasRef.current) canvasRef.current.style.opacity = "0";
     if (!burn) {
       setGeometries([]);
       return;
@@ -106,6 +109,7 @@ function ProceduralBurnAnimator({ burn }: { burn: BurnAnimationState | undefined
   // varias pasadas de seis rutas; ninguna ruta de reglas se descarta por ese límite del GLSL.
   useEffect(() => {
     if (!burn || geometries.length === 0) {
+      if (canvasRef.current) canvasRef.current.style.opacity = "0";
       rendererRef.current?.clear();
       return;
     }
@@ -220,6 +224,7 @@ function ProceduralBurnAnimator({ burn }: { burn: BurnAnimationState | undefined
     const totalMs = BURN_DURATION_MS + lastDelayMs;
     const start = performance.now();
     let frame = 0;
+    let firstFramePresented = false;
     const tick = (now: number) => {
       const elapsed = now - start;
       for (const pass of passes) {
@@ -227,11 +232,17 @@ function ProceduralBurnAnimator({ burn }: { burn: BurnAnimationState | undefined
         pass.uniforms.uT.value = elapsed / BURN_DURATION_MS;
       }
       renderer.render(scene, camera);
+      if (!firstFramePresented) {
+        firstFramePresented = true;
+        // El canvas sólo se revela después de tener una imagen procedural válida.
+        canvas.style.opacity = "1";
+      }
       if (elapsed <= totalMs) frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
 
     return () => {
+      canvas.style.opacity = "0";
       cancelAnimationFrame(frame);
       shakeAnimation?.cancel();
       window.removeEventListener("resize", resize);

@@ -272,7 +272,8 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
 - El renderer procedural crea su contexto WebGL de forma diferida al primer Burn y lo conserva
   durante el resto de la vida del campo. Los ataques
   consecutivos, incluidas varias Varkas apiladas, no deben forzar la pérdida ni recrear el contexto
-  entre beats. Su overlay debe permanecer oculto mientras no exista un Burn activo.
+  entre beats. Su overlay debe permanecer oculto mientras no exista un Burn activo y durante cada
+  handoff hasta que el nuevo efecto haya renderizado su primer frame WebGL válido.
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado
   aunque los impactos visuales se escalonen.
 

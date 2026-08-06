@@ -95,7 +95,7 @@ CSS still times the screen flash and the damage number, and the store's `BURN_IM
 2. A turbulent comet head travels from the source to the target: a teardrop stretched along the heading whose edge is eroded by noise advected backwards, with a white core only at its heart.
 3. The trail is **deposited, not dragged**. Puffs and sparks are emitted at fixed instants and each one stays anchored where it was born, drifts sideways, rises, cools and burns out there. A trail that travels rigidly with the ball is a regression. Emission uses a sliding window over the most recent instants so it never runs out mid-flight and detaches from the head.
 4. On impact (`BURN_IMPACT_MS`, 638ms), damage is committed in the engine and the canonical hit sound (`fireballHitSfx`) plays.
-5. The impact is not a disc: the outline deforms with two angular frequencies, the interior breaks up with noise, tongues are flung outward, the mass rises as it dies, and smoke sits underneath a turbulent ring. The persistent Burn canvas is hidden whenever there is no active Burn and gets a short impact shake while rendering; the board behind is deliberately **not** shaken. The target flashes with the burn shader (`.burn-card-scorch-flash`) and a heavy condensed damage number rises.
+5. The impact is not a disc: the outline deforms with two angular frequencies, the interior breaks up with noise, tongues are flung outward, the mass rises as it dies, and smoke sits underneath a turbulent ring. The persistent Burn canvas is hidden whenever there is no active Burn and remains hidden during each handoff until WebGL has rendered the new effect's first valid frame. It gets a short impact shake while rendering; the board behind is deliberately **not** shaken. The target flashes with the burn shader (`.burn-card-scorch-flash`) and a heavy condensed damage number rises.
 6. A surviving target keeps a scorch tint (`.burn-card-scorch`) and light smoke until end-step cleanup clears `card.flags.burnSmoke`.
 7. Buttons and battlefield interactions remain blocked until the animation and resulting triggers finish.
 
@@ -225,6 +225,7 @@ Current registration:
 - Consecutive Varkas reuse the same persistent WebGL context. Per-attack shader materials and
   geometry are disposed between beats, but the renderer is only released when the battlefield
   unmounts; force-losing and recreating the context between stacked attackers is a regression.
+  The canvas must not become visible during that handoff until the next attack has rendered once.
 - Adding another bespoke fight or direct attack means registering its context and adding or reusing
   a preset; do not add card-name branches to animator components or resolve combat inside VFX.
 

@@ -42,7 +42,8 @@ Implementaciones utiles como referencia:
   pasada admite seis rutas; una descarga mayor se divide en varias pasadas dentro del mismo render
   y ninguna ruta explicita se descarta. El renderer se conserva entre Burns consecutivos y solo se
   libera al desmontar el campo; su overlay queda oculto cuando no hay un Burn activo, mientras
-  geometria y materiales se renuevan por efecto. El GLSL
+  geometria y materiales se renuevan por efecto. En cada handoff, el canvas no vuelve a ser visible
+  hasta que el shader haya dibujado el primer frame valido, para no exponer el buffer limpio. El GLSL
   vive aparte en `burnFireball.ts` y deriva sus constantes del reloj de
   `burnPresentation.ts`, asi que el material de cada bando es solo una rampa de color. El destello
   de pantalla, el numero de dano y la chamusquina de la carta siguen siendo DOM porque deben

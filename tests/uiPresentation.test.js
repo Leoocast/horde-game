@@ -138,6 +138,18 @@ test("procedural volleys render every route in bounded shader batches", () => {
   assert.deepEqual(aggregateBatches[1].impacts, [{ routeIndex: 1, delayMs: 630 }]);
 });
 
+test("procedural Burn hides the WebGL buffer until its first rendered frame", () => {
+  const animator = readFileSync(new URL("../src/components/BurnAnimator.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  const renderIndex = animator.indexOf("renderer.render(scene, camera)");
+  const revealIndex = animator.indexOf('canvas.style.opacity = "1"', renderIndex);
+
+  assert.ok(renderIndex >= 0);
+  assert.ok(revealIndex > renderIndex);
+  assert.match(animator, /canvas\.style\.opacity = "0";\s*cancelAnimationFrame/u);
+  assert.match(styles, /\.burn-canvas\s*\{[^}]*opacity:\s*0;/u);
+});
+
 test("only Vaelor's entry volley keeps the curved procedural route", () => {
   assert.equal(burnPathCurvature(undefined), 0);
   assert.equal(burnPathCurvature("straight"), 0);
