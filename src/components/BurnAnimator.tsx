@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { useGameStore } from "../store/useGameStore";
-import { burnProjectileParticleTimings } from "./burnPresentation";
+import { burnProjectileOriginRatios, burnProjectileParticleTimings } from "./burnPresentation";
 
 type BurnGeometry = {
   startX: number;
@@ -54,12 +54,12 @@ export function BurnAnimator() {
       ? document.querySelector<HTMLElement>(`[data-card-slot-id="${burn.sourceId}"]`)
       : undefined;
     const sourceRect = source?.getBoundingClientRect();
-    const startX = sourceRect ? sourceRect.left + sourceRect.width / 2 : window.innerWidth * 0.5;
-    const startY = sourceRect ? sourceRect.top + sourceRect.height / 2 : window.innerHeight * 0.28;
+    const fallbackStartX = sourceRect ? sourceRect.left + sourceRect.width / 2 : window.innerWidth * 0.5;
+    const fallbackStartY = sourceRect ? sourceRect.top + sourceRect.height / 2 : window.innerHeight * 0.28;
     const targets = burn.targets?.length
       ? burn.targets
       : [{ targetId: burn.targetId, targetKind: burn.targetKind ?? "card" }];
-    const targetGeometries = targets.flatMap((target): BurnGeometry[] => {
+    const targetEndpoints = targets.flatMap((target): Array<Pick<BurnGeometry, "endX" | "endY">> => {
       const targetElement = target.targetKind === "playerLife"
         ? document.querySelector<HTMLElement>('[data-player-life-panel="true"]')
         : target.targetKind === "hostLife"
@@ -70,20 +70,34 @@ export function BurnAnimator() {
       if (!targetElement) return [];
       const targetRect = targetElement.getBoundingClientRect();
       return [{
-        startX,
-        startY,
         endX: targetRect.left + targetRect.width / 2,
         endY: targetRect.top + targetRect.height / 2,
       }];
     });
-    const repeatedProjectileCount = burn.targets?.length
-      ? 1
-      : Math.max(1, Math.min(6, burn.projectileCount ?? 1));
-    setGeometries(
-      repeatedProjectileCount === 1
-        ? targetGeometries
-        : Array.from({ length: repeatedProjectileCount }, () => targetGeometries[0]).filter(Boolean),
+    if (burn.targets?.length) {
+      setGeometries(targetEndpoints.map((endpoint) => ({
+        startX: fallbackStartX,
+        startY: fallbackStartY,
+        ...endpoint,
+      })));
+      return;
+    }
+
+    const endpoint = targetEndpoints[0];
+    if (!endpoint) {
+      setGeometries([]);
+      return;
+    }
+    const projectileCount = Math.max(1, Math.min(6, burn.projectileCount ?? 1));
+    const originRatios = burnProjectileOriginRatios(
+      projectileCount,
+      burn.projectileOrigin ?? "center",
     );
+    setGeometries(originRatios.map((origin) => ({
+      startX: sourceRect ? sourceRect.left + sourceRect.width * origin.x : fallbackStartX,
+      startY: sourceRect ? sourceRect.top + sourceRect.height * origin.y : fallbackStartY,
+      ...endpoint,
+    })));
   }, [burn]);
 
   // Every route sheds trace sparks from its live fireball body and bursts its own ember ring at
@@ -224,6 +238,13 @@ export function BurnAnimator() {
   const impacts = burn.targets?.length
     ? geometries.map((geometry, index) => ({ geometry, delay: index * projectileGapMs }))
     : [{ geometry: geometries[geometries.length - 1], delay: finalProjectileDelay }];
+  const chargeGeometries = burn.projectileOrigin === "split-horizontal"
+    ? geometries
+    : [firstGeometry];
+  const chargeStyle = (geometry: BurnGeometry): CSSProperties => ({
+    "--burn-start-x": `${geometry.startX}px`,
+    "--burn-start-y": `${geometry.startY}px`,
+  }) as CSSProperties;
 
   return createPortal(
     <div
@@ -237,26 +258,28 @@ export function BurnAnimator() {
       aria-hidden="true"
     >
       <div className="burn-world">
-        {/* Charge build-up at the source card. */}
-        <div className="burn-charge">
-          <div className="burn-charge-visual">
-            <span className="burn-charge-glow" />
-            <span className="burn-charge-distortion" />
-            <span className="burn-charge-arc" />
-            {CHARGE_PARTICLES.map((particle, index) => (
-              <i
-                key={index}
-                className="burn-charge-particle"
-                style={{ "--a": `${particle.a}deg`, "--r": `${particle.r}px`, "--s": `${particle.s}px` } as CSSProperties}
-              />
-            ))}
+        {/* Split casters charge once at each source hand; centered casts retain one charge. */}
+        {chargeGeometries.map((geometry, chargeIndex) => (
+          <div key={chargeIndex} className="burn-charge" style={chargeStyle(geometry)}>
+            <div className="burn-charge-visual">
+              <span className="burn-charge-glow" />
+              <span className="burn-charge-distortion" />
+              <span className="burn-charge-arc" />
+              {CHARGE_PARTICLES.map((particle, index) => (
+                <i
+                  key={index}
+                  className="burn-charge-particle"
+                  style={{ "--a": `${particle.a}deg`, "--r": `${particle.r}px`, "--s": `${particle.s}px` } as CSSProperties}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        ))}
 
         <div ref={traceRef} className="burn-trace-layer" />
 
-        {/* One charged cast, followed by a compact staggered volley. The last projectile owns
-            the trace/impact clock; earlier balls remain deliberately close together. */}
+        {/* Every projectile owns its route and particles. Repeated routes may still share one
+            aggregate rules impact at their common destination. */}
         {geometries.map((geometry, projectileIndex) => {
           const projectileDelay = projectileIndex * projectileGapMs;
           return (

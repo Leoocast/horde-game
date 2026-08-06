@@ -410,6 +410,7 @@ export type BurnAnimationState = {
   targets?: BurnAnimationTarget[];
   amount: number;
   projectileCount?: number;
+  projectileOrigin?: "split-horizontal";
   variant?: "fire" | "oil" | "emerald";
   scale?: number;
   sourceMoves?: boolean;
@@ -1458,6 +1459,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
                 variant: customAnimation.effect.variant,
                 scale: customAnimation.effect.scale,
                 sourceMoves: customAnimation.effect.sourceMoves,
+                ...(customAnimation.effect.projectileCount === undefined
+                  ? {}
+                  : { projectileCount: customAnimation.effect.projectileCount }),
+                ...(customAnimation.effect.projectileOrigin === undefined
+                  ? {}
+                  : { projectileOrigin: customAnimation.effect.projectileOrigin }),
+                ...(customAnimation.effect.projectileGapMs === undefined
+                  ? {}
+                  : { projectileGapMs: customAnimation.effect.projectileGapMs }),
               }
             : undefined,
         });
@@ -1826,6 +1836,15 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
           variant: customAnimation.effect.variant,
           scale: customAnimation.effect.scale,
           sourceMoves: customAnimation.effect.sourceMoves,
+          ...(customAnimation.effect.projectileCount === undefined
+            ? {}
+            : { projectileCount: customAnimation.effect.projectileCount }),
+          ...(customAnimation.effect.projectileOrigin === undefined
+            ? {}
+            : { projectileOrigin: customAnimation.effect.projectileOrigin }),
+          ...(customAnimation.effect.projectileGapMs === undefined
+            ? {}
+            : { projectileGapMs: customAnimation.effect.projectileGapMs }),
         }
       : undefined,
   });

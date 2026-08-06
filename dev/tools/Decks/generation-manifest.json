@@ -896,14 +896,14 @@
         {
           "id": "midnight_collector",
           "path": "public/cards/court_of_the_crimson_eclipse/midnight_collector.png",
-          "sha256": "65516fbb6838fe7bdf6fb12c514a7be514065c7fd623b26b4b61eb1a85975658",
+          "sha256": "a19b32a9ebafff6f8a06ce537bf82c73ff7cd2807ab5aa4acadcb8e3fa2989de",
           "width": 976,
           "height": 1360
         },
         {
           "id": "duelist_of_the_eclipse",
           "path": "public/cards/court_of_the_crimson_eclipse/duelist_of_the_eclipse.png",
-          "sha256": "55db3a941e8b51bd991cb0125772dddd5bc383e04dfabf1c707a6c0b0d718a04",
+          "sha256": "ad2eeead01b7b77938086ee80d140739124435d8ce50d4eb9f821a4e1e966bdf",
           "width": 976,
           "height": 1360
         },
@@ -924,7 +924,7 @@
         {
           "id": "sentinel_of_the_lunar_eye",
           "path": "public/cards/court_of_the_crimson_eclipse/sentinel_of_the_lunar_eye.png",
-          "sha256": "10be3ad0e1f4bb7ae5685c55c585f37c8cba616e7d4899ab78350f9a80675b5b",
+          "sha256": "05fa3024380cf38e1faa72c1d9a6bee1d55052e012dbf8a01ddc3bca8205c80f",
           "width": 976,
           "height": 1360
         },
@@ -959,7 +959,7 @@
         {
           "id": "hunt_beneath_the_red_moon",
           "path": "public/cards/court_of_the_crimson_eclipse/hunt_beneath_the_red_moon.png",
-          "sha256": "8a070ab99d8325f4a29d8b7e9b40cf728ad6619e0cc7af147edf9b81ea8e8131",
+          "sha256": "83e2c1dbf37305ebff9192f5dbe8153fa1d8ed9a867c246c44646d55217ca6ec",
           "width": 976,
           "height": 1360
         },

@@ -27,6 +27,9 @@ export type PersonalCombatAnimationPlan = {
     scale: number;
     amount: number;
     sourceMoves: boolean;
+    projectileCount?: number;
+    projectileOrigin?: "split-horizontal";
+    projectileGapMs?: number;
   };
 };
 
@@ -111,6 +114,9 @@ const PERSONAL_COMBAT_ANIMATION_RECIPES: Record<
       variant: "fire",
       scale: 0.85,
       sourceMoves: false,
+      projectileCount: 2,
+      projectileOrigin: "split-horizontal",
+      projectileGapMs: 0,
     },
   },
 };

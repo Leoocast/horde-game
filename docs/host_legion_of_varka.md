@@ -80,9 +80,10 @@ modificador. El cambio resuelve la decisión narrativa pendiente sin introducir 
   el ataque, y aplica la suma al terminar toda la secuencia.
 - El daño de entrada de Varka se resuelve como un único evento para el Cronista y cada enemigo; el
   texto impreso lo expresa como una sola instrucción de daño.
-- Los ataques de Varka conservan el resultado normal del combate, pero se presentan con una bola
-  de fuego infernal más pequeña que la de Vaelor. Con defensor apunta a ese Eco; sin defensor
-  apunta al panel de Vida del Cronista.
+- Los ataques de Varka conservan el resultado normal del combate, pero se presentan con dos bolas
+  de fuego infernal simultáneas, más pequeñas que la de Vaelor. Nacen de los bordes izquierdo y
+  derecho de su carta y convergen sobre un mismo destino: con defensor apuntan a ese Eco; sin
+  defensor apuntan al panel de Vida del Cronista. Ambas rutas producen un solo impacto de reglas.
 - La cantidad de Esbirros creada por Vardek usa su Fuerza después de colocar el contador +1/+1.
 - Forjador de Varka conserva sólo su Pasiva de +1/+1 a los demás Trasgos; su antigua Acción de
   sacrificio permanece retirada del corte.

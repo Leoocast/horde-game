@@ -6,7 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import * as THREE from "three";
 
 import { activeDefenseArrowLinks, isBehindInStackOrder, isFrontOfCardStack, visibleDefenseArrowLinks } from "../src/components/battlefieldLayout";
-import { burnProjectileParticleTimings } from "../src/components/burnPresentation";
+import { burnProjectileOriginRatios, burnProjectileParticleTimings } from "../src/components/burnPresentation";
 import { frameLeafRootIndex, frameRootPathSpecs } from "../src/components/GrowthBuffAnimator";
 import { buildStorm, stormBoltTones } from "../src/components/StormBuffAnimator";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
@@ -106,7 +106,18 @@ test("every Burn projectile owns trail and impact particle timing", () => {
   ]);
 });
 
-test("Varka casts a smaller infernal fireball at defenders and the Chronicler life panel", () => {
+test("Varka's split projectile origin follows the left and right card edges", () => {
+  assert.deepEqual(burnProjectileOriginRatios(2, "split-horizontal"), [
+    { x: 0.08, y: 0.52 },
+    { x: 0.92, y: 0.52 },
+  ]);
+  assert.deepEqual(burnProjectileOriginRatios(2), [
+    { x: 0.5, y: 0.5 },
+    { x: 0.5, y: 0.5 },
+  ]);
+});
+
+test("Varka casts two smaller infernal fireballs at defenders and the Chronicler life panel", () => {
   const varka = cardFromDeck("varka_infernal_matriarch", "host");
   const defender = customCard("varka-defender", "player");
 
@@ -130,6 +141,9 @@ test("Varka casts a smaller infernal fireball at defenders and the Chronicler li
       scale: 0.85,
       amount: 4,
       sourceMoves: false,
+      projectileCount: 2,
+      projectileOrigin: "split-horizontal",
+      projectileGapMs: 0,
     },
   });
 
@@ -148,6 +162,9 @@ test("Varka casts a smaller infernal fireball at defenders and the Chronicler li
       scale: 0.85,
       amount: 4,
       sourceMoves: false,
+      projectileCount: 2,
+      projectileOrigin: "split-horizontal",
+      projectileGapMs: 0,
     },
   });
   assert.equal(hostAttackPlayerHitDelay(direct), 638);

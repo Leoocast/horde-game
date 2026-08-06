@@ -248,7 +248,7 @@ test("Vaelor attacks the Host panel with his personal emerald fireball", async (
   }
 });
 
-test("Varka attacks the Chronicler life panel with her smaller infernal fireball", async () => {
+test("Varka attacks the Chronicler life panel with two smaller infernal fireballs", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -308,6 +308,9 @@ test("Varka attacks the Chronicler life panel with her smaller infernal fireball
     assert.equal(started.burnAnimation?.targetKind, "playerLife");
     assert.equal(started.burnAnimation?.variant, "fire");
     assert.equal(started.burnAnimation?.scale, 0.85);
+    assert.equal(started.burnAnimation?.projectileCount, 2);
+    assert.equal(started.burnAnimation?.projectileOrigin, "split-horizontal");
+    assert.equal(started.burnAnimation?.projectileGapMs, 0);
     assert.equal(started.burnAnimation?.amount, 4);
 
     timers.releaseExpiredAt(637);

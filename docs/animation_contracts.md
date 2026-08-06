@@ -195,8 +195,10 @@ Current registration:
 - Varka, Matriarca Infernal (`varka_infernal_matriarch`) uses `infernal-fireball` whenever she is
   the Host attacker. A defended attack targets the assigned defender; an undefended attack targets
   `[data-player-life-panel]`. Varka remains anchored, the ordinary lunge is suppressed, and the
-  normal combat result lands at the projectile's 638ms impact. The preset uses the fire material
-  at `scale: 0.85`, visibly smaller than Vaelor's personal `scale: 1.5` projectile.
+  normal combat result lands once at the projectiles' shared 638ms impact. The preset uses the fire
+  material at `scale: 0.85`, visibly smaller than Vaelor's personal `scale: 1.5` projectile. It casts two
+  simultaneous routes from the left and right edges of Varka's card, with separate charge, trail,
+  and ember particles; both converge on one target and still produce one rules impact.
 - Adding another bespoke fight or direct attack means registering its context and adding or reusing
   a preset; do not add card-name branches to animator components or resolve combat inside VFX.
 
