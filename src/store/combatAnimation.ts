@@ -1,6 +1,7 @@
 import type { CardInstance } from "../engine/GameTypes";
 
 export type PersonalCombatAnimationPreset = "emerald-fireball" | "infernal-fireball";
+export type BurnMaterialVariant = "fire" | "oil" | "emerald" | "golden";
 export type PersonalCombatRole = "attacker" | "defender";
 export type PersonalCombatOutcome = "wins" | "loses" | "draws" | "survives";
 
@@ -23,7 +24,7 @@ export type PersonalCombatAnimationPlan = {
   durationMs: number;
   effect: {
     type: "fireball";
-    variant: "fire" | "emerald" | "golden";
+    variant: BurnMaterialVariant;
     scale: number;
     amount: number;
     sourceMoves: boolean;
@@ -56,6 +57,21 @@ type PersonalCombatAnimationRecipe = Omit<
 > & {
   effect: Omit<PersonalCombatAnimationPlan["effect"], "amount">;
 };
+
+const PERSONAL_BURN_MATERIALS = {
+  varka_infernal_matriarch: "golden",
+} as const satisfies Record<string, BurnMaterialVariant>;
+
+/** Resolves a card-owned Burn material independently of the event shape. This keeps every Burn
+ * sourced by Varka golden, including entry volleys and any future single-target Burn. */
+export function resolveCardBurnMaterial(
+  sourceDefinitionId: string | undefined,
+  fallback: BurnMaterialVariant = "fire",
+): BurnMaterialVariant {
+  return sourceDefinitionId
+    ? PERSONAL_BURN_MATERIALS[sourceDefinitionId as keyof typeof PERSONAL_BURN_MATERIALS] ?? fallback
+    : fallback;
+}
 
 // Presentation-only registrations. Rules and combat outcomes remain fully owned by the engine;
 // this table only chooses how an already-decided fight should look.
@@ -111,7 +127,7 @@ const PERSONAL_COMBAT_ANIMATION_RECIPES: Record<
     durationMs: 1220,
     effect: {
       type: "fireball",
-      variant: "golden",
+      variant: PERSONAL_BURN_MATERIALS.varka_infernal_matriarch,
       scale: 0.85,
       sourceMoves: false,
       projectileCount: 2,

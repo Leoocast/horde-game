@@ -12,7 +12,11 @@ import { collectStaticAuras, heldAuraBonuses, newlyCoveredAuras, snapshotStaticA
 import { getPowerEndurance } from "../engine/StaticEffects";
 import { fireballCastSfx, fireballHitSfx, type SfxId } from "../audio/soundManifest";
 import { useAudioStore } from "./useAudioStore";
-import { resolvePersonalProjectileEffect } from "./combatAnimation";
+import {
+  resolveCardBurnMaterial,
+  resolvePersonalProjectileEffect,
+  type BurnMaterialVariant,
+} from "./combatAnimation";
 import { useToastStore } from "./useToastStore";
 import { useGameStore, type BurnAnimationTarget } from "./useGameStore";
 import { hasQueuedPlayerTriggers, scheduleQueuedPlayerTriggers } from "./playerBeats";
@@ -459,6 +463,21 @@ function pickRandom(ids: SfxId[]): SfxId {
   return ids[Math.floor(Math.random() * ids.length)];
 }
 
+function burnMaterialForEvent(game: GameState, event: EventItem): BurnMaterialVariant {
+  const liveSource = event.sourceId ? findBattlefieldCard(game, event.sourceId) : undefined;
+  const sourceDefinitionId = typeof event.payload?.sourceDefinitionId === "string"
+    ? event.payload.sourceDefinitionId
+    : liveSource?.definitionId;
+  const fallback = event.payload?.variant === "oil"
+    ? "oil"
+    : event.payload?.variant === "emerald"
+      ? "emerald"
+      : event.payload?.variant === "golden"
+        ? "golden"
+        : "fire";
+  return resolveCardBurnMaterial(sourceDefinitionId, fallback);
+}
+
 const burnBeatHandler: HostBeatHandler = {
   id: "burn",
   claims: (event) => event.type === "BURN_DAMAGE",
@@ -476,8 +495,15 @@ const burnBeatHandler: HostBeatHandler = {
       done();
       return;
     }
+    const game = useGameStore.getState().game;
     useGameStore.setState({
-      burnAnimation: { id: event.id, sourceId: event.sourceId, targetId, amount: Number(event.payload?.amount ?? 0) },
+      burnAnimation: {
+        id: event.id,
+        sourceId: event.sourceId,
+        targetId,
+        amount: Number(event.payload?.amount ?? 0),
+        variant: burnMaterialForEvent(game, event),
+      },
       burnImpactCardIds: [],
       hostAutoTriggerCount: 1,
     });
@@ -556,7 +582,7 @@ const burnVolleyBeatHandler: HostBeatHandler = {
         sourceId: event.sourceId,
         targets,
         amount: Number(event.payload?.amount ?? 0),
-        variant: event.payload?.variant === "oil" ? "oil" : "fire",
+        variant: burnMaterialForEvent(game, event),
       },
       hostAutoTriggerCount: 1,
     });

@@ -2468,6 +2468,7 @@ test("Varka, Infernal Matriarch queues one simultaneous Burn volley to the playe
   assert.equal(sturdy.damageMarked, 0);
   const volleyEvent = game.eventQueue.find((event) => event.type === "BURN_VOLLEY_DAMAGE");
   assert.ok(volleyEvent);
+  assert.equal(volleyEvent.payload?.sourceDefinitionId, "varka_infernal_matriarch");
   assert.equal(volleyEvent.payload?.targetPlayer, true);
   assert.deepEqual(volleyEvent.payload?.targetIds, [fragile.instanceId, sturdy.instanceId]);
   assert.equal(volleyEvent.payload?.amount, 2);

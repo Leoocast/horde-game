@@ -79,7 +79,8 @@ modificador. El cambio resuelve la decisión narrativa pendiente sin introducir 
 - Todos contra uno cuenta únicamente Trasgos atacantes con Fuerza 2 o menos, capturados al declarar
   el ataque, y aplica la suma al terminar toda la secuencia.
 - El daño de entrada de Varka se resuelve como un único evento para el Cronista y cada enemigo; el
-  texto impreso lo expresa como una sola instrucción de daño.
+  texto impreso lo expresa como una sola instrucción de daño. Todos sus proyectiles usan el mismo
+  material de fuego amarillo-dorado, incluida esta descarga de entrada.
 - Los ataques de Varka conservan el resultado normal del combate, pero se presentan con dos bolas
   de fuego amarillo-doradas simultáneas, como las llamas de sus manos y más pequeñas que la de
   Vaelor. Nacen de los bordes izquierdo y

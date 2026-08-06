@@ -17,7 +17,11 @@ import { CardTraitTooltipBadge } from "../src/components/Card";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
 import { PreviewStatsBadge, TraitPills } from "../src/components/CardPreview";
 import { cardLabelCamelCase } from "../src/i18n/cardLocalization";
-import { resolvePersonalAttackAnimation, resolvePersonalCombatAnimation } from "../src/store/combatAnimation";
+import {
+  resolveCardBurnMaterial,
+  resolvePersonalAttackAnimation,
+  resolvePersonalCombatAnimation,
+} from "../src/store/combatAnimation";
 import { addCard, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
 
 test("the Host Archive counter counts attack discards down without displaying zero", () => {
@@ -115,6 +119,12 @@ test("Varka's split projectile origin follows the left and right card edges", ()
     { x: 0.5, y: 0.5 },
     { x: 0.5, y: 0.5 },
   ]);
+});
+
+test("every Burn sourced by Varka resolves to her golden material", () => {
+  assert.equal(resolveCardBurnMaterial("varka_infernal_matriarch"), "golden");
+  assert.equal(resolveCardBurnMaterial("varka_infernal_matriarch", "oil"), "golden");
+  assert.equal(resolveCardBurnMaterial("ordinary_burn_source", "oil"), "oil");
 });
 
 test("Varka casts two smaller infernal fireballs at defenders and the Chronicler life panel", () => {

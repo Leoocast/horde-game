@@ -81,6 +81,7 @@ import { playerBuffSfxForAnimation } from "./playerAudioPolicy";
 import {
   resolvePersonalAttackAnimation,
   resolvePersonalCombatAnimation,
+  type BurnMaterialVariant,
   type PersonalAttackAnimationPlan,
   type PersonalCombatAnimationPlan,
 } from "./combatAnimation";
@@ -411,7 +412,7 @@ export type BurnAnimationState = {
   amount: number;
   projectileCount?: number;
   projectileOrigin?: "split-horizontal";
-  variant?: "fire" | "oil" | "emerald" | "golden";
+  variant?: BurnMaterialVariant;
   scale?: number;
   sourceMoves?: boolean;
   projectileGapMs?: number;

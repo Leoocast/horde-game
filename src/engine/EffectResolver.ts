@@ -94,6 +94,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
         sourceId: context.source?.instanceId,
         payload: {
           sourceSide: context.side,
+          sourceDefinitionId: context.source?.definitionId,
           targetPlayer: context.side === "host",
           targetIds: [],
           amount,
@@ -118,6 +119,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
         sourceId: context.source?.instanceId,
         payload: {
           sourceSide: context.side,
+          sourceDefinitionId: context.source?.definitionId,
           targetPlayer: context.side === "host",
           targetIds,
           amount,
@@ -357,6 +359,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
         sourceId: context.source?.instanceId,
         payload: {
           sourceSide: context.side,
+          sourceDefinitionId: context.source?.definitionId,
           targetPlayer: context.side === "host",
           targetIds: [],
           amount,
@@ -967,7 +970,12 @@ function enqueueBurnDamage(
   enqueue(game, {
     type: "BURN_DAMAGE",
     sourceId: source?.instanceId,
-    payload: { targetId: target.instanceId, amount, animation },
+    payload: {
+      targetId: target.instanceId,
+      amount,
+      animation,
+      sourceDefinitionId: source?.definitionId,
+    },
   });
 }
 
