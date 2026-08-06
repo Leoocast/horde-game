@@ -2,7 +2,7 @@
 
 Estado: **integrada en runtime y Card Studio; identidad técnica Hostfall final**
 Deck actual: `legion_of_varka` / `La Legión de Varka`
-Última actualización: 2026-08-05
+Última actualización: 2026-08-06
 
 Este documento conserva la identidad narrativa, el mapeo mecánico y la dirección visual de la
 Legión. Los 17 nombres y sus flavor bilingües viven en
@@ -80,6 +80,9 @@ modificador. El cambio resuelve la decisión narrativa pendiente sin introducir 
   el ataque, y aplica la suma al terminar toda la secuencia.
 - El daño de entrada de Varka se resuelve como un único evento para el Cronista y cada enemigo; el
   texto impreso lo expresa como una sola instrucción de daño.
+- Los ataques de Varka conservan el resultado normal del combate, pero se presentan con una bola
+  de fuego infernal más pequeña que la de Vaelor. Con defensor apunta a ese Eco; sin defensor
+  apunta al panel de Vida del Cronista.
 - La cantidad de Esbirros creada por Vardek usa su Fuerza después de colocar el contador +1/+1.
 - Forjador de Varka conserva sólo su Pasiva de +1/+1 a los demás Trasgos; su antigua Acción de
   sacrificio permanece retirada del corte.

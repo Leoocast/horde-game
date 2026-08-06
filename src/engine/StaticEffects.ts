@@ -44,12 +44,14 @@ export function getPowerEndurance(
 ): { power: number; endurance: number } {
   let power =
     card.basePower +
-    (card.counters["+1/+1"] ?? 0) +
+    (card.counters["+1/+1"] ?? 0) -
+    (card.counters["-1/-1"] ?? 0) +
     card.temporaryPower +
     (card.untilNextPlayerTurnPower ?? 0);
   let endurance =
     card.baseEndurance +
-    (card.counters["+1/+1"] ?? 0) +
+    (card.counters["+1/+1"] ?? 0) -
+    (card.counters["-1/-1"] ?? 0) +
     card.temporaryEndurance +
     (card.untilNextPlayerTurnEndurance ?? 0);
 

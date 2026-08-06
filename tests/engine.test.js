@@ -2479,6 +2479,33 @@ test("Varka, Infernal Matriarch queues one simultaneous Burn volley to the playe
   assert.equal(game.player.field.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 2);
 });
 
+test("Vaelor snapshots every current enemy and applies one simultaneous -1/-1 counter volley", () => {
+  const game = createTestGame("vaelor-entry-counter-volley");
+  const fragile = addCard(game, customCard("vaelor-fragile-enemy", "host", { power: 1, endurance: 1 }));
+  const sturdy = addCard(game, customCard("vaelor-sturdy-enemy", "host", { power: 3, endurance: 4 }));
+  const vaelor = addCard(game, cardFromDeck("vaelor_emerald_guardian", "player"));
+
+  runInvokedTriggers(game, vaelor);
+
+  const volley = game.eventQueue.find((event) => event.type === "COUNTER_VOLLEY");
+  assert.ok(volley);
+  assert.deepEqual(volley.payload?.targetIds, [fragile.instanceId, sturdy.instanceId]);
+  assert.equal(volley.payload?.counterType, "-1/-1");
+  assert.equal(volley.payload?.amount, 1);
+  assert.equal(volley.payload?.projectileGapMs, 0);
+  assert.equal(fragile.counters["-1/-1"] ?? 0, 0);
+  assert.equal(sturdy.counters["-1/-1"] ?? 0, 0);
+
+  const lateEnemy = addCard(game, customCard("vaelor-late-enemy", "host", { power: 2, endurance: 2 }));
+  drainEventQueue(game);
+
+  assert.equal(fragile.counters["-1/-1"], 1);
+  assert.equal(game.host.memory.some((card) => card.instanceId === fragile.instanceId), true);
+  assert.equal(sturdy.counters["-1/-1"], 1);
+  assert.deepEqual(getPowerEndurance(game, sturdy), { power: 2, endurance: 3 });
+  assert.equal(lateEnemy.counters["-1/-1"] ?? 0, 0);
+});
+
 test("Nerezh, Graveless Matriarch queues an oil Burn before the player loses life", () => {
   const game = createTestGame("lastMarchMarshal-captain-oil-burn");
   const captain = addCard(game, cardFromDeck("nerezh_graveless_matriarch", "host"));

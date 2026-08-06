@@ -281,6 +281,7 @@ function normalizeEffect(effect?: EffectDefinition): EffectDefinition | undefine
       ...normalizeEffectTarget(effect.target),
       counterType: effect.counter ?? effect.counterType ?? "+1/+1",
       amount: effect.amount ?? 1,
+      ...(effect.animation ? { animation: effect.animation } : {}),
     };
   }
   if (effect.type === "SEQUENCE" && effect.customHandler === "fight_simultaneously") {

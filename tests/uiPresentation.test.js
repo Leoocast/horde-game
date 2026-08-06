@@ -6,9 +6,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 import * as THREE from "three";
 
 import { activeDefenseArrowLinks, isBehindInStackOrder, isFrontOfCardStack, visibleDefenseArrowLinks } from "../src/components/battlefieldLayout";
+import { burnProjectileParticleTimings } from "../src/components/burnPresentation";
 import { frameLeafRootIndex, frameRootPathSpecs } from "../src/components/GrowthBuffAnimator";
 import { buildStorm, stormBoltTones } from "../src/components/StormBuffAnimator";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
+import { hostAttackPlayerHitDelay } from "../src/components/hostAttackPresentation";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { playerAttackHostHitDelay } from "../src/components/playerAttackPresentation";
 import { CardTraitTooltipBadge } from "../src/components/Card";
@@ -89,6 +91,67 @@ test("Vaelor's direct Host attack resolves to the shared emerald fireball preset
     },
   });
   assert.equal(resolvePersonalAttackAnimation(customCard("ordinary-attacker", "player"), 1), undefined);
+});
+
+test("every Burn projectile owns trail and impact particle timing", () => {
+  assert.deepEqual(burnProjectileParticleTimings(3, 0), [
+    { projectileIndex: 0, flightStartMs: 220, impactMs: 638 },
+    { projectileIndex: 1, flightStartMs: 220, impactMs: 638 },
+    { projectileIndex: 2, flightStartMs: 220, impactMs: 638 },
+  ]);
+  assert.deepEqual(burnProjectileParticleTimings(3, 90), [
+    { projectileIndex: 0, flightStartMs: 220, impactMs: 638 },
+    { projectileIndex: 1, flightStartMs: 310, impactMs: 728 },
+    { projectileIndex: 2, flightStartMs: 400, impactMs: 818 },
+  ]);
+});
+
+test("Varka casts a smaller infernal fireball at defenders and the Chronicler life panel", () => {
+  const varka = cardFromDeck("varka_infernal_matriarch", "host");
+  const defender = customCard("varka-defender", "player");
+
+  assert.deepEqual(resolvePersonalCombatAnimation({
+    attacker: varka,
+    defender,
+    attackerDies: false,
+    defenderDies: false,
+    damageToDefender: 4,
+  }), {
+    preset: "infernal-fireball",
+    sourceId: varka.instanceId,
+    targetId: defender.instanceId,
+    suppressDefaultMotion: true,
+    castMs: 220,
+    impactMs: 638,
+    durationMs: 1220,
+    effect: {
+      type: "fireball",
+      variant: "fire",
+      scale: 0.85,
+      amount: 4,
+      sourceMoves: false,
+    },
+  });
+
+  const direct = resolvePersonalAttackAnimation(varka, 4, "playerLife");
+  assert.deepEqual(direct, {
+    preset: "infernal-fireball",
+    sourceId: varka.instanceId,
+    targetKind: "playerLife",
+    suppressDefaultMotion: true,
+    castMs: 220,
+    impactMs: 638,
+    durationMs: 1220,
+    effect: {
+      type: "fireball",
+      variant: "fire",
+      scale: 0.85,
+      amount: 4,
+      sourceMoves: false,
+    },
+  });
+  assert.equal(hostAttackPlayerHitDelay(direct), 638);
+  assert.equal(hostAttackPlayerHitDelay(undefined), 0);
 });
 
 test("the Host panel reacts when a personal attack impacts, not when it starts", () => {

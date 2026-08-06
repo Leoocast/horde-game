@@ -248,6 +248,175 @@ test("Vaelor attacks the Host panel with his personal emerald fireball", async (
   }
 });
 
+test("Varka attacks the Chronicler life panel with her smaller infernal fireball", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { resetHostSequence },
+    { resetPlayerTriggerSequence },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame },
+  ] = await Promise.all([
+    import("../src/store/hostBeats"),
+    import("../src/store/playerBeats"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  const originalStopAllSfx = useAudioStore.getState().stopAllSfx;
+  useAudioStore.setState({ playSfx: () => undefined, stopAllSfx: () => undefined });
+
+  try {
+    resetHostSequence();
+    resetPlayerTriggerSequence();
+    const game = createTestGame("varka-personal-direct-attack-animation");
+    game.activeSide = "host";
+    game.phase = "combat";
+    const varka = addCard(game, cardFromDeck("varka_infernal_matriarch", "host"));
+    game.combat.hostAttackers = [varka.instanceId];
+
+    useGameStore.setState({
+      game,
+      hostAttackAnimation: undefined,
+      burnAnimation: undefined,
+      resolvingHostCombat: false,
+      hostAutoTriggerCount: 0,
+      playerAutoTriggerCount: 0,
+      hostCombatDeadCardIds: [],
+      hostCombatVisualDamage: {},
+    });
+
+    useGameStore.getState().resolveHostCombat();
+    const started = useGameStore.getState();
+    assert.equal(started.hostAttackAnimation?.customAnimation?.preset, "infernal-fireball");
+    assert.equal(started.burnAnimation?.sourceId, varka.instanceId);
+    assert.equal(started.burnAnimation?.targetKind, "playerLife");
+    assert.equal(started.burnAnimation?.variant, "fire");
+    assert.equal(started.burnAnimation?.scale, 0.85);
+    assert.equal(started.burnAnimation?.amount, 4);
+
+    timers.releaseExpiredAt(637);
+    assert.equal(useGameStore.getState().game.player.life, 30);
+
+    timers.releaseExpiredAt(638);
+    assert.equal(useGameStore.getState().game.player.life, 26);
+
+    timers.releaseExpiredAt(1220);
+    assert.equal(useGameStore.getState().burnAnimation, undefined);
+  } finally {
+    resetPlayerTriggerSequence();
+    resetHostSequence();
+    useAudioStore.setState({ playSfx: originalPlaySfx, stopAllSfx: originalStopAllSfx });
+    globalThis.window = originalWindow;
+  }
+});
+
+test("Vaelor's entry volley waits for the summon and applies all counters at one impact", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { resetHostSequence },
+    { resetPlayerTriggerSequence },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, addSources, cardFromDeck, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/store/hostBeats"),
+    import("../src/store/playerBeats"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  const originalStopAllSfx = useAudioStore.getState().stopAllSfx;
+  useAudioStore.setState({ playSfx: () => undefined, stopAllSfx: () => undefined });
+
+  try {
+    resetHostSequence();
+    resetPlayerTriggerSequence();
+    const game = createTestGame("vaelor-entry-volley-presentation");
+    game.activeSide = "player";
+    game.phase = "main";
+    game.setupTurnsRemaining = 0;
+    addSources(game, 6);
+    const firstEnemy = addCard(game, customCard("vaelor-entry-first-enemy", "host", { power: 3, endurance: 3 }));
+    const secondEnemy = addCard(game, customCard("vaelor-entry-second-enemy", "host", { power: 4, endurance: 4 }));
+    const vaelor = addCard(game, cardFromDeck("vaelor_emerald_guardian", "player", "hand"), "player", "hand");
+
+    useGameStore.setState({
+      game,
+      burnAnimation: undefined,
+      burnImpactCardIds: [],
+      hostAutoTriggerCount: 0,
+      playerAutoTriggerCount: 0,
+      summoningAnimationCount: 0,
+      specialDeadCardIds: [],
+    });
+
+    useGameStore.getState().castCard(vaelor.instanceId);
+    assert.equal(useGameStore.getState().game.eventQueue[0]?.type, "COUNTER_VOLLEY");
+    assert.equal(useGameStore.getState().game.host.field[0].counters["-1/-1"] ?? 0, 0);
+    assert.equal(useGameStore.getState().burnAnimation, undefined);
+
+    useGameStore.getState().endSummoningAnimation();
+    timers.releaseExpiredAt(40);
+    const started = useGameStore.getState();
+    assert.equal(started.burnAnimation?.sourceId, vaelor.instanceId);
+    assert.equal(started.burnAnimation?.variant, "emerald");
+    assert.equal(started.burnAnimation?.scale, 1.5);
+    assert.equal(started.burnAnimation?.sourceMoves, false);
+    assert.equal(started.burnAnimation?.projectileGapMs, 0);
+    assert.equal(started.burnAnimation?.impactLabel, "-1/-1");
+    assert.deepEqual(started.burnAnimation?.targets, [
+      { targetKind: "card", targetId: firstEnemy.instanceId },
+      { targetKind: "card", targetId: secondEnemy.instanceId },
+    ]);
+
+    timers.releaseExpiredAt(677);
+    assert.equal(useGameStore.getState().game.host.field[0].counters["-1/-1"] ?? 0, 0);
+
+    timers.releaseExpiredAt(678);
+    assert.equal(useGameStore.getState().game.host.field.find((card) => card.instanceId === firstEnemy.instanceId)?.counters["-1/-1"], 1);
+    assert.equal(useGameStore.getState().game.host.field.find((card) => card.instanceId === secondEnemy.instanceId)?.counters["-1/-1"], 1);
+
+    timers.releaseExpiredAt(1260);
+    assert.equal(useGameStore.getState().burnAnimation, undefined);
+  } finally {
+    resetPlayerTriggerSequence();
+    resetHostSequence();
+    useAudioStore.setState({ playSfx: originalPlaySfx, stopAllSfx: originalStopAllSfx });
+    globalThis.window = originalWindow;
+  }
+});
+
 test("a throttled Varka volley consumes its event before the beat finishes", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();

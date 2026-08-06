@@ -51,6 +51,9 @@ test("deck card text consistently highlights gameplay terms and separates abilit
   const tokenMaker = formatEffectText(
     "Pon un contador +1/+1 sobre esta criatura y luego crea dos Trasgos 1/1 atacando.",
   );
+  const negativeCounter = formatEffectText(
+    "Al ser invocado: pon un contador -1/-1 sobre cada enemigo.",
+  );
   const fightSpell = formatEffectText(
     "Una criatura aliada obtiene +1/+2 hasta el final del turno y luego lucha contra una criatura enemiga.",
   );
@@ -100,6 +103,7 @@ test("deck card text consistently highlights gameplay terms and separates abilit
   assert.equal((captain.match(/class="effect-paragraph"/g) ?? []).length, 3);
 
   assert.match(tokenMaker, /class="effect-counter">un contador \+1\/\+1<\/strong>/);
+  assert.match(negativeCounter, /class="effect-counter">un contador -1\/-1<\/strong>/);
   assert.match(tokenMaker, /class="effect-token">crea dos Trasgos 1\/1 atacando<\/strong>/);
   assert.equal((tokenMaker.match(/class="effect-paragraph"/g) ?? []).length, 2);
 

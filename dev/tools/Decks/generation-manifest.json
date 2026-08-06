@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "decks": {
     "pact_of_elarion": {
-      "inputHash": "0263effaf6e56efcb331c06bc39386f65a8ad841a80f47aac1b10a22c87f6ccc",
+      "inputHash": "0b199f75ba681f483a30d8f70759cedc73ddb128ea2a1578f8eb10c155ca7c1e",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
@@ -22,7 +22,7 @@
         },
         {
           "path": "dev/tools/Decks/pact_of_elarion/deck-data.generated.js",
-          "sha256": "fe7e3386c74b9eddc33232e015b9d976e424f841aad5b61b947eee1b722354ea"
+          "sha256": "0d5dbf216cc44eb0d05948f0edb8dc2897b9f253b142b3556c715f5a6f172afc"
         },
         {
           "path": "dev/tools/Decks/pact_of_elarion/index.html",
@@ -118,7 +118,7 @@
         },
         {
           "path": "src/data/decks/player/pact_of_elarion/pact_of_elarion.json",
-          "sha256": "cb5a53bf6944a8f55697c493e402039d587af8a52f4d1648601cdf3a89933911"
+          "sha256": "e12d469a45e82f1acb227c3b82823316c737badbbe870fae8579989041fd2654"
         },
         {
           "path": "src/data/decks/player/pact_of_elarion/pact_of_elarion_images.json",
@@ -129,14 +129,14 @@
         {
           "id": "veiled_dawn_flower",
           "path": "public/cards/pact_of_elarion/veiled_dawn_flower.png",
-          "sha256": "2e16d51626e8ed2afaa7b8dc162b8e0577f0de9deda322b9cee9ab08946db4a1",
+          "sha256": "f56697b52eef4098a4bf4f4e3e6906913cbe04926ad05e061d7a273134b7f00c",
           "width": 976,
           "height": 1360
         },
         {
           "id": "aelyra_heir_of_elarion",
           "path": "public/cards/pact_of_elarion/aelyra_heir_of_elarion.png",
-          "sha256": "a78ab8a19fff125568e951d88db12068d45b015ee02642903c61dd6af5d62d2e",
+          "sha256": "f4d2695287001bc3dcf927645d6cd0065b445794c664a7c0b6d3fe107a664bbe",
           "width": 976,
           "height": 1360
         },
@@ -150,14 +150,14 @@
         {
           "id": "hydra_of_the_black_bough",
           "path": "public/cards/pact_of_elarion/hydra_of_the_black_bough.png",
-          "sha256": "a1811fbddc60fa3919a5bba2107d9dbad9c56c3cbd28f397408083f7f36802f5",
+          "sha256": "930550d09f6bce390d85aba185fe7a98ac8867c7c6875b5d7dece3ff4e7b22ac",
           "width": 976,
           "height": 1360
         },
         {
           "id": "kaelor_stormcaller",
           "path": "public/cards/pact_of_elarion/kaelor_stormcaller.png",
-          "sha256": "6c80617076bf87856527b68c48b1b68b8e17e4092a98584b88fae299cb019f21",
+          "sha256": "00ee76e90ce2527d39c5cfc188193dd735a3bbcb55c432741dedd2209c265cb0",
           "width": 976,
           "height": 1360
         },
@@ -178,7 +178,7 @@
         {
           "id": "vaelor_emerald_guardian",
           "path": "public/cards/pact_of_elarion/vaelor_emerald_guardian.png",
-          "sha256": "6c50e83925131474134196188a3a2ee0e7eef45cfd2e22f32e0168325be71359",
+          "sha256": "bc087a810390bdcd79d42a3b7961581c489c55a3122871ab00febe9ee6aabb31",
           "width": 976,
           "height": 1360
         },
@@ -199,14 +199,14 @@
         {
           "id": "the_judgment_of_elarion",
           "path": "public/cards/pact_of_elarion/the_judgment_of_elarion.png",
-          "sha256": "c25838f321c816a3b10d3bb8e8553db8a6d81c6f3c4e0ad9a448ece1182ec3b6",
+          "sha256": "4aec413f752a3b61d16b436508a56306373c429d70dd84a8c1819836a51d493f",
           "width": 976,
           "height": 1360
         },
         {
           "id": "elixir_of_the_first_leaf",
           "path": "public/cards/pact_of_elarion/elixir_of_the_first_leaf.png",
-          "sha256": "60fdbd5fb7724119c920dcfb4de66923ef9c75965b531056c7a645b2cc8dfca8",
+          "sha256": "456b316a644bef7b2301a344d95b6a84a3aa5d545fa5e177e77542dbc93a4712",
           "width": 976,
           "height": 1360
         },

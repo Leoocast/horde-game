@@ -13,14 +13,18 @@ export function HostAttackAnimator() {
     if (!attacker) return;
 
     const customMotion = hostAttackAnimation.customAnimation?.suppressDefaultMotion === true;
-    // A projectile defender stays anchored, while the Host attacker may still complete its
-    // incoming lunge. Treat that lunge as nonlethal so the target remains visible until impact.
-    const attackerCleanup = animateAttacker(attacker, customMotion ? false : hostAttackAnimation.attackerDies);
+    const projectileSourceIsAttacker = customMotion &&
+      hostAttackAnimation.customAnimation?.sourceId === hostAttackAnimation.attackerId;
+    // A projectile defender stays anchored while the Host attacker completes a nonlethal lunge.
+    // A Host attacker casting its own projectile remains anchored at its source slot instead.
+    const attackerCleanup = projectileSourceIsAttacker
+      ? undefined
+      : animateAttacker(attacker, customMotion ? false : hostAttackAnimation.attackerDies);
     const blocker = hostAttackAnimation.blockerId ? document.querySelector<HTMLElement>(`[data-card-slot-id="${hostAttackAnimation.blockerId}"]`) : undefined;
     const blockerCleanup = !customMotion && blocker ? animateBlocker(blocker, hostAttackAnimation.blockerDies) : undefined;
 
     return () => {
-      attackerCleanup();
+      attackerCleanup?.();
       blockerCleanup?.();
     };
   }, [hostAttackAnimation]);

@@ -138,6 +138,7 @@ Elige un Apoyo enemigo o un Eco enemigo con Volar; destrúyelo.
   Fuerza.`
 - Mejora y lucha: `Elige un aliado y un enemigo; el aliado gana +1/+2 hasta el final del turno.
   Después, ese aliado lucha contra ese enemigo.`
+- Contador colectivo de entrada: `Al ser invocado: pon un contador -1/-1 sobre cada enemigo.`
 - Destrucción con clases alternativas: `Elige un Apoyo enemigo o un Eco enemigo con Volar;
   destrúyelo.`
 

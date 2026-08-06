@@ -294,7 +294,7 @@ let energyFlowCommit: (() => Partial<GameStore>) | undefined;
 let energyFlowAfterCommit: (() => void) | undefined;
 let hostCombatSequenceId = 0;
 
-type HostAttackAnimation = {
+export type HostAttackAnimation = {
   attackerId: string;
   attackerDies: boolean;
   blockerId?: string;
@@ -303,7 +303,7 @@ type HostAttackAnimation = {
   attackerDamageMarked?: number;
   blockerDamageMarked?: number;
   eventId: number;
-  customAnimation?: PersonalCombatAnimationPlan;
+  customAnimation?: PersonalCombatAnimationPlan | PersonalAttackAnimationPlan;
 };
 
 type PlayerAttackAnimation = {
@@ -413,6 +413,8 @@ export type BurnAnimationState = {
   variant?: "fire" | "oil" | "emerald";
   scale?: number;
   sourceMoves?: boolean;
+  projectileGapMs?: number;
+  impactLabel?: string;
 };
 
 export type BurnAnimationTarget = {
@@ -1780,19 +1782,21 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
   const blocker = event.blockerId
     ? currentGame.player.field.find((card) => card.instanceId === event.blockerId)
     : undefined;
-  const customAnimation = attacker && blocker
-    ? resolvePersonalCombatAnimation({
-        attacker,
-        defender: blocker,
-        attackerDies: event.attackerDies,
-        defenderDies: event.blockerDies,
-        damageToAttacker: event.attackerDamageMarked === undefined
-          ? 0
-          : event.attackerDamageMarked - attacker.damageMarked,
-        damageToDefender: event.blockerDamageMarked === undefined
-          ? 0
-          : event.blockerDamageMarked - blocker.damageMarked,
-      })
+  const customAnimation = attacker
+    ? blocker
+      ? resolvePersonalCombatAnimation({
+          attacker,
+          defender: blocker,
+          attackerDies: event.attackerDies,
+          defenderDies: event.blockerDies,
+          damageToAttacker: event.attackerDamageMarked === undefined
+            ? 0
+            : event.attackerDamageMarked - attacker.damageMarked,
+          damageToDefender: event.blockerDamageMarked === undefined
+            ? 0
+            : event.blockerDamageMarked - blocker.damageMarked,
+        })
+      : resolvePersonalAttackAnimation(attacker, event.playerDamage, "playerLife")
     : undefined;
   const impactMs = customAnimation?.impactMs ?? HOST_ATTACK_ANIMATION_MS - 35;
   const durationMs = customAnimation?.durationMs ?? HOST_ATTACK_ANIMATION_MS;
@@ -1816,8 +1820,8 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
       ? {
           id: `personal-combat-${sequenceId}-${index}`,
           sourceId: customAnimation.sourceId,
-          targetId: customAnimation.targetId,
-          targetKind: "card",
+          targetId: "targetId" in customAnimation ? customAnimation.targetId : undefined,
+          targetKind: "targetKind" in customAnimation ? customAnimation.targetKind : "card",
           amount: customAnimation.effect.amount,
           variant: customAnimation.effect.variant,
           scale: customAnimation.effect.scale,
@@ -2263,6 +2267,10 @@ function effectsUseAnimation(effects: EffectDefinition[] | undefined, animation:
   });
 }
 
+function hasDeferredPresentationEvents(game: GameState): boolean {
+  return game.eventQueue.some((event) => event.payload?.deferForPresentation === true);
+}
+
 function findCardPlayedReactionSources(game: GameState, card: CardInstance): CardInstance[] {
   const previewEvent: EventItem = { id: "preview-card-played", type: "CARD_PLAYED", sourceId: card.instanceId, payload: { nonToken: !card.isToken } };
   return game.host.field.filter((source) =>
@@ -2380,6 +2388,7 @@ function buildCastCardPatch(
     ...options,
     deferPlayerTriggers: Boolean(card && lifeCostAmount(card.additionalCost, game.player.life) > 0),
     deferReactiveTriggers: reactionSources.length > 0,
+    deferPresentationEvents: true,
   });
   const castSucceeded = next.lastActionResult?.ok === true;
   const previousHandIds = new Set(game.player.hand.map((item) => item.instanceId));
@@ -2387,6 +2396,7 @@ function buildCastCardPatch(
     ? next.player.hand.filter((item) => !previousHandIds.has(item.instanceId)).map((item) => item.instanceId)
     : [];
   const playerTriggersQueued = castSucceeded && hasQueuedPlayerTriggers(next);
+  const presentationEventsQueued = castSucceeded && hasDeferredPresentationEvents(next);
   const lostLife = castSucceeded && next.player.life < game.player.life;
   const lifeLost = Math.max(0, game.player.life - next.player.life);
   const paidLife = castSucceeded
@@ -2423,9 +2433,13 @@ function buildCastCardPatch(
       scheduleManualTriggerOverlay(manualTriggeredCard, 420);
     }
   };
-  const afterCommit = playerTriggersQueued
-    ? () => scheduleQueuedPlayerTriggers(continueAfterPlayerTriggers)
-    : continueAfterPlayerTriggers;
+  const afterCommit = presentationEventsQueued
+    ? () => scheduleQueuedHostTriggers(() => {
+        if (manualTriggeredCard) scheduleManualTriggerOverlay(manualTriggeredCard, MANUAL_TRIGGER_AFTER_REACTION_MS);
+      })
+    : playerTriggersQueued
+      ? () => scheduleQueuedPlayerTriggers(continueAfterPlayerTriggers)
+      : continueAfterPlayerTriggers;
   const bloodPactAnimation = castSucceeded && usesBloodPactAnimation && card
     ? {
         id: `blood-pact-${card.instanceId}-${Date.now()}`,

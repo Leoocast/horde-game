@@ -346,8 +346,8 @@
       "name": "Vaelor, Emerald Guardian",
       "displayNameEs": "Vaelor, Guardián Esmeralda",
       "gameText": {
-        "en": "No additional effect.",
-        "es": "Sin efecto adicional."
+        "en": "When Invoked: put a -1/-1 counter on each enemy.",
+        "es": "Al ser invocado: pon un contador -1/-1 sobre cada enemigo."
       },
       "flavorText": {
         "en": "Aelyra did not command the dragon. She gave him a kingdom worth waking for.",
@@ -364,7 +364,31 @@
       ],
       "power": 6,
       "endurance": 5,
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "vaelor_emerald_guardian_enter_counter_volley",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "INVOKED",
+            "source": "SELF"
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "ADD_COUNTERS",
+              "target": {
+                "type": "ALL_ECHOS",
+                "controller": "OPPONENT"
+              },
+              "counter": "-1/-1",
+              "amount": 1,
+              "animation": "EMERALD_FIREBALL_VOLLEY"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "ECHO"
       ],

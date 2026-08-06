@@ -127,6 +127,24 @@ Varka, Matriarca Infernal (`varka_infernal_matriarch`) uses the same compact vol
 - All hit creature ids are flashed together at resolution, and surviving creatures keep the
   normal scorch/smoke state until end-step cleanup.
 
+### Emerald counter volley to multiple targets
+
+Vaelor, Guardián Esmeralda (`vaelor_emerald_guardian`) reuses the projectile renderer for a rules
+effect that places counters rather than dealing damage:
+
+- Its Invoked trigger snapshots every opposing Echo currently on the Field and queues one
+  `COUNTER_VOLLEY` event. Echoes that enter after that snapshot are not affected.
+- The source activation waits for Vaelor's summon animation to finish. Vaelor pulses once, stays
+  anchored, and launches one fireball toward every captured enemy using the exact
+  `emerald-fireball` defense preset: the same emerald material, source-to-target geometry, and
+  `scale: 1.5`. The zero-millisecond projectile gap makes every route launch and impact
+  simultaneously.
+- Every route owns its fireball-body trace, impact core, smoke, and ember burst. Multi-target
+  volleys must never collapse procedural particles onto only the final projectile.
+- The impact label is `-1/-1`; this presentation never deals damage or adds scorch state.
+- Every still-present target receives one -1/-1 counter as a single simultaneous rules event at
+  the shared 638ms impact. Lethal stat reduction is cleaned up only after all counters are placed.
+
 ### Repeated single Burns to player life
 
 Mariscal de la Oleada (`marshal_of_the_wave`) does not aggregate its creature-entry triggers. Every other creature entering queues
@@ -174,6 +192,11 @@ Current registration:
 - The preset reuses `BurnAnimator`'s canonical fireball clock and source-to-target geometry, with
   an emerald material, `scale: 1.5`, and `sourceMoves: false`. Combat damage is committed at the
   fireball's 638ms impact; the beat remains locked until the 1220ms completion.
+- Varka, Matriarca Infernal (`varka_infernal_matriarch`) uses `infernal-fireball` whenever she is
+  the Host attacker. A defended attack targets the assigned defender; an undefended attack targets
+  `[data-player-life-panel]`. Varka remains anchored, the ordinary lunge is suppressed, and the
+  normal combat result lands at the projectile's 638ms impact. The preset uses the fire material
+  at `scale: 0.85`, visibly smaller than Vaelor's personal `scale: 1.5` projectile.
 - Adding another bespoke fight or direct attack means registering its context and adding or reusing
   a preset; do not add card-name branches to animator components or resolve combat inside VFX.
 

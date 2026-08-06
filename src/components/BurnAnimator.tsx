@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { useGameStore } from "../store/useGameStore";
+import { burnProjectileParticleTimings } from "./burnPresentation";
 
 type BurnGeometry = {
   startX: number;
@@ -10,8 +11,6 @@ type BurnGeometry = {
 };
 
 // Master clock mirrors the CSS --burn-duration (1100ms). Flight runs 20%–58%, impact at 58%.
-const IMPACT_AT_MS = 638;
-const FLIGHT_START_MS = 220;
 const EMBER_COUNT = 32;
 
 // Ported verbatim from the reference (assets/examples/Fireball/fireball.html).
@@ -43,7 +42,7 @@ const IMPACT_SMOKE = [
 export function BurnAnimator() {
   const burn = useGameStore((state) => state.burnAnimation);
   const [geometries, setGeometries] = useState<BurnGeometry[]>([]);
-  const fireballBodyRef = useRef<HTMLDivElement>(null);
+  const fireballBodyRefs = useRef<Array<HTMLDivElement | null>>([]);
   const traceRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -87,32 +86,35 @@ export function BurnAnimator() {
     );
   }, [burn]);
 
-  // Trace sparks bleed off the fireball along its real path; a ring of embers bursts on impact.
-  // Both read live DOM rects, exactly like the reference.
+  // Every route sheds trace sparks from its live fireball body and bursts its own ember ring at
+  // its target, including simultaneous multi-target volleys.
   useEffect(() => {
-    const traceGeometry = geometries[geometries.length - 1];
-    if (!burn || !traceGeometry) return;
+    if (!burn || geometries.length === 0) return;
     const trace = traceRef.current;
     if (!trace) return;
 
     let frame = 0;
     let cancelled = false;
     let lastSpawn = 0;
-    let embersSpawned = false;
     const start = performance.now();
     const visualScale = Math.max(0.5, Math.min(3, burn.scale ?? 1));
+    const projectileGapMs = Math.max(0, burn.projectileGapMs ?? 90);
+    const particleTimings = burnProjectileParticleTimings(geometries.length, projectileGapMs);
+    const embersSpawned = particleTimings.map(() => false);
 
-    // Sparks fly opposite the ball's heading (backward along the travel vector), with a little
-    // lateral spread — so they always stream off the tail, whatever the shot angle.
-    const travelLen = Math.hypot(traceGeometry.endX - traceGeometry.startX, traceGeometry.endY - traceGeometry.startY) || 1;
-    const backX = -(traceGeometry.endX - traceGeometry.startX) / travelLen;
-    const backY = -(traceGeometry.endY - traceGeometry.startY) / travelLen;
-    const perpX = -backY;
-    const perpY = backX;
+    // Sparks fly opposite each ball's heading with lateral spread, so every route streams from
+    // its own tail regardless of travel angle.
+    const routeVectors = geometries.map((geometry) => {
+      const travelLen = Math.hypot(geometry.endX - geometry.startX, geometry.endY - geometry.startY) || 1;
+      const backX = -(geometry.endX - geometry.startX) / travelLen;
+      const backY = -(geometry.endY - geometry.startY) / travelLen;
+      return { backX, backY, perpX: -backY, perpY: backX };
+    });
 
-    const spawnTrace = () => {
-      const fireballBody = fireballBodyRef.current;
+    const spawnTrace = (projectileIndex: number) => {
+      const fireballBody = fireballBodyRefs.current[projectileIndex];
       if (!fireballBody) return;
+      const { backX, backY, perpX, perpY } = routeVectors[projectileIndex];
       const rect = fireballBody.getBoundingClientRect();
       const particle = document.createElement("i");
       particle.className = "burn-trace-particle";
@@ -134,7 +136,7 @@ export function BurnAnimator() {
       particle.addEventListener("animationend", () => particle.remove(), { once: true });
     };
 
-    const spawnEmber = () => {
+    const spawnEmber = (geometry: BurnGeometry) => {
       const size = (2.5 + Math.random() * 6) * visualScale;
       const life = 420 + Math.random() * 560;
       const angle = Math.random() * Math.PI * 2;
@@ -142,8 +144,8 @@ export function BurnAnimator() {
       const dist = (40 + Math.random() * 220) * visualScale;
       const particle = document.createElement("i");
       particle.className = "burn-trace-particle";
-      particle.style.left = `${traceGeometry.endX}px`;
-      particle.style.top = `${traceGeometry.endY}px`;
+      particle.style.left = `${geometry.endX}px`;
+      particle.style.top = `${geometry.endY}px`;
       particle.style.setProperty("--size", `${size}px`);
       particle.style.setProperty("--life", `${life}ms`);
       particle.style.setProperty("--dx", `${Math.cos(angle) * dist}px`);
@@ -152,20 +154,30 @@ export function BurnAnimator() {
       particle.addEventListener("animationend", () => particle.remove(), { once: true });
     };
 
-    const finalProjectileDelay = (geometries.length - 1) * 90;
     const tick = (now: number) => {
       if (cancelled) return;
       const elapsed = now - start;
-      if (elapsed >= IMPACT_AT_MS + finalProjectileDelay - 30) {
-        if (!embersSpawned) {
-          embersSpawned = true;
-          for (let i = 0; i < EMBER_COUNT; i++) spawnEmber();
+      const activeTraceIndexes: number[] = [];
+
+      for (const timing of particleTimings) {
+        if (elapsed >= timing.impactMs - 30) {
+          if (!embersSpawned[timing.projectileIndex]) {
+            embersSpawned[timing.projectileIndex] = true;
+            const geometry = geometries[timing.projectileIndex];
+            for (let i = 0; i < EMBER_COUNT; i++) spawnEmber(geometry);
+          }
+        } else if (elapsed >= timing.flightStartMs) {
+          activeTraceIndexes.push(timing.projectileIndex);
         }
-        return;
       }
-      if (elapsed >= FLIGHT_START_MS && now - lastSpawn > 8) {
-        const bursts = 2 + Math.floor(Math.random() * 2);
-        for (let i = 0; i < bursts; i++) spawnTrace();
+
+      if (embersSpawned.every(Boolean)) return;
+
+      if (activeTraceIndexes.length > 0 && now - lastSpawn > 8) {
+        for (const projectileIndex of activeTraceIndexes) {
+          const bursts = 2 + Math.floor(Math.random() * 2);
+          for (let i = 0; i < bursts; i++) spawnTrace(projectileIndex);
+        }
         lastSpawn = now;
       }
       frame = requestAnimationFrame(tick);
@@ -181,7 +193,8 @@ export function BurnAnimator() {
 
   if (!burn || geometries.length === 0) return null;
   const firstGeometry = geometries[0];
-  const finalProjectileDelay = (geometries.length - 1) * 90;
+  const projectileGapMs = Math.max(0, burn.projectileGapMs ?? 90);
+  const finalProjectileDelay = (geometries.length - 1) * projectileGapMs;
   const impactAnimationStyle = { animationDelay: `${finalProjectileDelay}ms` } as CSSProperties;
   const style = {
     "--burn-start-x": `${firstGeometry.startX}px`,
@@ -209,7 +222,7 @@ export function BurnAnimator() {
   // A Raid volley repeats one route and lands as one aggregate impact. Chainwhirler supplies
   // explicit targets, so every route owns its own impact and damage number.
   const impacts = burn.targets?.length
-    ? geometries.map((geometry, index) => ({ geometry, delay: index * 90 }))
+    ? geometries.map((geometry, index) => ({ geometry, delay: index * projectileGapMs }))
     : [{ geometry: geometries[geometries.length - 1], delay: finalProjectileDelay }];
 
   return createPortal(
@@ -245,7 +258,7 @@ export function BurnAnimator() {
         {/* One charged cast, followed by a compact staggered volley. The last projectile owns
             the trace/impact clock; earlier balls remain deliberately close together. */}
         {geometries.map((geometry, projectileIndex) => {
-          const projectileDelay = projectileIndex * 90;
+          const projectileDelay = projectileIndex * projectileGapMs;
           return (
           <div
             key={projectileIndex}
@@ -269,7 +282,12 @@ export function BurnAnimator() {
                   />
                 ))}
               </div>
-              <div ref={projectileIndex === geometries.length - 1 ? fireballBodyRef : undefined} className="burn-fireball-body">
+              <div
+                ref={(element) => {
+                  fireballBodyRefs.current[projectileIndex] = element;
+                }}
+                className="burn-fireball-body"
+              >
                 <div className="burn-ball-outer" />
                 <div className="burn-ball-mid" />
                 <div className="burn-ball-core" />
@@ -315,7 +333,7 @@ export function BurnAnimator() {
           className="burn-damage-number"
           style={{ ...impactStyle(geometry), animationDelay: `${640 + delay}ms` }}
         >
-          -{burn.amount}
+          {burn.impactLabel ?? `-${burn.amount}`}
         </span>
       ))}
     </div>,

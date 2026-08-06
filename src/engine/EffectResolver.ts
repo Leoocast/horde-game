@@ -210,10 +210,28 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
   },
   PUT_COUNTER: (game, effect, context) => {
     const targets = resolveTargetCards(game, effect, context);
-    for (const target of targets) {
-      target.counters[String(effect.counterType ?? "+1/+1")] = (target.counters[String(effect.counterType ?? "+1/+1")] ?? 0) + Number(effect.amount ?? 1);
-      game.log.unshift(`${target.name} gets ${Number(effect.amount ?? 1)} ${String(effect.counterType ?? "+1/+1")} counter(s).`);
+    const counterType = String(effect.counterType ?? "+1/+1");
+    const amount = Number(effect.amount ?? 1);
+    if (effect.animation === "EMERALD_FIREBALL_VOLLEY" && targets.length > 0) {
+      enqueue(game, {
+        type: "COUNTER_VOLLEY",
+        sourceId: context.source?.instanceId,
+        payload: {
+          sourceSide: context.side,
+          targetIds: targets.map((target) => target.instanceId),
+          counterType,
+          amount,
+          projectileGapMs: 0,
+          deferForPresentation: true,
+        },
+      });
+      return;
     }
+    for (const target of targets) {
+      target.counters[counterType] = (target.counters[counterType] ?? 0) + amount;
+      game.log.unshift(`${target.name} gets ${amount} ${counterType} counter(s).`);
+    }
+    if (counterType === "-1/-1" && amount > 0) destroyMarkedCreatures(game);
   },
   REMOVE_COUNTER: (game, effect, context) => {
     const targets = resolveTargetCards(game, { ...effect, target: effect.from ?? effect.target }, context);
@@ -460,6 +478,10 @@ export function resolveTriggeredEvent(
   }
   if (event.type === "BURN_PLAYER_LIFE_LOSS") {
     resolveBurnPlayerLifeLossEvent(game, event);
+    return false;
+  }
+  if (event.type === "COUNTER_VOLLEY") {
+    resolveCounterVolleyEvent(game, event);
     return false;
   }
   let deferredAny = false;
@@ -987,6 +1009,25 @@ function resolveBurnPlayerLifeLossEvent(game: GameState, event: EventItem): void
   const source = [...game.player.field, ...game.host.field, ...game.player.memory, ...game.host.memory]
     .find((card) => card.instanceId === event.sourceId);
   game.log.unshift(`${source?.name ?? "Host effect"} causes Player to lose ${amount} life.`);
+}
+
+function resolveCounterVolleyEvent(game: GameState, event: EventItem): void {
+  const amount = Math.max(0, Number(event.payload?.amount ?? 0));
+  const counterType = String(event.payload?.counterType ?? "+1/+1");
+  const targetIds = Array.isArray(event.payload?.targetIds) ? event.payload.targetIds.map(String) : [];
+  const affected: CardInstance[] = [];
+  for (const targetId of targetIds) {
+    const target = findPermanent(game, targetId);
+    if (!target) continue;
+    target.counters[counterType] = (target.counters[counterType] ?? 0) + amount;
+    affected.push(target);
+  }
+  if (affected.length > 0) {
+    const source = [...game.player.field, ...game.host.field, ...game.player.memory, ...game.host.memory]
+      .find((card) => card.instanceId === event.sourceId);
+    game.log.unshift(`${source?.name ?? "Counter volley"} puts ${amount} ${counterType} counter(s) on ${affected.length} opposing Echo(es).`);
+  }
+  if (counterType === "-1/-1" && amount > 0) destroyMarkedCreatures(game);
 }
 
 function resolveNumericAmount(game: GameState, amount: unknown, context: ResolveContext): number {

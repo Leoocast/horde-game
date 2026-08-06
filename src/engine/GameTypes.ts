@@ -287,6 +287,9 @@ export type CastOptions = {
    *  before committing the effect. Used by spells that cause life loss and trigger Blood Page. */
   deferPlayerTriggers?: boolean;
   deferReactiveTriggers?: boolean;
+  /** Leaves events explicitly marked for an impact-timed presentation in the queue. Pure engine
+   * callers omit this and resolve the same rules synchronously. */
+  deferPresentationEvents?: boolean;
   /** Commits the cast and every non-fight effect, leaving the fight effect for a later
    *  presentation impact. The store must resolve the deferred effect before unlocking play. */
   deferFightResolution?: boolean;

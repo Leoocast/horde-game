@@ -88,12 +88,13 @@ Los subtipos como Vampiro, Druida, Zombi o Trasgo son lore y filtros, no tipos d
 | Endurance | Aguante | Daño que soporta un Eco antes de morir. |
 | Life | Vida | Recurso de supervivencia del Cronista. |
 | +1/+1 counter | Contador +1/+1 | Aumento persistente de Fuerza y Aguante. |
+| -1/-1 counter | Contador -1/-1 | Reducción persistente de Fuerza y Aguante. |
 | Poison | Veneno | Presión acumulada que hace perder cartas del Archivo a la Hueste. |
 
 Una Fuente es una carta permanente; Energía es el recurso que produce. Se escribe `Sacrifica una
 Fuente`, nunca `Sacrifica una Energía`.
 
-En `+N/+N`, el primer valor siempre es Fuerza y el segundo Aguante. La Energía generada se imprime
+En `+N/+N` y `-N/-N`, el primer valor siempre es Fuerza y el segundo Aguante. La Energía generada se imprime
 como `Agrega {E}` o `Agrega {E}{E}`, sin un número junto al símbolo.
 
 ## Fases y ventanas

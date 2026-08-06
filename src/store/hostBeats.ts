@@ -12,6 +12,7 @@ import { collectStaticAuras, heldAuraBonuses, newlyCoveredAuras, snapshotStaticA
 import { getPowerEndurance } from "../engine/StaticEffects";
 import { fireballCastSfx, fireballHitSfx, type SfxId } from "../audio/soundManifest";
 import { useAudioStore } from "./useAudioStore";
+import { resolvePersonalProjectileEffect } from "./combatAnimation";
 import { useToastStore } from "./useToastStore";
 import { useGameStore, type BurnAnimationTarget } from "./useGameStore";
 import { hasQueuedPlayerTriggers, scheduleQueuedPlayerTriggers } from "./playerBeats";
@@ -609,6 +610,108 @@ const burnVolleyBeatHandler: HostBeatHandler = {
   },
 };
 
+const counterVolleyBeatHandler: HostBeatHandler = {
+  id: "counter-volley",
+  claims: (event) => event.type === "COUNTER_VOLLEY",
+  run: ({ event, sequenceId, resolve, done }) => {
+    let committed = false;
+    const commit = () => {
+      if (committed || sequenceId !== hostAutoTriggerSequenceId) return;
+      committed = true;
+      resolve();
+      useGameStore.setState({ specialDeadCardIds: [] });
+    };
+    const game = useGameStore.getState().game;
+    const targetIds = Array.isArray(event.payload?.targetIds)
+      ? event.payload.targetIds.map(String).filter((targetId) => Boolean(findBattlefieldCard(game, targetId)))
+      : [];
+    if (targetIds.length === 0) {
+      resolve();
+      done();
+      return;
+    }
+
+    const source = event.sourceId ? findBattlefieldCard(game, event.sourceId) : undefined;
+    const sourceSide = event.payload?.sourceSide === "host" ? "host" : "player";
+    if (source) {
+      useAudioStore.getState().playSfx("activateEffect");
+      useGameStore.getState().triggerEffectActivationPulse(source.instanceId);
+      useToastStore.getState().pushToast({
+        title: uiText(sourceSide === "player" ? "toast.chroniclerEffect" : "toast.hostEffect"),
+        message: uiText("toast.cardTrigger", { card: uiCardName(source) }),
+        tone: sourceSide === "player" ? "success" : "host",
+      });
+    }
+
+    const amount = Math.max(0, Number(event.payload?.amount ?? 0));
+    const counterType = String(event.payload?.counterType ?? "+1/+1");
+    const projectileEffect = resolvePersonalProjectileEffect("emerald-fireball", amount);
+    useGameStore.setState({
+      burnAnimation: {
+        id: event.id,
+        sourceId: event.sourceId,
+        targets: targetIds.map((targetId) => ({ targetKind: "card" as const, targetId })),
+        amount,
+        variant: projectileEffect.variant,
+        scale: projectileEffect.scale,
+        sourceMoves: projectileEffect.sourceMoves,
+        projectileGapMs: Math.max(0, Number(event.payload?.projectileGapMs ?? 0)),
+        impactLabel: counterType,
+      },
+      hostAutoTriggerCount: 1,
+    });
+
+    window.setTimeout(() => {
+      if (sequenceId === hostAutoTriggerSequenceId) {
+        useAudioStore.getState().playSfx(pickRandom(fireballCastSfx));
+      }
+    }, BURN_PROJECTILE_LAUNCH_MS);
+
+    window.setTimeout(() => {
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
+      useAudioStore.getState().playSfx(fireballHitSfx);
+      const lethalTargetIds = counterVolleyLethalTargetIds(
+        useGameStore.getState().game,
+        targetIds,
+        counterType,
+        amount,
+      );
+      useGameStore.setState({
+        burnImpactCardIds: targetIds,
+        burnImpactEventId: Date.now(),
+        specialDeadCardIds: lethalTargetIds,
+      });
+      if (lethalTargetIds.length === 0) commit();
+    }, BURN_IMPACT_MS);
+
+    window.setTimeout(commit, BURN_IMPACT_MS + SPECIAL_DEATH_ANIMATION_MS);
+    window.setTimeout(() => {
+      if (sequenceId !== hostAutoTriggerSequenceId) return;
+      commit();
+      useGameStore.setState({
+        burnAnimation: undefined,
+        burnImpactCardId: undefined,
+        burnImpactCardIds: [],
+      });
+      done();
+    }, BURN_ANIMATION_MS);
+  },
+};
+
+function counterVolleyLethalTargetIds(
+  game: GameState,
+  targetIds: string[],
+  counterType: string,
+  amount: number,
+): string[] {
+  if (counterType !== "-1/-1" || amount <= 0) return [];
+  return targetIds.filter((targetId) => {
+    const target = findBattlefieldCard(game, targetId);
+    if (!target?.kinds.includes("ECHO")) return false;
+    return target.damageMarked >= getPowerEndurance(game, target).endurance - amount;
+  });
+}
+
 function burnLethalTargetIds(game: GameState, targetIds: string[], amount: number): string[] {
   if (amount <= 0) return [];
   return targetIds.filter((targetId) => {
@@ -831,6 +934,7 @@ function isDeferredCombatVolleyEffect(effect?: EffectDefinition): boolean {
 // Order matters: the first handler that claims an event owns its presentation.
 const HOST_BEAT_HANDLERS: HostBeatHandler[] = [
   burnBeatHandler,
+  counterVolleyBeatHandler,
   burnVolleyBeatHandler,
   staticAuraBeatHandler,
   hostGroupBuffBeatHandler,

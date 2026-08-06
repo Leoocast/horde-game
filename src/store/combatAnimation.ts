@@ -1,6 +1,6 @@
 import type { CardInstance } from "../engine/GameTypes";
 
-export type PersonalCombatAnimationPreset = "emerald-fireball";
+export type PersonalCombatAnimationPreset = "emerald-fireball" | "infernal-fireball";
 export type PersonalCombatRole = "attacker" | "defender";
 export type PersonalCombatOutcome = "wins" | "loses" | "draws" | "survives";
 
@@ -23,7 +23,7 @@ export type PersonalCombatAnimationPlan = {
   durationMs: number;
   effect: {
     type: "fireball";
-    variant: "emerald";
+    variant: "fire" | "emerald";
     scale: number;
     amount: number;
     sourceMoves: boolean;
@@ -31,13 +31,13 @@ export type PersonalCombatAnimationPlan = {
 };
 
 export type PersonalAttackAnimationPlan = Omit<PersonalCombatAnimationPlan, "targetId"> & {
-  targetKind: "hostLife";
+  targetKind: "hostLife" | "playerLife";
 };
 
 type PersonalCombatAnimationRegistration = {
   definitionId: string;
   role: PersonalCombatRole;
-  outcome: PersonalCombatOutcome;
+  outcome?: PersonalCombatOutcome;
   preset: PersonalCombatAnimationPreset;
 };
 
@@ -63,6 +63,11 @@ const PERSONAL_COMBAT_ANIMATIONS: readonly PersonalCombatAnimationRegistration[]
     outcome: "wins",
     preset: "emerald-fireball",
   },
+  {
+    definitionId: "varka_infernal_matriarch",
+    role: "attacker",
+    preset: "infernal-fireball",
+  },
 ];
 
 // Direct attacks use the same preset catalog as card-vs-card fights. The registration decides
@@ -72,6 +77,11 @@ const PERSONAL_ATTACK_ANIMATIONS: readonly PersonalAttackAnimationRegistration[]
     definitionId: "vaelor_emerald_guardian",
     targetKind: "hostLife",
     preset: "emerald-fireball",
+  },
+  {
+    definitionId: "varka_infernal_matriarch",
+    targetKind: "playerLife",
+    preset: "infernal-fireball",
   },
 ];
 
@@ -91,7 +101,32 @@ const PERSONAL_COMBAT_ANIMATION_RECIPES: Record<
       sourceMoves: false,
     },
   },
+  "infernal-fireball": {
+    suppressDefaultMotion: true,
+    castMs: 220,
+    impactMs: 638,
+    durationMs: 1220,
+    effect: {
+      type: "fireball",
+      variant: "fire",
+      scale: 0.85,
+      sourceMoves: false,
+    },
+  },
 };
+
+/** Reuses a personal preset's projectile appearance outside combat without copying its visual
+ * constants. Rules callers still decide targets and outcomes; this only returns presentation. */
+export function resolvePersonalProjectileEffect(
+  preset: PersonalCombatAnimationPreset,
+  amount: number,
+): PersonalCombatAnimationPlan["effect"] {
+  const recipe = PERSONAL_COMBAT_ANIMATION_RECIPES[preset];
+  return {
+    ...recipe.effect,
+    amount: Math.max(0, amount),
+  };
+}
 
 /** Selects a card-specific presentation after combat has already been resolved. The first
  * matching registration wins, so future presets can be added without branching in the combat
@@ -124,7 +159,7 @@ export function resolvePersonalCombatAnimation(
     const registration = PERSONAL_COMBAT_ANIMATIONS.find((candidate) =>
       candidate.definitionId === participant.card?.definitionId &&
       candidate.role === participant.role &&
-      candidate.outcome === outcome,
+      (candidate.outcome === undefined || candidate.outcome === outcome),
     );
     if (!registration) continue;
     const recipe = PERSONAL_COMBAT_ANIMATION_RECIPES[registration.preset];
@@ -136,23 +171,21 @@ export function resolvePersonalCombatAnimation(
       castMs: recipe.castMs,
       impactMs: recipe.impactMs,
       durationMs: recipe.durationMs,
-      effect: {
-        ...recipe.effect,
-        amount: Math.max(0, participant.damageToOpponent),
-      },
+      effect: resolvePersonalProjectileEffect(registration.preset, participant.damageToOpponent),
     };
   }
 
   return undefined;
 }
 
-/** Selects a card-specific presentation for an unblocked attack against the Host. */
+/** Selects a card-specific presentation for an unblocked attack against a life surface. */
 export function resolvePersonalAttackAnimation(
   attacker: CardInstance,
   amount: number,
+  targetKind: PersonalAttackAnimationPlan["targetKind"] = "hostLife",
 ): PersonalAttackAnimationPlan | undefined {
   const registration = PERSONAL_ATTACK_ANIMATIONS.find(
-    (candidate) => candidate.definitionId === attacker.definitionId,
+    (candidate) => candidate.definitionId === attacker.definitionId && candidate.targetKind === targetKind,
   );
   if (!registration) return undefined;
 
@@ -165,10 +198,7 @@ export function resolvePersonalAttackAnimation(
     castMs: recipe.castMs,
     impactMs: recipe.impactMs,
     durationMs: recipe.durationMs,
-    effect: {
-      ...recipe.effect,
-      amount: Math.max(0, amount),
-    },
+    effect: resolvePersonalProjectileEffect(registration.preset, amount),
   };
 }
 

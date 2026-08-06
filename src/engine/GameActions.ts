@@ -76,7 +76,12 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
   const deferredControllers: Side[] = [];
   if (options.deferPlayerTriggers) deferredControllers.push("player");
   if (options.deferReactiveTriggers) deferredControllers.push("host");
-  drainEventQueue(next, deferredControllers.length > 0 ? { deferControllers: deferredControllers } : undefined);
+  drainEventQueue(next, deferredControllers.length > 0 || options.deferPresentationEvents
+    ? {
+        deferControllers: deferredControllers,
+        deferPresentationEvents: options.deferPresentationEvents,
+      }
+    : undefined);
   return succeed(log(next, `Player casts ${card.name}.`));
 }
 

@@ -260,6 +260,12 @@ test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored 
   assert.deepEqual(byId.kaelor_stormcaller.traits, []);
   assert.deepEqual(byId.echo_of_the_forgotten_city.traits, ["SKYGUARD"]);
   assert.deepEqual(byId.vaelor_emerald_guardian.traits, ["FLYING"]);
+  assert.equal(byId.vaelor_emerald_guardian.abilities[0].effects[0].counter, "-1/-1");
+  assert.deepEqual(byId.vaelor_emerald_guardian.abilities[0].effects[0].target, {
+    type: "ALL_ECHOS",
+    controller: "OPPONENT",
+  });
+  assert.equal(byId.vaelor_emerald_guardian.abilities[0].effects[0].animation, "EMERALD_FIREBALL_VOLLEY");
   assert.deepEqual(byId.clash_of_echoes.kinds, ["SPELL"]);
   assert.deepEqual(byId.clash_of_echoes.modifiers, ["QUICK"]);
   assert.deepEqual(byId.shield_of_the_heir.kinds, ["SPELL"]);
@@ -275,7 +281,7 @@ test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored 
     kaelor_stormcaller: "La primera vez que otro aliado sea invocado durante tu turno: Kaelor gana +1/+1 hasta tu próximo turno.",
     maela_watcher_of_the_heights: "Sin efecto adicional.",
     echo_of_the_forgotten_city: "Sin efecto adicional.",
-    vaelor_emerald_guardian: "Sin efecto adicional.",
+    vaelor_emerald_guardian: "Al ser invocado: pon un contador -1/-1 sobre cada enemigo.",
     clash_of_echoes: "Elige un aliado y un enemigo; el aliado inflige al enemigo daño igual a su Fuerza.",
     shield_of_the_heir: "Elige un aliado y un enemigo; el aliado gana +1/+2 hasta el final del turno. Después, ese aliado lucha contra ese enemigo.",
     the_judgment_of_elarion: "Elige un Apoyo enemigo o un Eco enemigo con Volar; destrúyelo.",

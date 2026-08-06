@@ -67,6 +67,8 @@ export function blockRestrictionReason(game: GameState, blocker: CardInstance, a
   const attackerTraits = getTraits(game, attacker);
   const blockerTraits = getTraits(game, blocker);
   if (attackerTraits.includes("FLYING") && !blockerTraits.includes("FLYING") && !blockerTraits.includes("SKYGUARD")) return "Echoes with Flying require Flying or Skyguard to defend against them.";
-  if (attackerTraits.includes("FURTIVE") && blocker.basePower + (blocker.counters["+1/+1"] ?? 0) > attacker.basePower + (attacker.counters["+1/+1"] ?? 0)) return "Furtive cannot be defended by Echoes with greater Power.";
+  const blockerCounterPower = blocker.basePower + (blocker.counters["+1/+1"] ?? 0) - (blocker.counters["-1/-1"] ?? 0);
+  const attackerCounterPower = attacker.basePower + (attacker.counters["+1/+1"] ?? 0) - (attacker.counters["-1/-1"] ?? 0);
+  if (attackerTraits.includes("FURTIVE") && blockerCounterPower > attackerCounterPower) return "Furtive cannot be defended by Echoes with greater Power.";
   return undefined;
 }

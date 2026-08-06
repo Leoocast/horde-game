@@ -255,6 +255,11 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   atacante y sobrevive, o cuando ataca directamente el panel de vida de la Hueste. En ataques con
   proyectil, la reacción de golpe del panel espera el `impactMs` del preset. El Rasgo canónico de
   Vaelor es `FLYING` (Volar), no `SKYGUARD` (Guardia aérea).
+- Varka usa una bola de fuego infernal a escala 0.85 cada vez que ataca: apunta al defensor asignado
+  o, si no tiene defensor, al panel de Vida del Cronista. Vaelor, al ser Invocado, captura todos los
+  enemigos actuales y lanza a la vez una bola esmeralda a cada uno usando exactamente el preset de
+  su defensa (mismo diseño y escala 1.5); el impacto coloca un contador -1/-1 sobre cada objetivo
+  como un único evento simultáneo, sin daño adicional.
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado
   aunque los impactos visuales se escalonen.
 
