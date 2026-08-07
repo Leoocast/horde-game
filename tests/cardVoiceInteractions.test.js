@@ -5,6 +5,20 @@ import { resolvePlayerCombat } from "../src/engine/CombatResolver";
 import { resolveCardVoiceCue, resolveCardVoiceCueBatch } from "../src/store/cardVoiceInteractions";
 import { addCard, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
 
+test("Vaelor's entry cue layers his line with the stone impact", () => {
+  const game = createTestGame("vaelor-entry-audio");
+  const vaelor = cardFromDeck("vaelor_emerald_guardian", "player");
+
+  const cue = resolveCardVoiceCue({
+    type: "INVOKED",
+    card: vaelor,
+    previousGame: game,
+  });
+
+  assert.equal(cue?.sfx, "vaelorLinePlay");
+  assert.deepEqual(cue?.additionalSfx, ["stoneCrash"]);
+});
+
 test("Countess entry interactions use card types instead of card names", () => {
   const beforeCountess = createTestGame("countess-voice-entry");
   const countess = cardFromDeck("mirevna_countess_of_the_crimson_eclipse", "player");

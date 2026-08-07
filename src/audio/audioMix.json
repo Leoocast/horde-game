@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "unit": "dB",
   "sfx": {
-    "click": 0,
+    "click": -5,
     "draw": 0,
     "drawOne": 0,
     "playLand": 0,
@@ -19,7 +19,7 @@
     "countessThirdAttack": -11,
     "countessWeak": -11,
     "punch": -15,
-    "defend": 0,
+    "defend": -12,
     "skipNextBattle": 0,
     "activateEffect": 0,
     "buff": 0,
@@ -27,7 +27,10 @@
     "fireballCast1": -8,
     "fireballCast2": -6.5,
     "fireballCast3": -5,
-    "fireballHit": -7.5
+    "fireballHit": -7.5,
+    "selectAttacker": -11.5,
+    "stoneCrash": -11,
+    "vaelorLinePlay": -9.5
   },
   "music": {
     "zombiesBattle1": {

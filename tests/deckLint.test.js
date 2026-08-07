@@ -37,11 +37,30 @@ test("every deck ability is either fully engine-supported or explicitly marked",
   assert.equal(errors.length, 0, `Deck lint found silent gaps:\n${details}`);
 });
 
-test("pending abilities are reported as WIP, not as errors", () => {
+test("active demo decks contain no pending abilities", () => {
   const { reports } = lintDecks();
+  const pending = [];
   for (const report of reports) {
     for (const row of report.cards) {
-      if (row.pending.length > 0) assert.equal(row.status, "partial");
+      for (const abilityId of row.pending) pending.push(`${report.deckId}/${row.cardId}/${abilityId}`);
+    }
+  }
+  assert.deepEqual(pending, []);
+});
+
+test("active card text uses the canonical verb for adding Energy", () => {
+  for (const entry of DECK_REGISTRY) {
+    for (const card of [...entry.raw.cards, ...(entry.raw.tokens ?? [])]) {
+      assert.doesNotMatch(
+        card.gameText.es,
+        /\bGana \d+ (?:de )?Energías?\b/iu,
+        `${entry.raw.id}/${card.id} must use Agrega for Energy`,
+      );
+      assert.doesNotMatch(
+        card.gameText.en,
+        /\bGain \d+ Energy\b/iu,
+        `${entry.raw.id}/${card.id} must use add for Energy`,
+      );
     }
   }
 });
@@ -226,6 +245,7 @@ test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored 
 
   const normalizedAuthoring = normalizeAuthoredDeck(entry.raw);
   const byId = Object.fromEntries(normalizedAuthoring.cards.map((card) => [card.id, card]));
+  const rulesById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card.gameText.es]));
   assert.equal(normalizedAuthoring.name, "El Pacto de Elarion");
   assert.deepEqual(byId.kaelor_stormcaller.energyCost, { amount: 4 });
   assert.equal(byId.kaelor_stormcaller.power, 3);
@@ -235,10 +255,17 @@ test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored 
   assert.equal(byId.maela_watcher_of_the_heights.endurance, 3);
   assert.deepEqual(byId.hydra_of_the_black_bough.traits, ["LETHAL", "POISON_1"]);
   assert.deepEqual(byId.aelyra_heir_of_elarion.modifiers, ["CHRONICLE"]);
+  assert.equal(byId.aelyra_heir_of_elarion.abilities[0].targets[0].controller, "SELF");
   assert.equal(byId.aelyra_heir_of_elarion.abilities[0].effects[1].amount, 3);
   assert.deepEqual(byId.kaelor_stormcaller.traits, []);
   assert.deepEqual(byId.echo_of_the_forgotten_city.traits, ["SKYGUARD"]);
-  assert.deepEqual(byId.vaelor_emerald_guardian.traits, ["SKYGUARD"]);
+  assert.deepEqual(byId.vaelor_emerald_guardian.traits, ["FLYING"]);
+  assert.equal(byId.vaelor_emerald_guardian.abilities[0].effects[0].counter, "-1/-1");
+  assert.deepEqual(byId.vaelor_emerald_guardian.abilities[0].effects[0].target, {
+    type: "ALL_ECHOS",
+    controller: "OPPONENT",
+  });
+  assert.equal(byId.vaelor_emerald_guardian.abilities[0].effects[0].animation, "EMERALD_FIREBALL_VOLLEY");
   assert.deepEqual(byId.clash_of_echoes.kinds, ["SPELL"]);
   assert.deepEqual(byId.clash_of_echoes.modifiers, ["QUICK"]);
   assert.deepEqual(byId.shield_of_the_heir.kinds, ["SPELL"]);
@@ -246,6 +273,21 @@ test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored 
   assert.deepEqual(byId.river_of_elarion.kinds, ["SOURCE"]);
   assert.deepEqual(byId.echo_of_the_forgotten_city.energyCost, { amount: 4 });
   assert.equal(byId.echo_of_the_forgotten_city.endurance, 5);
+  assert.deepEqual(rulesById, {
+    veiled_dawn_flower: "Agota esta carta; agrega 1 de Energía.",
+    aelyra_heir_of_elarion: "Al ser invocada: elige un aliado; pon un contador +1/+1 sobre ese aliado y gana 3 de Vida.",
+    liora_keeper_of_the_grove: "Agota esta carta; agrega 1 de Energía.",
+    hydra_of_the_black_bough: "Sin efecto adicional.",
+    kaelor_stormcaller: "La primera vez que otro aliado sea invocado durante tu turno: Kaelor gana +1/+1 hasta tu próximo turno.",
+    maela_watcher_of_the_heights: "Sin efecto adicional.",
+    echo_of_the_forgotten_city: "Sin efecto adicional.",
+    vaelor_emerald_guardian: "Al ser invocado: pon un contador -1/-1 sobre cada enemigo.",
+    clash_of_echoes: "Elige un aliado y un enemigo; el aliado inflige al enemigo daño igual a su Fuerza.",
+    shield_of_the_heir: "Elige un aliado y un enemigo; el aliado gana +1/+2 hasta el final del turno. Después, ese aliado lucha contra ese enemigo.",
+    the_judgment_of_elarion: "Elige un Apoyo enemigo o un Eco enemigo con Volar; destrúyelo.",
+    elixir_of_the_first_leaf: "Elige un Eco; el Eco elegido gana +3/+3 hasta el final del turno.",
+    river_of_elarion: "Agota esta carta; agrega 1 de Energía.",
+  });
 
   const energyAction = byId.veiled_dawn_flower.abilities[0];
   assert.equal(energyAction.zone, "field");
@@ -271,10 +313,27 @@ test("Vampires keep Hostfall card kinds, modifiers and traits through authored n
   );
 
   const rawById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card]));
+  const rulesById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card.gameText.es]));
   assert.deepEqual(rawById.mirevna_countess_of_the_crimson_eclipse.modifiers, ["CHRONICLE"]);
   assert.deepEqual(rawById.mirevna_countess_of_the_crimson_eclipse.traits, ["FLYING", "ALERT"]);
   assert.equal(rawById.mirevna_countess_of_the_crimson_eclipse.abilities[0].effects[0].keyword, "DRAIN");
   assert.equal(rawById.blood_page.abilities[0].conditions[1].type, "SOURCE_IS_READY");
+  assert.deepEqual(rulesById, {
+    sanctuary_of_the_red_moon: "Agota esta carta; agrega 1 de Energía.",
+    blood_page: "La primera vez que pierdas Vida en cada turno: si este Eco está preparado, gana +2/+0 hasta el final del turno.",
+    herald_of_the_eclipse: "Sin efecto adicional.",
+    midnight_collector: "Agota esta carta y paga 5 de Vida; agrega 1 de Energía.",
+    duelist_of_the_eclipse: "Una vez durante tu turno, si este Eco no está Estabilizándose: paga 3 de Vida; este Eco gana +3/+1 hasta tu próximo turno.",
+    guardian_of_the_night_threshold: "Cuando este Eco reciba daño y sobreviva: gana 2 de Vida.",
+    assassin_of_the_black_veil: "Sin efecto adicional.",
+    sentinel_of_the_lunar_eye: "Sin efecto adicional.",
+    mirevna_countess_of_the_crimson_eclipse: "Coste adicional: paga la mitad de tu Vida, redondeada hacia arriba.\nDurante tu turno: este Eco tiene Drenar.",
+    midnight_pact: "Coste adicional: paga 5 de Vida.\nRoba 2 cartas.",
+    crimson_impulse: "Coste adicional: paga 2 de Vida.\nElige un aliado; ese aliado gana +2/+2 y Volar hasta el final del turno.",
+    drain_essence: "Elige un Eco; inflige 3 de daño a ese Eco. Gana 2 de Vida.",
+    hunt_beneath_the_red_moon: "Todos tus aliados ganan Drenar hasta el final del turno.",
+    verdict_of_the_eclipse: "Elige un enemigo; destrúyelo. Después, pierdes Vida igual a la Fuerza que tenía.",
+  });
 
   const normalizedAuthoring = normalizeAuthoredDeck(entry.raw);
   const byId = Object.fromEntries(normalizedAuthoring.cards.map((card) => [card.id, card]));
@@ -310,17 +369,40 @@ test("Zombies keep Hostfall card kinds and traits through authored normalization
   );
 
   const rawById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card]));
+  const rulesById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card.gameText.es]));
   assert.deepEqual(rawById.graveless_soldier.kinds, ["ECHO", "TOKEN"]);
   assert.deepEqual(rawById.graveless_soldier.energyCost, { amount: 2 });
   assert.deepEqual(rawById.the_broken_headstone.kinds, ["SUPPORT"]);
+  assert.equal(rawById.the_broken_headstone.abilities.length, 1);
   assert.equal(rawById.the_broken_headstone.abilities[0].effects[0].keyword, "DAUNTING");
-  assert.equal(rawById.the_broken_headstone.abilities[1].trigger.event, "BEGIN_READY");
   assert.deepEqual(rawById.spore_infested.traits, ["LETHAL", "FURTIVE"]);
   assert.deepEqual(rawById.return_to_memory.traits, []);
   assert.equal(rawById.return_to_memory.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");
   assert.equal(rawById.nerezh_graveless_matriarch.power, 3);
   assert.equal(rawById.nerezh_graveless_matriarch.endurance, 3);
   assert.equal(rawById.nerezh_graveless_matriarch.abilities[1].trigger.event, "ECHO_DIED");
+  assert.deepEqual(rawById.harvester_of_the_fallen.abilities[0].conditions[0].filter, {
+    subtypes: ["Zombie"],
+  });
+  assert.deepEqual(rulesById, {
+    graveless_soldier: "Sin efecto adicional.",
+    graveless_titan: "Sin efecto adicional.",
+    the_broken_headstone: "Los Zombis aliados ganan Imponente.",
+    inexhaustible_ossuary: "Cada vez que se juegue una carta que no sea Ficha: quita un contador +1/+1 de este Eco. Si se quitó un contador de esta manera, Invoca un Eco Ficha Zombi 2/2.",
+    devourer_of_the_last_memory: "Cuando este Eco muera: el Cronista descarta una carta.",
+    memory_thief: "Al ser invocado: el Cronista descarta una carta.",
+    tribute_of_the_four_sorrows: "La Hueste sacrifica uno de sus Ecos con la menor suma de Fuerza y Aguante. El Cronista pierde 1 de Vida, descarta una carta y sacrifica un Eco y una Fuente.",
+    winged_stalker_of_the_crypt: "Sin efecto adicional.",
+    stitched_wing_spawn: "Sin efecto adicional.",
+    ossuary_rider: "Sin efecto adicional.",
+    return_to_memory: "Al ser invocado o al morir: la Hueste descarta las 2 primeras cartas de su Archivo a su Memoria.",
+    barrow_wallbreaker: "Sin efecto adicional.",
+    hound_of_seven_memories: "Mientras la Hueste tenga 7 o más cartas en su Memoria: este Eco gana +1/+1 e Imponente.",
+    mastiff_of_the_overflowing_ossuary: "Mientras la Hueste tenga 7 o más cartas en su Memoria: este Eco gana Imponente.",
+    spore_infested: "Sin efecto adicional.",
+    harvester_of_the_fallen: "Cada vez que otro Zombi aliado muera: pon un contador +1/+1 sobre esta carta.",
+    nerezh_graveless_matriarch: "Los demás Zombis aliados ganan +1/+1.\nCada vez que otro Zombi aliado muera: el Cronista pierde 1 de Vida.",
+  });
   assert.equal(entry.raw.rulesProfile.damagePerArchiveDiscard, 3);
   assert.equal(entry.raw.rulesProfile.poisonPerArchiveDiscard, 3);
   assert.equal(entry.raw.rulesProfile.hostEchosHaveImpetus, true);
@@ -340,7 +422,6 @@ test("Zombies keep Hostfall card kinds and traits through authored normalization
   assert.equal(byId.the_broken_headstone.abilities[0].effects[0].scope.controller, "HOST");
   assert.deepEqual(byId.the_broken_headstone.abilities[0].effects[0].scope.filters.kinds, ["ECHO"]);
   assert.equal(byId.the_broken_headstone.abilities[0].effects[0].keyword, "DAUNTING");
-  assert.equal(byId.the_broken_headstone.abilities[1].trigger.event, "BEGIN_READY");
   assert.deepEqual(byId.spore_infested.traits, ["LETHAL", "FURTIVE"]);
   assert.deepEqual(byId.return_to_memory.traits, []);
   assert.equal(byId.return_to_memory.abilities[0].effects[0].type, "DISCARD_OWN_ARCHIVE_TO_MEMORY");
@@ -348,6 +429,9 @@ test("Zombies keep Hostfall card kinds and traits through authored normalization
   assert.equal(byId.nerezh_graveless_matriarch.endurance, 3);
   assert.equal(byId.nerezh_graveless_matriarch.abilities[1].trigger.event, "ECHO_DIED");
   assert.equal(byId.nerezh_graveless_matriarch.abilities[1].conditions[0].type, "ANOTHER_ALLIED_ECHO_DIED");
+  assert.deepEqual(byId.harvester_of_the_fallen.abilities[0].conditions[0].filter, {
+    subtypes: ["Zombie"],
+  });
 });
 
 test("Goblins keep Hostfall card kinds, modifiers and traits through authored normalization", () => {
@@ -363,6 +447,7 @@ test("Goblins keep Hostfall card kinds, modifiers and traits through authored no
   );
 
   const rawById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card]));
+  const rulesById = Object.fromEntries(entry.raw.cards.map((card) => [card.id, card.gameText.es]));
   assert.deepEqual(rawById.varkas_minion.kinds, ["ECHO", "TOKEN"]);
   assert.deepEqual(rawById.the_daunting_front.kinds, ["SUPPORT"]);
   assert.equal(rawById.the_daunting_front.name, "The Daunting Front");
@@ -379,11 +464,31 @@ test("Goblins keep Hostfall card kinds, modifiers and traits through authored no
   assert.equal(rawById.varka_infernal_matriarch.abilities[0].effects[0].scope.filters.excludeSelf, undefined);
   assert.deepEqual(rawById.varka_infernal_matriarch.traits, ["REFLEX"]);
   assert.deepEqual(rawById.varka_infernal_matriarch.modifiers, ["CHRONICLE"]);
+  assert.equal(rawById.varkas_forgemaster.abilities.length, 1);
   assert.equal(rawById.marshal_of_the_wave.modifiers, undefined);
   assert.equal(rawById.vardek_scribe_of_the_legion.modifiers, undefined);
   assert.equal(rawById.rear_guard_firebreather.modifiers, undefined);
   assert.equal(rawById.rear_guard_firebreather.abilities[0].trigger.event, "ECHO_DIED");
   assert.equal(rawById.rear_guard_firebreather.abilities[0].conditions[0].eventObject, "echo");
+  assert.deepEqual(rulesById, {
+    varkas_minion: "Sin efecto adicional.",
+    shaman_of_the_umbral_ember: "Los demás aliados ganan +1/+1.\nAl ser invocado: la Hueste elige un enemigo; este Eco inflige a ese enemigo daño igual al número de aliados invocados este turno.",
+    summoner_of_the_ranks: "Los demás aliados ganan +1/+1.\nCada vez que un aliado muera: mira la primera carta del Archivo. Si es un Eco, Invócalo. Si no, ponla al fondo del Archivo.",
+    varkas_standard_bearer: "Al ser invocado: los aliados ganan +1/+0 hasta el final del turno.",
+    the_daunting_front: "Los aliados ganan Imponente.",
+    all_against_one: "Al terminar el ataque de la Hueste: la Hueste inflige 1 de daño al Cronista por cada Trasgo atacante con Fuerza 2 o menos.",
+    chief_of_the_double_guard: "Al ser invocado: Invoca dos Esbirros de Varka.",
+    rider_of_the_third_charge: "Al ser invocado: Invoca tres Esbirros de Varka.",
+    varkas_linebreaker: "Al comienzo de la Batalla de la Hueste: Invoca un Esbirro de Varka.\nCuando este Eco ataque: gana +1/+0 hasta el final del turno por cada otro Trasgo atacante.",
+    unleash_the_legion: "Si la Hueste controla al menos un aliado: sus aliados ganan +2/+0 hasta el final del turno. Si no, comienza otra ronda de Revelado.",
+    corrupted_war_bear: "Sin efecto adicional.",
+    rider_of_the_umbral_volley: "Al ser invocado: la Hueste elige un enemigo; este Eco inflige a ese enemigo daño igual al número de aliados en el Campo.",
+    varka_infernal_matriarch: "Todos los aliados ganan +1/+1.\nAl ser invocada: este Eco inflige 2 de daño al Cronista y a cada enemigo.",
+    varkas_forgemaster: "Los demás Trasgos aliados ganan +1/+1.",
+    marshal_of_the_wave: "Cuando uno o más Trasgos aliados ataquen: Invoca un Esbirro de Varka atacando.\nCada vez que otro aliado sea invocado: el Cronista pierde 1 de Vida.",
+    vardek_scribe_of_the_legion: "Cuando este Eco ataque: pon un contador +1/+1 sobre este Eco. Después, Invoca una cantidad de Esbirros de Varka atacando igual a su Fuerza.",
+    rear_guard_firebreather: "Cada vez que un Trasgo aliado muera: este Eco inflige 1 de daño a un enemigo aleatorio.",
+  });
 
   const normalizedAuthoring = normalizeAuthoredDeck(entry.raw);
   const byId = Object.fromEntries(normalizedAuthoring.cards.map((card) => [card.id, card]));

@@ -2,7 +2,7 @@
 
 Estado: **integrada en runtime y Card Studio; identidad técnica Hostfall final**
 Deck actual: `uprising_of_the_graveless` / `El Alzamiento de los Sinsepulcro`
-Última actualización: 2026-08-04
+Última actualización: 2026-08-05
 
 Este documento conserva la identidad narrativa y el mapeo mecánico de los Sinsepulcro. Los nombres,
 reglas y flavor bilingüe viven en
@@ -36,10 +36,10 @@ cartas del Archivo a la Memoria— acerca a la Hueste a sus umbrales de siete ca
 | `graveless_soldier` | **Soldado Sinsepulcro** | Ficha 2/2, x21. | La tropa básica liberada por la lápida. |
 | `graveless_titan` | **Titán Sinsepulcro** | Ficha 5/5, x4. | Un cementerio entero comprimido dentro de una armadura. |
 | `the_broken_headstone` | **La Lápida Quebrada** | Apoyo; da Imponente a los Zombis. | La primera grieta y emblema del alzamiento. |
-| `inexhaustible_ossuary` | **Osario Inagotable** | Cinco contadores; cada carta no Ficha consume uno e Invoca una Ficha 2/2. | Cada espacio vacío reclama otro cuerpo. |
+| `inexhaustible_ossuary` | **Osario Inagotable** | Se imprime como 5/5 por sus cinco contadores iniciales; cada carta no Ficha consume uno y, sólo si se quitó, Invoca una Ficha 2/2. | Cada espacio vacío reclama otro cuerpo. |
 | `devourer_of_the_last_memory` | **Devorador del Último Recuerdo** | Al morir, el Cronista descarta una carta. | Su muerte arrastra consigo un pensamiento enemigo. |
 | `memory_thief` | **Ladrón de Memorias** | Al ser invocado, el Cronista descarta una carta. | La luz de su mano es un recuerdo robado. |
-| `tribute_of_the_four_sorrows` | **Tributo de los Cuatro Pesares** | Vida, descarte, sacrificio de Eco y de Fuente. | Cuatro pagos para una tumba que no perdona ninguno. |
+| `tribute_of_the_four_sorrows` | **Tributo de los Cuatro Pesares** | La Hueste sacrifica su Eco con menor suma de Fuerza y Aguante; después el Cronista pierde Vida, descarta y sacrifica un Eco y una Fuente. | Cuatro pagos para una tumba que no perdona ninguno. |
 | `winged_stalker_of_the_crypt` | **Acechador Alado de la Cripta** | 2/1, Volar. | El último guardián esquelético de la cripta lleva su cacería hasta el cielo. |
 | `stitched_wing_spawn` | **Engendro de Alas Cosidas** | 3/1, Volar. | Un cuerpo apenas sostenido por sus costuras. |
 | `ossuary_rider` | **Jinete del Osario** | 3/4, Volar. | Montura reforzada con los huesos de cada caída. |

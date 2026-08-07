@@ -9,7 +9,7 @@ import { buildHostRules } from "../src/engine/HostRules";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
 import { chaosTraitPool, prepareChaosDeck } from "../src/engine/ChaosMode";
 import { applyHostAttackEvent, buildHostAttackEvents, isHostAttackEventCurrent, prepareHostAttackers, previewPlayerAttackDrain, refreshHostAttackEvent, resolveHostCombat, resolvePlayerAttackerDrain, resolvePlayerAttackerPoison, resolvePlayerCombat } from "../src/engine/CombatResolver";
-import { destroyMarkedCreatures, destroyPermanent, findManualInvokedTargetTrigger, pendingTriggerSources, resolveEffect, resolveEffects, resolveTriggeredEvent, runInvokedTriggers } from "../src/engine/EffectResolver";
+import { destroyMarkedCreatures, destroyPermanent, findManualInvokedTargetTrigger, manualInvokedTargetRequirement, pendingTriggerSources, resolveEffect, resolveEffects, resolveTriggeredEvent, runInvokedTriggers } from "../src/engine/EffectResolver";
 import { drainEventQueue, enqueue } from "../src/engine/EventQueue";
 import { collectStaticAuras, newlyCoveredAuras, snapshotStaticAuras } from "../src/engine/StaticAuras";
 import { acceptOpeningHand, createInitialGame, expandDeck, mulliganOpeningHand, recordFieldEntry } from "../src/engine/GameState";
@@ -17,7 +17,7 @@ import { finishHostTurn, revealHostCardFromTop, runHostMain } from "../src/engin
 import { canAttack, hasTrait } from "../src/engine/Traits";
 import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
 import { getPowerEndurance, hostInSurge } from "../src/engine/StaticEffects";
-import { targetCandidates } from "../src/engine/Targeting";
+import { targetCandidates, targetCandidatesWithSelectedTargets } from "../src/engine/Targeting";
 import { queueUnusedNormalEnergy, releasePendingStoredEnergy } from "../src/engine/EnergySystem";
 import { performPlayerDraw, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
 import { cardStatState, sortTraitsForDisplay } from "../src/utils/selectors";
@@ -510,6 +510,22 @@ test("Stored Energy can pay a creature cost", () => {
   assert.equal(result.player.hand.some((card) => card.instanceId === gatherer.instanceId), false);
   assert.equal(result.player.field.some((card) => card.instanceId === gatherer.instanceId), true);
   assert.equal(result.player.energyPool.stored, 0);
+});
+
+test("an unaffordable card reports a typed Energy failure for presentation", () => {
+  const game = createTestGame("typed-energy-failure");
+  const card = addCard(
+    game,
+    customCard("too_expensive", "player", { zone: "hand", energyCost: 2 }),
+    "player",
+    "hand",
+  );
+
+  const result = castCard(game, card.instanceId);
+
+  assert.equal(result.lastActionResult?.ok, false);
+  assert.equal(result.lastActionResult?.code, "NOT_ENOUGH_ENERGY");
+  assert.match(result.lastActionResult?.reason ?? "", /not enough available Energy/i);
 });
 
 test("Stored Energy is spent before manually generated Source Energy", () => {
@@ -1673,6 +1689,8 @@ test("El Juicio de Elarion only offers legal permanent types and destroys The Br
   const grafHarvest = addCard(game, cardFromDeck("the_broken_headstone", "host"));
   const flyer = addCard(game, customCard("test_flyer", "host", { traits: ["FLYING"] }));
   const groundCreature = addCard(game, customCard("test_ground_creature", "host"));
+  const alliedSupport = addCard(game, customCard("allied_support", "player", { kinds: ["SUPPORT"] }));
+  const alliedFlyer = addCard(game, customCard("allied_flyer", "player", { traits: ["FLYING"] }));
   const spell = addCard(game, cardFromDeck("the_judgment_of_elarion", "player", "hand"), "player", "hand");
   const requirement = spell.requiresTargets[0];
 
@@ -1680,6 +1698,8 @@ test("El Juicio de Elarion only offers legal permanent types and destroys The Br
   assert.equal(candidateIds.includes(grafHarvest.instanceId), true);
   assert.equal(candidateIds.includes(flyer.instanceId), true);
   assert.equal(candidateIds.includes(groundCreature.instanceId), false);
+  assert.equal(candidateIds.includes(alliedSupport.instanceId), false);
+  assert.equal(candidateIds.includes(alliedFlyer.instanceId), false);
 
   const result = castCard(game, spell.instanceId, { targets: { targetPermanent: grafHarvest.instanceId } });
   assert.equal(result.host.field.some((card) => card.instanceId === grafHarvest.instanceId), false);
@@ -1690,8 +1710,19 @@ test("Choque de Ecos deals source power and preserves deathtouch for death clean
   const game = createTestGame();
   addSources(game, 2);
   const source = addCard(game, customCard("deathtouch_source", "player", { traits: ["LETHAL"], power: 1, endurance: 1 }));
+  const otherAlly = addCard(game, customCard("other_ally", "player"));
   const target = addCard(game, customCard("large_target", "host", { power: 0, endurance: 8 }));
   const spell = addCard(game, cardFromDeck("clash_of_echoes", "player", "hand"), "player", "hand");
+
+  const targetIds = targetCandidatesWithSelectedTargets(
+    game,
+    "player",
+    spell.requiresTargets[1],
+    { sourceCreature: source.instanceId },
+  ).map((card) => card.instanceId);
+  assert.equal(targetIds.includes(target.instanceId), true);
+  assert.equal(targetIds.includes(source.instanceId), false);
+  assert.equal(targetIds.includes(otherAlly.instanceId), false);
 
   const result = castCard(game, spell.instanceId, {
     targets: { sourceCreature: source.instanceId, damageTarget: target.instanceId },
@@ -1770,12 +1801,18 @@ test("Escudo de la Heredera can stage its buff before the deferred fight impact"
 test("Aelyra can target herself, adds one counter, and gains three Life", () => {
   const game = createTestGame();
   addSources(game, 1);
+  const enemy = addCard(game, customCard("aelyra_enemy_target", "host"));
   const iria = addCard(game, cardFromDeck("aelyra_heir_of_elarion", "player", "hand"), "player", "hand");
 
   const result = castCard(game, iria.instanceId);
   const permanent = result.player.field.find((card) => card.instanceId === iria.instanceId);
   const manualTrigger = findManualInvokedTargetTrigger(permanent);
   assert.ok(manualTrigger, "Aelyra should expose her manual Invoked trigger");
+  const requirement = manualInvokedTargetRequirement(permanent);
+  assert.ok(requirement, "Aelyra should preserve her authored target requirement");
+  const candidateIds = targetCandidates(result, "player", requirement).map((card) => card.instanceId);
+  assert.equal(candidateIds.includes(permanent.instanceId), true);
+  assert.equal(candidateIds.includes(enemy.instanceId), false);
   resolveEffect(result, manualTrigger.effect, {
     source: permanent,
     side: "player",
@@ -1819,9 +1856,10 @@ test("Toxic adds poison on player combat and every three poison mills one card",
   assert.equal(turnResult.host.archive.length, 2);
 });
 
-test("El Pacto de Elarion growth cards select the intended presentation intensity", () => {
+test("El Pacto de Elarion buffs select their intended presentation", () => {
   assert.equal(buffAnimationVariantForCard("aelyra_heir_of_elarion"), "growth-strong");
-  assert.equal(buffAnimationVariantForCard("kaelor_stormcaller"), "growth-strong");
+  assert.equal(buffAnimationVariantForCard("kaelor_stormcaller"), "storm-strong");
+  assert.equal(buffAnimationVariantForCard("kaelor_stormcaller", true), "storm-strong");
   assert.equal(buffAnimationVariantForCard("elixir_of_the_first_leaf"), "growth-strong");
   assert.equal(buffAnimationVariantForCard("shield_of_the_heir"), "growth-strong");
   assert.equal(buffAnimationVariantForCard("shield_of_the_heir", true), "growth-preview");
@@ -2146,6 +2184,27 @@ test("Return to Memory discards two Host Archive cards when Invoked and two more
   assert.equal(game.host.memory.filter((card) => card.definitionId.startsWith("crow_archive_")).length, 4);
 });
 
+test("Harvester of the Fallen grows only when another allied Zombie dies", () => {
+  const game = createTestGame("harvester-zombie-filter");
+  const harvester = addCard(game, cardFromDeck("harvester_of_the_fallen", "host"));
+  const nonZombie = addCard(game, customCard("harvester_non_zombie", "host"));
+  const zombie = addCard(game, cardFromDeck("graveless_soldier", "host"));
+
+  const resolveHarvesterDeathReaction = (deadCard) => {
+    destroyPermanent(game, deadCard);
+    const deathIndex = game.eventQueue.findIndex((event) => event.type === "ECHO_DIED");
+    assert.notEqual(deathIndex, -1);
+    const [deathEvent] = game.eventQueue.splice(deathIndex, 1);
+    resolveTriggeredEvent(game, deathEvent, undefined, harvester.instanceId);
+  };
+
+  resolveHarvesterDeathReaction(nonZombie);
+  assert.equal(harvester.counters["+1/+1"] ?? 0, 0);
+
+  resolveHarvesterDeathReaction(zombie);
+  assert.equal(harvester.counters["+1/+1"], 1);
+});
+
 test("destroying a Support does not emit Echo death events", () => {
   const game = createTestGame("support-destroyed-not-died");
   const support = addCard(game, customCard("destroyed_support", "host", { kinds: ["SUPPORT"] }));
@@ -2409,6 +2468,7 @@ test("Varka, Infernal Matriarch queues one simultaneous Burn volley to the playe
   assert.equal(sturdy.damageMarked, 0);
   const volleyEvent = game.eventQueue.find((event) => event.type === "BURN_VOLLEY_DAMAGE");
   assert.ok(volleyEvent);
+  assert.equal(volleyEvent.payload?.sourceDefinitionId, "varka_infernal_matriarch");
   assert.equal(volleyEvent.payload?.targetPlayer, true);
   assert.deepEqual(volleyEvent.payload?.targetIds, [fragile.instanceId, sturdy.instanceId]);
   assert.equal(volleyEvent.payload?.amount, 2);
@@ -2418,6 +2478,33 @@ test("Varka, Infernal Matriarch queues one simultaneous Burn volley to the playe
   assert.equal(game.player.life, 28);
   assert.equal(game.player.field.some((card) => card.instanceId === fragile.instanceId), false);
   assert.equal(game.player.field.find((card) => card.instanceId === sturdy.instanceId)?.damageMarked, 2);
+});
+
+test("Vaelor snapshots every current enemy and applies one simultaneous -1/-1 counter volley", () => {
+  const game = createTestGame("vaelor-entry-counter-volley");
+  const fragile = addCard(game, customCard("vaelor-fragile-enemy", "host", { power: 1, endurance: 1 }));
+  const sturdy = addCard(game, customCard("vaelor-sturdy-enemy", "host", { power: 3, endurance: 4 }));
+  const vaelor = addCard(game, cardFromDeck("vaelor_emerald_guardian", "player"));
+
+  runInvokedTriggers(game, vaelor);
+
+  const volley = game.eventQueue.find((event) => event.type === "COUNTER_VOLLEY");
+  assert.ok(volley);
+  assert.deepEqual(volley.payload?.targetIds, [fragile.instanceId, sturdy.instanceId]);
+  assert.equal(volley.payload?.counterType, "-1/-1");
+  assert.equal(volley.payload?.amount, 1);
+  assert.equal(volley.payload?.projectileGapMs, 0);
+  assert.equal(fragile.counters["-1/-1"] ?? 0, 0);
+  assert.equal(sturdy.counters["-1/-1"] ?? 0, 0);
+
+  const lateEnemy = addCard(game, customCard("vaelor-late-enemy", "host", { power: 2, endurance: 2 }));
+  drainEventQueue(game);
+
+  assert.equal(fragile.counters["-1/-1"], 1);
+  assert.equal(game.host.memory.some((card) => card.instanceId === fragile.instanceId), true);
+  assert.equal(sturdy.counters["-1/-1"], 1);
+  assert.deepEqual(getPowerEndurance(game, sturdy), { power: 2, endurance: 3 });
+  assert.equal(lateEnemy.counters["-1/-1"] ?? 0, 0);
 });
 
 test("Nerezh, Graveless Matriarch queues an oil Burn before the player loses life", () => {

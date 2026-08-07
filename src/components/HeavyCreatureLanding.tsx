@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
+import { renderSharedVfxFrame } from "./sharedVfxRenderer";
 
 type Props = {
   cardId: string;
@@ -70,26 +71,8 @@ export function HeavyCreatureLanding({ cardId, eventId, onComplete }: Props) {
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(0, 1, 1, 0, -100, 100);
     camera.position.z = 10;
-    let renderer: THREE.WebGLRenderer;
-
-    try {
-      renderer = new THREE.WebGLRenderer({
-        canvas,
-        alpha: true,
-        antialias: true,
-        premultipliedAlpha: false,
-      });
-    } catch {
-      const fallbackTimer = window.setTimeout(
-        () => onCompleteRef.current(cardId, eventId),
-        duration * 1000,
-      );
-      return () => window.clearTimeout(fallbackTimer);
-    }
-
-    renderer.setClearColor(0x000000, 0);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
-    renderer.outputEncoding = THREE.sRGBEncoding;
+    // El contexto WebGL es compartido por todo el juego: este lienzo sólo recibe la copia.
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.6);
 
     let width = 1;
     let height = 1;
@@ -100,7 +83,6 @@ export function HeavyCreatureLanding({ cardId, eventId, onComplete }: Props) {
       camera.right = width;
       camera.top = height;
       camera.updateProjectionMatrix();
-      renderer.setSize(Math.round(width), Math.round(height), false);
     };
     resize();
 
@@ -307,7 +289,9 @@ export function HeavyCreatureLanding({ cardId, eventId, onComplete }: Props) {
           Math.pow(1 - piece.age / piece.life, 1.2) * 0.88;
       }
 
-      renderer.render(scene, camera);
+      // Si el contexto compartido no está disponible, el beat conserva igualmente su duración y
+      // completa la llegada en el mismo instante que antes usaba el temporizador de respaldo.
+      renderSharedVfxFrame(canvas, { scene, camera, width, height, pixelRatio });
       if (elapsed < duration) {
         frame = window.requestAnimationFrame(animate);
       } else if (!completed) {
@@ -322,7 +306,7 @@ export function HeavyCreatureLanding({ cardId, eventId, onComplete }: Props) {
       for (const object of ownedObjects) scene.remove(object);
       for (const material of ownedMaterials) material.dispose();
       for (const texture of ownedTextures) texture.dispose();
-      renderer.dispose();
+      // El renderer es compartido y sobrevive al efecto; sólo se liberan sus recursos propios.
     };
   }, [cardId, eventId]);
 

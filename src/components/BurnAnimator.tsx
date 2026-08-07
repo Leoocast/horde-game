@@ -1,6 +1,19 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
-import { useGameStore } from "../store/useGameStore";
+import * as THREE from "three";
+import { useGameStore, type BurnAnimationState } from "../store/useGameStore";
+import { burnPathCurvature } from "../store/burnAnimation";
+import { ClassicBurnAnimator } from "./ClassicBurnAnimator";
+import { burnProjectileOriginRatios, BURN_DURATION_MS } from "./burnPresentation";
+import { renderSharedVfxFrame } from "./sharedVfxRenderer";
+import {
+  BURN_FIREBALL_FRAGMENT_SHADER,
+  BURN_FIREBALL_VERTEX_SHADER,
+  BURN_MAX_ROUTES,
+  burnImpactRoutes,
+  burnMaterialColors,
+  burnRenderBatches,
+} from "./burnFireball";
 
 type BurnGeometry = {
   startX: number;
@@ -9,44 +22,34 @@ type BurnGeometry = {
   endY: number;
 };
 
-// Master clock mirrors the CSS --burn-duration (1100ms). Flight runs 20%–58%, impact at 58%.
-const IMPACT_AT_MS = 638;
-const FLIGHT_START_MS = 220;
-const EMBER_COUNT = 32;
+/** El lienzo cubre la pantalla, así que se limita la resolución antes que el número de rutas. */
+const MAX_PIXEL_RATIO = 1.35;
 
-// Ported verbatim from the reference (assets/examples/Fireball/fireball.html).
-const CHARGE_PARTICLES = [
-  { a: 12, r: 42, s: 3 },
-  { a: 86, r: 33, s: 3 },
-  { a: 155, r: 45, s: 5 },
-  { a: 228, r: 36, s: 3 },
-  { a: 307, r: 40, s: 4 },
-];
-const TRAIL_RIBBONS = [
-  { w: 84, h: 18, y: 0, r: 0, blur: 6, o: 0.9 },
-  { w: 68, h: 10, y: -10, r: -7, blur: 4, o: 0.9 },
-  { w: 62, h: 9, y: 10, r: 8, blur: 4, o: 0.86 },
-];
-const TRAIL_STREAKS = [
-  { w: 94, h: 3, y: -4, r: -1, blur: 2, o: 0.92 },
-  { w: 78, h: 2, y: 7, r: 2, blur: 1.6, o: 0.96 },
-];
-const IMPACT_SMOKE = [
-  { x: -82, y: -20, s: 0.8, drift: -26, s2: 1.08, s3: 1.376, drift2: -39 },
-  { x: -44, y: -58, s: 1.0, drift: -14, s2: 1.35, s3: 1.72, drift2: -21 },
-  { x: 0, y: -74, s: 1.15, drift: 8, s2: 1.552, s3: 1.978, drift2: 12 },
-  { x: 46, y: -52, s: 0.96, drift: 18, s2: 1.296, s3: 1.651, drift2: 27 },
-  { x: 84, y: -16, s: 0.78, drift: 28, s2: 1.053, s3: 1.342, drift2: 42 },
-  { x: -18, y: -28, s: 0.72, drift: -4, s2: 0.972, s3: 1.238, drift2: -6 },
-];
+function clearBurnCanvas(canvas: HTMLCanvasElement | null): void {
+  if (!canvas) return;
+  const context = canvas.getContext("2d");
+  context?.clearRect(0, 0, canvas.width, canvas.height);
+}
 
 export function BurnAnimator() {
   const burn = useGameStore((state) => state.burnAnimation);
+  const classicBurn = burn?.renderer === "classic" ? burn : undefined;
+  return (
+    <>
+      <ProceduralBurnAnimator burn={classicBurn ? undefined : burn} />
+      {classicBurn && <ClassicBurnAnimator burn={classicBurn} />}
+    </>
+  );
+}
+
+function ProceduralBurnAnimator({ burn }: { burn: BurnAnimationState | undefined }) {
   const [geometries, setGeometries] = useState<BurnGeometry[]>([]);
-  const fireballBodyRef = useRef<HTMLDivElement>(null);
-  const traceRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useLayoutEffect(() => {
+    // React puede mostrar el portal antes de que el siguiente requestAnimationFrame pinte el
+    // shader. Mantener oculto el buffer WebGL evita exponer su rectángulo de limpieza entre beats.
+    if (canvasRef.current) canvasRef.current.style.opacity = "0";
     if (!burn) {
       setGeometries([]);
       return;
@@ -55,255 +58,240 @@ export function BurnAnimator() {
       ? document.querySelector<HTMLElement>(`[data-card-slot-id="${burn.sourceId}"]`)
       : undefined;
     const sourceRect = source?.getBoundingClientRect();
-    const startX = sourceRect ? sourceRect.left + sourceRect.width / 2 : window.innerWidth * 0.5;
-    const startY = sourceRect ? sourceRect.top + sourceRect.height / 2 : window.innerHeight * 0.28;
+    const fallbackStartX = sourceRect ? sourceRect.left + sourceRect.width / 2 : window.innerWidth * 0.5;
+    const fallbackStartY = sourceRect ? sourceRect.top + sourceRect.height / 2 : window.innerHeight * 0.28;
     const targets = burn.targets?.length
       ? burn.targets
       : [{ targetId: burn.targetId, targetKind: burn.targetKind ?? "card" }];
-    const targetGeometries = targets.flatMap((target): BurnGeometry[] => {
+    const targetEndpoints = targets.flatMap((target): Array<Pick<BurnGeometry, "endX" | "endY">> => {
       const targetElement = target.targetKind === "playerLife"
         ? document.querySelector<HTMLElement>('[data-player-life-panel="true"]')
-        : target.targetId
-          ? document.querySelector<HTMLElement>(`[data-card-slot-id="${target.targetId}"]`)
-          : undefined;
+        : target.targetKind === "hostLife"
+          ? document.querySelector<HTMLElement>('[data-host-life-emblem="true"]')
+          : target.targetId
+            ? document.querySelector<HTMLElement>(`[data-card-slot-id="${target.targetId}"]`)
+            : undefined;
       if (!targetElement) return [];
       const targetRect = targetElement.getBoundingClientRect();
       return [{
-        startX,
-        startY,
         endX: targetRect.left + targetRect.width / 2,
         endY: targetRect.top + targetRect.height / 2,
       }];
     });
-    const repeatedProjectileCount = burn.targets?.length
-      ? 1
-      : Math.max(1, Math.min(6, burn.projectileCount ?? 1));
-    setGeometries(
-      repeatedProjectileCount === 1
-        ? targetGeometries
-        : Array.from({ length: repeatedProjectileCount }, () => targetGeometries[0]).filter(Boolean),
+    if (burn.targets?.length) {
+      setGeometries(targetEndpoints.map((endpoint) => ({
+        startX: fallbackStartX,
+        startY: fallbackStartY,
+        ...endpoint,
+      })));
+      return;
+    }
+
+    const endpoint = targetEndpoints[0];
+    if (!endpoint) {
+      setGeometries([]);
+      return;
+    }
+    const projectileCount = Math.max(1, Math.min(BURN_MAX_ROUTES, burn.projectileCount ?? 1));
+    const originRatios = burnProjectileOriginRatios(
+      projectileCount,
+      burn.projectileOrigin ?? "center",
     );
+    setGeometries(originRatios.map((origin) => ({
+      startX: sourceRect ? sourceRect.left + sourceRect.width * origin.x : fallbackStartX,
+      startY: sourceRect ? sourceRect.top + sourceRect.height * origin.y : fallbackStartY,
+      ...endpoint,
+    })));
   }, [burn]);
 
-  // Trace sparks bleed off the fireball along its real path; a ring of embers bursts on impact.
-  // Both read live DOM rects, exactly like the reference.
+  const projectileGapMs = Math.max(0, burn?.projectileGapMs ?? 90);
+  const impacts = burnImpactRoutes(
+    geometries.length,
+    Boolean(burn?.targets?.length),
+    projectileGapMs,
+  );
+
+  // Toda la presentación vive en un canvas y un contexto. Una descarga grande puede requerir
+  // varias pasadas de seis rutas; ninguna ruta de reglas se descarta por ese límite del GLSL.
   useEffect(() => {
-    const traceGeometry = geometries[geometries.length - 1];
-    if (!burn || !traceGeometry) return;
-    const trace = traceRef.current;
-    if (!trace) return;
+    if (!burn || geometries.length === 0) {
+      if (canvasRef.current) canvasRef.current.style.opacity = "0";
+      clearBurnCanvas(canvasRef.current);
+      return;
+    }
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
 
-    let frame = 0;
-    let cancelled = false;
-    let lastSpawn = 0;
-    let embersSpawned = false;
+    const colors = burnMaterialColors(burn.variant);
+    const scale = Math.max(0.5, Math.min(3, burn.scale ?? 1));
+    const emptySlots = () => Array.from({ length: BURN_MAX_ROUTES }, () => new THREE.Vector2());
+    const batches = burnRenderBatches(geometries.length, impacts);
+    const scene = new THREE.Scene();
+    const planeGeometry = new THREE.PlaneGeometry(2, 2);
+    const passes = batches.map((batch, batchIndex) => {
+      const uniforms = {
+        uRes: { value: new THREE.Vector2(1, 1) },
+        uPixelRatio: { value: pixelRatio },
+        uTime: { value: 0 },
+        uT: { value: 0 },
+        uCount: { value: batch.routeIndexes.length },
+        uStart: { value: emptySlots() },
+        uEnd: { value: emptySlots() },
+        uDelay: { value: new Array(BURN_MAX_ROUTES).fill(0) },
+        uImpactCount: { value: batch.impacts.length },
+        uImpactPos: { value: emptySlots() },
+        uImpactDelay: { value: new Array(BURN_MAX_ROUTES).fill(0) },
+        uScale: { value: scale },
+        uCurve: { value: burnPathCurvature(burn.trajectory) },
+        uCore: { value: new THREE.Vector3(...colors.core) },
+        uHot: { value: new THREE.Vector3(...colors.hot) },
+        uMid: { value: new THREE.Vector3(...colors.mid) },
+        uDeep: { value: new THREE.Vector3(...colors.deep) },
+        uSmoke: { value: new THREE.Vector3(...colors.smoke) },
+        uInk: { value: colors.ink },
+      };
+
+      batch.routeIndexes.forEach((routeIndex, localIndex) => {
+        const route = geometries[routeIndex];
+        uniforms.uStart.value[localIndex].set(route.startX, route.startY);
+        uniforms.uEnd.value[localIndex].set(route.endX, route.endY);
+        uniforms.uDelay.value[localIndex] = (routeIndex * projectileGapMs) / BURN_DURATION_MS;
+      });
+      batch.impacts.forEach((impact, localImpactIndex) => {
+        const routeIndex = batch.routeIndexes[impact.routeIndex];
+        const route = geometries[routeIndex];
+        uniforms.uImpactPos.value[localImpactIndex].set(route.endX, route.endY);
+        uniforms.uImpactDelay.value[localImpactIndex] = impact.delayMs / BURN_DURATION_MS;
+      });
+
+      const material = new THREE.ShaderMaterial({
+        uniforms,
+        vertexShader: BURN_FIREBALL_VERTEX_SHADER,
+        fragmentShader: BURN_FIREBALL_FRAGMENT_SHADER,
+        transparent: true,
+        premultipliedAlpha: true,
+        depthTest: false,
+        depthWrite: false,
+      });
+      const mesh = new THREE.Mesh(planeGeometry, material);
+      mesh.renderOrder = batchIndex;
+      scene.add(mesh);
+      return { material, uniforms };
+    });
+    const camera = new THREE.Camera();
+
+    let width = 1;
+    let height = 1;
+    const resize = () => {
+      width = Math.max(1, window.innerWidth);
+      height = Math.max(1, window.innerHeight);
+      for (const pass of passes) pass.uniforms.uRes.value.set(width, height);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    const shakeAnimation = canvasRef.current?.animate(
+      [
+        { transform: "translate(0, 0) rotate(0)", offset: 0 },
+        { transform: "translate(0, 0) rotate(0)", offset: 0.5799 },
+        { transform: "translate(-14px, 8px) rotate(-0.8deg)", offset: 0.58 },
+        { transform: "translate(13px, -8px) rotate(0.72deg)", offset: 0.59 },
+        { transform: "translate(-9px, -5px) rotate(-0.45deg)", offset: 0.6 },
+        { transform: "translate(7px, 4px) rotate(0.32deg)", offset: 0.61 },
+        { transform: "translate(-4px, 2px) rotate(-0.16deg)", offset: 0.63 },
+        { transform: "translate(0, 0) rotate(0)", offset: 0.68 },
+        { transform: "translate(0, 0) rotate(0)", offset: 1 },
+      ],
+      { duration: BURN_DURATION_MS, easing: "linear" },
+    );
+
+    // El reloj se extiende con el retraso del último impacto, igual que las animaciones CSS
+    // encadenadas que reemplaza; el store sigue siendo quien desmonta el efecto.
+    const lastImpactDelayMs = impacts.reduce((longest, impact) => Math.max(longest, impact.delayMs), 0);
+    const lastRouteDelayMs = Math.max(0, geometries.length - 1) * projectileGapMs;
+    const lastDelayMs = Math.max(lastImpactDelayMs, lastRouteDelayMs);
+    const totalMs = BURN_DURATION_MS + lastDelayMs;
     const start = performance.now();
-
-    // Sparks fly opposite the ball's heading (backward along the travel vector), with a little
-    // lateral spread — so they always stream off the tail, whatever the shot angle.
-    const travelLen = Math.hypot(traceGeometry.endX - traceGeometry.startX, traceGeometry.endY - traceGeometry.startY) || 1;
-    const backX = -(traceGeometry.endX - traceGeometry.startX) / travelLen;
-    const backY = -(traceGeometry.endY - traceGeometry.startY) / travelLen;
-    const perpX = -backY;
-    const perpY = backX;
-
-    const spawnTrace = () => {
-      const fireballBody = fireballBodyRef.current;
-      if (!fireballBody) return;
-      const rect = fireballBody.getBoundingClientRect();
-      const particle = document.createElement("i");
-      particle.className = "burn-trace-particle";
-      const size = 2 + Math.random() * 4;
-      const life = 260 + Math.random() * 480;
-      // Anchor sparks to the visible fireball body instead of biasing them toward the right side
-      // of the wider projectile/trail box. This stays centered at every flight angle.
-      const x = rect.left + rect.width * (0.35 + Math.random() * 0.3);
-      const y = rect.top + rect.height * (0.3 + Math.random() * 0.4);
-      particle.style.left = `${x}px`;
-      particle.style.top = `${y}px`;
-      particle.style.setProperty("--size", `${size}px`);
-      particle.style.setProperty("--life", `${life}ms`);
-      const mag = 24 + Math.random() * 68;
-      const spread = (Math.random() - 0.5) * 42;
-      particle.style.setProperty("--dx", `${backX * mag + perpX * spread}px`);
-      particle.style.setProperty("--dy", `${backY * mag + perpY * spread}px`);
-      trace.appendChild(particle);
-      particle.addEventListener("animationend", () => particle.remove(), { once: true });
-    };
-
-    const spawnEmber = () => {
-      const size = 2.5 + Math.random() * 6;
-      const life = 420 + Math.random() * 560;
-      const angle = Math.random() * Math.PI * 2;
-      // Wide spread so plenty of embers clear the impact core and read against the dark board.
-      const dist = 40 + Math.random() * 220;
-      const particle = document.createElement("i");
-      particle.className = "burn-trace-particle";
-      particle.style.left = `${traceGeometry.endX}px`;
-      particle.style.top = `${traceGeometry.endY}px`;
-      particle.style.setProperty("--size", `${size}px`);
-      particle.style.setProperty("--life", `${life}ms`);
-      particle.style.setProperty("--dx", `${Math.cos(angle) * dist}px`);
-      particle.style.setProperty("--dy", `${Math.sin(angle) * dist}px`);
-      trace.appendChild(particle);
-      particle.addEventListener("animationend", () => particle.remove(), { once: true });
-    };
-
-    const finalProjectileDelay = (geometries.length - 1) * 90;
+    let frame = 0;
+    let firstFramePresented = false;
     const tick = (now: number) => {
-      if (cancelled) return;
       const elapsed = now - start;
-      if (elapsed >= IMPACT_AT_MS + finalProjectileDelay - 30) {
-        if (!embersSpawned) {
-          embersSpawned = true;
-          for (let i = 0; i < EMBER_COUNT; i++) spawnEmber();
-        }
-        return;
+      for (const pass of passes) {
+        pass.uniforms.uTime.value = now / 1000;
+        pass.uniforms.uT.value = elapsed / BURN_DURATION_MS;
       }
-      if (elapsed >= FLIGHT_START_MS && now - lastSpawn > 8) {
-        const bursts = 2 + Math.floor(Math.random() * 2);
-        for (let i = 0; i < bursts; i++) spawnTrace();
-        lastSpawn = now;
+      const drawn = renderSharedVfxFrame(canvas, {
+        scene,
+        camera,
+        width,
+        height,
+        pixelRatio,
+        // El renderer procedural anterior usaba la salida lineal predeterminada de Three.js.
+        outputEncoding: THREE.LinearEncoding,
+      });
+      if (drawn && !firstFramePresented) {
+        firstFramePresented = true;
+        // El canvas sólo se revela después de tener una imagen procedural válida.
+        canvas.style.opacity = "1";
       }
-      frame = requestAnimationFrame(tick);
+      if (elapsed <= totalMs) frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
 
     return () => {
-      cancelled = true;
+      canvas.style.opacity = "0";
       cancelAnimationFrame(frame);
-      trace.replaceChildren();
+      shakeAnimation?.cancel();
+      window.removeEventListener("resize", resize);
+      clearBurnCanvas(canvas);
+      planeGeometry.dispose();
+      for (const pass of passes) pass.material.dispose();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [burn, geometries]);
 
-  if (!burn || geometries.length === 0) return null;
-  const firstGeometry = geometries[0];
-  const finalProjectileDelay = (geometries.length - 1) * 90;
-  const impactAnimationStyle = { animationDelay: `${finalProjectileDelay}ms` } as CSSProperties;
-  const style = {
-    "--burn-start-x": `${firstGeometry.startX}px`,
-    "--burn-start-y": `${firstGeometry.startY}px`,
-  } as CSSProperties;
-  const projectileStyle = (geometry: BurnGeometry, delay: number): CSSProperties => {
-    const dx = geometry.endX - geometry.startX;
-    const dy = geometry.endY - geometry.startY;
-    return {
-      "--burn-start-x": `${geometry.startX}px`,
-      "--burn-start-y": `${geometry.startY}px`,
-      "--burn-end-x": `${geometry.endX}px`,
-      "--burn-end-y": `${geometry.endY}px`,
-      "--burn-dx": `${dx}px`,
-      "--burn-dy": `${dy}px`,
-      "--burn-angle": `${(Math.atan2(dy, dx) * 180) / Math.PI}deg`,
-      animationDelay: `${delay}ms`,
-    } as CSSProperties;
-  };
+  const active = Boolean(burn && geometries.length > 0);
+  const style = active
+    ? ({
+        "--burn-start-x": `${geometries[0].startX}px`,
+        "--burn-start-y": `${geometries[0].startY}px`,
+      } as CSSProperties)
+    : ({ display: "none" } as CSSProperties);
   const impactStyle = (geometry: BurnGeometry): CSSProperties => ({
     "--burn-end-x": `${geometry.endX}px`,
     "--burn-end-y": `${geometry.endY}px`,
   } as CSSProperties);
-  // A Raid volley repeats one route and lands as one aggregate impact. Chainwhirler supplies
-  // explicit targets, so every route owns its own impact and damage number.
-  const impacts = burn.targets?.length
-    ? geometries.map((geometry, index) => ({ geometry, delay: index * 90 }))
-    : [{ geometry: geometries[geometries.length - 1], delay: finalProjectileDelay }];
 
   return createPortal(
     <div
-      key={burn.id}
-      className={`burn-animation-layer${burn.variant === "oil" ? " burn-animation-layer-oil" : ""}`}
+      className={[
+        "burn-animation-layer",
+        burn?.variant === "oil" ? "burn-animation-layer-oil" : "",
+        burn?.variant === "emerald" ? "burn-animation-layer-emerald" : "",
+        burn?.variant === "golden" ? "burn-animation-layer-golden" : "",
+      ].filter(Boolean).join(" ")}
       style={style}
       aria-hidden="true"
     >
-      <div className="burn-world">
-        {/* Charge build-up at the source card. */}
-        <div className="burn-charge">
-          <span className="burn-charge-glow" />
-          <span className="burn-charge-distortion" />
-          <span className="burn-charge-arc" />
-          {CHARGE_PARTICLES.map((particle, index) => (
-            <i
-              key={index}
-              className="burn-charge-particle"
-              style={{ "--a": `${particle.a}deg`, "--r": `${particle.r}px`, "--s": `${particle.s}px` } as CSSProperties}
-            />
-          ))}
-        </div>
+      <canvas ref={canvasRef} className="burn-canvas" />
 
-        <div ref={traceRef} className="burn-trace-layer" />
-
-        {/* One charged cast, followed by a compact staggered volley. The last projectile owns
-            the trace/impact clock; earlier balls remain deliberately close together. */}
-        {geometries.map((geometry, projectileIndex) => {
-          const projectileDelay = projectileIndex * 90;
-          return (
-          <div
-            key={projectileIndex}
-            className="burn-fireball"
-            style={projectileStyle(geometry, projectileDelay)}
-          >
-            <div className="burn-trail">
-              {TRAIL_RIBBONS.map((t, index) => (
-                <i
-                  key={index}
-                  className="burn-trail-ribbon"
-                  style={{ "--w": `${t.w}px`, "--h": `${t.h}px`, "--y": `${t.y}px`, "--r": `${t.r}deg`, "--blur": `${t.blur}px`, "--o": `${t.o}`, animationDelay: `${projectileDelay}ms` } as CSSProperties}
-                />
-              ))}
-              {TRAIL_STREAKS.map((t, index) => (
-                <i
-                  key={index}
-                  className="burn-trail-streak"
-                  style={{ "--w": `${t.w}px`, "--h": `${t.h}px`, "--y": `${t.y}px`, "--r": `${t.r}deg`, "--blur": `${t.blur}px`, "--o": `${t.o}`, animationDelay: `${projectileDelay}ms` } as CSSProperties}
-                />
-              ))}
-            </div>
-            <div ref={projectileIndex === geometries.length - 1 ? fireballBodyRef : undefined} className="burn-fireball-body">
-              <div className="burn-ball-outer" />
-              <div className="burn-ball-mid" />
-              <div className="burn-ball-core" />
-              <div className="burn-ball-hotspot" />
-            </div>
-          </div>
-          );
-        })}
-
-        {impacts.map(({ geometry, delay }, impactIndex) => (
-          <div key={impactIndex} className="burn-impact" style={impactStyle(geometry)}>
-            <div className="burn-void-disc" style={{ animationDelay: `${delay}ms` }} />
-            <div className="burn-impact-core" style={{ animationDelay: `${delay}ms` }} />
-            <div className="burn-shock-ring one" style={{ "--size": "112px", "--border-size": "7px", "--ring-blur": "1px", animationDelay: `${delay}ms` } as CSSProperties} />
-            <div className="burn-shock-ring two" style={{ "--size": "92px", "--border-size": "3px", "--ring-blur": "2px", animationDelay: `${delay}ms` } as CSSProperties} />
-            {IMPACT_SMOKE.map((puff, index) => (
-              <i
-                key={index}
-                className="burn-impact-smoke"
-                style={{
-                  "--x": `${puff.x}px`,
-                  "--y": `${puff.y}px`,
-                  "--s": `${puff.s}`,
-                  "--drift": `${puff.drift}px`,
-                  "--s2": `${puff.s2}`,
-                  "--s3": `${puff.s3}`,
-                  "--drift2": `${puff.drift2}px`,
-                  animationDelay: `${delay}ms`,
-                } as CSSProperties}
-              />
-            ))}
-          </div>
-        ))}
-      </div>
-
-      <div className="burn-screen-flash" style={impactAnimationStyle} />
-      {impacts.map(({ geometry, delay }, impactIndex) => (
-        <span
-          key={impactIndex}
-          className="burn-damage-number"
-          style={{ ...impactStyle(geometry), animationDelay: `${640 + delay}ms` }}
-        >
-          -{burn.amount}
-        </span>
-      ))}
+      {active && burn && (
+        <Fragment key={burn.id}>
+          {impacts.map((impact, impactIndex) => {
+            const geometry = geometries[impact.routeIndex];
+            if (!geometry) return null;
+            return (
+              <span
+                key={impactIndex}
+                className="burn-damage-number"
+                style={{ ...impactStyle(geometry), animationDelay: `${640 + impact.delayMs}ms` }}
+              >
+                {burn.impactLabel ?? `-${burn.amount}`}
+              </span>
+            );
+          })}
+        </Fragment>
+      )}
     </div>,
     document.body,
   );

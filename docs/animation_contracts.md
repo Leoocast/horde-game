@@ -81,23 +81,40 @@ Data contract:
 
 Resolution order:
 
-The visual is a faithful port of the reference in `assets/examples/Fireball/fireball.html`, adapted from that scene's fixed horizontal shot to arbitrary source→target geometry. One CSS master clock drives it: `--burn-duration` (1100ms), with the projectile launching at 20% and impact at 58%. The store's `BURN_IMPACT_MS` (638) and `BURN_ANIMATION_MS` (1220) track that clock.
+The projectile is drawn by `BurnAnimator` with Three.js `ShaderMaterial` passes defined in
+`src/components/burnFireball.ts`. Each pass handles at most six routes, but larger explicit volleys
+are split across as many passes as needed in the same canvas, context and master clock; six is not
+a visual cap. The silhouette comes from fractal noise, not from animated `border-radius`, so it
+never reads as a sphere. One master clock drives everything:
+`BURN_DURATION_MS` (1100ms), with the projectile launching at 20% and impact at 58%. The shader
+derives its own constants from `BURN_FLIGHT_START_MS` / `BURN_IMPACT_AT_MS`; `--burn-duration` in
+CSS still times the screen flash and the damage number, and the store's `BURN_IMPACT_MS` (638) and
+`BURN_ANIMATION_MS` (1220) track the same clock.
 
-1. The source card plays its standard effect-activation pulse **on the beat that queues the burn**. The burn beat itself does not repeat it — one effect must not look like the card triggering twice. The source lunges instead (`.burn-source-casting`): movement, no gold, no brightness. A charge build-up (`.burn-charge`: swelling glow, distorting ring, spinning arc, inrushing sparks) plays at the source, and a random cast whoosh (`fireballCastSfx`) fires as the projectile ignites.
-2. A multi-layer morphing fireball (`.burn-fireball-body`) with an attached comet trail (ribbons + streaks) travels from the source card to the target card. The ball squash and trail ride the travel heading (`--burn-angle`), and JS-spawned trace sparks bleed off its real path.
-3. On impact (`BURN_IMPACT_MS`, 638ms), damage is committed in the engine and the canonical hit sound (`fireballHitSfx`) plays.
-4. A layered impact anchored on the target fires: a void implosion, a morphing molten core, two shock rings, a ring of JS-spawned embers, lingering smoke puffs, and a radial screen flash. The effects (inside `.burn-world`) get a short impact shake; the board behind is deliberately **not** shaken. The target flashes with the burn shader (`.burn-card-scorch-flash`) and a heavy condensed damage number rises.
+1. The source card plays its standard effect-activation pulse **on the beat that queues the burn**. The burn beat itself does not repeat it — one effect must not look like the card triggering twice. The source lunges instead (`.burn-source-casting`): movement, no gold, no brightness. A charge build-up swells at the source, and a random cast whoosh (`fireballCastSfx`) fires as the projectile ignites.
+2. A turbulent comet head travels from the source to the target: a teardrop stretched along the heading whose edge is eroded by noise advected backwards, with a white core only at its heart.
+3. The trail is **deposited, not dragged**. Puffs and sparks are emitted at fixed instants and each one stays anchored where it was born, drifts sideways, rises, cools and burns out there. A trail that travels rigidly with the ball is a regression. Emission uses a sliding window over the most recent instants so it never runs out mid-flight and detaches from the head.
+4. On impact (`BURN_IMPACT_MS`, 638ms), damage is committed in the engine and the canonical hit sound (`fireballHitSfx`) plays.
+5. The impact is not a disc: the outline deforms with two angular frequencies, the interior breaks up with noise, tongues are flung outward, the mass rises as it dies, and smoke sits underneath a turbulent ring. The persistent Burn canvas is hidden whenever there is no active Burn and remains hidden during each handoff until WebGL has rendered the new effect's first valid frame. It gets a short impact shake while rendering; the board behind is deliberately **not** shaken. Procedural Burn does not mount the legacy full-screen DOM flash: the shader explosion, target scorch (`.burn-card-scorch-flash`) and condensed damage number own the impact. The classic renderer keeps its former flash.
+6. A surviving target keeps a scorch tint (`.burn-card-scorch`) and light smoke until end-step cleanup clears `card.flags.burnSmoke`.
+7. Buttons and battlefield interactions remain blocked until the animation and resulting triggers finish.
 
-The reference's `blast-petal` / `blast-cone` / `backblast` / `pool` / `jet` / `debris` classes are **not** ported — they exist in its CSS but never appear in its DOM, so they never render.
-5. A surviving target keeps a scorch tint (`.burn-card-scorch`) and light smoke until end-step cleanup clears `card.flags.burnSmoke`.
-6. Buttons and battlefield interactions remain blocked until the animation and resulting triggers finish.
+Each faction contributes only a colour ramp and a density (`burnMaterialColors`), never a copied
+effect: `fire` for the Goblins, `oil` for Nerezh, `emerald` for Vaelor and `golden` for Varka. A
+route's scale, projectile count and origin ride on the same shader, so a new material must not fork
+the projectile, the trail or the impact.
+
+Procedural routes travel on the exact source-to-target line by default. Only Vaelor's Invoked
+counter volley opts into the curved route. Todos contra uno uses the same procedural fire at
+`scale: 1.2` and keeps a straight flight path.
 
 Use this contract for Escupefuego de la Retaguardia (`rear_guard_firebreather`), Jinete de la Salva
 Umbría (`rider_of_the_umbral_volley`), and future Goblin burn effects.
 
 ### Burn volley to player life
 
-Todos contra uno (`all_against_one`) reuses Burn with a different target and timing:
+Todos contra uno (`all_against_one`) reuses Burn's procedural shader, target and timing contracts
+at `scale: 1.2`:
 
 - Its `ATTACK_DECLARED` trigger silently snapshots the eligible Goblin ids and printed attack
   powers in `combat.pendingDamageVolleys`; it does not pulse or damage the player at declaration.
@@ -118,14 +135,37 @@ Varka, Matriarca Infernal (`varka_infernal_matriarch`) uses the same compact vol
 
 - Its ETB activation beat pulses the source once and queues `BURN_VOLLEY_DAMAGE`. The volley beat
   never pulses it again.
+- Every Burn event sourced by Varka resolves through her registered `golden` material and
+  `scale: 1.3`. Her entry volley therefore uses the same white-yellow fire and projectile size as
+  her two-projectile personal attacks.
 - The engine snapshots the player and every opposing creature as rules targets. `BurnAnimator`
   receives that target list and calculates one source-to-target geometry for each projectile.
+- Every captured target keeps a visible route. Volleys longer than six are divided into bounded
+  shader passes that share one canvas and clock instead of dropping the remaining fireballs.
 - Projectiles launch 90ms apart. Each one plays a singular cast sound at launch and the canonical
   singular hit sound at its own impact; every target gets its own impact effect and `-2` number.
 - The stagger is presentation only. Player life and all still-present creatures take damage
   simultaneously when the final projectile lands, followed by one marked-damage cleanup.
 - All hit creature ids are flashed together at resolution, and surviving creatures keep the
   normal scorch/smoke state until end-step cleanup.
+
+### Emerald counter volley to multiple targets
+
+Vaelor, Guardián Esmeralda (`vaelor_emerald_guardian`) reuses the projectile renderer for a rules
+effect that places counters rather than dealing damage:
+
+- Its Invoked trigger snapshots every opposing Echo currently on the Field and queues one
+  `COUNTER_VOLLEY` event. Echoes that enter after that snapshot are not affected.
+- The source activation waits for Vaelor's summon animation to finish. Vaelor pulses once, stays
+  anchored, and launches one fireball toward every captured enemy using the emerald material and
+  `scale: 1.8` of the `emerald-fireball` defense preset. This entry volley is the only Burn that
+  keeps the curved source-to-target geometry. The zero-millisecond projectile gap makes every
+  route launch and impact simultaneously.
+- Every route owns its fireball-body trace, impact core, smoke, and ember burst. Multi-target
+  volleys must never collapse procedural particles onto only the final projectile.
+- The impact label is `-1/-1`; this presentation never deals damage or adds scorch state.
+- Every still-present target receives one -1/-1 counter as a single simultaneous rules event at
+  the shared 638ms impact. Lethal stat reduction is cleaned up only after all counters are placed.
 
 ### Repeated single Burns to player life
 
@@ -143,9 +183,58 @@ Nerezh, Matriarca Sinsepulcro (`nerezh_graveless_matriarch`) preserves its print
   `BURN_PLAYER_LIFE_LOSS`; player life does not change until the projectile impacts.
 - The projectile follows the ordinary Burn clock and reuses the current fireball cast and hit
   sounds. `variant: "oil"` only changes its material: nearly black pitch, muted violet
-  iridescence, dark smoke, and a colder impact flash.
+  iridescence, dark smoke, and a colder impact flash. Its high `ink` makes the mass cover the board
+  instead of adding light, which is what separates pitch from flame.
 - Each Zombie death remains a separate trigger and projectile. The follow-up does not repeat the
   Captain's activation pulse.
+
+## Personal combat animations
+
+`src/store/combatAnimation.ts` is the presentation registry for card-specific fights and direct
+Host attacks. A fight registration matches a stable card definition, its combat role, and an
+engine-resolved outcome. A direct-attack registration matches the card and its destination surface.
+Both return a preset with source/target data, impact and completion clocks, and the visual effect to
+play. `useGameStore` still refreshes and resolves the ordinary `HostAttackEvent` or player combat.
+Animators never choose a winner or change combat damage.
+
+When exactly one combatant survives, only that winner may claim a personal presentation. If the
+winner has no registered preset, the fight uses the default combat animation instead of playing a
+bespoke animation from the card that died. When both survive or both die, the existing
+attacker-first registration order breaks the visual tie; the rules impact remains simultaneous.
+
+The default Host lunge remains the fallback whenever no registration matches. A preset may
+replace the normal two-card exchange when its source needs a stationary DOM anchor. A targeted
+Host attacker may still complete its incoming lunge, but it returns to its stored target geometry
+before the projectile lands and never performs its early lethal fade.
+
+Current registration:
+
+- Vaelor, Guardián Esmeralda (`vaelor_emerald_guardian`) uses `emerald-fireball` only as a defender
+  when the attacker dies and Vaelor survives. A simultaneous lethal exchange is not a win and
+  keeps the default combat animation.
+- When Vaelor attacks the Host directly, `resolvePersonalAttackAnimation` reuses the same preset,
+  keeps his card stationary, and targets the element marked with `data-host-life-emblem`. The first
+  Host mill preview and the Host panel's hit reaction start at the 638ms projectile impact; later
+  attackers wait for both the preset clock and any longer mill sequence. Default lunge attacks keep
+  their immediate panel reaction.
+- The preset reuses `BurnAnimator`'s canonical fireball clock and source-to-target geometry, with
+  an emerald material, `scale: 1.8`, a straight route, and `sourceMoves: false`. Combat damage is committed at the
+  fireball's 638ms impact; the beat remains locked until the 1220ms completion.
+- Varka, Matriarca Infernal (`varka_infernal_matriarch`) uses `infernal-fireball` whenever she is
+  the Host attacker. A defended attack targets the assigned defender; an undefended attack targets
+  `[data-player-life-panel]`. Varka remains anchored, the ordinary lunge is suppressed, and the
+  normal combat result lands once at the projectiles' shared 638ms impact. The preset uses Varka's
+  white-yellow `golden` fire material at `scale: 1.3`, visibly smaller than Vaelor's personal
+  `scale: 1.8` projectile. It casts two straight
+  simultaneous routes from the left and right edges of Varka's card, with separate charge, trail,
+  and ember particles; both converge on one target and still produce one rules impact.
+- Consecutive Varkas reuse the application's persistent shared WebGL context. Per-attack shader
+  materials and geometry are disposed between beats, but the shared renderer survives for the
+  session; force-losing and recreating the context between stacked attackers is a regression. The
+  destination canvas must not become visible during that handoff until the next attack has rendered
+  and copied its first valid frame.
+- Adding another bespoke fight or direct attack means registering its context and adding or reusing
+  a preset; do not add card-name branches to animator components or resolve combat inside VFX.
 
 ## Static activation
 

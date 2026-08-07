@@ -89,11 +89,45 @@ async function clearPreviousPngs(outputDir) {
     );
 }
 
-async function preparePage(page, htmlPath) {
-    await page.goto(pathToFileURL(htmlPath).href, {
+function parseArguments(argv) {
+    let deckId = '';
+    let language = 'es';
+    for (let index = 0; index < argv.length; index++) {
+        const argument = String(argv[index]);
+        if (argument === '--lang') {
+            language = String(argv[index + 1] || '');
+            index += 1;
+            continue;
+        }
+        if (argument.startsWith('--lang=')) {
+            language = argument.slice('--lang='.length);
+            continue;
+        }
+        if (argument.startsWith('--')) {
+            throw new Error(`Opción desconocida "${argument}".`);
+        }
+        if (deckId) throw new Error(`Argumento inesperado "${argument}".`);
+        deckId = argument;
+    }
+    return { deckId: deckId.trim().toLowerCase(), language };
+}
+
+async function preparePage(page, htmlPath, language) {
+    const pageUrl = pathToFileURL(htmlPath);
+    pageUrl.searchParams.set('lang', language);
+    await page.goto(pageUrl.href, {
         waitUntil: 'networkidle',
         timeout: 60000
     });
+
+    const renderedLanguage = await page.evaluate(
+        () => window.HostfallStudio?.language || document.documentElement.lang
+    );
+    if (renderedLanguage !== language) {
+        throw new Error(
+            `El renderer abrió el idioma "${renderedLanguage}" en lugar de "${language}".`
+        );
+    }
 
     const brokenImages = await page.evaluate(async () => {
         await document.fonts.ready;
@@ -128,7 +162,8 @@ async function preparePage(page, htmlPath) {
 }
 
 async function main() {
-    const deckId = String(process.argv[2] || '').trim().toLowerCase();
+    const parsed = parseArguments(process.argv.slice(2));
+    const deckId = parsed.deckId;
 
     if (!DECKS.has(deckId)) {
         throw new Error(
@@ -146,6 +181,8 @@ async function main() {
     const runtimeLayout = await import(
         pathToFileURL(path.join(scriptsDir, 'card-runtime-layout.mjs')).href
     );
+    const language = studioData.resolveStudioLanguage(deckId, parsed.language);
+    const writesRuntimeCards = language === studioData.DEFAULT_STUDIO_LANGUAGE;
     studioData.syncStudioData({ deckIds: [deckId] });
     generationManifest.assertIndependentArtSources(deckId);
 
@@ -162,8 +199,11 @@ async function main() {
 
     const deckDir = path.join(__dirname, deckId);
     const htmlPath = path.join(deckDir, 'index.html');
-    const outputDir = path.join(deckDir, 'exported-png');
-    const publicCardsDir = path.join(
+    const defaultOutputDir = path.join(deckDir, 'exported-png');
+    const outputDir = writesRuntimeCards
+        ? defaultOutputDir
+        : path.join(defaultOutputDir, language);
+    const publicCardsDir = writesRuntimeCards ? path.join(
         __dirname,
         '..',
         '..',
@@ -171,14 +211,14 @@ async function main() {
         'public',
         'cards',
         PUBLIC_CARD_FOLDERS[deckId]
-    );
+    ) : null;
 
     if (!fs.existsSync(htmlPath)) {
         throw new Error(`No se encontro el index del deck: ${htmlPath}`);
     }
 
     await fs.promises.mkdir(outputDir, { recursive: true });
-    await fs.promises.mkdir(publicCardsDir, { recursive: true });
+    if (publicCardsDir) await fs.promises.mkdir(publicCardsDir, { recursive: true });
 
     const browser = await chromium.launch({
         executablePath,
@@ -191,7 +231,7 @@ async function main() {
             deviceScaleFactor: 1
         });
 
-        await preparePage(page, htmlPath);
+        await preparePage(page, htmlPath, language);
 
         const cards = page.locator('.tcg-card');
         const total = await cards.count();
@@ -282,23 +322,34 @@ async function main() {
             });
         }
 
-        const measuredLayout = await runtimeLayout.measureDeckRuntimeLayout(page, deckId);
+        const measuredLayout = writesRuntimeCards
+            ? await runtimeLayout.measureDeckRuntimeLayout(page, deckId)
+            : null;
 
         await clearPreviousPngs(outputDir);
 
         for (let index = 0; index < pendingPngs.length; index++) {
             const { fileName, png } = pendingPngs[index];
             await writeFileWithRetry(path.join(outputDir, fileName), png);
-            await writeFileWithRetry(path.join(publicCardsDir, fileName), png);
+            if (publicCardsDir) {
+                await writeFileWithRetry(path.join(publicCardsDir, fileName), png);
+            }
             console.log(`[${index + 1}/${total}] ${fileName}`);
         }
 
-        runtimeLayout.writeRuntimeLayouts({ [deckId]: measuredLayout });
-        generationManifest.recordDeckGeneration(deckId);
+        if (writesRuntimeCards) {
+            runtimeLayout.writeRuntimeLayouts({ [deckId]: measuredLayout });
+            generationManifest.recordDeckGeneration(deckId);
+        }
 
         console.log('');
-        console.log(`Copia de trabajo: ${outputDir}`);
-        console.log(`Juego actualizado: ${publicCardsDir}`);
+        console.log(`Idioma: ${language}`);
+        console.log(`Exportación: ${outputDir}`);
+        console.log(
+            publicCardsDir
+                ? `Juego actualizado: ${publicCardsDir}`
+                : 'Juego sin cambios: las exportaciones no españolas se guardan sólo en el Taller.'
+        );
     } finally {
         await browser.close();
     }

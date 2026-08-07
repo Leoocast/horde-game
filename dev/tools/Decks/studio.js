@@ -35,6 +35,7 @@
 
     const el = (id) => document.getElementById(id);
     const deckSelect = el("deck-select");
+    const languageSelect = el("language-select");
     const cardList = el("card-list");
     const preview = el("preview");
     const artControls = el("art-controls");
@@ -72,6 +73,7 @@
     let decks = [];
     let deckId = "";
     let cardId = "";
+    let language = "es";
     let motifSlot = "head";
     let viewMode = "focus";
     let scale = 45;
@@ -83,7 +85,17 @@
     let supportsBattlefieldArtFrames = false;
 
     const deck = () => decks.find((entry) => entry.id === deckId) ?? null;
-    const card = () => deck()?.cards.find((entry) => entry.id === cardId) ?? null;
+    const localizedCard = (entry) => {
+        if (!entry) return null;
+        const localized = entry.localizations?.[language]
+            ?? entry.localizations?.[deck()?.defaultLanguage]
+            ?? {};
+        return { ...entry, ...localized };
+    };
+    const cards = () => (deck()?.cards ?? []).map(localizedCard);
+    const card = () => localizedCard(
+        deck()?.cards.find((entry) => entry.id === cardId) ?? null
+    );
 
     function versionedArtUrl(url, id, targetDeckId = deckId) {
         if (!url) return url;
@@ -503,7 +515,9 @@
 
     function loadPreview() {
         const current = deck();
-        if (current) preview.src = `${current.indexUrl}?t=${Date.now()}`;
+        if (current) {
+            preview.src = `${current.indexUrl}?lang=${encodeURIComponent(language)}&t=${Date.now()}`;
+        }
     }
 
     preview.addEventListener("load", () => {
@@ -761,9 +775,9 @@
 
     function renderCardList() {
         cardList.replaceChildren();
-        const cards = deck()?.cards ?? [];
+        const visibleLanguageCards = cards();
         const normalizedQuery = searchQuery.trim().toLocaleLowerCase("es");
-        const visibleCards = cards.filter((entry) => {
+        const visibleCards = visibleLanguageCards.filter((entry) => {
             const frame = frameOf(entry.id);
             const battlefieldFrame = battlefieldFrameOf(entry.id);
             const matchesFilter = listFilter === "missing"
@@ -779,7 +793,7 @@
         for (const entry of visibleCards) {
             const frame = frameOf(entry.id);
             const battlefieldFrame = battlefieldFrameOf(entry.id);
-            const cardNumber = cards.indexOf(entry) + 1;
+            const cardNumber = visibleLanguageCards.findIndex((cardEntry) => cardEntry.id === entry.id) + 1;
             const button = document.createElement("button");
             button.type = "button";
             button.className = "card-entry";
@@ -850,11 +864,11 @@
 
     function renderSelectedHead() {
         const current = card();
-        const cards = deck()?.cards ?? [];
-        const index = cards.findIndex((entry) => entry.id === cardId);
+        const visibleLanguageCards = cards();
+        const index = visibleLanguageCards.findIndex((entry) => entry.id === cardId);
         selectedName.textContent = current?.nombre ?? "—";
         selectedMeta.textContent = current
-            ? `${current.tipo} · carta ${index + 1} de ${cards.length}`
+            ? `${current.tipo} · carta ${index + 1} de ${visibleLanguageCards.length}`
             : "";
         selectedPosition.textContent = current
             ? `${current.collectorId ?? `#${String(index + 1).padStart(3, "0")}`} · ${deck()?.title ?? deckId}`
@@ -874,8 +888,28 @@
         applyViewMode();
     }
 
+    function renderLanguageSelect() {
+        const currentDeck = deck();
+        const available = currentDeck?.languages ?? [
+            { code: "es", label: "Español", htmlLang: "es" }
+        ];
+        if (!available.some((entry) => entry.code === language)) {
+            language = currentDeck?.defaultLanguage ?? available[0]?.code ?? "es";
+        }
+        languageSelect.replaceChildren();
+        for (const entry of available) {
+            const option = document.createElement("option");
+            option.value = entry.code;
+            option.textContent = entry.label;
+            languageSelect.append(option);
+        }
+        languageSelect.value = language;
+        languageSelect.disabled = available.length < 2;
+    }
+
     function selectDeck(id) {
         deckId = id;
+        renderLanguageSelect();
         cardId = deck()?.cards[0]?.id ?? "";
         searchQuery = "";
         listFilter = "all";
@@ -934,8 +968,13 @@
             : decks[0].id;
         deckSelect.value = target;
 
-        if (keepSelection) renderAll();
-        else selectDeck(target);
+        if (keepSelection) {
+            deckId = target;
+            renderLanguageSelect();
+            renderAll();
+        } else {
+            selectDeck(target);
+        }
 
         if (!supportsFullArtOverrides) {
             setStatus("Reinicia el servidor del taller para activar Full art.", "error");
@@ -1029,6 +1068,12 @@
     });
 
     deckSelect.addEventListener("change", () => selectDeck(deckSelect.value));
+
+    languageSelect.addEventListener("change", () => {
+        language = languageSelect.value;
+        renderAll();
+        loadPreview();
+    });
 
     cardSearch.addEventListener("input", () => {
         searchQuery = cardSearch.value;

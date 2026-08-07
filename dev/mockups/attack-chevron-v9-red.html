@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hostfall — V9 en rojo: versiones</title>
+<style>
+  :root {
+    --card-w: 152px;
+    --chev-scale: 1;
+    --bloom: 0.85;
+    --fall-dur: 1.6s;
+    --gold-soft: rgb(181 134 66 / 0.55);
+    --parch: #e9dcbd;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 28px 24px 80px;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgb(72 52 30 / 0.3), transparent 60%),
+      linear-gradient(180deg, #14100c, #0a0806 60%, #070605);
+    color: var(--parch);
+    font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  }
+
+  h1 { margin: 0 0 6px; font-size: 24px; letter-spacing: 0.04em; color: #f2e2b8; }
+  h2 { margin: 0; font-size: 16px; letter-spacing: 0.03em; color: #f2e2b8; }
+
+  .intro { max-width: 940px; margin-bottom: 20px; color: rgb(233 220 189 / 0.72); font-size: 14px; line-height: 1.5; }
+  .intro code { color: #f0cf8a; }
+
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px 12px;
+    border: 1px solid var(--gold-soft);
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgb(30 22 14 / 0.97), rgb(14 10 7 / 0.99));
+    box-shadow: 0 10px 26px rgb(0 0 0 / 0.6);
+    font-size: 13px;
+  }
+  .toolbar label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  .toolbar input[type="range"] { accent-color: #c8452f; }
+  .toolbar .hint { margin-left: auto; color: rgb(233 220 189 / 0.5); }
+
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(430px, 1fr)); }
+
+  .variant {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgb(181 134 66 / 0.3);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgb(26 19 13 / 0.92), rgb(12 9 6 / 0.96));
+    box-shadow: 0 14px 30px rgb(0 0 0 / 0.5);
+    overflow: hidden;
+  }
+  .variant.is-ref { border-color: rgb(226 140 74 / 0.45); }
+
+  .variant-head {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 11px 15px 9px;
+    border-bottom: 1px solid rgb(181 134 66 / 0.2);
+    background: linear-gradient(180deg, rgb(48 34 20 / 0.5), transparent);
+  }
+  .variant-head .tag {
+    padding: 2px 7px;
+    border: 1px solid var(--gold-soft);
+    border-radius: 4px;
+    color: #f0cf8a;
+    font-size: 11px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+  .variant-head .swatch { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.6); }
+
+  .variant-body { display: flex; flex: 1; flex-direction: column; padding: 4px 15px 13px; }
+  .desc { margin: 6px 2px 0; color: rgb(233 220 189 / 0.66); font-size: 12.5px; line-height: 1.45; }
+  .desc b { color: #f0cf8a; font-weight: 600; }
+
+  .row {
+    position: relative;
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    padding: 18px 10px 58px;
+    border-radius: 8px;
+    background:
+      radial-gradient(ellipse at 50% 76%, rgb(84 62 34 / 0.18), transparent 66%),
+      repeating-linear-gradient(90deg, rgb(255 255 255 / 0.014) 0 2px, transparent 2px 9px),
+      linear-gradient(180deg, #191209, #0d0906);
+  }
+
+  /* isolation: el galón lleva z-index -1 como la regla real; sin contexto de
+     apilamiento propio se iría detrás del fondo de la fila. */
+  .unit { position: relative; isolation: isolate; }
+
+  .cardv {
+    position: relative;
+    width: var(--card-w);
+    height: calc(var(--card-w) * 0.8893442623);
+    container-type: inline-size;
+    overflow: hidden;
+    border: 1px solid var(--gold-soft);
+    border-radius: 6px;
+    background: #120c08;
+    box-shadow: 0 12px 20px rgb(0 0 0 / 0.6);
+  }
+  .atk .cardv { rotate: 4deg; }
+
+  .cardv img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--sw, 100%);
+    height: var(--sh, 100%);
+    max-width: none;
+    object-fit: contain;
+    transform: translate(calc(-50% + var(--ax, 0cqw)), calc(-50% + var(--ay, 0cqw))) scale(var(--az, 1));
+  }
+
+  .cardv::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgb(8 5 3 / 0.55) 0%, transparent 26%, transparent 62%, rgb(8 5 3 / 0.5) 100%);
+    pointer-events: none;
+  }
+
+  .name {
+    position: absolute;
+    top: 5px;
+    left: 7px;
+    z-index: 12;
+    max-width: 78%;
+    color: #f3e7c6;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-shadow: 0 1px 3px #000, 0 0 8px #000;
+  }
+
+  .stat {
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+    z-index: 12;
+    display: grid;
+    height: 25px;
+    min-width: 76px;
+    grid-template-columns: 1fr 1px 1fr;
+    overflow: hidden;
+    border: 1px solid rgb(183 169 118 / 0.62);
+    background: linear-gradient(180deg, rgb(27 35 34 / 0.96), rgb(7 13 13 / 0.98));
+    box-shadow: inset 0 1px 0 rgb(255 247 208 / 0.1), 0 4px 12px rgb(0 0 0 / 0.68);
+    clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+    font-size: 13px;
+    font-weight: 900;
+  }
+  .stat > i { background: linear-gradient(transparent 10%, rgb(174 159 105 / 0.45) 50%, transparent 90%); }
+  .stat span { display: flex; align-items: center; justify-content: center; gap: 4px; text-shadow: 0 1px 3px #000; }
+  .stat .pw { color: #f0d79a; }
+  .stat .en { color: #cfe6dd; }
+
+  .idle-tag {
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    translate: -50% 0;
+    color: rgb(233 220 189 / 0.32);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .unit:not(.atk) .cardv { filter: saturate(0.86) brightness(0.9); }
+
+  /* ---------- Halo del suelo, tintado por versión ---------- */
+  .atk .halo {
+    position: absolute;
+    right: 12%;
+    bottom: -14px;
+    left: 12%;
+    height: 16px;
+    z-index: -1;
+    border-radius: 999px;
+    background: radial-gradient(ellipse at center, var(--halo-in), var(--halo-out) 50%, transparent 74%);
+    filter: blur(2px);
+    opacity: var(--halo-alpha, 1);
+    animation: halo-pulse var(--fall-dur) ease-in-out infinite;
+  }
+  @keyframes halo-pulse { 0%, 100% { opacity: calc(var(--halo-alpha, 1) * 0.6); transform: scaleX(0.94); } 50% { opacity: var(--halo-alpha, 1); transform: scaleX(1.05); } }
+
+  /* ---------- Galón base ---------- */
+  .chev {
+    position: absolute;
+    right: 33%;
+    bottom: -22px;
+    left: 33%;
+    z-index: -1;
+    height: 15px;
+    scale: var(--chev-scale);
+    transform-origin: top center;
+    clip-path: polygon(0 6%, 7% 0, 50% 62%, 93% 0, 100% 6%, 50% 100%);
+    animation: chev-fall var(--fall-dur) cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes chev-fall {
+    0%   { opacity: 0; translate: 0 -7px; }
+    30%  { opacity: 1; }
+    75%  { opacity: 0.85; translate: 0 4px; }
+    100% { opacity: 0; translate: 0 9px; }
+  }
+
+  /* ===== R0 — V9 tal cual, en naranja (referencia) ===== */
+  .r-orange {
+    --halo-in: rgb(255 230 142 / 0.6);
+    --halo-out: rgb(236 84 31 / 0.4);
+  }
+  .r-orange .chev {
+    background:
+      radial-gradient(circle at 50% 88%, #ffe0a0 0 5%, transparent 26%),
+      linear-gradient(180deg, #ffc66f, #ff7b24 52%, #dd3e14);
+    filter:
+      drop-shadow(0 0 3px rgb(255 205 111 / var(--bloom)))
+      drop-shadow(0 0 9px rgb(255 117 27 / var(--bloom)));
+  }
+
+  /* ===== R1 — Sangre ===== */
+  .r-blood {
+    --halo-in: rgb(255 150 130 / 0.5);
+    --halo-out: rgb(190 40 26 / 0.42);
+  }
+  .r-blood .chev {
+    background:
+      radial-gradient(circle at 50% 88%, #ffd0c4 0 5%, transparent 26%),
+      linear-gradient(180deg, #ff9d86, #d13b26 52%, #7a1a10);
+    filter:
+      drop-shadow(0 0 3px rgb(255 140 120 / var(--bloom)))
+      drop-shadow(0 0 9px rgb(200 45 30 / var(--bloom)));
+  }
+
+  /* ===== R2 — Carmesí con núcleo blanco ===== */
+  .r-crimson {
+    --halo-in: rgb(255 120 100 / 0.52);
+    --halo-out: rgb(214 20 24 / 0.44);
+  }
+  .r-crimson .chev {
+    background:
+      radial-gradient(circle at 50% 82%, #fff3e2 0 9%, rgb(255 190 150 / 0.65) 17%, transparent 34%),
+      linear-gradient(180deg, #ff7a6a, #e01f22 50%, #7d0b12);
+    filter:
+      drop-shadow(0 0 3px rgb(255 160 140 / var(--bloom)))
+      drop-shadow(0 0 10px rgb(224 31 34 / var(--bloom)))
+      drop-shadow(0 0 20px rgb(150 10 14 / calc(var(--bloom) * 0.7)));
+  }
+
+  /* ===== R3 — Rubí mate, sin brillo ===== */
+  .r-matte {
+    --halo-in: rgb(150 40 32 / 0.34);
+    --halo-out: rgb(90 16 12 / 0.3);
+    --halo-alpha: 0.5;
+  }
+  .r-matte .chev {
+    background: linear-gradient(180deg, #d4564a, #a01818 52%, #4d0a0a);
+    filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.95)) drop-shadow(0 0 4px rgb(140 20 16 / calc(var(--bloom) * 0.45)));
+  }
+
+  /* ===== R4 — Doble galón escalonado ===== */
+  .r-echo {
+    --halo-in: rgb(255 140 120 / 0.46);
+    --halo-out: rgb(190 40 26 / 0.4);
+  }
+  .r-echo .chev {
+    height: 12px;
+    background:
+      radial-gradient(circle at 50% 88%, #ffd0c4 0 5%, transparent 26%),
+      linear-gradient(180deg, #ff9d86, #d13b26 52%, #7a1a10);
+    filter: drop-shadow(0 0 3px rgb(255 140 120 / var(--bloom))) drop-shadow(0 0 8px rgb(200 45 30 / var(--bloom)));
+  }
+  /* Hermano adyacente, no nth-of-type: el halo también es un <i>, así que
+     contar por tipo apuntaría al galón equivocado. */
+  .r-echo .chev + .chev { bottom: -14px; animation-delay: calc(var(--fall-dur) * -0.18); opacity: 0.6; }
+
+  /* ===== R5 — Punta maciza ===== */
+  .r-solid {
+    --halo-in: rgb(255 130 110 / 0.5);
+    --halo-out: rgb(190 40 26 / 0.42);
+  }
+  .r-solid .chev {
+    right: 36%;
+    left: 36%;
+    height: 17px;
+    clip-path: polygon(50% 100%, 100% 0, 50% 34%, 0 0);
+    background: linear-gradient(180deg, #ff8f78, #cf2f1e 50%, #6f1409);
+    filter: drop-shadow(0 0 3px rgb(255 130 110 / var(--bloom))) drop-shadow(0 0 9px rgb(196 40 26 / var(--bloom)));
+  }
+
+  /* ===== R6 — Con estela ===== */
+  .r-trail {
+    --halo-in: rgb(255 140 120 / 0.44);
+    --halo-out: rgb(190 40 26 / 0.38);
+  }
+  .r-trail .chev {
+    background:
+      radial-gradient(circle at 50% 88%, #ffd0c4 0 5%, transparent 26%),
+      linear-gradient(180deg, #ff9d86, #d13b26 52%, #7a1a10);
+    filter: drop-shadow(0 0 3px rgb(255 140 120 / var(--bloom))) drop-shadow(0 0 9px rgb(200 45 30 / var(--bloom)));
+  }
+  .r-trail .trail {
+    position: absolute;
+    right: 46%;
+    bottom: -20px;
+    left: 46%;
+    z-index: -2;
+    height: 22px;
+    scale: var(--chev-scale);
+    transform-origin: top center;
+    background: linear-gradient(180deg, transparent, rgb(226 70 46 / 0.55) 40%, rgb(255 160 130 / 0.75));
+    filter: blur(1.5px);
+    animation: trail-fall var(--fall-dur) cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  @keyframes trail-fall {
+    0%   { opacity: 0; translate: 0 -9px; scale: var(--chev-scale) 0.4; }
+    35%  { opacity: 0.75; }
+    75%  { opacity: 0.4; translate: 0 4px; scale: var(--chev-scale) 1; }
+    100% { opacity: 0; translate: 0 9px; }
+  }
+
+  /* ===== R7 — Contorno oscuro ===== */
+  .r-outlined {
+    --halo-in: rgb(255 130 110 / 0.4);
+    --halo-out: rgb(170 34 22 / 0.36);
+    --halo-alpha: 0.7;
+  }
+  .r-outlined .chev {
+    background: linear-gradient(180deg, #ff8a72, #d3301c 52%, #74110a);
+    filter:
+      drop-shadow(0 0 1px #1a0703) drop-shadow(0 0 1px #1a0703) drop-shadow(0 0 1px #1a0703)
+      drop-shadow(0 0 7px rgb(211 48 28 / calc(var(--bloom) * 0.8)));
+  }
+
+  /* ===== R8 — Caída con impacto ===== */
+  .r-impact {
+    --halo-in: rgb(255 140 120 / 0.5);
+    --halo-out: rgb(190 40 26 / 0.42);
+    --halo-alpha: 0;
+  }
+  .r-impact .chev {
+    background:
+      radial-gradient(circle at 50% 88%, #ffd0c4 0 5%, transparent 26%),
+      linear-gradient(180deg, #ff9d86, #d13b26 52%, #7a1a10);
+    filter: drop-shadow(0 0 3px rgb(255 140 120 / var(--bloom))) drop-shadow(0 0 9px rgb(200 45 30 / var(--bloom)));
+    animation: chev-impact var(--fall-dur) cubic-bezier(0.5, 0, 0.75, 0) infinite;
+  }
+  @keyframes chev-impact {
+    0%   { opacity: 0; translate: 0 -10px; scale: var(--chev-scale) 1; }
+    28%  { opacity: 1; }
+    62%  { opacity: 1; translate: 0 2px; scale: var(--chev-scale) 1; }
+    70%  { translate: 0 3px; scale: calc(var(--chev-scale) * 1.16) calc(var(--chev-scale) * 0.78); }
+    80%  { opacity: 0.9; translate: 0 2px; scale: var(--chev-scale) 1; }
+    100% { opacity: 0; translate: 0 2px; }
+  }
+  .r-impact .flash {
+    position: absolute;
+    right: 22%;
+    bottom: -12px;
+    left: 22%;
+    z-index: -2;
+    height: 10px;
+    border-radius: 999px;
+    background: radial-gradient(ellipse at center, rgb(255 190 165 / 0.9), rgb(206 40 24 / 0.5) 45%, transparent 74%);
+    filter: blur(2px);
+    opacity: 0;
+    animation: impact-flash var(--fall-dur) linear infinite;
+  }
+  @keyframes impact-flash {
+    0%, 62% { opacity: 0; transform: scaleX(0.5); }
+    70%     { opacity: 1; transform: scaleX(1.15); }
+    100%    { opacity: 0; transform: scaleX(0.85); }
+  }
+</style>
+</head>
+<body>
+
+<h1>V9 en rojo — versiones</h1>
+<p class="intro">
+  Todas son el mismo concepto: un galón chico que aparece arriba y cae en loop, en el sitio de
+  <code>.battlefield-card-slot::after</code>. Cambia el rojo, la forma y el modo de caer.
+  <b>R0</b> es el V9 naranja de antes, para comparar. Los controles de arriba afectan a todas:
+  <b>ritmo</b> es el que más cambia el carácter — con una caída lenta el marcador se vuelve casi
+  ambiental, con una rápida se vuelve urgente.
+</p>
+
+<div class="toolbar">
+  <label>Tamaño <input type="range" id="scale" min="0.5" max="1.5" step="0.05" value="1"><span id="scale-out">1.00</span></label>
+  <label>Bloom <input type="range" id="bloom" min="0" max="1" step="0.05" value="0.85"><span id="bloom-out">0.85</span></label>
+  <label>Ritmo <input type="range" id="dur" min="0.9" max="3" step="0.1" value="1.6"><span id="dur-out">1.6s</span></label>
+  <label><input type="checkbox" id="toggle-anim" checked> Animaciones</label>
+  <label>Ancho de carta <input type="range" id="card-width" min="110" max="200" value="152"></label>
+  <span class="hint">R0 = V9 naranja.</span>
+</div>
+
+<div class="grid" id="variants"></div>
+
+<script>
+(() => {
+  const VIEW = { w: 488, h: 434 };
+  const ART = {
+    soldier: { src: "../../public/cards/uprising_of_the_graveless/art/graveless_soldier.jpg", name: "Soldado Sinsepulcro", zoom: 1, x: -2, y: 86, pw: 2, en: 2 },
+    titan:   { src: "../../public/cards/uprising_of_the_graveless/art/graveless_titan.jpg",   name: "Titán Sinsepulcro",   zoom: 1, x: 0,  y: 90, pw: 5, en: 5 },
+    hound:   { src: "../../public/cards/uprising_of_the_graveless/art/hound_of_seven_memories.jpg", name: "Sabueso de Siete Memorias", zoom: 1, x: 0, y: 92, pw: 3, en: 2 },
+  };
+
+  const VARIANTS = [
+    { id: "orange", cls: "r-orange", tag: "R0", title: "V9 naranja", swatch: "#ff7b24", ref: true, chevrons: 1,
+      desc: "<b>Referencia.</b> El V9 que ya viste, con la paleta actual. Sirve para medir cuánto baja el ruido cada rojo." },
+    { id: "blood", cls: "r-blood", tag: "R1", title: "Sangre", swatch: "#d13b26", chevrons: 1,
+      desc: "<b>Rojo terroso.</b> Ladrillo con degradado a granate. Es el que mejor convive con el marco dorado y con el arte de los Sinsepulcro, porque no compite en saturación." },
+    { id: "crimson", cls: "r-crimson", tag: "R2", title: "Carmesí con núcleo", swatch: "#e01f22", chevrons: 1,
+      desc: "<b>Rojo puro y caliente.</b> Cuerpo carmesí con un núcleo casi blanco en la punta. El más agresivo y el más visible sobre arte oscuro; también el que más brilla." },
+    { id: "matte", cls: "r-matte", tag: "R3", title: "Rubí mate", swatch: "#a01818", chevrons: 1,
+      desc: "<b>Sin brillo.</b> Rojo profundo con relieve en vez de neón y halo casi apagado. Se apoya solo en el movimiento: es el más discreto de todos." },
+    { id: "echo", cls: "r-echo", tag: "R4", title: "Doble escalonado", swatch: "#c93a24", chevrons: 2,
+      desc: "<b>Dos galones desfasados.</b> El segundo cae un instante después, como un eco. Da sensación de avance continuo sin agrandar el marcador." },
+    { id: "solid", cls: "r-solid", tag: "R5", title: "Punta maciza", swatch: "#cf2f1e", chevrons: 1,
+      desc: "<b>Relleno en vez de trazo.</b> Es la que mejor aguanta el tamaño chico: bajá el slider a 0,6 y sigue leyéndose, cosa que un trazo fino no logra." },
+    { id: "trail", cls: "r-trail", tag: "R6", title: "Con estela", swatch: "#e2462e", chevrons: 1, trail: true,
+      desc: "<b>Deja rastro.</b> Una estela vertical difusa cae detrás del galón. Refuerza la dirección hacia abajo, o sea hacia el Cronista, sin agregar ningún glifo." },
+    { id: "outlined", cls: "r-outlined", tag: "R7", title: "Contorno oscuro", swatch: "#d3301c", chevrons: 1,
+      desc: "<b>Legible sobre cualquier arte.</b> Rojo con un contorno negro fino en vez de bloom. Es el único que no se pierde si la carta tiene arte claro debajo." },
+    { id: "impact", cls: "r-impact", tag: "R8", title: "Caída con impacto", swatch: "#d13b26", chevrons: 1, flash: true,
+      desc: "<b>Aterriza.</b> Cae acelerando, se aplasta al tocar y suelta un destello en el suelo. El más expresivo; conviene mirarlo con el ritmo en 2s o más para que no canse." },
+  ];
+
+  function makeCard(key, attacking) {
+    const a = ART[key];
+    const unit = document.createElement("div");
+    unit.className = "unit" + (attacking ? " atk" : "");
+
+    const card = document.createElement("div");
+    card.className = "cardv";
+    card.style.setProperty("--az", a.zoom);
+    card.style.setProperty("--ax", (a.x / VIEW.w) * 100 + "cqw");
+    card.style.setProperty("--ay", (a.y / VIEW.w) * 100 + "cqw");
+
+    const img = new Image();
+    img.src = a.src;
+    img.alt = a.name;
+    const fit = () => {
+      const viewportAspect = VIEW.w / VIEW.h;
+      const sourceAspect = img.naturalWidth / img.naturalHeight;
+      if (!sourceAspect) return;
+      if (sourceAspect >= viewportAspect) {
+        card.style.setProperty("--sw", (sourceAspect / viewportAspect) * 100 + "%");
+        card.style.setProperty("--sh", "100%");
+      } else {
+        card.style.setProperty("--sw", "100%");
+        card.style.setProperty("--sh", (viewportAspect / sourceAspect) * 100 + "%");
+      }
+    };
+    img.addEventListener("load", fit);
+    if (img.complete) fit();
+    card.appendChild(img);
+
+    card.insertAdjacentHTML("beforeend", `<div class="name">${a.name}</div>`);
+    card.insertAdjacentHTML("beforeend", `<div class="stat"><span class="pw">⚔ ${a.pw}</span><i></i><span class="en">❤ ${a.en}</span></div>`);
+    unit.appendChild(card);
+
+    if (!attacking) unit.insertAdjacentHTML("beforeend", `<span class="idle-tag">no ataca</span>`);
+    return unit;
+  }
+
+  const host = document.getElementById("variants");
+
+  for (const variant of VARIANTS) {
+    const section = document.createElement("section");
+    section.className = "variant" + (variant.ref ? " is-ref" : "");
+    section.innerHTML = `<header class="variant-head"><span class="tag">${variant.tag}</span><i class="swatch" style="background:${variant.swatch}"></i><h2>${variant.title}</h2></header>`;
+
+    const body = document.createElement("div");
+    body.className = "variant-body";
+
+    const row = document.createElement("div");
+    row.className = "row " + variant.cls;
+
+    for (const [key, attacking] of [["soldier", true], ["titan", false], ["hound", true]]) {
+      const unit = makeCard(key, attacking);
+      if (attacking) {
+        unit.insertAdjacentHTML("beforeend", `<i class="halo"></i>`);
+        if (variant.trail) unit.insertAdjacentHTML("beforeend", `<i class="trail"></i>`);
+        if (variant.flash) unit.insertAdjacentHTML("beforeend", `<i class="flash"></i>`);
+        for (let i = 0; i < variant.chevrons; i += 1) unit.insertAdjacentHTML("beforeend", `<i class="chev"></i>`);
+      }
+      row.appendChild(unit);
+    }
+
+    body.insertAdjacentElement("beforeend", row);
+    body.insertAdjacentHTML("beforeend", `<p class="desc">${variant.desc}</p>`);
+    section.appendChild(body);
+    host.appendChild(section);
+  }
+
+  const rootStyle = document.documentElement.style;
+
+  document.getElementById("scale").addEventListener("input", (event) => {
+    rootStyle.setProperty("--chev-scale", event.target.value);
+    document.getElementById("scale-out").textContent = Number(event.target.value).toFixed(2);
+  });
+  document.getElementById("bloom").addEventListener("input", (event) => {
+    rootStyle.setProperty("--bloom", event.target.value);
+    document.getElementById("bloom-out").textContent = Number(event.target.value).toFixed(2);
+  });
+  document.getElementById("dur").addEventListener("input", (event) => {
+    rootStyle.setProperty("--fall-dur", event.target.value + "s");
+    document.getElementById("dur-out").textContent = Number(event.target.value).toFixed(1) + "s";
+  });
+  document.getElementById("card-width").addEventListener("input", (event) => {
+    rootStyle.setProperty("--card-w", event.target.value + "px");
+  });
+  document.getElementById("toggle-anim").addEventListener("change", (event) => {
+    const state = event.target.checked ? "running" : "paused";
+    document.querySelectorAll(".halo, .chev, .trail, .flash").forEach((n) => { n.style.animationPlayState = state; });
+  });
+})();
+</script>
+</body>
+</html>

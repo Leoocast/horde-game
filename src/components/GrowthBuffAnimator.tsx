@@ -1,9 +1,10 @@
 import { useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
 import type { BuffAnimationVariant } from "../store/buffAnimation";
+import { renderSharedVfxFrame } from "./sharedVfxRenderer";
 
-type GrowthBuffVariant = Exclude<BuffAnimationVariant, "default">;
-export type NatureRootPattern = "growth" | "shield";
+type GrowthBuffVariant = Exclude<BuffAnimationVariant, "default" | "storm-strong">;
+export type NatureRootPattern = "growth" | "shield" | "frame";
 
 export type NatureRootAnimatorProps = {
   eventId: number;
@@ -31,6 +32,9 @@ type RootSpec = {
   delay: number;
   growDuration: number;
   widthScale: number;
+  /** Forces which side of the strand sprouts leaves. Used by patterns whose normal has a stable
+   *  orientation, so the foliage always grows away from the card instead of over the art. */
+  leafSide?: 1 | -1;
 };
 
 type RootStrand = {
@@ -43,6 +47,7 @@ type RootStrand = {
   segments: number;
   delay: number;
   growDuration: number;
+  leafSide?: 1 | -1;
 };
 
 type LeafParticle = {
@@ -138,6 +143,14 @@ function seededNoise(index: number, salt: number): number {
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
+}
+
+/** Frame foliage lands mostly on the two rails and only every fourth leaf on a tendril, so the
+ *  border reads as one continuous vine instead of a cluster on whichever strand came first. */
+export function frameLeafRootIndex(index: number, rootCount: number): number {
+  if (rootCount <= 2) return rootCount > 0 ? index % rootCount : 0;
+  if (index % 4 !== 3) return index % 2;
+  return 2 + (Math.floor(index / 4) % (rootCount - 2));
 }
 
 function easeOutCubic(value: number): number {
@@ -406,6 +419,93 @@ function growthRootPathSpecs(width: number, height: number, config: GrowthConfig
   ].slice(0, config.rootCount);
 }
 
+/** Frame silhouette: two vines leave the base, climb the card's own border and close over the top
+ *  edge, plus short tendrils that lean outward. Nothing crosses the portrait, so art, stats and
+ *  State badges stay readable while the buff plays. */
+export function frameRootPathSpecs(
+  width: number,
+  height: number,
+  config: Pick<GrowthConfig, "duration" | "rootCount">,
+): RootSpec[] {
+  const rootDuration = config.duration * 0.86;
+  const point = (x: number, y: number, z = 1) => new THREE.Vector3(width * x, height * y, z);
+
+  /** Both rails share the same authored path; the right one is mirrored, which also flips the
+   *  curve normal and therefore its outward leaf side. */
+  const rail = (side: -1 | 1): THREE.Vector3[] => {
+    const at = (x: number) => (side < 0 ? x : 1 - x);
+    return [
+      point(at(0.5), 0.148),
+      point(at(0.37), 0.141),
+      point(at(0.25), 0.149),
+      point(at(0.184), 0.178),
+      point(at(0.167), 0.3),
+      point(at(0.179), 0.43),
+      point(at(0.165), 0.57),
+      point(at(0.183), 0.69),
+      point(at(0.216), 0.772),
+      point(at(0.33), 0.797),
+      point(at(0.44), 0.787),
+      point(at(0.5), 0.793),
+    ];
+  };
+
+  const specs: RootSpec[] = [
+    {
+      points: rail(-1),
+      delay: 0,
+      growDuration: rootDuration,
+      widthScale: 1.5,
+      leafSide: 1,
+    },
+    {
+      points: rail(1),
+      delay: 0.022,
+      growDuration: rootDuration,
+      widthScale: 1.5,
+      leafSide: -1,
+    },
+    {
+      points: [point(0.172, 0.35), point(0.118, 0.325), point(0.072, 0.26)],
+      delay: 0.26,
+      growDuration: rootDuration * 0.3,
+      widthScale: 0.62,
+    },
+    {
+      points: [point(0.828, 0.47), point(0.884, 0.45), point(0.932, 0.385)],
+      delay: 0.3,
+      growDuration: rootDuration * 0.3,
+      widthScale: 0.62,
+    },
+    {
+      points: [point(0.176, 0.62), point(0.116, 0.66), point(0.082, 0.73)],
+      delay: 0.4,
+      growDuration: rootDuration * 0.28,
+      widthScale: 0.54,
+    },
+    {
+      points: [point(0.824, 0.27), point(0.888, 0.245), point(0.93, 0.19)],
+      delay: 0.44,
+      growDuration: rootDuration * 0.28,
+      widthScale: 0.54,
+    },
+    {
+      points: [point(0.3, 0.792), point(0.28, 0.85), point(0.31, 0.9)],
+      delay: 0.56,
+      growDuration: rootDuration * 0.26,
+      widthScale: 0.5,
+    },
+    {
+      points: [point(0.7, 0.792), point(0.72, 0.85), point(0.69, 0.9)],
+      delay: 0.6,
+      growDuration: rootDuration * 0.26,
+      widthScale: 0.5,
+    },
+  ];
+
+  return specs.slice(0, config.rootCount);
+}
+
 export function NatureRootAnimator({
   eventId,
   variant,
@@ -423,21 +523,8 @@ export function NatureRootAnimator({
     const camera = new THREE.OrthographicCamera(0, 1, 1, 0, -100, 100);
     camera.position.z = 10;
 
-    let renderer: THREE.WebGLRenderer;
-    try {
-      renderer = new THREE.WebGLRenderer({
-        canvas,
-        alpha: true,
-        antialias: true,
-        premultipliedAlpha: false,
-      });
-    } catch {
-      canvas.classList.add("growth-buff-three-unavailable");
-      return;
-    }
-    renderer.setClearColor(0x000000, 0);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
-    renderer.outputEncoding = THREE.sRGBEncoding;
+    // El contexto WebGL es compartido por todo el juego: este lienzo sólo recibe la copia.
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.6);
 
     let width = 1;
     let height = 1;
@@ -450,7 +537,6 @@ export function NatureRootAnimator({
       camera.top = height;
       camera.bottom = 0;
       camera.updateProjectionMatrix();
-      renderer.setSize(Math.round(width), Math.round(height), false);
     };
     resize();
     const resizeObserver = typeof ResizeObserver === "undefined"
@@ -463,7 +549,9 @@ export function NatureRootAnimator({
     const rootSpecs =
       pattern === "shield"
         ? shieldRootPathSpecs(width, height, config)
-        : growthRootPathSpecs(width, height, config);
+        : pattern === "frame"
+          ? frameRootPathSpecs(width, height, config)
+          : growthRootPathSpecs(width, height, config);
     const rootSegments = reducedMotion ? 18 : 48;
 
     for (const spec of rootSpecs) {
@@ -514,6 +602,7 @@ export function NatureRootAnimator({
         segments: rootSegments,
         delay: spec.delay,
         growDuration: spec.growDuration,
+        leafSide: spec.leafSide,
       });
     }
 
@@ -527,14 +616,23 @@ export function NatureRootAnimator({
       const rootIndex =
         pattern === "shield"
           ? (index * 5 + 1) % roots.length
-          : (index * 7 + 2) % roots.length;
+          : pattern === "frame"
+            ? frameLeafRootIndex(index, roots.length)
+            : (index * 7 + 2) % roots.length;
       const root = roots[rootIndex];
-      const anchor = 0.28 + seededNoise(index, salt + 2.7) * 0.68;
+      const anchor =
+        pattern === "frame"
+          ? 0.1 + seededNoise(index, salt + 2.7) * 0.86
+          : 0.28 + seededNoise(index, salt + 2.7) * 0.68;
       const position = root.curve.getPoint(anchor);
       const tangent = root.curve.getTangent(anchor).normalize();
-      const side = seededNoise(index, salt + 4.1) > 0.5 ? 1 : -1;
+      const side = root.leafSide ?? (seededNoise(index, salt + 4.1) > 0.5 ? 1 : -1);
       const normal = new THREE.Vector3(-tangent.y, tangent.x, 0);
-      position.addScaledVector(normal, side * (1.6 + seededNoise(index, salt + 5.8) * 2.8));
+      const reach =
+        pattern === "frame"
+          ? 3.4 + seededNoise(index, salt + 5.8) * 4.6
+          : 1.6 + seededNoise(index, salt + 5.8) * 2.8;
+      position.addScaledVector(normal, side * reach);
 
       const tone = config.colors.leaves[index % config.colors.leaves.length];
       const bladeMaterial = new THREE.MeshBasicMaterial({
@@ -641,6 +739,25 @@ export function NatureRootAnimator({
     groundGlow.position.z = 0;
     scene.add(groundGlow);
 
+    /* Closing beat of the frame pattern: the two rails meet over the top edge and bloom there. */
+    const crownMaterial =
+      pattern === "frame"
+        ? new THREE.SpriteMaterial({
+            map: glowTexture,
+            color: 0xe8dc7a,
+            transparent: true,
+            opacity: 0,
+            depthTest: false,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+          })
+        : undefined;
+    const crown = crownMaterial ? new THREE.Sprite(crownMaterial) : undefined;
+    if (crown) {
+      crown.position.set(width * 0.5, height * 0.793, 5);
+      scene.add(crown);
+    }
+
     let elapsed = 0;
     let lastFrame = performance.now();
     let animationFrame = 0;
@@ -655,6 +772,15 @@ export function NatureRootAnimator({
       const fadeOut = clamp01((1 - masterProgress) / 0.22);
       const centerX = width / 2;
       const groundY = height * 0.145;
+
+      if (crown && crownMaterial) {
+        const crownProgress = clamp01((masterProgress - 0.66) / 0.34);
+        const crownSize = Math.min(width, height) * (0.09 + easeOutCubic(crownProgress) * 0.2);
+        crown.position.set(centerX, height * 0.793, 5);
+        crown.scale.set(crownSize, crownSize, 1);
+        crownMaterial.opacity =
+          crownProgress > 0 ? Math.sin(crownProgress * Math.PI) * 0.95 * config.opacity : 0;
+      }
 
       groundGlow.position.set(centerX, groundY, 0);
       groundGlow.scale.set(width * (0.68 + masterProgress * 0.08), height * 0.2, 1);
@@ -756,7 +882,12 @@ export function NatureRootAnimator({
         leaf.vein.material.opacity = alpha * 0.68;
       }
 
-      renderer.render(scene, camera);
+      const drawn = renderSharedVfxFrame(canvas, { scene, camera, width, height, pixelRatio });
+      if (!drawn) {
+        // Sin contexto compartido no hay efecto: se deja el respaldo CSS y se corta el bucle.
+        canvas.classList.add("growth-buff-three-unavailable");
+        return;
+      }
       if (elapsed <= duration + 0.08) {
         animationFrame = window.requestAnimationFrame(tick);
       }
@@ -785,10 +916,12 @@ export function NatureRootAnimator({
       }
       scene.remove(groundGlow);
       groundGlowMaterial.dispose();
+      if (crown) scene.remove(crown);
+      crownMaterial?.dispose();
       leafGeometry.dispose();
       veinGeometry.dispose();
       glowTexture.dispose();
-      renderer.dispose();
+      // El renderer es compartido y sobrevive al efecto; sólo se liberan sus recursos propios.
     };
   }, [eventId, pattern, variant]);
 
@@ -807,9 +940,15 @@ export function NatureRootAnimator({
   );
 }
 
+/**
+ * Buff vegetal de El Pacto de Elarion. Usa el patrón `frame`: las ramas trepan por el borde de la
+ * carta en vez de cruzar el arte, así que retrato, stats y badges de Estado siguen legibles.
+ * El patrón `growth` anterior queda disponible en el animador para un efecto futuro que sí quiera
+ * atravesar la carta.
+ */
 export function GrowthBuffAnimator({
   eventId,
   variant,
 }: Omit<NatureRootAnimatorProps, "pattern">) {
-  return <NatureRootAnimator eventId={eventId} variant={variant} pattern="growth" />;
+  return <NatureRootAnimator eventId={eventId} variant={variant} pattern="frame" />;
 }

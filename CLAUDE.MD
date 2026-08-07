@@ -88,7 +88,9 @@ Separación obligatoria:
 ## Vocabulario Hostfall
 
 Leer `docs/game_vocabulary.md` antes de cambiar nombres, tipos, zonas, fases, Rasgos, reglas o
-tooltips.
+tooltips. Leer también `docs/card_text_rules.md` antes de redactar o modificar texto impreso,
+puntuación de reglas o elecciones de objetivos.
+La gramática de cartas es propia de Hostfall y no depende de convenciones o reglas externas.
 
 Contratos principales:
 
@@ -118,6 +120,15 @@ Decks vigentes:
 | Hueste | `legion_of_varka` | La Legión de Varka | Jugable |
 
 Cazadores es sólo un preview de Card Studio: no tiene deck runtime ni lote final de PNG.
+
+Contratos particulares de la Corte: Paje de la Sed exige estar preparado en la primera pérdida
+de Vida del turno; Duelista del Eclipse no puede actuar mientras está Estabilizándose; Mirevna
+paga la mitad de la Vida actual redondeada hacia arriba.
+
+Contratos particulares de la Legión: Todos contra uno cuenta sólo Trasgos atacantes con Fuerza 2
+o menos; Vardek crea Esbirros atacando según su Fuerza después de recibir el contador; el daño de
+entrada de Varka se resuelve como un único evento; la antigua Acción de sacrificio del Forjador
+está retirada y no debe reintroducirse.
 
 Chaos Mode está deprecated y oculto. Se conserva únicamente por compatibilidad y pruebas; no debe
 recibir features sin una decisión explícita.
@@ -176,9 +187,11 @@ El deck lint informa las pendientes y rechaza cualquier efecto o handler descono
 No programar cartas por nombre. La excepción bespoke actual es `tribute_of_the_four_sorrows`, declarada
 `engineSupport: "custom"`, cuya secuencia vive en `src/store/tributeOfTheFourSorrowsSequence.ts` y
 `src/components/TributeOfTheFourSorrowsSelectionOverlay.tsx`.
+Su texto impreso debe describir también los pasos de la Hueste que ejecuta esa secuencia custom.
 
 Para agregar o implementar cartas, seguir `docs/adding_cards.md`. Documentación específica:
 
+- `docs/card_text_rules.md`
 - `docs/chronicle_pact_of_elarion.md`
 - `docs/chronicle_court_of_the_crimson_eclipse.md`
 - `docs/host_uprising_of_the_graveless.md`
@@ -191,9 +204,14 @@ Los manifests de imagen usan sólo `source: "local"`. El arte fuente está separ
 completa, normalmente en `public/cards/<deck>/art/`. Nunca apuntar un generador al PNG final de su
 propia carpeta.
 
-Card Studio consume `deck-data.generated.js`, generado desde el JSON runtime. No duplicar reglas,
-nombres o flavor en el HTML/configuración. El exportador escribe `exported-png/` y
-`public/cards/`, y registra la huella necesaria para `check-card-assets.mjs`.
+Card Studio consume `deck-data.generated.js`, generado desde el JSON runtime. La proyección contiene
+ES/EN y el Taller elige el idioma sin duplicar reglas, nombres o flavor en HTML/configuración.
+Español es el valor predeterminado. `export_cards.cjs <deck> --lang en` escribe sólo en
+`exported-png/en/`; únicamente la exportación española actualiza `public/cards/`, el layout runtime
+y la huella de `check-card-assets.mjs`. Los idiomas futuros se registran de forma central; chino
+requiere una fuente CJK local antes de habilitarse.
+Los contadores `+1/+1` declarados en `entersWithCounters` se suman a los stats base impresos, para
+que la carta muestre las estadísticas con las que entra realmente al Campo.
 
 Los cinco estudios usan `deck-card-studio.js` y `deck-card-studio.css`: existe una sola estructura
 de carta y los decks sólo aportan variables de tema, motivo e insignia. El diseño común usa marco
@@ -231,6 +249,36 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
 - Una Reacción manual de Invocación con target es obligatoria; no depende del id de Aelyra.
 - El ataque del Cronista y la defensa contra la Hueste usan overlays y estados explícitos. No
   resolver reglas de combate dentro de animadores.
+- Las presentaciones personales de pelea y ataque directo se registran en
+  `src/store/combatAnimation.ts` por identidad estable y contexto ya resuelto. El preset de Vaelor
+  reemplaza el movimiento por una bola de fuego esmeralda a escala 1.8 cuando defiende, mata al
+  atacante y sobrevive, o cuando ataca directamente el panel de vida de la Hueste. En ataques con
+  proyectil, la reacción de golpe del panel espera el `impactMs` del preset. El Rasgo canónico de
+  Vaelor es `FLYING` (Volar), no `SKYGUARD` (Guardia aérea).
+- Si una pelea con dos presentaciones personales deja una sola carta viva, sólo la ganadora puede
+  reclamar la animación bespoke. Si no tiene preset, se usa la pelea normal; cuando ambas sobreviven
+  o ambas mueren, el atacante conserva la prioridad visual sin cambiar el impacto simultáneo.
+- Varka usa dos bolas de fuego amarillo-doradas simultáneas a escala 1.3 cada vez que ataca:
+  nacen de los bordes izquierdo y derecho de su carta, convergen sobre el defensor asignado o, si
+  no tiene defensor, sobre el panel de Vida del Cronista, y producen un solo impacto de reglas.
+  Todo evento Burn cuyo origen sea Varka usa su material amarillo-dorado y escala 1.3, incluida su
+  descarga de entrada contra el Cronista y cada enemigo. Esa descarga muestra una ruta por cada objetivo sin
+  tope visual: el límite de seis pertenece a cada pasada del shader y las descargas mayores se
+  reparten en varias pasadas sobre el mismo canvas y reloj.
+  Vaelor, al ser Invocado, captura todos los enemigos actuales y lanza a la vez una bola esmeralda
+  a cada uno con el mismo material y escala 1.8 del preset de su defensa; sólo esta descarga de
+  entrada conserva una trayectoria curva. Todas las demás bolas de fuego viajan en línea recta.
+  El impacto
+  coloca un contador -1/-1 sobre cada objetivo como un único evento simultáneo, sin daño adicional.
+- Todos contra uno usa el renderer procedural de fuego a escala 1.2. Todos los Burn registrados
+  usan el shader procedural; el renderer clásico DOM/CSS queda sólo como implementación legada.
+- El Burn procedural no monta el destello DOM de pantalla completa del renderer clásico. Su
+  impacto se comunica con la explosión WebGL, la chamusquina del objetivo y el número de daño.
+- `sharedVfxRenderer.ts` crea el único contexto WebGL de forma diferida al primer efecto y lo
+  conserva durante el resto de la sesión. Burn reutiliza ese contexto compartido: los ataques
+  consecutivos, incluidas varias Varkas apiladas, no deben forzar su pérdida ni recrearlo entre
+  beats. Su canvas 2D de destino debe permanecer oculto mientras no exista un Burn activo y durante
+  cada handoff hasta que el nuevo efecto haya copiado su primer frame WebGL válido.
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado
   aunque los impactos visuales se escalonen.
 
@@ -262,6 +310,8 @@ antes de crear otra implementación.
 - Overlays y previews deben respetar los z-index documentados en los propios componentes/CSS.
 - El audio pasa por el sistema central y respeta mute/volumen. No crear `Audio` dispersos en
   componentes.
+- Los SFX del pase nuevo permanecen registrados en el Taller de Sonidos y se activan de forma
+  individual mediante `AUDIO_FEATURE_FLAGS`; apagar un flag no debe ocultar su clip del Taller.
 - La música cambia al tema de clímax cuando la Vida del Cronista baja del umbral configurado.
 
 ## Developer mode
@@ -297,7 +347,8 @@ Leer el archivo específico y sus consumidores. Como rutas de entrada:
 
 - Reglas: `src/engine/GameTypes.ts`, `GameActions.ts`, `EffectResolver.ts`.
 - Secuencias: `src/store/useGameStore.ts`, `hostBeats.ts`, `presentationEffects.ts`.
-- Cartas: `docs/adding_cards.md`, JSON del deck, `normalizeDeck.ts`, `deckLint.ts`.
+- Cartas: `docs/adding_cards.md`, `docs/card_text_rules.md`, JSON del deck, `normalizeDeck.ts`,
+  `deckLint.ts`.
 - Campo: `Battlefield.tsx`, `battlefieldLayout.ts` y sus tests.
 - Targeting: `Targeting.ts` y el overlay correspondiente.
 - Combate: `CombatResolver.ts` y `docs/animation_contracts.md`.

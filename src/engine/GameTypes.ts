@@ -136,6 +136,8 @@ export type HostRulesProfile = {
   swarmTokenSubtypes: string[];
 };
 
+export type ActionFailureCode = "NOT_ENOUGH_ENERGY";
+
 export type CardInstance = {
   instanceId: string;
   definitionId: string;
@@ -273,7 +275,7 @@ export type GameState = {
   log: string[];
   /** Outcome of the most recent player-initiated action. The store reads this instead of
    *  sniffing log strings; `reason` is the player-facing failure message. */
-  lastActionResult?: { ok: boolean; reason?: string };
+  lastActionResult?: { ok: boolean; reason?: string; code?: ActionFailureCode };
   winner?: Side;
 };
 
@@ -285,6 +287,9 @@ export type CastOptions = {
    *  before committing the effect. Used by spells that cause life loss and trigger Blood Page. */
   deferPlayerTriggers?: boolean;
   deferReactiveTriggers?: boolean;
+  /** Leaves events explicitly marked for an impact-timed presentation in the queue. Pure engine
+   * callers omit this and resolve the same rules synchronously. */
+  deferPresentationEvents?: boolean;
   /** Commits the cast and every non-fight effect, leaving the fight effect for a later
    *  presentation impact. The store must resolve the deferred effect before unlocking play. */
   deferFightResolution?: boolean;

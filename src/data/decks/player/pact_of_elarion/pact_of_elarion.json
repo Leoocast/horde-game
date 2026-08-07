@@ -13,10 +13,10 @@
       "id": "veiled_dawn_flower",
       "collectorId": "HFA1001",
       "name": "Veiled-Dawn Flower",
-      "displayNameEs": "Flor del Alba Velada",
+      "displayNameEs": "Flor del Alba",
       "gameText": {
-        "en": "Exhaust: Gain 1 Energy.",
-        "es": "Agota: Gana 1 Energía."
+        "en": "Exhaust this card; add 1 Energy.",
+        "es": "Agota esta carta; agrega 1 de Energía."
       },
       "flavorText": {
         "en": "When its petals opened, the old paths shone again.",
@@ -63,8 +63,8 @@
       "name": "Aelyra, Heir of Elarion",
       "displayNameEs": "Aelyra, Heredera de Elarion",
       "gameText": {
-        "en": "When Invoked, put a +1/+1 counter on an ally and gain 3 Life.",
-        "es": "Al ser invocada, pon un contador +1/+1 sobre un aliado y gana 3 de Vida."
+        "en": "When Invoked: choose an ally; put a +1/+1 counter on that ally and gain 3 Life.",
+        "es": "Al ser invocada: elige un aliado; pon un contador +1/+1 sobre ese aliado y gana 3 de Vida."
       },
       "flavorText": {
         "en": "She claimed no throne. She gathered the voices that still remembered the oath.",
@@ -94,7 +94,7 @@
             {
               "id": "targetCreature",
               "zone": "FIELD",
-              "controller": "ANY",
+              "controller": "SELF",
               "filters": {
                 "kinds": [
                   "ECHO"
@@ -132,8 +132,8 @@
       "name": "Liora, Keeper of the Grove",
       "displayNameEs": "Liora, Guardiana de la Arboleda",
       "gameText": {
-        "en": "Exhaust: Gain 1 Energy.",
-        "es": "Agota: Gana 1 Energía."
+        "en": "Exhaust this card; add 1 Energy.",
+        "es": "Agota esta carta; agrega 1 de Energía."
       },
       "flavorText": {
         "en": "She guarded the last living branch until the heir returned.",
@@ -212,8 +212,8 @@
       "name": "Kaelor, Stormcaller",
       "displayNameEs": "Kaelor, Convocador de Tormentas",
       "gameText": {
-        "en": "The first time another ally is Invoked during your turn, Kaelor gets +1/+1 until your next turn.",
-        "es": "La primera vez que otro aliado sea invocado durante tu turno, Kaelor gana +1/+1 hasta tu próximo turno."
+        "en": "The first time another ally is Invoked during your turn: Kaelor gets +1/+1 until your next turn.",
+        "es": "La primera vez que otro aliado sea invocado durante tu turno: Kaelor gana +1/+1 hasta tu próximo turno."
       },
       "flavorText": {
         "en": "For every ally who returned, a new storm answered over Elarion.",
@@ -346,8 +346,8 @@
       "name": "Vaelor, Emerald Guardian",
       "displayNameEs": "Vaelor, Guardián Esmeralda",
       "gameText": {
-        "en": "No additional effect.",
-        "es": "Sin efecto adicional."
+        "en": "When Invoked: put a -1/-1 counter on each enemy.",
+        "es": "Al ser invocado: pon un contador -1/-1 sobre cada enemigo."
       },
       "flavorText": {
         "en": "Aelyra did not command the dragon. She gave him a kingdom worth waking for.",
@@ -364,12 +364,36 @@
       ],
       "power": 6,
       "endurance": 5,
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "vaelor_emerald_guardian_enter_counter_volley",
+          "kind": "TRIGGERED",
+          "zone": "FIELD",
+          "trigger": {
+            "event": "INVOKED",
+            "source": "SELF"
+          },
+          "targets": [],
+          "conditions": [],
+          "effects": [
+            {
+              "type": "ADD_COUNTERS",
+              "target": {
+                "type": "ALL_ECHOS",
+                "controller": "OPPONENT"
+              },
+              "counter": "-1/-1",
+              "amount": 1,
+              "animation": "EMERALD_FIREBALL_VOLLEY"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "ECHO"
       ],
       "traits": [
-        "SKYGUARD"
+        "FLYING"
       ]
     },
     {
@@ -378,8 +402,8 @@
       "name": "Clash of Echoes",
       "displayNameEs": "Choque de Ecos",
       "gameText": {
-        "en": "Choose an ally and another Echo. The ally deals damage to the other equal to its Power.",
-        "es": "Elige un aliado y otro Eco. El aliado inflige al otro daño igual a su Fuerza."
+        "en": "Choose an ally and an enemy; the ally deals damage to the enemy equal to its Power.",
+        "es": "Elige un aliado y un enemigo; el aliado inflige al enemigo daño igual a su Fuerza."
       },
       "flavorText": {
         "en": "At the pact's call, each Echo revealed what it still fought for.",
@@ -413,7 +437,7 @@
             {
               "id": "damageTarget",
               "zone": "FIELD",
-              "controller": "ANY",
+              "controller": "OPPONENT",
               "filters": {
                 "anyOf": [
                   {
@@ -458,8 +482,8 @@
       "name": "Shield of the Heir",
       "displayNameEs": "Escudo de la Heredera",
       "gameText": {
-        "en": "An ally gains +1/+2 until the end of the turn. Then it fights an enemy.",
-        "es": "Un aliado gana +1/+2 hasta el final del turno. Luego lucha contra un enemigo."
+        "en": "Choose an ally and an enemy; the ally gets +1/+2 until the end of the turn. Then, that ally fights that enemy.",
+        "es": "Elige un aliado y un enemigo; el aliado gana +1/+2 hasta el final del turno. Después, ese aliado lucha contra ese enemigo."
       },
       "flavorText": {
         "en": "Within the heiress's circle, no ally bore their oath alone.",
@@ -554,8 +578,8 @@
       "name": "The Judgment of Elarion",
       "displayNameEs": "El Juicio de Elarion",
       "gameText": {
-        "en": "Destroy a Support or an Echo with Flying.",
-        "es": "Destruye un Apoyo o un Eco con Volar."
+        "en": "Choose an enemy Support or an enemy Echo with Flying; destroy it.",
+        "es": "Elige un Apoyo enemigo o un Eco enemigo con Volar; destrúyelo."
       },
       "flavorText": {
         "en": "Neither wing nor stone stood beyond the judgment of the ancient realm.",
@@ -579,7 +603,7 @@
             {
               "id": "targetPermanent",
               "zone": "FIELD",
-              "controller": "ANY",
+              "controller": "OPPONENT",
               "filters": {
                 "anyOf": [
                   {
@@ -622,8 +646,8 @@
       "name": "Elixir of the First Leaf",
       "displayNameEs": "Elixir de la Primera Hoja",
       "gameText": {
-        "en": "The target Echo gains +3/+3 until the end of the turn.",
-        "es": "El Eco objetivo gana +3/+3 hasta el final del turno."
+        "en": "Choose an Echo; the chosen Echo gets +3/+3 until the end of the turn.",
+        "es": "Elige un Eco; el Eco elegido gana +3/+3 hasta el final del turno."
       },
       "flavorText": {
         "en": "Distilled from the first leaf born after the pact, it preserved the strength of its founders.",
@@ -681,8 +705,8 @@
       "name": "River of Elarion",
       "displayNameEs": "Río de Elarion",
       "gameText": {
-        "en": "Exhaust: Gain 1 Energy.",
-        "es": "Agota: Gana 1 Energía."
+        "en": "Exhaust this card; add 1 Energy.",
+        "es": "Agota esta carta; agrega 1 de Energía."
       },
       "flavorText": {
         "en": "The river was the only path the fall of Elarion could not erase.",

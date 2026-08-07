@@ -1,5 +1,7 @@
 # La Corte del Eclipse Carmesí
 
+Última actualización: 2026-08-05
+
 `court_of_the_crimson_eclipse` es el deck de Cronista que convierte Vida en poder inmediato y recupera lo
 entregado mediante Drenar. Su identidad narrativa gira alrededor de Mirevna y el eclipse que
 mantiene unida a su corte.
@@ -30,3 +32,9 @@ oculta el precio hasta que Mirevna dicta el veredicto.
 - Drenar recupera Vida al hacer daño de Batalla.
 - Los ids técnicos se derivan de los nombres ingleses vigentes y los nombres visibles son los de
   esta Crónica.
+- `Paje de la Sed` sólo recibe su mejora si está preparado cuando ocurre la primera pérdida de
+  Vida del turno.
+- `Duelista del Eclipse` no puede usar su Acción mientras está Estabilizándose.
+- El coste adicional de Mirevna es la mitad de la Vida actual, redondeada hacia arriba.
+- `Drenar la Esencia` puede elegir cualquier Eco; `Impulso Carmesí` sólo puede elegir un aliado y
+  `Veredicto del Eclipse` sólo puede elegir un enemigo.

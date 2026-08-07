@@ -1,1 +1,4 @@
 dev/tools/Decks/**/deck-data.generated.js text eol=lf
+# Los verificadores comparan estos generados byte a byte: si el checkout los convierte a CRLF,
+# `card-studio-data.mjs --check` los da por desactualizados aunque el contenido sea idéntico.
+src/data/*.generated.json text eol=lf

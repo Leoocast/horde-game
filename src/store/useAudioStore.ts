@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import { audioEngine, type MusicStatus } from "../audio/AudioEngine";
 import { musicCollectionIds, musicCollections, type MusicCollectionId, type MusicVariant } from "../audio/musicManifest";
 import type { SfxId } from "../audio/soundManifest";
+import { audioFeatureEnabled } from "../config/featureFlags";
 
 type AudioStore = {
   enabled: boolean;
@@ -88,6 +89,7 @@ export const useAudioStore = create<AudioStore>()(
         set({ musicStatus: status, selectedCollectionId: status.collectionId ?? get().selectedCollectionId });
       },
       playSfx: (id, options) => {
+        if (!audioFeatureEnabled(id)) return;
         syncEngine();
         audioEngine.playSfx(id, options);
       },

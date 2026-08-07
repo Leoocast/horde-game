@@ -16,14 +16,18 @@ import {
 import { cardStatFrameCssVariables } from "../src/utils/cardStatFrame";
 import {
   STUDIO_DECKS,
+  DEFAULT_STUDIO_LANGUAGE,
+  STUDIO_LANGUAGES,
   buildStudioCards,
   generatedGameArtData,
   generatedStudioData,
   loadStudioConfig,
   normalizeBattlefieldArtFrame,
+  resolveStudioLanguage,
   resolveStudioFullArt,
   resolveStudioHeaderFade,
   studioGameArt,
+  studioLanguagesForDeck,
   studioSourceFiles,
   syncStudioData,
 } from "../scripts/card-studio-data.mjs";
@@ -46,6 +50,9 @@ test("deck card text consistently highlights gameplay terms and separates abilit
   );
   const tokenMaker = formatEffectText(
     "Pon un contador +1/+1 sobre esta criatura y luego crea dos Trasgos 1/1 atacando.",
+  );
+  const negativeCounter = formatEffectText(
+    "Al ser invocado: pon un contador -1/-1 sobre cada enemigo.",
   );
   const fightSpell = formatEffectText(
     "Una criatura aliada obtiene +1/+2 hasta el final del turno y luego lucha contra una criatura enemiga.",
@@ -74,18 +81,21 @@ test("deck card text consistently highlights gameplay terms and separates abilit
     "Volar. Drenar. Alerta.\nCoste adicional: Paga la mitad de tu Vida.",
   );
   const numberedTrait = formatEffectText("Letal\nVeneno 1");
-  const repeatedEnergy = formatEffectText("Gana {E}{E}.", {
+  const repeatedEnergy = formatEffectText("Agrega {E}{E}.", {
     energyIconHtml: '<span class="energy-icon"></span>',
   });
-  const exhaustAction = formatEffectText("Agota: Gana {E}.", {
+  const exhaustAction = formatEffectText("Agota esta carta; agrega {E}.", {
     energyIconHtml: '<span class="energy-icon"></span>',
   });
   const acolyteCost = formatEffectText(
-    "{{T}} y paga 5 de Vida: Gana {E}.",
+    "Agota esta carta y paga 5 de Vida; agrega {E}.",
     {
-      tapIconHtml: '<span class="tap-icon"></span>',
       energyIconHtml: '<span class="energy-icon"></span>',
     },
+  );
+  const englishRules = formatEffectText(
+    "Exhaust this card and pay 5 Life; add {E}. Flying. Invoke two Varka's Minions attacking.",
+    { energyIconHtml: '<span class="energy-icon"></span>' },
   );
 
   assert.match(captain, /class="effect-keyword">Toque mortal<\/strong>/);
@@ -93,6 +103,7 @@ test("deck card text consistently highlights gameplay terms and separates abilit
   assert.equal((captain.match(/class="effect-paragraph"/g) ?? []).length, 3);
 
   assert.match(tokenMaker, /class="effect-counter">un contador \+1\/\+1<\/strong>/);
+  assert.match(negativeCounter, /class="effect-counter">un contador -1\/-1<\/strong>/);
   assert.match(tokenMaker, /class="effect-token">crea dos Trasgos 1\/1 atacando<\/strong>/);
   assert.equal((tokenMaker.match(/class="effect-paragraph"/g) ?? []).length, 2);
 
@@ -133,12 +144,19 @@ test("deck card text consistently highlights gameplay terms and separates abilit
     /class="effect-keyword">Veneno <span class="effect-keyword-value">1<\/span><\/strong>/,
   );
   assert.equal((repeatedEnergy.match(/class="energy-icon"/g) ?? []).length, 2);
-  assert.doesNotMatch(repeatedEnergy, /Gana\s+\d/u);
-  assert.match(exhaustAction, /<strong class="effect-action">Agota<\/strong>:/u);
+  assert.doesNotMatch(repeatedEnergy, /Agrega\s+\d/u);
+  assert.match(exhaustAction, /<strong class="effect-action">Agota<\/strong> esta carta;/u);
   assert.equal((inlineTraits.match(/class="effect-paragraph"/g) ?? []).length, 2);
-  assert.match(acolyteCost, /<span class="tap-icon"><\/span> y <strong class="effect-life-cost">paga 5 de Vida<\/strong>:/);
-  assert.match(acolyteCost, /Gana <span class="energy-icon"><\/span>\./);
+  assert.match(acolyteCost, /<strong class="effect-action">Agota<\/strong> esta carta y <strong class="effect-life-cost">paga 5 de Vida<\/strong>;/);
+  assert.match(acolyteCost, /agrega <span class="energy-icon"><\/span>\./);
   assert.equal((acolyteCost.match(/class="effect-paragraph"/g) ?? []).length, 1);
+  assert.match(englishRules, /class="effect-action">Exhaust<\/strong>/u);
+  assert.match(englishRules, /class="effect-life-cost">pay 5 Life<\/strong>/u);
+  assert.match(englishRules, /class="effect-keyword">Flying<\/strong>/u);
+  assert.match(
+    englishRules,
+    /class="effect-token">Invoke two Varka&#039;s Minions attacking<\/strong>/u,
+  );
 });
 
 test("local Vampire studio art paths resolve to real files", () => {
@@ -150,6 +168,89 @@ test("local Vampire studio art paths resolve to real files", () => {
       `${card.id} points to missing art: ${card.art_crop}`,
     );
   }
+});
+
+test("Card Studio projects ES and EN from one extensible language registry", () => {
+  assert.equal(DEFAULT_STUDIO_LANGUAGE, "es");
+  assert.deepEqual(Object.keys(STUDIO_LANGUAGES), ["es", "en"]);
+  assert.deepEqual(studioLanguagesForDeck("pact_of_elarion"), ["es", "en"]);
+  assert.deepEqual(studioLanguagesForDeck("hunters"), ["es"]);
+  assert.equal(resolveStudioLanguage("legion_of_varka", "EN"), "en");
+  assert.throws(
+    () => resolveStudioLanguage("legion_of_varka", "pt"),
+    /Idioma de cartas desconocido "pt"/u,
+  );
+  assert.throws(
+    () => resolveStudioLanguage("hunters", "en"),
+    /todavía no tiene contenido de cartas en en/u,
+  );
+
+  for (const deckId of [
+    "pact_of_elarion",
+    "uprising_of_the_graveless",
+    "legion_of_varka",
+    "court_of_the_crimson_eclipse",
+  ]) {
+    const spanish = buildStudioCards(deckId, "es");
+    const english = buildStudioCards(deckId, "en");
+    assert.deepEqual(
+      english.map((card) => card.id),
+      spanish.map((card) => card.id),
+      `${deckId} must expose the same cards in both languages`,
+    );
+    for (const card of english) {
+      assert.ok(card.nombre.trim(), `${deckId}/${card.id} lacks an English name`);
+      assert.ok(card.tipo.trim(), `${deckId}/${card.id} lacks an English type line`);
+      assert.ok(card.desc.trim(), `${deckId}/${card.id} lacks English rules`);
+      assert.ok(card.lore.trim(), `${deckId}/${card.id} lacks English flavor`);
+    }
+
+    const context = { window: {} };
+    vm.runInNewContext(generatedStudioData(deckId), context);
+    const payload = context.window.HostfallDeckData;
+    assert.equal(payload.defaultLanguage, "es");
+    assert.equal(payload.cardsByLanguage.es.length, spanish.length);
+    assert.equal(payload.cardsByLanguage.en.length, english.length);
+  }
+
+  const englishPact = new Map(
+    buildStudioCards("pact_of_elarion", "en").map((card) => [card.id, card]),
+  );
+  assert.equal(englishPact.get("veiled_dawn_flower")?.nombre, "Veiled-Dawn Flower");
+  assert.equal(englishPact.get("veiled_dawn_flower")?.tipo, "Echo — Plant Spirit");
+  assert.equal(englishPact.get("veiled_dawn_flower")?.desc, "Exhaust this card; add {E}.");
+  assert.equal(
+    englishPact.get("aelyra_heir_of_elarion")?.tipo,
+    "Chronicle Echo — Elf Heir",
+  );
+});
+
+test("Card Studio UI and exporter select a language without replacing Spanish runtime PNGs", () => {
+  const studioHtml = fs.readFileSync(
+    new URL("../dev/tools/Decks/studio.html", import.meta.url),
+    "utf8",
+  );
+  const studioSource = fs.readFileSync(
+    new URL("../dev/tools/Decks/studio.js", import.meta.url),
+    "utf8",
+  );
+  const rendererSource = fs.readFileSync(
+    new URL("../dev/tools/Decks/deck-card-studio.js", import.meta.url),
+    "utf8",
+  );
+  const exporterSource = fs.readFileSync(
+    new URL("../dev/tools/Decks/export_cards.cjs", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(studioHtml, /id="language-select"/u);
+  assert.match(studioSource, /[?&]lang=\$\{encodeURIComponent\(language\)\}/u);
+  assert.match(rendererSource, /cardsByLanguage\?\.\[language\]/u);
+  assert.match(rendererSource, /new URLSearchParams\(window\.location\.search\)/u);
+  assert.match(exporterSource, /argument === '--lang'/u);
+  assert.match(exporterSource, /pageUrl\.searchParams\.set\('lang', language\)/u);
+  assert.match(exporterSource, /path\.join\(defaultOutputDir, language\)/u);
+  assert.match(exporterSource, /if \(writesRuntimeCards\)/u);
 });
 
 test("card studios consume one generated projection instead of embedded or mirrored data", () => {
@@ -302,6 +403,11 @@ test("Card Studio removes preview chrome and focus-mode overflow", () => {
     studioShell,
     /\.game-preview-title\s*\{[^}]*background:\s*linear-gradient\(90deg, var\(--game-title-start\) 0%, var\(--game-title-end\) 65%, var\(--game-title-end\) 100%\);/u,
     "the Studio cropped-card header must remain opaque across its full width",
+  );
+  assert.match(
+    studioShell,
+    /\.game-preview\[data-deck="uprising_of_the_graveless"\]\s*\{[^}]*--game-title-start:\s*#625d6b;[^}]*--game-title-end:\s*#37323f;[^}]*--game-stat-start:\s*#777081;[^}]*--game-stat-mid:\s*#56515e;[^}]*--game-stat-end:\s*#211e28;/u,
+    "the Studio cropped Zombie card must share the game's violet-gray title and stats palette",
   );
   assert.match(studioApp, /fullArtOverrides/u);
   assert.match(studioApp, /headerFadeOverrides/u);
@@ -815,7 +921,7 @@ test("battlefield art framing is canonical, bounded and independent from print f
   );
 });
 
-test("full-art Vampire life costs and damage use the same pink as their keywords", () => {
+test("full-art Vampire life costs and damage use the same pink as their Traits", () => {
   const css = fs.readFileSync(
     new URL("../dev/tools/Decks/deck-card-studio.css", import.meta.url),
     "utf8",
@@ -903,8 +1009,9 @@ test("El Pacto de Elarion studio cards use Hostfall vocabulary and stay aligned"
   const studioSources = [
     { label: "generated studio projection", cards: buildStudioCards("pact_of_elarion") },
   ];
-  const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|Agrega|entra|obtiene)\b|Robo de vida|Toque mortal|\{\{T\}\}|\{G\})/iu;
+  const retiredStudioVocabulary = /(?:\b(?:Criaturas?|Conjuros?|Instantáneos?|Horda|Alcance|entra|obtiene)\b|Robo de vida|Toque mortal|\{\{T\}\}|\{G\})/iu;
   const keywordLabels = {
+    FLYING: "Volar",
     LETHAL: "Letal",
     SKYGUARD: "Guardia aérea",
   };
@@ -1032,15 +1139,22 @@ test("El Alzamiento de los Sinsepulcro studio cards use Hostfall vocabulary and 
         `Zombie studio has a stale cost for ${runtimeCard.id}`,
       );
     }
+    const initialPlusOneCounters = (runtimeCard.entersWithCounters ?? [])
+      .filter((entry) => entry.counterType === "+1/+1")
+      .reduce((total, entry) => total + entry.amount, 0);
     assert.equal(
       studioCard.atk ?? null,
-      runtimeCard.power ?? null,
-      `Zombie studio has stale power for ${runtimeCard.id}`,
+      runtimeCard.power === null || runtimeCard.power === undefined
+        ? null
+        : runtimeCard.power + initialPlusOneCounters,
+      `Zombie studio has stale printed power for ${runtimeCard.id}`,
     );
     assert.equal(
       studioCard.def ?? null,
-      runtimeCard.endurance ?? null,
-      `Zombie studio has stale endurance for ${runtimeCard.id}`,
+      runtimeCard.endurance === null || runtimeCard.endurance === undefined
+        ? null
+        : runtimeCard.endurance + initialPlusOneCounters,
+      `Zombie studio has stale printed endurance for ${runtimeCard.id}`,
     );
 
     if (runtimeCard.kinds.includes("TOKEN")) {
@@ -1184,7 +1298,7 @@ test("La Legión de Varka studio cards use Hostfall vocabulary and stay aligned"
 test("Hunter preview sources use Hostfall vocabulary and stay aligned", () => {
   const indexUrl = new URL("../dev/tools/Decks/hunters/index.html", import.meta.url);
   const previewCards = buildStudioCards("hunters");
-  const retiredStudioVocabulary = /(?:\b(?:Tierras?|Criaturas?|Instantáneos?|Conjuros?|Encantamientos?|Horda|Alcance|Menace|Defensor|monstruos?|obtiene|entra|Agrega|vidas)\b|\{\{T\}\})/iu;
+  const retiredStudioVocabulary = /(?:\b(?:Tierras?|Criaturas?|Instantáneos?|Conjuros?|Encantamientos?|Horda|Alcance|Menace|Defensor|monstruos?|obtiene|entra|vidas)\b|\{\{T\}\})/iu;
   const expectedTypes = {
     territorio_de_caza: "Fuente — Territorio",
     trampa_de_mandibulas: "Eco — Trampa",
@@ -1240,7 +1354,7 @@ test("authored rules use ally and enemy as compact Echo nouns", () => {
     ["Goblins", buildStudioCards("legion_of_varka")],
     ["Hunters", buildStudioCards("hunters")],
   ];
-  const verboseEchoProse = /(?:\bCuando este Eco es invocad[oa]\b|\bEcos? aliad[oa]s?\b|\bEcos? enemig[oa]s?\b|\bEcos? de la Hueste\b)/iu;
+  const verboseEchoProse = /(?:\bCuando este Eco es invocad[oa]\b|\bEcos aliad[oa]s\b|\bEcos enemig[oa]s\b|\bEcos? de la Hueste\b)/iu;
 
   for (const [deckName, cards] of studioDecks) {
     for (const card of cards) {
@@ -1279,7 +1393,7 @@ test("Vampire gameplay cards use their full-image faction presentation", () => {
 function normalizeVampireEffect(text) {
   return String(text ?? "")
     .replaceAll("{{T}}", "Agota")
-    .replace(/(?:\{E\})+/g, (icons) => `${icons.length / 3} Energía`)
+    .replace(/(?:\{E\})+/g, (icons) => `${icons.length / 3} de Energía`)
     .replace(/\s+/g, " ")
     .trim()
     .toLocaleLowerCase("es");
@@ -1288,7 +1402,7 @@ function normalizeVampireEffect(text) {
 function normalizePactOfElarionEffect(text) {
   return String(text ?? "")
     .replaceAll("{{T}}", "Agota")
-    .replace(/(?:\{E\})+/g, (icons) => `${icons.length / 3} Energía`)
+    .replace(/(?:\{E\})+/g, (icons) => `${icons.length / 3} de Energía`)
     .replace(/\s+/g, " ")
     .trim()
     .toLocaleLowerCase("es");

@@ -101,7 +101,9 @@ export function CardContextMenu() {
       triggerEffectActivationPulse(cardId);
     }, 180);
     window.setTimeout(() => {
-      useAudioStore.getState().playSfx("playLand");
+      if (firstAbility.cost?.exhaust) {
+        useAudioStore.getState().playSfx("playLand");
+      }
       activateAbility(cardId, abilityId);
     }, 620);
   }
@@ -121,7 +123,7 @@ export function CardContextMenu() {
           {t("card.info")}
         </button>
         {hasActivatedEffect && (
-          <button data-audio-click={canActivate ? "valid" : undefined} className="context-menu-item" disabled={!canActivate} onClick={activateEffect}>
+          <button data-audio-click="off" className="context-menu-item" disabled={!canActivate} onClick={activateEffect}>
             <Sparkles size={15} />
             {activateLabel}
           </button>

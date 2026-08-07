@@ -50,9 +50,13 @@ export function DeckKeyCard({ deck, onOpen, selected = false, actionLabel }: { d
 
   return (
     <button
+      data-audio-click="off"
       className={`deck-key-card deck-theme-${deck.presentation.theme} ${selected ? "is-selected" : ""}`}
       type="button"
-      onClick={onOpen}
+      onClick={() => {
+        playSfx("click");
+        onOpen();
+      }}
       onMouseEnter={playHoverSound}
       onFocus={(event) => {
         if (!event.currentTarget.matches(":hover")) playHoverSound();

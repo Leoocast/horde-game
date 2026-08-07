@@ -3,15 +3,37 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import * as THREE from "three";
 
 import { activeDefenseArrowLinks, isBehindInStackOrder, isFrontOfCardStack, visibleDefenseArrowLinks } from "../src/components/battlefieldLayout";
+import {
+  burnProjectileOriginRatios,
+  burnProjectileParticleTimings,
+} from "../src/components/burnPresentation";
+import {
+  burnImpactRoutes,
+  burnMaterialColors,
+  burnRenderBatches,
+} from "../src/components/burnFireball";
+import { grownVfxSurface, sharedVfxSourceTop } from "../src/components/sharedVfxRenderer";
+import { frameLeafRootIndex, frameRootPathSpecs } from "../src/components/GrowthBuffAnimator";
+import { buildStorm, stormBoltTones } from "../src/components/StormBuffAnimator";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
+import { hostAttackPlayerHitDelay } from "../src/components/hostAttackPresentation";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
+import { playerAttackHostHitDelay } from "../src/components/playerAttackPresentation";
 import { CardTraitTooltipBadge } from "../src/components/Card";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
 import { PreviewStatsBadge, TraitPills } from "../src/components/CardPreview";
 import { cardLabelCamelCase } from "../src/i18n/cardLocalization";
-import { addCard, createTestGame, customCard } from "./engineTestUtils";
+import {
+  resolveCardBurnMaterial,
+  resolveCardBurnScale,
+  resolvePersonalAttackAnimation,
+  resolvePersonalCombatAnimation,
+} from "../src/store/combatAnimation";
+import { burnPathCurvature, resolveBurnRenderer } from "../src/store/burnAnimation";
+import { addCard, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
 
 test("the Host Archive counter counts attack discards down without displaying zero", () => {
   assert.equal(remainingArchiveDiscardPreview(7, 0), 7);
@@ -19,6 +41,336 @@ test("the Host Archive counter counts attack discards down without displaying ze
   assert.equal(remainingArchiveDiscardPreview(7, 6), 1);
   assert.equal(remainingArchiveDiscardPreview(7, 7), undefined);
   assert.equal(remainingArchiveDiscardPreview(0, 0), undefined);
+});
+
+test("Vaelor uses his personal defense animation only when he wins and survives", () => {
+  const vaelor = cardFromDeck("vaelor_emerald_guardian", "player");
+  const attacker = customCard("attacker", "host");
+  const winningAnimation = resolvePersonalCombatAnimation({
+    attacker,
+    defender: vaelor,
+    attackerDies: true,
+    defenderDies: false,
+    damageToAttacker: 6,
+  });
+
+  assert.deepEqual(winningAnimation, {
+    preset: "emerald-fireball",
+    sourceId: vaelor.instanceId,
+    targetId: attacker.instanceId,
+    suppressDefaultMotion: true,
+    castMs: 220,
+    impactMs: 638,
+    durationMs: 1220,
+    effect: {
+      type: "fireball",
+      variant: "emerald",
+      scale: 1.8,
+      amount: 6,
+      sourceMoves: false,
+    },
+  });
+  assert.equal(resolvePersonalCombatAnimation({
+    attacker,
+    defender: vaelor,
+    attackerDies: true,
+    defenderDies: true,
+    damageToAttacker: 6,
+  }), undefined);
+  assert.equal(resolvePersonalCombatAnimation({
+    attacker,
+    defender: vaelor,
+    attackerDies: false,
+    defenderDies: true,
+    damageToAttacker: 6,
+  }), undefined);
+});
+
+test("the surviving personal combatant owns the animation when Varka attacks Vaelor", () => {
+  const varka = cardFromDeck("varka_infernal_matriarch", "host");
+  const vaelor = cardFromDeck("vaelor_emerald_guardian", "player");
+
+  const animation = resolvePersonalCombatAnimation({
+    attacker: varka,
+    defender: vaelor,
+    attackerDies: true,
+    defenderDies: false,
+    damageToAttacker: 6,
+    damageToDefender: 4,
+  });
+
+  assert.equal(animation?.preset, "emerald-fireball");
+  assert.equal(animation?.sourceId, vaelor.instanceId);
+  assert.equal(animation?.targetId, varka.instanceId);
+  assert.equal(animation?.effect.amount, 6);
+
+  assert.equal(resolvePersonalCombatAnimation({
+    attacker: varka,
+    defender: customCard("ordinary-survivor", "player"),
+    attackerDies: true,
+    defenderDies: false,
+    damageToAttacker: 6,
+    damageToDefender: 4,
+  }), undefined);
+});
+
+test("Vaelor's direct Host attack resolves to the shared emerald fireball preset", () => {
+  const vaelor = cardFromDeck("vaelor_emerald_guardian", "player");
+
+  assert.deepEqual(resolvePersonalAttackAnimation(vaelor, 6), {
+    preset: "emerald-fireball",
+    sourceId: vaelor.instanceId,
+    targetKind: "hostLife",
+    suppressDefaultMotion: true,
+    castMs: 220,
+    impactMs: 638,
+    durationMs: 1220,
+    effect: {
+      type: "fireball",
+      variant: "emerald",
+      scale: 1.8,
+      amount: 6,
+      sourceMoves: false,
+    },
+  });
+  assert.equal(resolvePersonalAttackAnimation(customCard("ordinary-attacker", "player"), 1), undefined);
+});
+
+test("a repeated Burn volley lands as one aggregate impact and explicit targets keep their own", () => {
+  // Descarga repetida contra el mismo objetivo: un solo impacto, en el reloj del último proyectil.
+  assert.deepEqual(burnImpactRoutes(3, false, 90), [{ routeIndex: 2, delayMs: 180 }]);
+  assert.deepEqual(burnImpactRoutes(2, false, 0), [{ routeIndex: 1, delayMs: 0 }]);
+  // Objetivos explícitos: cada ruta conserva su impacto y su número de daño.
+  assert.deepEqual(burnImpactRoutes(3, true, 90), [
+    { routeIndex: 0, delayMs: 0 },
+    { routeIndex: 1, delayMs: 90 },
+    { routeIndex: 2, delayMs: 180 },
+  ]);
+  assert.deepEqual(burnImpactRoutes(0, false, 90), []);
+});
+
+test("procedural volleys render every route in bounded shader batches", () => {
+  const explicitImpacts = burnImpactRoutes(14, true, 90);
+  const explicitBatches = burnRenderBatches(14, explicitImpacts, 6);
+  assert.deepEqual(explicitBatches.map((batch) => batch.routeIndexes), [
+    [0, 1, 2, 3, 4, 5],
+    [6, 7, 8, 9, 10, 11],
+    [12, 13],
+  ]);
+  assert.deepEqual(explicitBatches.map((batch) => batch.impacts.length), [6, 6, 2]);
+  assert.deepEqual(explicitBatches[2].impacts, [
+    { routeIndex: 0, delayMs: 1080 },
+    { routeIndex: 1, delayMs: 1170 },
+  ]);
+
+  const aggregateBatches = burnRenderBatches(8, burnImpactRoutes(8, false, 90), 6);
+  assert.deepEqual(aggregateBatches[0].impacts, []);
+  assert.deepEqual(aggregateBatches[1].impacts, [{ routeIndex: 1, delayMs: 630 }]);
+});
+
+test("procedural Burn hides the WebGL buffer until its first rendered frame", () => {
+  const animator = readFileSync(new URL("../src/components/BurnAnimator.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  const renderIndex = animator.indexOf("renderSharedVfxFrame(canvas");
+  const revealIndex = animator.indexOf('canvas.style.opacity = "1"', renderIndex);
+
+  assert.ok(renderIndex >= 0);
+  assert.ok(revealIndex > renderIndex);
+  assert.match(animator, /if \(drawn && !firstFramePresented\)/u);
+  assert.match(animator, /canvas\.style\.opacity = "0";\s*cancelAnimationFrame/u);
+  assert.match(styles, /\.burn-canvas\s*\{[^}]*opacity:\s*0;/u);
+});
+
+// Migración a un único contexto WebGL: ver docs/plan_webgl_context_budget.md.
+const SHARED_RENDERER_ANIMATORS = [
+  "BloodSiphonAnimator",
+  "BuffSurgeAnimator",
+  "BurnAnimator",
+  "DrainEssenceAnimator",
+  "FinalBanquetAnimator",
+  "GrowthBuffAnimator",
+  "HeavyCreatureLanding",
+];
+const OWN_RENDERER_ANIMATORS = [];
+
+test("no animator poisons its canvas with forceContextLoss", () => {
+  // forceContextLoss deja el <canvas> inservible para siempre. Con React.StrictMode cada efecto
+  // se monta, se limpia y se vuelve a montar sobre el mismo lienzo, así que llamarlo en una
+  // limpieza deja el segundo montaje sin contexto y mata todas las animaciones.
+  for (const animator of [...SHARED_RENDERER_ANIMATORS, ...OWN_RENDERER_ANIMATORS]) {
+    const source = readFileSync(new URL(`../src/components/${animator}.tsx`, import.meta.url), "utf8");
+    assert.doesNotMatch(source, /forceContextLoss/u, `${animator} inutilizaría su lienzo`);
+  }
+});
+
+test("migrated animators draw through the single shared WebGL context", () => {
+  for (const animator of SHARED_RENDERER_ANIMATORS) {
+    const source = readFileSync(new URL(`../src/components/${animator}.tsx`, import.meta.url), "utf8");
+    assert.doesNotMatch(source, /new THREE\.WebGLRenderer/u, `${animator} volvió a abrir contexto propio`);
+    assert.match(source, /renderSharedVfxFrame/u, `${animator} debe dibujar por el renderer compartido`);
+  }
+  for (const animator of OWN_RENDERER_ANIMATORS) {
+    const source = readFileSync(new URL(`../src/components/${animator}.tsx`, import.meta.url), "utf8");
+    assert.match(source, /new THREE\.WebGLRenderer/u, `${animator} ya no abre contexto propio: muévelo a la lista migrada`);
+  }
+});
+
+test("the shared renderer preserves premultiplied alpha when copying transparent VFX", () => {
+  const sharedRenderer = readFileSync(
+    new URL("../src/components/sharedVfxRenderer.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(sharedRenderer, /premultipliedAlpha:\s*true/u);
+});
+
+test("the shared VFX surface only grows and its crop reads from the buffer top", () => {
+  // La superficie compartida nunca encoge: redimensionar reasigna el búfer.
+  assert.deepEqual(grownVfxSurface({ width: 1, height: 1 }, 200, 120), { width: 200, height: 120 });
+  assert.deepEqual(grownVfxSurface({ width: 200, height: 120 }, 80, 60), { width: 200, height: 120 });
+  assert.deepEqual(grownVfxSurface({ width: 200, height: 120 }, 80, 300), { width: 200, height: 300 });
+  assert.deepEqual(grownVfxSurface({ width: 200, height: 120 }, 0.2, 0.2), { width: 200, height: 120 });
+
+  // WebGL dibuja desde abajo y drawImage lee desde arriba: el recorte vive en la franja superior.
+  assert.equal(sharedVfxSourceTop(300, 120), 180);
+  assert.equal(sharedVfxSourceTop(120, 120), 0);
+  assert.equal(sharedVfxSourceTop(100, 120), 0);
+});
+
+test("the shared VFX renderer restores global state for every frame", () => {
+  const source = readFileSync(
+    new URL("../src/components/sharedVfxRenderer.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(source, /active\.setClearColor\(0x000000, 0\)/u);
+  assert.match(source, /active\.setPixelRatio\(1\)/u);
+  assert.match(source, /active\.outputEncoding = frame\.outputEncoding \?\? THREE\.sRGBEncoding/u);
+});
+
+test("procedural Burn never mounts the legacy full-screen white flash", () => {
+  const procedural = readFileSync(new URL("../src/components/BurnAnimator.tsx", import.meta.url), "utf8");
+  const classic = readFileSync(new URL("../src/components/ClassicBurnAnimator.tsx", import.meta.url), "utf8");
+
+  assert.doesNotMatch(procedural, /className="burn-screen-flash"/u);
+  assert.match(classic, /className="burn-screen-flash"/u);
+});
+
+test("only Vaelor's entry volley keeps the curved procedural route", () => {
+  assert.equal(burnPathCurvature(undefined), 0);
+  assert.equal(burnPathCurvature("straight"), 0);
+  assert.equal(burnPathCurvature("curved"), 1);
+});
+
+test("Todos contra uno uses the procedural fireball renderer at scale 1.2", () => {
+  const gameStore = readFileSync(new URL("../src/store/useGameStore.ts", import.meta.url), "utf8");
+
+  assert.equal(resolveBurnRenderer("all_against_one"), "procedural");
+  assert.equal(resolveCardBurnScale("all_against_one"), 1.2);
+  assert.equal(resolveBurnRenderer("varka_infernal_matriarch"), "procedural");
+  assert.equal(resolveBurnRenderer(undefined), "procedural");
+  assert.match(gameStore, /scale:\s*resolveCardBurnScale\(source\?\.definitionId\)/u);
+});
+
+test("the legacy classic volley keeps an independent particle clock for every projectile", () => {
+  assert.deepEqual(burnProjectileParticleTimings(3, 90), [
+    { projectileIndex: 0, flightStartMs: 220, impactMs: 638 },
+    { projectileIndex: 1, flightStartMs: 310, impactMs: 728 },
+    { projectileIndex: 2, flightStartMs: 400, impactMs: 818 },
+  ]);
+});
+
+test("each Burn material is only a colour ramp and a density", () => {
+  const emerald = burnMaterialColors("emerald");
+  // Vaelor ya no depende de rotar el tono del mundo: su rampa es verde por derecho propio.
+  assert.ok(emerald.mid[1] > emerald.mid[0] && emerald.mid[1] > emerald.mid[2]);
+  // La brea de Nerezh tapa el fondo; las llamas suman luz.
+  assert.ok(burnMaterialColors("oil").ink > 0.8);
+  for (const variant of ["fire", "emerald", "golden"]) {
+    assert.ok(burnMaterialColors(variant).ink < 0.2);
+  }
+  assert.deepEqual(burnMaterialColors(undefined), burnMaterialColors("fire"));
+});
+
+test("Varka's split projectile origin follows the left and right card edges", () => {
+  assert.deepEqual(burnProjectileOriginRatios(2, "split-horizontal"), [
+    { x: 0.08, y: 0.52 },
+    { x: 0.92, y: 0.52 },
+  ]);
+  assert.deepEqual(burnProjectileOriginRatios(2), [
+    { x: 0.5, y: 0.5 },
+    { x: 0.5, y: 0.5 },
+  ]);
+});
+
+test("every Burn sourced by Varka resolves to her golden material and personal scale", () => {
+  assert.equal(resolveCardBurnMaterial("varka_infernal_matriarch"), "golden");
+  assert.equal(resolveCardBurnMaterial("varka_infernal_matriarch", "oil"), "golden");
+  assert.equal(resolveCardBurnMaterial("ordinary_burn_source", "oil"), "oil");
+  assert.equal(resolveCardBurnScale("varka_infernal_matriarch"), 1.3);
+  assert.equal(resolveCardBurnScale("ordinary_burn_source"), 1);
+});
+
+test("Varka casts two smaller infernal fireballs at defenders and the Chronicler life panel", () => {
+  const varka = cardFromDeck("varka_infernal_matriarch", "host");
+  const defender = customCard("varka-defender", "player");
+
+  assert.deepEqual(resolvePersonalCombatAnimation({
+    attacker: varka,
+    defender,
+    attackerDies: false,
+    defenderDies: false,
+    damageToDefender: 4,
+  }), {
+    preset: "infernal-fireball",
+    sourceId: varka.instanceId,
+    targetId: defender.instanceId,
+    suppressDefaultMotion: true,
+    castMs: 220,
+    impactMs: 638,
+    durationMs: 1220,
+    effect: {
+      type: "fireball",
+      variant: "golden",
+      scale: 1.3,
+      amount: 4,
+      sourceMoves: false,
+      projectileCount: 2,
+      projectileOrigin: "split-horizontal",
+      projectileGapMs: 0,
+    },
+  });
+
+  const direct = resolvePersonalAttackAnimation(varka, 4, "playerLife");
+  assert.deepEqual(direct, {
+    preset: "infernal-fireball",
+    sourceId: varka.instanceId,
+    targetKind: "playerLife",
+    suppressDefaultMotion: true,
+    castMs: 220,
+    impactMs: 638,
+    durationMs: 1220,
+    effect: {
+      type: "fireball",
+      variant: "golden",
+      scale: 1.3,
+      amount: 4,
+      sourceMoves: false,
+      projectileCount: 2,
+      projectileOrigin: "split-horizontal",
+      projectileGapMs: 0,
+    },
+  });
+  assert.equal(hostAttackPlayerHitDelay(direct), 638);
+  assert.equal(hostAttackPlayerHitDelay(undefined), 0);
+});
+
+test("the Host panel reacts when a personal attack impacts, not when it starts", () => {
+  const vaelor = cardFromDeck("vaelor_emerald_guardian", "player");
+  const customAnimation = resolvePersonalAttackAnimation(vaelor, 6);
+
+  assert.equal(playerAttackHostHitDelay(customAnimation), 638);
+  assert.equal(playerAttackHostHitDelay(undefined), 0);
 });
 
 test("defense arrows disappear as soon as either combat endpoint leaves the field", () => {
@@ -133,6 +485,15 @@ test("main menu reserves enough width and breathing room for the Hostfall title"
   assert.match(styles, /\.main-menu-title\s*\{[^}]*margin:\s*16px 0 0;/u);
 });
 
+test("deck setup panels and deck cards opt into shared click audio", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const decksView = readFileSync(new URL("../src/components/DecksView.tsx", import.meta.url), "utf8");
+
+  assert.match(startMenu, /<article\s+data-audio-click="valid"\s+className=\{`expedition-combatant/u);
+  assert.match(decksView, /<button\s+data-audio-click="off"\s+className=\{`deck-key-card/u);
+  assert.match(decksView, /onClick=\{\(\) => \{\s*playSfx\("click"\);\s*onOpen\(\);/u);
+});
+
 test("deck detail close buttons inherit their deck palette", () => {
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
   assert.match(styles, /\.deck-collection-modal-close\s*\{[^}]*var\(--deck-accent,[^}]*var\(--deck-accent-bright,[^}]*var\(--deck-accent-soft,/u);
@@ -159,4 +520,74 @@ test("card names and type lines use initial capitals on every word", () => {
     cardLabelCamelCase("eco de crónica — elfo druida", "es"),
     "Eco De Crónica — Elfo Druida",
   );
+});
+
+test("the Elarion branch buff climbs the card border instead of crossing the art", () => {
+  /* `.growth-three-effect` insets the canvas -34% top, -27% each side and -24% bottom, so a
+     1000x1000 card sits at x 270..1270 and y 240..1240 inside a 1540x1580 canvas. */
+  const width = 1540;
+  const height = 1580;
+  const inner = { left: 270 + 90, right: 1270 - 90, bottom: 240 + 90, top: 1240 - 90 };
+
+  const specs = frameRootPathSpecs(width, height, { duration: 1.08, rootCount: 12 });
+  assert.equal(specs.length, 8);
+  assert.deepEqual(specs.slice(0, 2).map((spec) => spec.leafSide), [1, -1]);
+
+  for (const [index, spec] of specs.entries()) {
+    const curve = new THREE.CatmullRomCurve3(spec.points, false, "centripetal", 0.36);
+    for (let step = 0; step <= 60; step += 1) {
+      const point = curve.getPoint(step / 60);
+      const overArt =
+        point.x > inner.left &&
+        point.x < inner.right &&
+        point.y > inner.bottom &&
+        point.y < inner.top;
+      assert.equal(
+        overArt,
+        false,
+        `strand ${index} covers the portrait at ${point.x.toFixed(0)},${point.y.toFixed(0)}`,
+      );
+    }
+  }
+});
+
+test("frame foliage alternates both rails and only every fourth leaf sits on a tendril", () => {
+  const chosen = Array.from({ length: 12 }, (_, index) => frameLeafRootIndex(index, 8));
+
+  assert.deepEqual(chosen, [0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 4]);
+  assert.equal(chosen.filter((index) => index < 2).length, 9);
+  assert.equal(frameLeafRootIndex(3, 2), 1);
+  assert.equal(frameLeafRootIndex(7, 5), 2 + 1);
+});
+
+test("Kaelor's strike keeps every bolt in the same golden tone", () => {
+  const strike = stormBoltTones(12, "kaelor-a", 7);
+
+  assert.equal(strike.length, 7);
+  assert.deepEqual(stormBoltTones(12, "kaelor-a", 7), strike);
+  assert.deepEqual(strike, Array(7).fill("yellow"));
+  assert.deepEqual(stormBoltTones(99, "kaelor-b", 2), ["yellow", "yellow"]);
+});
+
+test("Kaelor's sky bolts converge on the upper-left marked point without base or rain", () => {
+  /* Cropped Echo row and tall slot: the strike is authored in measured pixels, so both keep the
+     same proportions instead of being stretched by a fixed viewBox. */
+  const slots = [
+    { left: 106, top: 58, width: 172, height: 153 },
+    { left: 93, top: 79, width: 150, height: 209 },
+  ];
+
+  for (const card of slots) {
+    const storm = buildStorm(9, "kaelor-slot", card);
+    const markedX = card.left + card.width * 0.135;
+    const markedY = card.top + card.height * 0.2;
+
+    assert.equal(storm.bolts.length, 2);
+    assert.equal(storm.bolts.filter((bolt) => bolt.primary).length, 1);
+    assert.deepEqual(storm.bolts.map((bolt) => bolt.tone), ["yellow", "yellow"]);
+    assert.equal(storm.impact.x, markedX);
+    assert.equal(storm.impact.y, markedY);
+    assert.equal("ground" in storm, false);
+    assert.equal("flecks" in storm, false);
+  }
 });

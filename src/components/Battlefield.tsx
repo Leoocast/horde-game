@@ -1,7 +1,8 @@
 import type { CardInstance, GameState, Side } from "../engine/GameTypes";
 import { activatedAbilityFailureReason } from "../engine/GameActions";
 import { blockRestrictionReason, canAttack, canBlockAttacker, hasTrait } from "../engine/Traits";
-import { targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
+import { findPermanent, targetCandidates, targetCandidatesWithSelectedTargets, targetRequirementIsBuff } from "../engine/Targeting";
+import { manualInvokedTargetRequirement } from "../engine/EffectResolver";
 import { getPowerEndurance } from "../engine/StaticEffects";
 import { MAX_PLAYER_LANDS } from "../engine/GameRules";
 import { STORED_ENERGY_CAP } from "../engine/EnergySystem";
@@ -18,6 +19,7 @@ import { cardStatState } from "../utils/selectors";
 import { BuffSurgeAnimator } from "./BuffSurgeAnimator";
 import { Card, CardDefenseBadge, CardTraitIconBadges } from "./Card";
 import { GrowthBuffAnimator } from "./GrowthBuffAnimator";
+import { StormBuffAnimator } from "./StormBuffAnimator";
 import { HeavyCreatureLanding } from "./HeavyCreatureLanding";
 import { Zone } from "./Zone";
 import { Hourglass, Zap } from "lucide-react";
@@ -171,6 +173,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
   // targeting states (see CounterTargetingOverlay/SpellTargetingOverlay/TributeOfTheFourSorrowsSelectionOverlay)
   // don't force a full Battlefield re-render on every pointer event.
   const counterTargetingActive = useGameStore((state) => Boolean(state.counterTargeting));
+  const counterTargetingSourceId = useGameStore((state) => state.counterTargeting?.sourceId);
   const counterTargetingTargetId = useGameStore((state) => state.counterTargeting?.targetId);
   const tributeOfTheFourSorrowsSelectionActive = useGameStore((state) => Boolean(state.tributeOfTheFourSorrowsSelection));
   const tributeOfTheFourSorrowsSelectionKind = useGameStore((state) => state.tributeOfTheFourSorrowsSelection?.kind);
@@ -182,7 +185,9 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
   const buffAnimationCardIds = useGameStore((state) => state.buffAnimationCardIds);
   const buffAnimationEventId = useGameStore((state) => state.buffAnimationEventId);
   const buffAnimationVariant = useGameStore((state) => state.buffAnimationVariant);
-  const burnSourceCardId = useGameStore((state) => state.burnAnimation?.sourceId);
+  const burnSourceCardId = useGameStore((state) =>
+    state.burnAnimation?.sourceMoves === false ? undefined : state.burnAnimation?.sourceId,
+  );
   const burnImpactCardId = useGameStore((state) => state.burnImpactCardId);
   const burnImpactCardIds = useGameStore((state) => state.burnImpactCardIds);
   const burnImpactEventId = useGameStore((state) => state.burnImpactEventId);
@@ -191,6 +196,16 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
   const hostCombatDeadCardIds = useGameStore((state) => state.hostCombatDeadCardIds);
   const specialDeadCardIds = useGameStore((state) => state.specialDeadCardIds);
   const autoPaidLandAnimation = useGameStore((state) => state.autoPaidLandAnimation);
+  const counterTargetingSource = counterTargetingSourceId
+    ? findPermanent(game, counterTargetingSourceId)
+    : undefined;
+  const counterTargetingRequirement = manualInvokedTargetRequirement(counterTargetingSource);
+  const counterTargetCandidateIds = new Set(
+    counterTargetingSource && counterTargetingRequirement
+      ? targetCandidates(game, counterTargetingSource.controller, counterTargetingRequirement)
+          .map((candidate) => candidate.instanceId)
+      : [],
+  );
   // Only the blocker id is used here; blockDrag.x/y update on every mousemove while
   // dragging and are consumed by CombatArrows, not here — same rationale as the
   // targeting selectors above.
@@ -858,7 +873,11 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
     const effectActive = activeEffectCardId === card.instanceId;
     const effectClosing = closingEffectCardId === card.instanceId;
     const effectActivating = activatingEffectCardId === card.instanceId;
-    const counterTargetable = Boolean(counterTargetingActive && !counterTargetingTargetId && card.kinds.includes("ECHO"));
+    const counterTargetable = Boolean(
+      counterTargetingActive &&
+      !counterTargetingTargetId &&
+      counterTargetCandidateIds.has(card.instanceId)
+    );
     const counterTargetLocked = counterTargetingTargetId === card.instanceId;
     const spellCard = spellTargetingActive ? game.player.hand.find((item) => item.instanceId === spellTargetingHandId) : undefined;
     const spellReq = spellCard?.requiresTargets[spellTargetingStepIndex ?? 0];
@@ -1032,7 +1051,23 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
                 seedKey={card.instanceId}
               />
             )
-          : (
+          : buffAnimationVariant === "storm-strong"
+            ? (
+                <>
+                  <BuffSurgeAnimator
+                    key={`storm-surge-${buffAnimationEventId}`}
+                    eventId={buffAnimationEventId!}
+                    palette="storm"
+                    seedKey={card.instanceId}
+                  />
+                  <StormBuffAnimator
+                    key={`storm-${buffAnimationEventId}`}
+                    eventId={buffAnimationEventId!}
+                    seedKey={card.instanceId}
+                  />
+                </>
+              )
+            : (
               <>
                 <BuffSurgeAnimator
                   key={`growth-surge-${buffAnimationEventId}`}
@@ -1046,7 +1081,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
                   variant={buffAnimationVariant}
                 />
               </>
-            )
+              )
       )}
       {card.flags.burnSmoke && <span className="burn-card-scorch" aria-hidden="true" />}
       {card.flags.burnSmoke && <span className="burn-card-smoke" aria-hidden="true"><i /><i /><i /></span>}
@@ -1191,7 +1226,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
       )}
       {effectActive && primaryAbility && (
         <button
-          data-audio-click="valid"
+          data-audio-click="off"
           className="effect-action-button"
           onClick={(event) => {
             event.stopPropagation();
@@ -1201,7 +1236,9 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
               triggerEffectActivationPulse(card.instanceId);
             }, 180);
             window.setTimeout(() => {
-              useAudioStore.getState().playSfx("playLand");
+              if (primaryAbility.cost?.exhaust) {
+                useAudioStore.getState().playSfx("playLand");
+              }
               activateAbility(card.instanceId, primaryAbility.id);
             }, 620);
           }}

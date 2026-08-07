@@ -2,7 +2,7 @@
 
 Estado: **integrada en runtime y Card Studio; identidad técnica Hostfall final**
 Deck actual: `legion_of_varka` / `La Legión de Varka`
-Última actualización: 2026-08-01
+Última actualización: 2026-08-06
 
 Este documento conserva la identidad narrativa, el mapeo mecánico y la dirección visual de la
 Legión. Los 17 nombres y sus flavor bilingües viven en
@@ -54,14 +54,14 @@ mando convierten esa presión colectiva en crecimiento, refuerzos o daño direct
 | `all_against_one` | **Todos contra uno** | Apoyo; cada Trasgo atacante de Fuerza 2 o menos aporta 1 de daño. | Muchas manos débiles lanzan remaches que por separado son insignificantes y juntos forman una salva. |
 | `chief_of_the_double_guard` | **Jefe de la Doble Guardia** | 2/2; al entrar Invoca exactamente dos Esbirros de Varka. | Un jefe llega con dos ayudantes y un cajón de herramientas compartido. |
 | `rider_of_the_third_charge` | **Jinete de la Tercera Carga** | 2/2; al entrar Invoca exactamente tres Esbirros de Varka. | Un jinete trasgo abre la tercera carga y arrastra consigo tres nuevos esbirros. |
-| `varkas_linebreaker` | **Rompefilas de Varka** | 2/2; antes de atacar Invoca un Esbirro de Varka y crece por los otros Trasgos atacantes. | La primera sirena abre un portón para un corredor nuevo; la multitud que responde agranda al agitador. |
-| `unleash_the_legion` | **¡Liberen a la Legión!** | Hechizo rápido; da +2/+0 al ejército existente o inicia otra ronda de revelado si no hay criaturas. | Una compuerta explota hacia afuera: detrás puede haber refuerzos o una oleada de presión ofensiva. |
+| `varkas_linebreaker` | **Rompefilas de Varka** | 2/2; antes de atacar Invoca un Esbirro de Varka y gana +1/+0 hasta el final del turno por cada otro Trasgo atacante. | La primera sirena abre un portón para un corredor nuevo; la multitud que responde agranda al agitador. |
+| `unleash_the_legion` | **¡Liberen a la Legión!** | Hechizo rápido; da +2/+0 al ejército existente o inicia otra ronda de Revelado si la Hueste no controla aliados. | Una compuerta explota hacia afuera: detrás puede haber refuerzos o una oleada de presión ofensiva. |
 | `corrupted_war_bear` | **Oso de Guerra Corrompido** | Eco Bestia/Oso vanilla 3/3. | Una bestia sometida a la maquinaria de guerra de la Legión. |
 | `rider_of_the_umbral_volley` | **Jinete de la Salva Umbría** | 4/2; al entrar daña un Eco enemigo según la cantidad de Ecos aliados en el Campo, incluido él mismo. | Jinete orco que mide la salva por todas las voces que responden. |
 | `varka_infernal_matriarch` | **Varka, Matriarca Infernal** | Eco de Crónica 3/3 impresa y 4/4 por su propia Pasiva; Reflejos, +1/+1 a todos los Ecos aliados y 2 de daño global al entrar. | Varka convierte sus cadenas en un círculo de fuego que alcanza a todos sus enemigos. |
 | `varkas_forgemaster` | **Forjador de Varka** | 3/3; da +1/+1 a otros Trasgos. | Armero que remacha placas rescatadas sobre los demás y deja su propia silueta sin el beneficio del aura. |
-| `marshal_of_the_wave` | **Mariscal de la Oleada** | 2/2; una declaración de ataque Invoca un Esbirro de Varka y cada otra llegada causa 1 de daño al Cronista. | Mariscal que abre una salida lateral para un atacante y sincroniza cada nuevo martillo con un golpe de ariete. |
-| `vardek_scribe_of_the_legion` | **Vardek, Escriba de la Legión** | 1/2; al atacar gana un contador +1/+1 e Invoca esa cantidad de Esbirros de Varka. | Vardek marca cada victoria en su armadura y hace aparecer a la cuadrilla que viene a cobrarla. |
+| `marshal_of_the_wave` | **Mariscal de la Oleada** | 2/2; una declaración con uno o más Trasgos Invoca un Esbirro atacando; cada otra llegada causa 1 de daño al Cronista. | Mariscal que abre una salida lateral para un atacante y sincroniza cada nuevo martillo con un golpe de ariete. |
+| `vardek_scribe_of_the_legion` | **Vardek, Escriba de la Legión** | 1/2; al atacar gana un contador +1/+1 y después Invoca Esbirros atacando según su Fuerza resultante. | Vardek marca cada victoria en su armadura y hace aparecer a la cuadrilla que viene a cobrarla. |
 | `rear_guard_firebreather` | **Escupefuego de la Retaguardia** | 2/2; cada muerte de un Trasgo hace 1 de daño a un Eco enemigo aleatorio. | Recoge el último remache de cada aliado caído y lo dispara de inmediato contra una silueta enemiga. |
 
 ## Eco de Crónica
@@ -70,6 +70,25 @@ mando convierten esa presión colectiva en crecimiento, refuerzos o daño direct
 `modifiers: ["CHRONICLE"]`. `marshal_of_the_wave`, `vardek_scribe_of_the_legion` y
 `rear_guard_firebreather` conservan sus reglas, estadísticas y cantidades, pero ya no declaran ese
 modificador. El cambio resuelve la decisión narrativa pendiente sin introducir una mecánica nueva.
+
+## Contratos mecánicos de redacción
+
+- Chamán de la Brasa Sombría y Jinete de la Salva Umbría hacen que la Hueste elija automáticamente
+  un enemigo mediante `BEST_LETHAL`; el texto no presenta esa selección como una decisión del
+  Cronista.
+- Todos contra uno cuenta únicamente Trasgos atacantes con Fuerza 2 o menos, capturados al declarar
+  el ataque, y aplica la suma al terminar toda la secuencia.
+- El daño de entrada de Varka se resuelve como un único evento para el Cronista y cada enemigo; el
+  texto impreso lo expresa como una sola instrucción de daño. Todos sus proyectiles usan el mismo
+  material de fuego amarillo-dorado, incluida esta descarga de entrada.
+- Los ataques de Varka conservan el resultado normal del combate, pero se presentan con dos bolas
+  de fuego amarillo-doradas simultáneas, como las llamas de sus manos y más pequeñas que la de
+  Vaelor. Nacen de los bordes izquierdo y
+  derecho de su carta y convergen sobre un mismo destino: con defensor apuntan a ese Eco; sin
+  defensor apuntan al panel de Vida del Cronista. Ambas rutas producen un solo impacto de reglas.
+- La cantidad de Esbirros creada por Vardek usa su Fuerza después de colocar el contador +1/+1.
+- Forjador de Varka conserva sólo su Pasiva de +1/+1 a los demás Trasgos; su antigua Acción de
+  sacrificio permanece retirada del corte.
 
 ## Contrato de datos y exportación
 

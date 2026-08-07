@@ -21,8 +21,8 @@
       "name": "Sanctuary of the Red Moon",
       "displayNameEs": "Santuario de la Luna Roja",
       "gameText": {
-        "en": "Exhaust: Gain 1 Energy.",
-        "es": "Agota: Gana 1 Energía."
+        "en": "Exhaust this card; add 1 Energy.",
+        "es": "Agota esta carta; agrega 1 de Energía."
       },
       "flavorText": {
         "en": "During the eclipse, every tower casts a shadow pointing toward Mirevna's throne.",
@@ -65,8 +65,8 @@
       "name": "Blood Page",
       "displayNameEs": "Paje de la Sed",
       "gameText": {
-        "en": "The first time you lose Life each turn, this card gains +2/+0 until the end of the turn.",
-        "es": "La primera vez que pierdas Vida en cada turno, esta carta gana +2/+0 hasta el final del turno."
+        "en": "The first time you lose Life each turn: if this Echo is ready, it gains +2/+0 until the end of the turn.",
+        "es": "La primera vez que pierdas Vida en cada turno: si este Eco está preparado, gana +2/+0 hasta el final del turno."
       },
       "flavorText": {
         "en": "Every drop spilled before the Court filled her cup without ever reaching the floor.",
@@ -155,8 +155,8 @@
       "name": "Midnight Collector",
       "displayNameEs": "Recaudador de Medianoche",
       "gameText": {
-        "en": "Exhaust and pay 5 Life: Gain 1 Energy.",
-        "es": "Agota y paga 5 de Vida: Gana 1 Energía."
+        "en": "Exhaust this card and pay 5 Life; add 1 Energy.",
+        "es": "Agota esta carta y paga 5 de Vida; agrega 1 de Energía."
       },
       "flavorText": {
         "en": "Mirevna collects no gold. She collects the years you still thought you would live.",
@@ -204,8 +204,8 @@
       "name": "Duelist of the Eclipse",
       "displayNameEs": "Duelista del Eclipse",
       "gameText": {
-        "en": "Once during your turn, you may pay 3 Life. If you do, this Echo gains +3/+1 until your next turn.",
-        "es": "Una vez durante tu turno, puedes pagar 3 de Vida. Si lo haces, este Eco gana +3/+1 hasta tu próximo turno."
+        "en": "Once during your turn, if this Echo is not Stabilizing: pay 3 Life; this Echo gains +3/+1 until your next turn.",
+        "es": "Una vez durante tu turno, si este Eco no está Estabilizándose: paga 3 de Vida; este Eco gana +3/+1 hasta tu próximo turno."
       },
       "flavorText": {
         "en": "Beneath the crimson moon, every bow leaves the neck exposed.",
@@ -254,8 +254,8 @@
       "name": "Guardian of the Night Threshold",
       "displayNameEs": "Guardiana del Umbral Nocturno",
       "gameText": {
-        "en": "When this card is dealt damage and survives, gain 2 Life.",
-        "es": "Cuando reciba daño y sobreviva, ganas 2 de Vida."
+        "en": "When this Echo is dealt damage and survives: gain 2 Life.",
+        "es": "Cuando este Eco reciba daño y sobreviva: gana 2 de Vida."
       },
       "flavorText": {
         "en": "She guarded the threshold with one certainty: all blood spilled would eventually return to the Court.",
@@ -369,8 +369,8 @@
       "name": "Mirevna, Countess of the Crimson Eclipse",
       "displayNameEs": "Mirevna, Condesa del Eclipse Carmesí",
       "gameText": {
-        "en": "Additional cost: Pay half your Life.\nDuring your turn, this Echo has Drain.",
-        "es": "Coste adicional: Paga la mitad de tu Vida.\nDurante tu turno, este Eco tiene Drenar."
+        "en": "Additional cost: pay half your Life, rounded up.\nDuring your turn: this Echo has Drain.",
+        "es": "Coste adicional: paga la mitad de tu Vida, redondeada hacia arriba.\nDurante tu turno: este Eco tiene Drenar."
       },
       "flavorText": {
         "en": "Mirevna always returns the blood you have given her, though it never comes from the same veins.",
@@ -437,8 +437,8 @@
       "name": "Midnight Pact",
       "displayNameEs": "Pacto de Medianoche",
       "gameText": {
-        "en": "Additional cost: Pay 5 Life.\nDraw 2 cards.",
-        "es": "Coste adicional: Paga 5 de Vida.\nRoba 2 cartas."
+        "en": "Additional cost: pay 5 Life.\nDraw 2 cards.",
+        "es": "Coste adicional: paga 5 de Vida.\nRoba 2 cartas."
       },
       "flavorText": {
         "en": "Five heartbeats buy two secrets. Neither returns to its owner.",
@@ -481,8 +481,8 @@
       "name": "Crimson Impulse",
       "displayNameEs": "Impulso Carmesí",
       "gameText": {
-        "en": "Additional cost: Pay 2 Life.\nAn ally gains +2/+2 and Flying until the end of the turn.",
-        "es": "Coste adicional: Paga 2 de Vida.\nUn aliado gana +2/+2 y Volar hasta el final del turno."
+        "en": "Additional cost: pay 2 Life.\nChoose an ally; that ally gains +2/+2 and Flying until the end of the turn.",
+        "es": "Coste adicional: paga 2 de Vida.\nElige un aliado; ese aliado gana +2/+2 y Volar hasta el final del turno."
       },
       "flavorText": {
         "en": "The blood touched the eclipse and, for an instant, remembered it once had wings.",
@@ -548,8 +548,8 @@
       "name": "Drain Essence",
       "displayNameEs": "Drenar la Esencia",
       "gameText": {
-        "en": "Deal 3 damage to an Echo. Gain 2 Life.",
-        "es": "Haz 3 de daño a un Eco. Gana 2 de Vida."
+        "en": "Choose an Echo; deal 3 damage to that Echo. Gain 2 Life.",
+        "es": "Elige un Eco; inflige 3 de daño a ese Eco. Gana 2 de Vida."
       },
       "flavorText": {
         "en": "The Court let no pain go to waste: even a final breath could become sustenance.",
@@ -612,8 +612,8 @@
       "name": "Hunt Beneath the Red Moon",
       "displayNameEs": "Cacería Bajo la Luna Roja",
       "gameText": {
-        "en": "All your allies gain Drain until the End.",
-        "es": "Todos tus aliados ganan Drenar hasta el Final."
+        "en": "All your allies gain Drain until the end of the turn.",
+        "es": "Todos tus aliados ganan Drenar hasta el final del turno."
       },
       "flavorText": {
         "en": "Mirevna gave no order. The moon only had to turn red for the entire Court to hunt.",
@@ -661,8 +661,8 @@
       "name": "Verdict of the Eclipse",
       "displayNameEs": "Veredicto del Eclipse",
       "gameText": {
-        "en": "Destroy an enemy. Lose Life equal to its Power.",
-        "es": "Destruye un enemigo. Pierdes Vida igual a su Fuerza."
+        "en": "Choose an enemy; destroy it. Then, lose Life equal to the Power it had.",
+        "es": "Elige un enemigo; destrúyelo. Después, pierdes Vida igual a la Fuerza que tenía."
       },
       "flavorText": {
         "en": "The greater the threat, the more blood the eclipse demanded to erase it.",

@@ -11,7 +11,14 @@ import {
   serializeAudioMix,
 } from "../src/audio/audioMix.ts";
 import { musicCollectionIds } from "../src/audio/musicManifest.ts";
-import { sfxManifest } from "../src/audio/soundManifest.ts";
+import { sfxManifest, sfxMetadata } from "../src/audio/soundManifest.ts";
+import { AUDIO_FEATURE_FLAGS, audioFeatureEnabled } from "../src/config/featureFlags.ts";
+
+const newFeatureSfx = [
+  "selectAttacker",
+  "stoneCrash",
+  "vaelorLinePlay",
+];
 
 test("the checked-in audio mix covers every manifest entry", () => {
   assert.deepEqual(projectAudioMixProblems, []);
@@ -26,6 +33,17 @@ test("an exported audio mix round-trips without corrections", () => {
   const parsed = parseAudioMix(serializeAudioMix(projectAudioMix));
   assert.deepEqual(parsed.problems, []);
   assert.deepEqual(parsed.config, projectAudioMix);
+});
+
+test("new gameplay cues remain individually flagged and visible in Audio Lab", () => {
+  assert.deepEqual(Object.keys(AUDIO_FEATURE_FLAGS), newFeatureSfx);
+  for (const id of newFeatureSfx) {
+    assert.equal(audioFeatureEnabled(id), true);
+    assert.equal(sfxMetadata[id].group, "new");
+    assert.equal(typeof sfxManifest[id], "string");
+    assert.equal(Number.isFinite(projectAudioMix.sfx[id]), true);
+  }
+  assert.equal(audioFeatureEnabled("click"), true);
 });
 
 test("invalid or missing trims fall back safely and are reported", () => {

@@ -8,6 +8,7 @@ export function PlayerAttackAnimator() {
 
   useEffect(() => {
     if (!playerAttackAnimation) return;
+    if (playerAttackAnimation.customAnimation?.suppressDefaultMotion) return;
 
     const attacker = document.querySelector<HTMLElement>(`[data-card-slot-id="${playerAttackAnimation.attackerId}"]`);
     if (!attacker) return;

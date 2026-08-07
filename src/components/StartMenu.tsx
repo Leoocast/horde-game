@@ -788,6 +788,7 @@ function SetupCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onChangeDe
   const deckTheme = deck?.presentation.theme ?? "ramp";
   return (
     <article
+      data-audio-click="valid"
       className={`expedition-combatant expedition-combatant-${side} deck-theme-${deckTheme}`}
       // Anywhere on the panel opens the drawer; the heading's own buttons keep their meaning.
       onClick={(event) => {

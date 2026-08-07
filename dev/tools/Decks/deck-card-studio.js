@@ -5,11 +5,27 @@
     const container = document.getElementById("cards-container");
     const status = document.getElementById("studio-status");
     const generatedData = window.HostfallDeckData;
+    const requestedLanguage = new URLSearchParams(window.location.search).get("lang");
     const CARD_WIDTH = 976;
     const CARD_HEIGHT = 1360;
     const setCode = (body.dataset.setCode || "HFX").toUpperCase();
     const theme = body.dataset.theme || "";
     const cardText = window.HostfallCardText;
+
+    function generatedLanguages(payload) {
+        if (!payload || !Array.isArray(payload.languages)) {
+            return [{ code: "es", label: "Español", htmlLang: "es" }];
+        }
+        return payload.languages.filter((entry) => entry?.code);
+    }
+
+    const languages = generatedLanguages(generatedData);
+    const defaultLanguage = String(generatedData?.defaultLanguage || "es");
+    const language = languages.some((entry) => entry.code === requestedLanguage)
+        ? requestedLanguage
+        : defaultLanguage;
+    const languageMeta = languages.find((entry) => entry.code === language);
+    document.documentElement.lang = languageMeta?.htmlLang || language;
 
     if (!cardText) {
         throw new Error("No se cargó deck-card-text.js antes del estudio de cartas.");
@@ -319,8 +335,8 @@
             const type = String(card.tipo || "Carta");
             const effect = String(card.desc || "");
             const lore = String(card.lore || "");
-            const noAdditionalEffect =
-                effect.trim().toLocaleLowerCase("es") === "sin efecto adicional.";
+            const noAdditionalEffect = /^(?:sin efecto (?:activo )?adicional|no additional effect)\.$/iu
+                .test(effect.trim());
             const hasEffect = effect.trim() !== "" && !noAdditionalEffect;
             const hasLore = card.showFlavorText !== false && lore.trim() !== "";
             const hasStats = card.atk !== null && card.atk !== undefined
@@ -448,7 +464,10 @@
 
     function readGeneratedCards() {
         try {
-            return normalizeCards(generatedData);
+            const localized = generatedData?.cardsByLanguage?.[language]
+                ?? generatedData?.cardsByLanguage?.[defaultLanguage]
+                ?? generatedData;
+            return normalizeCards(localized);
         } catch (error) {
             console.error(error);
             if (status) status.textContent = `No se pudieron leer los datos generados: ${error.message}`;
@@ -472,6 +491,8 @@
     window.HostfallStudio = {
         renderCards,
         applyDeckMotif,
-        readGeneratedCards
+        readGeneratedCards,
+        language,
+        languages
     };
 })();

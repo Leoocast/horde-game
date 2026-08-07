@@ -4,6 +4,7 @@ import { matchesFilter } from "../engine/StaticEffects";
 
 export type CardVoiceCue = {
   sfx: SfxId;
+  additionalSfx?: readonly SfxId[];
 };
 
 export type CardVoiceCueMatch = {
@@ -42,6 +43,13 @@ type CardVoiceRule = {
 /** Presentation-only card interactions. Adding a future voice relationship should be data here:
  * the matching code stays generic across definitions, creature types and combat events. */
 export const CARD_VOICE_RULES: readonly CardVoiceRule[] = [
+  {
+    id: "vaelor-enters",
+    sourceDefinitionId: "vaelor_emerald_guardian",
+    event: "INVOKED",
+    subject: "SOURCE",
+    cues: [{ sfx: "vaelorLinePlay", additionalSfx: ["stoneCrash"] }],
+  },
   {
     id: "countess-enters",
     sourceDefinitionId: "mirevna_countess_of_the_crimson_eclipse",

@@ -6,13 +6,15 @@ import { previewPlayerAttackDrain } from "../engine/CombatResolver";
 import { getPowerEndurance } from "../engine/StaticEffects";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
-import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
+import { useGameStore } from "../store/useGameStore";
 import { shouldShowFullCardImage } from "../utils/cardImages";
 import { Card } from "./Card";
 import { GameTooltip } from "./GameTooltip";
 import { GraveyardViewerModal } from "./GraveyardViewerModal";
+import { hostAttackPlayerHitDelay } from "./hostAttackPresentation";
 import { remainingArchiveDiscardPreview } from "./hostArchiveCounter";
+import { playerAttackHostHitDelay } from "./playerAttackPresentation";
 
 export function DuelHud({ game }: { game: GameState }) {
   const t = useTranslation();
@@ -69,11 +71,23 @@ export function DuelHud({ game }: { game: GameState }) {
     if (lastPlayerAttackEvent.current === eventKey) return;
     lastPlayerAttackEvent.current = eventKey;
     setHostTakingDamage(false);
-    const frame = window.requestAnimationFrame(() => setHostTakingDamage(true));
-    const timeout = window.setTimeout(() => setHostTakingDamage(false), 430);
+    const impactDelay = playerAttackHostHitDelay(playerAttackAnimation.customAnimation);
+    let frame: number | undefined;
+    let impactTimeout: number | undefined;
+    let clearTimeout: number | undefined;
+    const startImpact = () => {
+      setHostTakingDamage(true);
+      clearTimeout = window.setTimeout(() => setHostTakingDamage(false), 430);
+    };
+    if (impactDelay > 0) {
+      impactTimeout = window.setTimeout(startImpact, impactDelay);
+    } else {
+      frame = window.requestAnimationFrame(startImpact);
+    }
     return () => {
-      window.cancelAnimationFrame(frame);
-      window.clearTimeout(timeout);
+      if (frame !== undefined) window.cancelAnimationFrame(frame);
+      if (impactTimeout !== undefined) window.clearTimeout(impactTimeout);
+      if (clearTimeout !== undefined) window.clearTimeout(clearTimeout);
     };
   }, [playerAttackAnimation]);
 
@@ -415,13 +429,21 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   useEffect(() => {
     if (!hostAttackAnimation || hostAttackAnimation.eventId === lastEventId.current || hostAttackAnimation.playerDamage <= 0) return;
     lastEventId.current = hostAttackAnimation.eventId;
-    setVisualLife((life) => Math.max(0, life - hostAttackAnimation.playerDamage));
-    setTakingDamage(false);
-    const frame = window.requestAnimationFrame(() => setTakingDamage(true));
-    const timeout = window.setTimeout(() => setTakingDamage(false), 430);
+    const hitDelay = hostAttackPlayerHitDelay(hostAttackAnimation.customAnimation);
+    let frame: number | undefined;
+    const impact = () => {
+      if (hitDelay === 0) {
+        setVisualLife((life) => Math.max(0, life - hostAttackAnimation.playerDamage));
+      }
+      setTakingDamage(false);
+      frame = window.requestAnimationFrame(() => setTakingDamage(true));
+    };
+    const impactTimeout = window.setTimeout(impact, hitDelay);
+    const clearTimeout = window.setTimeout(() => setTakingDamage(false), hitDelay + 430);
     return () => {
-      window.cancelAnimationFrame(frame);
-      window.clearTimeout(timeout);
+      if (frame !== undefined) window.cancelAnimationFrame(frame);
+      window.clearTimeout(impactTimeout);
+      window.clearTimeout(clearTimeout);
     };
   }, [hostAttackAnimation]);
 

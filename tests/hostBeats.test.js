@@ -77,6 +77,363 @@ test("a lethal Host impact stops the remaining attack sequence immediately", asy
   }
 });
 
+test("Vaelor's winning defense overrides Varka's losing personal attack animation", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { resetHostSequence },
+    { resetPlayerTriggerSequence },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/store/hostBeats"),
+    import("../src/store/playerBeats"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  const originalStopAllSfx = useAudioStore.getState().stopAllSfx;
+  useAudioStore.setState({ playSfx: () => undefined, stopAllSfx: () => undefined });
+
+  try {
+    resetHostSequence();
+    resetPlayerTriggerSequence();
+    const game = createTestGame("vaelor-personal-defense-animation");
+    game.activeSide = "host";
+    game.phase = "combat";
+    const attacker = addCard(game, cardFromDeck("varka_infernal_matriarch", "host"));
+    addCard(game, customCard("host-bystander", "host"));
+    const vaelor = addCard(game, cardFromDeck("vaelor_emerald_guardian", "player"));
+    game.combat.hostAttackers = [attacker.instanceId];
+    game.combat.blockers = { [attacker.instanceId]: [vaelor.instanceId] };
+
+    useGameStore.setState({
+      game,
+      hostAttackAnimation: undefined,
+      burnAnimation: undefined,
+      resolvingHostCombat: false,
+      hostAutoTriggerCount: 0,
+      playerAutoTriggerCount: 0,
+      hostCombatDeadCardIds: [],
+      hostCombatVisualDamage: {},
+    });
+
+    useGameStore.getState().resolveHostCombat();
+    const started = useGameStore.getState();
+    assert.equal(started.hostAttackAnimation?.customAnimation?.preset, "emerald-fireball");
+    assert.equal(started.hostAttackAnimation?.customAnimation?.suppressDefaultMotion, true);
+    assert.match(started.burnAnimation?.id ?? "", /^personal-combat-\d+-0$/u);
+    assert.deepEqual({ ...started.burnAnimation, id: undefined }, {
+      id: undefined,
+      sourceId: vaelor.instanceId,
+      targetId: attacker.instanceId,
+      targetKind: "card",
+      amount: 6,
+      variant: "emerald",
+      scale: 1.8,
+      sourceMoves: false,
+    });
+
+    timers.releaseExpiredAt(637);
+    assert.equal(useGameStore.getState().game.host.field.some((card) => card.instanceId === attacker.instanceId), true);
+    assert.equal(useGameStore.getState().game.player.field.some((card) => card.instanceId === vaelor.instanceId), true);
+
+    timers.releaseExpiredAt(638);
+    const atImpact = useGameStore.getState();
+    assert.equal(atImpact.game.host.field.some((card) => card.instanceId === attacker.instanceId), false);
+    assert.equal(atImpact.game.player.field.some((card) => card.instanceId === vaelor.instanceId), true);
+    assert.equal(atImpact.burnAnimation?.variant, "emerald");
+
+    timers.releaseExpiredAt(1220);
+    assert.equal(useGameStore.getState().hostAttackAnimation, undefined);
+    assert.equal(useGameStore.getState().burnAnimation, undefined);
+  } finally {
+    resetPlayerTriggerSequence();
+    resetHostSequence();
+    useAudioStore.setState({ playSfx: originalPlaySfx, stopAllSfx: originalStopAllSfx });
+    globalThis.window = originalWindow;
+  }
+});
+
+test("Vaelor attacks the Host panel with his personal emerald fireball", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { useAudioStore },
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    const game = createTestGame("vaelor-personal-attack-animation");
+    game.activeSide = "player";
+    game.phase = "combat";
+    game.setupTurnsRemaining = 0;
+    const vaelor = addCard(game, cardFromDeck("vaelor_emerald_guardian", "player"));
+    for (let index = 0; index < 3; index += 1) {
+      addCard(game, customCard(`host-archive-${index}`, "host", { zone: "archive" }));
+    }
+    game.combat.playerAttackers = [vaelor.instanceId];
+
+    useGameStore.setState({
+      game,
+      playerAttackAnimation: undefined,
+      burnAnimation: undefined,
+      hostMillAnimationQueue: [],
+      hostMillPreviewCards: [],
+    });
+
+    useGameStore.getState().finishPlayerCombat();
+    timers.releaseExpiredAt(0);
+    const started = useGameStore.getState();
+    assert.equal(started.playerAttackAnimation?.customAnimation?.preset, "emerald-fireball");
+    assert.equal(started.burnAnimation?.sourceId, vaelor.instanceId);
+    assert.equal(started.burnAnimation?.targetKind, "hostLife");
+    assert.equal(started.burnAnimation?.variant, "emerald");
+    assert.equal(started.burnAnimation?.scale, 1.8);
+
+    timers.releaseExpiredAt(637);
+    assert.deepEqual(useGameStore.getState().hostMillPreviewCards, []);
+    assert.equal(useGameStore.getState().game.host.archive.length, 3);
+
+    timers.releaseExpiredAt(638);
+    assert.equal(useGameStore.getState().hostMillPreviewCards.length, 1);
+    assert.equal(useGameStore.getState().game.host.archive.length, 3);
+
+    timers.releaseExpiredAt(1220);
+    assert.equal(useGameStore.getState().burnAnimation, undefined);
+
+    timers.releaseExpiredAt(1903);
+    const completed = useGameStore.getState();
+    assert.equal(completed.game.host.archive.length, 1);
+    assert.equal(completed.game.host.memory.length, 2);
+    assert.equal(completed.playerAttackAnimation, undefined);
+  } finally {
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
+test("stacked Varkas attack consecutively with their own infernal fireballs", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { resetHostSequence },
+    { resetPlayerTriggerSequence },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame },
+  ] = await Promise.all([
+    import("../src/store/hostBeats"),
+    import("../src/store/playerBeats"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  const originalStopAllSfx = useAudioStore.getState().stopAllSfx;
+  useAudioStore.setState({ playSfx: () => undefined, stopAllSfx: () => undefined });
+
+  try {
+    resetHostSequence();
+    resetPlayerTriggerSequence();
+    const game = createTestGame("varka-personal-direct-attack-animation");
+    game.activeSide = "host";
+    game.phase = "combat";
+    const firstVarka = addCard(game, cardFromDeck("varka_infernal_matriarch", "host"));
+    const secondVarka = addCard(game, cardFromDeck("varka_infernal_matriarch", "host"));
+    game.combat.hostAttackers = [firstVarka.instanceId, secondVarka.instanceId];
+
+    useGameStore.setState({
+      game,
+      hostAttackAnimation: undefined,
+      burnAnimation: undefined,
+      resolvingHostCombat: false,
+      hostAutoTriggerCount: 0,
+      playerAutoTriggerCount: 0,
+      hostCombatDeadCardIds: [],
+      hostCombatVisualDamage: {},
+    });
+
+    useGameStore.getState().resolveHostCombat();
+    const started = useGameStore.getState();
+    assert.equal(started.hostAttackAnimation?.customAnimation?.preset, "infernal-fireball");
+    assert.equal(started.burnAnimation?.sourceId, firstVarka.instanceId);
+    assert.equal(started.burnAnimation?.targetKind, "playerLife");
+    assert.equal(started.burnAnimation?.variant, "golden");
+    assert.equal(started.burnAnimation?.scale, 1.3);
+    assert.equal(started.burnAnimation?.projectileCount, 2);
+    assert.equal(started.burnAnimation?.projectileOrigin, "split-horizontal");
+    assert.equal(started.burnAnimation?.projectileGapMs, 0);
+    const firstDamage = started.burnAnimation?.amount ?? 0;
+    assert.ok(firstDamage > 0);
+
+    timers.releaseExpiredAt(637);
+    assert.equal(useGameStore.getState().game.player.life, 30);
+
+    timers.releaseExpiredAt(638);
+    assert.equal(useGameStore.getState().game.player.life, 30 - firstDamage);
+
+    timers.releaseExpiredAt(1220);
+    const secondStarted = useGameStore.getState();
+    assert.equal(secondStarted.hostAttackAnimation?.customAnimation?.preset, "infernal-fireball");
+    assert.equal(secondStarted.burnAnimation?.sourceId, secondVarka.instanceId);
+    assert.equal(secondStarted.burnAnimation?.projectileCount, 2);
+    const secondDamage = secondStarted.burnAnimation?.amount ?? 0;
+    assert.ok(secondDamage > 0);
+
+    timers.releaseExpiredAt(1858);
+    assert.equal(useGameStore.getState().game.player.life, 30 - firstDamage - secondDamage);
+
+    timers.releaseExpiredAt(2440);
+    assert.equal(useGameStore.getState().burnAnimation, undefined);
+  } finally {
+    resetPlayerTriggerSequence();
+    resetHostSequence();
+    useAudioStore.setState({ playSfx: originalPlaySfx, stopAllSfx: originalStopAllSfx });
+    globalThis.window = originalWindow;
+  }
+});
+
+test("Vaelor's entry volley waits for the summon and applies all counters at one impact", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { resetHostSequence },
+    { resetPlayerTriggerSequence },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, addSources, cardFromDeck, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/store/hostBeats"),
+    import("../src/store/playerBeats"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  const originalStopAllSfx = useAudioStore.getState().stopAllSfx;
+  useAudioStore.setState({ playSfx: () => undefined, stopAllSfx: () => undefined });
+
+  try {
+    resetHostSequence();
+    resetPlayerTriggerSequence();
+    const game = createTestGame("vaelor-entry-volley-presentation");
+    game.activeSide = "player";
+    game.phase = "main";
+    game.setupTurnsRemaining = 0;
+    addSources(game, 6);
+    const firstEnemy = addCard(game, customCard("vaelor-entry-first-enemy", "host", { power: 3, endurance: 3 }));
+    const secondEnemy = addCard(game, customCard("vaelor-entry-second-enemy", "host", { power: 4, endurance: 4 }));
+    const vaelor = addCard(game, cardFromDeck("vaelor_emerald_guardian", "player", "hand"), "player", "hand");
+
+    useGameStore.setState({
+      game,
+      burnAnimation: undefined,
+      burnImpactCardIds: [],
+      hostAutoTriggerCount: 0,
+      playerAutoTriggerCount: 0,
+      summoningAnimationCount: 0,
+      specialDeadCardIds: [],
+    });
+
+    useGameStore.getState().castCard(vaelor.instanceId);
+    assert.equal(useGameStore.getState().game.eventQueue[0]?.type, "COUNTER_VOLLEY");
+    assert.equal(useGameStore.getState().game.host.field[0].counters["-1/-1"] ?? 0, 0);
+    assert.equal(useGameStore.getState().burnAnimation, undefined);
+
+    useGameStore.getState().endSummoningAnimation();
+    timers.releaseExpiredAt(40);
+    const started = useGameStore.getState();
+    assert.equal(started.burnAnimation?.sourceId, vaelor.instanceId);
+    assert.equal(started.burnAnimation?.variant, "emerald");
+    assert.equal(started.burnAnimation?.scale, 1.8);
+    assert.equal(started.burnAnimation?.trajectory, "curved");
+    assert.equal(started.burnAnimation?.sourceMoves, false);
+    assert.equal(started.burnAnimation?.projectileGapMs, 0);
+    assert.equal(started.burnAnimation?.impactLabel, "-1/-1");
+    assert.deepEqual(started.burnAnimation?.targets, [
+      { targetKind: "card", targetId: firstEnemy.instanceId },
+      { targetKind: "card", targetId: secondEnemy.instanceId },
+    ]);
+
+    timers.releaseExpiredAt(677);
+    assert.equal(useGameStore.getState().game.host.field[0].counters["-1/-1"] ?? 0, 0);
+
+    timers.releaseExpiredAt(678);
+    assert.equal(useGameStore.getState().game.host.field.find((card) => card.instanceId === firstEnemy.instanceId)?.counters["-1/-1"], 1);
+    assert.equal(useGameStore.getState().game.host.field.find((card) => card.instanceId === secondEnemy.instanceId)?.counters["-1/-1"], 1);
+
+    timers.releaseExpiredAt(1260);
+    assert.equal(useGameStore.getState().burnAnimation, undefined);
+  } finally {
+    resetPlayerTriggerSequence();
+    resetHostSequence();
+    useAudioStore.setState({ playSfx: originalPlaySfx, stopAllSfx: originalStopAllSfx });
+    globalThis.window = originalWindow;
+  }
+});
+
 test("a throttled Varka volley consumes its event before the beat finishes", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
@@ -139,6 +496,8 @@ test("a throttled Varka volley consumes its event before the beat finishes", asy
     scheduleQueuedHostTriggers(() => {
       completed = true;
     });
+    assert.equal(useGameStore.getState().burnAnimation?.variant, "golden");
+    assert.equal(useGameStore.getState().burnAnimation?.scale, 1.3);
 
     // Simulate a background/busy tab: impact, delayed death commit and animation finish
     // have all expired before the browser gets a chance to run any callback.
@@ -776,7 +1135,7 @@ test("Hunt Beneath the Red Moon presents its temporary Lifesteal on every allied
   }
 });
 
-test("Kaelor uses the shared growth animation when the first allied Echo is Invoked", async () => {
+test("Kaelor uses his storm animation when the first allied Echo is Invoked", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -829,7 +1188,7 @@ test("Kaelor uses the shared growth animation when the first allied Echo is Invo
     assert.equal(buffedKaelor?.untilNextPlayerTurnPower, 1);
     assert.equal(buffedKaelor?.untilNextPlayerTurnEndurance, 1);
     assert.deepEqual(result.buffAnimationCardIds, [ranger.instanceId]);
-    assert.equal(result.buffAnimationVariant, "growth-strong");
+    assert.equal(result.buffAnimationVariant, "storm-strong");
   } finally {
     useAudioStore.setState({ playSfx: originalPlaySfx });
     globalThis.window = originalWindow;
@@ -1472,6 +1831,80 @@ test("a deferred vanilla Host arrival still notifies ECHO_INVOKED observers", as
     const awaitingGeneral = useGameStore.getState();
     assert.equal(awaitingGeneral.hostAutoTriggerCount, 1);
     assert.equal(awaitingGeneral.game.eventQueue[0]?.type, "ECHO_INVOKED");
+  } finally {
+    resetHostSequence();
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
+test("Tribute of the Four Sorrows sacrifices the weakest Host Echo without discarding its Archive", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+    innerWidth: 1280,
+    innerHeight: 720,
+  };
+
+  const [
+    { resetHostSequence },
+    { runTributeOfTheFourSorrowsSequence },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/store/hostBeats"),
+    import("../src/store/tributeOfTheFourSorrowsSequence"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    resetHostSequence();
+    const game = createTestGame("tribute-no-host-archive-discard");
+    const tribute = cardFromDeck("tribute_of_the_four_sorrows", "host");
+    const weakest = addCard(game, customCard("tribute_weakest", "host", { power: 1, endurance: 1 }));
+    addCard(game, customCard("tribute_stronger", "host", { power: 3, endurance: 3 }));
+    const archived = addCard(
+      game,
+      customCard("tribute_archive_witness", "host", { zone: "archive" }),
+      "host",
+      "archive",
+    );
+    game.host.pendingCard = tribute;
+    useGameStore.setState({
+      game,
+      tributeOfTheFourSorrowsCard: undefined,
+      tributeOfTheFourSorrowsSelection: undefined,
+      hostAutoTriggerCount: 0,
+      specialDeadCardIds: [],
+      hostMillAnimationQueue: [],
+    });
+
+    runTributeOfTheFourSorrowsSequence(tribute);
+    timers.releaseExpiredAt(700);
+
+    const awaitingSacrifice = useGameStore.getState();
+    assert.deepEqual(awaitingSacrifice.game.host.archive.map((card) => card.instanceId), [archived.instanceId]);
+    assert.deepEqual(awaitingSacrifice.specialDeadCardIds, [weakest.instanceId]);
+
+    timers.releaseExpiredAt(960);
+    const afterSacrifice = useGameStore.getState();
+    assert.deepEqual(afterSacrifice.game.host.archive.map((card) => card.instanceId), [archived.instanceId]);
+    assert.equal(afterSacrifice.game.host.field.some((card) => card.instanceId === weakest.instanceId), false);
   } finally {
     resetHostSequence();
     useAudioStore.setState({ playSfx: originalPlaySfx });

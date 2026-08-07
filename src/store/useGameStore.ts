@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { acceptOpeningHand, createInitialGame, mulliganOpeningHand } from "../engine/GameState";
 import type { AbilityOptions, CardInstance, CastOptions, DifficultyMode, EffectDefinition, EventItem, GameMode, GameState, Phase } from "../engine/GameTypes";
 import { DEFAULT_HOST_DECK_ID, DEFAULT_PLAYER_DECK_ID, getHostDeck, getPlayerDeck } from "../data/decks";
+import { AUDIO_FEATURE_FLAGS } from "../config/featureFlags";
 import { advancePhase, endPlayerTurn } from "../engine/PhaseManager";
 import { activateAbility as activateEngineAbility, castCard, playLand, recycleEnergy } from "../engine/GameActions";
 import { lifeCostAmount } from "../engine/ActionCosts";
@@ -27,7 +28,7 @@ import {
 import { finishHostTurn, revealHostCardFromTop, runHostMain as runHostMainPhase } from "../engine/HostController";
 import { canAttack, hasTrait } from "../engine/Traits";
 import { getPowerEndurance, hostInSurge } from "../engine/StaticEffects";
-import { EFFECT_ANNOUNCEMENTS, destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, findManualInvokedTargetTrigger, hasEffectPresentation, resolveEffect, resolveEffects, triggerConditionMet } from "../engine/EffectResolver";
+import { EFFECT_ANNOUNCEMENTS, destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, findManualInvokedTargetTrigger, hasEffectPresentation, manualInvokedTargetRequirement, resolveEffect, resolveEffects, triggerConditionMet } from "../engine/EffectResolver";
 import { type StaticAura } from "../engine/StaticAuras";
 import { drainEventQueue } from "../engine/EventQueue";
 import { targetCandidates, targetRequirementIsBuff } from "../engine/Targeting";
@@ -77,6 +78,15 @@ import {
   type BuffAnimationVariant,
 } from "./buffAnimation";
 import { playerBuffSfxForAnimation } from "./playerAudioPolicy";
+import {
+  resolveCardBurnScale,
+  resolvePersonalAttackAnimation,
+  resolvePersonalCombatAnimation,
+  type BurnMaterialVariant,
+  type PersonalAttackAnimationPlan,
+  type PersonalCombatAnimationPlan,
+} from "./combatAnimation";
+import { resolveBurnRenderer, type BurnRenderer, type BurnTrajectory } from "./burnAnimation";
 
 export type GameStore = {
   game: GameState;
@@ -235,6 +245,9 @@ export type GameStore = {
 const SEED_STORAGE_KEY = "hostfall-seed:v2";
 const defaultSeed = readStoredSeed();
 const HOST_ATTACK_ANIMATION_MS = 500;
+// Lead the defender's lethal-hit reaction slightly so the cue arrives with the incoming blow.
+// Rules still commit near the end of the animation, independently from this presentation timing.
+const HOST_ATTACK_CONTACT_MS = HOST_ATTACK_ANIMATION_MS * 0.25;
 const COMBAT_VOLLEY_LEAD_IN_MS = 360;
 const COMBAT_VOLLEY_PROJECTILE_LAUNCH_MS = 220;
 const COMBAT_VOLLEY_IMPACT_MS = 638;
@@ -284,7 +297,7 @@ let energyFlowCommit: (() => Partial<GameStore>) | undefined;
 let energyFlowAfterCommit: (() => void) | undefined;
 let hostCombatSequenceId = 0;
 
-type HostAttackAnimation = {
+export type HostAttackAnimation = {
   attackerId: string;
   attackerDies: boolean;
   blockerId?: string;
@@ -293,11 +306,13 @@ type HostAttackAnimation = {
   attackerDamageMarked?: number;
   blockerDamageMarked?: number;
   eventId: number;
+  customAnimation?: PersonalCombatAnimationPlan | PersonalAttackAnimationPlan;
 };
 
 type PlayerAttackAnimation = {
   attackerId: string;
   eventId: number;
+  customAnimation?: PersonalAttackAnimationPlan;
 };
 
 export type LifestealAttackAnimationState = {
@@ -394,16 +409,23 @@ export type BurnAnimationState = {
   id: string;
   sourceId?: string;
   targetId?: string;
-  targetKind?: "card" | "playerLife";
+  targetKind?: "card" | "playerLife" | "hostLife";
   targets?: BurnAnimationTarget[];
   amount: number;
   projectileCount?: number;
-  variant?: "fire" | "oil";
+  projectileOrigin?: "split-horizontal";
+  variant?: BurnMaterialVariant;
+  scale?: number;
+  sourceMoves?: boolean;
+  projectileGapMs?: number;
+  impactLabel?: string;
+  renderer?: BurnRenderer;
+  trajectory?: BurnTrajectory;
 };
 
 export type BurnAnimationTarget = {
   targetId?: string;
-  targetKind: "card" | "playerLife";
+  targetKind: "card" | "playerLife" | "hostLife";
 };
 
 export type BlockDragState = {
@@ -700,7 +722,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const next = structuredClone(game) as GameState;
       const source = findBattlefieldCard(next, counterTargeting.sourceId);
       const target = findBattlefieldCard(next, counterTargeting.targetId);
-      if (!source || !target) {
+      const requirement = manualInvokedTargetRequirement(source);
+      const targetIsValid = Boolean(
+        source &&
+        target &&
+        requirement &&
+        targetCandidates(next, source.controller, requirement)
+          .some((candidate) => candidate.instanceId === target.instanceId)
+      );
+      if (!source || !target || !targetIsValid) {
         return {
           counterTargeting: undefined,
           pendingTriggeredEffectCount: Math.max(0, get().pendingTriggeredEffectCount - 1),
@@ -1322,8 +1352,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(({ game }) => {
       const wasAttacking = game.combat.playerAttackers.includes(id);
       const next = togglePlayerAttacker(game, id);
-      const changed = wasAttacking !== next.combat.playerAttackers.includes(id);
-      if (changed) useAudioStore.getState().playSfx("playLand");
+      const isAttacking = next.combat.playerAttackers.includes(id);
+      if (!wasAttacking && isAttacking) {
+        useAudioStore.getState().playSfx(AUDIO_FEATURE_FLAGS.selectAttacker ? "selectAttacker" : "playLand");
+      } else if (wasAttacking && !isAttacking) {
+        useAudioStore.getState().playSfx("playLand");
+      }
       return { game: next };
     }),
   attackAll: () =>
@@ -1380,6 +1414,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     const previewMillCards = previewPlayerCombatMillCards(game, attackers);
+    const personalAttackAnimations = new Map<string, PersonalAttackAnimationPlan>(
+      attackers.flatMap((attackerId) => {
+        const attacker = game.player.field.find((candidate) => candidate.instanceId === attackerId);
+        if (!attacker) return [];
+        const animation = resolvePersonalAttackAnimation(
+          attacker,
+          getPowerEndurance(game, attacker).power,
+        );
+        return animation ? [[attackerId, animation] as const] : [];
+      }),
+    );
     const attackVoiceCues = new Map(
       resolveCardVoiceCueBatch(
         attackers.flatMap((attackerId) => {
@@ -1397,14 +1442,57 @@ export const useGameStore = create<GameStore>((set, get) => ({
     let elapsed = 0;
     attackers.forEach((attackerId, index) => {
       const attackerMillCards = previewMillCards.filter((item) => item.attackerIndex === index);
+      const customAnimation = personalAttackAnimations.get(attackerId);
+      const impactOffset = customAnimation?.impactMs ?? PLAYER_ATTACK_MILL_START_MS;
+      const animationDuration = customAnimation?.durationMs ?? PLAYER_ATTACK_ANIMATION_MS;
+      const burnAnimationId = customAnimation
+        ? `personal-player-attack-${attackerId}-${index}`
+        : undefined;
       const startAt = elapsed;
       window.setTimeout(() => {
-        useAudioStore.getState().playSfx("attack");
+        if (!customAnimation) useAudioStore.getState().playSfx("attack");
         const voiceCue = attackVoiceCues.get(attackerId);
         if (voiceCue) playCardVoiceCue(voiceCue);
-        set({ playerAttackAnimation: { attackerId, eventId: index } });
+        set({
+          playerAttackAnimation: { attackerId, eventId: index, customAnimation },
+          burnAnimation: customAnimation?.effect.type === "fireball"
+            ? {
+                id: burnAnimationId!,
+                sourceId: customAnimation.sourceId,
+                targetKind: customAnimation.targetKind,
+                amount: customAnimation.effect.amount,
+                variant: customAnimation.effect.variant,
+                scale: customAnimation.effect.scale,
+                sourceMoves: customAnimation.effect.sourceMoves,
+                ...(customAnimation.effect.projectileCount === undefined
+                  ? {}
+                  : { projectileCount: customAnimation.effect.projectileCount }),
+                ...(customAnimation.effect.projectileOrigin === undefined
+                  ? {}
+                  : { projectileOrigin: customAnimation.effect.projectileOrigin }),
+                ...(customAnimation.effect.projectileGapMs === undefined
+                  ? {}
+                  : { projectileGapMs: customAnimation.effect.projectileGapMs }),
+              }
+            : undefined,
+        });
       }, startAt);
+      if (customAnimation?.effect.type === "fireball") {
+        window.setTimeout(() => {
+          const active = useGameStore.getState().playerAttackAnimation;
+          if (active?.attackerId !== attackerId || active.eventId !== index) return;
+          useAudioStore.getState().playSfx(pickRandomSfx(fireballCastSfx));
+        }, startAt + customAnimation.castMs);
+      }
       window.setTimeout(() => {
+        const active = useGameStore.getState().playerAttackAnimation;
+        if (
+          customAnimation?.effect.type === "fireball" &&
+          active?.attackerId === attackerId &&
+          active.eventId === index
+        ) {
+          useAudioStore.getState().playSfx(fireballHitSfx);
+        }
         useGameStore.setState((state) => {
           const afterLifesteal = resolvePlayerAttackerDrain(state.game, attackerId);
           const lifeGain = afterLifesteal.player.life - state.game.player.life;
@@ -1441,16 +1529,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
             poisonAttackAnimation: poisonAnimation ?? state.poisonAttackAnimation,
           };
         });
-      }, startAt + PLAYER_ATTACK_MILL_START_MS);
+      }, startAt + impactOffset);
       for (const preview of attackerMillCards) {
         window.setTimeout(() => {
           useGameStore.getState().queueHostMillPreview(preview.card);
-        }, startAt + PLAYER_ATTACK_MILL_START_MS + preview.cardIndexInHit * (HOST_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS));
+        }, startAt + impactOffset + preview.cardIndexInHit * (HOST_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS));
       }
-      elapsed +=
-        attackerMillCards.length > 0
-          ? PLAYER_ATTACK_MILL_START_MS + (attackerMillCards.length - 1) * (HOST_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS) + PLAYER_ATTACK_NEXT_AFTER_MILL_MS
-          : PLAYER_ATTACK_ANIMATION_MS;
+      if (burnAnimationId && customAnimation) {
+        window.setTimeout(() => {
+          useGameStore.setState((state) =>
+            state.burnAnimation?.id === burnAnimationId
+              ? { burnAnimation: undefined }
+              : {},
+          );
+        }, startAt + customAnimation.durationMs);
+      }
+      const millDuration = attackerMillCards.length > 0
+        ? impactOffset + (attackerMillCards.length - 1) * (HOST_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS) + PLAYER_ATTACK_NEXT_AFTER_MILL_MS
+        : 0;
+      elapsed += Math.max(animationDuration, millDuration);
     });
 
     window.setTimeout(() => {
@@ -1462,6 +1559,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         handLimitDiscardActive: false,
         handLimitSelectionId: undefined,
         playerAttackAnimation: undefined,
+        burnAnimation: undefined,
         selectedPlayerCreatureId: undefined,
         hostMillPreviewCards: [],
         hostMillAnimationQueue: previewMillCards.length > 0 ? state.hostMillAnimationQueue : appendHostMillAnimations(state, latest, next),
@@ -1695,13 +1793,33 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
     return;
   }
   useAudioStore.getState().playSfx("attack");
+  const attacker = currentGame.host.field.find((card) => card.instanceId === event.attackerId);
   const blocker = event.blockerId
     ? currentGame.player.field.find((card) => card.instanceId === event.blockerId)
     : undefined;
+  const customAnimation = attacker
+    ? blocker
+      ? resolvePersonalCombatAnimation({
+          attacker,
+          defender: blocker,
+          attackerDies: event.attackerDies,
+          defenderDies: event.blockerDies,
+          damageToAttacker: event.attackerDamageMarked === undefined
+            ? 0
+            : event.attackerDamageMarked - attacker.damageMarked,
+          damageToDefender: event.blockerDamageMarked === undefined
+            ? 0
+            : event.blockerDamageMarked - blocker.damageMarked,
+        })
+      : resolvePersonalAttackAnimation(attacker, event.playerDamage, "playerLife")
+    : undefined;
+  const impactMs = customAnimation?.impactMs ?? HOST_ATTACK_ANIMATION_MS - 35;
+  const durationMs = customAnimation?.durationMs ?? HOST_ATTACK_ANIMATION_MS;
   if (blocker) playCardVoiceInteraction({ type: "BLOCKS", card: blocker });
-  if (event.blockerDies) useAudioStore.getState().playSfx("defend");
   useGameStore.setState({
-    hostCombatVisualDamage: nextVisualDamage(event),
+    hostCombatVisualDamage: customAnimation
+      ? useGameStore.getState().hostCombatVisualDamage
+      : nextVisualDamage(event),
     hostAttackAnimation: {
       attackerId: event.attackerId,
       attackerDies: event.attackerDies,
@@ -1711,11 +1829,50 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
       attackerDamageMarked: event.attackerDamageMarked,
       blockerDamageMarked: event.blockerDamageMarked,
       eventId: index,
+      customAnimation,
     },
+    burnAnimation: customAnimation?.effect.type === "fireball"
+      ? {
+          id: `personal-combat-${sequenceId}-${index}`,
+          sourceId: customAnimation.sourceId,
+          targetId: "targetId" in customAnimation ? customAnimation.targetId : undefined,
+          targetKind: "targetKind" in customAnimation ? customAnimation.targetKind : "card",
+          amount: customAnimation.effect.amount,
+          variant: customAnimation.effect.variant,
+          scale: customAnimation.effect.scale,
+          sourceMoves: customAnimation.effect.sourceMoves,
+          ...(customAnimation.effect.projectileCount === undefined
+            ? {}
+            : { projectileCount: customAnimation.effect.projectileCount }),
+          ...(customAnimation.effect.projectileOrigin === undefined
+            ? {}
+            : { projectileOrigin: customAnimation.effect.projectileOrigin }),
+          ...(customAnimation.effect.projectileGapMs === undefined
+            ? {}
+            : { projectileGapMs: customAnimation.effect.projectileGapMs }),
+        }
+      : undefined,
   });
+
+  if (customAnimation?.effect.type === "fireball") {
+    window.setTimeout(() => {
+      if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
+      useAudioStore.getState().playSfx(pickRandomSfx(fireballCastSfx));
+    }, customAnimation.castMs);
+  }
+
+  if (event.blockerDies) {
+    window.setTimeout(() => {
+      if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
+      useAudioStore.getState().playSfx("defend");
+    }, customAnimation?.impactMs ?? HOST_ATTACK_CONTACT_MS);
+  }
 
   window.setTimeout(() => {
     if (sequenceId !== hostCombatSequenceId) return;
+    if (customAnimation?.effect.type === "fireball") {
+      useAudioStore.getState().playSfx(fireballHitSfx);
+    }
     let gameEnded = false;
     useGameStore.setState((state) => {
       const previous = state.game;
@@ -1730,22 +1887,28 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
       if (gameEnded) return { ...createCleanUiState(), game: next };
       return {
         game: next,
+        hostCombatVisualDamage: nextVisualDamage(event),
         hostCombatDeadCardIds: nextDeadCardIds(event),
         ...(gainedLife ? startLifeBuffBeat() : {}),
       };
     });
     if (gameEnded) useGameStore.getState().stopGamePresentation();
-  }, HOST_ATTACK_ANIMATION_MS - 35);
+  }, impactMs);
 
   window.setTimeout(() => {
     if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
-    useGameStore.setState({ hostAttackAnimation: undefined });
+    useGameStore.setState({
+      hostAttackAnimation: undefined,
+      burnAnimation: undefined,
+      burnImpactCardId: undefined,
+      burnImpactCardIds: [],
+    });
     scheduleQueuedCombatReactions(() => {
       if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
       useGameStore.setState({ hostCombatDeadCardIds: [] });
       runHostCombatEventSequence(events, index + 1, sequenceId);
     });
-  }, HOST_ATTACK_ANIMATION_MS);
+  }, durationMs);
 }
 
 function scheduleQueuedCombatReactions(onComplete: () => void): void {
@@ -1798,6 +1961,8 @@ function runPendingHostCombatVolleyOrFinish(combatSequenceId: number): void {
         targetKind: "playerLife",
         amount: volley.damage,
         projectileCount,
+        scale: resolveCardBurnScale(source?.definitionId),
+        renderer: resolveBurnRenderer(source?.definitionId),
       },
     });
     for (let projectileIndex = 0; projectileIndex < projectileCount; projectileIndex += 1) {
@@ -2128,6 +2293,10 @@ function effectsUseAnimation(effects: EffectDefinition[] | undefined, animation:
   });
 }
 
+function hasDeferredPresentationEvents(game: GameState): boolean {
+  return game.eventQueue.some((event) => event.payload?.deferForPresentation === true);
+}
+
 function findCardPlayedReactionSources(game: GameState, card: CardInstance): CardInstance[] {
   const previewEvent: EventItem = { id: "preview-card-played", type: "CARD_PLAYED", sourceId: card.instanceId, payload: { nonToken: !card.isToken } };
   return game.host.field.filter((source) =>
@@ -2245,6 +2414,7 @@ function buildCastCardPatch(
     ...options,
     deferPlayerTriggers: Boolean(card && lifeCostAmount(card.additionalCost, game.player.life) > 0),
     deferReactiveTriggers: reactionSources.length > 0,
+    deferPresentationEvents: true,
   });
   const castSucceeded = next.lastActionResult?.ok === true;
   const previousHandIds = new Set(game.player.hand.map((item) => item.instanceId));
@@ -2252,6 +2422,7 @@ function buildCastCardPatch(
     ? next.player.hand.filter((item) => !previousHandIds.has(item.instanceId)).map((item) => item.instanceId)
     : [];
   const playerTriggersQueued = castSucceeded && hasQueuedPlayerTriggers(next);
+  const presentationEventsQueued = castSucceeded && hasDeferredPresentationEvents(next);
   const lostLife = castSucceeded && next.player.life < game.player.life;
   const lifeLost = Math.max(0, game.player.life - next.player.life);
   const paidLife = castSucceeded
@@ -2267,7 +2438,6 @@ function buildCastCardPatch(
   if (sfx && castSucceeded) useAudioStore.getState().playSfx(sfx);
   else if (card && !castSucceeded) showActionToast(next.lastActionResult?.reason);
   if (castSucceeded && card) playInvokedVoiceInteraction(game, next, card.instanceId);
-  if (lostLife && paidLife === 0 && !usesBloodPactAnimation) useAudioStore.getState().playSfx("defend");
   if (castSucceeded && !usesBloodPactAnimation) playDrawOneIfPlayerDrew(game, next);
   if (triggeredBuffCardIds.length > 0) {
     useAudioStore.getState().playSfx(playerBuffSfxForAnimation(triggeredBuffVariant));
@@ -2289,9 +2459,13 @@ function buildCastCardPatch(
       scheduleManualTriggerOverlay(manualTriggeredCard, 420);
     }
   };
-  const afterCommit = playerTriggersQueued
-    ? () => scheduleQueuedPlayerTriggers(continueAfterPlayerTriggers)
-    : continueAfterPlayerTriggers;
+  const afterCommit = presentationEventsQueued
+    ? () => scheduleQueuedHostTriggers(() => {
+        if (manualTriggeredCard) scheduleManualTriggerOverlay(manualTriggeredCard, MANUAL_TRIGGER_AFTER_REACTION_MS);
+      })
+    : playerTriggersQueued
+      ? () => scheduleQueuedPlayerTriggers(continueAfterPlayerTriggers)
+      : continueAfterPlayerTriggers;
   const bloodPactAnimation = castSucceeded && usesBloodPactAnimation && card
     ? {
         id: `blood-pact-${card.instanceId}-${Date.now()}`,
@@ -2373,9 +2547,6 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     const playerTriggersQueued = castSucceeded && hasQueuedPlayerTriggers(next);
     if (!castSucceeded) showActionToast(next.lastActionResult?.reason);
     if (castSucceeded) playInvokedVoiceInteraction(latest, next, card.instanceId);
-    if (lostLife && paidLife === 0 && !presentation.suppressLifeLossPresentation) {
-      useAudioStore.getState().playSfx("defend");
-    }
     if (gainedLife) useAudioStore.getState().playSfx("buff");
     const triggeredBuffCardIds = findTemporaryBuffedCardIds(latest, next);
     const triggeredBuffVariant = buffAnimationVariantForCard(card.definitionId);
@@ -2684,6 +2855,7 @@ function playCardVoiceInteraction(event: CardVoiceEvent): void {
 
 function playCardVoiceCue(cue: CardVoiceCue): void {
   useAudioStore.getState().playSfx(cue.sfx);
+  for (const sfx of cue.additionalSfx ?? []) useAudioStore.getState().playSfx(sfx);
 }
 
 function nextVisualDamage(event: HostAttackEvent): Record<string, number> {

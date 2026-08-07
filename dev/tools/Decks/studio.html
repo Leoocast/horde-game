@@ -445,6 +445,21 @@
             flex: 1;
         }
 
+        .language-control {
+            display: flex;
+            align-items: center;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 600;
+            gap: 6px;
+        }
+
+        .language-control select {
+            width: auto;
+            min-width: 104px;
+            padding: 5px 28px 5px 8px;
+        }
+
         .stage {
             position: relative;
             display: grid;
@@ -547,11 +562,11 @@
         }
 
         .game-preview[data-deck="uprising_of_the_graveless"] {
-            --game-title-start: #315f55;
-            --game-title-end: #1d3f37;
-            --game-stat-start: #3f7569;
-            --game-stat-mid: #315f55;
-            --game-stat-end: #102822;
+            --game-title-start: #625d6b;
+            --game-title-end: #37323f;
+            --game-stat-start: #777081;
+            --game-stat-mid: #56515e;
+            --game-stat-end: #211e28;
         }
 
         .game-preview[data-deck="legion_of_varka"] {
@@ -1079,6 +1094,10 @@
                 <button type="button" data-scale="100">100%</button>
             </div>
             <span class="spacer"></span>
+            <label class="language-control" for="language-select">
+                <span>Idioma</span>
+                <select id="language-select" aria-label="Idioma de las cartas"></select>
+            </label>
             <button id="reload-data" type="button" class="ghost" title="Actualizar desde los JSON del deck">
                 Actualizar datos
             </button>

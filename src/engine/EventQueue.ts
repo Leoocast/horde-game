@@ -33,7 +33,7 @@ export function drainNextEvent(game: GameState): boolean {
 // Host's reaction to the same cast is held back to glow after the card is visible.
 export function drainEventQueue(
   game: GameState,
-  options?: { deferController?: Side; deferControllers?: Side[] },
+  options?: { deferController?: Side; deferControllers?: Side[]; deferPresentationEvents?: boolean },
 ): void {
   const deferred: EventItem[] = [];
   const deferredControllers = options?.deferControllers
@@ -41,6 +41,10 @@ export function drainEventQueue(
   while (game.eventQueue.length > 0) {
     const event = game.eventQueue.shift();
     if (!event) continue;
+    if (options?.deferPresentationEvents && event.payload?.deferForPresentation === true) {
+      deferred.push(event);
+      continue;
+    }
     if (resolveTriggeredEvent(game, event, deferredControllers)) {
       deferred.push({
         ...event,
