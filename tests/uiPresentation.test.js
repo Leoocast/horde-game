@@ -262,13 +262,17 @@ test("only Vaelor's entry volley keeps the curved procedural route", () => {
   assert.equal(burnPathCurvature("curved"), 1);
 });
 
-test("Todos contra uno keeps the classic fireball renderer", () => {
-  assert.equal(resolveBurnRenderer("all_against_one"), "classic");
+test("Todos contra uno uses the procedural fireball renderer at scale 1.2", () => {
+  const gameStore = readFileSync(new URL("../src/store/useGameStore.ts", import.meta.url), "utf8");
+
+  assert.equal(resolveBurnRenderer("all_against_one"), "procedural");
+  assert.equal(resolveCardBurnScale("all_against_one"), 1.2);
   assert.equal(resolveBurnRenderer("varka_infernal_matriarch"), "procedural");
   assert.equal(resolveBurnRenderer(undefined), "procedural");
+  assert.match(gameStore, /scale:\s*resolveCardBurnScale\(source\?\.definitionId\)/u);
 });
 
-test("the classic volley keeps an independent particle clock for every projectile", () => {
+test("the legacy classic volley keeps an independent particle clock for every projectile", () => {
   assert.deepEqual(burnProjectileParticleTimings(3, 90), [
     { projectileIndex: 0, flightStartMs: 220, impactMs: 638 },
     { projectileIndex: 1, flightStartMs: 310, impactMs: 728 },

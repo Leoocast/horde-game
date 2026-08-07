@@ -79,6 +79,7 @@ import {
 } from "./buffAnimation";
 import { playerBuffSfxForAnimation } from "./playerAudioPolicy";
 import {
+  resolveCardBurnScale,
   resolvePersonalAttackAnimation,
   resolvePersonalCombatAnimation,
   type BurnMaterialVariant,
@@ -1960,6 +1961,7 @@ function runPendingHostCombatVolleyOrFinish(combatSequenceId: number): void {
         targetKind: "playerLife",
         amount: volley.damage,
         projectileCount,
+        scale: resolveCardBurnScale(source?.definitionId),
         renderer: resolveBurnRenderer(source?.definitionId),
       },
     });

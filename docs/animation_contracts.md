@@ -105,16 +105,16 @@ route's scale, projectile count and origin ride on the same shader, so a new mat
 the projectile, the trail or the impact.
 
 Procedural routes travel on the exact source-to-target line by default. Only Vaelor's Invoked
-counter volley opts into the curved route. Todos contra uno is a registered presentation exception
-that retains the former DOM/CSS fireball material while keeping a straight flight path.
+counter volley opts into the curved route. Todos contra uno uses the same procedural fire at
+`scale: 1.2` and keeps a straight flight path.
 
 Use this contract for Escupefuego de la Retaguardia (`rear_guard_firebreather`), Jinete de la Salva
 Umbría (`rider_of_the_umbral_volley`), and future Goblin burn effects.
 
 ### Burn volley to player life
 
-Todos contra uno (`all_against_one`) reuses Burn's target and timing contracts but keeps the
-classic DOM/CSS projectile instead of the procedural shader:
+Todos contra uno (`all_against_one`) reuses Burn's procedural shader, target and timing contracts
+at `scale: 1.2`:
 
 - Its `ATTACK_DECLARED` trigger silently snapshots the eligible Goblin ids and printed attack
   powers in `combat.pendingDamageVolleys`; it does not pulse or damage the player at declaration.

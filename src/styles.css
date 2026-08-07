@@ -7636,7 +7636,7 @@
     will-change: opacity, transform;
   }
 
-  /* Todos contra uno intentionally retains the former DOM/CSS fireball material. */
+  /* Legacy DOM/CSS fireball material; no registered Burn currently selects it. */
   .burn-animation-layer-classic .burn-charge {
     position: absolute;
     left: var(--burn-start-x);

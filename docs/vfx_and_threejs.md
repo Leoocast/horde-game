@@ -49,8 +49,8 @@ Implementaciones utiles como referencia:
   dano y la chamusquina de la carta siguen siendo DOM porque deben alinearse con la interfaz. El
   renderer procedural no monta el antiguo destello DOM de pantalla completa; su impacto ya lo
   presentan la explosion del shader, la chamusquina y el numero. Las rutas son rectas salvo la descarga de entrada de Vaelor.
-  `ClassicBurnAnimator.tsx` conserva el renderer DOM/CSS anterior exclusivamente para excepciones
-  registradas como Todos contra uno. Detalles de forma y estela en `docs/animation_contracts.md`.
+  `ClassicBurnAnimator.tsx` conserva el renderer DOM/CSS anterior como referencia legada, pero
+  ninguna carta registrada lo selecciona. Detalles de forma y estela en `docs/animation_contracts.md`.
 
 Para cualquier efecto nuevo:
 

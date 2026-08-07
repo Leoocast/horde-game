@@ -270,8 +270,8 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   entrada conserva una trayectoria curva. Todas las demás bolas de fuego viajan en línea recta.
   El impacto
   coloca un contador -1/-1 sobre cada objetivo como un único evento simultáneo, sin daño adicional.
-- Todos contra uno conserva deliberadamente el renderer clásico DOM/CSS de bola de fuego; el resto
-  de Burn usa el renderer procedural salvo otra excepción registrada de presentación.
+- Todos contra uno usa el renderer procedural de fuego a escala 1.2. Todos los Burn registrados
+  usan el shader procedural; el renderer clásico DOM/CSS queda sólo como implementación legada.
 - El Burn procedural no monta el destello DOM de pantalla completa del renderer clásico. Su
   impacto se comunica con la explosión WebGL, la chamusquina del objetivo y el número de daño.
 - `sharedVfxRenderer.ts` crea el único contexto WebGL de forma diferida al primer efecto y lo
