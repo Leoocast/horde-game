@@ -14,6 +14,7 @@ import { fireballCastSfx, fireballHitSfx, type SfxId } from "../audio/soundManif
 import { useAudioStore } from "./useAudioStore";
 import {
   resolveCardBurnMaterial,
+  resolveCardBurnScale,
   resolvePersonalProjectileEffect,
   type BurnMaterialVariant,
 } from "./combatAnimation";
@@ -463,11 +464,14 @@ function pickRandom(ids: SfxId[]): SfxId {
   return ids[Math.floor(Math.random() * ids.length)];
 }
 
-function burnMaterialForEvent(game: GameState, event: EventItem): BurnMaterialVariant {
+function burnSourceDefinitionId(game: GameState, event: EventItem): string | undefined {
   const liveSource = event.sourceId ? findBattlefieldCard(game, event.sourceId) : undefined;
-  const sourceDefinitionId = typeof event.payload?.sourceDefinitionId === "string"
+  return typeof event.payload?.sourceDefinitionId === "string"
     ? event.payload.sourceDefinitionId
     : liveSource?.definitionId;
+}
+
+function burnMaterialForEvent(game: GameState, event: EventItem): BurnMaterialVariant {
   const fallback = event.payload?.variant === "oil"
     ? "oil"
     : event.payload?.variant === "emerald"
@@ -475,7 +479,11 @@ function burnMaterialForEvent(game: GameState, event: EventItem): BurnMaterialVa
       : event.payload?.variant === "golden"
         ? "golden"
         : "fire";
-  return resolveCardBurnMaterial(sourceDefinitionId, fallback);
+  return resolveCardBurnMaterial(burnSourceDefinitionId(game, event), fallback);
+}
+
+function burnScaleForEvent(game: GameState, event: EventItem): number {
+  return resolveCardBurnScale(burnSourceDefinitionId(game, event));
 }
 
 const burnBeatHandler: HostBeatHandler = {
@@ -503,6 +511,7 @@ const burnBeatHandler: HostBeatHandler = {
         targetId,
         amount: Number(event.payload?.amount ?? 0),
         variant: burnMaterialForEvent(game, event),
+        scale: burnScaleForEvent(game, event),
       },
       burnImpactCardIds: [],
       hostAutoTriggerCount: 1,
@@ -583,6 +592,7 @@ const burnVolleyBeatHandler: HostBeatHandler = {
         targets,
         amount: Number(event.payload?.amount ?? 0),
         variant: burnMaterialForEvent(game, event),
+        scale: burnScaleForEvent(game, event),
       },
       hostAutoTriggerCount: 1,
     });

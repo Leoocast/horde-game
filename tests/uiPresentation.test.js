@@ -15,6 +15,7 @@ import {
   burnMaterialColors,
   burnRenderBatches,
 } from "../src/components/burnFireball";
+import { grownVfxSurface, sharedVfxSourceTop } from "../src/components/sharedVfxRenderer";
 import { frameLeafRootIndex, frameRootPathSpecs } from "../src/components/GrowthBuffAnimator";
 import { buildStorm, stormBoltTones } from "../src/components/StormBuffAnimator";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
@@ -27,6 +28,7 @@ import { PreviewStatsBadge, TraitPills } from "../src/components/CardPreview";
 import { cardLabelCamelCase } from "../src/i18n/cardLocalization";
 import {
   resolveCardBurnMaterial,
+  resolveCardBurnScale,
   resolvePersonalAttackAnimation,
   resolvePersonalCombatAnimation,
 } from "../src/store/combatAnimation";
@@ -169,33 +171,81 @@ test("procedural volleys render every route in bounded shader batches", () => {
 test("procedural Burn hides the WebGL buffer until its first rendered frame", () => {
   const animator = readFileSync(new URL("../src/components/BurnAnimator.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
-  const renderIndex = animator.indexOf("renderer.render(scene, camera)");
+  const renderIndex = animator.indexOf("renderSharedVfxFrame(canvas");
   const revealIndex = animator.indexOf('canvas.style.opacity = "1"', renderIndex);
 
   assert.ok(renderIndex >= 0);
   assert.ok(revealIndex > renderIndex);
+  assert.match(animator, /if \(drawn && !firstFramePresented\)/u);
   assert.match(animator, /canvas\.style\.opacity = "0";\s*cancelAnimationFrame/u);
   assert.match(styles, /\.burn-canvas\s*\{[^}]*opacity:\s*0;/u);
 });
+
+// Migración a un único contexto WebGL: ver docs/plan_webgl_context_budget.md.
+const SHARED_RENDERER_ANIMATORS = [
+  "BloodSiphonAnimator",
+  "BuffSurgeAnimator",
+  "BurnAnimator",
+  "DrainEssenceAnimator",
+  "FinalBanquetAnimator",
+  "GrowthBuffAnimator",
+  "HeavyCreatureLanding",
+];
+const OWN_RENDERER_ANIMATORS = [];
 
 test("no animator poisons its canvas with forceContextLoss", () => {
   // forceContextLoss deja el <canvas> inservible para siempre. Con React.StrictMode cada efecto
   // se monta, se limpia y se vuelve a montar sobre el mismo lienzo, así que llamarlo en una
   // limpieza deja el segundo montaje sin contexto y mata todas las animaciones.
-  const animators = [
-    "BloodSiphonAnimator",
-    "BuffSurgeAnimator",
-    "BurnAnimator",
-    "DrainEssenceAnimator",
-    "FinalBanquetAnimator",
-    "GrowthBuffAnimator",
-    "HeavyCreatureLanding",
-  ];
-  for (const animator of animators) {
+  for (const animator of [...SHARED_RENDERER_ANIMATORS, ...OWN_RENDERER_ANIMATORS]) {
     const source = readFileSync(new URL(`../src/components/${animator}.tsx`, import.meta.url), "utf8");
-    assert.match(source, /new THREE\.WebGLRenderer/u, `${animator} debería crear su renderer`);
     assert.doesNotMatch(source, /forceContextLoss/u, `${animator} inutilizaría su lienzo`);
   }
+});
+
+test("migrated animators draw through the single shared WebGL context", () => {
+  for (const animator of SHARED_RENDERER_ANIMATORS) {
+    const source = readFileSync(new URL(`../src/components/${animator}.tsx`, import.meta.url), "utf8");
+    assert.doesNotMatch(source, /new THREE\.WebGLRenderer/u, `${animator} volvió a abrir contexto propio`);
+    assert.match(source, /renderSharedVfxFrame/u, `${animator} debe dibujar por el renderer compartido`);
+  }
+  for (const animator of OWN_RENDERER_ANIMATORS) {
+    const source = readFileSync(new URL(`../src/components/${animator}.tsx`, import.meta.url), "utf8");
+    assert.match(source, /new THREE\.WebGLRenderer/u, `${animator} ya no abre contexto propio: muévelo a la lista migrada`);
+  }
+});
+
+test("the shared renderer preserves premultiplied alpha when copying transparent VFX", () => {
+  const sharedRenderer = readFileSync(
+    new URL("../src/components/sharedVfxRenderer.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(sharedRenderer, /premultipliedAlpha:\s*true/u);
+});
+
+test("the shared VFX surface only grows and its crop reads from the buffer top", () => {
+  // La superficie compartida nunca encoge: redimensionar reasigna el búfer.
+  assert.deepEqual(grownVfxSurface({ width: 1, height: 1 }, 200, 120), { width: 200, height: 120 });
+  assert.deepEqual(grownVfxSurface({ width: 200, height: 120 }, 80, 60), { width: 200, height: 120 });
+  assert.deepEqual(grownVfxSurface({ width: 200, height: 120 }, 80, 300), { width: 200, height: 300 });
+  assert.deepEqual(grownVfxSurface({ width: 200, height: 120 }, 0.2, 0.2), { width: 200, height: 120 });
+
+  // WebGL dibuja desde abajo y drawImage lee desde arriba: el recorte vive en la franja superior.
+  assert.equal(sharedVfxSourceTop(300, 120), 180);
+  assert.equal(sharedVfxSourceTop(120, 120), 0);
+  assert.equal(sharedVfxSourceTop(100, 120), 0);
+});
+
+test("the shared VFX renderer restores global state for every frame", () => {
+  const source = readFileSync(
+    new URL("../src/components/sharedVfxRenderer.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(source, /active\.setClearColor\(0x000000, 0\)/u);
+  assert.match(source, /active\.setPixelRatio\(1\)/u);
+  assert.match(source, /active\.outputEncoding = frame\.outputEncoding \?\? THREE\.sRGBEncoding/u);
 });
 
 test("procedural Burn never mounts the legacy full-screen white flash", () => {
@@ -212,13 +262,17 @@ test("only Vaelor's entry volley keeps the curved procedural route", () => {
   assert.equal(burnPathCurvature("curved"), 1);
 });
 
-test("Todos contra uno keeps the classic fireball renderer", () => {
-  assert.equal(resolveBurnRenderer("all_against_one"), "classic");
+test("Todos contra uno uses the procedural fireball renderer at scale 1.2", () => {
+  const gameStore = readFileSync(new URL("../src/store/useGameStore.ts", import.meta.url), "utf8");
+
+  assert.equal(resolveBurnRenderer("all_against_one"), "procedural");
+  assert.equal(resolveCardBurnScale("all_against_one"), 1.2);
   assert.equal(resolveBurnRenderer("varka_infernal_matriarch"), "procedural");
   assert.equal(resolveBurnRenderer(undefined), "procedural");
+  assert.match(gameStore, /scale:\s*resolveCardBurnScale\(source\?\.definitionId\)/u);
 });
 
-test("the classic volley keeps an independent particle clock for every projectile", () => {
+test("the legacy classic volley keeps an independent particle clock for every projectile", () => {
   assert.deepEqual(burnProjectileParticleTimings(3, 90), [
     { projectileIndex: 0, flightStartMs: 220, impactMs: 638 },
     { projectileIndex: 1, flightStartMs: 310, impactMs: 728 },
@@ -249,10 +303,12 @@ test("Varka's split projectile origin follows the left and right card edges", ()
   ]);
 });
 
-test("every Burn sourced by Varka resolves to her golden material", () => {
+test("every Burn sourced by Varka resolves to her golden material and personal scale", () => {
   assert.equal(resolveCardBurnMaterial("varka_infernal_matriarch"), "golden");
   assert.equal(resolveCardBurnMaterial("varka_infernal_matriarch", "oil"), "golden");
   assert.equal(resolveCardBurnMaterial("ordinary_burn_source", "oil"), "oil");
+  assert.equal(resolveCardBurnScale("varka_infernal_matriarch"), 1.3);
+  assert.equal(resolveCardBurnScale("ordinary_burn_source"), 1);
 });
 
 test("Varka casts two smaller infernal fireballs at defenders and the Chronicler life panel", () => {
@@ -276,7 +332,7 @@ test("Varka casts two smaller infernal fireballs at defenders and the Chronicler
     effect: {
       type: "fireball",
       variant: "golden",
-      scale: 0.85,
+      scale: 1.3,
       amount: 4,
       sourceMoves: false,
       projectileCount: 2,
@@ -297,7 +353,7 @@ test("Varka casts two smaller infernal fireballs at defenders and the Chronicler
     effect: {
       type: "fireball",
       variant: "golden",
-      scale: 0.85,
+      scale: 1.3,
       amount: 4,
       sourceMoves: false,
       projectileCount: 2,

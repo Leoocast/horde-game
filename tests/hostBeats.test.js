@@ -308,7 +308,7 @@ test("stacked Varkas attack consecutively with their own infernal fireballs", as
     assert.equal(started.burnAnimation?.sourceId, firstVarka.instanceId);
     assert.equal(started.burnAnimation?.targetKind, "playerLife");
     assert.equal(started.burnAnimation?.variant, "golden");
-    assert.equal(started.burnAnimation?.scale, 0.85);
+    assert.equal(started.burnAnimation?.scale, 1.3);
     assert.equal(started.burnAnimation?.projectileCount, 2);
     assert.equal(started.burnAnimation?.projectileOrigin, "split-horizontal");
     assert.equal(started.burnAnimation?.projectileGapMs, 0);
@@ -497,6 +497,7 @@ test("a throttled Varka volley consumes its event before the beat finishes", asy
       completed = true;
     });
     assert.equal(useGameStore.getState().burnAnimation?.variant, "golden");
+    assert.equal(useGameStore.getState().burnAnimation?.scale, 1.3);
 
     // Simulate a background/busy tab: impact, delayed death commit and animation finish
     // have all expired before the browser gets a chance to run any callback.

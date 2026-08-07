@@ -1,8 +1,9 @@
 # Plan para 2026-08-06: presupuesto de contextos WebGL
 
-Estado: diagnosticado y verificado en partida; **sin implementar**. Los animadores siguen creando un
-renderer propio cada uno. Este documento explica el fallo, descarta dos soluciones que no sirven y
-fija el diseño al que hay que llegar.
+Estado: **fases 1, 2 y 3 implementadas** el 2026-08-06. Todos los animadores WebGL dibujan mediante
+`src/components/sharedVfxRenderer.ts`; ya no queda ninguno que abra un contexto propio. Queda
+pendiente la comprobación visual en partida. Este documento explica el fallo, descarta dos soluciones
+que no sirven y documenta el diseño implementado.
 
 ## Objetivo
 
@@ -142,11 +143,18 @@ se **copia** el resultado al lienzo de destino con `drawImage`. Los lienzos de d
 
 ## Plan por fases
 
-1. Crear el módulo del renderer compartido y migrar **sólo `GrowthBuffAnimator`**. Comprobar en
-   partida que el efecto se ve igual y que su línea desaparece del warning.
-2. Migrar `BuffSurgeAnimator` y `HeavyCreatureLanding`, que son los que multiplican por carta. Aquí
-   el warning debería desaparecer del todo.
-3. Migrar los cuatro fijos a pantalla completa, incluido `BurnAnimator`.
+1. **Hecha.** `src/components/sharedVfxRenderer.ts` abre el contexto único y `GrowthBuffAnimator`
+   dibuja a través de él. Falta la comprobación en partida: el efecto debe verse igual y su línea
+   debe desaparecer del warning.
+2. **Hecha.** `BuffSurgeAnimator` y `HeavyCreatureLanding`, los otros animadores que multiplicaban
+   contextos por carta, dibujan a través del renderer compartido. El warning debería desaparecer
+   del todo; falta confirmarlo en partida con un Campo poblado.
+3. **Hecha.** `BloodSiphonAnimator`, `DrainEssenceAnimator`, `FinalBanquetAnimator` y `BurnAnimator`
+   dibujan a través del renderer compartido. `BurnAnimator` conserva el contrato de handoff: su
+   lienzo procedural permanece oculto hasta que se ha copiado el primer fotograma válido.
+
+La lista de migrados vive en `tests/uiPresentation.test.js` (`SHARED_RENDERER_ANIMATORS`): al mover
+un animador de una lista a la otra, la regresión exige que deje de abrir contexto propio.
 
 Cada fase es verificable por separado: si el warning no baja como se espera, el diagnóstico está
 incompleto y hay que parar antes de seguir migrando.

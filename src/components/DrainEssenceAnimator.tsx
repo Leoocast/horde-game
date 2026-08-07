@@ -6,6 +6,7 @@ import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
 import { shouldShowFullCardImage } from "../utils/cardImages";
 import { Card } from "./Card";
+import { renderSharedVfxFrame } from "./sharedVfxRenderer";
 
 type ScreenPoint = { x: number; y: number };
 type SmokeRoute = "extraction" | "orbit" | "recovery";
@@ -252,29 +253,18 @@ export function DrainEssenceSmokeAnimator() {
     targetElement.classList.add("drain-essence-target-draining");
 
     const scene = new THREE.Scene();
+    const width = Math.max(1, window.innerWidth);
+    const height = Math.max(1, window.innerHeight);
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
     const camera = new THREE.OrthographicCamera(
       0,
-      window.innerWidth,
-      window.innerHeight,
+      width,
+      height,
       0,
       -100,
       100,
     );
     camera.position.z = 10;
-    let renderer: THREE.WebGLRenderer | undefined;
-    try {
-      renderer = new THREE.WebGLRenderer({
-        canvas: threeCanvas,
-        alpha: true,
-        antialias: true,
-        premultipliedAlpha: false,
-      });
-      renderer.setClearColor(0x000000, 0);
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    } catch {
-      renderer = undefined;
-    }
 
     const geometry = new THREE.PlaneGeometry(1, 1);
     const puffs: ShaderSmokePuff[] = [];
@@ -406,7 +396,15 @@ export function DrainEssenceSmokeAnimator() {
         puff.material.uniforms.uOpacity.value = fade * puff.opacity;
       }
 
-      renderer?.render(scene, camera);
+      renderSharedVfxFrame(threeCanvas, {
+        scene,
+        camera,
+        width,
+        height,
+        pixelRatio,
+        // El renderer anterior usaba el valor lineal predeterminado de Three.js.
+        outputEncoding: THREE.LinearEncoding,
+      });
       animationFrame = window.requestAnimationFrame(tick);
     };
     animationFrame = window.requestAnimationFrame(tick);
@@ -454,7 +452,7 @@ export function DrainEssenceSmokeAnimator() {
         puff.material.dispose();
       }
       geometry.dispose();
-      renderer?.dispose();
+      // El renderer es compartido y sobrevive al efecto; sólo se liberan sus recursos propios.
     };
   }, [active?.id, complete, playSfx, resolve]);
 

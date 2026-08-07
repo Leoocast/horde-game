@@ -105,16 +105,16 @@ route's scale, projectile count and origin ride on the same shader, so a new mat
 the projectile, the trail or the impact.
 
 Procedural routes travel on the exact source-to-target line by default. Only Vaelor's Invoked
-counter volley opts into the curved route. Todos contra uno is a registered presentation exception
-that retains the former DOM/CSS fireball material while keeping a straight flight path.
+counter volley opts into the curved route. Todos contra uno uses the same procedural fire at
+`scale: 1.2` and keeps a straight flight path.
 
 Use this contract for Escupefuego de la Retaguardia (`rear_guard_firebreather`), Jinete de la Salva
 Umbría (`rider_of_the_umbral_volley`), and future Goblin burn effects.
 
 ### Burn volley to player life
 
-Todos contra uno (`all_against_one`) reuses Burn's target and timing contracts but keeps the
-classic DOM/CSS projectile instead of the procedural shader:
+Todos contra uno (`all_against_one`) reuses Burn's procedural shader, target and timing contracts
+at `scale: 1.2`:
 
 - Its `ATTACK_DECLARED` trigger silently snapshots the eligible Goblin ids and printed attack
   powers in `combat.pendingDamageVolleys`; it does not pulse or damage the player at declaration.
@@ -135,8 +135,9 @@ Varka, Matriarca Infernal (`varka_infernal_matriarch`) uses the same compact vol
 
 - Its ETB activation beat pulses the source once and queues `BURN_VOLLEY_DAMAGE`. The volley beat
   never pulses it again.
-- Every Burn event sourced by Varka resolves through her registered `golden` material. Her entry
-  volley therefore uses the same white-yellow fire as her two-projectile personal attacks.
+- Every Burn event sourced by Varka resolves through her registered `golden` material and
+  `scale: 1.3`. Her entry volley therefore uses the same white-yellow fire and projectile size as
+  her two-projectile personal attacks.
 - The engine snapshots the player and every opposing creature as rules targets. `BurnAnimator`
   receives that target list and calculates one source-to-target geometry for each projectile.
 - Every captured target keeps a visible route. Volleys longer than six are divided into bounded
@@ -223,14 +224,15 @@ Current registration:
   the Host attacker. A defended attack targets the assigned defender; an undefended attack targets
   `[data-player-life-panel]`. Varka remains anchored, the ordinary lunge is suppressed, and the
   normal combat result lands once at the projectiles' shared 638ms impact. The preset uses Varka's
-  white-yellow `golden` fire material at `scale: 0.85`, visibly smaller than Vaelor's personal
+  white-yellow `golden` fire material at `scale: 1.3`, visibly smaller than Vaelor's personal
   `scale: 1.8` projectile. It casts two straight
   simultaneous routes from the left and right edges of Varka's card, with separate charge, trail,
   and ember particles; both converge on one target and still produce one rules impact.
-- Consecutive Varkas reuse the same persistent WebGL context. Per-attack shader materials and
-  geometry are disposed between beats, but the renderer is only released when the battlefield
-  unmounts; force-losing and recreating the context between stacked attackers is a regression.
-  The canvas must not become visible during that handoff until the next attack has rendered once.
+- Consecutive Varkas reuse the application's persistent shared WebGL context. Per-attack shader
+  materials and geometry are disposed between beats, but the shared renderer survives for the
+  session; force-losing and recreating the context between stacked attackers is a regression. The
+  destination canvas must not become visible during that handoff until the next attack has rendered
+  and copied its first valid frame.
 - Adding another bespoke fight or direct attack means registering its context and adding or reusing
   a preset; do not add card-name branches to animator components or resolve combat inside VFX.
 

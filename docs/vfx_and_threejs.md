@@ -36,21 +36,21 @@ Implementaciones utiles como referencia:
 - `ManaFlowAnimator.tsx`: usa SVG y Framer Motion para alinear un ribbon vegetal entre una
   criatura de ramp y el socket de mana almacenado. El store difiere la ganancia hasta que la
   semilla llega al HUD; no requiere Three.js porque ambos extremos son elementos de interfaz.
-- `BurnAnimator.tsx`: un canvas persistente y un contexto WebGL creado de forma diferida al primer
-  Burn dibujan carga, proyectil, estela
-  depositada e impacto con `ShaderMaterial` sobre planos y `THREE.Camera` sin proyeccion. Cada
-  pasada admite seis rutas; una descarga mayor se divide en varias pasadas dentro del mismo render
-  y ninguna ruta explicita se descarta. El renderer se conserva entre Burns consecutivos y solo se
-  libera al desmontar el campo; su overlay queda oculto cuando no hay un Burn activo, mientras
-  geometria y materiales se renuevan por efecto. En cada handoff, el canvas no vuelve a ser visible
-  hasta que el shader haya dibujado el primer frame valido, para no exponer el buffer limpio. El GLSL
+- `BurnAnimator.tsx`: un canvas 2D persistente recibe del renderer WebGL compartido la carga,
+  proyectil, estela depositada e impacto dibujados con `ShaderMaterial` sobre planos y
+  `THREE.Camera` sin proyeccion. Cada pasada admite seis rutas; una descarga mayor se divide en
+  varias pasadas dentro del mismo render y ninguna ruta explicita se descarta. El contexto
+  compartido se conserva durante toda la sesion; el overlay de Burn queda oculto cuando no hay un
+  Burn activo, mientras geometria y materiales propios se renuevan por efecto. En cada handoff, el
+  canvas no vuelve a ser visible hasta que el shader haya dibujado y copiado el primer frame valido,
+  para no exponer el buffer limpio. El GLSL
   vive aparte en `burnFireball.ts` y deriva sus constantes del reloj de
   `burnPresentation.ts`, asi que el material de cada bando es solo una rampa de color. El numero de
   dano y la chamusquina de la carta siguen siendo DOM porque deben alinearse con la interfaz. El
   renderer procedural no monta el antiguo destello DOM de pantalla completa; su impacto ya lo
   presentan la explosion del shader, la chamusquina y el numero. Las rutas son rectas salvo la descarga de entrada de Vaelor.
-  `ClassicBurnAnimator.tsx` conserva el renderer DOM/CSS anterior exclusivamente para excepciones
-  registradas como Todos contra uno. Detalles de forma y estela en `docs/animation_contracts.md`.
+  `ClassicBurnAnimator.tsx` conserva el renderer DOM/CSS anterior como referencia legada, pero
+  ninguna carta registrada lo selecciona. Detalles de forma y estela en `docs/animation_contracts.md`.
 
 Para cualquier efecto nuevo:
 
@@ -59,20 +59,19 @@ Para cualquier efecto nuevo:
 - Actualizar por delta time, con un limite razonable, para conservar forma y velocidad a 60 Hz,
   144 Hz y superiores.
 - Limitar `devicePixelRatio`, particulas y draw calls segun lo que realmente se ve.
-- Cancelar `requestAnimationFrame`, timers y listeners; liberar geometria, materiales, texturas y
-  renderer al desmontar.
+- Cancelar `requestAnimationFrame`, timers y listeners; liberar geometria, materiales y texturas
+  propias al desmontar. El animador no crea ni destruye un `WebGLRenderer`: dibuja mediante
+  `renderSharedVfxFrame`.
 - **Nunca llamar `renderer.forceContextLoss()`.** Deja el `<canvas>` inservible de forma
   permanente, y con `React.StrictMode` cada efecto se monta, se limpia y se vuelve a montar sobre
   el mismo lienzo: la segunda pasada se queda sin contexto y el animador muere con
   `THREE.WebGLRenderer: Context Lost`. Hay una regresion que lo prohibe en
   `tests/uiPresentation.test.js`.
 - Presupuesto de contextos WebGL: el navegador solo admite unos dieciseis vivos y al pasarse
-  descarta el mas antiguo, con lo que ese lienzo queda roto en pantalla. `dispose()` no devuelve su
-  contexto al cupo de inmediato; lo libera el recolector cuando se lleva el lienzo. Los animadores
-  montados por carta (`BuffSurgeAnimator`, `GrowthBuffAnimator`, `HeavyCreatureLanding`) abren un
-  contexto por criatura, asi que una oleada de buffs puede agotar el cupo. El diagnostico completo
-  y el diseño al que hay que llegar —un unico renderer compartido por toda la aplicacion— estan en
-  `docs/plan_webgl_context_budget.md`.
+  descarta el mas antiguo, con lo que ese lienzo queda roto en pantalla. Todos los animadores usan
+  ahora el unico renderer de `sharedVfxRenderer.ts`; sus canvas de destino son 2D y no consumen
+  cupo WebGL. El contexto compartido se crea de forma diferida y no se destruye entre efectos ni
+  partidas. El diagnostico y la migracion completa estan en `docs/plan_webgl_context_budget.md`.
 - Respetar la cola y el bloqueo descritos en `docs/animation_contracts.md`.
 
 ## Candidato futuro: three.quarks

@@ -5,6 +5,7 @@ import { useGameStore, type BurnAnimationState } from "../store/useGameStore";
 import { burnPathCurvature } from "../store/burnAnimation";
 import { ClassicBurnAnimator } from "./ClassicBurnAnimator";
 import { burnProjectileOriginRatios, BURN_DURATION_MS } from "./burnPresentation";
+import { renderSharedVfxFrame } from "./sharedVfxRenderer";
 import {
   BURN_FIREBALL_FRAGMENT_SHADER,
   BURN_FIREBALL_VERTEX_SHADER,
@@ -24,6 +25,12 @@ type BurnGeometry = {
 /** El lienzo cubre la pantalla, así que se limita la resolución antes que el número de rutas. */
 const MAX_PIXEL_RATIO = 1.35;
 
+function clearBurnCanvas(canvas: HTMLCanvasElement | null): void {
+  if (!canvas) return;
+  const context = canvas.getContext("2d");
+  context?.clearRect(0, 0, canvas.width, canvas.height);
+}
+
 export function BurnAnimator() {
   const burn = useGameStore((state) => state.burnAnimation);
   const classicBurn = burn?.renderer === "classic" ? burn : undefined;
@@ -38,7 +45,6 @@ export function BurnAnimator() {
 function ProceduralBurnAnimator({ burn }: { burn: BurnAnimationState | undefined }) {
   const [geometries, setGeometries] = useState<BurnGeometry[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
 
   useLayoutEffect(() => {
     // React puede mostrar el portal antes de que el siguiente requestAnimationFrame pinte el
@@ -110,30 +116,12 @@ function ProceduralBurnAnimator({ burn }: { burn: BurnAnimationState | undefined
   useEffect(() => {
     if (!burn || geometries.length === 0) {
       if (canvasRef.current) canvasRef.current.style.opacity = "0";
-      rendererRef.current?.clear();
+      clearBurnCanvas(canvasRef.current);
       return;
     }
     const canvas = canvasRef.current;
     if (!canvas) return;
-    let renderer = rendererRef.current;
-    if (!renderer) {
-      try {
-        renderer = new THREE.WebGLRenderer({
-          canvas,
-          alpha: true,
-          antialias: false,
-          premultipliedAlpha: true,
-        });
-      } catch {
-        return;
-      }
-      renderer.setClearColor(0x000000, 0);
-      renderer.setSize(Math.max(1, window.innerWidth), Math.max(1, window.innerHeight), false);
-      renderer.clear();
-      rendererRef.current = renderer;
-    }
     const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
-    renderer.setPixelRatio(pixelRatio);
 
     const colors = burnMaterialColors(burn.variant);
     const scale = Math.max(0.5, Math.min(3, burn.scale ?? 1));
@@ -193,11 +181,12 @@ function ProceduralBurnAnimator({ burn }: { burn: BurnAnimationState | undefined
     });
     const camera = new THREE.Camera();
 
+    let width = 1;
+    let height = 1;
     const resize = () => {
-      const width = Math.max(1, window.innerWidth);
-      const height = Math.max(1, window.innerHeight);
+      width = Math.max(1, window.innerWidth);
+      height = Math.max(1, window.innerHeight);
       for (const pass of passes) pass.uniforms.uRes.value.set(width, height);
-      renderer.setSize(width, height, false);
     };
     resize();
     window.addEventListener("resize", resize);
@@ -231,8 +220,16 @@ function ProceduralBurnAnimator({ burn }: { burn: BurnAnimationState | undefined
         pass.uniforms.uTime.value = now / 1000;
         pass.uniforms.uT.value = elapsed / BURN_DURATION_MS;
       }
-      renderer.render(scene, camera);
-      if (!firstFramePresented) {
+      const drawn = renderSharedVfxFrame(canvas, {
+        scene,
+        camera,
+        width,
+        height,
+        pixelRatio,
+        // El renderer procedural anterior usaba la salida lineal predeterminada de Three.js.
+        outputEncoding: THREE.LinearEncoding,
+      });
+      if (drawn && !firstFramePresented) {
         firstFramePresented = true;
         // El canvas sólo se revela después de tener una imagen procedural válida.
         canvas.style.opacity = "1";
@@ -246,19 +243,12 @@ function ProceduralBurnAnimator({ burn }: { burn: BurnAnimationState | undefined
       cancelAnimationFrame(frame);
       shakeAnimation?.cancel();
       window.removeEventListener("resize", resize);
-      renderer.clear();
+      clearBurnCanvas(canvas);
       planeGeometry.dispose();
       for (const pass of passes) pass.material.dispose();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [burn, geometries]);
-
-  // El contexto nace sólo al reproducir el primer Burn, se reutiliza entre atacantes apilados y
-  // se libera al desmontar el campo. Nunca se fuerza su pérdida entre beats.
-  useEffect(() => () => {
-    rendererRef.current?.dispose();
-    rendererRef.current = null;
-  }, []);
 
   const active = Boolean(burn && geometries.length > 0);
   const style = active
