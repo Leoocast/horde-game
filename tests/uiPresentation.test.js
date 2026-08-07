@@ -180,13 +180,16 @@ test("procedural Burn hides the WebGL buffer until its first rendered frame", ()
 });
 
 // Migración a un único contexto WebGL: ver docs/plan_webgl_context_budget.md.
-const SHARED_RENDERER_ANIMATORS = ["BuffSurgeAnimator", "GrowthBuffAnimator"];
+const SHARED_RENDERER_ANIMATORS = [
+  "BuffSurgeAnimator",
+  "GrowthBuffAnimator",
+  "HeavyCreatureLanding",
+];
 const OWN_RENDERER_ANIMATORS = [
   "BloodSiphonAnimator",
   "BurnAnimator",
   "DrainEssenceAnimator",
   "FinalBanquetAnimator",
-  "HeavyCreatureLanding",
 ];
 
 test("no animator poisons its canvas with forceContextLoss", () => {

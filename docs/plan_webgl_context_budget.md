@@ -1,10 +1,10 @@
 # Plan para 2026-08-06: presupuesto de contextos WebGL
 
-Estado: **fase 1 implementada** y **fase 2 en curso** el 2026-08-06. `GrowthBuffAnimator` y
-`BuffSurgeAnimator` ya dibujan mediante `src/components/sharedVfxRenderer.ts`; ambos quedan
-pendientes de comprobación en partida. `HeavyCreatureLanding` y los animadores fijos aún abren un
-contexto propio. Este documento explica el fallo, descarta dos soluciones que no sirven y fija el
-diseño al que hay que llegar.
+Estado: **fases 1 y 2 implementadas** el 2026-08-06. `GrowthBuffAnimator`, `BuffSurgeAnimator` y
+`HeavyCreatureLanding` ya dibujan mediante `src/components/sharedVfxRenderer.ts`; los tres quedan
+pendientes de comprobación en partida. Los animadores fijos aún abren un contexto propio. Este
+documento explica el fallo, descarta dos soluciones que no sirven y fija el diseño al que hay que
+llegar.
 
 ## Objetivo
 
@@ -147,8 +147,9 @@ se **copia** el resultado al lienzo de destino con `drawImage`. Los lienzos de d
 1. **Hecha.** `src/components/sharedVfxRenderer.ts` abre el contexto único y `GrowthBuffAnimator`
    dibuja a través de él. Falta la comprobación en partida: el efecto debe verse igual y su línea
    debe desaparecer del warning.
-2. **En curso.** `BuffSurgeAnimator` ya está migrado; falta `HeavyCreatureLanding`, el otro que
-   multiplica por carta. Al terminarlo, el warning debería desaparecer del todo.
+2. **Hecha.** `BuffSurgeAnimator` y `HeavyCreatureLanding`, los otros animadores que multiplicaban
+   contextos por carta, dibujan a través del renderer compartido. El warning debería desaparecer
+   del todo; falta confirmarlo en partida con un Campo poblado.
 3. Migrar los cuatro fijos a pantalla completa, incluido `BurnAnimator`.
 
 La lista de migrados vive en `tests/uiPresentation.test.js` (`SHARED_RENDERER_ANIMATORS`): al mover
