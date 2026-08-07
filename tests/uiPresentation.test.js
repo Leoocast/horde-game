@@ -15,6 +15,7 @@ import {
   burnMaterialColors,
   burnRenderBatches,
 } from "../src/components/burnFireball";
+import { grownVfxSurface, sharedVfxSourceTop } from "../src/components/sharedVfxRenderer";
 import { frameLeafRootIndex, frameRootPathSpecs } from "../src/components/GrowthBuffAnimator";
 import { buildStorm, stormBoltTones } from "../src/components/StormBuffAnimator";
 import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
@@ -178,24 +179,49 @@ test("procedural Burn hides the WebGL buffer until its first rendered frame", ()
   assert.match(styles, /\.burn-canvas\s*\{[^}]*opacity:\s*0;/u);
 });
 
+// Migración a un único contexto WebGL: ver docs/plan_webgl_context_budget.md.
+const SHARED_RENDERER_ANIMATORS = ["BuffSurgeAnimator", "GrowthBuffAnimator"];
+const OWN_RENDERER_ANIMATORS = [
+  "BloodSiphonAnimator",
+  "BurnAnimator",
+  "DrainEssenceAnimator",
+  "FinalBanquetAnimator",
+  "HeavyCreatureLanding",
+];
+
 test("no animator poisons its canvas with forceContextLoss", () => {
   // forceContextLoss deja el <canvas> inservible para siempre. Con React.StrictMode cada efecto
   // se monta, se limpia y se vuelve a montar sobre el mismo lienzo, así que llamarlo en una
   // limpieza deja el segundo montaje sin contexto y mata todas las animaciones.
-  const animators = [
-    "BloodSiphonAnimator",
-    "BuffSurgeAnimator",
-    "BurnAnimator",
-    "DrainEssenceAnimator",
-    "FinalBanquetAnimator",
-    "GrowthBuffAnimator",
-    "HeavyCreatureLanding",
-  ];
-  for (const animator of animators) {
+  for (const animator of [...SHARED_RENDERER_ANIMATORS, ...OWN_RENDERER_ANIMATORS]) {
     const source = readFileSync(new URL(`../src/components/${animator}.tsx`, import.meta.url), "utf8");
-    assert.match(source, /new THREE\.WebGLRenderer/u, `${animator} debería crear su renderer`);
     assert.doesNotMatch(source, /forceContextLoss/u, `${animator} inutilizaría su lienzo`);
   }
+});
+
+test("migrated animators draw through the single shared WebGL context", () => {
+  for (const animator of SHARED_RENDERER_ANIMATORS) {
+    const source = readFileSync(new URL(`../src/components/${animator}.tsx`, import.meta.url), "utf8");
+    assert.doesNotMatch(source, /new THREE\.WebGLRenderer/u, `${animator} volvió a abrir contexto propio`);
+    assert.match(source, /renderSharedVfxFrame/u, `${animator} debe dibujar por el renderer compartido`);
+  }
+  for (const animator of OWN_RENDERER_ANIMATORS) {
+    const source = readFileSync(new URL(`../src/components/${animator}.tsx`, import.meta.url), "utf8");
+    assert.match(source, /new THREE\.WebGLRenderer/u, `${animator} ya no abre contexto propio: muévelo a la lista migrada`);
+  }
+});
+
+test("the shared VFX surface only grows and its crop reads from the buffer top", () => {
+  // La superficie compartida nunca encoge: redimensionar reasigna el búfer.
+  assert.deepEqual(grownVfxSurface({ width: 1, height: 1 }, 200, 120), { width: 200, height: 120 });
+  assert.deepEqual(grownVfxSurface({ width: 200, height: 120 }, 80, 60), { width: 200, height: 120 });
+  assert.deepEqual(grownVfxSurface({ width: 200, height: 120 }, 80, 300), { width: 200, height: 300 });
+  assert.deepEqual(grownVfxSurface({ width: 200, height: 120 }, 0.2, 0.2), { width: 200, height: 120 });
+
+  // WebGL dibuja desde abajo y drawImage lee desde arriba: el recorte vive en la franja superior.
+  assert.equal(sharedVfxSourceTop(300, 120), 180);
+  assert.equal(sharedVfxSourceTop(120, 120), 0);
+  assert.equal(sharedVfxSourceTop(100, 120), 0);
 });
 
 test("procedural Burn never mounts the legacy full-screen white flash", () => {

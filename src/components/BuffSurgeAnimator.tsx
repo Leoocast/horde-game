@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
+import { renderSharedVfxFrame } from "./sharedVfxRenderer";
 
 export type BuffSurgePalette = "holy" | "nature" | "storm";
 
@@ -205,21 +206,8 @@ export function BuffSurgeAnimator({
     const camera = new THREE.OrthographicCamera(0, 1, 1, 0, -100, 100);
     camera.position.z = 10;
 
-    let renderer: THREE.WebGLRenderer;
-    try {
-      renderer = new THREE.WebGLRenderer({
-        canvas,
-        alpha: true,
-        antialias: true,
-        premultipliedAlpha: false,
-      });
-    } catch {
-      canvas.classList.add("buff-surge-three-unavailable");
-      return;
-    }
-    renderer.setClearColor(0x000000, 0);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
-    renderer.outputEncoding = THREE.sRGBEncoding;
+    // El contexto WebGL es compartido por todo el juego: este lienzo sólo recibe la copia.
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.6);
 
     let width = 1;
     let height = 1;
@@ -232,7 +220,6 @@ export function BuffSurgeAnimator({
       camera.top = height;
       camera.bottom = 0;
       camera.updateProjectionMatrix();
-      renderer.setSize(Math.round(width), Math.round(height), false);
     };
     resize();
     const resizeObserver = typeof ResizeObserver === "undefined"
@@ -352,7 +339,12 @@ export function BuffSurgeAnimator({
         pulse.material.opacity = 0;
       }
 
-      renderer.render(scene, camera);
+      const drawn = renderSharedVfxFrame(canvas, { scene, camera, width, height, pixelRatio });
+      if (!drawn) {
+        // Sin contexto compartido no hay efecto: se deja el respaldo CSS y se corta el bucle.
+        canvas.classList.add("buff-surge-three-unavailable");
+        return;
+      }
       if (elapsed <= duration + 0.06) {
         animationFrame = window.requestAnimationFrame(tick);
       }
@@ -377,7 +369,7 @@ export function BuffSurgeAnimator({
       streakTexture.dispose();
       emberTexture.dispose();
       ringTexture.dispose();
-      renderer.dispose();
+      // El renderer es compartido y sobrevive al efecto; sólo se liberan sus recursos propios.
     };
   }, [eventId, paletteName, seedKey]);
 

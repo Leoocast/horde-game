@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
 import type { BuffAnimationVariant } from "../store/buffAnimation";
+import { renderSharedVfxFrame } from "./sharedVfxRenderer";
 
 type GrowthBuffVariant = Exclude<BuffAnimationVariant, "default" | "storm-strong">;
 export type NatureRootPattern = "growth" | "shield" | "frame";
@@ -522,21 +523,8 @@ export function NatureRootAnimator({
     const camera = new THREE.OrthographicCamera(0, 1, 1, 0, -100, 100);
     camera.position.z = 10;
 
-    let renderer: THREE.WebGLRenderer;
-    try {
-      renderer = new THREE.WebGLRenderer({
-        canvas,
-        alpha: true,
-        antialias: true,
-        premultipliedAlpha: false,
-      });
-    } catch {
-      canvas.classList.add("growth-buff-three-unavailable");
-      return;
-    }
-    renderer.setClearColor(0x000000, 0);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
-    renderer.outputEncoding = THREE.sRGBEncoding;
+    // El contexto WebGL es compartido por todo el juego: este lienzo sólo recibe la copia.
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.6);
 
     let width = 1;
     let height = 1;
@@ -549,7 +537,6 @@ export function NatureRootAnimator({
       camera.top = height;
       camera.bottom = 0;
       camera.updateProjectionMatrix();
-      renderer.setSize(Math.round(width), Math.round(height), false);
     };
     resize();
     const resizeObserver = typeof ResizeObserver === "undefined"
@@ -895,7 +882,12 @@ export function NatureRootAnimator({
         leaf.vein.material.opacity = alpha * 0.68;
       }
 
-      renderer.render(scene, camera);
+      const drawn = renderSharedVfxFrame(canvas, { scene, camera, width, height, pixelRatio });
+      if (!drawn) {
+        // Sin contexto compartido no hay efecto: se deja el respaldo CSS y se corta el bucle.
+        canvas.classList.add("growth-buff-three-unavailable");
+        return;
+      }
       if (elapsed <= duration + 0.08) {
         animationFrame = window.requestAnimationFrame(tick);
       }
@@ -929,7 +921,7 @@ export function NatureRootAnimator({
       leafGeometry.dispose();
       veinGeometry.dispose();
       glowTexture.dispose();
-      renderer.dispose();
+      // El renderer es compartido y sobrevive al efecto; sólo se liberan sus recursos propios.
     };
   }, [eventId, pattern, variant]);
 
