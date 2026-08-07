@@ -258,7 +258,7 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
 - Si una pelea con dos presentaciones personales deja una sola carta viva, sólo la ganadora puede
   reclamar la animación bespoke. Si no tiene preset, se usa la pelea normal; cuando ambas sobreviven
   o ambas mueren, el atacante conserva la prioridad visual sin cambiar el impacto simultáneo.
-- Varka usa dos bolas de fuego amarillo-doradas simultáneas a escala 0.85 cada vez que ataca:
+- Varka usa dos bolas de fuego amarillo-doradas simultáneas a escala 1.3 cada vez que ataca:
   nacen de los bordes izquierdo y derecho de su carta, convergen sobre el defensor asignado o, si
   no tiene defensor, sobre el panel de Vida del Cronista, y producen un solo impacto de reglas.
   Todo evento Burn cuyo origen sea Varka usa su material amarillo-dorado, incluida su descarga de
@@ -274,11 +274,11 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   de Burn usa el renderer procedural salvo otra excepción registrada de presentación.
 - El Burn procedural no monta el destello DOM de pantalla completa del renderer clásico. Su
   impacto se comunica con la explosión WebGL, la chamusquina del objetivo y el número de daño.
-- El renderer procedural crea su contexto WebGL de forma diferida al primer Burn y lo conserva
-  durante el resto de la vida del campo. Los ataques
-  consecutivos, incluidas varias Varkas apiladas, no deben forzar la pérdida ni recrear el contexto
-  entre beats. Su overlay debe permanecer oculto mientras no exista un Burn activo y durante cada
-  handoff hasta que el nuevo efecto haya renderizado su primer frame WebGL válido.
+- `sharedVfxRenderer.ts` crea el único contexto WebGL de forma diferida al primer efecto y lo
+  conserva durante el resto de la sesión. Burn reutiliza ese contexto compartido: los ataques
+  consecutivos, incluidas varias Varkas apiladas, no deben forzar su pérdida ni recrearlo entre
+  beats. Su canvas 2D de destino debe permanecer oculto mientras no exista un Burn activo y durante
+  cada handoff hasta que el nuevo efecto haya copiado su primer frame WebGL válido.
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado
   aunque los impactos visuales se escalonen.
 

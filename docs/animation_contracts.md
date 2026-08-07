@@ -223,14 +223,15 @@ Current registration:
   the Host attacker. A defended attack targets the assigned defender; an undefended attack targets
   `[data-player-life-panel]`. Varka remains anchored, the ordinary lunge is suppressed, and the
   normal combat result lands once at the projectiles' shared 638ms impact. The preset uses Varka's
-  white-yellow `golden` fire material at `scale: 0.85`, visibly smaller than Vaelor's personal
+  white-yellow `golden` fire material at `scale: 1.3`, visibly smaller than Vaelor's personal
   `scale: 1.8` projectile. It casts two straight
   simultaneous routes from the left and right edges of Varka's card, with separate charge, trail,
   and ember particles; both converge on one target and still produce one rules impact.
-- Consecutive Varkas reuse the same persistent WebGL context. Per-attack shader materials and
-  geometry are disposed between beats, but the renderer is only released when the battlefield
-  unmounts; force-losing and recreating the context between stacked attackers is a regression.
-  The canvas must not become visible during that handoff until the next attack has rendered once.
+- Consecutive Varkas reuse the application's persistent shared WebGL context. Per-attack shader
+  materials and geometry are disposed between beats, but the shared renderer survives for the
+  session; force-losing and recreating the context between stacked attackers is a regression. The
+  destination canvas must not become visible during that handoff until the next attack has rendered
+  and copied its first valid frame.
 - Adding another bespoke fight or direct attack means registering its context and adding or reusing
   a preset; do not add card-name branches to animator components or resolve combat inside VFX.
 

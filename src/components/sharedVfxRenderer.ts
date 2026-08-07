@@ -67,7 +67,10 @@ function acquireRenderer(): THREE.WebGLRenderer | null {
       canvas,
       alpha: true,
       antialias: true,
-      premultipliedAlpha: false,
+      // Los shaders transparentes del juego, incluido Burn, entregan color premultiplicado.
+      // Mantener el mismo contrato en el contexto evita multiplicar el alfa otra vez al copiar
+      // el framebuffer WebGL a los canvas 2D de destino.
+      premultipliedAlpha: true,
     });
     created.setClearColor(0x000000, 0);
     created.setPixelRatio(1);

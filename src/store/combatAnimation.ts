@@ -128,7 +128,7 @@ const PERSONAL_COMBAT_ANIMATION_RECIPES: Record<
     effect: {
       type: "fireball",
       variant: PERSONAL_BURN_MATERIALS.varka_infernal_matriarch,
-      scale: 0.85,
+      scale: 1.3,
       sourceMoves: false,
       projectileCount: 2,
       projectileOrigin: "split-horizontal",

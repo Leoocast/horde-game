@@ -308,7 +308,7 @@ test("stacked Varkas attack consecutively with their own infernal fireballs", as
     assert.equal(started.burnAnimation?.sourceId, firstVarka.instanceId);
     assert.equal(started.burnAnimation?.targetKind, "playerLife");
     assert.equal(started.burnAnimation?.variant, "golden");
-    assert.equal(started.burnAnimation?.scale, 0.85);
+    assert.equal(started.burnAnimation?.scale, 1.3);
     assert.equal(started.burnAnimation?.projectileCount, 2);
     assert.equal(started.burnAnimation?.projectileOrigin, "split-horizontal");
     assert.equal(started.burnAnimation?.projectileGapMs, 0);

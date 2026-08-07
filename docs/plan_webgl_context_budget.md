@@ -1,10 +1,9 @@
 # Plan para 2026-08-06: presupuesto de contextos WebGL
 
-Estado: **fases 1 y 2 implementadas** y **fase 3 en curso** el 2026-08-06. `GrowthBuffAnimator`,
-`BuffSurgeAnimator`, `HeavyCreatureLanding`, `BloodSiphonAnimator`, `DrainEssenceAnimator` y
-`FinalBanquetAnimator` ya dibujan mediante `src/components/sharedVfxRenderer.ts`; quedan pendientes
-de comprobación en partida. Sólo `BurnAnimator` aún abre un contexto propio. Este documento explica
-el fallo, descarta dos soluciones que no sirven y fija el diseño al que hay que llegar.
+Estado: **fases 1, 2 y 3 implementadas** el 2026-08-06. Todos los animadores WebGL dibujan mediante
+`src/components/sharedVfxRenderer.ts`; ya no queda ninguno que abra un contexto propio. Queda
+pendiente la comprobación visual en partida. Este documento explica el fallo, descarta dos soluciones
+que no sirven y documenta el diseño implementado.
 
 ## Objetivo
 
@@ -150,8 +149,9 @@ se **copia** el resultado al lienzo de destino con `drawImage`. Los lienzos de d
 2. **Hecha.** `BuffSurgeAnimator` y `HeavyCreatureLanding`, los otros animadores que multiplicaban
    contextos por carta, dibujan a través del renderer compartido. El warning debería desaparecer
    del todo; falta confirmarlo en partida con un Campo poblado.
-3. **En curso.** `BloodSiphonAnimator`, `DrainEssenceAnimator` y `FinalBanquetAnimator` ya están
-   migrados; falta `BurnAnimator`.
+3. **Hecha.** `BloodSiphonAnimator`, `DrainEssenceAnimator`, `FinalBanquetAnimator` y `BurnAnimator`
+   dibujan a través del renderer compartido. `BurnAnimator` conserva el contrato de handoff: su
+   lienzo procedural permanece oculto hasta que se ha copiado el primer fotograma válido.
 
 La lista de migrados vive en `tests/uiPresentation.test.js` (`SHARED_RENDERER_ANIMATORS`): al mover
 un animador de una lista a la otra, la regresión exige que deje de abrir contexto propio.

@@ -170,11 +170,12 @@ test("procedural volleys render every route in bounded shader batches", () => {
 test("procedural Burn hides the WebGL buffer until its first rendered frame", () => {
   const animator = readFileSync(new URL("../src/components/BurnAnimator.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
-  const renderIndex = animator.indexOf("renderer.render(scene, camera)");
+  const renderIndex = animator.indexOf("renderSharedVfxFrame(canvas");
   const revealIndex = animator.indexOf('canvas.style.opacity = "1"', renderIndex);
 
   assert.ok(renderIndex >= 0);
   assert.ok(revealIndex > renderIndex);
+  assert.match(animator, /if \(drawn && !firstFramePresented\)/u);
   assert.match(animator, /canvas\.style\.opacity = "0";\s*cancelAnimationFrame/u);
   assert.match(styles, /\.burn-canvas\s*\{[^}]*opacity:\s*0;/u);
 });
@@ -183,14 +184,13 @@ test("procedural Burn hides the WebGL buffer until its first rendered frame", ()
 const SHARED_RENDERER_ANIMATORS = [
   "BloodSiphonAnimator",
   "BuffSurgeAnimator",
+  "BurnAnimator",
   "DrainEssenceAnimator",
   "FinalBanquetAnimator",
   "GrowthBuffAnimator",
   "HeavyCreatureLanding",
 ];
-const OWN_RENDERER_ANIMATORS = [
-  "BurnAnimator",
-];
+const OWN_RENDERER_ANIMATORS = [];
 
 test("no animator poisons its canvas with forceContextLoss", () => {
   // forceContextLoss deja el <canvas> inservible para siempre. Con React.StrictMode cada efecto
@@ -212,6 +212,15 @@ test("migrated animators draw through the single shared WebGL context", () => {
     const source = readFileSync(new URL(`../src/components/${animator}.tsx`, import.meta.url), "utf8");
     assert.match(source, /new THREE\.WebGLRenderer/u, `${animator} ya no abre contexto propio: muévelo a la lista migrada`);
   }
+});
+
+test("the shared renderer preserves premultiplied alpha when copying transparent VFX", () => {
+  const sharedRenderer = readFileSync(
+    new URL("../src/components/sharedVfxRenderer.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(sharedRenderer, /premultipliedAlpha:\s*true/u);
 });
 
 test("the shared VFX surface only grows and its crop reads from the buffer top", () => {
@@ -316,7 +325,7 @@ test("Varka casts two smaller infernal fireballs at defenders and the Chronicler
     effect: {
       type: "fireball",
       variant: "golden",
-      scale: 0.85,
+      scale: 1.3,
       amount: 4,
       sourceMoves: false,
       projectileCount: 2,
@@ -337,7 +346,7 @@ test("Varka casts two smaller infernal fireballs at defenders and the Chronicler
     effect: {
       type: "fireball",
       variant: "golden",
-      scale: 0.85,
+      scale: 1.3,
       amount: 4,
       sourceMoves: false,
       projectileCount: 2,
