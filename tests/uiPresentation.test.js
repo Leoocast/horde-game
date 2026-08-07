@@ -178,6 +178,34 @@ test("procedural Burn hides the WebGL buffer until its first rendered frame", ()
   assert.match(styles, /\.burn-canvas\s*\{[^}]*opacity:\s*0;/u);
 });
 
+test("no animator poisons its canvas with forceContextLoss", () => {
+  // forceContextLoss deja el <canvas> inservible para siempre. Con React.StrictMode cada efecto
+  // se monta, se limpia y se vuelve a montar sobre el mismo lienzo, así que llamarlo en una
+  // limpieza deja el segundo montaje sin contexto y mata todas las animaciones.
+  const animators = [
+    "BloodSiphonAnimator",
+    "BuffSurgeAnimator",
+    "BurnAnimator",
+    "DrainEssenceAnimator",
+    "FinalBanquetAnimator",
+    "GrowthBuffAnimator",
+    "HeavyCreatureLanding",
+  ];
+  for (const animator of animators) {
+    const source = readFileSync(new URL(`../src/components/${animator}.tsx`, import.meta.url), "utf8");
+    assert.match(source, /new THREE\.WebGLRenderer/u, `${animator} debería crear su renderer`);
+    assert.doesNotMatch(source, /forceContextLoss/u, `${animator} inutilizaría su lienzo`);
+  }
+});
+
+test("procedural Burn never mounts the legacy full-screen white flash", () => {
+  const procedural = readFileSync(new URL("../src/components/BurnAnimator.tsx", import.meta.url), "utf8");
+  const classic = readFileSync(new URL("../src/components/ClassicBurnAnimator.tsx", import.meta.url), "utf8");
+
+  assert.doesNotMatch(procedural, /className="burn-screen-flash"/u);
+  assert.match(classic, /className="burn-screen-flash"/u);
+});
+
 test("only Vaelor's entry volley keeps the curved procedural route", () => {
   assert.equal(burnPathCurvature(undefined), 0);
   assert.equal(burnPathCurvature("straight"), 0);

@@ -261,7 +261,6 @@ function ProceduralBurnAnimator({ burn }: { burn: BurnAnimationState | undefined
   }, []);
 
   const active = Boolean(burn && geometries.length > 0);
-  const finalProjectileDelay = Math.max(0, geometries.length - 1) * projectileGapMs;
   const style = active
     ? ({
         "--burn-start-x": `${geometries[0].startX}px`,
@@ -272,16 +271,6 @@ function ProceduralBurnAnimator({ burn }: { burn: BurnAnimationState | undefined
     "--burn-end-x": `${geometry.endX}px`,
     "--burn-end-y": `${geometry.endY}px`,
   } as CSSProperties);
-  const finalImpact = impacts[impacts.length - 1];
-  const finalImpactGeometry = finalImpact
-    ? geometries[finalImpact.routeIndex]
-    : geometries[geometries.length - 1];
-  const impactAnimationStyle = finalImpactGeometry
-    ? ({
-        ...impactStyle(finalImpactGeometry),
-        animationDelay: `${finalProjectileDelay}ms`,
-      } as CSSProperties)
-    : undefined;
 
   return createPortal(
     <div
@@ -298,7 +287,6 @@ function ProceduralBurnAnimator({ burn }: { burn: BurnAnimationState | undefined
 
       {active && burn && (
         <Fragment key={burn.id}>
-          <div className="burn-screen-flash" style={impactAnimationStyle} />
           {impacts.map((impact, impactIndex) => {
             const geometry = geometries[impact.routeIndex];
             if (!geometry) return null;

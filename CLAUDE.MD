@@ -272,6 +272,8 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   coloca un contador -1/-1 sobre cada objetivo como un único evento simultáneo, sin daño adicional.
 - Todos contra uno conserva deliberadamente el renderer clásico DOM/CSS de bola de fuego; el resto
   de Burn usa el renderer procedural salvo otra excepción registrada de presentación.
+- El Burn procedural no monta el destello DOM de pantalla completa del renderer clásico. Su
+  impacto se comunica con la explosión WebGL, la chamusquina del objetivo y el número de daño.
 - El renderer procedural crea su contexto WebGL de forma diferida al primer Burn y lo conserva
   durante el resto de la vida del campo. Los ataques
   consecutivos, incluidas varias Varkas apiladas, no deben forzar la pérdida ni recrear el contexto

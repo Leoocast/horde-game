@@ -7954,8 +7954,8 @@
     animation: burn-damage-pop 620ms 640ms linear both;
   }
 
-  /* Las variantes ya no repintan el proyectil: su material vive en el shader. Aquí sólo quedan
-     el destello de pantalla y el número de daño, que siguen siendo DOM. */
+  /* Las variantes ya no repintan el proyectil: su material vive en el shader. El número de daño
+     sigue siendo DOM; el destello de pantalla completa queda reservado al renderer clásico. */
   .burn-animation-layer-oil .burn-screen-flash {
     animation-name: burn-oil-screen-flash;
   }

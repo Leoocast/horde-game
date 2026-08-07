@@ -45,9 +45,10 @@ Implementaciones utiles como referencia:
   geometria y materiales se renuevan por efecto. En cada handoff, el canvas no vuelve a ser visible
   hasta que el shader haya dibujado el primer frame valido, para no exponer el buffer limpio. El GLSL
   vive aparte en `burnFireball.ts` y deriva sus constantes del reloj de
-  `burnPresentation.ts`, asi que el material de cada bando es solo una rampa de color. El destello
-  de pantalla, el numero de dano y la chamusquina de la carta siguen siendo DOM porque deben
-  alinearse con la interfaz. Las rutas son rectas salvo la descarga de entrada de Vaelor.
+  `burnPresentation.ts`, asi que el material de cada bando es solo una rampa de color. El numero de
+  dano y la chamusquina de la carta siguen siendo DOM porque deben alinearse con la interfaz. El
+  renderer procedural no monta el antiguo destello DOM de pantalla completa; su impacto ya lo
+  presentan la explosion del shader, la chamusquina y el numero. Las rutas son rectas salvo la descarga de entrada de Vaelor.
   `ClassicBurnAnimator.tsx` conserva el renderer DOM/CSS anterior exclusivamente para excepciones
   registradas como Todos contra uno. Detalles de forma y estela en `docs/animation_contracts.md`.
 
@@ -60,6 +61,18 @@ Para cualquier efecto nuevo:
 - Limitar `devicePixelRatio`, particulas y draw calls segun lo que realmente se ve.
 - Cancelar `requestAnimationFrame`, timers y listeners; liberar geometria, materiales, texturas y
   renderer al desmontar.
+- **Nunca llamar `renderer.forceContextLoss()`.** Deja el `<canvas>` inservible de forma
+  permanente, y con `React.StrictMode` cada efecto se monta, se limpia y se vuelve a montar sobre
+  el mismo lienzo: la segunda pasada se queda sin contexto y el animador muere con
+  `THREE.WebGLRenderer: Context Lost`. Hay una regresion que lo prohibe en
+  `tests/uiPresentation.test.js`.
+- Presupuesto de contextos WebGL: el navegador solo admite unos dieciseis vivos y al pasarse
+  descarta el mas antiguo, con lo que ese lienzo queda roto en pantalla. `dispose()` no devuelve su
+  contexto al cupo de inmediato; lo libera el recolector cuando se lleva el lienzo. Los animadores
+  montados por carta (`BuffSurgeAnimator`, `GrowthBuffAnimator`, `HeavyCreatureLanding`) abren un
+  contexto por criatura, asi que una oleada de buffs puede agotar el cupo. El diagnostico completo
+  y el diseño al que hay que llegar —un unico renderer compartido por toda la aplicacion— estan en
+  `docs/plan_webgl_context_budget.md`.
 - Respetar la cola y el bloqueo descritos en `docs/animation_contracts.md`.
 
 ## Candidato futuro: three.quarks
