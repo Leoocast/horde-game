@@ -19,6 +19,8 @@ export type SharedVfxFrame = {
   width: number;
   height: number;
   pixelRatio: number;
+  /** Estado global del renderer que debe restaurarse para este efecto. */
+  outputEncoding?: THREE.TextureEncoding;
 };
 
 export type SharedVfxSurface = {
@@ -100,6 +102,11 @@ export function renderSharedVfxFrame(
 ): boolean {
   const active = acquireRenderer();
   if (!active) return false;
+
+  // El renderer es compartido: ningún efecto puede heredar estado global del fotograma anterior.
+  active.setClearColor(0x000000, 0);
+  active.setPixelRatio(1);
+  active.outputEncoding = frame.outputEncoding ?? THREE.sRGBEncoding;
 
   const pixelWidth = Math.max(1, Math.round(frame.width * frame.pixelRatio));
   const pixelHeight = Math.max(1, Math.round(frame.height * frame.pixelRatio));

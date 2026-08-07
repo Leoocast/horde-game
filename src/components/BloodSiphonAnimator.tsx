@@ -7,6 +7,7 @@ import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
 import { shouldShowFullCardImage } from "../utils/cardImages";
 import { Card } from "./Card";
+import { renderSharedVfxFrame } from "./sharedVfxRenderer";
 import { VampireBite } from "./VampireBite";
 
 gsap.registerPlugin(RoughEase);
@@ -162,16 +163,11 @@ export function BloodPactAnimator() {
     const stainTimers: number[] = [];
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 2000);
+    let width = Math.max(1, window.innerWidth);
+    let height = Math.max(1, window.innerHeight);
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 2000);
     camera.position.z = 900;
-    let renderer: THREE.WebGLRenderer | undefined;
-    try {
-      renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, alpha: true, antialias: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    } catch {
-      renderer = undefined;
-    }
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.35));
     const pointLight = new THREE.PointLight(0x8c0014, 4, 1200);
@@ -338,9 +334,10 @@ export function BloodPactAnimator() {
     };
 
     const resize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
+      width = Math.max(1, window.innerWidth);
+      height = Math.max(1, window.innerHeight);
+      camera.aspect = width / height;
       camera.updateProjectionMatrix();
-      renderer?.setSize(window.innerWidth, window.innerHeight);
     };
     window.addEventListener("resize", resize);
 
@@ -424,7 +421,15 @@ export function BloodPactAnimator() {
         stainContext.drawImage(offscreen, 0, 0);
       }
 
-      renderer?.render(scene, camera);
+      renderSharedVfxFrame(threeCanvas, {
+        scene,
+        camera,
+        width,
+        height,
+        pixelRatio,
+        // El renderer anterior usaba el valor lineal predeterminado de Three.js.
+        outputEncoding: THREE.LinearEncoding,
+      });
       animationFrame = window.requestAnimationFrame(tick);
     };
     animationFrame = window.requestAnimationFrame(tick);
@@ -495,7 +500,7 @@ export function BloodPactAnimator() {
       clearParticles();
       sphereGeometry.dispose();
       material.dispose();
-      renderer?.dispose();
+      // El renderer es compartido y sobrevive al efecto; sólo se liberan sus recursos propios.
     };
   }, [active?.id, complete, playSfx, setPhase]);
 

@@ -181,15 +181,15 @@ test("procedural Burn hides the WebGL buffer until its first rendered frame", ()
 
 // Migración a un único contexto WebGL: ver docs/plan_webgl_context_budget.md.
 const SHARED_RENDERER_ANIMATORS = [
+  "BloodSiphonAnimator",
   "BuffSurgeAnimator",
+  "DrainEssenceAnimator",
+  "FinalBanquetAnimator",
   "GrowthBuffAnimator",
   "HeavyCreatureLanding",
 ];
 const OWN_RENDERER_ANIMATORS = [
-  "BloodSiphonAnimator",
   "BurnAnimator",
-  "DrainEssenceAnimator",
-  "FinalBanquetAnimator",
 ];
 
 test("no animator poisons its canvas with forceContextLoss", () => {
@@ -225,6 +225,17 @@ test("the shared VFX surface only grows and its crop reads from the buffer top",
   assert.equal(sharedVfxSourceTop(300, 120), 180);
   assert.equal(sharedVfxSourceTop(120, 120), 0);
   assert.equal(sharedVfxSourceTop(100, 120), 0);
+});
+
+test("the shared VFX renderer restores global state for every frame", () => {
+  const source = readFileSync(
+    new URL("../src/components/sharedVfxRenderer.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(source, /active\.setClearColor\(0x000000, 0\)/u);
+  assert.match(source, /active\.setPixelRatio\(1\)/u);
+  assert.match(source, /active\.outputEncoding = frame\.outputEncoding \?\? THREE\.sRGBEncoding/u);
 });
 
 test("procedural Burn never mounts the legacy full-screen white flash", () => {
