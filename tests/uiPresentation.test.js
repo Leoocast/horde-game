@@ -28,6 +28,7 @@ import { PreviewStatsBadge, TraitPills } from "../src/components/CardPreview";
 import { cardLabelCamelCase } from "../src/i18n/cardLocalization";
 import {
   resolveCardBurnMaterial,
+  resolveCardBurnScale,
   resolvePersonalAttackAnimation,
   resolvePersonalCombatAnimation,
 } from "../src/store/combatAnimation";
@@ -298,10 +299,12 @@ test("Varka's split projectile origin follows the left and right card edges", ()
   ]);
 });
 
-test("every Burn sourced by Varka resolves to her golden material", () => {
+test("every Burn sourced by Varka resolves to her golden material and personal scale", () => {
   assert.equal(resolveCardBurnMaterial("varka_infernal_matriarch"), "golden");
   assert.equal(resolveCardBurnMaterial("varka_infernal_matriarch", "oil"), "golden");
   assert.equal(resolveCardBurnMaterial("ordinary_burn_source", "oil"), "oil");
+  assert.equal(resolveCardBurnScale("varka_infernal_matriarch"), 1.3);
+  assert.equal(resolveCardBurnScale("ordinary_burn_source"), 1);
 });
 
 test("Varka casts two smaller infernal fireballs at defenders and the Chronicler life panel", () => {

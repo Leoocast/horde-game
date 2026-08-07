@@ -497,6 +497,7 @@ test("a throttled Varka volley consumes its event before the beat finishes", asy
       completed = true;
     });
     assert.equal(useGameStore.getState().burnAnimation?.variant, "golden");
+    assert.equal(useGameStore.getState().burnAnimation?.scale, 1.3);
 
     // Simulate a background/busy tab: impact, delayed death commit and animation finish
     // have all expired before the browser gets a chance to run any callback.

@@ -62,6 +62,10 @@ const PERSONAL_BURN_MATERIALS = {
   varka_infernal_matriarch: "golden",
 } as const satisfies Record<string, BurnMaterialVariant>;
 
+const PERSONAL_BURN_SCALES = {
+  varka_infernal_matriarch: 1.3,
+} as const satisfies Record<string, number>;
+
 /** Resolves a card-owned Burn material independently of the event shape. This keeps every Burn
  * sourced by Varka golden, including entry volleys and any future single-target Burn. */
 export function resolveCardBurnMaterial(
@@ -70,6 +74,13 @@ export function resolveCardBurnMaterial(
 ): BurnMaterialVariant {
   return sourceDefinitionId
     ? PERSONAL_BURN_MATERIALS[sourceDefinitionId as keyof typeof PERSONAL_BURN_MATERIALS] ?? fallback
+    : fallback;
+}
+
+/** Card-owned scale shared by personal combat and rules-triggered Burns such as Varka's entry. */
+export function resolveCardBurnScale(sourceDefinitionId: string | undefined, fallback = 1): number {
+  return sourceDefinitionId
+    ? PERSONAL_BURN_SCALES[sourceDefinitionId as keyof typeof PERSONAL_BURN_SCALES] ?? fallback
     : fallback;
 }
 
@@ -128,7 +139,7 @@ const PERSONAL_COMBAT_ANIMATION_RECIPES: Record<
     effect: {
       type: "fireball",
       variant: PERSONAL_BURN_MATERIALS.varka_infernal_matriarch,
-      scale: 1.3,
+      scale: PERSONAL_BURN_SCALES.varka_infernal_matriarch,
       sourceMoves: false,
       projectileCount: 2,
       projectileOrigin: "split-horizontal",

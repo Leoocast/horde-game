@@ -135,8 +135,9 @@ Varka, Matriarca Infernal (`varka_infernal_matriarch`) uses the same compact vol
 
 - Its ETB activation beat pulses the source once and queues `BURN_VOLLEY_DAMAGE`. The volley beat
   never pulses it again.
-- Every Burn event sourced by Varka resolves through her registered `golden` material. Her entry
-  volley therefore uses the same white-yellow fire as her two-projectile personal attacks.
+- Every Burn event sourced by Varka resolves through her registered `golden` material and
+  `scale: 1.3`. Her entry volley therefore uses the same white-yellow fire and projectile size as
+  her two-projectile personal attacks.
 - The engine snapshots the player and every opposing creature as rules targets. `BurnAnimator`
   receives that target list and calculates one source-to-target geometry for each projectile.
 - Every captured target keeps a visible route. Volleys longer than six are divided into bounded

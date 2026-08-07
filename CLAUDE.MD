@@ -261,8 +261,8 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
 - Varka usa dos bolas de fuego amarillo-doradas simultáneas a escala 1.3 cada vez que ataca:
   nacen de los bordes izquierdo y derecho de su carta, convergen sobre el defensor asignado o, si
   no tiene defensor, sobre el panel de Vida del Cronista, y producen un solo impacto de reglas.
-  Todo evento Burn cuyo origen sea Varka usa su material amarillo-dorado, incluida su descarga de
-  entrada contra el Cronista y cada enemigo. Esa descarga muestra una ruta por cada objetivo sin
+  Todo evento Burn cuyo origen sea Varka usa su material amarillo-dorado y escala 1.3, incluida su
+  descarga de entrada contra el Cronista y cada enemigo. Esa descarga muestra una ruta por cada objetivo sin
   tope visual: el límite de seis pertenece a cada pasada del shader y las descargas mayores se
   reparten en varias pasadas sobre el mismo canvas y reloj.
   Vaelor, al ser Invocado, captura todos los enemigos actuales y lanza a la vez una bola esmeralda
