@@ -6220,53 +6220,93 @@
     transform-origin: center;
   }
 
-  .battlefield-card-slot::before {
-    content: "";
+  /* Marcadores del atacante de la Hueste: halo y galón. Van en un contenedor
+     propio que ocupa la caja de la carta para poder ladearse con ella — la carta
+     se inclina 4° al declararse atacante y los marcadores tienen que acompañarla. */
+  .battlefield-attack-markers {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0;
+    transform-origin: center;
+    /* Misma duración y curva que `.card-visual`: al terminar el ataque el galón
+       se endereza junto con la carta, nunca antes que ella. */
+    transition:
+      opacity 320ms ease-out,
+      transform 300ms ease-out;
+  }
+
+  .battlefield-layout-slot-tapped > .battlefield-card-reflow > [data-card-slot-id] > .battlefield-attack-markers {
+    transform: rotate(4deg);
+  }
+
+  .host-attacker-readied > .battlefield-attack-markers {
+    opacity: 1;
+  }
+
+  .battlefield-attack-halo {
     position: absolute;
     left: 10%;
     right: 10%;
     bottom: -15px;
     height: 18px;
-    z-index: -1;
     border-radius: 999px;
-    opacity: 0;
     background:
       radial-gradient(ellipse at center, rgb(255 230 142 / 0.72), rgb(236 84 31 / 0.42) 48%, transparent 72%);
     filter: blur(2px);
-    transition: opacity 320ms ease-out, transform 320ms ease-out;
   }
 
-  .battlefield-card-slot::after {
-    content: "";
+  /* La hoja se dibuja a tamaño fijo y centrada: su proporción es parte de la
+     silueta authorada, así que no se estira con el ancho del slot. */
+  .battlefield-attack-chevron {
+    --attack-chevron-hot: #ffc66f;
+    --attack-chevron-mid: #ff7b24;
+    --attack-chevron-deep: #dd3e14;
+    --attack-chevron-root: #6d2107;
+    --attack-chevron-core: #ffd08a;
+    --attack-chevron-spark: #ffe0a0;
     position: absolute;
-    left: 4%;
-    right: 4%;
+    left: 50%;
     bottom: -28px;
+    width: 140px;
     height: 27px;
-    z-index: -1;
+    margin-left: -70px;
+    overflow: visible;
+    filter:
+      drop-shadow(0 0 3px rgb(255 205 111 / 0.95))
+      drop-shadow(0 0 9px rgb(255 117 27 / 0.9))
+      drop-shadow(0 0 18px rgb(224 61 14 / 0.6));
+  }
+
+  .battlefield-attack-chevron-bloom {
+    opacity: 0.34;
+  }
+
+  .battlefield-attack-chevron-glint {
     opacity: 0;
-    clip-path: polygon(
-      0 7%,
-      4% 0,
-      22% 22%,
-      39% 54%,
-      50% 76%,
-      61% 54%,
-      78% 22%,
-      96% 0,
-      100% 7%,
-      80% 29%,
-      61% 65%,
-      50% 100%,
-      39% 65%,
-      20% 29%
-    );
-    background:
-      radial-gradient(circle at 50% 88%, #ffe0a0 0 5%, transparent 26%),
-      linear-gradient(180deg, #ffc66f, #ff7b24 52%, #dd3e14);
-    box-shadow: none;
-    filter: drop-shadow(0 0 3px rgb(255 205 111 / 1)) drop-shadow(0 0 9px rgb(255 117 27 / 0.92)) drop-shadow(0 0 18px rgb(224 61 14 / 0.62));
-    transition: opacity 320ms ease-out, transform 320ms ease-out;
+  }
+
+  .battlefield-attack-chevron-spark {
+    opacity: 0.55;
+  }
+
+  /* Sólo el atacante declarado anima: el resto de los Ecos monta el marcador
+     apagado y no paga animaciones que nadie ve. */
+  .host-attacker-readied .battlefield-attack-halo {
+    animation: host-attack-marker-pulse 1.2s ease-in-out infinite;
+  }
+
+  .host-attacker-readied .battlefield-attack-chevron-bloom {
+    animation: attack-chevron-breathe 1.7s ease-in-out infinite;
+  }
+
+  .host-attacker-readied .battlefield-attack-chevron-glint {
+    animation: attack-chevron-glint 1.9s cubic-bezier(0.42, 0, 0.72, 1) infinite;
+  }
+
+  .host-attacker-readied .battlefield-attack-chevron-spark {
+    animation: attack-chevron-spark 1.7s ease-in-out infinite;
   }
 
   .battlefield-card-slot-compact {
@@ -7338,15 +7378,6 @@
 
   .host-attacker-readied {
     filter: drop-shadow(0 16px 20px rgb(0 0 0 / 0.42)) brightness(1.08);
-  }
-
-  .host-attacker-readied::before {
-    opacity: 1;
-    animation: host-attack-marker-pulse 1.2s ease-in-out infinite;
-  }
-
-  .host-attacker-readied::after {
-    opacity: 1;
   }
 
   .battlefield-empty,
@@ -10521,6 +10552,52 @@
   50% {
     opacity: 1;
     transform: scaleX(1.08);
+  }
+}
+
+/* Las dos bandas del galón nacen en los hombros y mueren juntas sobre la punta. */
+@keyframes attack-chevron-glint {
+  0% {
+    opacity: 0;
+    transform: translateX(var(--attack-chevron-glint-from));
+  }
+
+  14% {
+    opacity: 0.95;
+  }
+
+  58% {
+    opacity: 0.1;
+    transform: translateX(var(--attack-chevron-glint-to));
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(var(--attack-chevron-glint-to));
+  }
+}
+
+@keyframes attack-chevron-breathe {
+  0%,
+  100% {
+    opacity: 0.34;
+  }
+
+  50% {
+    opacity: 0.92;
+  }
+}
+
+@keyframes attack-chevron-spark {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.82);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.22);
   }
 }
 
@@ -13813,6 +13890,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .tactical-arrow-glint { animation: none; }
+
+  .host-attacker-readied .battlefield-attack-chevron-glint,
+  .host-attacker-readied .battlefield-attack-chevron-bloom,
+  .host-attacker-readied .battlefield-attack-chevron-spark { animation: none; }
 }
 
 /* Main-menu identity: the same editable name is carried into the expedition. */

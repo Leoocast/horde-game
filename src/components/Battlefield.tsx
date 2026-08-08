@@ -16,6 +16,7 @@ import { useToastStore } from "../store/useToastStore";
 import { cardThemeForDefinition, shouldShowFullCardImage } from "../utils/cardImages";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
+import { HostAttackerMarker } from "./AttackChevronGlyph";
 import { BuffSurgeAnimator } from "./BuffSurgeAnimator";
 import { Card, CardDefenseBadge, CardTraitIconBadges } from "./Card";
 import { GrowthBuffAnimator } from "./GrowthBuffAnimator";
@@ -1026,6 +1027,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
       {isFlying && <span className="battlefield-flight-shadow" aria-hidden="true" />}
       {isFlying && <span className="battlefield-flight-wisp" aria-hidden="true" />}
       <span className="battlefield-card-depth" aria-hidden="true" />
+      {side === "host" && !compact && card.kinds.includes("ECHO") && <HostAttackerMarker />}
       {heavyLandingEventId && (
         <HeavyCreatureLanding
           key={`heavy-landing-${heavyLandingEventId}`}

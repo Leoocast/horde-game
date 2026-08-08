@@ -15,6 +15,7 @@ try {
   await server.ssrLoadModule("/tests/battlefieldLayout.test.js");
   await server.ssrLoadModule("/tests/targetingGeometry.test.js");
   await server.ssrLoadModule("/tests/tacticalArrowGeometry.test.js");
+  await server.ssrLoadModule("/tests/attackChevronGeometry.test.js");
   await server.ssrLoadModule("/tests/cardVoiceInteractions.test.js");
   await server.ssrLoadModule("/tests/playgroundScenario.test.js");
   await server.ssrLoadModule("/tests/playgroundActions.test.js");
