@@ -6245,7 +6245,9 @@
     opacity: 1;
   }
 
+  /* Prueba: el galón se está evaluando sin el halo de base. */
   .battlefield-attack-halo {
+    display: none;
     position: absolute;
     left: 10%;
     right: 10%;
@@ -6257,9 +6259,14 @@
     filter: blur(2px);
   }
 
-  /* La hoja se dibuja a tamaño fijo y centrada: su proporción es parte de la
-     silueta authorada, así que no se estira con el ancho del slot. */
+  /* La hoja se dibuja centrada y a tamaño propio: su proporción es parte de la
+     silueta authorada, así que crece entera en vez de estirarse con el slot.
+     Sólo `--attack-chevron-width` se ajusta; la altura y el desplazamiento
+     salen de ahí, y el canto superior queda siempre a 1px del borde inferior
+     de la carta. */
   .battlefield-attack-chevron {
+    --attack-chevron-width: 168px;
+    --attack-chevron-height: calc(var(--attack-chevron-width) * 27 / 140);
     --attack-chevron-hot: #ffc66f;
     --attack-chevron-mid: #ff7b24;
     --attack-chevron-deep: #dd3e14;
@@ -6268,10 +6275,10 @@
     --attack-chevron-spark: #ffe0a0;
     position: absolute;
     left: 50%;
-    bottom: -28px;
-    width: 140px;
-    height: 27px;
-    margin-left: -70px;
+    bottom: calc(-1px - var(--attack-chevron-height));
+    width: var(--attack-chevron-width);
+    height: var(--attack-chevron-height);
+    margin-left: calc(var(--attack-chevron-width) / -2);
     overflow: visible;
     filter:
       drop-shadow(0 0 3px rgb(255 205 111 / 0.95))
