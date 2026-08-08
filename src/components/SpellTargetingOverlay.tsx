@@ -7,6 +7,7 @@ import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { shouldShowFullCardImage } from "../utils/cardImages";
+import { targetArrowCurve } from "./tacticalArrowGeometry";
 import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 import { Card } from "./Card";
 import { shouldRevealOverlappedTargets } from "./targetingGeometry";
@@ -159,7 +160,7 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
   if (!spellTargeting || !spell || !activeReq || !followEnd) return null;
 
   const showFullSourceImage = shouldShowFullCardImage(spell.definitionId);
-  const followArrow = makeTargetArrow(start, followEnd);
+  const followArrow = targetArrowCurve(start, followEnd);
   const currentLabel = activeReq.controller === "SELF"
     ? t("target.chooseAlly")
     : activeReq.controller === "OPPONENT"
@@ -169,54 +170,18 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
     .map((req) => {
       const end = lockedEnds[req.id];
       if (!end) return undefined;
-      return { req, arrow: makeTargetArrow(start, end), color: targetRequirementIsBuff(spell, req) ? FRIENDLY_ARROW : ENEMY_ARROW };
+      return { req, arrow: targetArrowCurve(start, end), color: targetRequirementIsBuff(spell, req) ? FRIENDLY_ARROW : ENEMY_ARROW };
     })
-    .filter((item): item is { req: TargetRequirement; arrow: ReturnType<typeof makeTargetArrow>; color: string } => Boolean(item));
+    .filter((item): item is { req: TargetRequirement; arrow: ReturnType<typeof targetArrowCurve>; color: string } => Boolean(item));
 
   return (
     <>
       <div data-audio-click="off" className="counter-target-backdrop" />
       <svg className="pointer-events-none fixed inset-0 z-[104] h-screen w-screen overflow-visible">
-        <defs>
-          <filter id="spell-target-arrow-green-glow" x="-80%" y="-80%" width="260%" height="260%" colorInterpolationFilters="sRGB">
-            <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="expanded" />
-            <feGaussianBlur in="expanded" stdDeviation="3.2" result="blurred" />
-            <feComposite in="blurred" in2="SourceAlpha" operator="out" result="outerAlpha" />
-            <feFlood floodColor={FRIENDLY_ARROW} floodOpacity="0.82" result="glowColor" />
-            <feComposite in="glowColor" in2="outerAlpha" operator="in" result="outerGlow" />
-            <feMerge>
-              <feMergeNode in="outerGlow" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-          <filter id="spell-target-arrow-red-glow" x="-80%" y="-80%" width="260%" height="260%" colorInterpolationFilters="sRGB">
-            <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="expanded" />
-            <feGaussianBlur in="expanded" stdDeviation="3.2" result="blurred" />
-            <feComposite in="blurred" in2="SourceAlpha" operator="out" result="outerAlpha" />
-            <feFlood floodColor={ENEMY_ARROW} floodOpacity="0.82" result="glowColor" />
-            <feComposite in="glowColor" in2="outerAlpha" operator="in" result="outerGlow" />
-            <feMerge>
-              <feMergeNode in="outerGlow" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-          <linearGradient id="spell-target-arrow-gradient" gradientUnits="userSpaceOnUse" x1={start.x} y1={start.y} x2={followEnd.x} y2={followEnd.y}>
-            <stop offset="0%" stopColor={arrowColor} stopOpacity="0" />
-            <stop offset="18%" stopColor={arrowColor} stopOpacity="0.28" />
-            <stop offset="60%" stopColor={arrowColor} stopOpacity="0.88" />
-            <stop offset="100%" stopColor={arrowColor} stopOpacity="0.96" />
-          </linearGradient>
-        </defs>
         {lockedArrows.map(({ req, arrow, color }) => (
-          <g key={req.id} filter={color === FRIENDLY_ARROW ? "url(#spell-target-arrow-green-glow)" : "url(#spell-target-arrow-red-glow)"}>
-            <TacticalArrowGlyph path={arrow.path} tip={arrow.tip} color={color} />
-          </g>
+          <TacticalArrowGlyph key={req.id} curve={arrow} color={color} />
         ))}
-        {!complete && (
-          <g filter={arrowColor === FRIENDLY_ARROW ? "url(#spell-target-arrow-green-glow)" : "url(#spell-target-arrow-red-glow)"}>
-            <TacticalArrowGlyph path={followArrow.path} tip={followArrow.tip} color={arrowColor} stroke="url(#spell-target-arrow-gradient)" />
-          </g>
-        )}
+        {!complete && <TacticalArrowGlyph curve={followArrow} color={arrowColor} />}
       </svg>
       <aside
         ref={panelRef}
@@ -281,27 +246,4 @@ function findCardIdAtPoint(x: number, y: number): string | undefined {
 function findBattlefieldSlot(cardId: string): HTMLElement | undefined {
   return Array.from(document.querySelectorAll<HTMLElement>("[data-card-slot-id]"))
     .find((element) => element.dataset.cardSlotId === cardId);
-}
-
-function makeTargetArrow(start: { x: number; y: number }, end: { x: number; y: number }) {
-  const dx = end.x - start.x;
-  const dy = end.y - start.y;
-  const length = Math.hypot(dx, dy) || 1;
-  const px = -dy / length;
-  const py = dx / length;
-  const curve = Math.min(64, Math.max(24, length * 0.16));
-  const control = { x: (start.x + end.x) / 2 + px * curve, y: (start.y + end.y) / 2 + py * curve };
-  const tangentX = end.x - control.x;
-  const tangentY = end.y - control.y;
-  const tangentLength = Math.hypot(tangentX, tangentY) || 1;
-  const tx = tangentX / tangentLength;
-  const ty = tangentY / tangentLength;
-  const tpx = -ty;
-  const tpy = tx;
-  const headLength = 24;
-  const headWing = 12;
-  const neckAt = { x: end.x - tx * headLength, y: end.y - ty * headLength };
-  const path = `M ${start.x} ${start.y} Q ${control.x} ${control.y} ${neckAt.x} ${neckAt.y}`;
-  const tip = [`${end.x},${end.y}`, `${end.x - tx * headLength + tpx * headWing},${end.y - ty * headLength + tpy * headWing}`, `${end.x - tx * headLength - tpx * headWing},${end.y - ty * headLength - tpy * headWing}`].join(" ");
-  return { path, tip };
 }

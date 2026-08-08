@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
+import { targetArrowCurve } from "./tacticalArrowGeometry";
 import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 
 const ARROW_COLOR = "#f04438";
@@ -84,63 +85,14 @@ export function TributeOfTheFourSorrowsSelectionOverlay({ game: _game }: { game:
 
   if (!tributeOfTheFourSorrowsSelection || !end) return null;
 
-  const arrow = makeTargetArrow(start, end);
+  const arrow = targetArrowCurve(start, end);
 
   return (
     <>
       <div data-audio-click="off" className="counter-target-backdrop" />
       <svg className="pointer-events-none fixed inset-0 z-[111] h-screen w-screen overflow-visible">
-        <defs>
-          <filter id="tribute-of-the-four-sorrows-target-arrow-glow" x="-80%" y="-80%" width="260%" height="260%" colorInterpolationFilters="sRGB">
-            <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="expanded" />
-            <feGaussianBlur in="expanded" stdDeviation="3.2" result="blurred" />
-            <feComposite in="blurred" in2="SourceAlpha" operator="out" result="outerAlpha" />
-            <feFlood floodColor={ARROW_COLOR} floodOpacity="0.82" result="glowColor" />
-            <feComposite in="glowColor" in2="outerAlpha" operator="in" result="outerGlow" />
-            <feMerge>
-              <feMergeNode in="outerGlow" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-          <linearGradient id="tribute-of-the-four-sorrows-target-arrow-gradient" gradientUnits="userSpaceOnUse" x1={start.x} y1={start.y} x2={end.x} y2={end.y}>
-            <stop offset="0%" stopColor={ARROW_COLOR} stopOpacity="0" />
-            <stop offset="16%" stopColor={ARROW_COLOR} stopOpacity="0.28" />
-            <stop offset="58%" stopColor={ARROW_COLOR} stopOpacity="0.9" />
-            <stop offset="100%" stopColor={ARROW_COLOR} stopOpacity="0.96" />
-          </linearGradient>
-        </defs>
-        <g filter="url(#tribute-of-the-four-sorrows-target-arrow-glow)">
-          <TacticalArrowGlyph path={arrow.path} tip={arrow.tip} color={ARROW_COLOR} stroke="url(#tribute-of-the-four-sorrows-target-arrow-gradient)" />
-        </g>
+        <TacticalArrowGlyph curve={arrow} color={ARROW_COLOR} />
       </svg>
     </>
   );
-}
-
-function makeTargetArrow(start: { x: number; y: number }, end: { x: number; y: number }) {
-  const dx = end.x - start.x;
-  const dy = end.y - start.y;
-  const length = Math.hypot(dx, dy) || 1;
-  const ux = dx / length;
-  const uy = dy / length;
-  const px = -uy;
-  const py = ux;
-  const curve = Math.min(64, Math.max(24, length * 0.16));
-  const control = {
-    x: (start.x + end.x) / 2 + px * curve,
-    y: (start.y + end.y) / 2 + py * curve,
-  };
-  const tangentX = end.x - control.x;
-  const tangentY = end.y - control.y;
-  const tangentLength = Math.hypot(tangentX, tangentY) || 1;
-  const tx = tangentX / tangentLength;
-  const ty = tangentY / tangentLength;
-  const tpx = -ty;
-  const tpy = tx;
-  const headLength = 24;
-  const headWing = 12;
-  const neckAt = { x: end.x - tx * headLength, y: end.y - ty * headLength };
-  const path = `M ${start.x} ${start.y} Q ${control.x} ${control.y} ${neckAt.x} ${neckAt.y}`;
-  const tip = [`${end.x},${end.y}`, `${end.x - tx * headLength + tpx * headWing},${end.y - ty * headLength + tpy * headWing}`, `${end.x - tx * headLength - tpx * headWing},${end.y - ty * headLength - tpy * headWing}`].join(" ");
-  return { path, tip };
 }

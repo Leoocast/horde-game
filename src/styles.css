@@ -12742,39 +12742,21 @@
   box-shadow: none;
 }
 
-/* Tactical arrows: fade into color, with the moving rune detail retained. */
-.tactical-arrow-halo {
-  stroke-width: 7.5;
-  opacity: 0.16;
-}
-
-.tactical-arrow-core {
-  stroke-width: 4.75;
-  opacity: 0.96;
-}
-
-.tactical-arrow-runes {
-  stroke: rgb(247 242 220 / 0.74);
-  stroke-width: 1;
-  stroke-dasharray: 2 11;
-  animation: tactical-arrow-runes-flow 1.25s linear infinite;
-}
-
+/* Tactical arrows: a tapered blade with a glint that sweeps it end to end. */
+.tactical-arrow-blade,
 .tactical-arrow-head {
   stroke: none;
 }
 
-.tactical-arrow-glyph {
-  animation: tactical-arrow-brightness 1.25s ease-in-out infinite;
+/* The band travels along the chord; the clip to the blade gives it the curve. */
+.tactical-arrow-glint {
+  animation: tactical-arrow-glint 2.3s linear infinite;
+  opacity: 0.9;
 }
 
-@keyframes tactical-arrow-runes-flow {
-  to { stroke-dashoffset: -12; }
-}
-
-@keyframes tactical-arrow-brightness {
-  0%, 100% { opacity: 0.86; }
-  50% { opacity: 1; }
+@keyframes tactical-arrow-glint {
+  from { transform: translateX(var(--tactical-arrow-glint-from, 0)); }
+  to { transform: translateX(var(--tactical-arrow-glint-to, 0)); }
 }
 
 /* All zombies share one alignment; only their vertical position is nudged upward. */
@@ -13830,8 +13812,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tactical-arrow-runes,
-  .tactical-arrow-glyph { animation: none; }
+  .tactical-arrow-glint { animation: none; }
 }
 
 /* Main-menu identity: the same editable name is carried into the expedition. */
