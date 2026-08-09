@@ -481,6 +481,27 @@ export type SpellFightAnimationState = {
   customAnimation?: PersonalCombatAnimationPlan;
 };
 
+function personalCardAttackBurnAnimation(
+  animation: PersonalCombatAnimationPlan,
+  animationId: string,
+): BurnAnimationState | undefined {
+  const { effect } = animation;
+  if (effect.type !== "fireball") return undefined;
+  return {
+    id: animationId,
+    sourceId: animation.sourceId,
+    targetId: animation.targetId,
+    targetKind: "card",
+    amount: effect.amount,
+    variant: effect.variant,
+    scale: effect.scale,
+    sourceMoves: effect.sourceMoves,
+    ...(effect.projectileCount === undefined ? {} : { projectileCount: effect.projectileCount }),
+    ...(effect.projectileOrigin === undefined ? {} : { projectileOrigin: effect.projectileOrigin }),
+    ...(effect.projectileGapMs === undefined ? {} : { projectileGapMs: effect.projectileGapMs }),
+  };
+}
+
 export type RootsTouchedSkyAnimationState = {
   id: string;
   targetId: string;
@@ -2710,21 +2731,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     const gameSessionId = state.gameSessionId;
     const effect = personalSourceDamageAnimation.effect;
     const sourceDamageEffects = card.effects.filter((candidate) => hasEffectPresentation([candidate], "sourceDamage"));
-    const burnAnimation: BurnAnimationState | undefined = effect.type === "fireball"
-      ? {
-          id: animationId,
-          sourceId: personalSourceDamageAnimation.sourceId,
-          targetId: personalSourceDamageAnimation.targetId,
-          targetKind: "card",
-          amount: effect.amount,
-          variant: effect.variant,
-          scale: effect.scale,
-          sourceMoves: effect.sourceMoves,
-          ...(effect.projectileCount === undefined ? {} : { projectileCount: effect.projectileCount }),
-          ...(effect.projectileOrigin === undefined ? {} : { projectileOrigin: effect.projectileOrigin }),
-          ...(effect.projectileGapMs === undefined ? {} : { projectileGapMs: effect.projectileGapMs }),
-        }
-      : undefined;
+    const burnAnimation = personalCardAttackBurnAnimation(personalSourceDamageAnimation, animationId);
 
     if (effect.type === "fireball") {
       window.setTimeout(() => {
@@ -2913,11 +2920,113 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
     };
   }
   const staged = resolveSpell(game, { deferFightResolution: true });
-  const castSucceeded = staged.game?.lastActionResult?.ok === true;
+  const stagedGame = staged.game;
+  const castSucceeded = stagedGame?.lastActionResult?.ok === true;
+  const personalFightActor = castSucceeded && stagedGame
+    ? [...stagedGame.player.field, ...stagedGame.host.field].find((candidate) => candidate.instanceId === friendlyId)
+    : undefined;
+  const personalFightTarget = castSucceeded && stagedGame
+    ? [...stagedGame.player.field, ...stagedGame.host.field].find((candidate) => candidate.instanceId === enemyId)
+    : undefined;
+  const personalFightAnimation = stagedGame && personalFightActor && personalFightTarget
+    ? resolvePersonalTargetedAttackAnimation(
+        personalFightActor,
+        personalFightTarget,
+        getPowerEndurance(stagedGame, personalFightActor).power,
+      )
+    : undefined;
+  const gameSessionId = state.gameSessionId;
   if (castSucceeded) {
     window.setTimeout(() => {
       const current = useGameStore.getState();
-      if (current.pendingSpellHandId !== handId) return;
+      if (current.gameSessionId !== gameSessionId || current.pendingSpellHandId !== handId) return;
+
+      if (personalFightAnimation) {
+        const animationEventId = Date.now();
+        const animationId = `personal-spell-fight-${handId}-${animationEventId}`;
+        const effect = personalFightAnimation.effect;
+        const burnAnimation = personalCardAttackBurnAnimation(personalFightAnimation, animationId);
+        const fightEffects = card.effects.filter((candidate) => hasEffectPresentation([candidate], "fight"));
+
+        useGameStore.setState({
+          spellFightAnimation: {
+            friendlyId,
+            enemyId,
+            enemyMoves: true,
+            eventId: animationEventId,
+            customAnimation: personalFightAnimation,
+          },
+          burnAnimation,
+        });
+
+        if (effect.type === "fireball") {
+          window.setTimeout(() => {
+            const castState = useGameStore.getState();
+            if (
+              castState.gameSessionId !== gameSessionId ||
+              castState.pendingSpellHandId !== handId ||
+              castState.spellFightAnimation?.eventId !== animationEventId
+            ) return;
+            useAudioStore.getState().playSfx(pickRandomSfx(fireballCastSfx));
+          }, personalFightAnimation.castMs);
+        } else {
+          useAudioStore.getState().playSfx("attack");
+        }
+
+        window.setTimeout(() => {
+          const impactState = useGameStore.getState();
+          if (
+            impactState.gameSessionId !== gameSessionId ||
+            impactState.pendingSpellHandId !== handId ||
+            impactState.spellFightAnimation?.eventId !== animationEventId
+          ) return;
+          if (effect.type === "fireball") useAudioStore.getState().playSfx(fireballHitSfx);
+
+          const next = structuredClone(impactState.game) as GameState;
+          const source = next.player.memory.find((candidate) => candidate.instanceId === handId) ?? card;
+          resolveEffects(next, fightEffects, {
+            source,
+            side: "player",
+            targets,
+          });
+          useGameStore.setState({
+            game: next,
+            specialDeadCardIds: findMarkedCreatureIds(next),
+          });
+        }, personalFightAnimation.impactMs);
+
+        window.setTimeout(() => {
+          const deathState = useGameStore.getState();
+          if (
+            deathState.gameSessionId !== gameSessionId ||
+            deathState.pendingSpellHandId !== handId ||
+            deathState.spellFightAnimation?.eventId !== animationEventId
+          ) return;
+          const next = structuredClone(deathState.game) as GameState;
+          destroyMarkedCreatures(next);
+          useGameStore.setState({ game: next, specialDeadCardIds: [] });
+          scheduleQueuedHostTriggers();
+        }, personalFightAnimation.impactMs + SPELL_FIGHT_DEATH_FADE_MS);
+
+        window.setTimeout(() => {
+          useGameStore.setState((completeState) => {
+            if (
+              completeState.gameSessionId !== gameSessionId ||
+              completeState.pendingSpellHandId !== handId ||
+              completeState.spellFightAnimation?.eventId !== animationEventId
+            ) return {};
+            return {
+              spellFightAnimation: undefined,
+              pendingSpellHandId: undefined,
+              burnAnimation: completeState.burnAnimation?.id === animationId
+                ? undefined
+                : completeState.burnAnimation,
+            };
+          });
+        }, personalFightAnimation.durationMs);
+        return;
+      }
+
       useAudioStore.getState().playSfx("attack");
       useGameStore.setState({
         spellFightAnimation: { friendlyId, enemyId, enemyMoves: true, eventId: Date.now() },

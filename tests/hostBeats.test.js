@@ -1279,7 +1279,7 @@ test("Kaelor uses his storm animation when the first allied Echo is Invoked", as
   }
 });
 
-test("growth spells animate only after confirm, and Oath of the Clearing fights after the buff beat", async () => {
+test("growth spells animate only after confirm, and Shield of the Heir fights after the buff beat", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -1374,6 +1374,118 @@ test("growth spells animate only after confirm, and Oath of the Clearing fights 
       afterImpact.game.host.field.find((card) => card.instanceId === enemy.instanceId)?.damageMarked,
       3,
     );
+  } finally {
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
+test("Shield of the Heir reuses Vaelor's attack preset after its buff beat", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { getPowerEndurance },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, addSources, cardFromDeck, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/engine/StaticEffects"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    const game = createTestGame("shield-vaelor-personal-attack");
+    addSources(game, 2);
+    const vaelor = addCard(game, cardFromDeck("vaelor_emerald_guardian", "player"));
+    const enemy = addCard(game, customCard("shield-vaelor-target", "host", {
+      power: 2,
+      endurance: 10,
+    }));
+    const shield = addCard(game, cardFromDeck("shield_of_the_heir", "player", "hand"), "player", "hand");
+    useGameStore.setState({
+      game,
+      playerDeckId: "pact_of_elarion",
+      spellTargeting: {
+        handId: shield.instanceId,
+        stepIndex: 1,
+        targets: {
+          yourCreature: vaelor.instanceId,
+          opponentCreature: enemy.instanceId,
+        },
+        x: 0,
+        y: 0,
+      },
+      spellFightAnimation: undefined,
+      pendingSpellHandId: undefined,
+      burnAnimation: undefined,
+      buffAnimationCardIds: [],
+      buffAnimationVariant: "default",
+      specialDeadCardIds: [],
+    });
+
+    useGameStore.getState().confirmSpellTargeting();
+    const afterConfirm = useGameStore.getState();
+    const buffedVaelor = afterConfirm.game.player.field.find((card) => card.instanceId === vaelor.instanceId);
+    assert.deepEqual(getPowerEndurance(afterConfirm.game, buffedVaelor), { power: 7, endurance: 7 });
+    assert.equal(afterConfirm.spellFightAnimation, undefined);
+    assert.equal(afterConfirm.burnAnimation, undefined);
+    assert.equal(afterConfirm.pendingSpellHandId, shield.instanceId);
+
+    timers.releaseExpiredAt(1039);
+    assert.equal(useGameStore.getState().spellFightAnimation, undefined);
+
+    timers.releaseExpiredAt(1040);
+    const attackStarted = useGameStore.getState();
+    assert.equal(attackStarted.spellFightAnimation?.customAnimation?.preset, "emerald-fireball");
+    assert.equal(attackStarted.spellFightAnimation?.enemyMoves, true);
+    assert.equal(attackStarted.burnAnimation?.sourceId, vaelor.instanceId);
+    assert.equal(attackStarted.burnAnimation?.targetId, enemy.instanceId);
+    assert.equal(attackStarted.burnAnimation?.amount, 7);
+
+    timers.releaseExpiredAt(1677);
+    assert.equal(
+      useGameStore.getState().game.player.field.find((card) => card.instanceId === vaelor.instanceId)?.damageMarked,
+      0,
+    );
+    assert.equal(
+      useGameStore.getState().game.host.field.find((card) => card.instanceId === enemy.instanceId)?.damageMarked,
+      0,
+    );
+
+    timers.releaseExpiredAt(1678);
+    const afterImpact = useGameStore.getState();
+    assert.equal(
+      afterImpact.game.player.field.find((card) => card.instanceId === vaelor.instanceId)?.damageMarked,
+      2,
+    );
+    assert.equal(
+      afterImpact.game.host.field.find((card) => card.instanceId === enemy.instanceId)?.damageMarked,
+      7,
+    );
+    assert.equal(afterImpact.pendingSpellHandId, shield.instanceId);
+
+    timers.releaseExpiredAt(2260);
+    const completed = useGameStore.getState();
+    assert.equal(completed.spellFightAnimation, undefined);
+    assert.equal(completed.burnAnimation, undefined);
+    assert.equal(completed.pendingSpellHandId, undefined);
   } finally {
     useAudioStore.setState({ playSfx: originalPlaySfx });
     globalThis.window = originalWindow;

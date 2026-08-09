@@ -8,10 +8,11 @@ export function SpellFightAnimator() {
 
   useEffect(() => {
     if (!spellFightAnimation) return;
-    if (spellFightAnimation.customAnimation?.suppressDefaultMotion) return;
     const friendly = document.querySelector<HTMLElement>(`[data-card-slot-id="${spellFightAnimation.friendlyId}"]`);
     const enemy = document.querySelector<HTMLElement>(`[data-card-slot-id="${spellFightAnimation.enemyId}"]`);
-    const friendlyCleanup = friendly ? animatePlayerForward(friendly) : undefined;
+    const friendlyCleanup = !spellFightAnimation.customAnimation?.suppressDefaultMotion && friendly
+      ? animatePlayerForward(friendly)
+      : undefined;
     const enemyCleanup = spellFightAnimation.enemyMoves !== false && enemy ? animateEnemyForward(enemy) : undefined;
     return () => {
       friendlyCleanup?.();
