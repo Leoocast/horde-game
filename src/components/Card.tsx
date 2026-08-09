@@ -469,6 +469,7 @@ export function CardStatsBadge({
         "card-stat-badge",
         stats.damaged ? "is-damaged" : "",
         stats.buffed ? "is-buffed" : "",
+        stats.debuffed ? "is-debuffed" : "",
       ].join(" ")}
     >
       <span className="card-stat-motif" aria-hidden="true" />

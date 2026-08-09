@@ -22,15 +22,17 @@ import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCou
 import { hostAttackPlayerHitDelay } from "../src/components/hostAttackPresentation";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { playerAttackHostHitDelay } from "../src/components/playerAttackPresentation";
-import { CardTraitTooltipBadge } from "../src/components/Card";
+import { CardStatsBadge, CardTraitTooltipBadge } from "../src/components/Card";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
 import { PreviewStatsBadge, TraitPills } from "../src/components/CardPreview";
+import { VampireBite } from "../src/components/VampireBite";
 import { cardLabelCamelCase } from "../src/i18n/cardLocalization";
 import {
   resolveCardBurnMaterial,
   resolveCardBurnScale,
   resolvePersonalAttackAnimation,
   resolvePersonalCombatAnimation,
+  resolvePersonalTargetedAttackAnimation,
 } from "../src/store/combatAnimation";
 import { burnPathCurvature, resolveBurnRenderer } from "../src/store/burnAnimation";
 import { addCard, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
@@ -134,6 +136,67 @@ test("Vaelor's direct Host attack resolves to the shared emerald fireball preset
     },
   });
   assert.equal(resolvePersonalAttackAnimation(customCard("ordinary-attacker", "player"), 1), undefined);
+});
+
+test("card-sourced damage reuses the selected Echo's registered attack presentation", () => {
+  const vaelor = cardFromDeck("vaelor_emerald_guardian", "player");
+  const target = customCard("source-damage-target", "host");
+
+  assert.deepEqual(resolvePersonalTargetedAttackAnimation(vaelor, target, 6), {
+    preset: "emerald-fireball",
+    sourceId: vaelor.instanceId,
+    targetId: target.instanceId,
+    suppressDefaultMotion: true,
+    castMs: 220,
+    impactMs: 638,
+    durationMs: 1220,
+    effect: {
+      type: "fireball",
+      variant: "emerald",
+      scale: 1.8,
+      amount: 6,
+      sourceMoves: false,
+    },
+  });
+  assert.equal(
+    resolvePersonalTargetedAttackAnimation(customCard("ordinary-source", "player"), target, 2),
+    undefined,
+  );
+});
+
+test("the Hydra's personal attack uses the vampire bite silhouette with a venom palette", () => {
+  const hydra = cardFromDeck("hydra_of_the_black_bough", "player");
+  const target = customCard("hydra-bite-target", "host");
+  const animation = resolvePersonalTargetedAttackAnimation(hydra, target, 1);
+
+  assert.equal(animation?.preset, "venom-bite");
+  assert.equal(animation?.effect.type, "bite");
+  assert.equal(animation?.effect.variant, "venom");
+  assert.equal(animation?.suppressDefaultMotion, false);
+
+  const markup = renderToStaticMarkup(createElement(VampireBite, {
+    animationId: "venom-preview",
+    variant: "venom",
+  }));
+  assert.match(markup, /bite-venom/u);
+  assert.match(markup, /#b7ff45/iu);
+});
+
+test("debuffed stats render a red downward indicator independently of damage", () => {
+  const markup = renderToStaticMarkup(createElement(CardStatsBadge, {
+    stats: {
+      text: "2/3",
+      power: 2,
+      endurance: 3,
+      damaged: false,
+      buffed: false,
+      debuffed: true,
+    },
+  }));
+  const css = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(markup, /is-debuffed/u);
+  assert.match(css, /\.card-stat-badge\.is-debuffed::before\s*\{[^}]*content:\s*"\\25BC"\s*!important;/u);
 });
 
 test("a repeated Burn volley lands as one aggregate impact and explicit targets keep their own", () => {

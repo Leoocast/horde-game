@@ -444,6 +444,7 @@ test("marked damage remains visible through the End phase and clears only when t
     endurance: 1,
     damaged: true,
     buffed: true,
+    debuffed: false,
   });
 
   const hostTurn = endPlayerTurn(endPhase);
@@ -457,6 +458,22 @@ test("marked damage remains visible through the End phase and clears only when t
     endurance: 1,
     damaged: false,
     buffed: false,
+    debuffed: false,
+  });
+});
+
+test("negative stat counters expose a debuff independently of marked damage", () => {
+  const game = createTestGame();
+  const echo = addCard(game, customCard("debuffed_echo", "host", { power: 3, endurance: 4 }));
+  echo.counters["-1/-1"] = 1;
+
+  assert.deepEqual(cardStatState(game, echo), {
+    text: "2/3",
+    power: 2,
+    endurance: 3,
+    damaged: false,
+    buffed: false,
+    debuffed: true,
   });
 });
 

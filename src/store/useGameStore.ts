@@ -82,6 +82,7 @@ import {
   resolveCardBurnScale,
   resolvePersonalAttackAnimation,
   resolvePersonalCombatAnimation,
+  resolvePersonalTargetedAttackAnimation,
   type BurnMaterialVariant,
   type PersonalAttackAnimationPlan,
   type PersonalCombatAnimationPlan,
@@ -477,6 +478,7 @@ export type SpellFightAnimationState = {
   enemyId: string;
   enemyMoves?: boolean;
   eventId: number;
+  customAnimation?: PersonalCombatAnimationPlan;
 };
 
 export type RootsTouchedSkyAnimationState = {
@@ -1450,7 +1452,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         : undefined;
       const startAt = elapsed;
       window.setTimeout(() => {
-        if (!customAnimation) useAudioStore.getState().playSfx("attack");
+        if (!customAnimation || customAnimation.effect.type !== "fireball") {
+          useAudioStore.getState().playSfx("attack");
+        }
         const voiceCue = attackVoiceCues.get(attackerId);
         if (voiceCue) playCardVoiceCue(voiceCue);
         set({
@@ -2516,6 +2520,19 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
   const isSourceDamageSpell = Boolean(friendlyId && enemyId && hasEffectPresentation(card.effects, "sourceDamage"));
   const isTargetDamageSpell = hasEffectPresentation(card.effects, "targetDamage");
   const isDestroySpell = hasEffectPresentation(card.effects, "destroy");
+  const sourceDamageActor = isSourceDamageSpell
+    ? [...game.player.field, ...game.host.field].find((candidate) => candidate.instanceId === friendlyId)
+    : undefined;
+  const sourceDamageTarget = isSourceDamageSpell
+    ? [...game.player.field, ...game.host.field].find((candidate) => candidate.instanceId === enemyId)
+    : undefined;
+  const personalSourceDamageAnimation = sourceDamageActor && sourceDamageTarget
+    ? resolvePersonalTargetedAttackAnimation(
+        sourceDamageActor,
+        sourceDamageTarget,
+        getPowerEndurance(game, sourceDamageActor).power,
+      )
+    : undefined;
   const usesDrainEssenceBiteAnimation = effectsUseAnimation(card.effects, "DRAIN_ESSENCE");
   const usesEssenceSmokeAnimation = effectsUseAnimation(card.effects, "ESSENCE_SMOKE");
   const usesDrainEssenceAnimation = usesDrainEssenceBiteAnimation || usesEssenceSmokeAnimation;
@@ -2528,6 +2545,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
       deferContinuation?: boolean;
       suppressLifeLossPresentation?: boolean;
       deferFightResolution?: boolean;
+      deferSourceDamageResolution?: boolean;
     } = {},
   ) => {
     const readySourceIds = new Set(latest.player.field.filter((item) => item.kinds.includes("SOURCE") && !item.exhausted).map((item) => item.instanceId));
@@ -2537,6 +2555,7 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
       deferPlayerTriggers: lifeCostAmount(card.additionalCost, latest.player.life) > 0 || isTargetDamageSpell || isDestroySpell,
       deferReactiveTriggers: reactionSources.length > 0 || isDestroySpell,
       deferFightResolution: presentation.deferFightResolution,
+      deferSourceDamageResolution: presentation.deferSourceDamageResolution,
     });
     const castSucceeded = next.lastActionResult?.ok === true;
     const lostLife = castSucceeded && next.player.life < latest.player.life;
@@ -2671,6 +2690,120 @@ function runConfirmSpellTargeting(state: GameStore): Partial<GameStore> {
       selectedHandId: undefined,
       hoveredCardId: undefined,
       focusedCardId: undefined,
+    };
+  }
+  if (isSourceDamageSpell && personalSourceDamageAnimation) {
+    const staged = resolveSpell(game, { deferSourceDamageResolution: true });
+    const stagedGame = staged.game;
+    const castSucceeded = stagedGame?.lastActionResult?.ok === true;
+    if (!castSucceeded || !stagedGame) {
+      return {
+        ...staged,
+        spellTargeting: undefined,
+        selectedHandId: undefined,
+        focusedCardId: undefined,
+      };
+    }
+
+    const animationEventId = Date.now();
+    const animationId = `personal-source-damage-${handId}-${animationEventId}`;
+    const gameSessionId = state.gameSessionId;
+    const effect = personalSourceDamageAnimation.effect;
+    const sourceDamageEffects = card.effects.filter((candidate) => hasEffectPresentation([candidate], "sourceDamage"));
+    const burnAnimation: BurnAnimationState | undefined = effect.type === "fireball"
+      ? {
+          id: animationId,
+          sourceId: personalSourceDamageAnimation.sourceId,
+          targetId: personalSourceDamageAnimation.targetId,
+          targetKind: "card",
+          amount: effect.amount,
+          variant: effect.variant,
+          scale: effect.scale,
+          sourceMoves: effect.sourceMoves,
+          ...(effect.projectileCount === undefined ? {} : { projectileCount: effect.projectileCount }),
+          ...(effect.projectileOrigin === undefined ? {} : { projectileOrigin: effect.projectileOrigin }),
+          ...(effect.projectileGapMs === undefined ? {} : { projectileGapMs: effect.projectileGapMs }),
+        }
+      : undefined;
+
+    if (effect.type === "fireball") {
+      window.setTimeout(() => {
+        const current = useGameStore.getState();
+        if (
+          current.gameSessionId !== gameSessionId ||
+          current.pendingSpellHandId !== handId ||
+          current.spellFightAnimation?.eventId !== animationEventId
+        ) return;
+        useAudioStore.getState().playSfx(pickRandomSfx(fireballCastSfx));
+      }, personalSourceDamageAnimation.castMs);
+    } else {
+      useAudioStore.getState().playSfx("attack");
+    }
+
+    window.setTimeout(() => {
+      const current = useGameStore.getState();
+      if (
+        current.gameSessionId !== gameSessionId ||
+        current.pendingSpellHandId !== handId ||
+        current.spellFightAnimation?.eventId !== animationEventId
+      ) return;
+      if (effect.type === "fireball") useAudioStore.getState().playSfx(fireballHitSfx);
+
+      const next = structuredClone(current.game) as GameState;
+      const spellSource = next.player.memory.find((candidate) => candidate.instanceId === handId) ?? card;
+      resolveEffects(next, sourceDamageEffects, {
+        source: spellSource,
+        side: "player",
+        targets,
+      });
+      useGameStore.setState({
+        game: next,
+        specialDeadCardIds: findMarkedCreatureIds(next),
+      });
+    }, personalSourceDamageAnimation.impactMs);
+
+    window.setTimeout(() => {
+      const current = useGameStore.getState();
+      if (
+        current.gameSessionId !== gameSessionId ||
+        current.pendingSpellHandId !== handId ||
+        current.spellFightAnimation?.eventId !== animationEventId
+      ) return;
+      const next = structuredClone(current.game) as GameState;
+      destroyMarkedCreatures(next);
+      useGameStore.setState({ game: next, specialDeadCardIds: [] });
+      scheduleQueuedHostTriggers();
+    }, personalSourceDamageAnimation.impactMs + 260);
+
+    window.setTimeout(() => {
+      useGameStore.setState((current) => {
+        if (
+          current.gameSessionId !== gameSessionId ||
+          current.pendingSpellHandId !== handId ||
+          current.spellFightAnimation?.eventId !== animationEventId
+        ) return {};
+        return {
+          spellFightAnimation: undefined,
+          pendingSpellHandId: undefined,
+          burnAnimation: current.burnAnimation?.id === animationId ? undefined : current.burnAnimation,
+        };
+      });
+    }, personalSourceDamageAnimation.durationMs);
+
+    return {
+      ...staged,
+      spellTargeting: undefined,
+      selectedHandId: undefined,
+      focusedCardId: undefined,
+      pendingSpellHandId: handId,
+      spellFightAnimation: {
+        friendlyId,
+        enemyId,
+        enemyMoves: false,
+        eventId: animationEventId,
+        customAnimation: personalSourceDamageAnimation,
+      },
+      burnAnimation,
     };
   }
   if (!isFightSpell) {

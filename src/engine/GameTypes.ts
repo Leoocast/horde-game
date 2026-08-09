@@ -293,6 +293,8 @@ export type CastOptions = {
   /** Commits the cast and every non-fight effect, leaving the fight effect for a later
    *  presentation impact. The store must resolve the deferred effect before unlocking play. */
   deferFightResolution?: boolean;
+  /** Commits the cast while leaving card-sourced damage for its registered attack impact. */
+  deferSourceDamageResolution?: boolean;
 };
 
 export type AbilityOptions = {

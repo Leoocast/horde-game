@@ -248,6 +248,89 @@ test("Vaelor attacks the Host panel with his personal emerald fireball", async (
   }
 });
 
+test("Choque de Ecos reuses Vaelor's attack preset and commits damage at its impact", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { useAudioStore },
+    { useGameStore },
+    { addCard, addSources, cardFromDeck, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    const game = createTestGame("clash-vaelor-personal-attack");
+    game.activeSide = "player";
+    game.phase = "main";
+    game.setupTurnsRemaining = 0;
+    addSources(game, 2);
+    const vaelor = addCard(game, cardFromDeck("vaelor_emerald_guardian", "player"));
+    const enemy = addCard(game, customCard("clash-vaelor-target", "host", { endurance: 8 }));
+    const clash = addCard(game, cardFromDeck("clash_of_echoes", "player", "hand"), "player", "hand");
+
+    useGameStore.setState({
+      game,
+      spellTargeting: {
+        handId: clash.instanceId,
+        stepIndex: 1,
+        targets: {
+          sourceCreature: vaelor.instanceId,
+          damageTarget: enemy.instanceId,
+        },
+        x: 0,
+        y: 0,
+      },
+      spellFightAnimation: undefined,
+      pendingSpellHandId: undefined,
+      burnAnimation: undefined,
+      specialDeadCardIds: [],
+    });
+
+    useGameStore.getState().confirmSpellTargeting();
+    const started = useGameStore.getState();
+    assert.equal(started.spellFightAnimation?.customAnimation?.preset, "emerald-fireball");
+    assert.equal(started.burnAnimation?.sourceId, vaelor.instanceId);
+    assert.equal(started.burnAnimation?.targetId, enemy.instanceId);
+    assert.equal(started.burnAnimation?.targetKind, "card");
+    assert.equal(started.burnAnimation?.variant, "emerald");
+    assert.equal(started.game.host.field[0].damageMarked, 0);
+    assert.equal(started.game.player.memory.some((card) => card.instanceId === clash.instanceId), true);
+
+    timers.releaseExpiredAt(637);
+    assert.equal(useGameStore.getState().game.host.field[0].damageMarked, 0);
+
+    timers.releaseExpiredAt(638);
+    assert.equal(useGameStore.getState().game.host.field[0].damageMarked, 6);
+
+    timers.releaseExpiredAt(1220);
+    const completed = useGameStore.getState();
+    assert.equal(completed.spellFightAnimation, undefined);
+    assert.equal(completed.burnAnimation, undefined);
+    assert.equal(completed.pendingSpellHandId, undefined);
+  } finally {
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
 test("stacked Varkas attack consecutively with their own infernal fireballs", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
@@ -723,6 +806,7 @@ test("a Toxic attacker poisons the Host HUD at its combat impact without doublin
     useGameStore.getState().finishPlayerCombat();
     timers.releaseExpiredAt(0);
     assert.equal(useGameStore.getState().playerAttackAnimation?.attackerId, basilisk.instanceId);
+    assert.equal(useGameStore.getState().playerAttackAnimation?.customAnimation?.preset, "venom-bite");
 
     timers.releaseExpiredAt(89);
     assert.equal(useGameStore.getState().game.host.poisonCounters, 0);
