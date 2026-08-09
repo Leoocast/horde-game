@@ -16,20 +16,22 @@ export function cardStatState(
   card: CardInstance,
   visualDamageMarked = 0,
   heldBonus?: { power: number; endurance: number },
-): { text: string; power?: number; endurance?: number; damaged: boolean; buffed: boolean } {
-  if (!card.kinds.includes("ECHO")) return { text: "", damaged: false, buffed: false };
+): { text: string; power?: number; endurance?: number; damaged: boolean; buffed: boolean; debuffed: boolean } {
+  if (!card.kinds.includes("ECHO")) return { text: "", damaged: false, buffed: false, debuffed: false };
   const total = getPowerEndurance(game, card);
   const power = total.power - (heldBonus?.power ?? 0);
   const endurance = total.endurance - (heldBonus?.endurance ?? 0);
   const damageMarked = Math.max(card.damageMarked, visualDamageMarked);
   const visibleEndurance = Math.max(0, endurance - damageMarked);
   const buffed = power > card.basePower || endurance > card.baseEndurance;
+  const debuffed = power < card.basePower || endurance < card.baseEndurance;
   return {
     text: damageMarked > 0 ? `${power}/${visibleEndurance}` : `${power}/${endurance}`,
     power,
     endurance: damageMarked > 0 ? visibleEndurance : endurance,
     damaged: damageMarked > 0,
     buffed,
+    debuffed,
   };
 }
 

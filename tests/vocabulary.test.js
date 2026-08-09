@@ -5,6 +5,7 @@ import { test } from "node:test";
 
 import { DECK_REGISTRY } from "../src/data/decks";
 import { localizedTypeLine } from "../src/i18n/cardLocalization";
+import { traitVocabularyTooltip } from "../src/i18n/gameVocabulary";
 import { canonicalizeRulesText } from "../src/i18n/rulesText";
 import { translate, translationValues } from "../src/i18n/translations";
 
@@ -25,6 +26,11 @@ test("localized interface copy contains no retired public vocabulary", () => {
 test("the in-game Host counter uses the compact side label", () => {
   assert.equal(translate("en", "game.hostDeck"), "Host");
   assert.equal(translate("es", "game.hostDeck"), "Hueste");
+});
+
+test("Flying explains that it can defend against other Flying Echoes", () => {
+  assert.equal(traitVocabularyTooltip("FLYING", "en"), "Can defend against Echoes with Flying.");
+  assert.equal(traitVocabularyTooltip("FLYING", "es"), "Puede defender contra Ecos con Volar.");
 });
 
 test("every authored card rule and type line has a clean Hostfall presentation", () => {

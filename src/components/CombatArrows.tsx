@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
 import { isBehindInStackOrder, visibleDefenseArrowLinks } from "./battlefieldLayout";
+import { combatArrowCurve, tacticalArrowCurvesMatch, type TacticalArrowCurve } from "./tacticalArrowGeometry";
 import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 
 const DEFENSE_ARROW_COLOR = "#66d8ff";
@@ -13,13 +14,7 @@ const STACKED_ARROW_LEFT_INSET_PX = 24;
 type Arrow = {
   id: string;
   color: string;
-  path: string;
-  tip: string;
-  gradientId: string;
-  startX: number;
-  startY: number;
-  tipX: number;
-  tipY: number;
+  curve: TacticalArrowCurve;
 };
 
 export function CombatArrows({ game, hiddenDefenseLinkIds }: { game: GameState; hiddenDefenseLinkIds: ReadonlySet<string> }) {
@@ -160,42 +155,10 @@ export function CombatArrows({ game, hiddenDefenseLinkIds }: { game: GameState; 
         <filter id="combat-arrow-shadow" x="-50%" y="-50%" width="200%" height="200%">
           <feDropShadow dx="0" dy="3" stdDeviation="2.4" floodColor="#050302" floodOpacity="0.9" />
         </filter>
-        <filter id="combat-arrow-defense-outer-glow" x="-80%" y="-80%" width="260%" height="260%" colorInterpolationFilters="sRGB">
-          <feMorphology in="SourceAlpha" operator="dilate" radius="1" result="expanded" />
-          <feGaussianBlur in="expanded" stdDeviation="2.2" result="blurred" />
-          <feComposite in="blurred" in2="SourceAlpha" operator="out" result="outerAlpha" />
-          <feFlood floodColor={DEFENSE_ARROW_COLOR} floodOpacity="0.55" result="glowColor" />
-          <feComposite in="glowColor" in2="outerAlpha" operator="in" result="outerGlow" />
-          <feMerge>
-            <feMergeNode in="outerGlow" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-        <filter id="combat-arrow-attack-outer-glow" x="-80%" y="-80%" width="260%" height="260%" colorInterpolationFilters="sRGB">
-          <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="expanded" />
-          <feGaussianBlur in="expanded" stdDeviation="3.2" result="blurred" />
-          <feComposite in="blurred" in2="SourceAlpha" operator="out" result="outerAlpha" />
-          <feFlood floodColor={PLAYER_ATTACK_ARROW_COLOR} floodOpacity="0.82" result="glowColor" />
-          <feComposite in="glowColor" in2="outerAlpha" operator="in" result="outerGlow" />
-          <feMerge>
-            <feMergeNode in="outerGlow" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-        {renderedArrows.map((arrow) => (
-          <linearGradient key={arrow.gradientId} id={arrow.gradientId} gradientUnits="userSpaceOnUse" x1={arrow.startX} y1={arrow.startY} x2={arrow.tipX} y2={arrow.tipY}>
-            <stop offset="0%" stopColor={arrow.color} stopOpacity="0" />
-            <stop offset="12%" stopColor={arrow.color} stopOpacity="0.24" />
-            <stop offset="52%" stopColor={arrow.color} stopOpacity="0.82" />
-            <stop offset="78%" stopColor={arrow.color} stopOpacity="0.9" />
-            <stop offset="100%" stopColor={arrow.color} stopOpacity="0.9" />
-          </linearGradient>
-        ))}
       </defs>
       <AnimatePresence>
         {renderedArrows.map((arrow) => {
           const exiting = exitingArrows.some((item) => item.id === arrow.id) && !arrows.some((item) => item.id === arrow.id);
-          const isDefenseArrow = arrow.color === DEFENSE_ARROW_COLOR;
           return (
           <motion.g
             key={arrow.id}
@@ -206,14 +169,7 @@ export function CombatArrows({ game, hiddenDefenseLinkIds }: { game: GameState; 
             transition={{ duration: 0.28, ease: "easeOut" }}
           >
             <g className="combat-arrow-reveal">
-              <g filter={isDefenseArrow ? "url(#combat-arrow-defense-outer-glow)" : "url(#combat-arrow-attack-outer-glow)"}>
-                <TacticalArrowGlyph
-                  path={arrow.path}
-                  tip={arrow.tip}
-                  color={arrow.color}
-                  stroke={`url(#${arrow.gradientId})`}
-                />
-              </g>
+              <TacticalArrowGlyph curve={arrow.curve} color={arrow.color} />
             </g>
           </motion.g>
           );
@@ -269,48 +225,10 @@ function arrowsMatch(current: Arrow[], next: Arrow[]): boolean {
   if (current.length !== next.length) return false;
   return current.every((arrow, index) => {
     const candidate = next[index];
-    return Boolean(
-      candidate &&
-        arrow.id === candidate.id &&
-        arrow.path === candidate.path &&
-        arrow.tip === candidate.tip &&
-        arrow.startX === candidate.startX &&
-        arrow.startY === candidate.startY &&
-        arrow.tipX === candidate.tipX &&
-        arrow.tipY === candidate.tipY,
-    );
+    return Boolean(candidate && arrow.id === candidate.id && tacticalArrowCurvesMatch(arrow.curve, candidate.curve));
   });
 }
 
 function makeArrow(id: string, start: { x: number; y: number }, end: { x: number; y: number }, color: string): Arrow {
-  const dx = end.x - start.x;
-  const dy = end.y - start.y;
-  const length = Math.hypot(dx, dy) || 1;
-  const ux = dx / length;
-  const uy = dy / length;
-  const px = -uy;
-  const py = ux;
-  const curve = Math.min(38, Math.max(10, length * 0.11));
-  const curveDirection = dx >= 0 ? -1 : 1;
-  const controlA = {
-    x: start.x + dx * 0.36 + px * curve * curveDirection,
-    y: start.y + dy * 0.36 + py * curve * curveDirection,
-  };
-  const controlB = {
-    x: start.x + dx * 0.72 + px * curve * curveDirection * 0.42,
-    y: start.y + dy * 0.72 + py * curve * curveDirection * 0.42,
-  };
-  const tangentX = end.x - controlB.x;
-  const tangentY = end.y - controlB.y;
-  const tangentLength = Math.hypot(tangentX, tangentY) || 1;
-  const tx = tangentX / tangentLength;
-  const ty = tangentY / tangentLength;
-  const tpx = -ty;
-  const tpy = tx;
-  const headLength = 22;
-  const headWing = 10;
-  const neckAt = { x: end.x - tx * headLength, y: end.y - ty * headLength };
-  const path = `M ${start.x} ${start.y} C ${controlA.x} ${controlA.y} ${controlB.x} ${controlB.y} ${neckAt.x} ${neckAt.y}`;
-  const tip = [`${end.x},${end.y}`, `${end.x - tx * headLength + tpx * headWing},${end.y - ty * headLength + tpy * headWing}`, `${end.x - tx * headLength - tpx * headWing},${end.y - ty * headLength - tpy * headWing}`].join(" ");
-  return { id, color, path, tip, gradientId: `combat-arrow-${id.replace(/[^a-zA-Z0-9_-]/g, "-")}`, startX: start.x, startY: start.y, tipX: end.x, tipY: end.y };
+  return { id, color, curve: combatArrowCurve(start, end) };
 }

@@ -1,9 +1,10 @@
 import type { CardInstance } from "../engine/GameTypes";
 
-export type PersonalCombatAnimationPreset = "emerald-fireball" | "infernal-fireball";
+export type PersonalCombatAnimationPreset = "emerald-fireball" | "infernal-fireball" | "venom-bite";
 export type BurnMaterialVariant = "fire" | "oil" | "emerald" | "golden";
 export type PersonalCombatRole = "attacker" | "defender";
 export type PersonalCombatOutcome = "wins" | "loses" | "draws" | "survives";
+export type PersonalAttackTargetKind = "card" | "hostLife" | "playerLife";
 
 export type PersonalCombatAnimationContext = {
   attacker: CardInstance;
@@ -14,6 +15,25 @@ export type PersonalCombatAnimationContext = {
   damageToDefender?: number;
 };
 
+export type PersonalFireballEffect = {
+  type: "fireball";
+  variant: BurnMaterialVariant;
+  scale: number;
+  amount: number;
+  sourceMoves: boolean;
+  projectileCount?: number;
+  projectileOrigin?: "split-horizontal";
+  projectileGapMs?: number;
+};
+
+export type PersonalBiteEffect = {
+  type: "bite";
+  variant: "blood" | "venom";
+  amount: number;
+};
+
+export type PersonalAttackEffect = PersonalFireballEffect | PersonalBiteEffect;
+
 export type PersonalCombatAnimationPlan = {
   preset: PersonalCombatAnimationPreset;
   sourceId: string;
@@ -22,16 +42,7 @@ export type PersonalCombatAnimationPlan = {
   castMs: number;
   impactMs: number;
   durationMs: number;
-  effect: {
-    type: "fireball";
-    variant: BurnMaterialVariant;
-    scale: number;
-    amount: number;
-    sourceMoves: boolean;
-    projectileCount?: number;
-    projectileOrigin?: "split-horizontal";
-    projectileGapMs?: number;
-  };
+  effect: PersonalAttackEffect;
 };
 
 export type PersonalAttackAnimationPlan = Omit<PersonalCombatAnimationPlan, "targetId"> & {
@@ -47,16 +58,16 @@ type PersonalCombatAnimationRegistration = {
 
 type PersonalAttackAnimationRegistration = {
   definitionId: string;
-  targetKind: PersonalAttackAnimationPlan["targetKind"];
+  targetKinds: readonly PersonalAttackTargetKind[];
   preset: PersonalCombatAnimationPreset;
 };
 
-type PersonalCombatAnimationRecipe = Omit<
+type PersonalFireballEffectRecipe = Omit<PersonalFireballEffect, "amount">;
+type PersonalBiteEffectRecipe = Omit<PersonalBiteEffect, "amount">;
+type PersonalCombatAnimationRecipe = Pick<
   PersonalCombatAnimationPlan,
-  "preset" | "sourceId" | "targetId" | "effect"
-> & {
-  effect: Omit<PersonalCombatAnimationPlan["effect"], "amount">;
-};
+  "suppressDefaultMotion" | "castMs" | "impactMs" | "durationMs"
+> & { effect: PersonalFireballEffectRecipe | PersonalBiteEffectRecipe };
 
 const PERSONAL_BURN_MATERIALS = {
   varka_infernal_matriarch: "golden",
@@ -106,13 +117,18 @@ const PERSONAL_COMBAT_ANIMATIONS: readonly PersonalCombatAnimationRegistration[]
 const PERSONAL_ATTACK_ANIMATIONS: readonly PersonalAttackAnimationRegistration[] = [
   {
     definitionId: "vaelor_emerald_guardian",
-    targetKind: "hostLife",
+    targetKinds: ["card", "hostLife"],
     preset: "emerald-fireball",
   },
   {
     definitionId: "varka_infernal_matriarch",
-    targetKind: "playerLife",
+    targetKinds: ["card", "playerLife"],
     preset: "infernal-fireball",
+  },
+  {
+    definitionId: "hydra_of_the_black_bough",
+    targetKinds: ["card", "hostLife"],
+    preset: "venom-bite",
   },
 ];
 
@@ -147,17 +163,44 @@ const PERSONAL_COMBAT_ANIMATION_RECIPES: Record<
       projectileGapMs: 0,
     },
   },
+  "venom-bite": {
+    suppressDefaultMotion: false,
+    castMs: 40,
+    impactMs: 90,
+    durationMs: 780,
+    effect: {
+      type: "bite",
+      variant: "venom",
+    },
+  },
 };
 
 /** Reuses a personal preset's projectile appearance outside combat without copying its visual
  * constants. Rules callers still decide targets and outcomes; this only returns presentation. */
 export function resolvePersonalProjectileEffect(
-  preset: PersonalCombatAnimationPreset,
+  preset: Exclude<PersonalCombatAnimationPreset, "venom-bite">,
   amount: number,
-): PersonalCombatAnimationPlan["effect"] {
+): PersonalFireballEffect {
   const recipe = PERSONAL_COMBAT_ANIMATION_RECIPES[preset];
+  if (recipe.effect.type !== "fireball") {
+    throw new Error(`${preset} is not a projectile presentation.`);
+  }
   return {
     ...recipe.effect,
+    amount: Math.max(0, amount),
+  };
+}
+
+function resolvePersonalAttackEffect(
+  preset: PersonalCombatAnimationPreset,
+  amount: number,
+): PersonalAttackEffect {
+  const effect = PERSONAL_COMBAT_ANIMATION_RECIPES[preset].effect;
+  if (effect.type === "fireball") {
+    return { ...effect, amount: Math.max(0, amount) };
+  }
+  return {
+    ...effect,
     amount: Math.max(0, amount),
   };
 }
@@ -208,7 +251,7 @@ export function resolvePersonalCombatAnimation(
       castMs: recipe.castMs,
       impactMs: recipe.impactMs,
       durationMs: recipe.durationMs,
-      effect: resolvePersonalProjectileEffect(registration.preset, participant.damageToOpponent),
+      effect: resolvePersonalAttackEffect(registration.preset, participant.damageToOpponent),
     };
   }
 
@@ -222,7 +265,7 @@ export function resolvePersonalAttackAnimation(
   targetKind: PersonalAttackAnimationPlan["targetKind"] = "hostLife",
 ): PersonalAttackAnimationPlan | undefined {
   const registration = PERSONAL_ATTACK_ANIMATIONS.find(
-    (candidate) => candidate.definitionId === attacker.definitionId && candidate.targetKind === targetKind,
+    (candidate) => candidate.definitionId === attacker.definitionId && candidate.targetKinds.includes(targetKind),
   );
   if (!registration) return undefined;
 
@@ -230,12 +273,37 @@ export function resolvePersonalAttackAnimation(
   return {
     preset: registration.preset,
     sourceId: attacker.instanceId,
-    targetKind: registration.targetKind,
+    targetKind,
     suppressDefaultMotion: recipe.suppressDefaultMotion,
     castMs: recipe.castMs,
     impactMs: recipe.impactMs,
     durationMs: recipe.durationMs,
-    effect: resolvePersonalProjectileEffect(registration.preset, amount),
+    effect: resolvePersonalAttackEffect(registration.preset, amount),
+  };
+}
+
+/** Selects the same card-owned attack presentation when an effect makes that card deal damage to
+ * another card. The caller owns rules resolution; this registry only supplies the visual plan. */
+export function resolvePersonalTargetedAttackAnimation(
+  attacker: CardInstance,
+  target: CardInstance,
+  amount: number,
+): PersonalCombatAnimationPlan | undefined {
+  const registration = PERSONAL_ATTACK_ANIMATIONS.find(
+    (candidate) => candidate.definitionId === attacker.definitionId && candidate.targetKinds.includes("card"),
+  );
+  if (!registration) return undefined;
+
+  const recipe = PERSONAL_COMBAT_ANIMATION_RECIPES[registration.preset];
+  return {
+    preset: registration.preset,
+    sourceId: attacker.instanceId,
+    targetId: target.instanceId,
+    suppressDefaultMotion: recipe.suppressDefaultMotion,
+    castMs: recipe.castMs,
+    impactMs: recipe.impactMs,
+    durationMs: recipe.durationMs,
+    effect: resolvePersonalAttackEffect(registration.preset, amount),
   };
 }
 

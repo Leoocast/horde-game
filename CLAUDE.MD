@@ -255,6 +255,12 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   atacante y sobrevive, o cuando ataca directamente el panel de vida de la Hueste. En ataques con
   proyectil, la reacción de golpe del panel espera el `impactMs` del preset. El Rasgo canónico de
   Vaelor es `FLYING` (Volar), no `SKYGUARD` (Guardia aérea).
+- Los efectos de daño causado por una carta y las peleas iniciadas por efectos consultan el mismo
+  registro de ataques personales. Choque de Ecos reutiliza la presentación del aliado elegido y
+  aplica el daño en su `impactMs`; Escudo de la Heredera termina primero su beat de buff y aplica
+  ambos daños simultáneos en el `impactMs` del preset, usando la fuerza ya aumentada. La Hidra de la
+  Fronda Negra registra una mordida de vampiro con paleta verde venenosa, tanto al atacar
+  directamente como cuando un efecto la hace infligir daño a otra carta.
 - Si una pelea con dos presentaciones personales deja una sola carta viva, sólo la ganadora puede
   reclamar la animación bespoke. Si no tiene preset, se usa la pelea normal; cuando ambas sobreviven
   o ambas mueren, el atacante conserva la prioridad visual sin cambiar el impacto simultáneo.

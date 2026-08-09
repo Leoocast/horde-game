@@ -3,29 +3,71 @@ import type { Ref } from "react";
 type Props = {
   animationId: string;
   elementRef?: Ref<HTMLDivElement>;
+  variant?: BiteVisualVariant;
 };
 
-export function VampireBite({ animationId, elementRef }: Props) {
+export type BiteVisualVariant = "blood" | "venom";
+
+export type BiteVisualPalette = {
+  light: string;
+  middle: string;
+  dark: string;
+  stroke: string;
+  glow: string;
+  splashLight: readonly [number, number, number];
+  splashMiddle: readonly [number, number, number];
+  splashDark: readonly [number, number, number];
+};
+
+const BITE_VISUAL_PALETTES: Record<BiteVisualVariant, BiteVisualPalette> = {
+  blood: {
+    light: "#ff334b",
+    middle: "#b80018",
+    dark: "#4a000a",
+    stroke: "#ff4d66",
+    glow: "#ff002b",
+    splashLight: [255, 79, 98],
+    splashMiddle: [194, 0, 27],
+    splashDark: [61, 0, 8],
+  },
+  venom: {
+    light: "#b7ff45",
+    middle: "#58b817",
+    dark: "#163d08",
+    stroke: "#a2f03d",
+    glow: "#76e82a",
+    splashLight: [183, 255, 69],
+    splashMiddle: [88, 184, 23],
+    splashDark: [22, 61, 8],
+  },
+};
+
+export function biteVisualPalette(variant: BiteVisualVariant = "blood"): BiteVisualPalette {
+  return BITE_VISUAL_PALETTES[variant];
+}
+
+export function VampireBite({ animationId, elementRef, variant = "blood" }: Props) {
   const jawGradientId = `blood-pact-jaw-${animationId}`;
   const teethGlowId = `blood-pact-teeth-glow-${animationId}`;
+  const palette = biteVisualPalette(variant);
 
   return (
-    <div ref={elementRef} className="blood-pact-vampire-bite">
+    <div ref={elementRef} className={`blood-pact-vampire-bite bite-${variant}`}>
       <svg viewBox="-25 -25 170 170">
         <defs>
           <linearGradient id={jawGradientId} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#ff334b" />
-            <stop offset="60%" stopColor="#b80018" />
-            <stop offset="100%" stopColor="#4a000a" />
+            <stop offset="0%" stopColor={palette.light} />
+            <stop offset="60%" stopColor={palette.middle} />
+            <stop offset="100%" stopColor={palette.dark} />
           </linearGradient>
           <filter id={teethGlowId}>
-            <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor="#ff002b" floodOpacity="0.95" />
+            <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor={palette.glow} floodOpacity="0.95" />
           </filter>
         </defs>
         <g
           className="blood-pact-jaw-upper"
           fill={`url(#${jawGradientId})`}
-          stroke="#ff4d66"
+          stroke={palette.stroke}
           strokeWidth="1.5"
           filter={`url(#${teethGlowId})`}
         >
@@ -39,7 +81,7 @@ export function VampireBite({ animationId, elementRef }: Props) {
         <g
           className="blood-pact-jaw-lower"
           fill={`url(#${jawGradientId})`}
-          stroke="#ff4d66"
+          stroke={palette.stroke}
           strokeWidth="1.5"
           filter={`url(#${teethGlowId})`}
         >

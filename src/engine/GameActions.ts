@@ -53,9 +53,10 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
   card.xValuePaid = options.xValue ?? 0;
   next.player.hand = next.player.hand.filter((item) => item.instanceId !== handId);
   if (card.kinds.includes("SPELL")) {
-    const immediateEffects = options.deferFightResolution
-      ? card.effects.filter((effect) => !hasEffectPresentation([effect], "fight"))
-      : card.effects;
+    const immediateEffects = card.effects.filter((effect) =>
+      !(options.deferFightResolution && hasEffectPresentation([effect], "fight")) &&
+      !(options.deferSourceDamageResolution && hasEffectPresentation([effect], "sourceDamage")),
+    );
     resolveEffects(next, immediateEffects, { source: card, side: "player", targets: options.targets, distribution: options.distribution });
     card.zone = "memory";
     next.player.memory.push(card);

@@ -220,6 +220,16 @@ Current registration:
 - The preset reuses `BurnAnimator`'s canonical fireball clock and source-to-target geometry, with
   an emerald material, `scale: 1.8`, a straight route, and `sourceMoves: false`. Combat damage is committed at the
   fireball's 638ms impact; the beat remains locked until the 1220ms completion.
+- Hidra de la Fronda Negra (`hydra_of_the_black_bough`) uses `venom-bite` when it attacks the Host:
+  the ordinary attack lunge stays visible and the vampire bite silhouette lands over the Host panel
+  with a green venom palette at the Poison impact.
+- Card-sourced damage and effect-driven fights query the same attack registry. Choque de Ecos and
+  Escudo de la Heredera therefore use the selected ally's registered card-target presentation (for
+  example Vaelor's emerald fireball or the Hydra's venom bite), while unregistered allies retain
+  the ordinary lunge. Escudo completes its buff beat first, derives the preset's displayed damage
+  from the ally's newly buffed power, and commits both sides of the simultaneous fight at that
+  preset's `impactMs`. A stationary projectile source does not lunge, but the opposing fighter may
+  still perform its incoming motion.
 - Varka, Matriarca Infernal (`varka_infernal_matriarch`) uses `infernal-fireball` whenever she is
   the Host attacker. A defended attack targets the assigned defender; an undefended attack targets
   `[data-player-life-panel]`. Varka remains anchored, the ordinary lunge is suppressed, and the
@@ -233,7 +243,7 @@ Current registration:
   session; force-losing and recreating the context between stacked attackers is a regression. The
   destination canvas must not become visible during that handoff until the next attack has rendered
   and copied its first valid frame.
-- Adding another bespoke fight or direct attack means registering its context and adding or reusing
+- Adding another bespoke fight, direct attack, or card-target attack means registering its context and adding or reusing
   a preset; do not add card-name branches to animator components or resolve combat inside VFX.
 
 ## Static activation

@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { gsap } from "gsap";
 import { useAudioStore } from "../store/useAudioStore";
-import { VampireBite } from "./VampireBite";
+import { VampireBite, biteVisualPalette, type BiteVisualVariant } from "./VampireBite";
 
 type BloodDrop = {
   x: number;
@@ -21,6 +21,8 @@ type Props = {
   onImpact?: (id: string) => void;
   onComplete: (id: string) => void;
   playSound?: boolean;
+  variant?: BiteVisualVariant;
+  impactMs?: number;
 };
 
 export function VampireBiteImpact({
@@ -31,6 +33,8 @@ export function VampireBiteImpact({
   onImpact,
   onComplete,
   playSound = true,
+  variant = "blood",
+  impactMs = 50,
 }: Props) {
   const playSfx = useAudioStore((state) => state.playSfx);
   const biteRef = useRef<HTMLDivElement>(null);
@@ -52,6 +56,9 @@ export function VampireBiteImpact({
     const fallbackY = fallbackAnchor === "player" ? window.innerHeight - 56 : 112;
     const anchorX = anchorRect ? anchorRect.left + anchorRect.width / 2 : fallbackX;
     const anchorY = anchorRect ? anchorRect.top + anchorRect.height / 2 : fallbackY;
+    const palette = biteVisualPalette(variant);
+    const rgb = (color: readonly [number, number, number], alpha: number) =>
+      `rgb(${color[0]} ${color[1]} ${color[2]} / ${alpha})`;
     gsap.set(biteElement, { left: anchorX - 85, top: anchorY - 85 });
 
     const context = splashCanvas.getContext("2d");
@@ -88,17 +95,17 @@ export function VampireBiteImpact({
           anchorY,
           impactRadius,
         );
-        impactGradient.addColorStop(0, `rgb(255 83 104 / ${impactOpacity})`);
-        impactGradient.addColorStop(0.3, `rgb(211 0 31 / ${impactOpacity * 0.9})`);
-        impactGradient.addColorStop(1, "rgb(91 0 13 / 0)");
+        impactGradient.addColorStop(0, rgb(palette.splashLight, impactOpacity));
+        impactGradient.addColorStop(0.3, rgb(palette.splashMiddle, impactOpacity * 0.9));
+        impactGradient.addColorStop(1, rgb(palette.splashDark, 0));
         context.fillStyle = impactGradient;
         context.beginPath();
         context.arc(anchorX, anchorY, impactRadius, 0, Math.PI * 2);
         context.fill();
 
-        context.strokeStyle = `rgb(255 36 66 / ${impactOpacity * 0.85})`;
+        context.strokeStyle = rgb(palette.splashLight, impactOpacity * 0.85);
         context.lineWidth = Math.max(5 * (1 - impactProgress), 1);
-        context.shadowColor = `rgb(255 0 43 / ${impactOpacity})`;
+        context.shadowColor = rgb(palette.splashMiddle, impactOpacity);
         context.shadowBlur = 16;
         context.beginPath();
         context.arc(anchorX, anchorY, 18 + impactProgress * 50, 0, Math.PI * 2);
@@ -121,11 +128,11 @@ export function VampireBiteImpact({
           drop.y,
           drop.radius,
         );
-        gradient.addColorStop(0, `rgb(255 79 98 / ${Math.max(drop.opacity, 0)})`);
-        gradient.addColorStop(0.35, `rgb(194 0 27 / ${Math.max(drop.opacity, 0)})`);
-        gradient.addColorStop(1, `rgb(61 0 8 / ${Math.max(drop.opacity * 0.92, 0)})`);
+        gradient.addColorStop(0, rgb(palette.splashLight, Math.max(drop.opacity, 0)));
+        gradient.addColorStop(0.35, rgb(palette.splashMiddle, Math.max(drop.opacity, 0)));
+        gradient.addColorStop(1, rgb(palette.splashDark, Math.max(drop.opacity * 0.92, 0)));
         context.fillStyle = gradient;
-        context.shadowColor = `rgb(255 0 43 / ${Math.max(drop.opacity * 0.75, 0)})`;
+        context.shadowColor = rgb(palette.splashMiddle, Math.max(drop.opacity * 0.75, 0));
         context.shadowBlur = 13;
         context.beginPath();
         context.ellipse(
@@ -165,17 +172,18 @@ export function VampireBiteImpact({
       splashFrame = window.requestAnimationFrame(drawSplash);
     };
 
+    const impactAt = Math.max(0.05, impactMs / 1000);
     const timeline = gsap.timeline();
     timeline
-      .call(() => biteElement.classList.add("is-active"), [], 0)
+      .call(() => biteElement.classList.add("is-active"), [], Math.max(0, impactAt - 0.05))
       .call(() => {
         biteElement.classList.add("is-biting");
         triggerSplash();
         if (playSound) playSfx("bloodSplash");
         onImpact?.(animationId);
-      }, [], 0.05)
-      .call(() => biteElement.classList.remove("is-biting", "is-active"), [], 0.32)
-      .call(() => onComplete(animationId), [], 0.68);
+      }, [], impactAt)
+      .call(() => biteElement.classList.remove("is-biting", "is-active"), [], impactAt + 0.27)
+      .call(() => onComplete(animationId), [], impactAt + 0.63);
 
     return () => {
       timeline.kill();
@@ -183,14 +191,14 @@ export function VampireBiteImpact({
       context?.clearRect(0, 0, window.innerWidth, window.innerHeight);
       biteElement.classList.remove("is-biting", "is-active");
     };
-  }, [animationId, fallbackAnchor, fallbackSelector, onComplete, onImpact, playSfx, playSound, primarySelector]);
+  }, [animationId, fallbackAnchor, fallbackSelector, impactMs, onComplete, onImpact, playSfx, playSound, primarySelector, variant]);
 
   if (typeof document === "undefined") return null;
 
   return createPortal(
     <div className="life-payment-animation-layer" aria-hidden="true">
       <canvas ref={splashCanvasRef} className="life-payment-blood-splash-canvas" />
-      <VampireBite animationId={animationId} elementRef={biteRef} />
+      <VampireBite animationId={animationId} elementRef={biteRef} variant={variant} />
     </div>,
     document.body,
   );
