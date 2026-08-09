@@ -6,3 +6,4 @@ dist/
 .env
 .env.*
 dev/tools/Decks/*/exported-png/
+.DS_Store

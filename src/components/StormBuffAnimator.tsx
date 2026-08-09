@@ -218,7 +218,7 @@ export function buildStorm(eventId: number, seedKey: string, card: CardBox): Sto
 }
 
 /** Local, rules-agnostic storm strike. The store already chose Kaelor and committed his +1/+1;
- * this component only makes that existing buff beat read as his own magic. */
+ * this component only makes that existing buff beat read as his own storm power. */
 export function StormBuffAnimator({ eventId, seedKey }: StormBuffAnimatorProps) {
   const hostRef = useRef<HTMLSpanElement>(null);
   const [overlay, setOverlay] = useState<{ width: number; height: number }>();

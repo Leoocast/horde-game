@@ -5,7 +5,8 @@ determinista y corre en Node, sin DOM y sin navegador.
 
 ## Comandos
 
-El usuario no tiene node/pnpm global; se usa el runtime bundled de Codex.
+El usuario no tiene node/pnpm global; se usa el runtime bundled de Codex. El toolchain de release
+está fijado en Node 24.14.x (`.node-version`) y pnpm 11.16.x (`packageManager` y `engines`).
 
 Typecheck (lo minimo despues de cualquier cambio):
 
@@ -51,13 +52,38 @@ de su propio generador.
 Build de produccion:
 
 ```bash
-C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe node_modules\vite\bin\vite.js build
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe node_modules\vite\bin\vite.js --config vite.config.ts build
 ```
+
+El script equivalente y canónico es `pnpm run build:web`; `build` se mantiene como alias web hasta
+que exista el build Electron. `vite.config.ts` es la única config Vite y todos los scripts la
+seleccionan explícitamente.
+
+CI corre en Windows x64, instala con `pnpm install --frozen-lockfile` y ejecuta typecheck, suite,
+deck lint, proyección de Card Studio, `build:web`, auditoría offline e inventario runtime. Los
+scripts de instalación permitidos están declarados por paquete en `pnpm-workspace.yaml`, sin
+aprobación interactiva.
+
+Después de `build:web`, comprobar que no haya recursos remotos ni tooling de desarrollo en release:
+
+```bash
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\audit-offline-runtime.mjs
+```
+
+Comprobar el inventario de paths, tamaños y SHA-256 de `dist`:
+
+```bash
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\runtime-asset-inventory.mjs --check
+```
+
+Usar `--write` únicamente después de revisar un cambio intencional del build release. El output
+versionado es `docs/runtime_asset_inventory.json`.
 
 ## Como corre la suite
 
-`scripts/run-engine-tests.mjs` levanta un Vite en middleware mode y carga cada archivo de test con
-`ssrLoadModule`. Eso es lo que permite que los tests importen TypeScript y JSON del proyecto
+`scripts/run-engine-tests.mjs` levanta un Vite en middleware mode usando explícitamente
+`vite.config.ts` y carga cada archivo de test con `ssrLoadModule`. Eso es lo que permite que los
+tests importen TypeScript y JSON del proyecto
 directamente, sin build previo ni configuracion de transpilacion aparte. Los tests en si son
 `node:test` + `node:assert/strict`.
 

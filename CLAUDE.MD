@@ -51,8 +51,12 @@ C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\
 ```
 
 ```powershell
-C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe node_modules\vite\bin\vite.js build
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe node_modules\vite\bin\vite.js --config vite.config.ts build
 ```
+
+La config web canónica es `vite.config.ts`; para builds manuales pasar siempre
+`--config vite.config.ts`. El release toolchain está fijado en Node 24.14.x y pnpm 11.16.x mediante
+`.node-version`, `packageManager` y `engines`.
 
 No ejecutar `npm install` ni `pnpm install` salvo necesidad real: `node_modules` ya existe. No
 levantar un servidor ni jugar para verificar; el usuario prueba el juego. Detalle en
@@ -87,9 +91,9 @@ Separación obligatoria:
 
 ## Migración a Electron
 
-La migración desktop está planificada, pero todavía no implementada. El documento canónico de
-arquitectura es `docs/electron_migration_plan.md` y el avance se registra exclusivamente en
-`docs/electron_migration_tracking.md`.
+La migración desktop está en curso. Las Fases 0 y 1 están completadas; la Fase 2 está activa. El
+documento canónico de arquitectura es `docs/electron_migration_plan.md` y el avance se registra
+exclusivamente en `docs/electron_migration_tracking.md`.
 
 Contratos durante la migración:
 
@@ -105,6 +109,10 @@ Contratos durante la migración:
   que incluye todo PNG, arte recortado y metadata generada que consume el juego.
 - No implementar fuentes Local/Workshop hasta que la identidad calificada y la validación external
   estén terminadas.
+- El renderer release no puede contener recursos remotos, `?playground`, `PlaygroundScreen` ni
+  `AudioLabScreen`. Verificarlo con `scripts/audit-offline-runtime.mjs` después de `build:web`.
+- `docs/runtime_asset_inventory.json` es la proyección reproducible del contenido de `dist`; se
+  regenera sólo después de un build release intencional.
 
 ## Vocabulario Hostfall
 

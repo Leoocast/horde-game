@@ -45,11 +45,6 @@ export const musicCollections = {
     new URL("../../assets/music/battle/Pirates/Battle_3.mp3", import.meta.url).href,
     new URL("../../assets/music/battle/Pirates/Climax_3.mp3", import.meta.url).href,
   ),
-  otherBattle1: makeBattleCollection(
-    "Other — Battle #1",
-    new URL("../../assets/music/battle/Other/Battle_1.mp3", import.meta.url).href,
-    new URL("../../assets/music/battle/Other/Climax_1.mp3", import.meta.url).href,
-  ),
   otherBattle2: makeBattleCollection(
     "Other — Battle #2",
     new URL("../../assets/music/battle/Other/Battle_2.mp3", import.meta.url).href,

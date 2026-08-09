@@ -1,0 +1,1700 @@
+{
+  "schemaVersion": 1,
+  "source": "build:web/dist",
+  "totals": {
+    "files": 278,
+    "bytes": 458343707
+  },
+  "categories": {
+    "app": {
+      "files": 3,
+      "bytes": 1982737
+    },
+    "audio": {
+      "files": 57,
+      "bytes": 142226330
+    },
+    "cards": {
+      "files": 206,
+      "bytes": 307422668
+    },
+    "fonts": {
+      "files": 6,
+      "bytes": 155700
+    },
+    "images": {
+      "files": 6,
+      "bytes": 6556272
+    }
+  },
+  "files": [
+    {
+      "path": "assets/10. Moonlit Journey (Loop)-6ZkH3zuy.mp3",
+      "category": "audio",
+      "bytes": 7456486,
+      "sha256": "0e1d326a89ea5bbe53b30d096ae71042eea04ed151b05c784e3690c9ca178fb1"
+    },
+    {
+      "path": "assets/3. Whispers Beyond (Loop)-7mtnCR5W.mp3",
+      "category": "audio",
+      "bytes": 7682183,
+      "sha256": "f2b8b8924a164be41724fc1ce8cdc5ff3c2d8d4f37b40b1483df19665c41fe18"
+    },
+    {
+      "path": "assets/9. Falconreach-BW8OYjNp.mp3",
+      "category": "audio",
+      "bytes": 15026772,
+      "sha256": "85c1d776634d2bc45a5c75344ed14d38976e1148755a5d15cfce72440e66d750"
+    },
+    {
+      "path": "assets/activate_effect_NEED_REVIEW-CIWJUdjv.wav",
+      "category": "audio",
+      "bytes": 201240,
+      "sha256": "056540f9c4be650e5a0db4e98a53e8e078a3a47e8558940409b392394937c960"
+    },
+    {
+      "path": "assets/Ambient 7 Loop-kErJrH3n.mp3",
+      "category": "audio",
+      "bytes": 5208909,
+      "sha256": "00c8312b076263e20ccc46e5bd36d62ad639e55de7bc10cb3654a86aa21a7c05"
+    },
+    {
+      "path": "assets/attack_NEED_REVIEW-DUll1xVF.wav",
+      "category": "audio",
+      "bytes": 247168,
+      "sha256": "72383cce867790590ed404f7c17ea0385e2f776013361f534e9f575401028580"
+    },
+    {
+      "path": "assets/background-BP4rlwPL.webp",
+      "category": "images",
+      "bytes": 50696,
+      "sha256": "c5c4fab350cb758e4af171aee8a83d49c384269ff7d6481cfa79da5c28fca277"
+    },
+    {
+      "path": "assets/background-CXan3g61.jpg",
+      "category": "images",
+      "bytes": 163195,
+      "sha256": "ca91dffe8201cb3e84b4ab9bf05c0ca5c9f07ce7337c46b7963f9f696e61649e"
+    },
+    {
+      "path": "assets/Battle_1-5FWaRK8Z.mp3",
+      "category": "audio",
+      "bytes": 7230788,
+      "sha256": "cf76c8a47f547587e3059f160980129291ccc1594e8d0dfd0f7dfcce39db9ac2"
+    },
+    {
+      "path": "assets/battle_1-C_JE_SX8.mp3",
+      "category": "audio",
+      "bytes": 4459718,
+      "sha256": "c9ba961e7e771ae26167a6fa7fe7da25cd5bb25921acd12b3522952a25ca09d7"
+    },
+    {
+      "path": "assets/battle_1-DlWVlmyC.mp3",
+      "category": "audio",
+      "bytes": 3842183,
+      "sha256": "6f536c1dc72a2a2087b09aa206f1cbd76387d53b1a26042494a9c25d487d8ab1"
+    },
+    {
+      "path": "assets/Battle_1-osxYAdmV.mp3",
+      "category": "audio",
+      "bytes": 2522477,
+      "sha256": "103838a69343d30025a38850b90ab331f55844f09ebd743993d1119525be53fc"
+    },
+    {
+      "path": "assets/Battle_2-BhGI3pE5.mp3",
+      "category": "audio",
+      "bytes": 6722968,
+      "sha256": "a7c5110fa61e08e1a300f2022290d9438797514ff5cfb0777c49e47725d3fefa"
+    },
+    {
+      "path": "assets/Battle_2-CvQqxnNr.mp3",
+      "category": "audio",
+      "bytes": 5283098,
+      "sha256": "65138dfd19f8614f8b59db51bc8e3906adba361a0cc2dbbfedd3fa7334377965"
+    },
+    {
+      "path": "assets/Battle_3-B9dkVHzh.mp3",
+      "category": "audio",
+      "bytes": 2124371,
+      "sha256": "6df29dcbf5b5f494e383894675c7230b7dd69ac47f3c16fab409c3cae02b7cbf"
+    },
+    {
+      "path": "assets/Battle_3-DvryxeKI.mp3",
+      "category": "audio",
+      "bytes": 6482670,
+      "sha256": "9b576bc5155d63f00bd3887171b9202a6e11bf58c1749096dfb90f896a67a8ba"
+    },
+    {
+      "path": "assets/Battle_4-DGuvLxrc.mp3",
+      "category": "audio",
+      "bytes": 4729301,
+      "sha256": "2189baff35300078c2145fbd1398de3cfeb003d38a9237b361b081c09ccdbeb3"
+    },
+    {
+      "path": "assets/Battle_Goty_1-CROSrqTp.mp3",
+      "category": "audio",
+      "bytes": 2109743,
+      "sha256": "ce02ee89c6cdb2e397e9f3bd5c29749e8a5da5bd7924dfde20f4c12673e770c0"
+    },
+    {
+      "path": "assets/Battle-BUl4gIVh.mp3",
+      "category": "audio",
+      "bytes": 7091843,
+      "sha256": "48d9e8492e597b789e33bf114a5e26078bce8be496f6ef2b6238736bd3bfc18b"
+    },
+    {
+      "path": "assets/blood_splash-DtdZB-ZL.mp3",
+      "category": "audio",
+      "bytes": 44303,
+      "sha256": "0460b1bcbded77a77abfc097e123cbf49ada705317a9e0025247eb507c0601fd"
+    },
+    {
+      "path": "assets/blood_splash2-C6h5zLA9.mp3",
+      "category": "audio",
+      "bytes": 38328,
+      "sha256": "f9a515fc9cdb0eba0fbc7bf43d7d89cba779e34c32f16bec44b1cfc10d33bfa2"
+    },
+    {
+      "path": "assets/buff_NEED_REVIEW-DMP7moW_.wav",
+      "category": "audio",
+      "bytes": 130556,
+      "sha256": "a33bf907306ad5b90161c82c050e703e9e38728a3630ae83647bc8f5c0729ddf"
+    },
+    {
+      "path": "assets/click_NEED_REVIEW-Q2Xxjuy2.wav",
+      "category": "audio",
+      "bytes": 51736,
+      "sha256": "09a70b61ccfaabe5f74d7d74c0e79a61d9b47bb10fb7fb072540fc1f29d1e343"
+    },
+    {
+      "path": "assets/climax_1-3--CXYEk.mp3",
+      "category": "audio",
+      "bytes": 3842183,
+      "sha256": "410bb860be8428e0e804a08e769763684f73a0914a9589c188d14cd07f88e63a"
+    },
+    {
+      "path": "assets/Climax_1-B-oI_1KK.mp3",
+      "category": "audio",
+      "bytes": 5843164,
+      "sha256": "dff0d40899d9a97d4d1cf8cbe6826dd6f378bb0da79b623904389631838b600b"
+    },
+    {
+      "path": "assets/climax_1-CPkymnz0.mp3",
+      "category": "audio",
+      "bytes": 3842183,
+      "sha256": "da54742c96f8d0a4302ebe69b4da64f6b9bd4fdaca56f65afe67b80bb2e9c1b9"
+    },
+    {
+      "path": "assets/Climax_1-DP05q7Li.mp3",
+      "category": "audio",
+      "bytes": 2882967,
+      "sha256": "0ec84a2c4f57700ba9c9ffcf36e1849c37e13586b086a483682046750413545e"
+    },
+    {
+      "path": "assets/Climax_2-BUXCuja-.mp3",
+      "category": "audio",
+      "bytes": 4651980,
+      "sha256": "de74a733b146bfc8c531f33dce2a05fe12e551bc34dd815fa88407f5ced4349d"
+    },
+    {
+      "path": "assets/Climax_2-CSIcAXwU.mp3",
+      "category": "audio",
+      "bytes": 5138902,
+      "sha256": "6c54f7fef976b9a1b25548891f2d89a5fe1925e35dc76573451347dd96846e31"
+    },
+    {
+      "path": "assets/Climax_3-Cg3N3-Ar.mp3",
+      "category": "audio",
+      "bytes": 6357279,
+      "sha256": "eba6d5db7959025a20d78883c065c126f73f0049425dfbd3e3c34beeb5d43ded"
+    },
+    {
+      "path": "assets/Climax_3-D3L5MImf.mp3",
+      "category": "audio",
+      "bytes": 4044894,
+      "sha256": "e268eb2a451a4f4dafafb126c888beb186163c658f549870c9f619db5871e21e"
+    },
+    {
+      "path": "assets/Climax_4-k0kn5PMr.mp3",
+      "category": "audio",
+      "bytes": 3974886,
+      "sha256": "881a7926839190c8164b0c0e47930a1f0e09c6e4d63ec1d83d1e6ceac5986500"
+    },
+    {
+      "path": "assets/Climax_Goty_1-Bo-8ch3e.mp3",
+      "category": "audio",
+      "bytes": 3281073,
+      "sha256": "f170ec5a44f4acb4737a50b2991180975d89e95e2db51fb6d97b989c0c92bb99"
+    },
+    {
+      "path": "assets/Climax-C6X7731e.mp3",
+      "category": "audio",
+      "bytes": 4137923,
+      "sha256": "45950e6b5b2d5d6481bf7a98a0cafd950949eb8609594115132064e0cc642b8d"
+    },
+    {
+      "path": "assets/countess_enter-BY9IXlEq.mp3",
+      "category": "audio",
+      "bytes": 179722,
+      "sha256": "c32d747a6fa2aa6df2a19c2a686b1785f38bad882014c9660893e948bb7e154a"
+    },
+    {
+      "path": "assets/countess_humans-jM4Ck5og.mp3",
+      "category": "audio",
+      "bytes": 42375,
+      "sha256": "053421eb5ebc245d540bb28eff9bac5ad95ccace7a312d93e9803aba53534ece"
+    },
+    {
+      "path": "assets/countess_laugh_short-Cp4hFX0e.mp3",
+      "category": "audio",
+      "bytes": 23347,
+      "sha256": "5d15839b316a92c77a110c32a91b014dfe7c7a2b2973c892d80882862f65103b"
+    },
+    {
+      "path": "assets/countess_pour-DlVusgQx.mp3",
+      "category": "audio",
+      "bytes": 18523,
+      "sha256": "ea33f12a0a4bbae0167ebd8f70991579c7fe54be0ecd76d802aa90532fc4740f"
+    },
+    {
+      "path": "assets/countess_third_attack-DpJhN523.mp3",
+      "category": "audio",
+      "bytes": 168019,
+      "sha256": "ead72ce1f830e8817775d62e2407f3c679f9b5c344d5574e1ec519a00c5a8920"
+    },
+    {
+      "path": "assets/countess_weak-BIz2AwQR.mp3",
+      "category": "audio",
+      "bytes": 23588,
+      "sha256": "c4469977b4720fb1cca2aa399d862d38a3df128ec8fd97acfc8ea9d0c134ad6f"
+    },
+    {
+      "path": "assets/defend-CBisAH04.wav",
+      "category": "audio",
+      "bytes": 559490,
+      "sha256": "dbc83994b14e487c3cc1084bb8af36ccc820bc00f39c0e7595260a1cdeb94764"
+    },
+    {
+      "path": "assets/draw_NEED_REVIEW-B_NG_6DN.mp3",
+      "category": "audio",
+      "bytes": 7632,
+      "sha256": "44402100d3441bbe8bf23cd9b91349b6330665f299324112e624b29c293da1f2"
+    },
+    {
+      "path": "assets/draw_one_NEED_REVIEW-hXfMNlCY.wav",
+      "category": "audio",
+      "bytes": 59152,
+      "sha256": "fb67e65f82943ec4d8ee813128ed0c18cbc7659a4b4535aa47244f436823de63"
+    },
+    {
+      "path": "assets/fireball_cast_1-BM3Ia5_U.wav",
+      "category": "audio",
+      "bytes": 218578,
+      "sha256": "676d1ed662705575186e1ee6a9114b812b81d6f1987f7d39bb37ccc491c60318"
+    },
+    {
+      "path": "assets/fireball_cast_2-Jj3rg9_7.wav",
+      "category": "audio",
+      "bytes": 208354,
+      "sha256": "31d563a704e7cceaa8d4af0116b2a452120a411b3733d40606c4aa16443f0d73"
+    },
+    {
+      "path": "assets/fireball_cast_3-u8yr6no5.wav",
+      "category": "audio",
+      "bytes": 219706,
+      "sha256": "a24ff4a537bd2595629ef8afc889566d6d67f1bbfdb92c85ba3a644c2046460a"
+    },
+    {
+      "path": "assets/fireball_hit-DzTLJuNm.wav",
+      "category": "audio",
+      "bytes": 67978,
+      "sha256": "dcb5d4eb52d46c0de286eb2a9d28526d22925843b5f54788cd74c0a26f823f28"
+    },
+    {
+      "path": "assets/index-D2Lr7q85.js",
+      "category": "app",
+      "bytes": 1543406,
+      "sha256": "48c67966fd1bad6017f504a29bca0594fc4a53f8dff4d7f7dfac4c7b1d2092c2"
+    },
+    {
+      "path": "assets/index-DbGasn43.css",
+      "category": "app",
+      "bytes": 438938,
+      "sha256": "d36c8f83f851975ea0694adc7db3694aa3ccb1ab27ef127f554fef32bdc8071e"
+    },
+    {
+      "path": "assets/Lose-DtUEQlmV.mp3",
+      "category": "audio",
+      "bytes": 402379,
+      "sha256": "daf10b75ed0a86eec65cc95f47d076add38dd4233cec8c98cfbb7164e20d45e1"
+    },
+    {
+      "path": "assets/mareo-Dqe6LRpB.gif",
+      "category": "images",
+      "bytes": 6020067,
+      "sha256": "90a6323e4e0bd51e8e5eb0399c111f71435f7e79d663349d81b387de5a064cc0"
+    },
+    {
+      "path": "assets/motivo-D_0F0sHQ.avif",
+      "category": "images",
+      "bytes": 182815,
+      "sha256": "15fd22a0aa110da7efb35caa88a54c958ed3ba2eea97e12c71d2f97dea737c44"
+    },
+    {
+      "path": "assets/motivo-MA-gqbOR.avif",
+      "category": "images",
+      "bytes": 10683,
+      "sha256": "283d0b935e8fab6eb5c314c8b64510168b1e698e86ea38c56362aa32fc71e9d6"
+    },
+    {
+      "path": "assets/motivo-midgJy9Y.avif",
+      "category": "images",
+      "bytes": 128816,
+      "sha256": "81134a6b961eda6dc18e9ed9b84316d05f970a3ae5935f884f9d5fce36f28178"
+    },
+    {
+      "path": "assets/pact_of_elarion_buff-v2H4pjPQ.mp3",
+      "category": "audio",
+      "bytes": 49980,
+      "sha256": "0f541c1e9cf6daf8cb924d988fd90bcdd8880b7b9a0852153bdb8f085915dbc6"
+    },
+    {
+      "path": "assets/play_land_NEED_REVIEW-Dhim6VWf.wav",
+      "category": "audio",
+      "bytes": 141960,
+      "sha256": "6f90cb665baaba85eb52612bf285801189bbfd30284db18d69c958987ae99be6"
+    },
+    {
+      "path": "assets/play_monster_effect_NEED_REVIEW-TwSRdueU.wav",
+      "category": "audio",
+      "bytes": 281252,
+      "sha256": "e6d88b7966dcac402a2bae3b7e48e7f481d6b9a4e42e9b6842a9a3f3c6e664a6"
+    },
+    {
+      "path": "assets/play_monster_heavy_NEED_REVIEW-DVXzlrx1.wav",
+      "category": "audio",
+      "bytes": 290652,
+      "sha256": "ff196f1d8b9b273a1a21251c1bf5af1d6a7529fcb90a5186845e93b7137e2d00"
+    },
+    {
+      "path": "assets/play_monster_NEED_REVIEW-D4ujwR76.wav",
+      "category": "audio",
+      "bytes": 254972,
+      "sha256": "ac81f4b8d4fdcdd36a0c7e99234552b69047b5d074ff3454170333aa82f383f7"
+    },
+    {
+      "path": "assets/punch-VN3vIvBx.mp3",
+      "category": "audio",
+      "bytes": 12144,
+      "sha256": "7470ed202f2b1d5a429775b1fd3ed2ef8c58377ed913a9044cfecb1c47e8c02d"
+    },
+    {
+      "path": "assets/select_attacker-Cox0Yza6.wav",
+      "category": "audio",
+      "bytes": 762970,
+      "sha256": "59cc5d452a87c7208717b0607d5ddc0c4883e7f2b29c5e5d80d5534edb842874"
+    },
+    {
+      "path": "assets/skip_next_battle_NEED_REVIEW-viUjvpVZ.wav",
+      "category": "audio",
+      "bytes": 122644,
+      "sha256": "7aff7e213237325daec2b47b45aa9c512e04f555c1fcf4281543cde12f75f83c"
+    },
+    {
+      "path": "assets/stone_crash-xC3cCuCX.wav",
+      "category": "audio",
+      "bytes": 1050716,
+      "sha256": "6708b91c23f2a5014a814a0ce816f8ce2332050e8699e26a81be6a144e4fb76e"
+    },
+    {
+      "path": "assets/vaelor_line_play-DcNbuaAO.mp3",
+      "category": "audio",
+      "bytes": 117739,
+      "sha256": "b02a857449a8c23db1f98c147a4deaac8de2519fbefc041dfc20aa5f10bea489"
+    },
+    {
+      "path": "assets/Victory-kV7VGm9x.mp3",
+      "category": "audio",
+      "bytes": 258183,
+      "sha256": "4fe75c68f321a24e629a98c0400a0b76884f89b19909815aa1fbb478162cd615"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/assassin_of_the_black_veil.jpg",
+      "category": "cards",
+      "bytes": 289811,
+      "sha256": "00588796fef9f456cc9a1b7230f9e5dbf5657200495aef294155e42b1a56c26c"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/assassin_of_the_black_veil.webp",
+      "category": "cards",
+      "bytes": 186820,
+      "sha256": "bb8901ba19135545353ec0962d6c273f7367f1cedeb245aeda0c078246d65684"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/blood_page.jpg",
+      "category": "cards",
+      "bytes": 385477,
+      "sha256": "cb19e7eb0e15b9a6117ea9a4963781f497f8cbfefea74d0ef64f7110a2f2ff3f"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/blood_page.webp",
+      "category": "cards",
+      "bytes": 176410,
+      "sha256": "55c78acdc828ab28d39537ca2b3e88b718a0087de6bb78471894ed138ec2dd57"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/crimson_impulse.jpg",
+      "category": "cards",
+      "bytes": 366464,
+      "sha256": "d8c24dc2488d5978969d8b1ece7aa598913541a823ea65da60f0901344271046"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/crimson_impulse.webp",
+      "category": "cards",
+      "bytes": 256434,
+      "sha256": "c306df1fd30438a6fc27e3c568975b49b37f71319055921e47aba5f55ff53809"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/drain_essence.jpg",
+      "category": "cards",
+      "bytes": 513929,
+      "sha256": "5610fd902ff084537dea2d8c5596e33478528082b4f1341eba4f492140afa509"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/drain_essence.webp",
+      "category": "cards",
+      "bytes": 197082,
+      "sha256": "9171ccec201bd78a6bd78842b55ac01e32d029ba948b149593732c19674b11ee"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/duelist_of_the_eclipse.jpg",
+      "category": "cards",
+      "bytes": 127127,
+      "sha256": "75873401b5f375eaf8910901035aa2c8ae215766d0a00d788ee580ce1b40c442"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/duelist_of_the_eclipse.webp",
+      "category": "cards",
+      "bytes": 293264,
+      "sha256": "17636533ea3f477e037a0f63911e3a623573333d7ab9dac1956c0094cbc073c0"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/guardian_of_the_night_threshold.jpg",
+      "category": "cards",
+      "bytes": 57266,
+      "sha256": "16b74c17aad947014ff05f1d931691e6da73b24fa35bf53174982990a04ae433"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/guardian_of_the_night_threshold.webp",
+      "category": "cards",
+      "bytes": 347598,
+      "sha256": "ce368d0ac82ca0ac878f6c2c52739ace7735ad5e5cd110f33ed03a9e1b307986"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/herald_of_the_eclipse.jpg",
+      "category": "cards",
+      "bytes": 289154,
+      "sha256": "d1af7d60da40a86005f244bb5e0090198e08a3fb880d7d5d8f8949eccbd69553"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/herald_of_the_eclipse.webp",
+      "category": "cards",
+      "bytes": 308064,
+      "sha256": "a08941a5ce06aa37dc9d6055b7b775cafbd486cdbb5e23d9826a6b957688d2ef"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/hunt_beneath_the_red_moon.jpg",
+      "category": "cards",
+      "bytes": 73472,
+      "sha256": "16c2100567be2b89b5ac3f4c0fa3cbd6b0eb8107d5484e359285d3c3cd1ab951"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/hunt_beneath_the_red_moon.webp",
+      "category": "cards",
+      "bytes": 244792,
+      "sha256": "86da71052942618e8647cb73b7770bf328a631f702049a63ca764f15f128a744"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/midnight_collector.jpg",
+      "category": "cards",
+      "bytes": 478697,
+      "sha256": "a8f5cfec50dc978af9dc4ed6814a7e52f835215e58b4e4f0ce3d4079f7e634e7"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/midnight_collector.webp",
+      "category": "cards",
+      "bytes": 238832,
+      "sha256": "2742b3d8a9e65c5048eeb7fcb76eb41226b7d4be0fe84e978a31aa7460ca9847"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/midnight_pact.jpg",
+      "category": "cards",
+      "bytes": 502177,
+      "sha256": "d6c2ca431d27c19dac6d3f14347df54952b0e2f7194e955b87edd9f4caf08b9d"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/midnight_pact.webp",
+      "category": "cards",
+      "bytes": 279890,
+      "sha256": "d6f0ea91aaeac4792c06722b6b04e435aac67d53665e6ef422bb6557992e0052"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/mirevna_countess_of_the_crimson_eclipse.jpg",
+      "category": "cards",
+      "bytes": 361342,
+      "sha256": "8cd2f27c7d32c7cb050e4f74e89082e2cec8fb0c7f09da07c2653af24a464f2a"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/mirevna_countess_of_the_crimson_eclipse.webp",
+      "category": "cards",
+      "bytes": 225850,
+      "sha256": "868076daff3db988aaea6dc6299374fff2d10eea064eb3713fa9088525253b99"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/sanctuary_of_the_red_moon.jpg",
+      "category": "cards",
+      "bytes": 269551,
+      "sha256": "f2022d9624a46b28676862b446e1a1b53c80684df55ff3c98ad652fda05f8fc4"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/sanctuary_of_the_red_moon.webp",
+      "category": "cards",
+      "bytes": 358882,
+      "sha256": "dc6892164542a762fef314503714b143db85788eb4c98d132e74ce6459a6cafb"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/sentinel_of_the_lunar_eye.jpg",
+      "category": "cards",
+      "bytes": 371592,
+      "sha256": "b4056647f4c4268155bdf1cd67637f2e0c94d6962e34144ab6501468838c8048"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/sentinel_of_the_lunar_eye.webp",
+      "category": "cards",
+      "bytes": 199382,
+      "sha256": "9e8a5a4a1c2aec8f33465256c97ce606fee9435acf02681cea7266a179b81ecf"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/verdict_of_the_eclipse.jpg",
+      "category": "cards",
+      "bytes": 66932,
+      "sha256": "a369b488321ab91e5ebd8ebda649e6e2ccf9b3448f7715b5b94cd7d48058b363"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/verdict_of_the_eclipse.png",
+      "category": "cards",
+      "bytes": 610075,
+      "sha256": "2c0f9288af88a02438e8daef5cea6e655a48293c71dd250bf1d45bdc9a1003b8"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/art/verdict_of_the_eclipse.webp",
+      "category": "cards",
+      "bytes": 342648,
+      "sha256": "4e8761574429b22603b32d94cf393d91d1a72b2978ed820aa00dc3565307f741"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/assassin_of_the_black_veil.png",
+      "category": "cards",
+      "bytes": 2809784,
+      "sha256": "8f5906fa184fb13be177f834c2d1bc1e85607998a0459908b122cb7114280983"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/blood_page.png",
+      "category": "cards",
+      "bytes": 2539536,
+      "sha256": "b44fd76ad07220bb90f6dde60a538d2cf4cb2c3bd5d654f99cb2f5746999146c"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/crimson_impulse.png",
+      "category": "cards",
+      "bytes": 2357347,
+      "sha256": "f2873de3804990e8f036c70e471ecee2ebfd8d9975930399997306211bf73554"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/drain_essence.png",
+      "category": "cards",
+      "bytes": 2035141,
+      "sha256": "2bf784c7e559cc95368eeeb5f87b90926eee0492c0ddfdefa1c948eb1da8da3c"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/duelist_of_the_eclipse.png",
+      "category": "cards",
+      "bytes": 2155261,
+      "sha256": "ad2eeead01b7b77938086ee80d140739124435d8ce50d4eb9f821a4e1e966bdf"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/guardian_of_the_night_threshold.png",
+      "category": "cards",
+      "bytes": 2382268,
+      "sha256": "2deaff718a598f305a3dedc0cbe8a856a590349b078a05cc2f3dfb9f1f7f1b65"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/herald_of_the_eclipse.png",
+      "category": "cards",
+      "bytes": 2690829,
+      "sha256": "49f1cb48028e344e13ed6f9a27bc9edd77320827bf3965b9647e814fcaef3b51"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/hunt_beneath_the_red_moon.png",
+      "category": "cards",
+      "bytes": 1911679,
+      "sha256": "83e2c1dbf37305ebff9192f5dbe8153fa1d8ed9a867c246c44646d55217ca6ec"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/midnight_collector.png",
+      "category": "cards",
+      "bytes": 2675211,
+      "sha256": "a19b32a9ebafff6f8a06ce537bf82c73ff7cd2807ab5aa4acadcb8e3fa2989de"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/midnight_pact.png",
+      "category": "cards",
+      "bytes": 2160374,
+      "sha256": "291230cd3d0fb73cea61876104acd42c15bc1ef778f1f89786c113d039b002e5"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/mirevna_countess_of_the_crimson_eclipse.png",
+      "category": "cards",
+      "bytes": 1872740,
+      "sha256": "1d5c1f59d698c5da54dffdd58763de21a0f4048fa5d13b1c358d100ca84bb464"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/sanctuary_of_the_red_moon.png",
+      "category": "cards",
+      "bytes": 1865981,
+      "sha256": "c5d60beea0cd9ed39b12a93c1a85c3797bd04fd5b76dc4b5f551cbbd01d2e94d"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/sentinel_of_the_lunar_eye.png",
+      "category": "cards",
+      "bytes": 2743645,
+      "sha256": "05fa3024380cf38e1faa72c1d9a6bee1d55052e012dbf8a01ddc3bca8205c80f"
+    },
+    {
+      "path": "cards/court_of_the_crimson_eclipse/verdict_of_the_eclipse.png",
+      "category": "cards",
+      "bytes": 2245619,
+      "sha256": "952f8fdd24cd9274863d8be7e7939085b051ad240ed5d8c7188da63858f8672e"
+    },
+    {
+      "path": "cards/hunters/art/contra_tu_manada.jpg",
+      "category": "cards",
+      "bytes": 556866,
+      "sha256": "d405cc0b12b79f972bdb37f8f4e538637b9af9df34ef8ddf5a804845f9d0e345"
+    },
+    {
+      "path": "cards/hunters/art/contra_tu_manada.webp",
+      "category": "cards",
+      "bytes": 306904,
+      "sha256": "2647259168f9b4ca5027ae60f20f0bb178465a28983eec976a8ff83c73d9aa5d"
+    },
+    {
+      "path": "cards/hunters/art/flecha_sedante.jpg",
+      "category": "cards",
+      "bytes": 209236,
+      "sha256": "b5874fae70b3d629a0b47cd84f50f7763725e653d9fc61848498c9ca6c9d1011"
+    },
+    {
+      "path": "cards/hunters/art/flecha_sedante.webp",
+      "category": "cards",
+      "bytes": 262622,
+      "sha256": "e075f1aa7b138b969ffaadaef970e946fbc11bb4c52c60ee1dde0ede9aa60a4c"
+    },
+    {
+      "path": "cards/hunters/art/la_gran_batida.webp",
+      "category": "cards",
+      "bytes": 334002,
+      "sha256": "78eff2ef065f249f46be22561b8376d6a222839b3d038d2b82be6194efecc40c"
+    },
+    {
+      "path": "cards/hunters/art/lancero_de_la_marca.jpg",
+      "category": "cards",
+      "bytes": 293292,
+      "sha256": "a8e7f7ab00a0d77f8f0d8063b1d27bb60232ad3575df97702c880d0352194f0c"
+    },
+    {
+      "path": "cards/hunters/art/lancero_de_la_marca.webp",
+      "category": "cards",
+      "bytes": 306432,
+      "sha256": "950104596a0c8b22545fe8b5a09d09b77921860930d72294b821dc288cf540ee"
+    },
+    {
+      "path": "cards/hunters/art/lyra_ojo_de_la_caceria.jpg",
+      "category": "cards",
+      "bytes": 733339,
+      "sha256": "e79e93f132f7d00ba416b6f5ba869b71e2f91c834ff66607574c2a77835d1d8c"
+    },
+    {
+      "path": "cards/hunters/art/lyra_ojo_de_la_caceria.webp",
+      "category": "cards",
+      "bytes": 320222,
+      "sha256": "f6487aee96dca95cf1952e7f51b7061c11cc2f473881e466cc3934f59a8d481d"
+    },
+    {
+      "path": "cards/hunters/art/rastreadora_de_huellas.jpg",
+      "category": "cards",
+      "bytes": 35693,
+      "sha256": "cf81295d3791360041557f9a5074ac52b2810850e0056d69ebd5f72a495c4177"
+    },
+    {
+      "path": "cards/hunters/art/rastreadora_de_huellas.webp",
+      "category": "cards",
+      "bytes": 322724,
+      "sha256": "e1c1d6e50ca98ebddb6d6c8281b3428aace9e0011b4289b9eafd4397ccaa396f"
+    },
+    {
+      "path": "cards/hunters/art/red_de_garfios.webp",
+      "category": "cards",
+      "bytes": 335690,
+      "sha256": "c1de9a8be3038032545084ccb3af88cf3825d8c5892c248ff71f54e3fd3ecfff"
+    },
+    {
+      "path": "cards/hunters/art/rodear_a_la_presa.jpg",
+      "category": "cards",
+      "bytes": 733339,
+      "sha256": "e79e93f132f7d00ba416b6f5ba869b71e2f91c834ff66607574c2a77835d1d8c"
+    },
+    {
+      "path": "cards/hunters/art/rodear_a_la_presa.webp",
+      "category": "cards",
+      "bytes": 318176,
+      "sha256": "dbaac975dc773939c3a74ec960bc2c59294b60f7d8678383628ec9f5af3236c1"
+    },
+    {
+      "path": "cards/hunters/art/territorio_de_caza.jpg",
+      "category": "cards",
+      "bytes": 232808,
+      "sha256": "80524638dad6d00f5d9554cb4868aadad940ee22c2b8a7ca0ffccdc636967a32"
+    },
+    {
+      "path": "cards/hunters/art/territorio_de_caza.webp",
+      "category": "cards",
+      "bytes": 326074,
+      "sha256": "4df52c1872a6bbd8af26aecb0ada411b8d7dd4c4c16e90d2d80ee87789c30896"
+    },
+    {
+      "path": "cards/hunters/art/trampa_de_mandibulas.webp",
+      "category": "cards",
+      "bytes": 350230,
+      "sha256": "0439246aac044e4f269b7c527c513d4c6ffa18b5d78d67461ffad64f8b52e876"
+    },
+    {
+      "path": "cards/hunters/art/trampa_improvisada.webp",
+      "category": "cards",
+      "bytes": 347108,
+      "sha256": "826fb509b4fb80d40fc50b05b64d36c8ce557ff080a3a1e713f27d6809b6b820"
+    },
+    {
+      "path": "cards/hunters/art/trampero_de_acero.jpg",
+      "category": "cards",
+      "bytes": 403086,
+      "sha256": "b19b6fd53125c274fd84c8483ed7f2c85f88ea00cb7c7afec8c83e7e294633cc"
+    },
+    {
+      "path": "cards/hunters/art/trampero_de_acero.webp",
+      "category": "cards",
+      "bytes": 381564,
+      "sha256": "b4bf48ad3135b947bcc01f1c64acb5f60a5eae626f861ddd8908c508bf408fec"
+    },
+    {
+      "path": "cards/hunters/art/trofeo_de_la_caceria.jpg",
+      "category": "cards",
+      "bytes": 562714,
+      "sha256": "64eab5be4196abf81f77720169e8a9a6c67e9f7720198db012e6a160adc1b498"
+    },
+    {
+      "path": "cards/hunters/art/trofeo_de_la_caceria.webp",
+      "category": "cards",
+      "bytes": 324652,
+      "sha256": "f1077ae65ec9ff52fb63ed280a64548a9f6136cc771624ed80ff38d32e59b333"
+    },
+    {
+      "path": "cards/legion_of_varka/all_against_one.png",
+      "category": "cards",
+      "bytes": 2728474,
+      "sha256": "caa4fce82173b98554b5e5a8b88b0368ef9c19f3afb88663a695d07118650c4f"
+    },
+    {
+      "path": "cards/legion_of_varka/art/all_against_one.jpg",
+      "category": "cards",
+      "bytes": 844489,
+      "sha256": "b429c11a5b4a8e2e63017f066f5f534bf994f423ae2d8014154398ba67cb28b9"
+    },
+    {
+      "path": "cards/legion_of_varka/art/all_against_one.png",
+      "category": "cards",
+      "bytes": 2773543,
+      "sha256": "e1496ca7dd0bd46c3bcf18b0bd5312663b36ffbb3374cb6f5fd188ff2548d9d4"
+    },
+    {
+      "path": "cards/legion_of_varka/art/chief_of_the_double_guard.jpg",
+      "category": "cards",
+      "bytes": 438016,
+      "sha256": "638cd61389e7e53bf443c07fa430872b7e2dd1492637201f506a14364adbe960"
+    },
+    {
+      "path": "cards/legion_of_varka/art/chief_of_the_double_guard.png",
+      "category": "cards",
+      "bytes": 2731543,
+      "sha256": "6beae7e6e7f5a73b8990556ce73a5b54ad581e58cc0fc82ac69e202dbdf35a7f"
+    },
+    {
+      "path": "cards/legion_of_varka/art/corrupted_war_bear.jpg",
+      "category": "cards",
+      "bytes": 432434,
+      "sha256": "f1ab0fac2dd4e7917617beed72ce3849bb04e0ce84b36981b4b3725ea274ecb0"
+    },
+    {
+      "path": "cards/legion_of_varka/art/corrupted_war_bear.png",
+      "category": "cards",
+      "bytes": 2655631,
+      "sha256": "2d74ee3916af8fb86a915b8a788b60c5ff038643c088b54a1f2e99645f2ba0ba"
+    },
+    {
+      "path": "cards/legion_of_varka/art/marshal_of_the_wave.jpg",
+      "category": "cards",
+      "bytes": 550884,
+      "sha256": "a885f3d45ef3dacd557479a02821e28699623b6443783995e3598a42889fc54b"
+    },
+    {
+      "path": "cards/legion_of_varka/art/marshal_of_the_wave.png",
+      "category": "cards",
+      "bytes": 2786452,
+      "sha256": "a7d22fc9b62ef5c50421b33e500aef0757a7f529610012cc94115c5992b54b73"
+    },
+    {
+      "path": "cards/legion_of_varka/art/rear_guard_firebreather.jpg",
+      "category": "cards",
+      "bytes": 444762,
+      "sha256": "5966de05af104df4167bc891ebb2b0e9a57f14332003197f0a508c857fbfed5b"
+    },
+    {
+      "path": "cards/legion_of_varka/art/rear_guard_firebreather.png",
+      "category": "cards",
+      "bytes": 2875724,
+      "sha256": "d9946ac5147ca189fb160ac4bb6796d69da9f7f9b78e507e9a8542d915382641"
+    },
+    {
+      "path": "cards/legion_of_varka/art/rider_of_the_third_charge.jpg",
+      "category": "cards",
+      "bytes": 373728,
+      "sha256": "823d46d318d05be1970cf8889a9d5eb389b432ae06aced1efd19764fad2ba601"
+    },
+    {
+      "path": "cards/legion_of_varka/art/rider_of_the_third_charge.png",
+      "category": "cards",
+      "bytes": 2644242,
+      "sha256": "c5f32237d1445f211d01a474f391a192672c05ad511ad81e69b3f402192a54c1"
+    },
+    {
+      "path": "cards/legion_of_varka/art/rider_of_the_umbral_volley.jpg",
+      "category": "cards",
+      "bytes": 857887,
+      "sha256": "c0ddf1aa082b948cca6d99341118508b9e6af9a307237f3492c291df52fdb165"
+    },
+    {
+      "path": "cards/legion_of_varka/art/rider_of_the_umbral_volley.png",
+      "category": "cards",
+      "bytes": 2938531,
+      "sha256": "240fd7a43c1a85813d23296e41a61107b148b214902de8c37027fc542e297d9d"
+    },
+    {
+      "path": "cards/legion_of_varka/art/shaman_of_the_umbral_ember.jpg",
+      "category": "cards",
+      "bytes": 450465,
+      "sha256": "61b5fce69e468351f574beb15b9038e2ad7927e10fd572a0599a53b9b5998fe5"
+    },
+    {
+      "path": "cards/legion_of_varka/art/shaman_of_the_umbral_ember.png",
+      "category": "cards",
+      "bytes": 2715841,
+      "sha256": "5aba4ceb6f66cdf3610acff88c7a1c2e776104590a05972465dbcaf62c86c6cf"
+    },
+    {
+      "path": "cards/legion_of_varka/art/summoner_of_the_ranks.jpg",
+      "category": "cards",
+      "bytes": 336194,
+      "sha256": "f2363516259644fb0e9d3666ed1bd86f549be3da41f8909f40321ff8158d1237"
+    },
+    {
+      "path": "cards/legion_of_varka/art/summoner_of_the_ranks.png",
+      "category": "cards",
+      "bytes": 2761237,
+      "sha256": "2119a021bc4f81ef66ce208528a9dba5f4fd0399f6e34e242fe784cd5ba3b30b"
+    },
+    {
+      "path": "cards/legion_of_varka/art/the_daunting_front.jpg",
+      "category": "cards",
+      "bytes": 369751,
+      "sha256": "a4a8dbf77132e439bf68185c6a05928ce1929e51689c58d4b213c38b471ba89a"
+    },
+    {
+      "path": "cards/legion_of_varka/art/the_daunting_front.png",
+      "category": "cards",
+      "bytes": 2787490,
+      "sha256": "f348723bd16f27fc38e149af1ae0234105c0524fa1a496a87824334a28f703ee"
+    },
+    {
+      "path": "cards/legion_of_varka/art/unleash_the_legion.jpg",
+      "category": "cards",
+      "bytes": 358139,
+      "sha256": "9f0e2bd651319d8addc80cc4cf372423128968eab35b7e3a9a89593f991960bb"
+    },
+    {
+      "path": "cards/legion_of_varka/art/unleash_the_legion.png",
+      "category": "cards",
+      "bytes": 2861970,
+      "sha256": "695084a18685aba279397c97f0be133b4f008a94a4b0a804f5eff08b2ddf42b2"
+    },
+    {
+      "path": "cards/legion_of_varka/art/vardek_scribe_of_the_legion.jpg",
+      "category": "cards",
+      "bytes": 421931,
+      "sha256": "b2ac54800895ced259b70573c7fcd62e1f6809b43b56b77653329a8f3da2b856"
+    },
+    {
+      "path": "cards/legion_of_varka/art/vardek_scribe_of_the_legion.png",
+      "category": "cards",
+      "bytes": 3130407,
+      "sha256": "a028568085edc5a42ffee6d1da5732dd156d2049f68042ce82da28127f468c9d"
+    },
+    {
+      "path": "cards/legion_of_varka/art/varka_infernal_matriarch.jpg",
+      "category": "cards",
+      "bytes": 450022,
+      "sha256": "22043659e493a08e466575841117898b93878df52254b7d632b36e39af72e656"
+    },
+    {
+      "path": "cards/legion_of_varka/art/varka_infernal_matriarch.png",
+      "category": "cards",
+      "bytes": 2916246,
+      "sha256": "3ef7c0fa63d94f3a35273b26a9364e36084d603e71408cdd5931414bdcb5e4cd"
+    },
+    {
+      "path": "cards/legion_of_varka/art/varkas_forgemaster.jpg",
+      "category": "cards",
+      "bytes": 509944,
+      "sha256": "7b73927571f7f5d33c2af19ac2a7a1a20401d4f3bc108e01bade6a097b11f248"
+    },
+    {
+      "path": "cards/legion_of_varka/art/varkas_forgemaster.png",
+      "category": "cards",
+      "bytes": 2904262,
+      "sha256": "4b1269748c580dc8e295e630459641a7805e5c0f46cb7e127af7f46559373837"
+    },
+    {
+      "path": "cards/legion_of_varka/art/varkas_linebreaker.jpg",
+      "category": "cards",
+      "bytes": 291407,
+      "sha256": "d0b82c34b7877396c7f52b3ac84016b4ab3aa24e6df28484032dddedd4d28e85"
+    },
+    {
+      "path": "cards/legion_of_varka/art/varkas_linebreaker.png",
+      "category": "cards",
+      "bytes": 2768267,
+      "sha256": "f03a9da4183f77e65453e6e2a185ff302b6817b863aa26b2bdb5c18624ebae19"
+    },
+    {
+      "path": "cards/legion_of_varka/art/varkas_minion.jpg",
+      "category": "cards",
+      "bytes": 482885,
+      "sha256": "a06320fe557cf2b54f16988bf8fe6efea5f7c90106cd2e318b88170147cea9c8"
+    },
+    {
+      "path": "cards/legion_of_varka/art/varkas_minion.png",
+      "category": "cards",
+      "bytes": 2927255,
+      "sha256": "4047f6827d12001c9ebbd205db863d66a310e205ffd56b305229d0b83a2143b3"
+    },
+    {
+      "path": "cards/legion_of_varka/art/varkas_standard_bearer.jpg",
+      "category": "cards",
+      "bytes": 522583,
+      "sha256": "fecd625064b9831c4a391af8497ae13f59b6daa8c834d7730eae353dd2ee9eb4"
+    },
+    {
+      "path": "cards/legion_of_varka/art/varkas_standard_bearer.png",
+      "category": "cards",
+      "bytes": 2670704,
+      "sha256": "f95b61071a0f38eba5b9f37d03a11c3bdd538956033f7a9bae61da12a717bd7b"
+    },
+    {
+      "path": "cards/legion_of_varka/chief_of_the_double_guard.png",
+      "category": "cards",
+      "bytes": 2596838,
+      "sha256": "61232a03286d010c1fedb52f0a46b7f849805b68346adde7fffd0cf5b6b17dd1"
+    },
+    {
+      "path": "cards/legion_of_varka/corrupted_war_bear.png",
+      "category": "cards",
+      "bytes": 2704698,
+      "sha256": "fa77dba98a57b672d9f81dd0c698c18fbf98830916acf0245e20336b0f216ec0"
+    },
+    {
+      "path": "cards/legion_of_varka/marshal_of_the_wave.png",
+      "category": "cards",
+      "bytes": 3067821,
+      "sha256": "feb07b86af878124d9c46ce33769672bb9e657cc19ec76d949aedd125b98c6a1"
+    },
+    {
+      "path": "cards/legion_of_varka/rear_guard_firebreather.png",
+      "category": "cards",
+      "bytes": 2563368,
+      "sha256": "3dfe524b28b6ecda74e67cdd2e87c4032bdca7d308d2695025b1d1bf6571e276"
+    },
+    {
+      "path": "cards/legion_of_varka/rider_of_the_third_charge.png",
+      "category": "cards",
+      "bytes": 2743681,
+      "sha256": "483a10344231efdccf7afaae80455e8c9dc0ef39b6eea2674a9e1571a8b7c6da"
+    },
+    {
+      "path": "cards/legion_of_varka/rider_of_the_umbral_volley.png",
+      "category": "cards",
+      "bytes": 2744917,
+      "sha256": "17606b24c4db3b602a9031807834b7ebfefccdd32621b3bfab987fd6b556e894"
+    },
+    {
+      "path": "cards/legion_of_varka/shaman_of_the_umbral_ember.png",
+      "category": "cards",
+      "bytes": 2414503,
+      "sha256": "30225194a86aeab8a7d251a34011a112e888ed5a4f7486bc5185158732429a1c"
+    },
+    {
+      "path": "cards/legion_of_varka/summoner_of_the_ranks.png",
+      "category": "cards",
+      "bytes": 2643746,
+      "sha256": "8ffbde32d9924d6903ba2b32d5b722c1543908468b212935f84773e0b4d80a3a"
+    },
+    {
+      "path": "cards/legion_of_varka/the_daunting_front.png",
+      "category": "cards",
+      "bytes": 1844741,
+      "sha256": "949b9455ac415210ac769c0788c0a2a55aa5601bfe19a28af239619544ae179e"
+    },
+    {
+      "path": "cards/legion_of_varka/unleash_the_legion.png",
+      "category": "cards",
+      "bytes": 2564444,
+      "sha256": "730c2c501ed17b024f4f5c06f4687f5360ef1bfcce0c2f55e44ec628e95fe932"
+    },
+    {
+      "path": "cards/legion_of_varka/vardek_scribe_of_the_legion.png",
+      "category": "cards",
+      "bytes": 2629996,
+      "sha256": "8a420f225e83f24cd510b80957d3e9c81dc935997c393c9cf2ae8b1376166b45"
+    },
+    {
+      "path": "cards/legion_of_varka/varka_infernal_matriarch.png",
+      "category": "cards",
+      "bytes": 2326400,
+      "sha256": "718ef26fadd195c86c89d06e232c175e2592bbbc87b58534042cd17246ac7f4b"
+    },
+    {
+      "path": "cards/legion_of_varka/varkas_forgemaster.png",
+      "category": "cards",
+      "bytes": 2177132,
+      "sha256": "d04b2ca800243b255984787a8759fbd85424c2a7d8e6e259d47294d22226eb46"
+    },
+    {
+      "path": "cards/legion_of_varka/varkas_linebreaker.png",
+      "category": "cards",
+      "bytes": 2910018,
+      "sha256": "af50426a9cbc7d8fc7eb9aef006367cfcfcad7433dd8b3bc07aa728b0b070353"
+    },
+    {
+      "path": "cards/legion_of_varka/varkas_minion.png",
+      "category": "cards",
+      "bytes": 2237705,
+      "sha256": "b340c23a83bcb91f80f1aed179449be95e17b27bfed5669f985ad02a46a5726c"
+    },
+    {
+      "path": "cards/legion_of_varka/varkas_standard_bearer.png",
+      "category": "cards",
+      "bytes": 3092935,
+      "sha256": "0bb198bf85db32f3fd0d8433d878ee831794c5de295a9495255b718b4c4dde82"
+    },
+    {
+      "path": "cards/pact_of_elarion/aelyra_heir_of_elarion.png",
+      "category": "cards",
+      "bytes": 1905729,
+      "sha256": "f4d2695287001bc3dcf927645d6cd0065b445794c664a7c0b6d3fe107a664bbe"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/aelyra_heir_of_elarion.jpg",
+      "category": "cards",
+      "bytes": 42036,
+      "sha256": "1f1e5610136a7be22610b4e45391213f525aed064ab809d1011552d3b31b9131"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/aelyra_heir_of_elarion.png",
+      "category": "cards",
+      "bytes": 2650824,
+      "sha256": "4699357b569150c9370d688e8f3628ebabead65afb710078d77c58370237a149"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/clash_of_echoes.jpg",
+      "category": "cards",
+      "bytes": 274900,
+      "sha256": "e7cf4d4a59322f329aeb3d7e962e924b8c9f1e460822216ee591011b6ea27275"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/clash_of_echoes.png",
+      "category": "cards",
+      "bytes": 2541848,
+      "sha256": "b4c0cc0b7dbbd255de2ef89d95564390d8dd1659310992423633a876f51f4814"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/echo_of_the_forgotten_city.jpg",
+      "category": "cards",
+      "bytes": 103445,
+      "sha256": "a3f14eb43acded8104d2dd10cc143e3d438e299c48928b820339adb167e291d2"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/echo_of_the_forgotten_city.png",
+      "category": "cards",
+      "bytes": 2747746,
+      "sha256": "693618e467be2eeba88f8e3ded0fce0f3afc085f3a7b5546d548f7845f0dd2f0"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/elixir_of_the_first_leaf.jpg",
+      "category": "cards",
+      "bytes": 246582,
+      "sha256": "bbe3d06623084c1386e75ce72d68986966a57ddb95a8c77a5294cc8d84cf0860"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/elixir_of_the_first_leaf.png",
+      "category": "cards",
+      "bytes": 2730237,
+      "sha256": "68841d7dc62221441cad4a105a8cbe778c64e2871e4ec8f6fa37740f81a94680"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/hydra_of_the_black_bough.jpg",
+      "category": "cards",
+      "bytes": 300280,
+      "sha256": "ac5484ff174cdb7235163550155542d60d0606fb8392f6279d73998200daf9c0"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/hydra_of_the_black_bough.png",
+      "category": "cards",
+      "bytes": 2612076,
+      "sha256": "05cb72bf7da1f4baec9c93bc0f102eeb15f0674c178dad1cddb8a400f77360f4"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/kaelor_stormcaller.jpg",
+      "category": "cards",
+      "bytes": 779613,
+      "sha256": "ca34e2aec8725e83b1e798c40393c5eb541f1b0820b6a08e1e808e3a332bcfa9"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/kaelor_stormcaller.png",
+      "category": "cards",
+      "bytes": 2563742,
+      "sha256": "754e811ef1a8dfbc721fa9f0f1ac3795f5d9353ddb50dba3d06b93bdc38fe90f"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/liora_keeper_of_the_grove.jpg",
+      "category": "cards",
+      "bytes": 353254,
+      "sha256": "7bca755a7f34fcfcbc9def17990cb7e3ced9ed6ef9cf8915ccfc227f8570dcf1"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/liora_keeper_of_the_grove.png",
+      "category": "cards",
+      "bytes": 2703739,
+      "sha256": "f95de4f0a676d56f6e5d841b94fef8a66b06b4fcccf475ea03299fbd720da806"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/maela_watcher_of_the_heights.jpg",
+      "category": "cards",
+      "bytes": 470546,
+      "sha256": "7329f49c8cfd7c1b1e88359620e41006e1df4e36c6af99b051009519e514ab20"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/maela_watcher_of_the_heights.png",
+      "category": "cards",
+      "bytes": 2564894,
+      "sha256": "0d8e20b36cf6b281df1e6d499a87364c690dc2c5e4fef10ef2047daee9e0b724"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/river_of_elarion.jpg",
+      "category": "cards",
+      "bytes": 433908,
+      "sha256": "ca31919172974615f9ca4cd00714f5001a9bb41ee31fd1c4c5bcc57f4f490860"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/river_of_elarion.png",
+      "category": "cards",
+      "bytes": 2636400,
+      "sha256": "c165841f537df4148dc1a18d7adbf956444046e8d6e9d06bde83d2e7310a5da4"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/shield_of_the_heir.jpg",
+      "category": "cards",
+      "bytes": 296087,
+      "sha256": "7d838bd565ba39c632c323f0d837a8d79cc2d3def995bb023e9fee2f85b049f2"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/shield_of_the_heir.png",
+      "category": "cards",
+      "bytes": 2917747,
+      "sha256": "d0a5df056c319b480c70272611229f21c4226989af096b7f68ae3f05688803da"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/the_judgment_of_elarion.jpg",
+      "category": "cards",
+      "bytes": 720870,
+      "sha256": "6305cb9718435f6775ab6f07fde63ef4e5213afa4ab5693317ac0d804aaa077d"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/the_judgment_of_elarion.png",
+      "category": "cards",
+      "bytes": 2719048,
+      "sha256": "3e0e819fe7cfd93a6e1f5086e58e2ccda87f096c1bca6f1f4ae2b6349369b2c2"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/vaelor_emerald_guardian.jpg",
+      "category": "cards",
+      "bytes": 396712,
+      "sha256": "ae79129e04f7641c3736c774d1501d6c3e7ecd126887f9565ddc826674aba6cb"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/vaelor_emerald_guardian.png",
+      "category": "cards",
+      "bytes": 2540726,
+      "sha256": "e6b4165864fb5b5beffe7185b369c2fddfdd60762266f4e68763a70ab15264fc"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/veiled_dawn_flower.jpg",
+      "category": "cards",
+      "bytes": 319288,
+      "sha256": "8ffefabb07173ced021bdff0666a7b043e2b092283330f7435ea34e693ef3dcd"
+    },
+    {
+      "path": "cards/pact_of_elarion/art/veiled_dawn_flower.png",
+      "category": "cards",
+      "bytes": 2628737,
+      "sha256": "41863b0d1a9d60e3922290b64c2047cf7f51d9ee67d9d3088d8d22217b9bf9ef"
+    },
+    {
+      "path": "cards/pact_of_elarion/clash_of_echoes.png",
+      "category": "cards",
+      "bytes": 2354716,
+      "sha256": "470377fb695f1798f97659d90e762255b0d63db5f00a6f7650c7f9eddbd300ae"
+    },
+    {
+      "path": "cards/pact_of_elarion/echo_of_the_forgotten_city.png",
+      "category": "cards",
+      "bytes": 2678873,
+      "sha256": "0b4d01e524be61ea1bb319aca72cb2266dfd5d909029f389e67f7f12cc9d9812"
+    },
+    {
+      "path": "cards/pact_of_elarion/elixir_of_the_first_leaf.png",
+      "category": "cards",
+      "bytes": 2350725,
+      "sha256": "456b316a644bef7b2301a344d95b6a84a3aa5d545fa5e177e77542dbc93a4712"
+    },
+    {
+      "path": "cards/pact_of_elarion/hydra_of_the_black_bough.png",
+      "category": "cards",
+      "bytes": 2780200,
+      "sha256": "930550d09f6bce390d85aba185fe7a98ac8867c7c6875b5d7dece3ff4e7b22ac"
+    },
+    {
+      "path": "cards/pact_of_elarion/kaelor_stormcaller.png",
+      "category": "cards",
+      "bytes": 2280245,
+      "sha256": "00ee76e90ce2527d39c5cfc188193dd735a3bbcb55c432741dedd2209c265cb0"
+    },
+    {
+      "path": "cards/pact_of_elarion/liora_keeper_of_the_grove.png",
+      "category": "cards",
+      "bytes": 2607173,
+      "sha256": "f13e8399ae4c2da11fae576d1c703d96168ae48030490c972a83f4bc9440e57a"
+    },
+    {
+      "path": "cards/pact_of_elarion/maela_watcher_of_the_heights.png",
+      "category": "cards",
+      "bytes": 2703258,
+      "sha256": "2233e5703ff84cbd3a20c8929236c2c3c41bda3e7418e3541afda96de2354aac"
+    },
+    {
+      "path": "cards/pact_of_elarion/river_of_elarion.png",
+      "category": "cards",
+      "bytes": 1924649,
+      "sha256": "6bdbd6a0b8c0331903579b462d47d0b41ab3065ddf9a3e67fa5467f5f1391cd2"
+    },
+    {
+      "path": "cards/pact_of_elarion/shield_of_the_heir.png",
+      "category": "cards",
+      "bytes": 2904973,
+      "sha256": "b043efb36a81c9db8c6f429dd49129a823dd9c26c163cbecb160ac27a7bfe764"
+    },
+    {
+      "path": "cards/pact_of_elarion/the_judgment_of_elarion.png",
+      "category": "cards",
+      "bytes": 2942178,
+      "sha256": "4aec413f752a3b61d16b436508a56306373c429d70dd84a8c1819836a51d493f"
+    },
+    {
+      "path": "cards/pact_of_elarion/vaelor_emerald_guardian.png",
+      "category": "cards",
+      "bytes": 2141663,
+      "sha256": "bc087a810390bdcd79d42a3b7961581c489c55a3122871ab00febe9ee6aabb31"
+    },
+    {
+      "path": "cards/pact_of_elarion/veiled_dawn_flower.png",
+      "category": "cards",
+      "bytes": 2210848,
+      "sha256": "f56697b52eef4098a4bf4f4e3e6906913cbe04926ad05e061d7a273134b7f00c"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/barrow_wallbreaker.jpg",
+      "category": "cards",
+      "bytes": 290520,
+      "sha256": "a58b70c1f3c4fbd179f4f7943e1d4f016e60a60295c5493b2b8a8ba42191ae28"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/barrow_wallbreaker.png",
+      "category": "cards",
+      "bytes": 2588557,
+      "sha256": "23f4b76693d68ab00532ee266156c0b5f686c9161b0358537517d15556d4ffe1"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/devourer_of_the_last_memory.jpg",
+      "category": "cards",
+      "bytes": 269602,
+      "sha256": "a43355926d3474695fe5f0d28ce4eca387b67a1cc2ba9f74bb7b76293de9285c"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/devourer_of_the_last_memory.png",
+      "category": "cards",
+      "bytes": 2510276,
+      "sha256": "3daf6ada5f9524d15b50b9e281f916e39ef6966ac97aabcd840d670cf7800e32"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/graveless_soldier.jpg",
+      "category": "cards",
+      "bytes": 416685,
+      "sha256": "08c9c0bfb6d9c3057c64185c999d37ab4bf7eefea00ac112fc721087410f5d41"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/graveless_soldier.png",
+      "category": "cards",
+      "bytes": 2674933,
+      "sha256": "e05e870cda25bc63b960a5a63db8bdca32f04452e5e76ffe3b813fa16885778f"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/graveless_titan.jpg",
+      "category": "cards",
+      "bytes": 503718,
+      "sha256": "329a34c44abcb9e418bb777b97e8884ab68d44da3658c2f62b3ca1d463589a98"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/graveless_titan.png",
+      "category": "cards",
+      "bytes": 2753275,
+      "sha256": "8ab19a655784e0adc38983394eb598014a8dc0c22cb3288243eecca8430c275f"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/harvester_of_the_fallen.jpg",
+      "category": "cards",
+      "bytes": 195857,
+      "sha256": "6006a5700d7bf007bd8f548ea5262a54c2fbea23e6f2dbb95061c644bbb5cacf"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/harvester_of_the_fallen.png",
+      "category": "cards",
+      "bytes": 2485633,
+      "sha256": "6db577df4a8831d8ed198295842b4db7137bfec32675ba9e08b2207422a7fc45"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/hound_of_seven_memories.jpg",
+      "category": "cards",
+      "bytes": 446855,
+      "sha256": "ead487284067c475d5b7792635842bf9ce13886e2f87474b26df238c27707b12"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/hound_of_seven_memories.png",
+      "category": "cards",
+      "bytes": 2510638,
+      "sha256": "a6a926b3b7c5497294a0a3f3c7bd3fee62128690c442bf5059604c888c26a125"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/inexhaustible_ossuary.jpg",
+      "category": "cards",
+      "bytes": 501812,
+      "sha256": "4872025dd64cddefe17d61ea2a3e435c1b83c9e46a78863b9c42fbe0298f13e1"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/inexhaustible_ossuary.png",
+      "category": "cards",
+      "bytes": 2720987,
+      "sha256": "47ee564a2119ce65080f5293a10df985053fcf6a7a4ea0876530c652f45de9b7"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/mastiff_of_the_overflowing_ossuary.jpg",
+      "category": "cards",
+      "bytes": 338694,
+      "sha256": "0b55035f49ca0ad48939425a76facc5c6143e595c6520a59fead27ba59ca99da"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/mastiff_of_the_overflowing_ossuary.png",
+      "category": "cards",
+      "bytes": 2798726,
+      "sha256": "11eb460f2ce955f26d1f16538a61c1241c6a6dea562d6375e652aa200bb3fa60"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/memory_thief.jpg",
+      "category": "cards",
+      "bytes": 283890,
+      "sha256": "34130d8804ec829983cc584fff42476ca240c4dc847f63e47a089ace721b9d49"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/memory_thief.png",
+      "category": "cards",
+      "bytes": 2571439,
+      "sha256": "d52f2f857eb5a2257b4e33007fd20681df3f4a076c7155f9f2dd8c7af000774e"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/nerezh_graveless_matriarch.jpg",
+      "category": "cards",
+      "bytes": 314321,
+      "sha256": "d0e616ac7dcbe4a8d02ace4abb307ae91f2b82fee2bde0d93f9ca32a75763a7f"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/nerezh_graveless_matriarch.png",
+      "category": "cards",
+      "bytes": 2666190,
+      "sha256": "ce7c6378f63eb70a410e8a6ad1fbce679e4cebb7fa518cd8632cf99f0d7b0cf2"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/ossuary_rider.jpg",
+      "category": "cards",
+      "bytes": 36113,
+      "sha256": "d15e5be1bfee216aa0313321a942e00c711deb8b23701aad609d81a69674c154"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/ossuary_rider.png",
+      "category": "cards",
+      "bytes": 2448243,
+      "sha256": "3ade458b5fee98eaef7cb9113804ee93024d90e9f91f6b42803b7748cbf253f1"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/return_to_memory.jpg",
+      "category": "cards",
+      "bytes": 524978,
+      "sha256": "5132e5c5caba652a0bcf9de17483ae843f7dfbceba3cdfd6a7b8b00e155a47b7"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/return_to_memory.png",
+      "category": "cards",
+      "bytes": 2404974,
+      "sha256": "68fe452f84a5dce6e60206efc996c586261b63bb76b33c920da5fb3d27877905"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/spore_infested.jpg",
+      "category": "cards",
+      "bytes": 486529,
+      "sha256": "4097984084cb791c1430d8e0d346005104f38120a2974fe0de3859e14bc38556"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/spore_infested.png",
+      "category": "cards",
+      "bytes": 1899100,
+      "sha256": "7013c1fe90506107c0f2c151dcc8b351f64bdafeba3b22057f58f08ace9a6f5b"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/stitched_wing_spawn.jpg",
+      "category": "cards",
+      "bytes": 281451,
+      "sha256": "dcd42412e83bc84d663f2057719d8eedcd34c37ee5853cbff99c04cbdf50fd5f"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/stitched_wing_spawn.png",
+      "category": "cards",
+      "bytes": 2331931,
+      "sha256": "16d30ccd7d4efe8d1c9d38fa27711e684f5d2f1760a06386292214b99cdf9eb7"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/the_broken_headstone.jpg",
+      "category": "cards",
+      "bytes": 228892,
+      "sha256": "308a7d17056d0ea260053d3e0ee8e4b1ab61e8c80ec2e5a46bd58f3302a28633"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/the_broken_headstone.png",
+      "category": "cards",
+      "bytes": 2659467,
+      "sha256": "614ca8176244ec826d5009320622888eca9fe68778c8589d4a5af602b41eabb5"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/tribute_of_the_four_sorrows.jpg",
+      "category": "cards",
+      "bytes": 472975,
+      "sha256": "08dfb431db9c600ec897c6177ee34c349fc17b33193169af46ffe7d7de996f8f"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/tribute_of_the_four_sorrows.png",
+      "category": "cards",
+      "bytes": 2351949,
+      "sha256": "c05d6a0030004b9725b25117bbfa9f877cc124f2abf6e0eab77017f18fae50f7"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/winged_stalker_of_the_crypt.jpg",
+      "category": "cards",
+      "bytes": 282777,
+      "sha256": "93a4a5f76688130afaaaecf7ffba876d95577c4691e812d6cf8520dce246023d"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/art/winged_stalker_of_the_crypt.png",
+      "category": "cards",
+      "bytes": 2123276,
+      "sha256": "0b6a823fcaad3f305f84ebe74c60b13e7528ee9c58fd63029ca4186d956d7d60"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/barrow_wallbreaker.png",
+      "category": "cards",
+      "bytes": 2770879,
+      "sha256": "a8969f89e77cce470e90d3d179b2119251e5f3a269c4d3d850803c58047bc3cd"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/devourer_of_the_last_memory.png",
+      "category": "cards",
+      "bytes": 2486747,
+      "sha256": "cf9d52e4e71bed9a7f45e25baa58737c7c2a39123ff418584eaf4243ba3cf40f"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/graveless_soldier.png",
+      "category": "cards",
+      "bytes": 2344238,
+      "sha256": "929c6713f3692de69458e405576d35a92c5115dc6337ee589593cfd51d8b0ca8"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/graveless_titan.png",
+      "category": "cards",
+      "bytes": 2138450,
+      "sha256": "b254cd595696e0771a0c6db9b6dd97d5eb67c233292c6c19a451485a61ff167c"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/harvester_of_the_fallen.png",
+      "category": "cards",
+      "bytes": 1045089,
+      "sha256": "09a897f9bedbba68240fff3617b8ffed236de7d53f0e0fccfa816abbd7f60edd"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/hound_of_seven_memories.png",
+      "category": "cards",
+      "bytes": 2551345,
+      "sha256": "3a2204e61c260ea0f1bf71c471c2f39801e6fc94d8901d9f922994dbf7ad7931"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/inexhaustible_ossuary.png",
+      "category": "cards",
+      "bytes": 2514005,
+      "sha256": "7f2c2e29c319cd168c50ec968dbc73d4c60f3484a826e2cf1564de59be7f45ba"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/mastiff_of_the_overflowing_ossuary.png",
+      "category": "cards",
+      "bytes": 2669132,
+      "sha256": "450a48cadb5f0f05dbd0960b8e3c708deb461653bac9383275bba6413316b5d7"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/memory_thief.png",
+      "category": "cards",
+      "bytes": 2078907,
+      "sha256": "6fc85e81db4abaa0f39a373619491db06acf5a10f865d2968a15e6e5515c8fc8"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/nerezh_graveless_matriarch.png",
+      "category": "cards",
+      "bytes": 1922491,
+      "sha256": "2620a7154b4378f3265b24ccf6d50f46e651a283e5e5177b82df2bd9769ed61c"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/ossuary_rider.png",
+      "category": "cards",
+      "bytes": 2060489,
+      "sha256": "b97fdb1571a2d89b595cada25f636b25957a8ad664d30d0763d551c77d7ca90e"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/return_to_memory.png",
+      "category": "cards",
+      "bytes": 1856403,
+      "sha256": "8d332f1ebd0f79348eb4383b74794e70187446a3e5a4c648e46d513f5feedf2f"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/spore_infested.png",
+      "category": "cards",
+      "bytes": 2728318,
+      "sha256": "c5ea541df0d455f54befd9ebff44c9a0a27b7d0bf27afb0a644aa761a28998a4"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/stitched_wing_spawn.png",
+      "category": "cards",
+      "bytes": 2640905,
+      "sha256": "3f64848d7362ce48b642ef25af80034d5f6f58af7b0154d2105f18c249d17b07"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/the_broken_headstone.png",
+      "category": "cards",
+      "bytes": 2255131,
+      "sha256": "73d263a8fa5e66243cd61dba9120ac7f7c89da1c2aff340ef5c34b4879ce192b"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/tribute_of_the_four_sorrows.png",
+      "category": "cards",
+      "bytes": 2450546,
+      "sha256": "39e4cd1782783b2efdb439e24dc2a42101140731210f26ff780bfd35f3ef1df3"
+    },
+    {
+      "path": "cards/uprising_of_the_graveless/winged_stalker_of_the_crypt.png",
+      "category": "cards",
+      "bytes": 2616330,
+      "sha256": "599cc32ebec13f8bd5b5379c9f746447d4b02804ea8103dc63b71d358892b2e1"
+    },
+    {
+      "path": "fonts/pact-of-elarion/cinzel-decorative-latin.woff2",
+      "category": "fonts",
+      "bytes": 15488,
+      "sha256": "0826d61da654ac987a9f0046cdc6bcb95eba7f8d2d20f93531d51d008fedea14"
+    },
+    {
+      "path": "fonts/pact-of-elarion/cinzel-latin.woff2",
+      "category": "fonts",
+      "bytes": 25904,
+      "sha256": "09941fb1c169c38fd414536b37690057fc01b3117a5c63dd6571186540c8f370"
+    },
+    {
+      "path": "fonts/pact-of-elarion/lora-italic-latin.woff2",
+      "category": "fonts",
+      "bytes": 22756,
+      "sha256": "723cc14fe86bc9fadb2f5f34efb421d246edb240a18d2a7828d2edc041d79996"
+    },
+    {
+      "path": "fonts/pact-of-elarion/lora-normal-latin.woff2",
+      "category": "fonts",
+      "bytes": 37788,
+      "sha256": "ddb8c66035104e233fc024669183aad3738b6daa16deee2ebb1241bd0f98ace1"
+    },
+    {
+      "path": "fonts/pact-of-elarion/oswald-latin.woff2",
+      "category": "fonts",
+      "bytes": 21472,
+      "sha256": "571f3457dab507b6f2ce5394d593ca015251b69fea81ab7a546bd2368e9fc3ed"
+    },
+    {
+      "path": "fonts/pact-of-elarion/outfit-latin.woff2",
+      "category": "fonts",
+      "bytes": 32292,
+      "sha256": "6c18d579fd87c3776be068b762cbc83fde3acb543d49eabd3ade842eb987e887"
+    },
+    {
+      "path": "index.html",
+      "category": "app",
+      "bytes": 393,
+      "sha256": "cc66c2bb15ce4d328e41cfcb262eb073ac8e2b1cbf74e98e7ca8daee6729006a"
+    }
+  ]
+}

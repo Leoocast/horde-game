@@ -13,10 +13,14 @@ import { IS_DEV } from "./utils/devMode";
 import { hasCompletedOnboarding, hasPreloadedGameAssets, markGameAssetsPreloaded, readStoredPlayerName } from "./utils/appPersistence";
 import { preloadGameAssets, type LoadingLabel } from "./utils/assetPreloader";
 
-// Split into its own chunk behind IS_DEV. Because IS_DEV also reads the URL at runtime it can't be
-// statically eliminated, so the chunk is still emitted — production simply never requests it.
-const PlaygroundScreen = lazy(() => import("./playground/PlaygroundScreen").then((module) => ({ default: module.PlaygroundScreen })));
-const AudioLabScreen = lazy(() => import("./audio-lab/AudioLabScreen").then((module) => ({ default: module.AudioLabScreen })));
+// The conditional imports are compile-time: release builds remove both developer modules instead
+// of merely hiding their entry buttons.
+const PlaygroundScreen = import.meta.env.DEV
+  ? lazy(() => import("./playground/PlaygroundScreen").then((module) => ({ default: module.PlaygroundScreen })))
+  : undefined;
+const AudioLabScreen = import.meta.env.DEV
+  ? lazy(() => import("./audio-lab/AudioLabScreen").then((module) => ({ default: module.AudioLabScreen })))
+  : undefined;
 
 export default function App() {
   const reset = useGameStore((state) => state.reset);
@@ -133,7 +137,7 @@ export default function App() {
     />
   ) : null;
 
-  if (screen === "playground" && IS_DEV) {
+  if (screen === "playground" && PlaygroundScreen) {
     return (
       // A plain dark hold, not the game's loading screen: the playground chunk resolves in a frame
       // or two, and flashing the full boot art on the way into a developer tool reads like the game
@@ -151,7 +155,7 @@ export default function App() {
     );
   }
 
-  if (screen === "audioLab" && IS_DEV) {
+  if (screen === "audioLab" && AudioLabScreen) {
     return (
       <Suspense fallback={<div className="playground-chunk-fallback" />}>
         <AudioLabScreen

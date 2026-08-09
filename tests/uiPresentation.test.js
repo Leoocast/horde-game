@@ -654,3 +654,15 @@ test("Kaelor's sky bolts converge on the upper-left marked point without base or
     assert.equal("flecks" in storm, false);
   }
 });
+
+test("developer tools keep their development imports without a release URL escape hatch", () => {
+  const appSource = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
+  const gateSource = readFileSync(new URL("../src/utils/devMode.ts", import.meta.url), "utf8");
+
+  assert.match(appSource, /const PlaygroundScreen = import\.meta\.env\.DEV/);
+  assert.match(appSource, /import\("\.\/playground\/PlaygroundScreen"\)/);
+  assert.match(appSource, /const AudioLabScreen = import\.meta\.env\.DEV/);
+  assert.match(appSource, /import\("\.\/audio-lab\/AudioLabScreen"\)/);
+  assert.match(gateSource, /export const IS_DEV: boolean = import\.meta\.env\.DEV/);
+  assert.doesNotMatch(`${appSource}\n${gateSource}`, /\?playground/);
+});

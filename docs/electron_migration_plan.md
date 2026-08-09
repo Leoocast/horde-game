@@ -444,6 +444,10 @@ ruta absoluta visible al renderer.
 
 # Architecture Decision Records
 
+Estado al cerrar la implementación técnica de Fase 0 (2026-08-09): **ADR-001 a ADR-014
+aceptadas como baseline de la migración**. Si una fase posterior necesita reemplazar alguna, debe
+registrar explícitamente la nueva decisión y su motivo en este documento y en el tracker.
+
 | ADR | Alternativas | Recomendación | Consecuencias | Dificultad de cambiar después |
 | --- | --- | --- | --- | --- |
 | ADR-001 Toolchain | Forge; electron-vite + builder; Packager manual | Electron Forge + plugin Vite oficial con versiones exactas | Integración oficial de packaging/fuses; el plugin Vite sigue experimental y exige pins y smoke | Media |

@@ -1,7 +1,9 @@
 import { createServer } from "vite";
+import path from "node:path";
 
 const server = await createServer({
   appType: "custom",
+  configFile: path.resolve(process.cwd(), "vite.config.ts"),
   logLevel: "silent",
   root: process.cwd(),
   server: { middlewareMode: true },

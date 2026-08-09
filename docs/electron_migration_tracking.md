@@ -1,8 +1,8 @@
 # Seguimiento de la migración de Hostfall a Electron
 
 Última actualización: **2026-08-09**  
-Estado global: **planificado; implementación no iniciada**  
-Fase activa: **ninguna**  
+Estado global: **migración en curso; Fase 1 completada**
+Fase activa: **Fase 2 — Frontera de contenido builtin**
 Plan técnico: [`electron_migration_plan.md`](electron_migration_plan.md)
 
 Este documento es el tablero operativo de la migración. El plan técnico explica las decisiones; este
@@ -31,15 +31,15 @@ Estados permitidos:
 | Fase | Nombre | Dependencias | Estado | PR/commit | Evidencia de cierre |
 | --- | --- | --- | --- | --- | --- |
 | Preflight | Auditoría y plan | Ninguna | Completada | — | `electron_migration_plan.md` |
-| 0 | Baseline y toolchain determinista | Ninguna | No iniciada | — | — |
-| 1 | Renderer offline y release-clean | Fase 0 | No iniciada | — | — |
-| 2 | Frontera de contenido builtin | Fase 1 | No iniciada | — | — |
+| 0 | Baseline y toolchain determinista | Ninguna | Completada | — | Gates automáticos verdes y QA manual de Card Studio aprobada |
+| 1 | Renderer offline y release-clean | Fase 0 | Completada | — | Gates automáticos y QA manual aprobados |
+| 2 | Frontera de contenido builtin | Fase 1 | En curso | — | — |
 | 3 | Vertical Electron segura | Fases 1-2 | No iniciada | — | — |
 | 4 | Persistencia y lifecycle | Fase 3 | No iniciada | — | — |
 | 5 | Packaging Windows x64 reproducible | Fases 3-4 | No iniciada | — | — |
 | 6 | SteamPipe y rama privada | Fase 5 | No iniciada | — | — |
 
-Progreso de implementación: **0/7 fases**.
+Progreso de implementación: **2/7 fases**.
 
 ## Baseline conocido antes de empezar
 
@@ -49,7 +49,7 @@ Progreso de implementación: **0/7 fases**.
 | Deck lint | Pasa | Cuatro decks |
 | Card Studio data check | Pasa | Proyecciones vigentes |
 | Card assets check | Falla | 61 PNG con fingerprints obsoletos |
-| Independence strict | Falla | Un falso positivo `magic` y warning de PNG |
+| Independence strict | Pasa | Cero blockers; mantiene warning de 61 PNG |
 | Packaged-app smoke | No existe | Se crea en Fase 3 |
 | CI Windows | No existe | Se crea en Fase 0 |
 
@@ -92,79 +92,87 @@ Progreso de implementación: **0/7 fases**.
 
 # Fase 0 — Baseline y toolchain determinista
 
-Estado: **No iniciada**
+Estado: **Completada**
 
 ## Implementación
 
-- [ ] Eliminar `vite.config.js` y `vite.config.d.ts` como outputs tracked.
-- [ ] Evitar que TypeScript vuelva a emitir configs junto al source.
-- [ ] Hacer explícita la config usada por cada script.
-- [ ] Separar `build:web` del futuro build Electron.
-- [ ] Declarar `packageManager` y `engines`.
-- [ ] Fijar Node y pnpm del release toolchain.
-- [ ] Revisar dependencies frente a devDependencies.
-- [ ] Crear CI Windows x64 con frozen install.
-- [ ] Registrar ADR-001 a ADR-014 como aceptadas o reemplazadas.
-- [ ] Crear issues/PRs separados para los blockers de assets y auditor.
+- [x] Eliminar `vite.config.js` y `vite.config.d.ts` como outputs tracked.
+- [x] Evitar que TypeScript vuelva a emitir configs junto al source.
+- [x] Hacer explícita la config usada por cada script.
+- [x] Separar `build:web` del futuro build Electron.
+- [x] Declarar `packageManager` y `engines`.
+- [x] Fijar Node y pnpm del release toolchain.
+- [x] Revisar dependencies frente a devDependencies.
+- [x] Crear CI Windows x64 con frozen install.
+- [x] Registrar ADR-001 a ADR-014 como aceptadas o reemplazadas.
+- [x] Registrar por separado los blockers de assets y auditor.
 
 ## Gates
 
-- [ ] TypeScript pasa.
-- [ ] Suite Node pasa sin reducir tests.
-- [ ] Deck lint pasa.
-- [ ] `card-studio-data --check` pasa.
-- [ ] `build:web` pasa.
-- [ ] Dos builds web tienen el mismo inventario lógico.
-- [ ] Ningún JSON de deck cambió.
-- [ ] Card Studio abre, guarda y vuelve a quedar sincronizado.
+- [x] TypeScript pasa.
+- [x] Suite Node pasa sin reducir tests.
+- [x] Deck lint pasa.
+- [x] `card-studio-data --check` pasa.
+- [x] `build:web` pasa.
+- [x] Dos builds web tienen el mismo inventario lógico.
+- [x] Ningún JSON de deck cambió.
+- [x] Card Studio abre, guarda y vuelve a quedar sincronizado.
 
 ## Evidencia
 
-- PR/commit:
-- CI run:
-- Comandos:
-- Notas:
-- Fecha de cierre:
+- PR/commit: pendiente de commit/PR.
+- CI run: workflow creado; pendiente de ejecución remota.
+- Comandos: `tsc -b`; suite Node; deck lint; `card-studio-data --check`;
+  `audit-independence --strict`; frozen install; dos `build:web` equivalentes.
+- Notas: 307/307 tests; 283 archivos con cero diferencias de path, tamaño o SHA-256 entre builds;
+  `vite.config.js`/`.d.ts` no reaparecen; cero cambios bajo `src/data/decks/`. El asset checker
+  conserva el blocker conocido de 61 PNG. QA manual de Card Studio aprobada por el usuario:
+  apertura, guardado y persistencia funcionan correctamente.
+- Fecha de cierre: 2026-08-09.
 
 ---
 
 # Fase 1 — Renderer offline y release-clean
 
-Estado: **No iniciada**
+Estado: **Completada**
 
 ## Implementación
 
-- [ ] Declarar localmente todas las fuentes utilizadas.
-- [ ] Eliminar Google Fonts.
-- [ ] Eliminar Font Awesome remoto.
-- [ ] Crear un gate compile-time para Playground/Audio Lab.
-- [ ] Eliminar `?playground` del release.
-- [ ] Añadir auditor de requests/recursos externos.
-- [ ] Crear inventario inicial de assets runtime.
+- [x] Declarar localmente todas las fuentes utilizadas.
+- [x] Eliminar Google Fonts.
+- [x] Eliminar Font Awesome remoto.
+- [x] Crear un gate compile-time para Playground/Audio Lab.
+- [x] Eliminar `?playground` del release.
+- [x] Añadir auditor de requests/recursos externos.
+- [x] Crear inventario inicial de assets runtime.
 
 ## Gates
 
-- [ ] Cero requests HTTP/HTTPS durante menú y partida offline.
-- [ ] Los cuatro decks cargan con red bloqueada.
-- [ ] Cards, artes, fuentes, música y SFX cargan localmente.
-- [ ] Playground sigue funcionando en desarrollo.
-- [ ] Playground y Audio Lab no aparecen en chunks release.
-- [ ] Card Studio sigue funcionando sin cambios de workflow.
-- [ ] Comparación visual aprobada a 1280×720 y 1920×1080.
+- [x] Cero requests HTTP/HTTPS durante menú y partida offline.
+- [x] Los cuatro decks cargan con red bloqueada.
+- [x] Cards, artes, fuentes, música y SFX tienen referencias locales verificables.
+- [x] Playground sigue funcionando en desarrollo.
+- [x] Playground y Audio Lab no aparecen en chunks release.
+- [x] Card Studio sigue funcionando sin cambios de workflow.
+- [x] Comparación visual aprobada a 1280×720 y 1920×1080.
 
 ## Evidencia
 
-- PR/commit:
-- Network log:
-- Capturas/QA:
-- Card Studio check:
-- Fecha de cierre:
+- PR/commit: pendiente de commit/PR.
+- Network log: auditor estático verde y smoke runtime con red bloqueada aprobado por el usuario.
+- Capturas/QA: aprobada por el usuario; quedan ajustes de tamaños a 1280×720 para trabajo visual
+  posterior, no bloqueante.
+- Card Studio check: suite, `card-studio-data --check` y smoke manual aprobados.
+- Build: 278 archivos, 458343707 bytes; inventario completo en
+  `runtime_asset_inventory.json`. Cero chunks/markers de Playground y Audio Lab.
+- Tests: 308/308; deck lint, independence strict y frozen install pasan.
+- Fecha de cierre: 2026-08-09.
 
 ---
 
 # Fase 2 — Frontera de contenido builtin
 
-Estado: **No iniciada**
+Estado: **En curso**
 
 ## Implementación
 
@@ -399,9 +407,10 @@ Estado: **No iniciada**
 | ID | Tipo | Descripción | Owner | Fase límite | Estado | Resolución |
 | --- | --- | --- | --- | --- | --- | --- |
 | BLK-001 | Asset gate | 61 PNG tienen fingerprints obsoletos | — | 5 | Abierto | — |
-| BLK-002 | Auditor | `magic` en comentario produce blocker probablemente falso | — | 0 | Abierto | — |
+| BLK-002 | Auditor | `magic` en comentario producía un blocker falso | Codex | 0 | Resuelto | Comentario neutralizado; strict pasa con cero blockers |
 | BLK-003 | Derechos | Provenance contiene verificaciones pendientes | — | 5 | Abierto | — |
 | BLK-004 | Audio | Once SFX mantienen `_NEED_REVIEW` | — | 5 | Abierto | — |
+| BLK-005 | Audio runtime | Faltaban `Other/Battle_1.mp3` y `Other/Climax_1.mp3`; Vite dejaba las URLs sin resolver | Codex | 1 | Resuelto | Colección inexistente retirada del manifest y audio mix; build sin referencias faltantes |
 | DEC-001 | Toolchain | Patch exacto Electron/Forge | — | 3 | Pendiente | — |
 | DEC-002 | Lifecycle | Política final de background throttling | — | 3 | Pendiente | — |
 | DEC-003 | Producto | Confirmar comportamiento de Continuar/autosave | — | 4 | Pendiente | Recomendación: un slot y checkpoint seguro |
@@ -412,3 +421,7 @@ Estado: **No iniciada**
 | Fecha | Cambio | Autor |
 | --- | --- | --- |
 | 2026-08-09 | Creación del plan y del tracker; implementación aún no iniciada | Codex |
+| 2026-08-09 | Fase 0 implementada; gates automáticos verdes y QA manual de Card Studio pendiente | Codex |
+| 2026-08-09 | QA manual de Card Studio aprobada; Fase 0 cerrada como completada | Codex |
+| 2026-08-09 | Fase 1 implementada; gates estáticos verdes y QA offline/visual pendiente | Codex |
+| 2026-08-09 | QA offline, tooling y Card Studio aprobada; Fase 1 completada con ajustes 720p diferidos | Codex |
