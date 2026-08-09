@@ -12,6 +12,16 @@ import { useGameStore } from "./store/useGameStore";
 import { IS_DEV } from "./utils/devMode";
 import { hasCompletedOnboarding, hasPreloadedGameAssets, markGameAssetsPreloaded, readStoredPlayerName } from "./utils/appPersistence";
 import { preloadGameAssets, type LoadingLabel } from "./utils/assetPreloader";
+import { registerDesktopLifecycle } from "./platform/desktopLifecycle";
+import { initializeDesktopPreferences } from "./persistence/desktopPreferences";
+import {
+  deleteDesktopResume,
+  loadDesktopResume,
+  resumeDeckIds,
+  startDesktopResumeCheckpointing,
+  type DesktopResumeLoad,
+} from "./persistence/resumeService";
+import { restoreResumeGame } from "./persistence/resumeSave";
 
 // The conditional imports are compile-time: release builds remove both developer modules instead
 // of merely hiding their entry buttons.
@@ -24,6 +34,7 @@ const AudioLabScreen = import.meta.env.DEV
 
 export default function App() {
   const reset = useGameStore((state) => state.reset);
+  const loadScenario = useGameStore((state) => state.loadScenario);
   const gameSessionId = useGameStore((state) => state.gameSessionId);
   const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
   const playSfx = useAudioStore((state) => state.playSfx);
@@ -46,6 +57,41 @@ export default function App() {
     hostDeckId: string;
     gameMode: GameMode;
   } | null>(null);
+  const [desktopResume, setDesktopResume] = useState<DesktopResumeLoad>({ status: "none" });
+
+  useEffect(() => {
+    return registerDesktopLifecycle();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void loadDesktopResume()
+      .then((resume) => {
+        if (active) setDesktopResume(resume);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (screen !== "game") return;
+    return startDesktopResumeCheckpointing({ setupTurns, playerName });
+  }, [playerName, screen, setupTurns]);
+
+  useEffect(() => {
+    let active = true;
+    let dispose: (() => void) | undefined;
+    void initializeDesktopPreferences().then((cleanup) => {
+      if (active) dispose = cleanup;
+      else cleanup();
+    });
+    return () => {
+      active = false;
+      dispose?.();
+    };
+  }, []);
 
   useEffect(() => {
     const disableBrowserHistory = (root: ParentNode) => {
@@ -227,6 +273,24 @@ export default function App() {
             stopMusic();
             setScreen("audioLab");
           } : undefined}
+          resumeStatus={desktopResume.status}
+          onContinue={desktopResume.save ? () => {
+            const save = desktopResume.save!;
+            const deckIds = resumeDeckIds(save);
+            stopMusic();
+            setPlayerName(save.playerName);
+            setSetupTurns(save.setupTurns);
+            setSelectedDeckId(deckIds.playerDeckId);
+            setSelectedHostDeckId(deckIds.hostDeckId);
+            loadScenario(restoreResumeGame(save), deckIds);
+            setDesktopResume({ status: "none" });
+            setScreen("game");
+            startBattleMusic(true);
+          } : undefined}
+          onDiscardResume={desktopResume.status === "corrupt" ? () => {
+            void deleteDesktopResume();
+            setDesktopResume({ status: "none" });
+          } : undefined}
           onRestartFirstTime={() => {
             setScreen("start");
             setMenuReturnScreen("home");
@@ -235,6 +299,8 @@ export default function App() {
             setBootRevision((revision) => revision + 1);
           }}
           onStart={(options) => {
+            void deleteDesktopResume();
+            setDesktopResume({ status: "none" });
             setPreserveMenuMusic(false);
             setPlayerName(options.playerName);
             setSetupTurns(options.setupTurns);
@@ -271,6 +337,8 @@ export default function App() {
         setupTurns={setupTurns}
         encounterEntering={Boolean(launchTransition)}
         onReturnToMenu={() => {
+          void deleteDesktopResume();
+          setDesktopResume({ status: "none" });
           setPreserveMenuMusic(false);
           setMenuReturnScreen("home");
           setScreen("start");

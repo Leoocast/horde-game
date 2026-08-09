@@ -800,6 +800,30 @@ determinista, close durante beats y sleep/resume.
 
 **Estado final:** aplicación desktop con settings durables y Continuar.
 
+### Implementación materializada en Fase 4 (2026-08-09)
+
+- Identidad estable: `productName`/ejecutable `Hostfall`, app id y AUMID
+  `com.hostfall.game`; `userData` se puede redirigir sólo mediante la variable de harness de tests.
+- Main escribe JSON de hasta 5 MiB mediante temporal sincronizado, rename y backup. Las escrituras
+  del mismo archivo se serializan y el cierre espera window state, saves, preferencias y logs.
+- Layout de datos: `profile/preferences-v1.json`, `profile/saves/resume-v1.json` y
+  `local/window-state-v1.json`; sólo `profile` es candidato a Auto-Cloud futuro. El contrato completo
+  está en `docs/electron_persistence.md`.
+- `preferences-v1` contiene idioma y mezcla pública de audio. Si aún no existe, importa una vez los
+  adapters `localStorage` vigentes; el build web conserva esos mismos adapters.
+- `resume-v1` usa un slot, claves calificadas de deck y revisión exacta de contenido. Su checkpoint
+  sólo contiene `GameState`; no serializa Zustand, UI, animaciones, timers o herramientas developer.
+- El autosave revalida el store tras un debounce y omite Burn, eventos pendientes, combate de
+  Hueste, targeting y otros commits no asentados. Primario y backup se validan por separado; un
+  backup sano ofrece recuperación y dos candidatos inválidos ofrecen borrado explícito.
+- Pantalla completa funciona desde ambos menús y F11. Posición, tamaño, maximizado y fullscreen se
+  restauran sin sincronizar coordenadas entre equipos.
+- `backgroundThrottling: true` queda como política final. Blur/minimize/suspend pausan audio como
+  lifecycle y focus/resume lo recuperan sin pisar mute o pausa del usuario. El checkpoint anterior
+  es la garantía de cierre/sleep, no la ejecución de timers en background.
+- El lock de instancia única precede a toda escritura y el smoke confirma que una segunda instancia
+  sale sin abrir otro writer.
+
 ## Fase 5 — Packaging Windows x64 reproducible
 
 **Dependencias:** Fases 3 y 4.

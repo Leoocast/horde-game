@@ -70,7 +70,8 @@ pnpm electron:smoke
 
 `electron:verify` lee el ASAR y los nueve fuses del binario. `electron:smoke` carga el `app.asar`
 real mediante Playwright, comprueba sandbox/preload, protocolo, PNG, arte fuente, font, Range/seek,
-WebGL/context loss y cero HTTP; después lanza el `Hostfall.exe` real con un boot probe oculto. El
+WebGL/context loss, fullscreen, preferencias/resume, window state, single-instance y cero HTTP;
+después lanza el `Hostfall.exe` real con un boot probe oculto. El
 arnés Playwright no usa directamente el ejecutable fusionado porque el fuse requerido
 `EnableNodeCliInspectArguments: false` bloquea correctamente su canal de inspector.
 
@@ -124,6 +125,9 @@ archivo no corre nunca.
 | `tests/audioMix.test.js` | Cobertura y validacion del JSON de mezcla, import/export, conversion de dB y prohibicion de volumen escondido en `playSfx` |
 | `tests/contentCatalog.test.js` | Snapshot builtin inmutable, 61 identidades, aliases calificados, defaults estrictos, adapters de assets web/desktop, proyecciones de Card Studio, hashes JSON de Fase 2 y rechazo de candidatos external adversariales |
 | `tests/electronSecurity.test.js` | Policy pura de `hostfall://`, traversal/hosts/packs adversariales, MIME, Range, roots e integración de respuestas parciales con CSP |
+| `tests/electronPersistence.test.js` | Rutas cloud-worthy/local-only, escritura atómica, backup, corrupción y validación de window state |
+| `tests/desktopPreferences.test.js` | Envelope v1 de idioma/audio, límites y rechazo de schemas desconocidos |
+| `tests/resumeSave.test.js` | Round-trip/restore determinista, claves de deck y revisión, rechazo sin fallback, backup y checkpoints inseguros durante animaciones/combate/selecciones |
 
 `tests/engineTestUtils.js` arma game states de prueba (`createTestGame`, `customCard`,
 `cardFromDeck`, `addCard`, `addForests`).

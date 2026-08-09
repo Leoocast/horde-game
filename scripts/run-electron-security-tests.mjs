@@ -11,6 +11,7 @@ const server = await createServer({
 
 try {
   await server.ssrLoadModule("/tests/electronSecurity.test.js");
+  await server.ssrLoadModule("/tests/electronPersistence.test.js");
 } finally {
   await server.close();
 }

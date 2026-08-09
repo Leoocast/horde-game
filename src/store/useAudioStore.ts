@@ -30,6 +30,8 @@ type AudioStore = {
   stopMusic: () => void;
   preload: () => void;
   stopAllSfx: () => void;
+  suspendForLifecycle: () => void;
+  resumeFromLifecycle: () => void;
   resetSfx: () => void;
 };
 
@@ -118,6 +120,12 @@ export const useAudioStore = create<AudioStore>()(
         void audioEngine.preloadSfx();
       },
       stopAllSfx: () => audioEngine.stopAllSfx(),
+      suspendForLifecycle: () => {
+        set({ musicStatus: audioEngine.suspendForLifecycle() });
+      },
+      resumeFromLifecycle: () => {
+        set({ musicStatus: audioEngine.resumeFromLifecycle() });
+      },
       resetSfx: () => {
         audioEngine.resetSfx();
         void audioEngine.preloadSfx().catch(() => undefined);

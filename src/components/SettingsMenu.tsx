@@ -5,6 +5,7 @@ import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
 import { AudioControls } from "./AudioControls";
+import { DisplayControls } from "./DisplayControls";
 import { GameLog } from "./GameLog";
 import { LanguageSelector } from "./LanguageSelector";
 import { ZoneDrawer } from "./ZoneDrawer";
@@ -97,6 +98,7 @@ export function SettingsMenu({ onReturnToMenu, setupTurns = 3 }: Props) {
               <div className="old-scrollbar min-h-0 space-y-4 overflow-y-auto pr-2">
                 <LanguageSelector variant="panel" />
                 <AudioControls />
+                <DisplayControls />
 
                 <section className="old-panel-soft p-4">
                   <div className="game-settings-section-title">{t("settings.battleSeed")}</div>

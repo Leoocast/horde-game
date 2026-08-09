@@ -91,7 +91,8 @@ Separación obligatoria:
 
 ## Migración a Electron
 
-La migración desktop está en curso. Las Fases 0, 1 y 2 están completadas; la Fase 3 está activa. El
+La migración desktop está en curso. Las Fases 0, 1, 2 y 3 están completadas; la Fase 4 está en
+validación. El
 documento canónico de arquitectura es `docs/electron_migration_plan.md` y el avance se registra
 exclusivamente en `docs/electron_migration_tracking.md`.
 
@@ -125,7 +126,17 @@ Contratos durante la migración:
   regenera sólo después de un build release intencional.
 - Fase 3 usa Electron 43.3.0 + Forge 7.11.2 exactos. El código está en ASAR, cards/fonts son
   `extraResources`, Card Studio/Playground no se empaquetan y los gates automáticos son
-  `electron:verify` + `electron:smoke`. `backgroundThrottling: true` sigue pendiente de QA manual.
+  `electron:verify` + `electron:smoke`.
+- La carga llama `prewarmGameVfx`: crea el único renderer WebGL, reserva el framebuffer y compila
+  Burn, Phong, Basic, Sprite y Line antes del primer efecto visible. Sus escenas mínimas quedan
+  retenidas para conservar los programas GPU; no crear renderers nuevos en los animadores.
+- Fase 4 separa `profile/preferences-v1.json`, `profile/saves/resume-v1.json` y el local-only
+  `local/window-state-v1.json`. El contrato, backups, recuperación, Cloud-worthy data y checkpoints
+  seguros están en `docs/electron_persistence.md`.
+- El resume guarda sólo `GameState` estable y claves calificadas; nunca Zustand, UI, timers,
+  animaciones o Playground. `backgroundThrottling: true` es final y el lifecycle pausa/reanuda audio.
+- Pantalla completa se controla desde ambos menús o F11 y se persiste con el estado local de
+  ventana. No implementar otro canal IPC para esta función.
 
 ## Vocabulario Hostfall
 

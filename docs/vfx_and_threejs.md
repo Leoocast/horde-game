@@ -72,6 +72,10 @@ Para cualquier efecto nuevo:
   ahora el unico renderer de `sharedVfxRenderer.ts`; sus canvas de destino son 2D y no consumen
   cupo WebGL. El contexto compartido se crea de forma diferida y no se destruye entre efectos ni
   partidas. El diagnostico y la migracion completa estan en `docs/plan_webgl_context_budget.md`.
+- La carga ejecuta `prewarmGameVfx`: crea ese contexto, reserva una superficie capaz de cubrir el
+  viewport y compila Burn y las familias de materiales Three.js que usan los animadores. Las
+  escenas minimas se retienen para que Three.js conserve los programas GPU y el primer efecto
+  visible no pague esa compilacion. No crea una segunda ruta de render ni otro contexto.
 - Respetar la cola y el bloqueo descritos en `docs/animation_contracts.md`.
 
 ## Candidato futuro: three.quarks

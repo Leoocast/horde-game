@@ -76,9 +76,62 @@ try {
   }));
   assert.equal(rendererBoundary.requireType, "undefined");
   assert.equal(rendererBoundary.processType, "undefined");
-  assert.deepEqual(rendererBoundary.bridgeKeys, ["getBootstrap", "openExternalLink", "reportError"]);
+  assert.deepEqual(rendererBoundary.bridgeKeys, [
+    "deleteResumeSave",
+    "getBootstrap",
+    "getWindowState",
+    "onLifecycleChanged",
+    "onWindowStateChanged",
+    "openExternalLink",
+    "readPreferences",
+    "readResumeSave",
+    "reportError",
+    "setFullscreen",
+    "writePreferences",
+    "writeResumeSave",
+  ]);
   assert.equal(rendererBoundary.bootstrap?.platform, "win32");
   assert.equal(rendererBoundary.blockedWindow, true);
+
+  const secondInstance = spawn(harnessExecutablePath, [packagedAppPath], {
+    env: {
+      ...process.env,
+      HOSTFALL_ELECTRON_SMOKE: "1",
+      HOSTFALL_ELECTRON_USER_DATA: userDataPath,
+    },
+    stdio: "ignore",
+    windowsHide: true,
+  });
+  const secondInstanceExitCode = await waitForProcessExit(secondInstance, 15_000);
+  assert.equal(secondInstanceExitCode, 0);
+
+  const desktopState = await window.evaluate(async () => {
+    const initialWindow = await window.hostfallDesktop.getWindowState();
+    const enteredWindow = await window.hostfallDesktop.setFullscreen(true);
+    const leftWindow = await window.hostfallDesktop.setFullscreen(false);
+    await window.hostfallDesktop.writePreferences({
+      kind: "hostfall-preferences",
+      formatVersion: 1,
+      savedAt: "smoke",
+      values: {},
+    });
+    const preferences = await window.hostfallDesktop.readPreferences();
+    await window.hostfallDesktop.writeResumeSave({
+      kind: "hostfall-resume",
+      formatVersion: 1,
+      smoke: true,
+    });
+    const resumeBeforeDelete = await window.hostfallDesktop.readResumeSave();
+    await window.hostfallDesktop.deleteResumeSave();
+    const resumeAfterDelete = await window.hostfallDesktop.readResumeSave();
+    return { initialWindow, enteredWindow, leftWindow, preferences, resumeBeforeDelete, resumeAfterDelete };
+  });
+  assert.equal(desktopState.enteredWindow.fullscreen, true);
+  assert.equal(desktopState.leftWindow.fullscreen, false);
+  assert.equal(desktopState.preferences.primary?.kind, "hostfall-preferences");
+  assert.equal(desktopState.resumeBeforeDelete.primary?.smoke, true);
+  assert.equal(desktopState.resumeAfterDelete.primary, undefined);
+  assert.equal(desktopState.resumeAfterDelete.backup, undefined);
 
   const mediaState = await window.evaluate(async ({ audioUrl }) => {
     const loadImage = (url) => new Promise((resolve, reject) => {
@@ -162,6 +215,12 @@ try {
   await application.close();
   application = undefined;
 
+  const persistedWindowState = JSON.parse(await readFile(path.join(userDataPath, "local", "window-state-v1.json"), "utf8"));
+  assert.equal(persistedWindowState.formatVersion, 1);
+  assert.equal(persistedWindowState.fullscreen, false);
+  const persistedPreferences = JSON.parse(await readFile(path.join(userDataPath, "profile", "preferences-v1.json"), "utf8"));
+  assert.equal(persistedPreferences.kind, "hostfall-preferences");
+
   const releaseProcess = spawn(packagedExecutablePath, [], {
     env: {
       ...process.env,
@@ -187,6 +246,9 @@ try {
     packagedAppPath,
     processState,
     rendererBoundary,
+    secondInstanceExitCode,
+    desktopState,
+    persistedWindowState,
     mediaState,
     releaseBoot,
     offline: remoteRequests.length === 0,

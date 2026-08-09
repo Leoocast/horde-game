@@ -1,8 +1,8 @@
 # Seguimiento de la migración de Hostfall a Electron
 
 Última actualización: **2026-08-09**  
-Estado global: **migración en curso; implementación de Fase 3 completa, QA manual pendiente**
-Fase activa: **Fase 3 — Vertical Electron segura**
+Estado global: **migración en curso; Fase 3 completada, implementación de Fase 4 en validación**
+Fase activa: **Fase 4 — Persistencia y lifecycle**
 Plan técnico: [`electron_migration_plan.md`](electron_migration_plan.md)
 
 Este documento es el tablero operativo de la migración. El plan técnico explica las decisiones; este
@@ -34,12 +34,12 @@ Estados permitidos:
 | 0 | Baseline y toolchain determinista | Ninguna | Completada | — | Gates automáticos verdes y QA manual de Card Studio aprobada |
 | 1 | Renderer offline y release-clean | Fase 0 | Completada | — | Gates automáticos y QA manual aprobados |
 | 2 | Frontera de contenido builtin | Fase 1 | Completada | — | Gates automáticos y QA manual aprobados |
-| 3 | Vertical Electron segura | Fases 1-2 | En curso | — | Gates automáticos verdes; QA interactivo pendiente |
-| 4 | Persistencia y lifecycle | Fase 3 | No iniciada | — | — |
+| 3 | Vertical Electron segura | Fases 1-2 | Completada | — | Paquete/smoke verdes y QA interactivo aprobada |
+| 4 | Persistencia y lifecycle | Fase 3 | En validación | — | Implementación y gates automáticos verdes; QA manual pendiente |
 | 5 | Packaging Windows x64 reproducible | Fases 3-4 | No iniciada | — | — |
 | 6 | SteamPipe y rama privada | Fase 5 | No iniciada | — | — |
 
-Progreso de implementación: **3/7 fases**.
+Progreso de implementación: **4/7 fases**.
 
 ## Baseline conocido antes de empezar
 
@@ -221,7 +221,7 @@ Estado: **Completada**
 
 # Fase 3 — Vertical Electron segura
 
-Estado: **En curso**
+Estado: **Completada**
 
 ## Implementación
 
@@ -238,19 +238,19 @@ Estado: **En curso**
 - [x] Abrir créditos mediante ID simbólico.
 - [x] Configurar fuses e integridad ASAR.
 - [x] Añadir Error Boundary y logs locales rotados.
-- [ ] Probar y registrar decisión de `backgroundThrottling`.
+- [x] Probar y registrar decisión de `backgroundThrottling`.
 
 ## Gates
 
-- [ ] `forge start` funciona.
+- [x] `forge start` funciona.
 - [x] El paquete Windows x64 arranca desde una ruta con espacios.
 - [x] Funciona con red bloqueada.
 - [x] `/assets`, `/cards` y `/fonts` resuelven.
 - [x] PNG completos cargan.
 - [x] Arte fuente recortado carga.
-- [ ] `battlefieldArtFrame` coincide con Card Studio.
-- [ ] `statsFrame` full-art coincide con el layout generado.
-- [ ] Música y SFX reproducen, pausan y hacen seek.
+- [x] `battlefieldArtFrame` coincide con Card Studio.
+- [x] `statsFrame` full-art coincide con el layout generado.
+- [x] Música y SFX reproducen, pausan y hacen seek.
 - [x] WebGL y context-loss recovery funcionan.
 - [x] Renderer no tiene Node, filesystem o raw IPC.
 - [x] CSP no tiene violaciones inesperadas.
@@ -262,67 +262,78 @@ Estado: **En curso**
 ## Evidencia
 
 - PR/commit: cambios locales en rama `electron`; sin commit solicitado.
-- Package path/hash: `out/Electron Packages/Hostfall-win32-x64` (288 archivos; 822,520,078 bytes);
-  SHA-256 `Hostfall.exe` `2997A7F4AF59DFDD5B872991DC45C096B5B965E4E7EC06409D5B724D6A7596B6`;
-  SHA-256 `app.asar` `538CB7A1EFA4FDFAD861AD6174B93388CAD83CE577D12F6D07276ECB13453F12`.
+- Package path/hash final de cierre: `out/Electron Packages/Hostfall-win32-x64` (288 archivos;
+  822,572,322 bytes); SHA-256 `Hostfall.exe`
+  `EF95B7788D6A5615929EB3AB5ED19251CD2E60053820217C3B597EB964C1EF2A`; SHA-256 `app.asar`
+  `88566743F68CA33511799A0D66580E8C195FACB0D241D542F18ED87B0FBC6E16`.
 - Playwright smoke: `scripts/electron-smoke.mjs` pasa contra el `app.asar` real; PNG 976×1360,
   arte 600×842, fuente local, MP3 de 186.35 s con seek, WebGL/context loss, cero HTTP y frontera sin
   Node. Un boot probe separado confirma el `Hostfall.exe` endurecido real porque el fuse
   `nodeCliInspect` impide que Playwright se conecte directamente al ejecutable de release.
-- Security audit: 321/321 tests; corpus adversarial de protocolo, MIME/Range, CSP, ventana externa,
+- Security audit al cierre: 333/333 tests; corpus adversarial de protocolo, MIME/Range, CSP, ventana externa,
   `scripts/verify-electron-package.mjs`, ASAR allowlist y los nueve fuses verificados.
-- Audio/Card Studio QA: smoke automático de carga/seek verde; coincidencia visual de frames,
-  reproducción/pausa y flujo Card Studio-to-runtime pendientes de QA manual.
+- Audio/Card Studio QA: smoke automático de carga/seek verde y QA visual del usuario aprobada. El
+  tirón del primer VFX detectado durante QA se corrigió precalentando contexto, framebuffer y shaders
+  durante loading; el ajuste 1280×720 queda diferido por decisión del usuario.
 - Toolchain: Electron `43.3.0`; Forge/plugin Vite/plugin fuses/maker ZIP `7.11.2`;
   `@electron/fuses` `2.1.3`; Playwright Core `1.62.1`. Electron 43 ya no declara postinstall:
   `install-electron` realiza la descarga con checksums y `pnpm-workspace.yaml` mantiene la
   autorización explícita.
-- Fecha de cierre: pendiente de QA manual.
+- Fecha de cierre: 2026-08-09.
 
 ---
 
 # Fase 4 — Persistencia y lifecycle
 
-Estado: **No iniciada**
+Estado: **En validación**
 
 ## Implementación
 
-- [ ] Fijar `productName`, `appId` y ruta estable de datos.
-- [ ] Crear `preferences-v1.json`.
-- [ ] Crear `window-state-v1.json` local-only.
-- [ ] Crear `saves/resume-v1.json`.
-- [ ] Definir envelope y validación.
-- [ ] Implementar escritura atómica y backup.
-- [ ] Crear snapshot/restore puros.
-- [ ] Definir checkpoint seguro.
-- [ ] Añadir pantalla/acción Continuar.
-- [ ] Añadir recuperación de save corrupto.
-- [ ] Migrar preferencias legacy una vez.
-- [ ] Añadir single-instance lock.
-- [ ] Definir close, minimize, focus, suspend y audio.
-- [ ] Excluir Playground y window state de datos cloud-worthy.
+- [x] Fijar `productName`, `appId` y ruta estable de datos.
+- [x] Crear `preferences-v1.json`.
+- [x] Crear `window-state-v1.json` local-only.
+- [x] Crear `saves/resume-v1.json`.
+- [x] Definir envelope y validación.
+- [x] Implementar escritura atómica y backup.
+- [x] Crear snapshot/restore puros.
+- [x] Definir checkpoint seguro.
+- [x] Añadir pantalla/acción Continuar.
+- [x] Añadir recuperación de save corrupto.
+- [x] Migrar preferencias legacy una vez.
+- [x] Añadir single-instance lock.
+- [x] Definir close, minimize, focus, suspend y audio.
+- [x] Excluir Playground y window state de datos cloud-worthy.
+- [x] Añadir Pantalla completa en ambos menús y F11.
 
 ## Gates
 
-- [ ] Preferencias sobreviven reinicio.
+- [x] Preferencias sobreviven reinicio.
 - [ ] Una partida continúa desde el último checkpoint.
 - [ ] Cerrar durante Burn restaura estado estable.
 - [ ] Cerrar durante combate de Hueste restaura estado estable.
 - [ ] Cerrar durante una selección manual restaura estado estable.
-- [ ] Save corrupto usa backup o presenta recuperación.
-- [ ] Schema desconocido se rechaza limpiamente.
-- [ ] Contenido faltante no hace fallback a otro deck.
-- [ ] Dos instancias no escriben simultáneamente.
-- [ ] Web build conserva localStorage adapter.
-- [ ] Playground storage no se migra ni aparece en saves.
+- [x] Save corrupto usa backup o presenta recuperación.
+- [x] Schema desconocido se rechaza limpiamente.
+- [x] Contenido faltante no hace fallback a otro deck.
+- [x] Dos instancias no escriben simultáneamente.
+- [x] Web build conserva localStorage adapter.
+- [x] Playground storage no se migra ni aparece en saves.
 
 ## Evidencia
 
-- PR/commit:
-- Save schema/version:
-- Determinism resume test:
-- Corruption tests:
-- Fecha de cierre:
+- PR/commit: cambios locales en rama `electron`; sin commit solicitado.
+- Save schema/version: `hostfall-resume` v1; `hostfall-preferences` v1; window state v1.
+- Rutas: `profile/preferences-v1.json`, `profile/saves/resume-v1.json` y
+  `local/window-state-v1.json`; contrato en `docs/electron_persistence.md`.
+- Determinism resume test: JSON round-trip del `GameState`, restore puro, claves calificadas y
+  revisión exacta; suite 333/333.
+- Corruption tests: primario inválido recupera backup; dos candidatos inválidos presentan borrado;
+  schema/contenido/deck desconocidos se rechazan sin fallback.
+- Smoke: fullscreen on/off, archivos tras cierre, segunda instancia, bridge cerrado, assets/audio,
+  WebGL y boot del ejecutable fusionado verdes.
+- QA manual pendiente: Continuar tras reinicio y cierres reales durante Burn, combate de Hueste y
+  selección manual; minimize/alt-tab/suspend-resume con audio real.
+- Fecha de cierre: pendiente de QA manual.
 
 ---
 
@@ -428,8 +439,8 @@ Estado: **No iniciada**
 | BLK-004 | Audio | Once SFX mantienen `_NEED_REVIEW` | — | 5 | Abierto | — |
 | BLK-005 | Audio runtime | Faltaban `Other/Battle_1.mp3` y `Other/Climax_1.mp3`; Vite dejaba las URLs sin resolver | Codex | 1 | Resuelto | Colección inexistente retirada del manifest y audio mix; build sin referencias faltantes |
 | DEC-001 | Toolchain | Patch exacto Electron/Forge | Codex | 3 | Resuelto | Electron 43.3.0, Forge 7.11.2 y plugins exactos; `@electron/fuses` 2.1.3 cubre los nueve fuses de Electron 43 |
-| DEC-002 | Lifecycle | Política final de background throttling | Codex/usuario | 3 | Pendiente | Candidato `backgroundThrottling: true`; cerrar tras minimizar, alt-tab y suspend/resume manual |
-| DEC-003 | Producto | Confirmar comportamiento de Continuar/autosave | — | 4 | Pendiente | Recomendación: un slot y checkpoint seguro |
+| DEC-002 | Lifecycle | Política final de background throttling | Codex/usuario | 3 | Resuelto | `backgroundThrottling: true`; audio responde a blur/minimize/suspend y los checkpoints, no los timers de fondo, garantizan restore estable |
+| DEC-003 | Producto | Confirmar comportamiento de Continuar/autosave | Codex | 4 | Resuelto | Un slot `resume-v1`, autosave sólo en checkpoint seguro, backup y recuperación explícita |
 | DEC-004 | Release | Identidad de firma Windows | — | 5 | Pendiente | — |
 
 # Registro de cambios del tracker
@@ -445,3 +456,5 @@ Estado: **No iniciada**
 | 2026-08-09 | QA manual aprobada; Fase 2 completada y Fase 3 iniciada | Codex |
 | 2026-08-09 | Vertical Electron segura empaquetada; gates automáticos, smoke y fuses verdes; QA manual de Fase 3 pendiente | Codex |
 | 2026-08-09 | Baseline JSON recapturado sólo para reconocer el ajuste intencional de encuadre de Maela producido por Card Studio | Codex |
+| 2026-08-09 | QA manual de Fase 3 aprobada; precalentamiento VFX corrige el tirón inicial y Fase 3 queda completada | Codex |
+| 2026-08-09 | Fase 4 implementada: fullscreen/F11, preferencias, window state, resume seguro, backup, recovery, single-instance y lifecycle; QA manual pendiente | Codex |

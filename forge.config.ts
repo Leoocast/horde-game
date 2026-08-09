@@ -13,6 +13,13 @@ const config = {
     asar: true,
     appBundleId: "com.hostfall.game",
     executableName: "Hostfall",
+    win32metadata: {
+      CompanyName: "Hostfall",
+      FileDescription: "Hostfall",
+      InternalName: "Hostfall",
+      OriginalFilename: "Hostfall.exe",
+      ProductName: "Hostfall",
+    },
     extraResource: [path.join(projectRoot, "public", "cards"), path.join(projectRoot, "public", "fonts")],
     junk: true,
     prune: true,

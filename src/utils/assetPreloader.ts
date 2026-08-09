@@ -1,5 +1,6 @@
 import { audioEngine } from "../audio/AudioEngine";
 import { menuThemeIds, type MusicCollectionId } from "../audio/musicManifest";
+import { prewarmGameVfx } from "../components/vfxWarmup";
 
 const CRITICAL_MUSIC: MusicCollectionId[] = [
   ...menuThemeIds,
@@ -23,6 +24,7 @@ type ProgressUpdate = {
 // render instead. Sound preload stays, since it's cheap and audio pops if skipped.
 export async function preloadGameAssets(onProgress: (update: ProgressUpdate) => void): Promise<void> {
   const mediaTasks: Array<{ label: LoadingLabel; run: () => Promise<void>; timeoutMs?: number }> = [
+    { label: "opening", run: prewarmGameVfx },
     { label: "sfx", run: () => audioEngine.preloadSfx() },
     { label: "music", run: () => audioEngine.preloadMusic(CRITICAL_MUSIC), timeoutMs: 60000 },
   ];

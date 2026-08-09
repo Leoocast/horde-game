@@ -27,6 +27,9 @@ try {
   await server.ssrLoadModule("/tests/uiPresentation.test.js");
   await server.ssrLoadModule("/tests/contentCatalog.test.js");
   await server.ssrLoadModule("/tests/electronSecurity.test.js");
+  await server.ssrLoadModule("/tests/electronPersistence.test.js");
+  await server.ssrLoadModule("/tests/desktopPreferences.test.js");
+  await server.ssrLoadModule("/tests/resumeSave.test.js");
 } finally {
   await server.close();
 }

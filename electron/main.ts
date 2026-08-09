@@ -8,13 +8,22 @@ import {
   BrowserWindow,
   ipcMain,
   Menu,
+  powerMonitor,
   protocol,
+  screen as electronScreen,
   session,
   shell,
   type IpcMainInvokeEvent,
   type WebContents,
 } from "electron";
 import { RotatingFileLogger } from "./logger";
+import {
+  DesktopJsonStore,
+  desktopDataPaths,
+  parseWindowState,
+  type DesktopDataPaths,
+  type PersistedWindowState,
+} from "./persistence";
 import { HOSTFALL_APP_ORIGIN, HOSTFALL_SCHEME } from "./protocolPolicy";
 import {
   createProtocolFileIndex,
@@ -23,11 +32,17 @@ import {
 } from "./protocolServer";
 
 const CREDIT_URL = "https://github.com/Leoocast";
+const APP_ID = "com.hostfall.game";
 const EXTERNAL_LINKS = Object.freeze({ credits: CREDIT_URL });
 const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
 const smokeMode = process.env.HOSTFALL_ELECTRON_SMOKE === "1";
 let mainWindow: BrowserWindow | null = null;
 let logger: RotatingFileLogger | null = null;
+let dataPaths: DesktopDataPaths | null = null;
+const desktopStore = new DesktopJsonStore();
+let windowStateSaveTimer: NodeJS.Timeout | undefined;
+let lastLifecycleState: "background" | "foreground" | "suspend" | "resume" | undefined;
+let quitAfterFlush = false;
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -65,7 +80,21 @@ app.on("second-instance", () => {
 
 app.on("web-contents-created", (_event, webContents) => hardenWebContents(webContents));
 app.on("window-all-closed", () => app.quit());
-app.on("before-quit", () => void logger?.flush());
+app.on("before-quit", (event) => {
+  if (quitAfterFlush) return;
+  event.preventDefault();
+  if (windowStateSaveTimer) {
+    clearTimeout(windowStateSaveTimer);
+    windowStateSaveTimer = undefined;
+  }
+  void persistWindowState()
+    .then(() => desktopStore.flush())
+    .then(() => logger?.flush())
+    .finally(() => {
+      quitAfterFlush = true;
+      app.quit();
+    });
+});
 
 if (hasSingleInstanceLock) {
   void app.whenReady().then(startApplication).catch(async (error: unknown) => {
@@ -76,6 +105,7 @@ if (hasSingleInstanceLock) {
 }
 
 async function startApplication(): Promise<void> {
+  app.setAppUserModelId(APP_ID);
   logger = new RotatingFileLogger(path.join(app.getPath("userData"), "logs"));
   await logger.initialize();
   logger.log("info", "Starting Hostfall desktop", {
@@ -85,8 +115,10 @@ async function startApplication(): Promise<void> {
   });
 
   Menu.setApplicationMenu(null);
+  dataPaths = desktopDataPaths(app.getPath("userData"));
   configureSessionSecurity();
   registerIpcHandlers();
+  configurePowerLifecycle();
 
   const rendererRoot = path.join(app.getAppPath(), ".vite", "renderer", MAIN_WINDOW_VITE_NAME);
   const contentBase = usesPackagedLayout() ? path.dirname(app.getAppPath()) : path.join(app.getAppPath(), "public");
@@ -96,7 +128,8 @@ async function startApplication(): Promise<void> {
   ]);
   protocol.handle(HOSTFALL_SCHEME, (request) => serveHostfallRequest(request, fileIndex));
 
-  mainWindow = createMainWindow();
+  const storedWindowState = await loadWindowState();
+  mainWindow = createMainWindow(storedWindowState);
   await loadRenderer(mainWindow);
   if (process.env.HOSTFALL_ELECTRON_BOOT_PROBE === "1") await runPackagedBootProbe(mainWindow);
 }
@@ -121,15 +154,16 @@ async function runPackagedBootProbe(window: BrowserWindow): Promise<void> {
   app.quit();
 }
 
-function createMainWindow(): BrowserWindow {
+function createMainWindow(storedState?: PersistedWindowState): BrowserWindow {
+  const bounds = visibleWindowBounds(storedState);
   const window = new BrowserWindow({
-    width: 1280,
-    height: 720,
+    ...bounds,
     minWidth: 1024,
     minHeight: 640,
     show: false,
     backgroundColor: "#080c0d",
     autoHideMenuBar: true,
+    fullscreen: storedState?.fullscreen ?? false,
     title: "Hostfall",
     webPreferences: {
       preload: path.join(moduleDirectory, "preload.cjs"),
@@ -148,7 +182,39 @@ function createMainWindow(): BrowserWindow {
 
   window.setMenuBarVisibility(false);
   window.once("ready-to-show", () => {
+    if (storedState?.maximized && !storedState.fullscreen) window.maximize();
     if (!smokeMode) window.show();
+  });
+  const onWindowGeometryChanged = () => {
+    scheduleWindowStateSave();
+    emitWindowState(window);
+  };
+  window.on("move", onWindowGeometryChanged);
+  window.on("resize", onWindowGeometryChanged);
+  window.on("maximize", onWindowGeometryChanged);
+  window.on("unmaximize", onWindowGeometryChanged);
+  window.on("enter-full-screen", onWindowGeometryChanged);
+  window.on("leave-full-screen", onWindowGeometryChanged);
+  window.on("minimize", () => {
+    emitWindowState(window);
+    emitLifecycle("background");
+  });
+  window.on("restore", () => {
+    emitWindowState(window);
+    emitLifecycle(window.isFocused() ? "foreground" : "background");
+  });
+  window.on("blur", () => {
+    emitWindowState(window);
+    emitLifecycle("background");
+  });
+  window.on("focus", () => {
+    emitWindowState(window);
+    if (!window.isMinimized()) emitLifecycle("foreground");
+  });
+  window.on("close", () => {
+    if (windowStateSaveTimer) clearTimeout(windowStateSaveTimer);
+    windowStateSaveTimer = undefined;
+    void persistWindowState(window);
   });
   window.on("closed", () => {
     if (mainWindow === window) mainWindow = null;
@@ -177,6 +243,12 @@ function hardenWebContents(webContents: WebContents): void {
   });
   webContents.on("unresponsive", () => logger?.log("warn", "Renderer became unresponsive"));
   webContents.on("before-input-event", (event, input) => {
+    if (input.type === "keyDown" && input.key.toLowerCase() === "f11") {
+      event.preventDefault();
+      const owner = BrowserWindow.fromWebContents(webContents);
+      if (owner) owner.setFullScreen(!owner.isFullScreen());
+      return;
+    }
     if (!usesPackagedLayout()) return;
     const key = input.key.toLowerCase();
     if (key === "f12" || key === "f5" || ((input.control || input.meta) && (key === "r" || (input.shift && key === "i")))) {
@@ -232,6 +304,49 @@ function registerIpcHandlers(): void {
     return Object.freeze({ version: app.getVersion(), platform: process.platform });
   });
 
+  ipcMain.handle("hostfall:get-window-state", (event) => {
+    assertTrustedRenderer(event);
+    return currentWindowState(BrowserWindow.fromWebContents(event.sender) ?? mainWindow);
+  });
+
+  ipcMain.handle("hostfall:set-fullscreen", (event, enabled: unknown) => {
+    assertTrustedRenderer(event);
+    if (typeof enabled !== "boolean") throw new Error("Fullscreen state must be boolean.");
+    const window = BrowserWindow.fromWebContents(event.sender);
+    if (!window) throw new Error("Fullscreen request has no owning window.");
+    window.setFullScreen(enabled);
+    emitWindowState(window);
+    scheduleWindowStateSave();
+    return currentWindowState(window);
+  });
+
+  ipcMain.handle("hostfall:read-preferences", async (event) => {
+    assertTrustedRenderer(event);
+    return desktopStore.readCandidates(requireDataPaths().preferences);
+  });
+
+  ipcMain.handle("hostfall:write-preferences", async (event, value: unknown) => {
+    assertTrustedRenderer(event);
+    assertEnvelope(value, "hostfall-preferences");
+    await desktopStore.write(requireDataPaths().preferences, value);
+  });
+
+  ipcMain.handle("hostfall:read-resume-save", async (event) => {
+    assertTrustedRenderer(event);
+    return desktopStore.readCandidates(requireDataPaths().resumeSave);
+  });
+
+  ipcMain.handle("hostfall:write-resume-save", async (event, value: unknown) => {
+    assertTrustedRenderer(event);
+    assertEnvelope(value, "hostfall-resume");
+    await desktopStore.write(requireDataPaths().resumeSave, value);
+  });
+
+  ipcMain.handle("hostfall:delete-resume-save", async (event) => {
+    assertTrustedRenderer(event);
+    await desktopStore.delete(requireDataPaths().resumeSave);
+  });
+
   ipcMain.handle("hostfall:open-external", async (event, linkId: unknown) => {
     assertTrustedRenderer(event);
     if (typeof linkId !== "string" || !Object.hasOwn(EXTERNAL_LINKS, linkId)) throw new Error("Unknown external link identity.");
@@ -245,6 +360,84 @@ function registerIpcHandlers(): void {
     const report = parseRendererError(payload);
     logger?.log("error", `Renderer ${report.source} error: ${report.message}`, report.stack);
   });
+}
+
+function requireDataPaths(): DesktopDataPaths {
+  if (!dataPaths) throw new Error("Desktop persistence is not initialized.");
+  return dataPaths;
+}
+
+async function loadWindowState(): Promise<PersistedWindowState | undefined> {
+  const candidates = await desktopStore.readCandidates(requireDataPaths().windowState);
+  return parseWindowState(candidates.primary) ?? parseWindowState(candidates.backup);
+}
+
+function visibleWindowBounds(state?: PersistedWindowState): { width: number; height: number; x?: number; y?: number } {
+  const fallback = { width: state?.width ?? 1280, height: state?.height ?? 720 };
+  if (state?.x === undefined || state.y === undefined) return fallback;
+  const candidate = { x: state.x, y: state.y, width: fallback.width, height: fallback.height };
+  const display = electronScreen.getDisplayMatching(candidate);
+  const area = display.workArea;
+  const visibleWidth = Math.max(0, Math.min(candidate.x + candidate.width, area.x + area.width) - Math.max(candidate.x, area.x));
+  const visibleHeight = Math.max(0, Math.min(candidate.y + candidate.height, area.y + area.height) - Math.max(candidate.y, area.y));
+  return visibleWidth >= 120 && visibleHeight >= 80 ? candidate : fallback;
+}
+
+function scheduleWindowStateSave(delayMs = 250): void {
+  if (windowStateSaveTimer) clearTimeout(windowStateSaveTimer);
+  windowStateSaveTimer = setTimeout(() => {
+    windowStateSaveTimer = undefined;
+    void persistWindowState();
+  }, delayMs);
+}
+
+async function persistWindowState(window = mainWindow): Promise<void> {
+  if (!window || window.isDestroyed() || !dataPaths) return;
+  const bounds = window.getNormalBounds();
+  await desktopStore.write(dataPaths.windowState, {
+    formatVersion: 1,
+    x: bounds.x,
+    y: bounds.y,
+    width: bounds.width,
+    height: bounds.height,
+    maximized: window.isMaximized(),
+    fullscreen: window.isFullScreen(),
+  });
+}
+
+function currentWindowState(window: BrowserWindow | null): Readonly<{
+  fullscreen: boolean;
+  maximized: boolean;
+  minimized: boolean;
+  focused: boolean;
+}> {
+  return Object.freeze({
+    fullscreen: Boolean(window?.isFullScreen()),
+    maximized: Boolean(window?.isMaximized()),
+    minimized: Boolean(window?.isMinimized()),
+    focused: Boolean(window?.isFocused()),
+  });
+}
+
+function emitWindowState(window: BrowserWindow): void {
+  if (!window.isDestroyed()) window.webContents.send("hostfall:window-state", currentWindowState(window));
+}
+
+function configurePowerLifecycle(): void {
+  powerMonitor.on("suspend", () => emitLifecycle("suspend"));
+  powerMonitor.on("resume", () => emitLifecycle("resume"));
+}
+
+function emitLifecycle(state: "background" | "foreground" | "suspend" | "resume"): void {
+  if ((state === "background" || state === "foreground") && lastLifecycleState === state) return;
+  lastLifecycleState = state;
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send("hostfall:lifecycle", state);
+}
+
+function assertEnvelope(value: unknown, kind: "hostfall-preferences" | "hostfall-resume"): void {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Desktop persistence envelope is malformed.");
+  const candidate = value as Record<string, unknown>;
+  if (candidate.kind !== kind || candidate.formatVersion !== 1) throw new Error("Desktop persistence envelope is unsupported.");
 }
 
 function assertTrustedRenderer(event: IpcMainInvokeEvent): void {
