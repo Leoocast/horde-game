@@ -91,7 +91,7 @@ Separación obligatoria:
 
 ## Migración a Electron
 
-La migración desktop está en curso. Las Fases 0 y 1 están completadas; la Fase 2 está activa. El
+La migración desktop está en curso. Las Fases 0, 1 y 2 están completadas; la Fase 3 está activa. El
 documento canónico de arquitectura es `docs/electron_migration_plan.md` y el avance se registra
 exclusivamente en `docs/electron_migration_tracking.md`.
 
@@ -109,10 +109,23 @@ Contratos durante la migración:
   que incluye todo PNG, arte recortado y metadata generada que consume el juego.
 - No implementar fuentes Local/Workshop hasta que la identidad calificada y la validación external
   estén terminadas.
+- El contenido runtime nace en `src/content/bootstrap.ts`: sólo `BuiltinContentSource` está activo,
+  `ContentCatalog` es un snapshot inmutable y `src/data/decks.ts` es una fachada temporal.
+- Los IDs authored siguen intactos. Usar `hostfall.core/<deckId>` y
+  `hostfall.core/<deckId>/<cardId>` cuando se necesite una clave canónica; los aliases legacy
+  permanecen durante la migración.
+- Los paths `/cards/...` son referencias lógicas del pack builtin. El adapter web conserva esas
+  URLs y el build Electron activa `hostfall://content/...`; main sólo sirve archivos indexados de
+  roots registrados.
+- `docs/electron_phase2_json_baseline.json` protege byte por byte decks, manifests y proyecciones
+  runtime de Card Studio durante esta fase.
 - El renderer release no puede contener recursos remotos, `?playground`, `PlaygroundScreen` ni
   `AudioLabScreen`. Verificarlo con `scripts/audit-offline-runtime.mjs` después de `build:web`.
 - `docs/runtime_asset_inventory.json` es la proyección reproducible del contenido de `dist`; se
   regenera sólo después de un build release intencional.
+- Fase 3 usa Electron 43.3.0 + Forge 7.11.2 exactos. El código está en ASAR, cards/fonts son
+  `extraResources`, Card Studio/Playground no se empaquetan y los gates automáticos son
+  `electron:verify` + `electron:smoke`. `backgroundThrottling: true` sigue pendiente de QA manual.
 
 ## Vocabulario Hostfall
 

@@ -25,6 +25,8 @@ try {
   await server.ssrLoadModule("/tests/audioMix.test.js");
   await server.ssrLoadModule("/tests/vocabulary.test.js");
   await server.ssrLoadModule("/tests/uiPresentation.test.js");
+  await server.ssrLoadModule("/tests/contentCatalog.test.js");
+  await server.ssrLoadModule("/tests/electronSecurity.test.js");
 } finally {
   await server.close();
 }

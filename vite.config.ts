@@ -6,6 +6,9 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react(), excludeSystemMetadata()],
+  define: {
+    __HOSTFALL_DESKTOP__: "false",
+  },
 });
 
 function excludeSystemMetadata(): Plugin {

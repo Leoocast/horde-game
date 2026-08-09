@@ -1,7 +1,8 @@
 # Testing
 
-Como se verifica este proyecto. No hay runner de UI ni snapshots: todo lo que se testea es
-determinista y corre en Node, sin DOM y sin navegador.
+Como se verifica este proyecto. La lógica determinista corre en Node; la vertical Electron añade un
+smoke empaquetado para frontera de seguridad, protocolo y media. El layout jugable y las animaciones
+completas siguen requiriendo QA manual.
 
 ## Comandos
 
@@ -59,6 +60,23 @@ El script equivalente y canónico es `pnpm run build:web`; `build` se mantiene c
 que exista el build Electron. `vite.config.ts` es la única config Vite y todos los scripts la
 seleccionan explícitamente.
 
+Vertical Electron Windows x64:
+
+```bash
+pnpm electron:package
+pnpm electron:verify
+pnpm electron:smoke
+```
+
+`electron:verify` lee el ASAR y los nueve fuses del binario. `electron:smoke` carga el `app.asar`
+real mediante Playwright, comprueba sandbox/preload, protocolo, PNG, arte fuente, font, Range/seek,
+WebGL/context loss y cero HTTP; después lanza el `Hostfall.exe` real con un boot probe oculto. El
+arnés Playwright no usa directamente el ejecutable fusionado porque el fuse requerido
+`EnableNodeCliInspectArguments: false` bloquea correctamente su canal de inspector.
+
+Para QA interactivo de desarrollo, el usuario ejecuta `pnpm electron:start`. Los agentes no levantan
+ese servidor ni juegan el build como verificación automática.
+
 CI corre en Windows x64, instala con `pnpm install --frozen-lockfile` y ejecuta typecheck, suite,
 deck lint, proyección de Card Studio, `build:web`, auditoría offline e inventario runtime. Los
 scripts de instalación permitidos están declarados por paquete en `pnpm-workspace.yaml`, sin
@@ -104,6 +122,8 @@ archivo no corre nunca.
 | `tests/playgroundActions.test.js` | Acciones del laboratorio usando reglas reales: energia, cast, muerte, movimiento de zona y eventos |
 | `tests/playgroundStorage.test.js` | Round-trip del schema v4 Hostfall, import/export, parseo defensivo y rechazo sin migración de versiones retiradas |
 | `tests/audioMix.test.js` | Cobertura y validacion del JSON de mezcla, import/export, conversion de dB y prohibicion de volumen escondido en `playSfx` |
+| `tests/contentCatalog.test.js` | Snapshot builtin inmutable, 61 identidades, aliases calificados, defaults estrictos, adapters de assets web/desktop, proyecciones de Card Studio, hashes JSON de Fase 2 y rechazo de candidatos external adversariales |
+| `tests/electronSecurity.test.js` | Policy pura de `hostfall://`, traversal/hosts/packs adversariales, MIME, Range, roots e integración de respuestas parciales con CSP |
 
 `tests/engineTestUtils.js` arma game states de prueba (`createTestGame`, `customCard`,
 `cardFromDeck`, `addCard`, `addForests`).

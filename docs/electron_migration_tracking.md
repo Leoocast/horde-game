@@ -1,8 +1,8 @@
 # Seguimiento de la migración de Hostfall a Electron
 
 Última actualización: **2026-08-09**  
-Estado global: **migración en curso; Fase 1 completada**
-Fase activa: **Fase 2 — Frontera de contenido builtin**
+Estado global: **migración en curso; implementación de Fase 3 completa, QA manual pendiente**
+Fase activa: **Fase 3 — Vertical Electron segura**
 Plan técnico: [`electron_migration_plan.md`](electron_migration_plan.md)
 
 Este documento es el tablero operativo de la migración. El plan técnico explica las decisiones; este
@@ -33,13 +33,13 @@ Estados permitidos:
 | Preflight | Auditoría y plan | Ninguna | Completada | — | `electron_migration_plan.md` |
 | 0 | Baseline y toolchain determinista | Ninguna | Completada | — | Gates automáticos verdes y QA manual de Card Studio aprobada |
 | 1 | Renderer offline y release-clean | Fase 0 | Completada | — | Gates automáticos y QA manual aprobados |
-| 2 | Frontera de contenido builtin | Fase 1 | En curso | — | — |
-| 3 | Vertical Electron segura | Fases 1-2 | No iniciada | — | — |
+| 2 | Frontera de contenido builtin | Fase 1 | Completada | — | Gates automáticos y QA manual aprobados |
+| 3 | Vertical Electron segura | Fases 1-2 | En curso | — | Gates automáticos verdes; QA interactivo pendiente |
 | 4 | Persistencia y lifecycle | Fase 3 | No iniciada | — | — |
 | 5 | Packaging Windows x64 reproducible | Fases 3-4 | No iniciada | — | — |
 | 6 | SteamPipe y rama privada | Fase 5 | No iniciada | — | — |
 
-Progreso de implementación: **2/7 fases**.
+Progreso de implementación: **3/7 fases**.
 
 ## Baseline conocido antes de empezar
 
@@ -172,96 +172,112 @@ Estado: **Completada**
 
 # Fase 2 — Frontera de contenido builtin
 
-Estado: **En curso**
+Estado: **Completada**
 
 ## Implementación
 
-- [ ] Extraer contratos authored/manifest/presentación sin ciclos runtime.
-- [ ] Crear `ContentOrigin` y `ContentPackDescriptor`.
-- [ ] Crear `BuiltinContentSource`.
-- [ ] Crear `ContentCatalog` inmutable.
-- [ ] Mantener `DECK_REGISTRY` como fachada temporal.
-- [ ] Crear bootstrap de contenido previo al store/App.
-- [ ] Hacer explícitos los decks default.
-- [ ] Rechazar lookups faltantes donde el fallback sería peligroso.
-- [ ] Crear `AssetResolver` con adapter web y desktop.
-- [ ] Interpretar `/cards/...` como path lógico del pack builtin.
-- [ ] Separar validación candidate/policy del lint global.
-- [ ] Añadir fixtures external en memoria; no scanner ni carpeta de mods.
-- [ ] Registrar `packKey`, `origin` y `revision` en metadata runtime.
-- [ ] Documentar el futuro ID `packId/deckId/cardId` sin migrar JSON.
+- [x] Extraer contratos authored/manifest/presentación sin ciclos runtime.
+- [x] Crear `ContentOrigin` y `ContentPackDescriptor`.
+- [x] Crear `BuiltinContentSource`.
+- [x] Crear `ContentCatalog` inmutable.
+- [x] Mantener `DECK_REGISTRY` como fachada temporal.
+- [x] Crear bootstrap de contenido previo al store/App.
+- [x] Hacer explícitos los decks default.
+- [x] Rechazar lookups faltantes donde el fallback sería peligroso.
+- [x] Crear `AssetResolver` con adapter web y desktop.
+- [x] Interpretar `/cards/...` como path lógico del pack builtin.
+- [x] Separar validación candidate/policy del lint global.
+- [x] Añadir fixtures external en memoria; no scanner ni carpeta de mods.
+- [x] Registrar `packKey`, `origin` y `revision` en metadata runtime.
+- [x] Documentar el futuro ID `packId/deckId/cardId` sin migrar JSON.
 
 ## Gates
 
-- [ ] Continúan exactamente 4 decks y 61 IDs builtin.
-- [ ] Defaults, orden y proyecciones son equivalentes al baseline.
-- [ ] Determinismo por seed no cambia.
-- [ ] No existe ninguna fuente local/Workshop activa.
-- [ ] El renderer no recibe rutas filesystem.
-- [ ] External fixtures con handler, marker, remote URL o traversal se rechazan.
-- [ ] Los JSON authored e image manifests no cambiaron.
-- [ ] `cardStudioGameArt.generated.json` sigue resolviendo todo arte del campo.
-- [ ] `cardRuntimeLayout.generated.json` sigue aplicándose a cartas full-art.
-- [ ] El preview `En juego` y el web runtime coinciden.
+- [x] Continúan exactamente 4 decks y 61 IDs builtin.
+- [x] Defaults, orden y proyecciones son equivalentes al baseline.
+- [x] Determinismo por seed no cambia.
+- [x] No existe ninguna fuente local/Workshop activa.
+- [x] El renderer no recibe rutas filesystem.
+- [x] External fixtures con handler, marker, remote URL o traversal se rechazan.
+- [x] Los JSON authored e image manifests no cambiaron.
+- [x] `cardStudioGameArt.generated.json` sigue resolviendo todo arte del campo.
+- [x] `cardRuntimeLayout.generated.json` sigue aplicándose a cartas full-art.
+- [x] El preview `En juego` y el web runtime coinciden.
 
 ## Evidencia
 
-- PR/commit:
-- Snapshot catálogo:
-- Determinism test:
-- Card Studio regression:
-- Fecha de cierre:
+- PR/commit: pendiente de commit/PR.
+- Snapshot catálogo: `tests/contentCatalog.test.js`; 1 pack builtin, 4 decks, 61 identidades,
+  revision `builtin.hostfall.core@0.0.2-beta.0`.
+- Determinism test: suite completa 316/316; el test de seed y los tests de engine existentes pasan.
+- Card Studio regression: proyección vigente; URLs web idénticas; arte de campo y full-art
+  verificados. Hashes SHA-256 fijados en `electron_phase2_json_baseline.json`.
+- Build/gates: typecheck, deck lint, `card-studio-data --check`, independence strict, dos builds,
+  auditor offline e inventario reproducible verdes. Build: 278 archivos, 458349850 bytes.
+- QA manual: juego, Playground y Card Studio aprobados por el usuario.
+- Fecha de cierre: 2026-08-09.
 
 ---
 
 # Fase 3 — Vertical Electron segura
 
-Estado: **No iniciada**
+Estado: **En curso**
 
 ## Implementación
 
-- [ ] Fijar versiones exactas de Electron, Forge y plugins.
-- [ ] Aprobar postinstall de Electron en pnpm.
-- [ ] Crear Vite main/renderer/preload configs.
-- [ ] Generar preload sandboxed CJS.
-- [ ] Crear `BrowserWindow` seguro.
-- [ ] Registrar `hostfall://` antes de `ready`.
-- [ ] Implementar hosts `app` y `content`.
-- [ ] Implementar MIME y Range.
-- [ ] Añadir CSP de dev y producción.
-- [ ] Denegar permisos, navegación, ventanas y downloads.
-- [ ] Abrir créditos mediante ID simbólico.
-- [ ] Configurar fuses e integridad ASAR.
-- [ ] Añadir Error Boundary y logs locales rotados.
+- [x] Fijar versiones exactas de Electron, Forge y plugins.
+- [x] Aprobar postinstall de Electron en pnpm.
+- [x] Crear Vite main/renderer/preload configs.
+- [x] Generar preload sandboxed CJS.
+- [x] Crear `BrowserWindow` seguro.
+- [x] Registrar `hostfall://` antes de `ready`.
+- [x] Implementar hosts `app` y `content`.
+- [x] Implementar MIME y Range.
+- [x] Añadir CSP de dev y producción.
+- [x] Denegar permisos, navegación, ventanas y downloads.
+- [x] Abrir créditos mediante ID simbólico.
+- [x] Configurar fuses e integridad ASAR.
+- [x] Añadir Error Boundary y logs locales rotados.
 - [ ] Probar y registrar decisión de `backgroundThrottling`.
 
 ## Gates
 
 - [ ] `forge start` funciona.
-- [ ] El paquete Windows x64 arranca desde una ruta con espacios.
-- [ ] Funciona con red bloqueada.
-- [ ] `/assets`, `/cards` y `/fonts` resuelven.
-- [ ] PNG completos cargan.
-- [ ] Arte fuente recortado carga.
+- [x] El paquete Windows x64 arranca desde una ruta con espacios.
+- [x] Funciona con red bloqueada.
+- [x] `/assets`, `/cards` y `/fonts` resuelven.
+- [x] PNG completos cargan.
+- [x] Arte fuente recortado carga.
 - [ ] `battlefieldArtFrame` coincide con Card Studio.
 - [ ] `statsFrame` full-art coincide con el layout generado.
 - [ ] Música y SFX reproducen, pausan y hacen seek.
-- [ ] WebGL y context-loss recovery funcionan.
-- [ ] Renderer no tiene Node, filesystem o raw IPC.
-- [ ] CSP no tiene violaciones inesperadas.
-- [ ] Traversal y hosts desconocidos se rechazan.
-- [ ] Links no crean BrowserWindows.
-- [ ] Fuses se verifican en el binario.
-- [ ] `build:web` continúa funcionando.
+- [x] WebGL y context-loss recovery funcionan.
+- [x] Renderer no tiene Node, filesystem o raw IPC.
+- [x] CSP no tiene violaciones inesperadas.
+- [x] Traversal y hosts desconocidos se rechazan.
+- [x] Links no crean BrowserWindows.
+- [x] Fuses se verifican en el binario.
+- [x] `build:web` continúa funcionando.
 
 ## Evidencia
 
-- PR/commit:
-- Package path/hash:
-- Playwright smoke:
-- Security audit:
-- Audio/Card Studio QA:
-- Fecha de cierre:
+- PR/commit: cambios locales en rama `electron`; sin commit solicitado.
+- Package path/hash: `out/Electron Packages/Hostfall-win32-x64` (288 archivos; 822,520,078 bytes);
+  SHA-256 `Hostfall.exe` `2997A7F4AF59DFDD5B872991DC45C096B5B965E4E7EC06409D5B724D6A7596B6`;
+  SHA-256 `app.asar` `538CB7A1EFA4FDFAD861AD6174B93388CAD83CE577D12F6D07276ECB13453F12`.
+- Playwright smoke: `scripts/electron-smoke.mjs` pasa contra el `app.asar` real; PNG 976×1360,
+  arte 600×842, fuente local, MP3 de 186.35 s con seek, WebGL/context loss, cero HTTP y frontera sin
+  Node. Un boot probe separado confirma el `Hostfall.exe` endurecido real porque el fuse
+  `nodeCliInspect` impide que Playwright se conecte directamente al ejecutable de release.
+- Security audit: 321/321 tests; corpus adversarial de protocolo, MIME/Range, CSP, ventana externa,
+  `scripts/verify-electron-package.mjs`, ASAR allowlist y los nueve fuses verificados.
+- Audio/Card Studio QA: smoke automático de carga/seek verde; coincidencia visual de frames,
+  reproducción/pausa y flujo Card Studio-to-runtime pendientes de QA manual.
+- Toolchain: Electron `43.3.0`; Forge/plugin Vite/plugin fuses/maker ZIP `7.11.2`;
+  `@electron/fuses` `2.1.3`; Playwright Core `1.62.1`. Electron 43 ya no declara postinstall:
+  `install-electron` realiza la descarga con checksums y `pnpm-workspace.yaml` mantiene la
+  autorización explícita.
+- Fecha de cierre: pendiente de QA manual.
 
 ---
 
@@ -411,8 +427,8 @@ Estado: **No iniciada**
 | BLK-003 | Derechos | Provenance contiene verificaciones pendientes | — | 5 | Abierto | — |
 | BLK-004 | Audio | Once SFX mantienen `_NEED_REVIEW` | — | 5 | Abierto | — |
 | BLK-005 | Audio runtime | Faltaban `Other/Battle_1.mp3` y `Other/Climax_1.mp3`; Vite dejaba las URLs sin resolver | Codex | 1 | Resuelto | Colección inexistente retirada del manifest y audio mix; build sin referencias faltantes |
-| DEC-001 | Toolchain | Patch exacto Electron/Forge | — | 3 | Pendiente | — |
-| DEC-002 | Lifecycle | Política final de background throttling | — | 3 | Pendiente | — |
+| DEC-001 | Toolchain | Patch exacto Electron/Forge | Codex | 3 | Resuelto | Electron 43.3.0, Forge 7.11.2 y plugins exactos; `@electron/fuses` 2.1.3 cubre los nueve fuses de Electron 43 |
+| DEC-002 | Lifecycle | Política final de background throttling | Codex/usuario | 3 | Pendiente | Candidato `backgroundThrottling: true`; cerrar tras minimizar, alt-tab y suspend/resume manual |
 | DEC-003 | Producto | Confirmar comportamiento de Continuar/autosave | — | 4 | Pendiente | Recomendación: un slot y checkpoint seguro |
 | DEC-004 | Release | Identidad de firma Windows | — | 5 | Pendiente | — |
 
@@ -425,3 +441,7 @@ Estado: **No iniciada**
 | 2026-08-09 | QA manual de Card Studio aprobada; Fase 0 cerrada como completada | Codex |
 | 2026-08-09 | Fase 1 implementada; gates estáticos verdes y QA offline/visual pendiente | Codex |
 | 2026-08-09 | QA offline, tooling y Card Studio aprobada; Fase 1 completada con ajustes 720p diferidos | Codex |
+| 2026-08-09 | Fase 2 implementada; catálogo builtin, asset boundary y política external pasan gates automáticos; QA visual pendiente | Codex |
+| 2026-08-09 | QA manual aprobada; Fase 2 completada y Fase 3 iniciada | Codex |
+| 2026-08-09 | Vertical Electron segura empaquetada; gates automáticos, smoke y fuses verdes; QA manual de Fase 3 pendiente | Codex |
+| 2026-08-09 | Baseline JSON recapturado sólo para reconocer el ajuste intencional de encuadre de Maela producido por Card Studio | Codex |

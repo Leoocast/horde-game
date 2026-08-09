@@ -423,7 +423,7 @@ type ContentPackDescriptor = {
 };
 
 interface ContentSource {
-  loadCandidates(): Promise<ContentPackCandidate[]>;
+  loadCandidates(): readonly ContentPackCandidate[];
 }
 
 interface ContentCatalog {
@@ -439,6 +439,24 @@ interface AssetResolver {
 
 Durante la migración sólo se implementa `BuiltinContentSource`. Un descriptor nunca contiene una
 ruta absoluta visible al renderer.
+
+Implementación de Fase 2:
+
+- `src/content/contracts.ts` contiene contratos authored, manifest, presentación y metadata sin
+  importar el registro runtime.
+- `BuiltinContentSource` registra un solo pack: `packKey=builtin.hostfall.core`,
+  `packId=hostfall.core`, `origin=builtin`; `revision` sigue la versión de `package.json`.
+- `ContentCatalog` se construye de forma síncrona antes de App/Zustand porque el contenido builtin
+  ya forma parte del bundle. Una futura lectura asíncrona de disco/Workshop ocurriría fuera del
+  renderer y entregaría candidatos completos antes de construir el snapshot.
+- Los aliases authored actuales siguen funcionando. La identidad canónica futura es
+  `packId/deckId` para decks y `packId/deckId/cardId` para cartas; no se reescribió ningún JSON.
+- `packKey` identifica la instancia runtime y los roots de assets; no sustituye al `packId`
+  autor-facing.
+- `/cards/...` se convierte en `{packKey, path}`. El adapter web devuelve la misma URL y el adapter
+  desktop prepara `hostfall://content/<packKey>/...`; este último no se activa hasta Fase 3.
+- La política external sólo recibe fixtures JSON en memoria. No existen `LocalContentSource`,
+  `WorkshopContentSource`, scanner de carpetas ni registro de mods.
 
 ---
 
@@ -715,6 +733,36 @@ seguridad y smoke manual de interacción, audio, GPU y Card Studio-to-runtime.
 **Riesgos:** Forge Vite experimental, preload mal empaquetado, CSP, Range de audio y drivers.
 
 **Estado final:** ejecutable Electron seguro y offline, todavía sin save desktop.
+
+### Implementación materializada en Fase 3 (2026-08-09)
+
+- Pins exactos: Electron `43.3.0`, Forge/plugin Vite/plugin fuses/maker ZIP `7.11.2`,
+  `@electron/fuses` `2.1.3`, `@electron/asar` `4.2.1` y Playwright Core `1.62.1`.
+- Forge 7 estable arrastra `@electron/rebuild` 3.7.2 y el commit oficial
+  `electron/node-gyp#06b29aafb7708acef8b3669835c8a7857ebc92d2`. pnpm resuelve esa dependencia
+  exótica una vez con el commit fijado y conserva `blockExoticSubdeps` activo por defecto; no hay
+  una excepción global versionada.
+- Electron 43 sustituyó el postinstall por el binario `install-electron`, que descarga el artefacto
+  con los checksums incluidos. La autorización `allowBuilds.electron` permanece explícita para no
+  relajar el contrato cuando cambie el mecanismo del paquete.
+- Main se empaqueta como ESM y preload como un único CJS sandboxed. El renderer sólo recibe
+  `getBootstrap`, `openExternalLink(id)` y `reportError`; no recibe canales, `ipcRenderer`, URLs,
+  filesystem ni paths.
+- `hostfall://app/` sirve el bundle indexado dentro de ASAR y
+  `hostfall://content/builtin.hostfall.core/...` sirve cards/fonts desde roots registrados. El
+  adapter web sigue devolviendo `/cards/...`.
+- Cards y fonts son `extraResources`; el audio importado permanece transitoriamente dentro del ASAR
+  de Fase 3. La Fase 5 crea el staging final y mueve media grande a archivos individuales, sin
+  cambiar las URLs lógicas.
+- Los nueve fuses se configuran con `strictlyRequireAllFuses`. El snapshot browser-specific queda
+  desactivado porque el archivo oficial de Electron 43 sólo incluye `v8_context_snapshot.bin`, no
+  `browser_v8_context_snapshot.bin`; activarlo hacía abortar el ejecutable antes del bootstrap.
+- `backgroundThrottling: true` es el candidato conservador actual. DEC-002 sigue abierto hasta la
+  prueba manual de minimizar, alt-tab y suspend/resume con beats y audio reales.
+- El package de prueba vive intencionalmente bajo `out/Electron Packages/` para cubrir paths con
+  espacios. Playwright carga su `app.asar` con el Electron no fusionado de desarrollo, ya que el
+  fuse de release que deshabilita `nodeCliInspect` bloquea el transporte de Playwright; un boot
+  probe aparte ejecuta y valida el `Hostfall.exe` fusionado real.
 
 ## Fase 4 — Persistencia y lifecycle
 

@@ -3,12 +3,12 @@
   "source": "build:web/dist",
   "totals": {
     "files": 278,
-    "bytes": 458343707
+    "bytes": 458351573
   },
   "categories": {
     "app": {
       "files": 3,
-      "bytes": 1982737
+      "bytes": 1990603
     },
     "audio": {
       "files": 57,
@@ -311,16 +311,16 @@
       "sha256": "dcb5d4eb52d46c0de286eb2a9d28526d22925843b5f54788cd74c0a26f823f28"
     },
     {
-      "path": "assets/index-D2Lr7q85.js",
+      "path": "assets/index-CqakrfWn.css",
       "category": "app",
-      "bytes": 1543406,
-      "sha256": "48c67966fd1bad6017f504a29bca0594fc4a53f8dff4d7f7dfac4c7b1d2092c2"
+      "bytes": 439213,
+      "sha256": "5f129d5815f4c79a9ac64cded823bf56ebf31082aaf2ba7962748769ce78c712"
     },
     {
-      "path": "assets/index-DbGasn43.css",
+      "path": "assets/index-DwUV2F5H.js",
       "category": "app",
-      "bytes": 438938,
-      "sha256": "d36c8f83f851975ea0694adc7db3694aa3ccb1ab27ef127f554fef32bdc8071e"
+      "bytes": 1550997,
+      "sha256": "98b237642c3c86b53d33dd12c2f58ddcfcd89b6963456c471bb4e4dc80b68f0c"
     },
     {
       "path": "assets/Lose-DtUEQlmV.mp3",
@@ -1694,7 +1694,7 @@
       "path": "index.html",
       "category": "app",
       "bytes": 393,
-      "sha256": "cc66c2bb15ce4d328e41cfcb262eb073ac8e2b1cbf74e98e7ca8daee6729006a"
+      "sha256": "c21d9378984f419da190200cc7bd29e0d9ddaed8b226494d0074f09dc61a2086"
     }
   ]
 }
