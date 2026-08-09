@@ -85,6 +85,27 @@ Separación obligatoria:
 - Las acciones del engine comunican éxito o fallo mediante `game.lastActionResult`; nunca parsear
   strings de `game.log` para decidir comportamiento.
 
+## Migración a Electron
+
+La migración desktop está planificada, pero todavía no implementada. El documento canónico de
+arquitectura es `docs/electron_migration_plan.md` y el avance se registra exclusivamente en
+`docs/electron_migration_tracking.md`.
+
+Contratos durante la migración:
+
+- Conservar el build web hasta estabilizar Steam.
+- No cambiar el schema ni los JSON authored de decks.
+- Playground sigue siendo tooling de desarrollo y no entra al paquete Steam.
+- Card Studio sigue siendo una herramienta local bajo `dev/tools/Decks/`; Electron consume sus
+  outputs runtime, no reemplaza ni empaqueta el estudio.
+- Preservar `studio.config.json`, `game-art.config.json`, `deck-data.generated.js`,
+  `cardStudioGameArt.generated.json`, `cardRuntimeLayout.generated.json`, los PNG finales y el arte
+  fuente referenciado.
+- El staging de release excluye Card Studio, `exported-png` y fuentes no usadas, pero debe demostrar
+  que incluye todo PNG, arte recortado y metadata generada que consume el juego.
+- No implementar fuentes Local/Workshop hasta que la identidad calificada y la validación external
+  estén terminadas.
+
 ## Vocabulario Hostfall
 
 Leer `docs/game_vocabulary.md` antes de cambiar nombres, tipos, zonas, fases, Rasgos, reglas o
