@@ -30,6 +30,7 @@ try {
   await server.ssrLoadModule("/tests/electronPersistence.test.js");
   await server.ssrLoadModule("/tests/desktopPreferences.test.js");
   await server.ssrLoadModule("/tests/resumeSave.test.js");
+  await server.ssrLoadModule("/tests/electronRelease.test.js");
 } finally {
   await server.close();
 }

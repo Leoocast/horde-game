@@ -13,6 +13,7 @@ import {
 } from "../src/content/BuiltinContentSource";
 import {
   builtinAssetRef,
+  builtinAudioAssetRef,
   createDesktopAssetResolver,
   createWebAssetResolver,
 } from "../src/content/AssetResolver";
@@ -115,6 +116,14 @@ test("web and desktop asset adapters resolve logical builtin refs without filesy
     assert.throws(() => builtinAssetRef(BUILTIN_PACK_DESCRIPTOR.packKey, invalid));
   }
   assert.throws(() => web.resolve({ packKey: "local.unregistered", path: "cards/test.png" }), /not registered/u);
+
+  const audioRef = builtinAudioAssetRef(BUILTIN_PACK_DESCRIPTOR.packKey, "/audio/music/main menu.mp3");
+  assert.equal(web.resolve(audioRef), "/audio/music/main menu.mp3");
+  assert.equal(
+    desktop.resolve(audioRef),
+    "hostfall://content/builtin.hostfall.core/audio/music/main%20menu.mp3",
+  );
+  assert.throws(() => builtinAudioAssetRef(BUILTIN_PACK_DESCRIPTOR.packKey, "/cards/not-audio.png"));
 });
 
 test("Card Studio runtime projections still resolve to the authored web URLs", () => {

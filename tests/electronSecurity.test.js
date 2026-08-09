@@ -26,6 +26,10 @@ test("hostfall protocol maps only registered app and content identities", () => 
     parseHostfallRequestUrl("hostfall://content/builtin.hostfall.core/cards/pact/card.png"),
     { scope: "content", logicalPath: "cards/pact/card.png" },
   );
+  assert.deepEqual(
+    parseHostfallRequestUrl("hostfall://content/builtin.hostfall.core/audio/music/main%20menu.mp3"),
+    { scope: "content", logicalPath: "audio/music/main menu.mp3" },
+  );
 });
 
 test("hostfall protocol rejects traversal, encoded separators, drives, schemes and unknown authorities", () => {

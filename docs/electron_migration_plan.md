@@ -859,6 +859,12 @@ de un asset.
 
 **Estado final:** candidato Windows x64 listo para depot.
 
+**Estado materializado (2026-08-09):** la parte técnica está implementada y reproducible. El
+staging contiene 185 recursos declarados, el ASAR queda en 8.6 MB sin media grande y dos builds
+unsigned producen los mismos 261 hashes. La fase no se cierra ni habilita Fase 6 hasta resolver
+fingerprints de Card Studio, revisión de SFX, rights/licencia, icono, firma y QA final. Contrato
+operativo: `docs/electron_release.md`.
+
 ## Fase 6 — SteamPipe y rama privada
 
 **Dependencias:** Fase 5.

@@ -35,11 +35,11 @@ Estados permitidos:
 | 1 | Renderer offline y release-clean | Fase 0 | Completada | — | Gates automáticos y QA manual aprobados |
 | 2 | Frontera de contenido builtin | Fase 1 | Completada | — | Gates automáticos y QA manual aprobados |
 | 3 | Vertical Electron segura | Fases 1-2 | Completada | — | Paquete/smoke verdes y QA interactivo aprobada |
-| 4 | Persistencia y lifecycle | Fase 3 | En validación | — | Implementación y gates automáticos verdes; QA manual pendiente |
-| 5 | Packaging Windows x64 reproducible | Fases 3-4 | No iniciada | — | — |
+| 4 | Persistencia y lifecycle | Fase 3 | Completada | — | Gates automáticos y QA manual aprobados |
+| 5 | Packaging Windows x64 reproducible | Fases 3-4 | En validación | — | Paquete reproducible y smoke verdes; blockers comerciales abiertos |
 | 6 | SteamPipe y rama privada | Fase 5 | No iniciada | — | — |
 
-Progreso de implementación: **4/7 fases**.
+Progreso de implementación: **5/7 fases**.
 
 ## Baseline conocido antes de empezar
 
@@ -285,7 +285,7 @@ Estado: **Completada**
 
 # Fase 4 — Persistencia y lifecycle
 
-Estado: **En validación**
+Estado: **Completada**
 
 ## Implementación
 
@@ -308,10 +308,10 @@ Estado: **En validación**
 ## Gates
 
 - [x] Preferencias sobreviven reinicio.
-- [ ] Una partida continúa desde el último checkpoint.
-- [ ] Cerrar durante Burn restaura estado estable.
-- [ ] Cerrar durante combate de Hueste restaura estado estable.
-- [ ] Cerrar durante una selección manual restaura estado estable.
+- [x] Una partida continúa desde el último checkpoint.
+- [x] Cerrar durante Burn restaura estado estable.
+- [x] Cerrar durante combate de Hueste restaura estado estable.
+- [x] Cerrar durante una selección manual restaura estado estable.
 - [x] Save corrupto usa backup o presenta recuperación.
 - [x] Schema desconocido se rechaza limpiamente.
 - [x] Contenido faltante no hace fallback a otro deck.
@@ -326,62 +326,68 @@ Estado: **En validación**
 - Rutas: `profile/preferences-v1.json`, `profile/saves/resume-v1.json` y
   `local/window-state-v1.json`; contrato en `docs/electron_persistence.md`.
 - Determinism resume test: JSON round-trip del `GameState`, restore puro, claves calificadas y
-  revisión exacta; suite 333/333.
+  revisión exacta; suite 337/337 al cierre.
 - Corruption tests: primario inválido recupera backup; dos candidatos inválidos presentan borrado;
   schema/contenido/deck desconocidos se rechazan sin fallback.
 - Smoke: fullscreen on/off, archivos tras cierre, segunda instancia, bridge cerrado, assets/audio,
   WebGL y boot del ejecutable fusionado verdes.
-- QA manual pendiente: Continuar tras reinicio y cierres reales durante Burn, combate de Hueste y
-  selección manual; minimize/alt-tab/suspend-resume con audio real.
-- Fecha de cierre: pendiente de QA manual.
+- QA manual: Continuar, checkpoints seguros, fullscreen y lifecycle aprobados por el usuario.
+- Fecha de cierre: 2026-08-09.
 
 ---
 
 # Fase 5 — Packaging Windows x64 reproducible
 
-Estado: **No iniciada**
+Estado: **En validación**
 
 ## Implementación
 
-- [ ] Crear staging allowlist desde manifests y outputs generados.
-- [ ] Incluir código, HTML y preload en ASAR.
-- [ ] Incluir cards/audio/fonts como `extraResources` individuales.
-- [ ] Excluir `src`, tests, dev, tmp y documentación privada.
-- [ ] Excluir Card Studio, su servidor e HTML.
-- [ ] Excluir Hunters y `exported-png`.
-- [ ] Excluir artes fuente no referenciados.
-- [ ] Incluir todos los artes fuente referenciados por `cardStudioGameArt.generated.json`.
-- [ ] Incluir todos los PNG referenciados por manifests.
-- [ ] Incluir `cardRuntimeLayout.generated.json` dentro del bundle de código.
-- [ ] Generar manifest de paths, tamaños y SHA-256.
-- [ ] Añadir icono y metadata Windows.
-- [ ] Comparar dos builds unsigned.
+- [x] Crear staging allowlist desde manifests y outputs generados.
+- [x] Incluir código, HTML y preload en ASAR.
+- [x] Incluir cards/audio/fonts como `extraResources` individuales.
+- [x] Excluir `src`, tests, dev, tmp y documentación privada.
+- [x] Excluir Card Studio, su servidor e HTML.
+- [x] Excluir Hunters y `exported-png`.
+- [x] Excluir artes fuente no referenciados.
+- [x] Incluir todos los artes fuente referenciados por `cardStudioGameArt.generated.json`.
+- [x] Incluir todos los PNG referenciados por manifests.
+- [x] Incluir `cardRuntimeLayout.generated.json` dentro del bundle de código.
+- [x] Generar manifest de paths, tamaños y SHA-256.
+- [ ] Añadir icono final; metadata Windows ya está fijada.
+- [x] Comparar dos builds unsigned.
 - [ ] Configurar firma después de la comparación.
 - [ ] Resolver NOTICE, provenance y SFX pendientes.
-- [ ] Medir delta de modificar una carta.
+- [x] Medir delta de modificar una carta.
 
 ## Gates
 
-- [ ] El paquete sólo contiene allowlist.
-- [ ] Card Studio no está en el paquete.
-- [ ] Todos sus outputs runtime necesarios sí están.
+- [x] El paquete sólo contiene allowlist.
+- [x] Card Studio no está en el paquete.
+- [x] Todos sus outputs runtime necesarios sí están.
 - [ ] Los cuatro decks muestran PNG completo y recorte correcto.
-- [ ] Código/main/preload tienen integridad ASAR.
-- [ ] Media grande está fuera de ASAR.
-- [ ] Dos builds unsigned tienen inventario/hashes equivalentes.
+- [x] Código/main/preload tienen integridad ASAR.
+- [x] Media grande está fuera de ASAR.
+- [x] Dos builds unsigned tienen inventario/hashes equivalentes.
 - [ ] Arranca en Windows limpio sin Node/pnpm.
 - [ ] Firma e icono son válidos.
 - [ ] Rights/notices están resueltos.
 
 ## Evidencia
 
-- PR/commit:
-- Artifact manifest:
-- Tamaño final:
-- ASAR inspection:
-- Card Studio asset graph:
-- Firma:
-- Fecha de cierre:
+- PR/commit: cambios locales en rama `electron`; sin commit solicitado.
+- Artifact manifest: `out/Electron Packages/Hostfall-win32-x64.manifest.json`; 261 archivos,
+  685,323,602 bytes; SHA-256 `CD4773D7ED0D186E87CAEA977E65B6F09E11FB9F8E073B69A30672A5F8B7E540`.
+- Binarios: SHA-256 `Hostfall.exe` `A4D51FD22956225AFF8D9F7BE61D801FB43EF9DCE1665E34EA71E4BC4522EEF6`;
+  SHA-256 `app.asar` `D00098ACCFE4CD4B92C07FBF47BB33EC516E344895AA9ABE0390398CECD302A0`.
+- Tamaño final: 685,323,602 bytes; reducción de 137,248,720 bytes respecto al paquete de Fase 4.
+- ASAR inspection: 17 entradas, 8,595,843 bytes, sin audio ni source maps; nueve fuses verdes.
+- Card Studio asset graph: 61 PNG + 61 artes runtime; Hunters, estudio y autoría excluidos.
+- Reproducibilidad: dos builds unsigned consecutivos idénticos en sus 261 paths, tamaños y SHA-256.
+- Delta: modificar una carta altera un recurso individual y deja `app.asar` intacto.
+- Smoke: bridge cerrado, fullscreen/persistencia, PNG/arte/fuente, MP3 externo con seek,
+  WebGL/context loss, cero HTTP, segunda instancia y ejecutable fusionado verdes.
+- Firma/icono/rights: pendientes; detalle y comandos en `docs/electron_release.md`.
+- Fecha de cierre: pendiente de QA final y blockers comerciales.
 
 ---
 
@@ -433,15 +439,17 @@ Estado: **No iniciada**
 
 | ID | Tipo | Descripción | Owner | Fase límite | Estado | Resolución |
 | --- | --- | --- | --- | --- | --- | --- |
-| BLK-001 | Asset gate | 61 PNG tienen fingerprints obsoletos | — | 5 | Abierto | — |
+| BLK-001 | Asset gate | 61 PNG tienen fingerprints obsoletos | Owner | 5 | Abierto | Reexportar los cuatro decks desde Card Studio vigente |
 | BLK-002 | Auditor | `magic` en comentario producía un blocker falso | Codex | 0 | Resuelto | Comentario neutralizado; strict pasa con cero blockers |
-| BLK-003 | Derechos | Provenance contiene verificaciones pendientes | — | 5 | Abierto | — |
-| BLK-004 | Audio | Once SFX mantienen `_NEED_REVIEW` | — | 5 | Abierto | — |
+| BLK-003 | Derechos | Provenance contiene verificaciones pendientes | Owner | 5 | Abierto | Aprobar y registrar derechos antes de distribución |
+| BLK-004 | Audio | Once SFX mantienen `_NEED_REVIEW` | Owner | 5 | Abierto | Escuchar, aprobar/reemplazar y retirar el marcador |
 | BLK-005 | Audio runtime | Faltaban `Other/Battle_1.mp3` y `Other/Climax_1.mp3`; Vite dejaba las URLs sin resolver | Codex | 1 | Resuelto | Colección inexistente retirada del manifest y audio mix; build sin referencias faltantes |
+| BLK-006 | Licencia | El paquete npm de GSAP no incluye texto de licencia local | Owner | 5 | Abierto | Revisar términos aplicables y añadir el texto/notice autorizado |
+| BLK-007 | Branding | Falta el icono Windows multirresolución final | Owner | 5 | Abierto | Aprobar `build/icon.ico` antes de firmar |
 | DEC-001 | Toolchain | Patch exacto Electron/Forge | Codex | 3 | Resuelto | Electron 43.3.0, Forge 7.11.2 y plugins exactos; `@electron/fuses` 2.1.3 cubre los nueve fuses de Electron 43 |
 | DEC-002 | Lifecycle | Política final de background throttling | Codex/usuario | 3 | Resuelto | `backgroundThrottling: true`; audio responde a blur/minimize/suspend y los checkpoints, no los timers de fondo, garantizan restore estable |
 | DEC-003 | Producto | Confirmar comportamiento de Continuar/autosave | Codex | 4 | Resuelto | Un slot `resume-v1`, autosave sólo en checkpoint seguro, backup y recuperación explícita |
-| DEC-004 | Release | Identidad de firma Windows | — | 5 | Pendiente | — |
+| DEC-004 | Release | Identidad de firma Windows | Owner | 5 | Pendiente | Definir identidad legal y certificado; secretos fuera del repo |
 
 # Registro de cambios del tracker
 
@@ -458,3 +466,5 @@ Estado: **No iniciada**
 | 2026-08-09 | Baseline JSON recapturado sólo para reconocer el ajuste intencional de encuadre de Maela producido por Card Studio | Codex |
 | 2026-08-09 | QA manual de Fase 3 aprobada; precalentamiento VFX corrige el tirón inicial y Fase 3 queda completada | Codex |
 | 2026-08-09 | Fase 4 implementada: fullscreen/F11, preferencias, window state, resume seguro, backup, recovery, single-instance y lifecycle; QA manual pendiente | Codex |
+| 2026-08-09 | QA manual aprobada; Fase 4 completada y Fase 5 iniciada | Codex |
+| 2026-08-09 | Fase 5 técnica empaquetada: allowlist, audio externo al ASAR, manifest, delta y doble build reproducible; blockers comerciales abiertos | Codex |

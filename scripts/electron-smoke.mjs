@@ -1,10 +1,9 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { listPackage } from "@electron/asar";
 import { _electron as electron } from "playwright-core";
 
 const projectRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -16,13 +15,18 @@ const packagedExecutablePath = path.join(
   "Hostfall.exe",
 );
 const packagedAppPath = path.join(path.dirname(packagedExecutablePath), "resources", "app.asar");
+const packagedAudioPath = path.join(
+  path.dirname(packagedExecutablePath),
+  "resources",
+  "audio",
+  "music",
+  "main_menu",
+  "10. Moonlit Journey (Loop).mp3",
+);
 const harnessExecutablePath = path.join(projectRoot, "node_modules", "electron", "dist", "electron.exe");
 assert.match(packagedAppPath, /\s/u, "The packaged smoke path must contain a space.");
-const packagedMp3Path = listPackage(packagedAppPath, { isPack: false })
-  .map((entry) => entry.replaceAll("\\", "/"))
-  .find((entry) => entry.startsWith("/.vite/renderer/main_window/assets/") && entry.endsWith(".mp3"));
-assert.ok(packagedMp3Path, "The packaged ASAR must contain at least one MP3.");
-const packagedAudioUrl = `hostfall://app/${packagedMp3Path.split("/.vite/renderer/main_window/")[1]}`;
+await stat(packagedAudioPath);
+const packagedAudioUrl = "hostfall://content/builtin.hostfall.core/audio/music/main_menu/10.%20Moonlit%20Journey%20(Loop).mp3";
 
 const userDataPath = await mkdtemp(path.join(os.tmpdir(), "Hostfall smoke user data "));
 const bootProbeUserDataPath = await mkdtemp(path.join(os.tmpdir(), "Hostfall release boot probe "));

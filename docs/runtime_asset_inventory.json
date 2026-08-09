@@ -3,12 +3,12 @@
   "source": "build:web/dist",
   "totals": {
     "files": 278,
-    "bytes": 458351573
+    "bytes": 458369442
   },
   "categories": {
     "app": {
       "files": 3,
-      "bytes": 1990603
+      "bytes": 2008472
     },
     "audio": {
       "files": 57,
@@ -29,42 +29,6 @@
   },
   "files": [
     {
-      "path": "assets/10. Moonlit Journey (Loop)-6ZkH3zuy.mp3",
-      "category": "audio",
-      "bytes": 7456486,
-      "sha256": "0e1d326a89ea5bbe53b30d096ae71042eea04ed151b05c784e3690c9ca178fb1"
-    },
-    {
-      "path": "assets/3. Whispers Beyond (Loop)-7mtnCR5W.mp3",
-      "category": "audio",
-      "bytes": 7682183,
-      "sha256": "f2b8b8924a164be41724fc1ce8cdc5ff3c2d8d4f37b40b1483df19665c41fe18"
-    },
-    {
-      "path": "assets/9. Falconreach-BW8OYjNp.mp3",
-      "category": "audio",
-      "bytes": 15026772,
-      "sha256": "85c1d776634d2bc45a5c75344ed14d38976e1148755a5d15cfce72440e66d750"
-    },
-    {
-      "path": "assets/activate_effect_NEED_REVIEW-CIWJUdjv.wav",
-      "category": "audio",
-      "bytes": 201240,
-      "sha256": "056540f9c4be650e5a0db4e98a53e8e078a3a47e8558940409b392394937c960"
-    },
-    {
-      "path": "assets/Ambient 7 Loop-kErJrH3n.mp3",
-      "category": "audio",
-      "bytes": 5208909,
-      "sha256": "00c8312b076263e20ccc46e5bd36d62ad639e55de7bc10cb3654a86aa21a7c05"
-    },
-    {
-      "path": "assets/attack_NEED_REVIEW-DUll1xVF.wav",
-      "category": "audio",
-      "bytes": 247168,
-      "sha256": "72383cce867790590ed404f7c17ea0385e2f776013361f534e9f575401028580"
-    },
-    {
       "path": "assets/background-BP4rlwPL.webp",
       "category": "images",
       "bytes": 50696,
@@ -77,256 +41,16 @@
       "sha256": "ca91dffe8201cb3e84b4ab9bf05c0ca5c9f07ce7337c46b7963f9f696e61649e"
     },
     {
-      "path": "assets/Battle_1-5FWaRK8Z.mp3",
-      "category": "audio",
-      "bytes": 7230788,
-      "sha256": "cf76c8a47f547587e3059f160980129291ccc1594e8d0dfd0f7dfcce39db9ac2"
-    },
-    {
-      "path": "assets/battle_1-C_JE_SX8.mp3",
-      "category": "audio",
-      "bytes": 4459718,
-      "sha256": "c9ba961e7e771ae26167a6fa7fe7da25cd5bb25921acd12b3522952a25ca09d7"
-    },
-    {
-      "path": "assets/battle_1-DlWVlmyC.mp3",
-      "category": "audio",
-      "bytes": 3842183,
-      "sha256": "6f536c1dc72a2a2087b09aa206f1cbd76387d53b1a26042494a9c25d487d8ab1"
-    },
-    {
-      "path": "assets/Battle_1-osxYAdmV.mp3",
-      "category": "audio",
-      "bytes": 2522477,
-      "sha256": "103838a69343d30025a38850b90ab331f55844f09ebd743993d1119525be53fc"
-    },
-    {
-      "path": "assets/Battle_2-BhGI3pE5.mp3",
-      "category": "audio",
-      "bytes": 6722968,
-      "sha256": "a7c5110fa61e08e1a300f2022290d9438797514ff5cfb0777c49e47725d3fefa"
-    },
-    {
-      "path": "assets/Battle_2-CvQqxnNr.mp3",
-      "category": "audio",
-      "bytes": 5283098,
-      "sha256": "65138dfd19f8614f8b59db51bc8e3906adba361a0cc2dbbfedd3fa7334377965"
-    },
-    {
-      "path": "assets/Battle_3-B9dkVHzh.mp3",
-      "category": "audio",
-      "bytes": 2124371,
-      "sha256": "6df29dcbf5b5f494e383894675c7230b7dd69ac47f3c16fab409c3cae02b7cbf"
-    },
-    {
-      "path": "assets/Battle_3-DvryxeKI.mp3",
-      "category": "audio",
-      "bytes": 6482670,
-      "sha256": "9b576bc5155d63f00bd3887171b9202a6e11bf58c1749096dfb90f896a67a8ba"
-    },
-    {
-      "path": "assets/Battle_4-DGuvLxrc.mp3",
-      "category": "audio",
-      "bytes": 4729301,
-      "sha256": "2189baff35300078c2145fbd1398de3cfeb003d38a9237b361b081c09ccdbeb3"
-    },
-    {
-      "path": "assets/Battle_Goty_1-CROSrqTp.mp3",
-      "category": "audio",
-      "bytes": 2109743,
-      "sha256": "ce02ee89c6cdb2e397e9f3bd5c29749e8a5da5bd7924dfde20f4c12673e770c0"
-    },
-    {
-      "path": "assets/Battle-BUl4gIVh.mp3",
-      "category": "audio",
-      "bytes": 7091843,
-      "sha256": "48d9e8492e597b789e33bf114a5e26078bce8be496f6ef2b6238736bd3bfc18b"
-    },
-    {
-      "path": "assets/blood_splash-DtdZB-ZL.mp3",
-      "category": "audio",
-      "bytes": 44303,
-      "sha256": "0460b1bcbded77a77abfc097e123cbf49ada705317a9e0025247eb507c0601fd"
-    },
-    {
-      "path": "assets/blood_splash2-C6h5zLA9.mp3",
-      "category": "audio",
-      "bytes": 38328,
-      "sha256": "f9a515fc9cdb0eba0fbc7bf43d7d89cba779e34c32f16bec44b1cfc10d33bfa2"
-    },
-    {
-      "path": "assets/buff_NEED_REVIEW-DMP7moW_.wav",
-      "category": "audio",
-      "bytes": 130556,
-      "sha256": "a33bf907306ad5b90161c82c050e703e9e38728a3630ae83647bc8f5c0729ddf"
-    },
-    {
-      "path": "assets/click_NEED_REVIEW-Q2Xxjuy2.wav",
-      "category": "audio",
-      "bytes": 51736,
-      "sha256": "09a70b61ccfaabe5f74d7d74c0e79a61d9b47bb10fb7fb072540fc1f29d1e343"
-    },
-    {
-      "path": "assets/climax_1-3--CXYEk.mp3",
-      "category": "audio",
-      "bytes": 3842183,
-      "sha256": "410bb860be8428e0e804a08e769763684f73a0914a9589c188d14cd07f88e63a"
-    },
-    {
-      "path": "assets/Climax_1-B-oI_1KK.mp3",
-      "category": "audio",
-      "bytes": 5843164,
-      "sha256": "dff0d40899d9a97d4d1cf8cbe6826dd6f378bb0da79b623904389631838b600b"
-    },
-    {
-      "path": "assets/climax_1-CPkymnz0.mp3",
-      "category": "audio",
-      "bytes": 3842183,
-      "sha256": "da54742c96f8d0a4302ebe69b4da64f6b9bd4fdaca56f65afe67b80bb2e9c1b9"
-    },
-    {
-      "path": "assets/Climax_1-DP05q7Li.mp3",
-      "category": "audio",
-      "bytes": 2882967,
-      "sha256": "0ec84a2c4f57700ba9c9ffcf36e1849c37e13586b086a483682046750413545e"
-    },
-    {
-      "path": "assets/Climax_2-BUXCuja-.mp3",
-      "category": "audio",
-      "bytes": 4651980,
-      "sha256": "de74a733b146bfc8c531f33dce2a05fe12e551bc34dd815fa88407f5ced4349d"
-    },
-    {
-      "path": "assets/Climax_2-CSIcAXwU.mp3",
-      "category": "audio",
-      "bytes": 5138902,
-      "sha256": "6c54f7fef976b9a1b25548891f2d89a5fe1925e35dc76573451347dd96846e31"
-    },
-    {
-      "path": "assets/Climax_3-Cg3N3-Ar.mp3",
-      "category": "audio",
-      "bytes": 6357279,
-      "sha256": "eba6d5db7959025a20d78883c065c126f73f0049425dfbd3e3c34beeb5d43ded"
-    },
-    {
-      "path": "assets/Climax_3-D3L5MImf.mp3",
-      "category": "audio",
-      "bytes": 4044894,
-      "sha256": "e268eb2a451a4f4dafafb126c888beb186163c658f549870c9f619db5871e21e"
-    },
-    {
-      "path": "assets/Climax_4-k0kn5PMr.mp3",
-      "category": "audio",
-      "bytes": 3974886,
-      "sha256": "881a7926839190c8164b0c0e47930a1f0e09c6e4d63ec1d83d1e6ceac5986500"
-    },
-    {
-      "path": "assets/Climax_Goty_1-Bo-8ch3e.mp3",
-      "category": "audio",
-      "bytes": 3281073,
-      "sha256": "f170ec5a44f4acb4737a50b2991180975d89e95e2db51fb6d97b989c0c92bb99"
-    },
-    {
-      "path": "assets/Climax-C6X7731e.mp3",
-      "category": "audio",
-      "bytes": 4137923,
-      "sha256": "45950e6b5b2d5d6481bf7a98a0cafd950949eb8609594115132064e0cc642b8d"
-    },
-    {
-      "path": "assets/countess_enter-BY9IXlEq.mp3",
-      "category": "audio",
-      "bytes": 179722,
-      "sha256": "c32d747a6fa2aa6df2a19c2a686b1785f38bad882014c9660893e948bb7e154a"
-    },
-    {
-      "path": "assets/countess_humans-jM4Ck5og.mp3",
-      "category": "audio",
-      "bytes": 42375,
-      "sha256": "053421eb5ebc245d540bb28eff9bac5ad95ccace7a312d93e9803aba53534ece"
-    },
-    {
-      "path": "assets/countess_laugh_short-Cp4hFX0e.mp3",
-      "category": "audio",
-      "bytes": 23347,
-      "sha256": "5d15839b316a92c77a110c32a91b014dfe7c7a2b2973c892d80882862f65103b"
-    },
-    {
-      "path": "assets/countess_pour-DlVusgQx.mp3",
-      "category": "audio",
-      "bytes": 18523,
-      "sha256": "ea33f12a0a4bbae0167ebd8f70991579c7fe54be0ecd76d802aa90532fc4740f"
-    },
-    {
-      "path": "assets/countess_third_attack-DpJhN523.mp3",
-      "category": "audio",
-      "bytes": 168019,
-      "sha256": "ead72ce1f830e8817775d62e2407f3c679f9b5c344d5574e1ec519a00c5a8920"
-    },
-    {
-      "path": "assets/countess_weak-BIz2AwQR.mp3",
-      "category": "audio",
-      "bytes": 23588,
-      "sha256": "c4469977b4720fb1cca2aa399d862d38a3df128ec8fd97acfc8ea9d0c134ad6f"
-    },
-    {
-      "path": "assets/defend-CBisAH04.wav",
-      "category": "audio",
-      "bytes": 559490,
-      "sha256": "dbc83994b14e487c3cc1084bb8af36ccc820bc00f39c0e7595260a1cdeb94764"
-    },
-    {
-      "path": "assets/draw_NEED_REVIEW-B_NG_6DN.mp3",
-      "category": "audio",
-      "bytes": 7632,
-      "sha256": "44402100d3441bbe8bf23cd9b91349b6330665f299324112e624b29c293da1f2"
-    },
-    {
-      "path": "assets/draw_one_NEED_REVIEW-hXfMNlCY.wav",
-      "category": "audio",
-      "bytes": 59152,
-      "sha256": "fb67e65f82943ec4d8ee813128ed0c18cbc7659a4b4535aa47244f436823de63"
-    },
-    {
-      "path": "assets/fireball_cast_1-BM3Ia5_U.wav",
-      "category": "audio",
-      "bytes": 218578,
-      "sha256": "676d1ed662705575186e1ee6a9114b812b81d6f1987f7d39bb37ccc491c60318"
-    },
-    {
-      "path": "assets/fireball_cast_2-Jj3rg9_7.wav",
-      "category": "audio",
-      "bytes": 208354,
-      "sha256": "31d563a704e7cceaa8d4af0116b2a452120a411b3733d40606c4aa16443f0d73"
-    },
-    {
-      "path": "assets/fireball_cast_3-u8yr6no5.wav",
-      "category": "audio",
-      "bytes": 219706,
-      "sha256": "a24ff4a537bd2595629ef8afc889566d6d67f1bbfdb92c85ba3a644c2046460a"
-    },
-    {
-      "path": "assets/fireball_hit-DzTLJuNm.wav",
-      "category": "audio",
-      "bytes": 67978,
-      "sha256": "dcb5d4eb52d46c0de286eb2a9d28526d22925843b5f54788cd74c0a26f823f28"
+      "path": "assets/index-C1N76V_t.js",
+      "category": "app",
+      "bytes": 1568866,
+      "sha256": "eb1f48fe80d4bc8e7ca66d42b40d3d6811db171ebbcc3d13267d7c294bac03d0"
     },
     {
       "path": "assets/index-CqakrfWn.css",
       "category": "app",
       "bytes": 439213,
       "sha256": "5f129d5815f4c79a9ac64cded823bf56ebf31082aaf2ba7962748769ce78c712"
-    },
-    {
-      "path": "assets/index-DwUV2F5H.js",
-      "category": "app",
-      "bytes": 1550997,
-      "sha256": "98b237642c3c86b53d33dd12c2f58ddcfcd89b6963456c471bb4e4dc80b68f0c"
-    },
-    {
-      "path": "assets/Lose-DtUEQlmV.mp3",
-      "category": "audio",
-      "bytes": 402379,
-      "sha256": "daf10b75ed0a86eec65cc95f47d076add38dd4233cec8c98cfbb7164e20d45e1"
     },
     {
       "path": "assets/mareo-Dqe6LRpB.gif",
@@ -353,70 +77,346 @@
       "sha256": "81134a6b961eda6dc18e9ed9b84316d05f970a3ae5935f884f9d5fce36f28178"
     },
     {
-      "path": "assets/pact_of_elarion_buff-v2H4pjPQ.mp3",
+      "path": "audio/music/battle/Clowns/Battle.mp3",
+      "category": "audio",
+      "bytes": 7091843,
+      "sha256": "48d9e8492e597b789e33bf114a5e26078bce8be496f6ef2b6238736bd3bfc18b"
+    },
+    {
+      "path": "audio/music/battle/Clowns/Climax.mp3",
+      "category": "audio",
+      "bytes": 4137923,
+      "sha256": "45950e6b5b2d5d6481bf7a98a0cafd950949eb8609594115132064e0cc642b8d"
+    },
+    {
+      "path": "audio/music/battle/Fairy/Battle_1.mp3",
+      "category": "audio",
+      "bytes": 2522477,
+      "sha256": "103838a69343d30025a38850b90ab331f55844f09ebd743993d1119525be53fc"
+    },
+    {
+      "path": "audio/music/battle/Fairy/Climax_1.mp3",
+      "category": "audio",
+      "bytes": 2882967,
+      "sha256": "0ec84a2c4f57700ba9c9ffcf36e1849c37e13586b086a483682046750413545e"
+    },
+    {
+      "path": "audio/music/battle/Goblins/battle_1.mp3",
+      "category": "audio",
+      "bytes": 4459718,
+      "sha256": "c9ba961e7e771ae26167a6fa7fe7da25cd5bb25921acd12b3522952a25ca09d7"
+    },
+    {
+      "path": "audio/music/battle/Goblins/climax_1.mp3",
+      "category": "audio",
+      "bytes": 3842183,
+      "sha256": "410bb860be8428e0e804a08e769763684f73a0914a9589c188d14cd07f88e63a"
+    },
+    {
+      "path": "audio/music/battle/Other/Battle_2.mp3",
+      "category": "audio",
+      "bytes": 5283098,
+      "sha256": "65138dfd19f8614f8b59db51bc8e3906adba361a0cc2dbbfedd3fa7334377965"
+    },
+    {
+      "path": "audio/music/battle/Other/Battle_3.mp3",
+      "category": "audio",
+      "bytes": 2124371,
+      "sha256": "6df29dcbf5b5f494e383894675c7230b7dd69ac47f3c16fab409c3cae02b7cbf"
+    },
+    {
+      "path": "audio/music/battle/Other/Battle_4.mp3",
+      "category": "audio",
+      "bytes": 4729301,
+      "sha256": "2189baff35300078c2145fbd1398de3cfeb003d38a9237b361b081c09ccdbeb3"
+    },
+    {
+      "path": "audio/music/battle/Other/Battle_Goty_1.mp3",
+      "category": "audio",
+      "bytes": 2109743,
+      "sha256": "ce02ee89c6cdb2e397e9f3bd5c29749e8a5da5bd7924dfde20f4c12673e770c0"
+    },
+    {
+      "path": "audio/music/battle/Other/Climax_2.mp3",
+      "category": "audio",
+      "bytes": 5138902,
+      "sha256": "6c54f7fef976b9a1b25548891f2d89a5fe1925e35dc76573451347dd96846e31"
+    },
+    {
+      "path": "audio/music/battle/Other/Climax_3.mp3",
+      "category": "audio",
+      "bytes": 4044894,
+      "sha256": "e268eb2a451a4f4dafafb126c888beb186163c658f549870c9f619db5871e21e"
+    },
+    {
+      "path": "audio/music/battle/Other/Climax_4.mp3",
+      "category": "audio",
+      "bytes": 3974886,
+      "sha256": "881a7926839190c8164b0c0e47930a1f0e09c6e4d63ec1d83d1e6ceac5986500"
+    },
+    {
+      "path": "audio/music/battle/Other/Climax_Goty_1.mp3",
+      "category": "audio",
+      "bytes": 3281073,
+      "sha256": "f170ec5a44f4acb4737a50b2991180975d89e95e2db51fb6d97b989c0c92bb99"
+    },
+    {
+      "path": "audio/music/battle/Pirates/Battle_1.mp3",
+      "category": "audio",
+      "bytes": 7230788,
+      "sha256": "cf76c8a47f547587e3059f160980129291ccc1594e8d0dfd0f7dfcce39db9ac2"
+    },
+    {
+      "path": "audio/music/battle/Pirates/Battle_2.mp3",
+      "category": "audio",
+      "bytes": 6722968,
+      "sha256": "a7c5110fa61e08e1a300f2022290d9438797514ff5cfb0777c49e47725d3fefa"
+    },
+    {
+      "path": "audio/music/battle/Pirates/Battle_3.mp3",
+      "category": "audio",
+      "bytes": 6482670,
+      "sha256": "9b576bc5155d63f00bd3887171b9202a6e11bf58c1749096dfb90f896a67a8ba"
+    },
+    {
+      "path": "audio/music/battle/Pirates/Climax_1.mp3",
+      "category": "audio",
+      "bytes": 5843164,
+      "sha256": "dff0d40899d9a97d4d1cf8cbe6826dd6f378bb0da79b623904389631838b600b"
+    },
+    {
+      "path": "audio/music/battle/Pirates/Climax_2.mp3",
+      "category": "audio",
+      "bytes": 4651980,
+      "sha256": "de74a733b146bfc8c531f33dce2a05fe12e551bc34dd815fa88407f5ced4349d"
+    },
+    {
+      "path": "audio/music/battle/Pirates/Climax_3.mp3",
+      "category": "audio",
+      "bytes": 6357279,
+      "sha256": "eba6d5db7959025a20d78883c065c126f73f0049425dfbd3e3c34beeb5d43ded"
+    },
+    {
+      "path": "audio/music/battle/Zombies/battle_1.mp3",
+      "category": "audio",
+      "bytes": 3842183,
+      "sha256": "6f536c1dc72a2a2087b09aa206f1cbd76387d53b1a26042494a9c25d487d8ab1"
+    },
+    {
+      "path": "audio/music/battle/Zombies/climax_1.mp3",
+      "category": "audio",
+      "bytes": 3842183,
+      "sha256": "da54742c96f8d0a4302ebe69b4da64f6b9bd4fdaca56f65afe67b80bb2e9c1b9"
+    },
+    {
+      "path": "audio/music/main_menu/10. Moonlit Journey (Loop).mp3",
+      "category": "audio",
+      "bytes": 7456486,
+      "sha256": "0e1d326a89ea5bbe53b30d096ae71042eea04ed151b05c784e3690c9ca178fb1"
+    },
+    {
+      "path": "audio/music/main_menu/3. Whispers Beyond (Loop).mp3",
+      "category": "audio",
+      "bytes": 7682183,
+      "sha256": "f2b8b8924a164be41724fc1ce8cdc5ff3c2d8d4f37b40b1483df19665c41fe18"
+    },
+    {
+      "path": "audio/music/main_menu/9. Falconreach.mp3",
+      "category": "audio",
+      "bytes": 15026772,
+      "sha256": "85c1d776634d2bc45a5c75344ed14d38976e1148755a5d15cfce72440e66d750"
+    },
+    {
+      "path": "audio/music/main_menu/Ambient 7 Loop.mp3",
+      "category": "audio",
+      "bytes": 5208909,
+      "sha256": "00c8312b076263e20ccc46e5bd36d62ad639e55de7bc10cb3654a86aa21a7c05"
+    },
+    {
+      "path": "audio/music/sfx/Lose.mp3",
+      "category": "audio",
+      "bytes": 402379,
+      "sha256": "daf10b75ed0a86eec65cc95f47d076add38dd4233cec8c98cfbb7164e20d45e1"
+    },
+    {
+      "path": "audio/music/sfx/Victory.mp3",
+      "category": "audio",
+      "bytes": 258183,
+      "sha256": "4fe75c68f321a24e629a98c0400a0b76884f89b19909815aa1fbb478162cd615"
+    },
+    {
+      "path": "audio/sounds/activate_effect_NEED_REVIEW.wav",
+      "category": "audio",
+      "bytes": 201240,
+      "sha256": "056540f9c4be650e5a0db4e98a53e8e078a3a47e8558940409b392394937c960"
+    },
+    {
+      "path": "audio/sounds/attack_NEED_REVIEW.wav",
+      "category": "audio",
+      "bytes": 247168,
+      "sha256": "72383cce867790590ed404f7c17ea0385e2f776013361f534e9f575401028580"
+    },
+    {
+      "path": "audio/sounds/blood_splash.mp3",
+      "category": "audio",
+      "bytes": 44303,
+      "sha256": "0460b1bcbded77a77abfc097e123cbf49ada705317a9e0025247eb507c0601fd"
+    },
+    {
+      "path": "audio/sounds/blood_splash2.mp3",
+      "category": "audio",
+      "bytes": 38328,
+      "sha256": "f9a515fc9cdb0eba0fbc7bf43d7d89cba779e34c32f16bec44b1cfc10d33bfa2"
+    },
+    {
+      "path": "audio/sounds/buff_NEED_REVIEW.wav",
+      "category": "audio",
+      "bytes": 130556,
+      "sha256": "a33bf907306ad5b90161c82c050e703e9e38728a3630ae83647bc8f5c0729ddf"
+    },
+    {
+      "path": "audio/sounds/click_NEED_REVIEW.wav",
+      "category": "audio",
+      "bytes": 51736,
+      "sha256": "09a70b61ccfaabe5f74d7d74c0e79a61d9b47bb10fb7fb072540fc1f29d1e343"
+    },
+    {
+      "path": "audio/sounds/countess/countess_enter.mp3",
+      "category": "audio",
+      "bytes": 179722,
+      "sha256": "c32d747a6fa2aa6df2a19c2a686b1785f38bad882014c9660893e948bb7e154a"
+    },
+    {
+      "path": "audio/sounds/countess/countess_humans.mp3",
+      "category": "audio",
+      "bytes": 42375,
+      "sha256": "053421eb5ebc245d540bb28eff9bac5ad95ccace7a312d93e9803aba53534ece"
+    },
+    {
+      "path": "audio/sounds/countess/countess_laugh_short.mp3",
+      "category": "audio",
+      "bytes": 23347,
+      "sha256": "5d15839b316a92c77a110c32a91b014dfe7c7a2b2973c892d80882862f65103b"
+    },
+    {
+      "path": "audio/sounds/countess/countess_pour.mp3",
+      "category": "audio",
+      "bytes": 18523,
+      "sha256": "ea33f12a0a4bbae0167ebd8f70991579c7fe54be0ecd76d802aa90532fc4740f"
+    },
+    {
+      "path": "audio/sounds/countess/countess_third_attack.mp3",
+      "category": "audio",
+      "bytes": 168019,
+      "sha256": "ead72ce1f830e8817775d62e2407f3c679f9b5c344d5574e1ec519a00c5a8920"
+    },
+    {
+      "path": "audio/sounds/countess/countess_weak.mp3",
+      "category": "audio",
+      "bytes": 23588,
+      "sha256": "c4469977b4720fb1cca2aa399d862d38a3df128ec8fd97acfc8ea9d0c134ad6f"
+    },
+    {
+      "path": "audio/sounds/defend.wav",
+      "category": "audio",
+      "bytes": 559490,
+      "sha256": "dbc83994b14e487c3cc1084bb8af36ccc820bc00f39c0e7595260a1cdeb94764"
+    },
+    {
+      "path": "audio/sounds/draw_NEED_REVIEW.mp3",
+      "category": "audio",
+      "bytes": 7632,
+      "sha256": "44402100d3441bbe8bf23cd9b91349b6330665f299324112e624b29c293da1f2"
+    },
+    {
+      "path": "audio/sounds/draw_one_NEED_REVIEW.wav",
+      "category": "audio",
+      "bytes": 59152,
+      "sha256": "fb67e65f82943ec4d8ee813128ed0c18cbc7659a4b4535aa47244f436823de63"
+    },
+    {
+      "path": "audio/sounds/fireball_cast_1.wav",
+      "category": "audio",
+      "bytes": 218578,
+      "sha256": "676d1ed662705575186e1ee6a9114b812b81d6f1987f7d39bb37ccc491c60318"
+    },
+    {
+      "path": "audio/sounds/fireball_cast_2.wav",
+      "category": "audio",
+      "bytes": 208354,
+      "sha256": "31d563a704e7cceaa8d4af0116b2a452120a411b3733d40606c4aa16443f0d73"
+    },
+    {
+      "path": "audio/sounds/fireball_cast_3.wav",
+      "category": "audio",
+      "bytes": 219706,
+      "sha256": "a24ff4a537bd2595629ef8afc889566d6d67f1bbfdb92c85ba3a644c2046460a"
+    },
+    {
+      "path": "audio/sounds/fireball_hit.wav",
+      "category": "audio",
+      "bytes": 67978,
+      "sha256": "dcb5d4eb52d46c0de286eb2a9d28526d22925843b5f54788cd74c0a26f823f28"
+    },
+    {
+      "path": "audio/sounds/pact_of_elarion_buff.mp3",
       "category": "audio",
       "bytes": 49980,
       "sha256": "0f541c1e9cf6daf8cb924d988fd90bcdd8880b7b9a0852153bdb8f085915dbc6"
     },
     {
-      "path": "assets/play_land_NEED_REVIEW-Dhim6VWf.wav",
+      "path": "audio/sounds/play_land_NEED_REVIEW.wav",
       "category": "audio",
       "bytes": 141960,
       "sha256": "6f90cb665baaba85eb52612bf285801189bbfd30284db18d69c958987ae99be6"
     },
     {
-      "path": "assets/play_monster_effect_NEED_REVIEW-TwSRdueU.wav",
+      "path": "audio/sounds/play_monster_effect_NEED_REVIEW.wav",
       "category": "audio",
       "bytes": 281252,
       "sha256": "e6d88b7966dcac402a2bae3b7e48e7f481d6b9a4e42e9b6842a9a3f3c6e664a6"
     },
     {
-      "path": "assets/play_monster_heavy_NEED_REVIEW-DVXzlrx1.wav",
+      "path": "audio/sounds/play_monster_heavy_NEED_REVIEW.wav",
       "category": "audio",
       "bytes": 290652,
       "sha256": "ff196f1d8b9b273a1a21251c1bf5af1d6a7529fcb90a5186845e93b7137e2d00"
     },
     {
-      "path": "assets/play_monster_NEED_REVIEW-D4ujwR76.wav",
+      "path": "audio/sounds/play_monster_NEED_REVIEW.wav",
       "category": "audio",
       "bytes": 254972,
       "sha256": "ac81f4b8d4fdcdd36a0c7e99234552b69047b5d074ff3454170333aa82f383f7"
     },
     {
-      "path": "assets/punch-VN3vIvBx.mp3",
+      "path": "audio/sounds/punch.mp3",
       "category": "audio",
       "bytes": 12144,
       "sha256": "7470ed202f2b1d5a429775b1fd3ed2ef8c58377ed913a9044cfecb1c47e8c02d"
     },
     {
-      "path": "assets/select_attacker-Cox0Yza6.wav",
+      "path": "audio/sounds/select_attacker.wav",
       "category": "audio",
       "bytes": 762970,
       "sha256": "59cc5d452a87c7208717b0607d5ddc0c4883e7f2b29c5e5d80d5534edb842874"
     },
     {
-      "path": "assets/skip_next_battle_NEED_REVIEW-viUjvpVZ.wav",
+      "path": "audio/sounds/skip_next_battle_NEED_REVIEW.wav",
       "category": "audio",
       "bytes": 122644,
       "sha256": "7aff7e213237325daec2b47b45aa9c512e04f555c1fcf4281543cde12f75f83c"
     },
     {
-      "path": "assets/stone_crash-xC3cCuCX.wav",
+      "path": "audio/sounds/stone_crash.wav",
       "category": "audio",
       "bytes": 1050716,
       "sha256": "6708b91c23f2a5014a814a0ce816f8ce2332050e8699e26a81be6a144e4fb76e"
     },
     {
-      "path": "assets/vaelor_line_play-DcNbuaAO.mp3",
+      "path": "audio/sounds/vaelor_line_play.mp3",
       "category": "audio",
       "bytes": 117739,
       "sha256": "b02a857449a8c23db1f98c147a4deaac8de2519fbefc041dfc20aa5f10bea489"
-    },
-    {
-      "path": "assets/Victory-kV7VGm9x.mp3",
-      "category": "audio",
-      "bytes": 258183,
-      "sha256": "4fe75c68f321a24e629a98c0400a0b76884f89b19909815aa1fbb478162cd615"
     },
     {
       "path": "cards/court_of_the_crimson_eclipse/art/assassin_of_the_black_veil.jpg",
@@ -1694,7 +1694,7 @@
       "path": "index.html",
       "category": "app",
       "bytes": 393,
-      "sha256": "c21d9378984f419da190200cc7bd29e0d9ddaed8b226494d0074f09dc61a2086"
+      "sha256": "1b0a45722a4f74aa1c97d675f67b4d826aeffa598d109d2c2df8c897bffe0233"
     }
   ]
 }

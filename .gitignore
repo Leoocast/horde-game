@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .vite/
+.electron-staging/
 out/
 .playwright/
 .pnpm-store/

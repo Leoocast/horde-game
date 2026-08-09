@@ -66,6 +66,9 @@ Vertical Electron Windows x64:
 pnpm electron:package
 pnpm electron:verify
 pnpm electron:smoke
+pnpm electron:repro
+pnpm electron:delta
+pnpm electron:release:audit
 ```
 
 `electron:verify` lee el ASAR y los nueve fuses del binario. `electron:smoke` carga el `app.asar`
@@ -74,6 +77,11 @@ WebGL/context loss, fullscreen, preferencias/resume, window state, single-instan
 después lanza el `Hostfall.exe` real con un boot probe oculto. El
 arnés Playwright no usa directamente el ejecutable fusionado porque el fuse requerido
 `EnableNodeCliInspectArguments: false` bloquea correctamente su canal de inspector.
+
+`electron:repro` construye dos paquetes unsigned y exige que sus 261 archivos tengan exactamente
+los mismos tamaños y SHA-256. `electron:delta` verifica que una carta sea un recurso individual y
+no invalide `app.asar`. `electron:release:audit` es un gate comercial: debe seguir fallando mientras
+queden fingerprints, audio, rights, licencia, icono o firma pendientes.
 
 Para QA interactivo de desarrollo, el usuario ejecuta `pnpm electron:start`. Los agentes no levantan
 ese servidor ni juegan el build como verificación automática.
@@ -128,6 +136,7 @@ archivo no corre nunca.
 | `tests/electronPersistence.test.js` | Rutas cloud-worthy/local-only, escritura atómica, backup, corrupción y validación de window state |
 | `tests/desktopPreferences.test.js` | Envelope v1 de idioma/audio, límites y rechazo de schemas desconocidos |
 | `tests/resumeSave.test.js` | Round-trip/restore determinista, claves de deck y revisión, rechazo sin fallback, backup y checkpoints inseguros durante animaciones/combate/selecciones |
+| `tests/electronRelease.test.js` | Allowlist generada, grafo Card Studio-to-runtime, audio declarativo/local, hashes del staging y comparación de manifests de paquete |
 
 `tests/engineTestUtils.js` arma game states de prueba (`createTestGame`, `customCard`,
 `cardFromDeck`, `addCard`, `addForests`).

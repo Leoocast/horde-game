@@ -121,10 +121,11 @@ async function startApplication(): Promise<void> {
   configurePowerLifecycle();
 
   const rendererRoot = path.join(app.getAppPath(), ".vite", "renderer", MAIN_WINDOW_VITE_NAME);
-  const contentBase = usesPackagedLayout() ? path.dirname(app.getAppPath()) : path.join(app.getAppPath(), "public");
+  const contentBase = usesPackagedLayout() ? path.dirname(app.getAppPath()) : app.getAppPath();
   const fileIndex = await createProtocolFileIndex(rendererRoot, [
-    { logicalPrefix: "cards", rootPath: path.join(contentBase, "cards") },
-    { logicalPrefix: "fonts", rootPath: path.join(contentBase, "fonts") },
+    { logicalPrefix: "audio", rootPath: path.join(contentBase, usesPackagedLayout() ? "audio" : "assets") },
+    { logicalPrefix: "cards", rootPath: path.join(contentBase, usesPackagedLayout() ? "cards" : "public/cards") },
+    { logicalPrefix: "fonts", rootPath: path.join(contentBase, usesPackagedLayout() ? "fonts" : "public/fonts") },
   ]);
   protocol.handle(HOSTFALL_SCHEME, (request) => serveHostfallRequest(request, fileIndex));
 

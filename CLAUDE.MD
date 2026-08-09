@@ -91,7 +91,7 @@ Separación obligatoria:
 
 ## Migración a Electron
 
-La migración desktop está en curso. Las Fases 0, 1, 2 y 3 están completadas; la Fase 4 está en
+La migración desktop está en curso. Las Fases 0, 1, 2, 3 y 4 están completadas; la Fase 5 está en
 validación. El
 documento canónico de arquitectura es `docs/electron_migration_plan.md` y el avance se registra
 exclusivamente en `docs/electron_migration_tracking.md`.
@@ -137,6 +137,10 @@ Contratos durante la migración:
   animaciones o Playground. `backgroundThrottling: true` es final y el lifecycle pausa/reanuda audio.
 - Pantalla completa se controla desde ambos menús o F11 y se persiste con el estado local de
   ventana. No implementar otro canal IPC para esta función.
+- Fase 5 genera `.electron-staging/resources` exclusivamente desde manifests runtime: 61 PNG,
+  61 artes de campo, 57 audios y 6 fuentes. `app.asar` no contiene audio ni source maps; Card Studio,
+  Hunters y autoría no entran. El contrato y los blockers comerciales viven en
+  `docs/electron_release.md`.
 
 ## Vocabulario Hostfall
 

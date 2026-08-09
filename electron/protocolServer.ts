@@ -47,7 +47,7 @@ export type ProtocolFileIndex = Readonly<{
 
 export async function createProtocolFileIndex(
   appRoot: string,
-  contentRoots: readonly Readonly<{ logicalPrefix: "cards" | "fonts"; rootPath: string }>[],
+  contentRoots: readonly Readonly<{ logicalPrefix: "audio" | "cards" | "fonts"; rootPath: string }>[],
 ): Promise<ProtocolFileIndex> {
   const appFiles = new Map<string, string>();
   const contentFiles = new Map<string, string>();

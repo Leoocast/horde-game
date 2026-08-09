@@ -65,7 +65,7 @@ export function parseHostfallRequestUrl(
       throw new ProtocolPolicyError("The content pack key is malformed.");
     }
     const logicalPath = segments.join("/");
-    if (!logicalPath.startsWith("cards/") && !logicalPath.startsWith("fonts/")) {
+    if (!logicalPath.startsWith("audio/") && !logicalPath.startsWith("cards/") && !logicalPath.startsWith("fonts/")) {
       throw new ProtocolPolicyError("The requested content root is not exposed.", 403);
     }
     return Object.freeze({ scope: "content", logicalPath });

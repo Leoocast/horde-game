@@ -6,7 +6,7 @@ export default defineConfig((env) => {
   if (!("entry" in env.forgeConfigSelf)) throw new Error("The main Vite config requires a Forge build target.");
   return {
     build: {
-      sourcemap: true,
+      sourcemap: env.mode !== "production",
       target: "node24",
       lib: {
         entry: env.forgeConfigSelf.entry,

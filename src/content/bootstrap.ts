@@ -1,4 +1,9 @@
-import { builtinAssetRef, createDesktopAssetResolver, createWebAssetResolver } from "./AssetResolver";
+import {
+  builtinAssetRef,
+  builtinAudioAssetRef,
+  createDesktopAssetResolver,
+  createWebAssetResolver,
+} from "./AssetResolver";
 import { BuiltinContentSource, BUILTIN_PACK_DESCRIPTOR } from "./BuiltinContentSource";
 import { ContentCatalog } from "./ContentCatalog";
 
@@ -14,6 +19,10 @@ export const assetResolver = (__HOSTFALL_DESKTOP__ ? createDesktopAssetResolver 
 
 export function resolveBuiltinAssetUrl(authoredUrl: string): string {
   return assetResolver.resolve(builtinAssetRef(BUILTIN_PACK_DESCRIPTOR.packKey, authoredUrl));
+}
+
+export function resolveBuiltinAudioUrl(authoredUrl: string): string {
+  return assetResolver.resolve(builtinAudioAssetRef(BUILTIN_PACK_DESCRIPTOR.packKey, authoredUrl));
 }
 
 export function assertContentBootstrapReady(): void {

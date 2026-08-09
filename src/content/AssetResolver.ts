@@ -14,6 +14,13 @@ export function builtinAssetRef(packKey: string, authoredUrl: string): LogicalAs
   return Object.freeze({ packKey, path: validateLogicalAssetPath(authoredUrl.slice(1)) });
 }
 
+export function builtinAudioAssetRef(packKey: string, authoredUrl: string): LogicalAssetRef {
+  if (!authoredUrl.startsWith("/audio/")) {
+    throw new Error(`Builtin audio asset "${authoredUrl}" is outside the logical /audio root.`);
+  }
+  return Object.freeze({ packKey, path: validateLogicalAssetPath(authoredUrl.slice(1)) });
+}
+
 export function createWebAssetResolver(allowedPackKeys: readonly string[]): AssetResolver {
   const allowed = new Set(allowedPackKeys);
   return Object.freeze({

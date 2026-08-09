@@ -1,4 +1,5 @@
 import path from "node:path";
+import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { FuseVersion, FuseV1Options } from "@electron/fuses";
 import { MakerZIP } from "@electron-forge/maker-zip";
@@ -6,6 +7,8 @@ import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { VitePlugin } from "@electron-forge/plugin-vite";
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
+const runtimeResourcesRoot = path.join(projectRoot, ".electron-staging", "resources");
+const windowsIconPath = path.join(projectRoot, "build", "icon.ico");
 
 const config = {
   outDir: path.join("out", "Electron Packages"),
@@ -13,6 +16,7 @@ const config = {
     asar: true,
     appBundleId: "com.hostfall.game",
     executableName: "Hostfall",
+    icon: fs.existsSync(windowsIconPath) ? windowsIconPath : undefined,
     win32metadata: {
       CompanyName: "Hostfall",
       FileDescription: "Hostfall",
@@ -20,7 +24,12 @@ const config = {
       OriginalFilename: "Hostfall.exe",
       ProductName: "Hostfall",
     },
-    extraResource: [path.join(projectRoot, "public", "cards"), path.join(projectRoot, "public", "fonts")],
+    extraResource: [
+      path.join(runtimeResourcesRoot, "audio"),
+      path.join(runtimeResourcesRoot, "cards"),
+      path.join(runtimeResourcesRoot, "fonts"),
+      path.join(projectRoot, "THIRD_PARTY_NOTICES.txt"),
+    ],
     junk: true,
     prune: true,
   },
