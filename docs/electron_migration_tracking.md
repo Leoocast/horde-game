@@ -376,11 +376,11 @@ Estado: **En validación**
 
 - PR/commit: cambios locales en rama `electron`; sin commit solicitado.
 - Artifact manifest: `out/Electron Packages/Hostfall-win32-x64.manifest.json`; 261 archivos,
-  685,323,602 bytes; SHA-256 `CD4773D7ED0D186E87CAEA977E65B6F09E11FB9F8E073B69A30672A5F8B7E540`.
-- Binarios: SHA-256 `Hostfall.exe` `A4D51FD22956225AFF8D9F7BE61D801FB43EF9DCE1665E34EA71E4BC4522EEF6`;
-  SHA-256 `app.asar` `D00098ACCFE4CD4B92C07FBF47BB33EC516E344895AA9ABE0390398CECD302A0`.
-- Tamaño final: 685,323,602 bytes; reducción de 137,248,720 bytes respecto al paquete de Fase 4.
-- ASAR inspection: 17 entradas, 8,595,843 bytes, sin audio ni source maps; nueve fuses verdes.
+  685,323,727 bytes; SHA-256 `E58EDE9606A4127ADDB33944604AED0843B63A04E43A1F17F25F835A0E6B0979`.
+- Binarios: SHA-256 `Hostfall.exe` `83DCC365832C41704B9AA67C591BCD2B6428AD2080F148C99FDA04BF1B536916`;
+  SHA-256 `app.asar` `C85B18BE8E7F1F735E2DB75FF865F81B2B4E1ED59AE87547D28B7F1A86F04F81`.
+- Tamaño final: 685,323,727 bytes; reducción de 137,248,595 bytes respecto al paquete de Fase 4.
+- ASAR inspection: 17 entradas, 8,595,968 bytes, sin audio ni source maps; nueve fuses verdes.
 - Card Studio asset graph: 61 PNG + 61 artes runtime; Hunters, estudio y autoría excluidos.
 - Reproducibilidad: dos builds unsigned consecutivos idénticos en sus 261 paths, tamaños y SHA-256.
 - Delta: modificar una carta altera un recurso individual y deja `app.asar` intacto.

@@ -27,7 +27,7 @@ export const PRODUCTION_CSP = [
 
 export const DEVELOPMENT_CSP = [
   "default-src 'none'",
-  "script-src 'self' 'unsafe-eval'",
+  "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' hostfall: data:",
   "media-src 'self' hostfall:",
@@ -46,16 +46,16 @@ export type ProtocolFileIndex = Readonly<{
 }>;
 
 export async function createProtocolFileIndex(
-  appRoot: string,
+  appRoot: string | undefined,
   contentRoots: readonly Readonly<{ logicalPrefix: "audio" | "cards" | "fonts"; rootPath: string }>[],
 ): Promise<ProtocolFileIndex> {
   const appFiles = new Map<string, string>();
   const contentFiles = new Map<string, string>();
-  await indexDirectory(appRoot, "", appFiles);
+  if (appRoot) await indexDirectory(appRoot, "", appFiles);
   for (const root of contentRoots) {
     await indexDirectory(root.rootPath, root.logicalPrefix, contentFiles);
   }
-  if (!appFiles.has("index.html")) throw new Error("Electron renderer index.html is absent from the app bundle.");
+  if (appRoot && !appFiles.has("index.html")) throw new Error("Electron renderer index.html is absent from the app bundle.");
   return Object.freeze({ app: appFiles, content: contentFiles });
 }
 

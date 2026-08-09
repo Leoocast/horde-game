@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -10,7 +10,20 @@ import {
   parseByteRange,
   parseHostfallRequestUrl,
 } from "../electron/protocolPolicy";
-import { serveHostfallRequest } from "../electron/protocolServer";
+import {
+  DEVELOPMENT_CSP,
+  PRODUCTION_CSP,
+  createProtocolFileIndex,
+  serveHostfallRequest,
+} from "../electron/protocolServer";
+
+test("development CSP supports Vite React refresh without weakening production", () => {
+  const developmentScriptPolicy = DEVELOPMENT_CSP.split("; ").find((entry) => entry.startsWith("script-src"));
+  const productionScriptPolicy = PRODUCTION_CSP.split("; ").find((entry) => entry.startsWith("script-src"));
+
+  assert.equal(developmentScriptPolicy, "script-src 'self' 'unsafe-eval' 'unsafe-inline'");
+  assert.equal(productionScriptPolicy, "script-src 'self'");
+});
 
 test("hostfall protocol maps only registered app and content identities", () => {
   assert.deepEqual(parseHostfallRequestUrl("hostfall://app/"), { scope: "app", logicalPath: "index.html" });
@@ -95,5 +108,19 @@ test("protocol server returns partial bytes and security headers without exposin
     assert.equal(rejected.status, 404);
   } finally {
     await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("development protocol indexing does not require a packaged renderer directory", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "hostfall-protocol-dev-"));
+  try {
+    const audioRoot = path.join(root, "audio");
+    await mkdir(audioRoot, { recursive: true });
+    await writeFile(path.join(audioRoot, "menu.mp3"), Buffer.from([1, 2, 3]));
+    const index = await createProtocolFileIndex(undefined, [{ logicalPrefix: "audio", rootPath: audioRoot }]);
+    assert.equal(index.app.size, 0);
+    assert.equal(index.content.has("audio/menu.mp3"), true);
+  } finally {
+    await rm(root, { recursive: true, force: true });
   }
 });

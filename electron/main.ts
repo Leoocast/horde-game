@@ -120,12 +120,15 @@ async function startApplication(): Promise<void> {
   registerIpcHandlers();
   configurePowerLifecycle();
 
-  const rendererRoot = path.join(app.getAppPath(), ".vite", "renderer", MAIN_WINDOW_VITE_NAME);
-  const contentBase = usesPackagedLayout() ? path.dirname(app.getAppPath()) : app.getAppPath();
+  const packagedLayout = usesPackagedLayout();
+  const rendererRoot = packagedLayout
+    ? path.join(app.getAppPath(), ".vite", "renderer", MAIN_WINDOW_VITE_NAME)
+    : undefined;
+  const contentBase = packagedLayout ? path.dirname(app.getAppPath()) : app.getAppPath();
   const fileIndex = await createProtocolFileIndex(rendererRoot, [
-    { logicalPrefix: "audio", rootPath: path.join(contentBase, usesPackagedLayout() ? "audio" : "assets") },
-    { logicalPrefix: "cards", rootPath: path.join(contentBase, usesPackagedLayout() ? "cards" : "public/cards") },
-    { logicalPrefix: "fonts", rootPath: path.join(contentBase, usesPackagedLayout() ? "fonts" : "public/fonts") },
+    { logicalPrefix: "audio", rootPath: path.join(contentBase, packagedLayout ? "audio" : "assets") },
+    { logicalPrefix: "cards", rootPath: path.join(contentBase, packagedLayout ? "cards" : "public/cards") },
+    { logicalPrefix: "fonts", rootPath: path.join(contentBase, packagedLayout ? "fonts" : "public/fonts") },
   ]);
   protocol.handle(HOSTFALL_SCHEME, (request) => serveHostfallRequest(request, fileIndex));
 
@@ -233,6 +236,13 @@ async function loadRenderer(window: BrowserWindow): Promise<void> {
 
 function hardenWebContents(webContents: WebContents): void {
   webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  webContents.on("console-message", (details) => {
+    if (details.level !== "error") return;
+    logger?.log("error", `Renderer console: ${details.message}`, {
+      lineNumber: details.lineNumber,
+      sourceId: details.sourceId,
+    });
+  });
   webContents.on("will-navigate", (event) => event.preventDefault());
   webContents.on("will-redirect", (event) => event.preventDefault());
   webContents.on("will-attach-webview", (event) => event.preventDefault());
