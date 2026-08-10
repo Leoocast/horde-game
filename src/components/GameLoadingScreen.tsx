@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Github } from "lucide-react";
 import { useTranslation } from "../i18n/useTranslation";
+import { openExternalLink } from "../platform/desktopBridge";
 import type { LoadingLabel } from "../utils/assetPreloader";
 import { APP_VERSION } from "../version";
 
@@ -47,9 +48,9 @@ export function GameLoadingScreen({ percent, label, leaving = false }: Props) {
       </section>
       <footer className="game-loading-credits">
         <span>Version: {APP_VERSION}</span>
-        <a href="https://github.com/Leoocast" target="_blank" rel="noopener noreferrer">
+        <button type="button" onClick={() => void openExternalLink("credits")}>
           <span>{t("common.developedBy")}</span><Github aria-hidden="true" /><strong>Leoocast</strong>
-        </a>
+        </button>
       </footer>
     </main>
   );

@@ -51,8 +51,12 @@ C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\
 ```
 
 ```powershell
-C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe node_modules\vite\bin\vite.js build
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe node_modules\vite\bin\vite.js --config vite.config.ts build
 ```
+
+La config web canónica es `vite.config.ts`; para builds manuales pasar siempre
+`--config vite.config.ts`. El release toolchain está fijado en Node 24.14.x y pnpm 11.16.x mediante
+`.node-version`, `packageManager` y `engines`.
 
 No ejecutar `npm install` ni `pnpm install` salvo necesidad real: `node_modules` ya existe. No
 levantar un servidor ni jugar para verificar; el usuario prueba el juego. Detalle en
@@ -84,6 +88,59 @@ Separación obligatoria:
   función pura y probarla. `src/components/battlefieldLayout.ts` es el ejemplo de referencia.
 - Las acciones del engine comunican éxito o fallo mediante `game.lastActionResult`; nunca parsear
   strings de `game.log` para decidir comportamiento.
+
+## Migración a Electron
+
+La migración desktop está en curso. Las Fases 0, 1, 2, 3 y 4 están completadas; la Fase 5 está en
+validación. El
+documento canónico de arquitectura es `docs/electron_migration_plan.md` y el avance se registra
+exclusivamente en `docs/electron_migration_tracking.md`.
+
+Contratos durante la migración:
+
+- Conservar el build web hasta estabilizar Steam.
+- No cambiar el schema ni los JSON authored de decks.
+- Playground sigue siendo tooling de desarrollo y no entra al paquete Steam.
+- Card Studio sigue siendo una herramienta local bajo `dev/tools/Decks/`; Electron consume sus
+  outputs runtime, no reemplaza ni empaqueta el estudio.
+- Preservar `studio.config.json`, `game-art.config.json`, `deck-data.generated.js`,
+  `cardStudioGameArt.generated.json`, `cardRuntimeLayout.generated.json`, los PNG finales y el arte
+  fuente referenciado.
+- El staging de release excluye Card Studio, `exported-png` y fuentes no usadas, pero debe demostrar
+  que incluye todo PNG, arte recortado y metadata generada que consume el juego.
+- No implementar fuentes Local/Workshop hasta que la identidad calificada y la validación external
+  estén terminadas.
+- El contenido runtime nace en `src/content/bootstrap.ts`: sólo `BuiltinContentSource` está activo,
+  `ContentCatalog` es un snapshot inmutable y `src/data/decks.ts` es una fachada temporal.
+- Los IDs authored siguen intactos. Usar `hostfall.core/<deckId>` y
+  `hostfall.core/<deckId>/<cardId>` cuando se necesite una clave canónica; los aliases legacy
+  permanecen durante la migración.
+- Los paths `/cards/...` son referencias lógicas del pack builtin. El adapter web conserva esas
+  URLs y el build Electron activa `hostfall://content/...`; main sólo sirve archivos indexados de
+  roots registrados.
+- `docs/electron_phase2_json_baseline.json` protege byte por byte decks, manifests y proyecciones
+  runtime de Card Studio durante esta fase.
+- El renderer release no puede contener recursos remotos, `?playground`, `PlaygroundScreen` ni
+  `AudioLabScreen`. Verificarlo con `scripts/audit-offline-runtime.mjs` después de `build:web`.
+- `docs/runtime_asset_inventory.json` es la proyección reproducible del contenido de `dist`; se
+  regenera sólo después de un build release intencional.
+- Fase 3 usa Electron 43.3.0 + Forge 7.11.2 exactos. El código está en ASAR, cards/fonts son
+  `extraResources`, Card Studio/Playground no se empaquetan y los gates automáticos son
+  `electron:verify` + `electron:smoke`.
+- La carga llama `prewarmGameVfx`: crea el único renderer WebGL, reserva el framebuffer y compila
+  Burn, Phong, Basic, Sprite y Line antes del primer efecto visible. Sus escenas mínimas quedan
+  retenidas para conservar los programas GPU; no crear renderers nuevos en los animadores.
+- Fase 4 separa `profile/preferences-v1.json`, `profile/saves/resume-v1.json` y el local-only
+  `local/window-state-v1.json`. El contrato, backups, recuperación, Cloud-worthy data y checkpoints
+  seguros están en `docs/electron_persistence.md`.
+- El resume guarda sólo `GameState` estable y claves calificadas; nunca Zustand, UI, timers,
+  animaciones o Playground. `backgroundThrottling: true` es final y el lifecycle pausa/reanuda audio.
+- Pantalla completa se controla desde ambos menús o F11 y se persiste con el estado local de
+  ventana. No implementar otro canal IPC para esta función.
+- Fase 5 genera `.electron-staging/resources` exclusivamente desde manifests runtime: 61 PNG,
+  61 artes de campo, 57 audios y 6 fuentes. `app.asar` no contiene audio ni source maps; Card Studio,
+  Hunters y autoría no entran. El contrato y los blockers comerciales viven en
+  `docs/electron_release.md`.
 
 ## Vocabulario Hostfall
 

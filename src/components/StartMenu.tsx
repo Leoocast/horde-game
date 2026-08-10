@@ -5,6 +5,7 @@ import { findDeckKeyCard, type InspectableDeck } from "../data/deckCatalog";
 import type { DifficultyMode, GameMode } from "../engine/GameTypes";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
+import { openExternalLink } from "../platform/desktopBridge";
 import { useAudioStore } from "../store/useAudioStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { useToastStore } from "../store/useToastStore";
@@ -13,6 +14,7 @@ import { clearAppAssetCache, completeOnboarding, persistDeveloperMode, readStore
 import { APP_VERSION } from "../version";
 import { AudioControls } from "./AudioControls";
 import { DeckKeyCard, DecksView } from "./DecksView";
+import { DisplayControls } from "./DisplayControls";
 import { LanguageSelector } from "./LanguageSelector";
 import { ToastStack } from "./ToastStack";
 
@@ -35,6 +37,9 @@ type Props = {
   onOpenPlayground?: () => void;
   /** Only provided in development builds; edits the checked-in per-file audio mix. */
   onOpenAudioLab?: () => void;
+  resumeStatus?: "none" | "available" | "recovered" | "corrupt";
+  onContinue?: () => void;
+  onDiscardResume?: () => void;
   onStart: (options: { playerName: string; mode: DifficultyMode; gameMode: GameMode; setupTurns: number; seed: string }) => void;
 };
 
@@ -47,7 +52,7 @@ const modes: Array<{ id: DifficultyMode; setupTurns: number }> = [
   { id: "hard", setupTurns: 2 },
 ];
 
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, onStart }: Props) {
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, resumeStatus = "none", onContinue, onDiscardResume, onStart }: Props) {
   const t = useTranslation();
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [mode, setMode] = useState<DifficultyMode>("easy");
@@ -256,6 +261,18 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           </div>
 
           <nav className="main-menu-nav" aria-label={t("menu.mainAria")}>
+            {(resumeStatus === "available" || resumeStatus === "recovered") && onContinue && (
+              <button className="main-menu-entry group" type="button" onClick={onContinue}>
+                <span className="main-menu-entry-mark" />
+                <span>{resumeStatus === "recovered" ? t("menu.continueRecovered") : t("menu.continue")}</span>
+              </button>
+            )}
+            {resumeStatus === "corrupt" && onDiscardResume && (
+              <button className="main-menu-entry group" type="button" onClick={onDiscardResume} title={t("menu.corruptSaveDescription")}>
+                <span className="main-menu-entry-mark" />
+                <span>{t("menu.discardCorruptSave")}</span>
+              </button>
+            )}
             <button className="main-menu-entry group" type="button" onClick={() => setMenuScreen("setup")}>
               <span className="main-menu-entry-mark" />
               <span>{t("menu.play")}</span>
@@ -290,6 +307,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
             <div className="main-settings-content old-scrollbar">
               <LanguageSelector />
               <AudioControls variant="screen" />
+              <DisplayControls variant="screen" />
 
               <section className="main-settings-section">
                 <div className="main-settings-section-title">{t("settings.game")}</div>
@@ -417,11 +435,11 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
       
       {menuScreen !== "setup" && menuScreen !== "chaos" && <div className="main-menu-credits fixed z-[300] text-[10px] font-bold uppercase tracking-wide text-[#66776f]">
         <div className="mb-0.5">Version: {APP_VERSION}</div>
-        <a href="https://github.com/Leoocast" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 transition hover:text-[#e6c36f]" data-audio-click="valid">
+        <button type="button" onClick={() => void openExternalLink("credits")} className="flex items-center gap-1.5 transition hover:text-[#e6c36f]" data-audio-click="valid">
           <span>{t("common.developedBy")}</span>
           <Github size={11} className="-mt-[1px]" />
           <span>Leoocast</span>
-        </a>
+        </button>
       </div>}
 
       <ToastStack variant="menu" />

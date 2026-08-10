@@ -12,14 +12,29 @@ import { useGameStore } from "./store/useGameStore";
 import { IS_DEV } from "./utils/devMode";
 import { hasCompletedOnboarding, hasPreloadedGameAssets, markGameAssetsPreloaded, readStoredPlayerName } from "./utils/appPersistence";
 import { preloadGameAssets, type LoadingLabel } from "./utils/assetPreloader";
+import { registerDesktopLifecycle } from "./platform/desktopLifecycle";
+import { initializeDesktopPreferences } from "./persistence/desktopPreferences";
+import {
+  deleteDesktopResume,
+  loadDesktopResume,
+  resumeDeckIds,
+  startDesktopResumeCheckpointing,
+  type DesktopResumeLoad,
+} from "./persistence/resumeService";
+import { restoreResumeGame } from "./persistence/resumeSave";
 
-// Split into its own chunk behind IS_DEV. Because IS_DEV also reads the URL at runtime it can't be
-// statically eliminated, so the chunk is still emitted — production simply never requests it.
-const PlaygroundScreen = lazy(() => import("./playground/PlaygroundScreen").then((module) => ({ default: module.PlaygroundScreen })));
-const AudioLabScreen = lazy(() => import("./audio-lab/AudioLabScreen").then((module) => ({ default: module.AudioLabScreen })));
+// The conditional imports are compile-time: release builds remove both developer modules instead
+// of merely hiding their entry buttons.
+const PlaygroundScreen = import.meta.env.DEV
+  ? lazy(() => import("./playground/PlaygroundScreen").then((module) => ({ default: module.PlaygroundScreen })))
+  : undefined;
+const AudioLabScreen = import.meta.env.DEV
+  ? lazy(() => import("./audio-lab/AudioLabScreen").then((module) => ({ default: module.AudioLabScreen })))
+  : undefined;
 
 export default function App() {
   const reset = useGameStore((state) => state.reset);
+  const loadScenario = useGameStore((state) => state.loadScenario);
   const gameSessionId = useGameStore((state) => state.gameSessionId);
   const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
   const playSfx = useAudioStore((state) => state.playSfx);
@@ -42,6 +57,41 @@ export default function App() {
     hostDeckId: string;
     gameMode: GameMode;
   } | null>(null);
+  const [desktopResume, setDesktopResume] = useState<DesktopResumeLoad>({ status: "none" });
+
+  useEffect(() => {
+    return registerDesktopLifecycle();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void loadDesktopResume()
+      .then((resume) => {
+        if (active) setDesktopResume(resume);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (screen !== "game") return;
+    return startDesktopResumeCheckpointing({ setupTurns, playerName });
+  }, [playerName, screen, setupTurns]);
+
+  useEffect(() => {
+    let active = true;
+    let dispose: (() => void) | undefined;
+    void initializeDesktopPreferences().then((cleanup) => {
+      if (active) dispose = cleanup;
+      else cleanup();
+    });
+    return () => {
+      active = false;
+      dispose?.();
+    };
+  }, []);
 
   useEffect(() => {
     const disableBrowserHistory = (root: ParentNode) => {
@@ -133,7 +183,7 @@ export default function App() {
     />
   ) : null;
 
-  if (screen === "playground" && IS_DEV) {
+  if (screen === "playground" && PlaygroundScreen) {
     return (
       // A plain dark hold, not the game's loading screen: the playground chunk resolves in a frame
       // or two, and flashing the full boot art on the way into a developer tool reads like the game
@@ -151,7 +201,7 @@ export default function App() {
     );
   }
 
-  if (screen === "audioLab" && IS_DEV) {
+  if (screen === "audioLab" && AudioLabScreen) {
     return (
       <Suspense fallback={<div className="playground-chunk-fallback" />}>
         <AudioLabScreen
@@ -223,6 +273,24 @@ export default function App() {
             stopMusic();
             setScreen("audioLab");
           } : undefined}
+          resumeStatus={desktopResume.status}
+          onContinue={desktopResume.save ? () => {
+            const save = desktopResume.save!;
+            const deckIds = resumeDeckIds(save);
+            stopMusic();
+            setPlayerName(save.playerName);
+            setSetupTurns(save.setupTurns);
+            setSelectedDeckId(deckIds.playerDeckId);
+            setSelectedHostDeckId(deckIds.hostDeckId);
+            loadScenario(restoreResumeGame(save), deckIds);
+            setDesktopResume({ status: "none" });
+            setScreen("game");
+            startBattleMusic(true);
+          } : undefined}
+          onDiscardResume={desktopResume.status === "corrupt" ? () => {
+            void deleteDesktopResume();
+            setDesktopResume({ status: "none" });
+          } : undefined}
           onRestartFirstTime={() => {
             setScreen("start");
             setMenuReturnScreen("home");
@@ -231,6 +299,8 @@ export default function App() {
             setBootRevision((revision) => revision + 1);
           }}
           onStart={(options) => {
+            void deleteDesktopResume();
+            setDesktopResume({ status: "none" });
             setPreserveMenuMusic(false);
             setPlayerName(options.playerName);
             setSetupTurns(options.setupTurns);
@@ -267,6 +337,8 @@ export default function App() {
         setupTurns={setupTurns}
         encounterEntering={Boolean(launchTransition)}
         onReturnToMenu={() => {
+          void deleteDesktopResume();
+          setDesktopResume({ status: "none" });
           setPreserveMenuMusic(false);
           setMenuReturnScreen("home");
           setScreen("start");

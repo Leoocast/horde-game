@@ -308,7 +308,49 @@ test("the shared VFX renderer restores global state for every frame", () => {
 
   assert.match(source, /active\.setClearColor\(0x000000, 0\)/u);
   assert.match(source, /active\.setPixelRatio\(1\)/u);
-  assert.match(source, /active\.outputEncoding = frame\.outputEncoding \?\? THREE\.sRGBEncoding/u);
+  assert.match(source, /outputEncoding: THREE\.TextureEncoding = THREE\.sRGBEncoding/u);
+  assert.match(source, /active\.outputEncoding = outputEncoding/u);
+  assert.match(source, /frame\.outputEncoding/u);
+});
+
+test("the loading pipeline warms the shared renderer and representative VFX programs", () => {
+  const preloader = readFileSync(
+    new URL("../src/utils/assetPreloader.ts", import.meta.url),
+    "utf8",
+  );
+  const warmup = readFileSync(
+    new URL("../src/components/vfxWarmup.ts", import.meta.url),
+    "utf8",
+  );
+  const sharedRenderer = readFileSync(
+    new URL("../src/components/sharedVfxRenderer.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(preloader, /run:\s*prewarmGameVfx/u);
+  assert.match(warmup, /BURN_FIREBALL_FRAGMENT_SHADER/u);
+  assert.match(warmup, /new THREE\.MeshPhongMaterial/u);
+  assert.match(warmup, /new THREE\.SpriteMaterial/u);
+  assert.match(warmup, /new THREE\.LineBasicMaterial/u);
+  assert.match(sharedRenderer, /active\.compile\(frame\.scene, frame\.camera\)/u);
+  assert.match(sharedRenderer, /active\.getContext\(\)\.finish\(\)/u);
+});
+
+test("production resume checkpoints exclude Playground and presentation state", () => {
+  const service = readFileSync(
+    new URL("../src/persistence/resumeService.ts", import.meta.url),
+    "utf8",
+  );
+  const schema = readFileSync(
+    new URL("../src/persistence/resumeSave.ts", import.meta.url),
+    "utf8",
+  );
+  const app = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
+
+  assert.doesNotMatch(service, /playground/iu);
+  assert.doesNotMatch(schema, /playground/iu);
+  assert.match(schema, /checkpoint:\s*Object\.freeze\(\{ game:/u);
+  assert.match(app, /if \(screen !== "game"\) return;/u);
 });
 
 test("procedural Burn never mounts the legacy full-screen white flash", () => {
@@ -653,4 +695,16 @@ test("Kaelor's sky bolts converge on the upper-left marked point without base or
     assert.equal("ground" in storm, false);
     assert.equal("flecks" in storm, false);
   }
+});
+
+test("developer tools keep their development imports without a release URL escape hatch", () => {
+  const appSource = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
+  const gateSource = readFileSync(new URL("../src/utils/devMode.ts", import.meta.url), "utf8");
+
+  assert.match(appSource, /const PlaygroundScreen = import\.meta\.env\.DEV/);
+  assert.match(appSource, /import\("\.\/playground\/PlaygroundScreen"\)/);
+  assert.match(appSource, /const AudioLabScreen = import\.meta\.env\.DEV/);
+  assert.match(appSource, /import\("\.\/audio-lab\/AudioLabScreen"\)/);
+  assert.match(gateSource, /export const IS_DEV: boolean = import\.meta\.env\.DEV/);
+  assert.doesNotMatch(`${appSource}\n${gateSource}`, /\?playground/);
 });

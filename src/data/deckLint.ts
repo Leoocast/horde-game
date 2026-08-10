@@ -1,5 +1,5 @@
 import { DECK_REGISTRY, findCardDefinition } from "./decks";
-import type { NewDeckAbility, NewDeckCard, NewDeckList } from "./deckCatalog";
+import type { NewDeckAbility, NewDeckCard, NewDeckList } from "../content/contracts";
 import { cardIdFromName } from "./cardIdentity";
 import { normalizeDeck } from "./normalizeDeck";
 import { HOSTFALL_DECK_SCHEMA_VERSION, normalizeAuthoredDeck } from "./authoredDeckNormalizer";

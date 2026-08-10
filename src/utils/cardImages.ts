@@ -1,5 +1,6 @@
 import { DECK_REGISTRY } from "../data/decks";
 import type { DeckTheme } from "../data/deckCatalog";
+import { resolveBuiltinAssetUrl } from "../content/bootstrap";
 import gameArtRaw from "../data/cardStudioGameArt.generated.json";
 import runtimeLayoutRaw from "../data/cardRuntimeLayout.generated.json";
 import type { BattlefieldArtFrame } from "./battlefieldArtFrame";
@@ -65,8 +66,10 @@ const detailsById = new Map<string, CardDetails>([
     Object.entries(entry.images.cards).flatMap(([id, image]) =>
       image.imageUrl
         ? [[id, {
-            imageUrl: image.imageUrl,
-            battlefieldArtUrl: gameArt.cards[id]?.artUrl,
+            imageUrl: resolveBuiltinAssetUrl(image.imageUrl),
+            battlefieldArtUrl: gameArt.cards[id]?.artUrl
+              ? resolveBuiltinAssetUrl(gameArt.cards[id].artUrl)
+              : undefined,
             battlefieldArtFrame: gameArt.cards[id]?.battlefieldArtFrame,
             statsFrame: runtimeLayoutById.get(id)?.statsFrame,
           }] as [string, CardDetails]]

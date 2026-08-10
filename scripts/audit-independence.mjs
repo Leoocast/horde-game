@@ -256,7 +256,7 @@ function finding(id, severity, scope, title, description, result) {
 }
 
 const productionText = textFiles(["src"])
-  .concat([absolute("index.html"), absolute("vite.config.js")].filter(fs.existsSync));
+  .concat([absolute("index.html"), absolute("vite.config.ts")].filter(fs.existsSync));
 const toolText = textFiles(["dev/tools"]);
 const distText = textFiles(["dist"]);
 const internalText = textFiles(["src/engine", "src/store", "src/playground"]);

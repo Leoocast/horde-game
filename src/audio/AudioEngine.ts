@@ -42,6 +42,7 @@ class AudioEngine {
   private currentVariant: MusicVariant = "battle";
   private pausedByUser = false;
   private pausedByMute = false;
+  private pausedByLifecycle = false;
 
   configure(settings: Partial<AudioSettings>) {
     this.settings = {
@@ -114,6 +115,23 @@ class AudioEngine {
       sound.currentTime = 0;
     }
     this.activeSfx.clear();
+  }
+
+  suspendForLifecycle() {
+    this.stopAllSfx();
+    if (!this.music || this.music.paused) return this.getStatus();
+    this.pausedByLifecycle = true;
+    this.music.pause();
+    return this.getStatus();
+  }
+
+  resumeFromLifecycle() {
+    const shouldResume = this.pausedByLifecycle;
+    this.pausedByLifecycle = false;
+    if (shouldResume && this.music && this.settings.musicEnabled && !this.pausedByUser) {
+      void this.music.play().catch(() => undefined);
+    }
+    return this.getStatus();
   }
 
   resetSfx() {
@@ -192,7 +210,7 @@ class AudioEngine {
 
   resumeMusic() {
     if (!this.music) return this.getStatus();
-    if (!this.settings.musicEnabled || this.pausedByUser) return this.getStatus();
+    if (!this.settings.musicEnabled || this.pausedByUser || this.pausedByLifecycle) return this.getStatus();
     this.pausedByMute = false;
     void this.music.play().catch(() => undefined);
     return this.getStatus();
@@ -215,6 +233,7 @@ class AudioEngine {
     this.currentVariant = "battle";
     this.pausedByUser = false;
     this.pausedByMute = false;
+    this.pausedByLifecycle = false;
   }
 
   getStatus(): MusicStatus {

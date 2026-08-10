@@ -1,11 +1,13 @@
 # Testing
 
-Como se verifica este proyecto. No hay runner de UI ni snapshots: todo lo que se testea es
-determinista y corre en Node, sin DOM y sin navegador.
+Como se verifica este proyecto. La lógica determinista corre en Node; la vertical Electron añade un
+smoke empaquetado para frontera de seguridad, protocolo y media. El layout jugable y las animaciones
+completas siguen requiriendo QA manual.
 
 ## Comandos
 
-El usuario no tiene node/pnpm global; se usa el runtime bundled de Codex.
+El usuario no tiene node/pnpm global; se usa el runtime bundled de Codex. El toolchain de release
+está fijado en Node 24.14.x (`.node-version`) y pnpm 11.16.x (`packageManager` y `engines`).
 
 Typecheck (lo minimo despues de cualquier cambio):
 
@@ -51,13 +53,64 @@ de su propio generador.
 Build de produccion:
 
 ```bash
-C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe node_modules\vite\bin\vite.js build
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe node_modules\vite\bin\vite.js --config vite.config.ts build
 ```
+
+El script equivalente y canónico es `pnpm run build:web`; `build` se mantiene como alias web hasta
+que exista el build Electron. `vite.config.ts` es la única config Vite y todos los scripts la
+seleccionan explícitamente.
+
+Vertical Electron Windows x64:
+
+```bash
+pnpm electron:package
+pnpm electron:verify
+pnpm electron:smoke
+pnpm electron:repro
+pnpm electron:delta
+pnpm electron:release:audit
+```
+
+`electron:verify` lee el ASAR y los nueve fuses del binario. `electron:smoke` carga el `app.asar`
+real mediante Playwright, comprueba sandbox/preload, protocolo, PNG, arte fuente, font, Range/seek,
+WebGL/context loss, fullscreen, preferencias/resume, window state, single-instance y cero HTTP;
+después lanza el `Hostfall.exe` real con un boot probe oculto. El
+arnés Playwright no usa directamente el ejecutable fusionado porque el fuse requerido
+`EnableNodeCliInspectArguments: false` bloquea correctamente su canal de inspector.
+
+`electron:repro` construye dos paquetes unsigned y exige que sus 261 archivos tengan exactamente
+los mismos tamaños y SHA-256. `electron:delta` verifica que una carta sea un recurso individual y
+no invalide `app.asar`. `electron:release:audit` es un gate comercial: debe seguir fallando mientras
+queden fingerprints, audio, rights, licencia, icono o firma pendientes.
+
+Para QA interactivo de desarrollo, el usuario ejecuta `pnpm electron:start`. Los agentes no levantan
+ese servidor ni juegan el build como verificación automática.
+
+CI corre en Windows x64, instala con `pnpm install --frozen-lockfile` y ejecuta typecheck, suite,
+deck lint, proyección de Card Studio, `build:web`, auditoría offline e inventario runtime. Los
+scripts de instalación permitidos están declarados por paquete en `pnpm-workspace.yaml`, sin
+aprobación interactiva.
+
+Después de `build:web`, comprobar que no haya recursos remotos ni tooling de desarrollo en release:
+
+```bash
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\audit-offline-runtime.mjs
+```
+
+Comprobar el inventario de paths, tamaños y SHA-256 de `dist`:
+
+```bash
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\runtime-asset-inventory.mjs --check
+```
+
+Usar `--write` únicamente después de revisar un cambio intencional del build release. El output
+versionado es `docs/runtime_asset_inventory.json`.
 
 ## Como corre la suite
 
-`scripts/run-engine-tests.mjs` levanta un Vite en middleware mode y carga cada archivo de test con
-`ssrLoadModule`. Eso es lo que permite que los tests importen TypeScript y JSON del proyecto
+`scripts/run-engine-tests.mjs` levanta un Vite en middleware mode usando explícitamente
+`vite.config.ts` y carga cada archivo de test con `ssrLoadModule`. Eso es lo que permite que los
+tests importen TypeScript y JSON del proyecto
 directamente, sin build previo ni configuracion de transpilacion aparte. Los tests en si son
 `node:test` + `node:assert/strict`.
 
@@ -78,6 +131,12 @@ archivo no corre nunca.
 | `tests/playgroundActions.test.js` | Acciones del laboratorio usando reglas reales: energia, cast, muerte, movimiento de zona y eventos |
 | `tests/playgroundStorage.test.js` | Round-trip del schema v4 Hostfall, import/export, parseo defensivo y rechazo sin migración de versiones retiradas |
 | `tests/audioMix.test.js` | Cobertura y validacion del JSON de mezcla, import/export, conversion de dB y prohibicion de volumen escondido en `playSfx` |
+| `tests/contentCatalog.test.js` | Snapshot builtin inmutable, 61 identidades, aliases calificados, defaults estrictos, adapters de assets web/desktop, proyecciones de Card Studio, hashes JSON de Fase 2 y rechazo de candidatos external adversariales |
+| `tests/electronSecurity.test.js` | Policy pura de `hostfall://`, traversal/hosts/packs adversariales, MIME, Range, roots e integración de respuestas parciales con CSP |
+| `tests/electronPersistence.test.js` | Rutas cloud-worthy/local-only, escritura atómica, backup, corrupción y validación de window state |
+| `tests/desktopPreferences.test.js` | Envelope v1 de idioma/audio, límites y rechazo de schemas desconocidos |
+| `tests/resumeSave.test.js` | Round-trip/restore determinista, claves de deck y revisión, rechazo sin fallback, backup y checkpoints inseguros durante animaciones/combate/selecciones |
+| `tests/electronRelease.test.js` | Allowlist generada, grafo Card Studio-to-runtime, audio declarativo/local, hashes del staging y comparación de manifests de paquete |
 
 `tests/engineTestUtils.js` arma game states de prueba (`createTestGame`, `customCard`,
 `cardFromDeck`, `addCard`, `addForests`).
