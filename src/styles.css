@@ -10073,6 +10073,13 @@
     height: var(--hand-card-height);
   }
 
+  .hand-card-drag-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
   .hand-card {
     position: absolute;
     left: 50%;

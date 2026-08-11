@@ -21,7 +21,7 @@ import { targetCandidates, targetCandidatesWithSelectedTargets } from "../src/en
 import { queueUnusedNormalEnergy, releasePendingStoredEnergy } from "../src/engine/EnergySystem";
 import { performPlayerDraw, playerDrawForecast, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
 import { cardStatState, sortTraitsForDisplay } from "../src/utils/selectors";
-import { getHandCardPresentationState } from "../src/components/handCardPresentation";
+import { getHandCardPresentationState, handArchiveEntryOffset } from "../src/components/handCardPresentation";
 import { displayedReserveEnergy, reserveTransferPresentation } from "../src/components/reserveTransferPresentation";
 import {
   fitHoverCardDisplay,
@@ -355,6 +355,20 @@ test("discard selection stays raised while the hovered hand card layers above it
     getHandCardPresentationState({ index: 4, hovered: false, selectedForDiscard: false, dragging: false }),
     { raised: false, zIndex: 5 },
   );
+});
+
+test("drawn hand cards derive their entry translation from the shared Archive origin", () => {
+  assert.deepEqual(handArchiveEntryOffset({
+    archiveCenter: { x: 1000, y: 700 },
+    handCenterX: 500,
+    handBaselineY: 800,
+    cardWidth: 244,
+    cardHeight: 340,
+    handSize: 3,
+    index: 1,
+    stackMargin: -30,
+    fanY: 88,
+  }), { x: 500, y: -18 });
 });
 
 test("previews and raised hand cards use exact card-image geometry", () => {

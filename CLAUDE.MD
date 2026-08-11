@@ -357,6 +357,14 @@ No lanzar efectos relacionados todos a la vez. No recentrar el campo entre beats
 fuente no debe repetirse cuando el mismo evento continúa inmediatamente con líneas, proyectiles o
 impactos. Los resets incrementan `hostSequenceEpoch` para invalidar callbacks viejos.
 
+La Mano separa tres transformaciones que no deben volver a compartir el mismo nodo: el slot exterior
+anima entrada/salida y reorganización; una capa intermedia posee el drag; la carta interior posee el
+abanico y el hover. Toda carta robada después del reparto inicial nace en el centro DOM del Archivo
+del Cronista (`data-player-archive-origin`), y un robo múltiple comparte ese origen con entradas
+escalonadas. `AnimatePresence` mantiene el hueco fuera del layout mientras la carta sale para que las
+restantes se reorganicen con spring en vez de saltar. El contrato completo está en
+`docs/reference/animation_contracts.md`.
+
 VFX y Three.js: consultar `docs/reference/vfx_and_threejs.md` y reutilizar materiales/animadores existentes
 antes de crear otra implementación.
 

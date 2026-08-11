@@ -18,23 +18,28 @@ import {
   HAND_HOVER_CARD_DISPLAY_HEIGHT,
   HAND_HOVER_CARD_DISPLAY_WIDTH,
 } from "./cardDisplayGeometry";
-import { getHandCardPresentationState } from "./handCardPresentation";
+import { getHandCardPresentationState, handArchiveEntryOffset } from "./handCardPresentation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { motion, motionValue, type MotionValue, type PanInfo, type Variants } from "framer-motion";
+import { AnimatePresence, motion, motionValue, type MotionValue, type PanInfo, type Variants } from "framer-motion";
 
 const DRAG_PLAY_SCREEN_RATIO = 0.7;
 const ENERGY_RECYCLE_SCREEN_RATIO = 0.82;
 const ENERGY_RECYCLE_MIN_HORIZONTAL_DRAG = 48;
 const HAND_ENTRY_STAGGER = 0.07;
 const HAND_BASE_OVERLAP_RATIO = 0.12;
-type HandCardMotionContext = { index: number; stagger: boolean; fromArchive: boolean };
+type HandCardMotionContext = {
+  entryOrder: number;
+  stagger: boolean;
+  fromArchive: boolean;
+  entryOffset: { x: number; y: number };
+};
 const handCardMotion: Variants = {
   initial: (custom: HandCardMotionContext) => ({
     opacity: 0,
-    x: custom.fromArchive ? "calc(50vw - 150px)" : 260,
-    y: custom.fromArchive ? 62 : 18,
+    x: custom.fromArchive ? custom.entryOffset.x : 260,
+    y: custom.fromArchive ? custom.entryOffset.y : 18,
     rotate: custom.fromArchive ? -4 : 3,
-    scale: custom.fromArchive ? 0.72 : 0.94,
+    scale: custom.fromArchive ? 0.3 : 0.94,
   }),
   animate: (custom: HandCardMotionContext) => ({
     opacity: 1,
@@ -43,13 +48,19 @@ const handCardMotion: Variants = {
     rotate: 0,
     scale: 1,
     transition: {
-      opacity: { duration: 0.16, delay: custom.stagger ? custom.index * HAND_ENTRY_STAGGER : 0, ease: "easeOut" },
-      x: { type: "spring" as const, stiffness: 700, damping: 42, mass: 0.5, delay: custom.stagger ? custom.index * HAND_ENTRY_STAGGER : 0 },
-      y: { type: "spring" as const, stiffness: 700, damping: 42, mass: 0.5, delay: custom.stagger ? custom.index * HAND_ENTRY_STAGGER : 0 },
-      rotate: { type: "spring" as const, stiffness: 700, damping: 42, mass: 0.5, delay: custom.stagger ? custom.index * HAND_ENTRY_STAGGER : 0 },
-      scale: { type: "spring" as const, stiffness: 700, damping: 42, mass: 0.5, delay: custom.stagger ? custom.index * HAND_ENTRY_STAGGER : 0 },
+      opacity: { duration: 0.2, delay: custom.stagger ? custom.entryOrder * HAND_ENTRY_STAGGER : 0, ease: "easeOut" },
+      x: { type: "spring" as const, stiffness: 460, damping: 36, mass: 0.68, delay: custom.stagger ? custom.entryOrder * HAND_ENTRY_STAGGER : 0 },
+      y: { type: "spring" as const, stiffness: 460, damping: 36, mass: 0.68, delay: custom.stagger ? custom.entryOrder * HAND_ENTRY_STAGGER : 0 },
+      rotate: { type: "spring" as const, stiffness: 520, damping: 38, mass: 0.6, delay: custom.stagger ? custom.entryOrder * HAND_ENTRY_STAGGER : 0 },
+      scale: { type: "spring" as const, stiffness: 500, damping: 36, mass: 0.62, delay: custom.stagger ? custom.entryOrder * HAND_ENTRY_STAGGER : 0 },
     },
   }),
+  exit: {
+    opacity: 0,
+    y: -34,
+    scale: 0.9,
+    transition: { duration: 0.18, ease: [0.4, 0, 1, 1] },
+  },
 };
 
 export function Hand({ game }: { game: GameState }) {
@@ -114,11 +125,20 @@ export function Hand({ game }: { game: GameState }) {
   const visibleHand = game.player.hand.filter((card) => !hiddenBloodPactDrawIds.has(card.instanceId));
   const handSize = visibleHand.length;
   const handLayoutSignature = visibleHand.map((card) => card.instanceId).join("|");
+  const previousVisibleHandIds = useRef(new Set(visibleHand.map((card) => card.instanceId)));
+  const enteringHandIds = visibleHand
+    .filter((card) => !previousVisibleHandIds.current.has(card.instanceId))
+    .map((card) => card.instanceId);
+  const enteringHandOrder = new Map(enteringHandIds.map((id, index) => [id, index]));
 
   useEffect(() => () => {
     setEnergyRecycleDragActive(false);
     setDraggingRecyclableSourceId(undefined);
   }, [setDraggingRecyclableSourceId, setEnergyRecycleDragActive]);
+
+  useLayoutEffect(() => {
+    previousVisibleHandIds.current = new Set(visibleHand.map((card) => card.instanceId));
+  }, [handLayoutSignature]);
 
   useLayoutEffect(() => {
     const region = handRegionRef.current;
@@ -310,6 +330,8 @@ export function Hand({ game }: { game: GameState }) {
     setHoveredHandId(undefined);
   }
 
+  const handEntryGeometry = readHandEntryGeometry(handRegionRef.current, handCardsRef.current);
+
   return (
     <>
       {energyRecycleHint && <EnergyRecycleDragHint hint={energyRecycleHint} recycleLabel={t("hand.recycle")} hintLabel={t("hand.recycleHint")} />}
@@ -335,7 +357,8 @@ export function Hand({ game }: { game: GameState }) {
             onMouseMove={handleHandPointerMove}
             onMouseLeave={handleHandPointerLeave}
           >
-            {visibleHand.map((card, index) => {
+            <AnimatePresence mode="popLayout">
+              {visibleHand.map((card, index) => {
             const playable = isPlayableFromHand(game, card, unresolvedTriggerCount);
             const energyRecyclable = isEnergyRecyclable(game, card, unresolvedTriggerCount);
             const discardTargetable = tributeOfTheFourSorrowsSelectionKind === "discard" && !tributeOfTheFourSorrowsSelectionTargetId;
@@ -364,15 +387,26 @@ export function Hand({ game }: { game: GameState }) {
               showFullImage &&
               UI_FEATURE_FLAGS.useNativeHdHandImageRendering;
             const { x: dragX, y: dragY } = getDragMotionValues(card.instanceId);
+            const initialDealCard = initialHandIds.current.has(card.instanceId);
+            const entryOffset = handArchiveEntryOffset({
+              ...handEntryGeometry,
+              cardWidth: HAND_CARD_DISPLAY_WIDTH,
+              cardHeight: HAND_CARD_DISPLAY_HEIGHT,
+              handSize,
+              index,
+              stackMargin: handStackMargin,
+              fanY: 88 + fanDip,
+            });
             return (
               <motion.div
                 key={card.instanceId}
                 layout="position"
                 layoutDependency={handLayoutSignature}
                 custom={{
-                  index,
-                  stagger: initialHandIds.current.has(card.instanceId),
-                  fromArchive: !initialHandIds.current.has(card.instanceId),
+                  entryOrder: initialDealCard ? index : enteringHandOrder.get(card.instanceId) ?? 0,
+                  stagger: initialDealCard || enteringHandIds.length > 1,
+                  fromArchive: !initialDealCard,
+                  entryOffset,
                 }}
                 variants={handCardMotion}
                 initial="initial"
@@ -382,35 +416,39 @@ export function Hand({ game }: { game: GameState }) {
                   layout: { type: "spring", stiffness: 420, damping: 38, mass: 0.55 },
                 }}
                 className="hand-card-slot"
-                style={{ position: "relative", zIndex: handZIndex, x: dragX, y: dragY }}
-                drag={!tributeOfTheFourSorrowsSelectionActive && !handLimitDiscardActive && !hostAttackAnimating && !playerAttackAnimating}
-                dragElastic={0.08}
-                dragMomentum={false}
-                dragSnapToOrigin
-                whileDrag={{ zIndex: 120, rotate: 0 }}
-                onDragStart={(_, info) => {
-                  beginCenterGrabDrag(card.instanceId, info.point.x, info.point.y);
-                  selectHand(card.instanceId);
-                  setHoveredCardId(undefined);
-                  setHoveredHandId(undefined);
-                  setDraggingRecyclableSourceId(energyRecyclable ? card.instanceId : undefined);
-                  setEnergyRecycleDragActive(false);
-                  setDraggingCardId(card.instanceId);
-                }}
-                onDrag={(_, info) => updateCardDrag(card, info.point.x, info.point.y)}
-                onDragEnd={(_, info) => finishDrag(card, playable, info)}
-                onPointerUpCapture={(event) => {
-                  if (suppressedClickId !== card.instanceId) return;
-                  event.stopPropagation();
-                  event.preventDefault();
-                }}
-                onClickCapture={(event) => {
-                  if (suppressedClickId !== card.instanceId) return;
-                  event.stopPropagation();
-                  event.preventDefault();
-                }}
+                style={{ position: "relative", zIndex: handZIndex }}
               >
                 <motion.div
+                  className="hand-card-drag-layer"
+                  style={{ x: dragX, y: dragY }}
+                  drag={!tributeOfTheFourSorrowsSelectionActive && !handLimitDiscardActive && !hostAttackAnimating && !playerAttackAnimating}
+                  dragElastic={0.08}
+                  dragMomentum={false}
+                  dragSnapToOrigin
+                  whileDrag={{ zIndex: 120, rotate: 0 }}
+                  onDragStart={(_, info) => {
+                    beginCenterGrabDrag(card.instanceId, info.point.x, info.point.y);
+                    selectHand(card.instanceId);
+                    setHoveredCardId(undefined);
+                    setHoveredHandId(undefined);
+                    setDraggingRecyclableSourceId(energyRecyclable ? card.instanceId : undefined);
+                    setEnergyRecycleDragActive(false);
+                    setDraggingCardId(card.instanceId);
+                  }}
+                  onDrag={(_, info) => updateCardDrag(card, info.point.x, info.point.y)}
+                  onDragEnd={(_, info) => finishDrag(card, playable, info)}
+                  onPointerUpCapture={(event) => {
+                    if (suppressedClickId !== card.instanceId) return;
+                    event.stopPropagation();
+                    event.preventDefault();
+                  }}
+                  onClickCapture={(event) => {
+                    if (suppressedClickId !== card.instanceId) return;
+                    event.stopPropagation();
+                    event.preventDefault();
+                  }}
+                >
+                  <motion.div
                   ref={(el) => {
                     if (el) innerCardRefs.current.set(card.instanceId, el);
                     else innerCardRefs.current.delete(card.instanceId);
@@ -482,10 +520,12 @@ export function Hand({ game }: { game: GameState }) {
                         aria-hidden="true"
                       />
                     )}
+                  </motion.div>
                 </motion.div>
               </motion.div>
             );
-          })}
+              })}
+            </AnimatePresence>
             </div>
         </div>
       </section>
@@ -500,6 +540,35 @@ function isPlayableFromHand(game: GameState, card: CardInstance, pendingTriggere
   if (!canPayLifeCost(game, card.additionalCost)) return false;
   if (!canPayWithAutomaticEnergy(game, totalEnergyCost(card.energyCost, card.variableCost?.hasX ? 1 : 0))) return false;
   return hasValidTargetSequence(game, "player", card.requiresTargets);
+}
+
+function readHandEntryGeometry(
+  region: HTMLDivElement | null,
+  cards: HTMLDivElement | null,
+): {
+  archiveCenter: { x: number; y: number };
+  handCenterX: number;
+  handBaselineY: number;
+} {
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return {
+      archiveCenter: { x: 0, y: 0 },
+      handCenterX: 0,
+      handBaselineY: 0,
+    };
+  }
+
+  const archiveRect = document.querySelector<HTMLElement>("[data-player-archive-origin='true']")?.getBoundingClientRect();
+  const regionRect = region?.getBoundingClientRect();
+  const cardsRect = cards?.getBoundingClientRect();
+
+  return {
+    archiveCenter: archiveRect
+      ? { x: archiveRect.left + archiveRect.width / 2, y: archiveRect.top + archiveRect.height / 2 }
+      : { x: window.innerWidth - 110, y: window.innerHeight - 46 },
+    handCenterX: regionRect ? regionRect.left + regionRect.width / 2 : window.innerWidth / 2,
+    handBaselineY: cardsRect?.bottom ?? window.innerHeight,
+  };
 }
 
 function isEnergyRecyclable(game: GameState, card: CardInstance, pendingTriggeredEffectCount = 0): boolean {

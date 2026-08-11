@@ -641,6 +641,8 @@ es relevante. El usuario puede pedir simplificación, movimiento o eliminación 
 - movimiento reducido;
 - ataques por debajo, en y por encima del umbral;
 - animaciones y overlays que puedan tapar indicadores;
+- transiciones de la Mano al robar, Invocar, jugar o devolver una Fuente: la carta nueva debe salir
+  del Archivo y las cartas restantes deben reorganizarse sin saltos;
 - estados que no dependan sólo de color.
 
 ### QA manual mínimo del usuario

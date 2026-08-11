@@ -97,7 +97,11 @@ test("Memory, Archive and Life share one row of equal boxes and the Archive owns
   assert.match(boardSource, /<PlayerArchiveForecast game=\{game\}/u);
   assert.match(forecastSource, /data-player-archive-origin="true"/u);
   assert.match(forecastSource, /data-energy-recycle-target="true"/u);
-  assert.match(handSource, /fromArchive:\s*!initialHandIds\.current\.has/u);
+  assert.match(handSource, /handArchiveEntryOffset/u);
+  assert.match(handSource, /querySelector<HTMLElement>\("\[data-player-archive-origin='true'\]"\)/u);
+  assert.match(handSource, /<AnimatePresence mode="popLayout">/u);
+  assert.match(handSource, /className="hand-card-drag-layer"/u);
+  assert.doesNotMatch(handSource, /className="hand-card-slot"[\s\S]{0,180}style=\{\{[^}]*x:\s*dragX/su);
 
   // Memory and the Archive are the same box; only Life keeps the vitals panel.
   assert.match(boardSource, /className="player-vitals-row"/u);
