@@ -1,12 +1,13 @@
 # Seguimiento de la migración de Hostfall a Electron
 
-Última actualización: **2026-08-09**  
-Estado global: **migración en curso; Fase 3 completada, implementación de Fase 4 en validación**
-Fase activa: **Fase 4 — Persistencia y lifecycle**
-Plan técnico: [`electron_migration_plan.md`](electron_migration_plan.md)
+Última actualización: **2026-08-10**  
+Estado global: **migración Electron cerrada para desarrollo diario; release de la demo pendiente**
+Fase activa: **ninguna; Fases 5 y 6 diferidas al release de la demo**
+Plan técnico: [`migration_plan.md`](migration_plan.md)
 
-Este documento es el tablero operativo de la migración. El plan técnico explica las decisiones; este
-archivo registra qué se hizo, cómo se verificó y qué impide avanzar.
+Este documento conserva el cierre operativo de la migración y el trabajo diferido para publicar.
+El plan técnico explica las decisiones; este archivo registra qué se hizo, cómo se verificó y qué
+queda reservado para el release de la demo.
 
 ## Reglas de seguimiento
 
@@ -14,9 +15,12 @@ archivo registra qué se hizo, cómo se verificó y qué impide avanzar.
 - Cada fase debe dejar un web build o desktop build funcional, según corresponda.
 - No marcar una tarea por intención: registrar PR/commit y evidencia.
 - Las regresiones de engine, Card Studio o decks bloquean la fase.
-- Los JSON authored de decks no se cambian como parte de esta migración.
+- El congelamiento de los JSON authored terminó con el cierre de la migración diaria: vuelve a estar
+  permitido añadir y modificar contenido. Los cambios de schema siguen siendo trabajo intencional,
+  con migración y validación propias.
 - Los blockers independientes se resuelven en PRs separados.
 - Steam Cloud, Steamworks y Workshop no forman parte de las fases 0-6.
+- Las Fases 5 y 6 no bloquean contenido ni el workflow diario; se reanudan al preparar la demo.
 
 Estados permitidos:
 
@@ -30,7 +34,7 @@ Estados permitidos:
 
 | Fase | Nombre | Dependencias | Estado | PR/commit | Evidencia de cierre |
 | --- | --- | --- | --- | --- | --- |
-| Preflight | Auditoría y plan | Ninguna | Completada | — | `electron_migration_plan.md` |
+| Preflight | Auditoría y plan | Ninguna | Completada | — | `migration_plan.md` |
 | 0 | Baseline y toolchain determinista | Ninguna | Completada | — | Gates automáticos verdes y QA manual de Card Studio aprobada |
 | 1 | Renderer offline y release-clean | Fase 0 | Completada | — | Gates automáticos y QA manual aprobados |
 | 2 | Frontera de contenido builtin | Fase 1 | Completada | — | Gates automáticos y QA manual aprobados |
@@ -39,7 +43,8 @@ Estados permitidos:
 | 5 | Packaging Windows x64 reproducible | Fases 3-4 | En validación | — | Paquete reproducible y smoke verdes; blockers comerciales abiertos |
 | 6 | SteamPipe y rama privada | Fase 5 | No iniciada | — | — |
 
-Progreso de implementación: **5/7 fases**.
+Cierre de desarrollo: **Fases 0-4 completadas; workflow diario y cambios de contenido habilitados**.
+Release de demo: **Fase 5 en validación y Fase 6 no iniciada, ambas diferidas**.
 
 ## Baseline conocido antes de empezar
 
@@ -57,36 +62,36 @@ Progreso de implementación: **5/7 fases**.
 
 ### Gameplay
 
-- [ ] Los cuatro decks siguen presentes y jugables.
-- [ ] Los 61 IDs builtin conservan su comportamiento.
-- [ ] Las mismas seeds producen resultados equivalentes.
-- [ ] Ninguna regla se mueve a componentes o al proceso main.
-- [ ] Las animaciones conservan orden e impactos.
+- Los cuatro decks siguen presentes y jugables.
+- Los 61 IDs builtin conservan su comportamiento.
+- Las mismas seeds producen resultados equivalentes.
+- Ninguna regla se mueve a componentes o al proceso main.
+- Las animaciones conservan orden e impactos.
 
 ### Playground
 
-- [ ] Continúa disponible en desarrollo.
-- [ ] Boards/replays conservan sus schemas y namespaces vigentes.
-- [ ] No se migra a saves de producción.
-- [ ] No entra en el paquete Steam.
-- [ ] El build release no puede reactivarlo mediante `?playground`.
+- Continúa disponible en desarrollo.
+- Boards/replays conservan sus schemas y namespaces vigentes.
+- No se migra a saves de producción.
+- No entra en el paquete Steam.
+- El build release no puede reactivarlo mediante `?playground`.
 
 ### Card Studio
 
-- [ ] El servidor local continúa escuchando sólo en `127.0.0.1`.
-- [ ] Puede cargar arte y guardarlo en `public/cards/<deck>/art/`.
-- [ ] Puede guardar `studio.config.json`.
-- [ ] Puede guardar `game-art.config.json`.
-- [ ] `battlefieldArtFrame` conserva zoom, X e Y por carta.
-- [ ] Regenera `deck-data.generated.js`.
-- [ ] Regenera `src/data/cardStudioGameArt.generated.json`.
-- [ ] La exportación española actualiza el PNG runtime.
-- [ ] La exportación actualiza `src/data/cardRuntimeLayout.generated.json` cuando corresponde.
-- [ ] La exportación actualiza `generation-manifest.json`.
-- [ ] Cambiar sólo `battlefieldArtFrame` no vuelve obsoleto el PNG.
-- [ ] El campo Electron muestra el mismo recorte que el preview `En juego`.
-- [ ] Mano, hover, detalles, colección y animadores siguen usando el PNG completo.
-- [ ] Card Studio no se incluye en el paquete Steam.
+- El servidor local continúa escuchando sólo en `127.0.0.1`.
+- Puede cargar arte y guardarlo en `public/cards/<deck>/art/`.
+- Puede guardar `studio.config.json`.
+- Puede guardar `game-art.config.json`.
+- `battlefieldArtFrame` conserva zoom, X e Y por carta.
+- Regenera `deck-data.generated.js`.
+- Regenera `src/data/cardStudioGameArt.generated.json`.
+- La exportación española actualiza el PNG runtime.
+- La exportación actualiza `src/data/cardRuntimeLayout.generated.json` cuando corresponde.
+- La exportación actualiza `generation-manifest.json`.
+- Cambiar sólo `battlefieldArtFrame` no vuelve obsoleto el PNG.
+- El campo Electron muestra el mismo recorte que el preview `En juego`.
+- Mano, hover, detalles, colección y animadores siguen usando el PNG completo.
+- Card Studio no se incluye en el paquete Steam.
 
 ---
 
@@ -164,7 +169,7 @@ Estado: **Completada**
   posterior, no bloqueante.
 - Card Studio check: suite, `card-studio-data --check` y smoke manual aprobados.
 - Build: 278 archivos, 458343707 bytes; inventario completo en
-  `runtime_asset_inventory.json`. Cero chunks/markers de Playground y Audio Lab.
+  `docs/data/generated/runtime_asset_inventory.json`. Cero chunks/markers de Playground y Audio Lab.
 - Tests: 308/308; deck lint, independence strict y frozen install pasan.
 - Fecha de cierre: 2026-08-09.
 
@@ -211,7 +216,8 @@ Estado: **Completada**
   revision `builtin.hostfall.core@0.0.2-beta.0`.
 - Determinism test: suite completa 316/316; el test de seed y los tests de engine existentes pasan.
 - Card Studio regression: proyección vigente; URLs web idénticas; arte de campo y full-art
-  verificados. Hashes SHA-256 fijados en `electron_phase2_json_baseline.json`.
+  verificados. Hashes SHA-256 fijados en
+  `docs/data/baselines/electron_phase2_json_baseline.json`.
 - Build/gates: typecheck, deck lint, `card-studio-data --check`, independence strict, dos builds,
   auditor offline e inventario reproducible verdes. Build: 278 archivos, 458349850 bytes.
 - QA manual: juego, Playground y Card Studio aprobados por el usuario.
@@ -324,7 +330,7 @@ Estado: **Completada**
 - PR/commit: cambios locales en rama `electron`; sin commit solicitado.
 - Save schema/version: `hostfall-resume` v1; `hostfall-preferences` v1; window state v1.
 - Rutas: `profile/preferences-v1.json`, `profile/saves/resume-v1.json` y
-  `local/window-state-v1.json`; contrato en `docs/electron_persistence.md`.
+  `local/window-state-v1.json`; contrato en `docs/electron/persistence.md`.
 - Determinism resume test: JSON round-trip del `GameState`, restore puro, claves calificadas y
   revisión exacta; suite 337/337 al cierre.
 - Corruption tests: primario inválido recupera backup; dos candidatos inválidos presentan borrado;
@@ -356,7 +362,7 @@ Estado: **En validación**
 - [ ] Añadir icono final; metadata Windows ya está fijada.
 - [x] Comparar dos builds unsigned.
 - [ ] Configurar firma después de la comparación.
-- [ ] Resolver NOTICE, provenance y SFX pendientes.
+- [ ] Resolver NOTICE y SFX pendientes.
 - [x] Medir delta de modificar una carta.
 
 ## Gates
@@ -386,7 +392,7 @@ Estado: **En validación**
 - Delta: modificar una carta altera un recurso individual y deja `app.asar` intacto.
 - Smoke: bridge cerrado, fullscreen/persistencia, PNG/arte/fuente, MP3 externo con seek,
   WebGL/context loss, cero HTTP, segunda instancia y ejecutable fusionado verdes.
-- Firma/icono/rights: pendientes; detalle y comandos en `docs/electron_release.md`.
+- Firma/icono/rights: pendientes; detalle y comandos en `docs/electron/release.md`.
 - Fecha de cierre: pendiente de QA final y blockers comerciales.
 
 ---
@@ -441,7 +447,6 @@ Estado: **No iniciada**
 | --- | --- | --- | --- | --- | --- | --- |
 | BLK-001 | Asset gate | 61 PNG tienen fingerprints obsoletos | Owner | 5 | Abierto | Reexportar los cuatro decks desde Card Studio vigente |
 | BLK-002 | Auditor | `magic` en comentario producía un blocker falso | Codex | 0 | Resuelto | Comentario neutralizado; strict pasa con cero blockers |
-| BLK-003 | Derechos | Provenance contiene verificaciones pendientes | Owner | 5 | Abierto | Aprobar y registrar derechos antes de distribución |
 | BLK-004 | Audio | Once SFX mantienen `_NEED_REVIEW` | Owner | 5 | Abierto | Escuchar, aprobar/reemplazar y retirar el marcador |
 | BLK-005 | Audio runtime | Faltaban `Other/Battle_1.mp3` y `Other/Climax_1.mp3`; Vite dejaba las URLs sin resolver | Codex | 1 | Resuelto | Colección inexistente retirada del manifest y audio mix; build sin referencias faltantes |
 | BLK-006 | Licencia | El paquete npm de GSAP no incluye texto de licencia local | Owner | 5 | Abierto | Revisar términos aplicables y añadir el texto/notice autorizado |
@@ -468,3 +473,4 @@ Estado: **No iniciada**
 | 2026-08-09 | Fase 4 implementada: fullscreen/F11, preferencias, window state, resume seguro, backup, recovery, single-instance y lifecycle; QA manual pendiente | Codex |
 | 2026-08-09 | QA manual aprobada; Fase 4 completada y Fase 5 iniciada | Codex |
 | 2026-08-09 | Fase 5 técnica empaquetada: allowlist, audio externo al ASAR, manifest, delta y doble build reproducible; blockers comerciales abiertos | Codex |
+| 2026-08-09 | Migración Electron cerrada para desarrollo diario; se descongelan los JSON de contenido y las Fases 5-6 quedan diferidas al release de la demo | Codex |

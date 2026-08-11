@@ -190,7 +190,7 @@ test("external content policy rejects handlers, markers, remote URLs, traversal 
 });
 
 test("Electron Phase 2 leaves authored and Card Studio JSON byte-for-byte at its captured baseline", () => {
-  const baselinePath = path.resolve("docs", "electron_phase2_json_baseline.json");
+  const baselinePath = path.resolve("docs", "data", "baselines", "electron_phase2_json_baseline.json");
   const baseline = JSON.parse(fs.readFileSync(baselinePath, "utf8"));
   assert.equal(Object.keys(baseline.files).length, 10);
   for (const [relativePath, expectedHash] of Object.entries(baseline.files)) {

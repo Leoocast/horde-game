@@ -4,7 +4,7 @@ import path from "node:path";
 
 const ROOT = process.cwd();
 const DIST_ROOT = path.join(ROOT, "dist");
-const OUTPUT = path.join(ROOT, "docs", "runtime_asset_inventory.json");
+const OUTPUT = path.join(ROOT, "docs", "data", "generated", "runtime_asset_inventory.json");
 const WRITE = process.argv.includes("--write");
 const CHECK = process.argv.includes("--check");
 

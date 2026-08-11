@@ -62,7 +62,7 @@ demuestra que cambia un solo recurso, sin tocar `app.asar`.
 La comparación reproducible siempre se ejecuta antes de firmar. La firma no se configurará hasta
 que el owner entregue la identidad legal y el certificado de code signing; esos secretos nunca se
 guardan en el repo. Falta también aprobar un `.ico` final multirresolución en `build/icon.ico`.
-La aprobación pública de identidad se registra sin secretos en `docs/windows_signing.json`; el
+La aprobación pública de identidad se registra sin secretos en `docs/electron/windows_signing.json`; el
 certificado y sus credenciales se inyectan sólo desde el entorno seguro de release.
 
 ## Gates comerciales pendientes
@@ -71,7 +71,6 @@ certificado y sus credenciales se inyectan sólo desde el entorno seguro de rele
 
 - los 61 PNG no se hayan reexportado desde el Card Studio vigente;
 - queden sonidos `_NEED_REVIEW`;
-- los registros de provenance sigan sin aprobación del owner;
 - falte el texto/licencia autoritativa de una dependencia distribuida;
 - falten icono o identidad de firma.
 

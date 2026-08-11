@@ -4,6 +4,9 @@ Notas de diseño para variantes futuras. Estas reglas todavía no forman parte n
 
 ## Modo difícil
 
+Estado: la dificultad `hard` del menú está implementada. Los modificadores y la progresión que se
+enumeran a continuación son propuestas futuras y todavía no forman parte del engine.
+
 El objetivo no es solamente aumentar estadísticas, sino obligar al jugador a tomar decisiones distintas.
 
 Posibles modificadores:

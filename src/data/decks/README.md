@@ -1,7 +1,7 @@
 # Deck Data Format
 
 Este archivo resume el formato. La guía operativa completa para implementar una carta está en
-[`docs/adding_cards.md`](../../../docs/adding_cards.md).
+[`docs/guides/adding_cards.md`](../../../docs/guides/adding_cards.md).
 
 Deck folders under `src/data/decks/` are the current gameplay card data format.
 
@@ -162,7 +162,7 @@ Marcadores admitidos:
 - `custom`: resuelta por un flujo bespoke existente fuera del resolver genérico.
 
 Las limitaciones concretas y el proceso para ampliar efectos, triggers, targets, activaciones y
-presentación están documentados en `docs/adding_cards.md`. El comando
+presentación están documentados en `docs/guides/adding_cards.md`. El comando
 `node scripts/lint-decks.mjs` es la fuente actual para saber qué cartas siguen WIP.
 
 Los antiguos `player_deck.json` y `horde_deck.json` de la raíz fueron eliminados. No recrearlos:

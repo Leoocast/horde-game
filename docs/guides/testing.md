@@ -104,7 +104,7 @@ C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\
 ```
 
 Usar `--write` únicamente después de revisar un cambio intencional del build release. El output
-versionado es `docs/runtime_asset_inventory.json`.
+versionado es `docs/data/generated/runtime_asset_inventory.json`.
 
 ## Como corre la suite
 
@@ -126,11 +126,16 @@ archivo no corre nunca.
 | `tests/deckLint.test.js` | El deck lint como test: una habilidad desconocida rompe la suite; también protege versión, side, vocabulario cerrado Hostfall, perfiles de reglas y normalización de zonas authored |
 | `tests/deckCardText.test.js` | Formato puro del texto impreso, fuente runtime única de reglas, proyecciones generadas y assets locales: Rasgos, Fuerza/Aguante, contadores, creación de fichas, párrafos y rutas de arte |
 | `tests/battlefieldLayout.test.js` | Reglas puras de layout del campo: slots que se sostienen durante la secuencia de la Horda, y congelamiento del agrupado en stacks |
+| `tests/targetingGeometry.test.js` | Geometría pura para selección de objetivos y solapamiento visible entre fuente y target |
+| `tests/tacticalArrowGeometry.test.js` | Construcción, orientación y estabilidad de las flechas tácticas |
+| `tests/attackChevronGeometry.test.js` | Forma, simetría y anclajes del chevrón de ataque |
 | `tests/cardVoiceInteractions.test.js` | Reglas de voz entre cartas, filtros por subtipo, probabilidades y conteo de ataques confirmados |
 | `tests/playgroundScenario.test.js` | Construccion, validacion, snapshot y reproducibilidad de escenarios |
 | `tests/playgroundActions.test.js` | Acciones del laboratorio usando reglas reales: energia, cast, muerte, movimiento de zona y eventos |
 | `tests/playgroundStorage.test.js` | Round-trip del schema v4 Hostfall, import/export, parseo defensivo y rechazo sin migración de versiones retiradas |
 | `tests/audioMix.test.js` | Cobertura y validacion del JSON de mezcla, import/export, conversion de dB y prohibicion de volumen escondido en `playSfx` |
+| `tests/vocabulary.test.js` | Vocabulario público retirado, presentación localizada de cartas y ausencia de rutas dormidas de tutorial |
+| `tests/uiPresentation.test.js` | Contratos puros y estáticos de presentación: VFX compartido, Burn, presets, capas y geometría visual |
 | `tests/contentCatalog.test.js` | Snapshot builtin inmutable, 61 identidades, aliases calificados, defaults estrictos, adapters de assets web/desktop, proyecciones de Card Studio, hashes JSON de Fase 2 y rechazo de candidatos external adversariales |
 | `tests/electronSecurity.test.js` | Policy pura de `hostfall://`, traversal/hosts/packs adversariales, MIME, Range, roots e integración de respuestas parciales con CSP |
 | `tests/electronPersistence.test.js` | Rutas cloud-worthy/local-only, escritura atómica, backup, corrupción y validación de window state |
@@ -143,7 +148,7 @@ archivo no corre nunca.
 
 ## Que NO se testea, y por que
 
-No hay tests de React. No se montan componentes, no se mide layout real y no se conducen
+No hay tests que monten React. No se mide layout real ni se conducen
 animaciones. El navegador queda para el usuario, que juega el build el mismo.
 
 La consecuencia practica: **si un bug visual depende de logica, esa logica se saca del componente

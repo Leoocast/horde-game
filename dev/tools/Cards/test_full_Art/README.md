@@ -46,7 +46,7 @@ En los dos, los stats viven en la franja de arte y la línea de tipo separa el a
 
 ## La carta de prueba
 
-Inventada, pero escrita con el vocabulario del juego (`docs/game_vocabulary.md`):
+Inventada, pero escrita con el vocabulario del juego (`docs/reference/game_vocabulary.md`):
 
 - **Ilvara, Filo del Juramento** · coste 6 · 5/5
 - Tipo: `Eco — Humano Caballero` en la común, `Eco de Crónica — Humano Caballero` en la full art

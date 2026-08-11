@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hostfall — Variantes del menú principal</title>
+<style>
+@font-face{font-family:"Cinzel Decorative";src:url(../../../../public/fonts/pact-of-elarion/cinzel-decorative-latin.woff2) format("woff2");font-display:block}
+@font-face{font-family:"Cinzel";src:url(../../../../public/fonts/pact-of-elarion/cinzel-latin.woff2) format("woff2");font-display:block}
+@font-face{font-family:"Lora";src:url(../../../../public/fonts/pact-of-elarion/lora-normal-latin.woff2) format("woff2");font-display:block}
+@font-face{font-family:"Lora";src:url(../../../../public/fonts/pact-of-elarion/lora-italic-latin.woff2) format("woff2");font-style:italic;font-display:block}
+@font-face{font-family:"Oswald";src:url(../../../../public/fonts/pact-of-elarion/oswald-latin.woff2) format("woff2");font-display:block}
+
+:root{--bg:url(../../../../assets/images/background.webp)}
+*{box-sizing:border-box}
+body{margin:0;background:#0a0c0d;color:#d9d4c6;font-family:"Lora",Georgia,serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:52px 24px 110px}
+
+/* ---------- chrome del documento ---------- */
+.doc-head{border-bottom:1px solid #23292b;padding-bottom:34px}
+.doc-kicker{font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:#7b8683}
+.doc-head h1{font-family:"Cinzel Decorative",Georgia,serif;font-size:clamp(30px,5vw,48px);margin:14px 0 0;color:#e3d6b0;font-weight:400;letter-spacing:-.02em;text-wrap:balance}
+.doc-head p{max-width:74ch;color:#9aa39e;font-size:15.5px;line-height:1.65;margin:16px 0 0}
+.variant{margin:64px 0 0}
+.vhead{display:flex;align-items:baseline;gap:15px;flex-wrap:wrap;margin-bottom:8px}
+.vnum{font-family:"Oswald",sans-serif;font-size:12px;letter-spacing:.2em;color:#5f6a67;border:1px solid #2a3134;padding:3px 8px}
+.vhead h2{font-family:"Cinzel Decorative",Georgia,serif;font-weight:400;font-size:28px;margin:0;color:#e6d7ae}
+.vtag{font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#7f8a86}
+.vlede{color:#98a29d;font-size:15px;line-height:1.62;max-width:80ch;margin:0 0 18px}
+.stage{position:relative;overflow:hidden;border:1px solid #262d30;background:#000;box-shadow:0 20px 48px rgba(0,0,0,.6)}
+/* lienzo a 1920×1080: es la resolución para la que están calibrados los clamp() actuales */
+.screen{width:1920px;height:1080px;position:relative;overflow:hidden;transform-origin:top left;transform:scale(var(--s,1))}
+.changes{margin:20px 0 0;padding:0;list-style:none;display:grid;gap:9px}
+.changes li{position:relative;padding-left:26px;font-size:14px;line-height:1.55;color:#98a29d}
+.changes li::before{content:"→";position:absolute;left:0;top:0;color:#a8945f;font-family:"Oswald",sans-serif}
+.changes li b{color:#dccfa8;font-weight:400;font-family:"Cinzel",serif}
+.caveat{margin:16px 0 0;font-size:13.5px;line-height:1.6;color:#7d8884;font-style:italic;border-left:2px solid #2c3436;padding-left:14px;max-width:78ch}
+
+/* ============================================================
+   BASE — reproduce el shell actual del menú (styles.css)
+   ============================================================ */
+.mm{--panel:590px;color:#f6e6b8;font-family:Georgia,"Times New Roman",serif;
+  background-color:#080c0f;
+  background-image:
+    linear-gradient(90deg, rgb(4 7 9/.98) 0%, rgb(9 14 17/.95) 29%, rgb(13 19 22/.62) 55%, rgb(7 10 12/.42) 100%),
+    linear-gradient(0deg, rgb(3 6 8/.92), rgb(0 0 0/.08) 58%),
+    var(--bg);
+  background-position:center,center,58% center;background-repeat:no-repeat;background-size:cover}
+.mm .veil{position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(circle at 72% 43%, rgb(0 0 0/.06) 0 17%, rgb(7 11 14/.26) 42%, rgb(2 5 7/.74) 100%),
+    linear-gradient(180deg, rgb(0 0 0/.74), rgb(0 0 0/.08) 20% 68%, rgb(0 0 0/.8))}
+.mm .seam{position:absolute;top:0;bottom:0;left:var(--panel);width:1px;
+  background:linear-gradient(transparent 8%, rgb(156 137 89/.3) 28%, rgb(156 137 89/.15) 72%, transparent 94%);
+  box-shadow:14px 0 36px rgb(0 0 0/.35)}
+.mm .panel{position:absolute;left:0;top:0;width:var(--panel);height:1080px;display:grid;
+  grid-template-rows:auto 1fr auto;padding:86px 80px 34px;
+  background:linear-gradient(115deg, rgb(7 13 15/.66), rgb(9 15 16/.3));
+  -webkit-backdrop-filter:blur(10px) saturate(.9);backdrop-filter:blur(10px) saturate(.9)}
+.mm .kicker{color:#879397;font-size:10px;font-weight:700;letter-spacing:.28em;text-transform:uppercase}
+.mm .wordmark{font-family:"Cinzel Decorative",Georgia,serif;font-weight:400;letter-spacing:-.035em;line-height:.95;
+  margin:16px 0 0;color:#d8c99f;font-size:82px;text-shadow:0 4px 22px rgb(0 0 0/.85)}
+.mm .subtitle{display:flex;align-items:center;gap:10px;margin-top:12px;color:#7f8d91;font-size:11px;
+  font-weight:800;letter-spacing:.42em;text-transform:uppercase}
+.mm .subtitle i{width:30px;height:1px;background:#8b7443;display:block}
+.mm .credits{position:absolute;left:80px;bottom:34px;z-index:5;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.04em;color:#66776f;font-family:"Trebuchet MS",Verdana,sans-serif}
+.mm .credits span{display:block;margin-bottom:3px}
+
+/* luciérnagas */
+.flies{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.flies i{position:absolute;border-radius:50%;background:#e8d98c;
+  box-shadow:0 0 7px 2px rgb(220 205 114/.55), 0 0 18px 5px rgb(148 178 93/.18);opacity:0;
+  animation:fly var(--d) ease-in-out var(--dl) infinite}
+@keyframes fly{0%,100%{opacity:0;transform:translate3d(-18px,18px,0) scale(.6)}
+ 12%{opacity:.85}44%{opacity:.3;transform:translate3d(var(--mx),var(--my),0) scale(1)}
+ 68%{opacity:.92;transform:translate3d(var(--dx),var(--dy),0) scale(.78)}88%{opacity:.18}}
+@media(prefers-reduced-motion:reduce){.flies i{animation:none;opacity:.4}}
+
+/* ---------- A · entradas actuales ---------- */
+.nav-now{align-self:center;width:330px}
+.entry{position:relative;display:flex;align-items:center;gap:15px;width:100%;min-height:58px;
+  border-bottom:1px solid rgb(145 154 157/.15);color:#abb4b6;font-size:23px;letter-spacing:.075em;
+  text-transform:uppercase;cursor:default;transition:color 160ms ease,padding-left 160ms ease,background-color 160ms ease}
+.entry::after{position:absolute;right:0;bottom:-1px;left:0;height:1px;
+  background:linear-gradient(90deg,#a38c54,transparent 76%);content:"";opacity:0;transform:scaleX(.45);
+  transform-origin:left;transition:opacity 160ms ease,transform 160ms ease}
+.entry:hover{padding-left:8px;background:linear-gradient(90deg, rgb(111 124 128/.13), transparent 82%);color:#f0e5c4}
+.entry:hover::after{opacity:1;transform:scaleX(1)}
+.entry .mark{width:5px;height:5px;flex:0 0 auto;border:1px solid #877849;background:#1a2225;transform:rotate(45deg);
+  transition:background-color 160ms ease,box-shadow 160ms ease}
+.entry:hover .mark{background:#b9a46a;box-shadow:0 0 12px rgb(185 164 106/.55)}
+.entry.dis{opacity:.42;cursor:not-allowed}
+.entry.dis:hover{padding-left:0;background:none;color:#8f9998}
+.entry.dis:hover::after{opacity:0;transform:scaleX(0)}
+
+/* ---------- ficha del Cronista (actual, esquina superior derecha) ---------- */
+.chron{position:absolute;z-index:4;top:59px;right:64px;display:flex;align-items:flex-start;gap:15px;width:320px;
+  border-bottom:1px solid rgb(153 170 160/.24);padding:3px 4px 15px 0;
+  background:linear-gradient(90deg,transparent, rgb(7 15 15/.2));text-align:right}
+.chron .mk{width:9px;height:9px;flex:0 0 auto;margin-top:10px;border:1px solid #a69258;background:#1b2824;
+  box-shadow:0 0 12px rgb(176 199 118/.22);transform:rotate(45deg)}
+.chron > div{flex:1;min-width:0}
+.chron strong{display:block;color:#e8dcb9;font-family:"Cinzel Decorative",Georgia,serif;font-size:28px;font-weight:400;
+  letter-spacing:.065em;line-height:1.12;text-shadow:0 2px 11px rgb(0 0 0/.78)}
+.chron small{display:block;margin-top:7px;color:#81918b;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase}
+.chron .edit{width:39px;height:39px;flex:0 0 auto;display:grid;place-items:center;border:1px solid rgb(169 148 88/.46);
+  background:linear-gradient(145deg, rgb(32 45 40/.86), rgb(8 15 15/.9));color:#bba66d;font-size:15px;
+  box-shadow:inset 0 1px 0 rgb(255 245 197/.06), 0 7px 18px rgb(0 0 0/.3);
+  clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)}
+
+/* ============================================================
+   B · JERARQUÍA — mismos materiales, distinta lectura
+   ============================================================ */
+.vb .wordmark,.vc .wordmark{font-size:82px;margin:0}
+.brand{border-bottom:1px solid rgb(163 145 94/.24);padding-bottom:30px}
+.vb .subtitle,.vc .subtitle{letter-spacing:.2em;font-size:11px;color:#8a9698;gap:0}
+.nav{align-self:center;width:100%;display:flex;flex-direction:column;gap:4px}
+/* acción primaria: la partida en curso, con su estado */
+.resume{position:relative;display:grid;grid-template-columns:3px 1fr auto;align-items:center;gap:0 16px;
+  padding:15px 14px 15px 0;cursor:default;transition:background 160ms ease}
+.resume::before{content:"";grid-row:1/3;width:3px;height:100%;
+  background:linear-gradient(180deg,transparent,#c2a761,transparent);box-shadow:0 0 12px rgb(194 167 97/.5)}
+.resume b{grid-column:2;font-family:"Cinzel Decorative",Georgia,serif;font-weight:400;font-size:38px;color:#ecdcae;
+  letter-spacing:.02em;line-height:1.1;text-shadow:0 2px 12px rgb(0 0 0/.7)}
+.resume small{grid-column:2;font-family:Georgia,serif;font-size:15px;color:#8b968f;letter-spacing:.02em;margin-top:6px}
+.resume .go{grid-column:3;grid-row:1/3;color:#c2a761;font-size:26px;transition:transform 160ms ease}
+.resume:hover{background:linear-gradient(90deg, rgb(120 133 137/.14), transparent 78%)}
+.resume:hover .go{transform:translateX(4px)}
+.resume:hover b{color:#fbeec6}
+.group-rule{height:1px;background:linear-gradient(90deg, rgb(163 145 94/.28), transparent 72%);margin:14px 0 6px}
+.entry2{position:relative;display:flex;align-items:center;gap:15px;min-height:52px;color:#a3adaf;font-size:23px;
+  letter-spacing:.08em;text-transform:uppercase;cursor:default;
+  transition:color 150ms ease,padding-left 150ms ease}
+.entry2 .mark{width:5px;height:5px;flex:0 0 auto;border:1px solid #6f6647;background:transparent;transform:rotate(45deg);
+  transition:background-color 150ms ease,box-shadow 150ms ease,border-color 150ms ease}
+.entry2:hover{padding-left:9px;color:#f2e7c6}
+.entry2:hover .mark{background:#c2a761;border-color:#c2a761;box-shadow:0 0 12px rgb(194 167 97/.55)}
+.entry2.minor{font-size:18px;letter-spacing:.12em;color:#7e8a8c;min-height:44px}
+.entry2.minor:hover{color:#cfd6cd}
+/* "pronto" en vez de un botón medio apagado que parece roto */
+.soon{margin-left:auto;font-family:"Trebuchet MS",Verdana,sans-serif;font-size:8.5px;font-weight:900;letter-spacing:.18em;
+  text-transform:uppercase;color:#6b7770;border:1px solid rgb(126 139 135/.3);padding:3px 7px}
+.entry2.locked{color:#68746f;cursor:default}
+.entry2.locked:hover{padding-left:0;color:#68746f}
+.entry2.locked:hover .mark{background:transparent;border-color:#6f6647;box-shadow:none}
+/* el Cronista baja al pie del panel: deja de flotar suelto sobre el arte */
+.panel-foot{display:flex;align-items:center;gap:13px;border-top:1px solid rgb(163 145 94/.2);padding-top:16px}
+.panel-foot .mk{width:8px;height:8px;border:1px solid #a69258;background:#1b2824;transform:rotate(45deg);flex:0 0 auto}
+.panel-foot strong{display:block;font-family:"Cinzel Decorative",Georgia,serif;font-weight:400;font-size:24px;color:#e8dcb9;letter-spacing:.05em}
+.panel-foot small{display:block;margin-top:4px;color:#7d8a84;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;font-family:"Trebuchet MS",Verdana,sans-serif}
+/* con el Cronista al pie del panel, los créditos se van a la esquina libre */
+.vb .credits,.vc .credits{left:auto;right:80px;text-align:right}
+.panel-foot .edit{margin-left:auto;width:39px;height:39px;display:grid;place-items:center;border:1px solid rgb(169 148 88/.4);
+  color:#bba66d;font-size:16px;background:linear-gradient(145deg, rgb(32 45 40/.7), rgb(8 15 15/.8));
+  clip-path:polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px)}
+
+/* ============================================================
+   C · MATERIA — el panel deja de ser cristal
+   ============================================================ */
+.vc .panel{background:
+    repeating-linear-gradient(102deg, rgb(255 255 255/.012) 0 2px, transparent 2px 7px),
+    linear-gradient(118deg, #101719 0%, #0a1012 52%, #070b0d 100%);
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+  box-shadow:inset 1px 0 0 rgb(226 233 228/.05), inset 0 1px 0 rgb(226 233 228/.05), 26px 0 60px rgb(0 0 0/.6)}
+/* canto biselado en vez del filete de 1px */
+.vc .seam{left:calc(var(--panel) - 3px);width:4px;background:
+   linear-gradient(90deg, rgb(0 0 0/.85) 0 2px, rgb(198 178 118/.32) 2px 3px, rgb(0 0 0/.5) 3px 4px);
+  box-shadow:10px 0 40px rgb(0 0 0/.55)}
+/* la luz cálida entra por la derecha, así el panel tiene silueta */
+.vc .rim{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 620px 700px at 84% 46%, rgb(214 152 62/.16), transparent 66%)}
+.vc .wordmark{color:#dfd0a4;text-shadow:0 3px 0 rgb(0 0 0/.55), 0 6px 26px rgb(0 0 0/.9)}
+.vc .entry2{position:relative;padding-left:0}
+.vc .entry2::before{content:"";position:absolute;left:-80px;top:6px;bottom:6px;width:3px;background:#c2a761;
+  box-shadow:0 0 14px rgb(194 167 97/.7);opacity:0;transition:opacity 150ms ease}
+.vc .entry2:hover::before{opacity:1}
+.vc .resume::before{background:linear-gradient(180deg,transparent,#d4b06a,transparent)}
+
+/* ============================================================
+   D · MENÚ BAJO — el arte respira, el menú se ancla
+   ============================================================ */
+.vd{background-position:center,center,66% center}
+.vd .scrim{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg, rgb(4 7 9/.94) 0 22%, rgb(6 10 12/.6) 44%, transparent 72%),
+             linear-gradient(0deg, rgb(3 6 8/.96) 0 18%, transparent 52%)}
+.vd .brandtop{position:absolute;z-index:3;left:96px;top:88px}
+.vd .brandtop .wordmark{font-size:118px;margin:0;color:#dfd0a4;text-shadow:0 5px 30px rgb(0 0 0/.9)}
+.vd .brandtop .subtitle{margin-top:16px;letter-spacing:.24em;font-size:12px}
+.vd .lownav{position:absolute;z-index:3;left:96px;bottom:112px;width:470px;display:flex;flex-direction:column;gap:2px}
+.vd .resume{padding-left:0}
+.vd .resume::before{left:-22px;position:absolute;height:64%;top:18%}
+.vd .chron2{position:absolute;z-index:3;right:72px;top:80px;display:flex;align-items:center;gap:14px;text-align:right}
+.vd .chron2 strong{font-family:"Cinzel Decorative",Georgia,serif;font-weight:400;font-size:24px;color:#e8dcb9;letter-spacing:.05em}
+.vd .chron2 small{display:block;margin-top:5px;color:#7f8b85;font-size:10px;font-weight:700;letter-spacing:.2em;
+  text-transform:uppercase;font-family:"Trebuchet MS",Verdana,sans-serif}
+.vd .chron2 .edit{width:39px;height:39px;display:grid;place-items:center;border:1px solid rgb(169 148 88/.4);
+  color:#bba66d;font-size:16px;background:linear-gradient(145deg, rgb(32 45 40/.7), rgb(8 15 15/.8));
+  clip-path:polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px)}
+.vd .credits{left:auto;right:80px}
+
+/* ---------- cierre ---------- */
+.close{margin:84px 0 0;border-top:1px solid #23292b;padding-top:36px}
+.close h3{font-family:"Cinzel Decorative",serif;font-weight:400;font-size:24px;color:#e3d6b0;margin:0 0 16px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid #1c2224;vertical-align:top}
+th{font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#a8945f;font-weight:500}
+td{color:#949e99;line-height:1.55}
+td b{color:#d8cca9;font-weight:400;font-family:"Cinzel",serif}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="doc-head">
+  <div class="doc-kicker">Hostfall · menú principal · variantes sobre la base actual</div>
+  <h1>Cuatro lecturas del mismo menú</h1>
+  <p>La primera pantalla reproduce el menú tal y como está hoy, para tener referencia. Las tres siguientes conservan
+  la fórmula — panel a la izquierda, marca arriba, lista de entradas, luciérnagas, créditos abajo — y sólo cambian
+  jerarquía, material y anclaje. Ninguna inventa un lenguaje nuevo. Pasa el ratón por las entradas.</p>
+</div>
+
+<!-- ===================== A ===================== -->
+<section class="variant">
+  <div class="vhead"><span class="vnum">A</span><h2>Actual</h2><span class="vtag">referencia</span></div>
+  <p class="vlede">Lo que hay hoy. Funciona, pero las seis entradas pesan lo mismo, el kicker compite con la marca, la
+  ficha del Cronista flota suelta sobre el arte y entre la marca y el menú queda un vacío grande sin trabajo.</p>
+  <div class="stage"><div class="screen mm">
+    <div class="veil"></div>
+    <div class="flies">
+      <i style="left:62%;top:24%;width:3px;height:3px;--d:9s;--dl:-2s;--mx:12px;--my:-20px;--dx:26px;--dy:-38px"></i>
+      <i style="left:74%;top:58%;width:2px;height:2px;--d:12s;--dl:-6s;--mx:-14px;--my:-18px;--dx:-30px;--dy:-34px"></i>
+      <i style="left:86%;top:36%;width:4px;height:4px;--d:11s;--dl:-9s;--mx:10px;--my:-24px;--dx:18px;--dy:-44px"></i>
+      <i style="left:56%;top:74%;width:2.5px;height:2.5px;--d:14s;--dl:-4s;--mx:-8px;--my:-22px;--dx:-16px;--dy:-40px"></i>
+      <i style="left:92%;top:66%;width:2px;height:2px;--d:10s;--dl:-11s;--mx:6px;--my:-16px;--dx:14px;--dy:-30px"></i>
+      <i style="left:68%;top:12%;width:3px;height:3px;--d:13s;--dl:-7s;--mx:-10px;--my:-14px;--dx:-22px;--dy:-26px"></i>
+    </div>
+    <div class="seam"></div>
+    <div class="chron">
+      <span class="mk"></span>
+      <div><strong>Leo</strong><small>Cronista</small></div>
+      <span class="edit">✎</span>
+    </div>
+    <div class="panel">
+      <div>
+        <div class="kicker">Crónicas de los Reinos Quebrados</div>
+        <h1 class="wordmark">Hostfall</h1>
+        <div class="subtitle"><i></i> Acto I — Coronas sobre cenizas</div>
+      </div>
+      <nav class="nav-now">
+        <div class="entry"><span class="mark"></span><span>Continuar</span></div>
+        <div class="entry"><span class="mark"></span><span>Jugar</span></div>
+        <div class="entry"><span class="mark"></span><span>Crónicas</span></div>
+        <div class="entry"><span class="mark"></span><span>Huestes</span></div>
+        <div class="entry dis"><span class="mark"></span><span>Cómo jugar</span></div>
+        <div class="entry"><span class="mark"></span><span>Ajustes</span></div>
+      </nav>
+      <div></div>
+    </div>
+    <div class="credits"><span>Version: 0.9.0</span>Desarrollado por Leoocast</div>
+  </div></div>
+  <p class="caveat">Detalle que salió al reproducirlo: a 1920 el logo mide 430px y el ancho útil del panel son
+  exactamente 430px. Encaja al píxel, pero significa que en cualquier ventana más estrecha —1600, 1366— el logo se
+  sale del panel y cruza la línea dorada, porque <code>--main-menu-panel-width</code> crece con <code>34vw</code>
+  mientras el título está topado en <code>82px</code>. Merece un <code>clamp()</code> coherente entre ambos.</p>
+</section>
+
+<!-- ===================== B ===================== -->
+<section class="variant">
+  <div class="vhead"><span class="vnum">B</span><h2>Jerarquía</h2><span class="vtag">mismos materiales · sólo lectura</span></div>
+  <p class="vlede">No toca ni el cristal ni el color: sólo decide qué es importante. <em>Continuar</em> deja de ser una
+  entrada más y pasa a ser la acción principal con el estado real de la partida debajo; el resto se ordena en dos
+  grupos. Es el cambio de menor riesgo y el que más se nota.</p>
+  <div class="stage"><div class="screen mm vb">
+    <div class="veil"></div>
+    <div class="flies">
+      <i style="left:62%;top:24%;width:3px;height:3px;--d:9s;--dl:-2s;--mx:12px;--my:-20px;--dx:26px;--dy:-38px"></i>
+      <i style="left:74%;top:58%;width:2px;height:2px;--d:12s;--dl:-6s;--mx:-14px;--my:-18px;--dx:-30px;--dy:-34px"></i>
+      <i style="left:86%;top:36%;width:4px;height:4px;--d:11s;--dl:-9s;--mx:10px;--my:-24px;--dx:18px;--dy:-44px"></i>
+      <i style="left:56%;top:74%;width:2.5px;height:2.5px;--d:14s;--dl:-4s;--mx:-8px;--my:-22px;--dx:-16px;--dy:-40px"></i>
+      <i style="left:92%;top:66%;width:2px;height:2px;--d:10s;--dl:-11s;--mx:6px;--my:-16px;--dx:14px;--dy:-30px"></i>
+    </div>
+    <div class="seam"></div>
+    <div class="panel">
+      <div class="brand">
+        <h1 class="wordmark">Hostfall</h1>
+        <div class="subtitle">Acto I — Coronas sobre cenizas</div>
+      </div>
+      <nav class="nav">
+        <div class="resume">
+          <b>Continuar</b>
+          <small>Turno 7 · El Pacto de Elarion · Veterano</small>
+          <span class="go">›</span>
+        </div>
+        <div class="group-rule"></div>
+        <div class="entry2"><span class="mark"></span><span>Nueva Crónica</span></div>
+        <div class="entry2"><span class="mark"></span><span>Crónicas</span></div>
+        <div class="entry2"><span class="mark"></span><span>Huestes</span></div>
+        <div class="group-rule"></div>
+        <div class="entry2 minor locked"><span class="mark"></span><span>Cómo jugar</span><span class="soon">Pronto</span></div>
+        <div class="entry2 minor"><span class="mark"></span><span>Ajustes</span></div>
+      </nav>
+      <div class="panel-foot">
+        <span class="mk"></span>
+        <div><strong>Leo</strong><small>Cronista</small></div>
+        <span class="edit">✎</span>
+      </div>
+    </div>
+    <div class="credits"><span>Version: 0.9.0</span>Desarrollado por Leoocast</div>
+  </div></div>
+  <ul class="changes">
+    <li><b>Continuar manda.</b> Ocupa el primer bloque, en Cinzel Decorative y con el estado de la partida debajo. Deja de ser una palabra suelta y pasa a ser una promesa concreta.</li>
+    <li><b>Se va el kicker.</b> «Crónicas de los Reinos Quebrados» encima del logo restaba fuerza a la marca; el acto sigue, en una sola línea y con menos <code>letter-spacing</code>.</li>
+    <li><b>Dos grupos, no seis iguales.</b> Jugar/Crónicas/Huestes es un bloque; Cómo jugar y Ajustes bajan a tamaño secundario. La línea entre grupos sustituye a los seis subrayados.</li>
+    <li><b>«Cómo jugar» ya no parece roto.</b> En vez de opacidad 42%, una etiqueta <em>Pronto</em>: el estado se comunica con palabras, no atenuando.</li>
+    <li><b>El Cronista baja al pie del panel.</b> Se integra en la columna en lugar de flotar sobre el arte, y libera la esquina superior derecha.</li>
+  </ul>
+  <p class="caveat">Nota: aquí «Jugar» pasa a llamarse «Nueva Crónica» para que no compita semánticamente con Continuar. Es un cambio de copy, no de arquitectura.</p>
+</section>
+
+<!-- ===================== C ===================== -->
+<section class="variant">
+  <div class="vhead"><span class="vnum">C</span><h2>Materia</h2><span class="vtag">B + el panel deja de ser cristal</span></div>
+  <p class="vlede">Misma jerarquía que B, pero el panel se vuelve sólido: fuera <code>backdrop-filter</code>, dentro una
+  superficie oscura con veta y un canto biselado en vez del filete dorado de 1px. La luz cálida entra por la derecha,
+  así el panel tiene silueta y el arte deja de verse como una foto difuminada detrás de un vidrio.</p>
+  <div class="stage"><div class="screen mm vc">
+    <div class="veil"></div>
+    <div class="rim"></div>
+    <div class="flies">
+      <i style="left:66%;top:28%;width:3px;height:3px;--d:9s;--dl:-2s;--mx:12px;--my:-20px;--dx:26px;--dy:-38px"></i>
+      <i style="left:78%;top:60%;width:2px;height:2px;--d:12s;--dl:-6s;--mx:-14px;--my:-18px;--dx:-30px;--dy:-34px"></i>
+      <i style="left:88%;top:38%;width:4px;height:4px;--d:11s;--dl:-9s;--mx:10px;--my:-24px;--dx:18px;--dy:-44px"></i>
+      <i style="left:60%;top:76%;width:2.5px;height:2.5px;--d:14s;--dl:-4s;--mx:-8px;--my:-22px;--dx:-16px;--dy:-40px"></i>
+    </div>
+    <div class="seam"></div>
+    <div class="panel">
+      <div class="brand">
+        <h1 class="wordmark">Hostfall</h1>
+        <div class="subtitle">Acto I — Coronas sobre cenizas</div>
+      </div>
+      <nav class="nav">
+        <div class="resume">
+          <b>Continuar</b>
+          <small>Turno 7 · El Pacto de Elarion · Veterano</small>
+          <span class="go">›</span>
+        </div>
+        <div class="group-rule"></div>
+        <div class="entry2"><span class="mark"></span><span>Nueva Crónica</span></div>
+        <div class="entry2"><span class="mark"></span><span>Crónicas</span></div>
+        <div class="entry2"><span class="mark"></span><span>Huestes</span></div>
+        <div class="group-rule"></div>
+        <div class="entry2 minor locked"><span class="mark"></span><span>Cómo jugar</span><span class="soon">Pronto</span></div>
+        <div class="entry2 minor"><span class="mark"></span><span>Ajustes</span></div>
+      </nav>
+      <div class="panel-foot">
+        <span class="mk"></span>
+        <div><strong>Leo</strong><small>Cronista</small></div>
+        <span class="edit">✎</span>
+      </div>
+    </div>
+    <div class="credits"><span>Version: 0.9.0</span>Desarrollado por Leoocast</div>
+  </div></div>
+  <ul class="changes">
+    <li><b>Panel sólido con veta.</b> Sustituye el desenfoque por una superficie propia. Además rinde mejor: <code>backdrop-filter</code> a pantalla completa es de lo más caro que hay en un renderer Electron.</li>
+    <li><b>Canto biselado.</b> El borde derecho pasa de un degradado de 1px a un canto de 4px (sombra + hilo de luz + sombra). Se lee como grosor, no como decoración.</li>
+    <li><b>Luz cálida por la derecha.</b> Un solo foco tibio rompe la simetría plana y recorta el panel contra el fondo.</li>
+    <li><b>El hover se marca en el canto.</b> La entrada activa enciende una barra dorada pegada al borde del panel, en vez de subrayarse. Un único gesto para todo el menú.</li>
+  </ul>
+</section>
+
+<!-- ===================== D ===================== -->
+<section class="variant">
+  <div class="vhead"><span class="vnum">D</span><h2>Menú bajo</h2><span class="vtag">mismo lenguaje · otro anclaje</span></div>
+  <p class="vlede">La variante más atrevida de las tres, y aun así la misma fórmula: se quita el panel como caja y se
+  deja un degradado; la marca sube y crece, el menú se ancla abajo a la izquierda y el arte del fondo por fin respira.
+  Es la composición clásica de menú de RPG de PC, y es la que mejor aguantaría una ilustración de fondo el día que la haya.</p>
+  <div class="stage"><div class="screen mm vd">
+    <div class="veil"></div>
+    <div class="scrim"></div>
+    <div class="flies">
+      <i style="left:66%;top:26%;width:3px;height:3px;--d:9s;--dl:-2s;--mx:12px;--my:-20px;--dx:26px;--dy:-38px"></i>
+      <i style="left:80%;top:56%;width:2px;height:2px;--d:12s;--dl:-6s;--mx:-14px;--my:-18px;--dx:-30px;--dy:-34px"></i>
+      <i style="left:88%;top:34%;width:4px;height:4px;--d:11s;--dl:-9s;--mx:10px;--my:-24px;--dx:18px;--dy:-44px"></i>
+      <i style="left:58%;top:70%;width:2.5px;height:2.5px;--d:14s;--dl:-4s;--mx:-8px;--my:-22px;--dx:-16px;--dy:-40px"></i>
+      <i style="left:92%;top:64%;width:2px;height:2px;--d:10s;--dl:-11s;--mx:6px;--my:-16px;--dx:14px;--dy:-30px"></i>
+    </div>
+    <div class="brandtop">
+      <h1 class="wordmark">Hostfall</h1>
+      <div class="subtitle"><i></i> Acto I — Coronas sobre cenizas</div>
+    </div>
+    <div class="chron2">
+      <div><strong>Leo</strong><small>Cronista</small></div>
+      <span class="edit">✎</span>
+    </div>
+    <nav class="lownav">
+      <div class="resume">
+        <b>Continuar</b>
+        <small>Turno 7 · El Pacto de Elarion · Veterano</small>
+        <span class="go">›</span>
+      </div>
+      <div class="group-rule"></div>
+      <div class="entry2"><span class="mark"></span><span>Nueva Crónica</span></div>
+      <div class="entry2"><span class="mark"></span><span>Crónicas</span></div>
+      <div class="entry2"><span class="mark"></span><span>Huestes</span></div>
+      <div class="entry2 minor locked"><span class="mark"></span><span>Cómo jugar</span><span class="soon">Pronto</span></div>
+      <div class="entry2 minor"><span class="mark"></span><span>Ajustes</span></div>
+    </nav>
+    <div class="credits"><span>Version: 0.9.0</span>Desarrollado por Leoocast</div>
+  </div></div>
+  <ul class="changes">
+    <li><b>Sin caja.</b> El panel se convierte en un degradado que oscurece el borde izquierdo. Mismo contraste para el texto, sin contenedor visible.</li>
+    <li><b>Marca arriba y grande.</b> El logo deja de estar encajonado en 590px y ocupa el aire que tenía libre.</li>
+    <li><b>Menú anclado abajo.</b> Se elimina el vacío central: la vista va de la marca al menú y del menú a la acción, no a un hueco.</li>
+    <li><b>El fondo se mueve.</b> El encuadre se desplaza para que el sello grabado quede a la derecha y no detrás del texto.</li>
+  </ul>
+  <p class="caveat">El riesgo aquí es que las pantallas de Crónicas, Huestes y Ajustes hoy se abren <em>dentro</em> del panel de 590px. Sin panel habría que decidir cómo entran: a pantalla completa, como hace la vista de mazos, o en una columna que aparece al abrirlas.</p>
+</section>
+
+<div class="close">
+  <h3>Orden que propongo</h3>
+  <table>
+    <tr><th>Paso</th><th>Qué se toca</th><th>Riesgo</th></tr>
+    <tr><td><b>1 · Jerarquía (B)</b></td><td>Sólo JSX y tipografía en <code>StartMenu.tsx</code> más <code>.main-menu-*</code>. No cambia ninguna pantalla secundaria.</td><td>Ninguno. Reversible en un commit.</td></tr>
+    <tr><td><b>2 · Materia (C)</b></td><td>Se quita <code>backdrop-filter</code> de <code>.main-menu-layout</code>, se rehace <code>::after</code> como canto y se añade el foco cálido.</td><td>Bajo. Hay que revisar que Ajustes y Crónicas, que comparten ese fondo, sigan legibles.</td></tr>
+    <tr><td><b>3 · Menú bajo (D)</b></td><td>Recolocación del layout y decisión sobre cómo entran las pantallas secundarias.</td><td>Medio. Es el único que obliga a tocar otras vistas.</td></tr>
+  </table>
+</div>
+
+</div>
+<script>
+function fit(){
+  document.querySelectorAll('.stage').forEach(function(st){
+    var s = st.clientWidth / 1920;
+    var scr = st.querySelector('.screen');
+    if(scr) scr.style.setProperty('--s', s);
+    st.style.height = (1080 * s) + 'px';
+  });
+}
+window.addEventListener('resize', fit);
+document.addEventListener('DOMContentLoaded', fit);
+fit(); setTimeout(fit, 300);
+</script>
+</body>
+</html>

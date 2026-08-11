@@ -30,7 +30,7 @@ stack, que slot se sostiene), se saca del componente a un modulo puro para poder
 
 ## Verificar
 
-Comandos, runner de tests y que esta cubierto: [`docs/testing.md`](docs/testing.md).
+Comandos, runner de tests y que esta cubierto: [`docs/guides/testing.md`](docs/guides/testing.md).
 
 Lo minimo despues de cualquier cambio:
 
@@ -49,13 +49,12 @@ Verifica por tipos y tests.
 
 ## Otros documentos
 
-- [`docs/testing.md`](docs/testing.md) — como se verifica, que esta cubierto y que no.
-- [`docs/adding_cards.md`](docs/adding_cards.md) — flujo completo para agregar e implementar cartas.
-- [`docs/animation_contracts.md`](docs/animation_contracts.md) — beats de la Horda, burn, static
-  activation, death reveal, y por que el campo debe quedarse quieto entre beats.
-- [`docs/game_modes.md`](docs/game_modes.md) — modos de juego.
-- [`docs/goblin_cards.md`](docs/goblin_cards.md) — estado del deck de goblins.
-- [`docs/chronicle_pact_of_elarion.md`](docs/chronicle_pact_of_elarion.md) — identidad de El Pacto de Elarion.
-- [`docs/chronicle_court_of_the_crimson_eclipse.md`](docs/chronicle_court_of_the_crimson_eclipse.md) — identidad de La Corte del Eclipse Carmesí.
-- [`docs/host_uprising_of_the_graveless.md`](docs/host_uprising_of_the_graveless.md) — identidad de El Alzamiento de los Sinsepulcro.
-- [`docs/host_legion_of_varka.md`](docs/host_legion_of_varka.md) — identidad de La Legión de Varka.
+El índice y el estado de cada documento están en [`docs/README.md`](docs/README.md). Las rutas
+principales son:
+
+- `docs/guides/` — flujos operativos y testing.
+- `docs/reference/` — vocabulario, texto de cartas, animaciones y VFX.
+- `docs/content/` — identidad y contratos de los decks vigentes, más previews explícitos.
+- `docs/plans/` — únicamente propuestas o validaciones todavía abiertas.
+- `docs/electron/` — arquitectura desktop, seguimiento, persistencia y release.
+- `docs/data/` — baselines e inventarios generados consumidos por tooling.

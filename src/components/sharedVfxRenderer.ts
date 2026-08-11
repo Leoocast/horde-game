@@ -9,7 +9,7 @@ import * as THREE from "three";
  * efecto dibuja su escena en este lienzo compartido y copia el resultado a su propio lienzo 2D, que
  * no consume cupo.
  *
- * Contexto y diseño completos en `docs/plan_webgl_context_budget.md`.
+ * Contexto y diseño completos en `docs/plans/webgl_context_budget.md`.
  */
 
 export type SharedVfxFrame = {

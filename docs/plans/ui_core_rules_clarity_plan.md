@@ -1,0 +1,565 @@
+# Plan de diseño e implementación de claridad en la UI
+
+Estado: **propuesta para discutir fase por fase; no implementada**  
+Última actualización: 2026-08-10
+
+## Objetivo
+
+Discutir, aprobar e implementar cambios en la UI normal de Hostfall para que el jugador comprenda
+estas reglas sin depender del futuro tutorial:
+
+- la Preparación como una etapa distinta de los turnos normales;
+- cómo se obtiene, conserva y consume la Reserva;
+- cuándo se roba una o dos cartas;
+- cómo devolver una Fuente al Archivo para robar una carta;
+- que los ataques del Cronista se dirigen al Archivo de la Hueste;
+- cómo la Fuerza atacante se convierte en cartas descartadas del Archivo.
+
+El propósito principal de este documento no es ejecutar una lista técnica automáticamente. Es servir
+como guion para **diseñar cada parte de la interfaz con el usuario y después implementarla**.
+
+El tutorial obligatorio se diseñará en un trabajo posterior, cuando estas señales ya existan y hayan
+sido probadas en partidas normales.
+
+## Cómo debe utilizarse este documento en el otro chat
+
+Cada fase sigue obligatoriamente este ciclo:
+
+```text
+DISCUTIR LA UI
+      ↓
+APROBAR O MODIFICAR LA PROPUESTA
+      ↓
+IMPLEMENTAR SÓLO ESA FASE
+      ↓
+VERIFICAR Y PROBAR
+      ↓
+DETENERSE ANTES DE LA SIGUIENTE FASE
+```
+
+La aprobación de una fase no autoriza las siguientes.
+
+### Antes de implementar una fase
+
+El agente debe presentar primero:
+
+1. **Problema actual:** qué puede confundir al jugador.
+2. **Propuesta visible:** qué elementos, textos, estados y acciones cambiarían.
+3. **Beneficio para el jugador:** qué podrá entender o anticipar gracias al cambio.
+4. **Decisiones para el usuario:** alternativas de layout, copy o interacción que todavía pueden
+   modificarse.
+5. **Boceto breve:** cuando cambie el layout, incluir un esquema textual o visual suficientemente
+   concreto para imaginar el resultado.
+6. **Límites de la fase:** qué no se modificará todavía.
+
+Después debe preguntar si se aprueba la propuesta, si debe modificarse o si se descarta. **No debe
+editar código antes de recibir esa respuesta.**
+
+### Después de implementar una fase
+
+El agente debe:
+
+- resumir qué cambió para el jugador;
+- informar cualquier diferencia respecto de la propuesta aprobada;
+- ejecutar la verificación proporcional al cambio;
+- indicar exactamente qué debe probar manualmente el usuario;
+- esperar la revisión del usuario;
+- presentar la fase siguiente únicamente cuando el usuario decida continuar.
+
+## Límites generales
+
+Este plan:
+
+- no implementa el tutorial obligatorio;
+- no diseña todavía la sección opcional de tutoriales;
+- no cambia cartas, decks o modos futuros;
+- no autoriza rebalancear reglas sin aprobación explícita;
+- no debe convertir información de gameplay en paneles técnicos o diagnósticos;
+- conserva el estilo dark-medieval y táctil del juego.
+
+Las reglas reales permanecen en `src/engine/`. Cuando una propuesta visual necesite calcular próximo
+robo, Reserva prevista o descarte del Archivo, debe extraerse una función pura y probarse dentro de la
+misma fase aprobada. La preparación técnica no es una fase separada ni puede adelantarse al diseño.
+
+## Fase 0 — Confirmar las reglas que la UI debe enseñar
+
+Esta fase es sólo una conversación de reglas y vocabulario. No implementa UI.
+
+### Problema que resuelve
+
+Hay dos diferencias entre la descripción informal de las reglas y el comportamiento vigente. No se
+puede diseñar una interfaz clara si todavía no se sabe cuál versión debe comunicar.
+
+### Decisión 0.1 — Próximo robo
+
+Comportamiento implementado actualmente:
+
+- durante Preparación: roba 1;
+- después de Preparación, en Fácil: roba 2 siempre;
+- después de Preparación, en Normal o Difícil: roba 1;
+- en Normal o Difícil, si la Mano está vacía al comenzar el robo: roba 2.
+
+Propuesta inicial: conservar esta regla para no cambiar el balance ni la identidad de Fácil.
+
+Alternativa para discutir: todas las dificultades roban 1 normalmente y sólo una Mano vacía roba 2.
+Esta alternativa es un cambio de reglas y balance, no sólo de presentación.
+
+### Decisión 0.2 — Devolver una Fuente
+
+Comportamiento implementado actualmente:
+
+- sólo después de la Preparación;
+- sólo durante la fase Principal del Cronista;
+- sólo una vez por turno;
+- jugar una Fuente y devolver una Fuente consumen la misma acción;
+- la Fuente se coloca al fondo del Archivo y el Cronista roba 1 carta.
+
+Propuesta inicial: conservar esta regla.
+
+Alternativa para discutir: permitir devolverla literalmente “en cualquier momento”. Esto abriría
+ventanas durante combate y el turno de la Hueste, por lo que requiere nuevas decisiones de timing y
+balance.
+
+### Decisión 0.3 — Vocabulario visible
+
+Propuesta inicial:
+
+- **Fuente:** la carta que produce Energía;
+- **Energía:** el recurso usado para pagar costes;
+- **Reserva:** Energía persistente, con límite 3;
+- **Acción de Fuente:** la elección compartida entre jugar o devolver una Fuente;
+- **Devolver Fuente:** acción visible;
+- explicación: “Pon esta Fuente al fondo de tu Archivo. Roba 1 carta.”
+
+### Resultado de la conversación
+
+El agente debe registrar en este documento las tres decisiones aprobadas antes de presentar la Fase
+1. No debe interpretar silencio como aprobación.
+
+## Fase 1 — Rediseñar la presentación de Preparación
+
+### Problema actual
+
+La UI mezcla **Preparación** con expresiones propias de turnos normales:
+
+- “quedan N turnos del jugador”;
+- “Turno adicional”;
+- “Último turno adicional”;
+- “Siguiente turno”;
+- “Terminar turno”.
+
+Esto hace razonable que el jugador espere robo, Reserva y alternancia normales durante esos pasos.
+
+### Propuesta inicial para discutir
+
+Presentar Preparación como una etapa con progreso propio:
+
+```text
+PREPARACIÓN
+Paso 1 de 3
+● ○ ○
+```
+
+La cantidad debe reflejar la dificultad elegida; nunca se fijará visualmente en tres.
+
+Cambiar las acciones principales:
+
+- pasos intermedios: **Siguiente preparación**;
+- último paso: **Despertar a la Hueste**.
+
+Durante esta etapa, la Reserva aparece cerrada o latente:
+
+```text
+RESERVA
+Se activa cuando la Hueste despierte
+```
+
+### Beneficio para el jugador
+
+Entiende que está construyendo su posición antes de comenzar la alternancia real. Ya no necesita
+deducir por qué no apareció Reserva después de un paso temprano.
+
+### Decisiones que deben discutirse antes de implementar
+
+- ubicación exacta del progreso `Paso/total`;
+- puntos, números, runas u otro motivo visual para el progreso;
+- copy definitivo de los dos botones;
+- si la Reserva se muestra bloqueada, apagada o parcialmente oculta;
+- cuánto énfasis visual recibe el despertar de la Hueste.
+
+### Límites de la fase
+
+- no cambia cuántas preparaciones concede cada dificultad;
+- no añade tutorial, diálogos ni coach marks;
+- no implementa todavía la Reserva prevista.
+
+### Implementación después de aprobar el diseño
+
+Los consumidores probables son `TurnPhaseHud`, `GameStatusBadge`, `PhaseBanner`, `PhaseOrb`, las
+traducciones y sus estilos. Si el progreso necesita conocer el total original, su representación debe
+respetar resume y persistencia.
+
+### Condición para cerrar la fase
+
+El jugador siempre puede distinguir Preparación de un turno normal, saber en qué paso se encuentra y
+entender que la acción final despertará a la Hueste.
+
+## Fase 2 — Mostrar el Archivo del Cronista y anticipar el robo
+
+### Problema actual
+
+El jugador ve su Mano, pero no dispone de una indicación clara y permanente de:
+
+- cuántas cartas quedan en su Archivo;
+- cuántas robará al comenzar su próximo turno;
+- que una Mano vacía puede conceder un segundo robo.
+
+### Propuesta inicial para discutir
+
+Añadir un indicador cerca de la Mano o del grupo de zonas del Cronista:
+
+```text
+ARCHIVO             22
+PRÓXIMO ROBO         1
+```
+
+Cuando la Mano vacía sea la causa del robo adicional:
+
+```text
+MANO VACÍA
+PRÓXIMO ROBO         2
+```
+
+El indicador se actualiza al jugar o perder la última carta. Durante el robo real, un feedback breve
+puede mostrar:
+
+> Mano vacía: +1 carta
+
+No debe atribuirse esa causa cuando la dificultad Fácil ya roba 2 por su regla normal.
+
+### Beneficio para el jugador
+
+Puede planear si vaciar su Mano y entiende el origen de la carta adicional cuando ocurre. El Archivo
+propio también se convierte en el destino lógico de la acción **Devolver Fuente** de la fase siguiente.
+
+### Decisiones que deben discutirse antes de implementar
+
+- posición y tamaño del Archivo del Cronista;
+- si “Próximo robo” es permanente o gana énfasis sólo cuando cambia;
+- tratamiento visual de **Mano vacía**;
+- forma de distinguir el robo por dificultad del robo adicional por Mano vacía;
+- origen y trayectoria de la animación de robo.
+
+### Boceto inicial
+
+```text
+┌──────────────────────┐
+│ Archivo          22  │
+│ Próximo robo      1  │
+└──────────────────────┘
+            ↓
+      [ MANO DEL JUGADOR ]
+```
+
+### Límites de la fase
+
+- no permite inspeccionar cartas ocultas;
+- no cambia tamaño máximo de Mano;
+- no implementa todavía la devolución de Fuente.
+
+### Implementación después de aprobar el diseño
+
+La cantidad del próximo robo debe proceder de la misma función pura que usa la resolución real. No
+se duplicarán reglas dentro de `DuelHud` o `Hand`.
+
+### Condición para cerrar la fase
+
+La previsión coincide con el robo real en Preparación, Fácil, Normal, Difícil, Mano vacía y Mano no
+vacía.
+
+## Fase 3 — Hacer visible la acción Devolver Fuente
+
+### Problema actual
+
+La acción depende de descubrir un arrastre hacia una zona lateral asociada visualmente al panel de
+Vida. La ayuda aparece cuando el jugador ya ha comenzado el gesto, por lo que muchos jugadores pueden
+no descubrir nunca esta regla.
+
+También resulta poco visible que jugar y devolver una Fuente consumen la misma acción del turno.
+
+### Propuesta inicial para discutir
+
+Al seleccionar o mantener el cursor sobre una Fuente de la Mano:
+
+```text
+[JUGAR FUENTE]   [DEVOLVER · ROBAR 1]
+```
+
+Mostrar cerca de la Mano:
+
+```text
+ACCIÓN DE FUENTE
+Disponible
+```
+
+Después de usar cualquiera de las dos opciones:
+
+```text
+ACCIÓN DE FUENTE
+Usada este turno
+```
+
+Los botones desactivados permanecen visibles y explican el motivo:
+
+- disponible después de la Preparación;
+- sólo durante la fase Principal;
+- Acción de Fuente ya utilizada.
+
+El arrastre puede conservarse como atajo, pero su destino pasa a ser el Archivo del Cronista. La
+animación muestra la Fuente entrando al fondo del Archivo y otra carta saliendo de la parte superior
+hacia la Mano.
+
+### Beneficio para el jugador
+
+Descubre una herramienta central para corregir manos con demasiadas Fuentes y entiende el coste de
+oportunidad entre jugar una Fuente o cambiarla por otra carta.
+
+### Decisiones que deben discutirse antes de implementar
+
+- botones sobre la carta, debajo de la Mano o en un panel contextual;
+- si el estado de Acción de Fuente es permanente o sólo aparece cuando hay una Fuente en Mano;
+- apariencia del destino de arrastre;
+- copy visible: **Devolver**, **Cambiar** u otra opción compatible con el vocabulario aprobado;
+- comportamiento con ratón, teclado y movimiento reducido.
+
+### Límites de la fase
+
+- no cambia timing, frecuencia ni balance aprobados en la Fase 0;
+- no permite elegir la carta robada;
+- no rediseña todas las interacciones de la Mano.
+
+### Implementación después de aprobar el diseño
+
+Los consumidores probables son `Hand`, el indicador del Archivo del Cronista, `EnergyRecycleAnimator`,
+el store y traducciones. La regla sigue resolviéndose en el engine.
+
+### Condición para cerrar la fase
+
+Un jugador puede descubrir y ejecutar ambas opciones sin conocer previamente un gesto secreto. La
+UI comunica que ambas consumen la misma acción.
+
+## Fase 4 — Clarificar Reserva actual, Reserva prevista y orden de pago
+
+### Problema actual
+
+Las pistas de orbes muestran valores, pero no explican suficientemente:
+
+- qué representa cada pista;
+- cuándo aparecerá nueva Reserva;
+- por qué pasos tempranos de Preparación no la conservan;
+- por qué al pagar se consume Reserva antes de agotar Fuentes.
+
+### Propuesta inicial para discutir
+
+Etiquetar de forma compacta el núcleo de Energía:
+
+```text
+FUENTES LISTAS       2
+RESERVA            1 / 3
+AL VOLVER            +2
+```
+
+`Al volver` significa: Reserva que estará disponible después del próximo turno de la Hueste.
+
+- No aparece en Preparaciones tempranas que conducen directamente a otro paso del Cronista.
+- Puede aparecer en la última Preparación porque después actuará la Hueste.
+- Durante el turno enemigo, los puntos pendientes pueden permanecer translúcidos.
+- Al regresar al Cronista, se vuelven sólidos mediante la animación existente o una evolución de ella.
+
+Al pagar una carta, la secuencia visible es:
+
+1. se consume Reserva;
+2. se agotan sólo las Fuentes necesarias;
+3. las Fuentes restantes alimentan la nueva previsión.
+
+### Beneficio para el jugador
+
+Puede decidir cuánto gastar, cuánto reservar y qué sucederá al terminar la ronda. El orden de pago
+deja de parecer arbitrario.
+
+### Decisiones que deben discutirse antes de implementar
+
+- nombres definitivos de las dos pistas;
+- ubicación de `Al volver`;
+- orbes translúcidos, cifra `+N` o ambos;
+- cuánto dura el feedback del orden de pago;
+- comportamiento cuando la Reserva ya está llena.
+
+### Límites de la fase
+
+- no cambia el límite 3;
+- no cambia el orden automático de pago;
+- no conserva Energía de Preparaciones tempranas;
+- no añade selección manual de Fuentes para pagar.
+
+### Implementación después de aprobar el diseño
+
+La previsión debe derivarse mediante una función pura compartida con las reglas. `Battlefield` y los
+animadores sólo presentan la cantidad ya resuelta o prevista.
+
+### Condición para cerrar la fase
+
+La UI nunca promete Reserva que después se pierde y el jugador puede observar claramente Reserva
+primero, Fuentes después.
+
+## Fase 5 — Hacer inequívoco el ataque al Archivo de la Hueste
+
+### Problema actual
+
+La convención habitual de otros juegos hace pensar que los Ecos atacan a los Ecos enemigos. El panel
+superior representa a la Hueste, pero no insiste en que su Archivo es el objetivo del ataque y su
+condición de derrota.
+
+La fórmula actual `daño / umbral = -cartas` exige interpretar división, redondeo y resta al mismo
+tiempo.
+
+### Propuesta inicial para discutir
+
+Reforzar el panel superior:
+
+```text
+HUESTE
+Archivo: 24 cartas
+```
+
+Al entrar en combate:
+
+- el Archivo se ilumina como destino;
+- las trayectorias de los atacantes terminan en él;
+- los Ecos enemigos no parecen targets del ataque normal;
+- **A batalla** cambia a **Elegir atacantes**;
+- **Confirmar** cambia a **Atacar el Archivo**;
+- **No atacar** cambia a **Pasar el combate**.
+
+Sustituir la fórmula principal por una equivalencia y un medidor:
+
+```text
+FUERZA CONTRA EL ARCHIVO
+■ ■ ■ | ■ ■ □
+5 de Fuerza → 1 carta
+Falta 1 para descartar otra
+```
+
+El conteo puede anticipar:
+
+```text
+Archivo: 24 → 23
+```
+
+La fórmula exacta permanece disponible en un tooltip secundario.
+
+### Beneficio para el jugador
+
+Comprende dónde debe atacar, cómo progresa hacia la victoria y qué conseguirá antes de confirmar el
+combate.
+
+### Decisiones que deben discutirse antes de implementar
+
+- cuánto debe cambiar el panel de la Hueste fuera del combate;
+- aspecto del medidor de bloques;
+- copy para Fuerza insuficiente y Fuerza sobrante;
+- intensidad del foco sobre el Archivo;
+- nombres definitivos de los tres botones de combate.
+
+### Límites de la fase
+
+- no permite ataques normales contra Ecos enemigos;
+- no cambia el umbral autorizado por el deck;
+- no acumula Fuerza sobrante entre combates;
+- no rediseña Veneno.
+
+### Implementación después de aprobar el diseño
+
+El preview usará `hostRules.damagePerArchiveDiscard`; nunca se codificará el número 3 en la UI. Debe
+probarse con umbrales alternativos aunque los decks actuales compartan el mismo valor.
+
+### Condición para cerrar la fase
+
+Preview, CTA, trayectorias, animación y descarte real identifican al Archivo y coinciden para cero,
+una y varias cartas.
+
+## Fase 6 — Revisar el conjunto antes de diseñar el tutorial
+
+### Problema que resuelve
+
+Cada cambio puede funcionar por separado y aun así producir una pantalla demasiado cargada. Esta
+fase revisa la jerarquía completa con el usuario antes de declarar estable el nuevo lenguaje visual.
+
+### Conversación inicial
+
+El agente debe presentar un inventario visual de lo implementado:
+
+- progreso de Preparación;
+- Archivo y próximo robo;
+- Acción de Fuente;
+- Fuentes listas, Reserva y previsión;
+- objetivo y conversión del ataque.
+
+Debe explicar qué información es permanente, cuál aparece sólo en contexto y cuál se oculta cuando no
+es relevante. El usuario puede pedir simplificación, movimiento o eliminación antes del pase final.
+
+### Revisión propuesta
+
+- legibilidad en ES y EN;
+- Mano pequeña, grande y vacía;
+- Preparación Fácil, Normal y Difícil;
+- Reserva vacía, parcial y llena;
+- uso con ratón y teclado;
+- movimiento reducido;
+- ataques por debajo, en y por encima del umbral;
+- animaciones y overlays que puedan tapar indicadores;
+- estados que no dependan sólo de color.
+
+### QA manual mínimo del usuario
+
+1. Un paso temprano de Preparación no promete Reserva.
+2. La última Preparación anticipa correctamente lo que llegará después de la Hueste.
+3. Mano vacía y no vacía muestran el próximo robo correcto según dificultad.
+4. Jugar una Fuente bloquea devolver otra durante el mismo turno y viceversa.
+5. Devolver una Fuente comunica fondo del Archivo y robo de una carta.
+6. Un pago mixto consume Reserva primero y sólo las Fuentes necesarias.
+7. El jugador reconoce que el ataque se dirige al Archivo.
+8. Ataques con distintos totales anticipan exactamente cuántas cartas se descartarán.
+
+### Cierre
+
+Después de los ajustes aprobados, actualizar `CLAUDE.md` y `docs/guides/testing.md` con los contratos finales.
+Esta fase no implementa el tutorial.
+
+## Verificación automática durante la implementación
+
+Después de cada fase con cambios de código:
+
+```powershell
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe node_modules\typescript\lib\tsc.js -b
+```
+
+```powershell
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe --test scripts/run-engine-tests.mjs
+```
+
+Según los archivos modificados, añadir pruebas específicas de presentación. El agente no debe
+levantar un servidor ni jugar el juego; el usuario realiza el QA interactivo.
+
+## Cuándo regresar al diseño del tutorial
+
+El diseño del tutorial obligatorio puede retomarse cuando:
+
+- las decisiones de la Fase 0 estén registradas;
+- el usuario haya aprobado e implementado las Fases 1 a 5;
+- la revisión conjunta de la Fase 6 esté cerrada;
+- la UI normal permita anticipar Preparación, robo, Acción de Fuente, Reserva y ataque sin depender de
+  texto exclusivo del tutorial.
+
+En ese momento el tutorial podrá concentrarse en hacer que el jugador realice esas acciones en una
+Primera Semilla guiada, utilizando la misma interfaz que encontrará después.
