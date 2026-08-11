@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hostfall — Menú: tres pieles medievales sobre el mismo layout</title>
+<style>
+@font-face{font-family:"Cinzel Decorative";src:url(../../../../public/fonts/pact-of-elarion/cinzel-decorative-latin.woff2) format("woff2");font-display:block}
+@font-face{font-family:"Cinzel";src:url(../../../../public/fonts/pact-of-elarion/cinzel-latin.woff2) format("woff2");font-display:block}
+@font-face{font-family:"Lora";src:url(../../../../public/fonts/pact-of-elarion/lora-normal-latin.woff2) format("woff2");font-display:block}
+@font-face{font-family:"Lora";src:url(../../../../public/fonts/pact-of-elarion/lora-italic-latin.woff2) format("woff2");font-style:italic;font-display:block}
+@font-face{font-family:"Oswald";src:url(../../../../public/fonts/pact-of-elarion/oswald-latin.woff2) format("woff2");font-display:block}
+
+:root{--bg:url(../../../../assets/images/background.webp)}
+*{box-sizing:border-box}
+body{margin:0;background:#0a0c0d;color:#d9d4c6;font-family:"Lora",Georgia,serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:52px 24px 110px}
+.doc-head{border-bottom:1px solid #23292b;padding-bottom:34px}
+.doc-kicker{font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:#7b8683}
+.doc-head h1{font-family:"Cinzel Decorative",Georgia,serif;font-size:clamp(30px,5vw,48px);margin:14px 0 0;color:#e3d6b0;font-weight:400;letter-spacing:-.02em;text-wrap:balance}
+.doc-head p{max-width:74ch;color:#9aa39e;font-size:15.5px;line-height:1.65;margin:16px 0 0}
+.variant{margin:64px 0 0}
+.vhead{display:flex;align-items:baseline;gap:15px;flex-wrap:wrap;margin-bottom:8px}
+.vnum{font-family:"Oswald",sans-serif;font-size:12px;letter-spacing:.2em;color:#5f6a67;border:1px solid #2a3134;padding:3px 8px}
+.vhead h2{font-family:"Cinzel Decorative",Georgia,serif;font-weight:400;font-size:28px;margin:0;color:#e6d7ae}
+.vtag{font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#7f8a86}
+.vlede{color:#98a29d;font-size:15px;line-height:1.62;max-width:80ch;margin:0 0 14px}
+.swatches{display:flex;gap:0;margin:0 0 16px;border:1px solid #262d30;width:fit-content}
+.swatches i{width:76px;height:32px;display:block;position:relative}
+.swatches i::after{content:attr(data-n);position:absolute;left:0;right:0;bottom:-19px;font-family:"Oswald",sans-serif;
+  font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:#6e7975;text-align:center}
+.swatch-wrap{margin-bottom:32px}
+.stage{position:relative;overflow:hidden;border:1px solid #262d30;background:#000;box-shadow:0 20px 48px rgba(0,0,0,.6)}
+.screen{width:1920px;height:1080px;position:relative;overflow:hidden;transform-origin:top left;transform:scale(var(--s,1))}
+.changes{margin:20px 0 0;padding:0;list-style:none;display:grid;gap:9px}
+.changes li{position:relative;padding-left:26px;font-size:14px;line-height:1.55;color:#98a29d}
+.changes li::before{content:"→";position:absolute;left:0;top:0;color:#a8945f;font-family:"Oswald",sans-serif}
+.changes li b{color:#dccfa8;font-weight:400;font-family:"Cinzel",serif}
+.caveat{margin:16px 0 0;font-size:13.5px;line-height:1.6;color:#7d8884;font-style:italic;border-left:2px solid #2c3436;padding-left:14px;max-width:78ch}
+
+/* ============================================================
+   ESTRUCTURA — idéntica a la del menú actual en los 3 casos.
+   Sólo cambian materiales, color y ornamento.
+   ============================================================ */
+.mm{--panel:590px;position:relative}
+.mm .veil{position:absolute;inset:0;pointer-events:none}
+.mm .seam{position:absolute;top:0;bottom:0;left:var(--panel);width:1px}
+.mm .panel{position:absolute;left:0;top:0;width:var(--panel);height:1080px;display:grid;
+  grid-template-rows:auto 1fr auto;padding:86px 80px 34px}
+.mm .brand{padding-bottom:43px}
+.mm .kicker{font-size:10px;font-weight:700;letter-spacing:.28em;text-transform:uppercase}
+.mm .wordmark{font-weight:400;line-height:.95;margin:16px 0 0;font-size:82px}
+.mm .subtitle{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:11px;font-weight:800;
+  letter-spacing:.42em;text-transform:uppercase}
+.mm .subtitle i{width:30px;height:1px;display:block}
+.mm .nav{align-self:center;width:330px}
+.mm .entry{position:relative;display:flex;align-items:center;gap:15px;width:100%;min-height:58px;font-size:23px;
+  letter-spacing:.075em;text-transform:uppercase;cursor:default;transition:all 160ms ease}
+.mm .entry .mark{width:11px;height:11px;flex:0 0 auto;transition:all 160ms ease}
+.mm .entry.dis{opacity:.42;cursor:not-allowed}
+.mm .chron{position:absolute;z-index:4;top:59px;right:64px;display:flex;align-items:flex-start;gap:15px;width:320px;
+  padding:3px 4px 15px 0;text-align:right}
+.mm .chron .mk{width:11px;height:11px;flex:0 0 auto;margin-top:10px}
+.mm .chron > div{flex:1;min-width:0}
+.mm .chron strong{display:block;font-size:28px;font-weight:400;line-height:1.12}
+.mm .chron small{display:block;margin-top:7px;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase}
+.mm .chron .edit{width:39px;height:39px;flex:0 0 auto;display:grid;place-items:center;font-size:16px}
+.mm .credits{position:absolute;left:80px;bottom:34px;z-index:5;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.04em;font-family:"Trebuchet MS",Verdana,sans-serif}
+.mm .credits span{display:block;margin-bottom:3px}
+
+/* ============================================================
+   PIEL 1 · TABLERO Y LATÓN
+   nogal, fieltro verde, cartón impreso, tornillos de latón
+   ============================================================ */
+.s-board{
+  background:
+    radial-gradient(ellipse 900px 620px at 74% 46%, rgba(196,140,58,.10), transparent 70%),
+    repeating-linear-gradient(93deg, rgba(0,0,0,.22) 0 2px, transparent 2px 7px, rgba(255,230,190,.022) 7px 9px, transparent 9px 23px),
+    repeating-linear-gradient(93deg, rgba(0,0,0,.1) 0 1px, transparent 1px 54px),
+    linear-gradient(168deg, #4a2e1a 0%, #331d0f 44%, #1d0f06 100%)}
+.s-board .veil{background:
+    radial-gradient(ellipse 620px 420px at 78% 40%, rgba(255,214,150,.10), transparent 72%),
+    linear-gradient(180deg, rgba(12,6,2,.5), transparent 26% 70%, rgba(10,5,2,.66))}
+/* la costura es una moldura de latón, no un filete de 1px */
+.s-board .seam{left:calc(var(--panel) - 7px);width:9px;
+  background:linear-gradient(90deg, rgba(0,0,0,.7) 0 2px, #6d4d20 2px 3px, #c79a4a 3px 5px, #8a6428 5px 7px, rgba(0,0,0,.55) 7px 9px);
+  box-shadow:12px 0 34px rgba(0,0,0,.55)}
+/* el panel es una lámina de cartón impreso clavada a la madera */
+.s-board .panel{
+  background:
+    radial-gradient(ellipse at 22% 12%, rgba(160,118,54,.16), transparent 56%),
+    radial-gradient(ellipse at 78% 88%, rgba(110,72,28,.2), transparent 52%),
+    linear-gradient(172deg, #e6d5ac 0%, #d8c397 52%, #c9b184 100%);
+  box-shadow:inset 0 0 0 2px #3c2812, inset 0 0 0 9px #ddc99e, inset 0 0 0 11px #8a6a32,
+             inset 0 0 60px rgba(101,68,26,.28), 18px 0 46px rgba(0,0,0,.55)}
+/* tornillos de latón en las cuatro esquinas del panel */
+.s-board .panel::before,.s-board .panel::after{content:"";position:absolute;width:17px;height:17px;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%, #f0d089, #b1832f 58%, #6b4a18);
+  box-shadow:0 2px 3px rgba(0,0,0,.5), inset 0 -2px 3px rgba(0,0,0,.35)}
+.s-board .panel::before{left:26px;top:26px}
+.s-board .panel::after{left:26px;bottom:26px}
+.s-board .brand{border-bottom:3px double #8a6a32}
+.s-board .kicker{color:#7b5a26}
+.s-board .wordmark{font-family:"Cinzel Decorative",Georgia,serif;color:#3a2410;letter-spacing:-.02em;
+  text-shadow:0 1px 0 rgba(255,246,220,.55), 0 3px 0 rgba(94,62,22,.14)}
+.s-board .subtitle{color:#7d5c28}
+.s-board .subtitle i{background:#8a6a32;height:2px}
+.s-board .entry{font-family:"Cinzel",serif;color:#4b3418;border-bottom:1px solid rgba(120,86,38,.35);letter-spacing:.06em}
+/* la viñeta es un remache de latón */
+.s-board .entry .mark{border-radius:50%;background:radial-gradient(circle at 34% 30%, #e6c383, #a8792a 60%, #64461a);
+  box-shadow:0 1px 2px rgba(72,46,14,.5)}
+.s-board .entry:hover{color:#7c1f14;background:linear-gradient(90deg, rgba(140,96,38,.16), transparent 84%);padding-left:10px}
+.s-board .entry:hover .mark{background:radial-gradient(circle at 34% 30%, #fff0c4, #d3a53c 60%, #8a6420);
+  box-shadow:0 0 10px rgba(214,166,64,.7)}
+.s-board .entry.dis{color:#8a7147}
+.s-board .chron{border-bottom:2px solid rgba(196,158,88,.4)}
+.s-board .chron .mk{border-radius:50%;background:radial-gradient(circle at 34% 30%, #e6c383, #a8792a 60%, #64461a)}
+.s-board .chron strong{font-family:"Cinzel Decorative",serif;color:#eddcb2;text-shadow:0 2px 8px rgba(0,0,0,.8)}
+.s-board .chron small{color:#b39461}
+.s-board .chron .edit{border:2px solid #a8792a;color:#f0d89b;border-radius:3px;
+  background:linear-gradient(180deg, #5b3a18, #33200c);box-shadow:inset 0 1px 0 rgba(255,220,150,.2), 0 4px 10px rgba(0,0,0,.5)}
+.s-board .credits{color:#8f6f3c}
+
+/* ============================================================
+   PIEL 2 · GRIMORIO ILUMINADO
+   vitela clara, rúbricas rojas, lapislázuli y pan de oro
+   ============================================================ */
+.s-codex{
+  background:
+    radial-gradient(ellipse at 30% 18%, rgba(176,138,72,.18), transparent 58%),
+    radial-gradient(ellipse at 82% 82%, rgba(140,98,44,.24), transparent 54%),
+    repeating-linear-gradient(88deg, rgba(120,88,40,.035) 0 3px, transparent 3px 11px),
+    linear-gradient(160deg, #ddc9a0 0%, #cbb488 46%, #b79c6f 100%)}
+.s-codex .veil{background:
+    radial-gradient(ellipse 1100px 780px at 50% 46%, transparent 42%, rgba(84,56,22,.34) 100%)}
+/* la costura es la doble raya de la caja de texto de un manuscrito */
+.s-codex .seam{left:calc(var(--panel) - 5px);width:7px;
+  background:linear-gradient(90deg, #9c2f1c 0 2px, transparent 2px 5px, #9c2f1c 5px 7px)}
+.s-codex .panel{
+  background:
+    radial-gradient(ellipse at 26% 14%, rgba(255,246,222,.5), transparent 60%),
+    linear-gradient(174deg, #f0e3c3 0%, #e7d7b3 58%, #dcc9a1 100%);
+  box-shadow:inset 0 0 0 1px rgba(140,102,46,.5), 16px 0 40px rgba(72,48,18,.4)}
+/* pauta de escriba */
+.s-codex .panel::before{content:"";position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;
+  background:repeating-linear-gradient(180deg, transparent 0 57px, rgba(150,112,54,.14) 57px 58px)}
+/* capitular iluminada en el margen */
+.s-codex .panel::after{content:"H";position:absolute;left:26px;top:78px;width:56px;height:56px;display:grid;place-items:center;
+  font-family:"Cinzel Decorative",serif;font-size:34px;color:#f4e6c2;background:linear-gradient(150deg,#2f4c8e,#1d3260);
+  border:2px solid #c1932e;box-shadow:0 3px 8px rgba(60,40,14,.4)}
+.s-codex .brand{border-bottom:2px solid #9c2f1c;position:relative;z-index:2}
+.s-codex .kicker{color:#9c2f1c;letter-spacing:.2em}
+.s-codex .wordmark{font-family:"Cinzel Decorative",Georgia,serif;color:#8e2c1a;letter-spacing:-.02em;
+  text-shadow:1px 1px 0 rgba(201,150,44,.55), 0 2px 0 rgba(255,250,236,.5)}
+.s-codex .subtitle{color:#2f4c8e;letter-spacing:.3em}
+.s-codex .subtitle i{background:#c1932e;height:2px}
+.s-codex .nav{position:relative;z-index:2}
+.s-codex .entry{font-family:"Cinzel",serif;color:#2a2118;letter-spacing:.04em;text-transform:none;font-size:26px}
+/* la viñeta es un calderón rojo de manuscrito */
+.s-codex .entry .mark{width:16px;height:16px;background:none;position:relative}
+.s-codex .entry .mark::before{content:"¶";position:absolute;inset:0;display:grid;place-items:center;
+  font-family:"Cinzel",serif;font-size:19px;color:#9c2f1c}
+.s-codex .entry:hover{color:#8e2c1a;padding-left:10px}
+.s-codex .entry:hover .mark::before{color:#c1932e;text-shadow:0 0 10px rgba(193,147,46,.7)}
+.s-codex .entry.dis{color:#8b7c60}
+.s-codex .chron{border-bottom:2px solid #9c2f1c}
+.s-codex .chron .mk{background:#2f4c8e;transform:rotate(45deg);box-shadow:0 0 0 2px #c1932e}
+.s-codex .chron strong{font-family:"Cinzel Decorative",serif;color:#3d2c14}
+.s-codex .chron small{color:#8e2c1a}
+.s-codex .chron .edit{border:2px solid #c1932e;color:#f4e6c2;background:linear-gradient(150deg,#2f4c8e,#1d3260)}
+.s-codex .credits{color:#7d6540}
+
+/* ============================================================
+   PIEL 3 · HERÁLDICA DE SANGRE Y HIERRO
+   oscuro pero saturado: estandarte oxblood, oro y hierro
+   ============================================================ */
+.s-heraldry{
+  background:
+    radial-gradient(ellipse 860px 640px at 76% 42%, rgba(196,120,42,.16), transparent 70%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.014) 0 1px, transparent 1px 5px),
+    linear-gradient(172deg, #1b1e21 0%, #121517 50%, #08090b 100%),
+    var(--bg);
+  background-size:auto,auto,auto,cover;background-position:center,center,center,58% center}
+.s-heraldry .veil{background:
+    linear-gradient(90deg, rgba(6,7,9,.9) 0 26%, rgba(8,10,12,.55) 52%, rgba(6,7,9,.8)),
+    linear-gradient(180deg, rgba(4,5,6,.72), transparent 24% 68%, rgba(4,5,6,.84))}
+/* la costura es una trenza de oro sobre hierro */
+.s-heraldry .seam{left:calc(var(--panel) - 6px);width:8px;
+  background:linear-gradient(90deg, rgba(0,0,0,.8) 0 2px, #6b5320 2px 3px,
+    repeating-linear-gradient(180deg,#d8ae4a 0 5px,#8a6a24 5px 10px) 3px 5px, #6b5320 5px 6px, rgba(0,0,0,.7) 6px 8px);
+  box-shadow:10px 0 32px rgba(0,0,0,.6), 0 0 22px rgba(198,152,58,.18)}
+/* el panel es un estandarte de tela colgado */
+.s-heraldry .panel{
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(150,44,32,.5), transparent 62%),
+    repeating-linear-gradient(94deg, rgba(0,0,0,.14) 0 3px, transparent 3px 8px),
+    linear-gradient(176deg, #5e1b16 0%, #431310 46%, #2a0c0a 100%);
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.6), inset 0 0 0 4px rgba(198,152,58,.42),
+             inset 0 -60px 90px rgba(0,0,0,.4), 20px 0 52px rgba(0,0,0,.65)}
+/* barra superior de hierro con remaches, de la que cuelga el estandarte */
+.s-heraldry .panel::before{content:"";position:absolute;left:0;right:0;top:0;height:22px;
+  background:linear-gradient(180deg,#4a5155,#22282b 60%,#12171a);
+  box-shadow:0 3px 10px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.14)}
+.s-heraldry .panel::after{content:"";position:absolute;left:0;right:0;top:6px;height:9px;
+  background-image:radial-gradient(circle, #9aa4a8 0 2px, #3d4548 2px 3.4px, transparent 3.6px);
+  background-size:54px 9px;background-repeat:repeat-x;background-position:24px 0}
+.s-heraldry .brand{border-bottom:2px solid rgba(198,152,58,.5)}
+.s-heraldry .kicker{color:#c08c52}
+.s-heraldry .wordmark{font-family:"Cinzel Decorative",Georgia,serif;color:#e8c574;
+  text-shadow:0 2px 0 rgba(0,0,0,.6), 0 0 34px rgba(214,158,58,.34)}
+.s-heraldry .subtitle{color:#c9a26a}
+.s-heraldry .subtitle i{background:#c6983a;height:2px}
+.s-heraldry .entry{font-family:"Cinzel",serif;color:#e0cba4;letter-spacing:.06em}
+/* la viñeta es un escudo heráldico */
+.s-heraldry .entry .mark{width:13px;height:15px;background:linear-gradient(180deg,#8a6a24,#4a3712);
+  clip-path:polygon(0 0,100% 0,100% 58%,50% 100%,0 58%);box-shadow:0 0 0 1px rgba(0,0,0,.5)}
+.s-heraldry .entry:hover{color:#fff0c8;padding-left:10px;
+  background:linear-gradient(90deg, rgba(198,152,58,.2), transparent 84%);
+  text-shadow:0 0 18px rgba(214,158,58,.5)}
+.s-heraldry .entry:hover .mark{background:linear-gradient(180deg,#f2d488,#c6983a);box-shadow:0 0 14px rgba(214,158,58,.8)}
+.s-heraldry .entry.dis{color:#8a7d63}
+.s-heraldry .chron{border-bottom:2px solid rgba(198,152,58,.42)}
+.s-heraldry .chron .mk{background:linear-gradient(180deg,#c6983a,#7a5c1e);clip-path:polygon(0 0,100% 0,100% 58%,50% 100%,0 58%);height:13px}
+.s-heraldry .chron strong{font-family:"Cinzel Decorative",serif;color:#f0dcae;text-shadow:0 2px 10px rgba(0,0,0,.8)}
+.s-heraldry .chron small{color:#b08d5c}
+.s-heraldry .chron .edit{border:2px solid rgba(198,152,58,.6);color:#eccf8c;
+  background:linear-gradient(180deg,#4d2320,#26100e);clip-path:polygon(0 0,100% 0,100% 74%,50% 100%,0 74%)}
+.s-heraldry .credits{color:#8a7550}
+
+/* cierre */
+.close{margin:84px 0 0;border-top:1px solid #23292b;padding-top:36px}
+.close h3{font-family:"Cinzel Decorative",serif;font-weight:400;font-size:24px;color:#e3d6b0;margin:0 0 16px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid #1c2224;vertical-align:top}
+th{font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#a8945f;font-weight:500}
+td{color:#949e99;line-height:1.55}
+td b{color:#d8cca9;font-weight:400;font-family:"Cinzel",serif}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="doc-head">
+  <div class="doc-kicker">Hostfall · menú principal · tono medieval</div>
+  <h1>El mismo layout con tres materiales</h1>
+  <p>Ninguna de las tres mueve una sola caja: panel de 590px a la izquierda, marca arriba, seis entradas centradas,
+  ficha del Cronista arriba a la derecha, créditos abajo. Lo que cambia es de qué está hecho todo y qué colores usa.
+  El objetivo es alejarse del gris-verdoso elegante y acercarse a un juego de mesa de fantasía. Pasa el ratón por las entradas.</p>
+</div>
+
+<!-- ============ 1 ============ -->
+<section class="variant">
+  <div class="vhead"><span class="vnum">1</span><h2>Tablero y latón</h2><span class="vtag">nogal · cartón impreso · remaches</span></div>
+  <p class="vlede">La caja del juego abierta sobre la mesa. El fondo es madera de nogal con veta, el panel es una lámina
+  de cartón impreso atornillada encima, y la separación es una moldura de latón de verdad. Los textos son tinta sobre
+  cartón, no luz sobre cristal. Es la piel que más grita «juego de mesa».</p>
+  <div class="swatch-wrap"><div class="swatches">
+    <i style="background:#2c1a0d" data-n="nogal"></i><i style="background:#d8c397" data-n="cartón"></i>
+    <i style="background:#c79a4a" data-n="latón"></i><i style="background:#7c1f14" data-n="oxblood"></i>
+    <i style="background:#3a2410" data-n="tinta"></i>
+  </div></div>
+  <div class="stage"><div class="screen mm s-board">
+    <div class="veil"></div><div class="seam"></div>
+    <div class="chron"><span class="mk"></span><div><strong>Leo</strong><small>Cronista</small></div><span class="edit">✎</span></div>
+    <div class="panel">
+      <div class="brand">
+        <div class="kicker">Crónicas de los Reinos Quebrados</div>
+        <h1 class="wordmark">Hostfall</h1>
+        <div class="subtitle"><i></i> Acto I — Coronas sobre cenizas</div>
+      </div>
+      <nav class="nav">
+        <div class="entry"><span class="mark"></span><span>Continuar</span></div>
+        <div class="entry"><span class="mark"></span><span>Jugar</span></div>
+        <div class="entry"><span class="mark"></span><span>Crónicas</span></div>
+        <div class="entry"><span class="mark"></span><span>Huestes</span></div>
+        <div class="entry dis"><span class="mark"></span><span>Cómo jugar</span></div>
+        <div class="entry"><span class="mark"></span><span>Ajustes</span></div>
+      </nav>
+      <div></div>
+    </div>
+    <div class="credits"><span>Version: 0.9.0</span>Desarrollado por Leoocast</div>
+  </div></div>
+  <ul class="changes">
+    <li><b>Panel claro sobre fondo oscuro.</b> Se invierte el contraste: hoy es panel oscuro sobre foto oscura, aquí es cartón claro sobre madera. El menú se lee de un vistazo y deja de parecer una capa translúcida.</li>
+    <li><b>Marco impreso, no borde.</b> Doble filete grabado en el propio cartón (<code>inset box-shadow</code>) en lugar de un <code>border</code> de 1px. Es el gesto de una caja de juego impresa.</li>
+    <li><b>Remaches en vez de rombos.</b> La viñeta ◆ pasa a ser un remache de latón redondo con brillo especular.</li>
+    <li><b>El acento cambia de dorado frío a oxblood.</b> El hover tiñe el texto de rojo tinta; el dorado se reserva al metal.</li>
+  </ul>
+  <p class="caveat">Riesgo: es la que más se aleja del arte de las cartas, que son oscuras. Habría que ver el salto del menú claro a la partida oscura — o aclarar también la mesa de juego.</p>
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="variant">
+  <div class="vhead"><span class="vnum">2</span><h2>Grimorio iluminado</h2><span class="vtag">vitela · rúbrica roja · lapislázuli y oro</span></div>
+  <p class="vlede">El menú como página de un manuscrito: vitela con pauta de escriba, capitular iluminada en el margen,
+  rúbricas rojas y azul lapislázuli. Es la piel que mejor encaja con el lore —el Cronista escribe una Crónica— y la
+  única que usa color de verdad, no sólo dorado.</p>
+  <div class="swatch-wrap"><div class="swatches">
+    <i style="background:#e7d7b3" data-n="vitela"></i><i style="background:#9c2f1c" data-n="minio"></i>
+    <i style="background:#2f4c8e" data-n="lapislázuli"></i><i style="background:#c1932e" data-n="oro"></i>
+    <i style="background:#2a2118" data-n="tinta"></i>
+  </div></div>
+  <div class="stage"><div class="screen mm s-codex">
+    <div class="veil"></div><div class="seam"></div>
+    <div class="chron"><span class="mk"></span><div><strong>Leo</strong><small>Cronista</small></div><span class="edit">✎</span></div>
+    <div class="panel">
+      <div class="brand">
+        <div class="kicker">Crónicas de los Reinos Quebrados</div>
+        <h1 class="wordmark">Hostfall</h1>
+        <div class="subtitle"><i></i> Acto I — Coronas sobre cenizas</div>
+      </div>
+      <nav class="nav">
+        <div class="entry"><span class="mark"></span><span>Continuar</span></div>
+        <div class="entry"><span class="mark"></span><span>Jugar</span></div>
+        <div class="entry"><span class="mark"></span><span>Crónicas</span></div>
+        <div class="entry"><span class="mark"></span><span>Huestes</span></div>
+        <div class="entry dis"><span class="mark"></span><span>Cómo jugar</span></div>
+        <div class="entry"><span class="mark"></span><span>Ajustes</span></div>
+      </nav>
+      <div></div>
+    </div>
+    <div class="credits"><span>Version: 0.9.0</span>Desarrollado por Leoocast</div>
+  </div></div>
+  <ul class="changes">
+    <li><b>Entra el color.</b> Rojo minio y azul lapislázuli junto al oro. Es lo que más rompe con el gris-verdoso actual, y son los tres pigmentos reales de un manuscrito medieval.</li>
+    <li><b>Se acaban las mayúsculas.</b> Las entradas van en caja normal, como texto escrito, y suben a 26px. La sensación pasa de «navegación» a «índice de un libro».</li>
+    <li><b>Calderón en vez de rombo.</b> El ¶ rojo es la marca de párrafo del manuscrito; marca la entrada igual pero significa algo.</li>
+    <li><b>Pauta y capitular.</b> Las líneas de escriba y la letra capital iluminada dan textura sin añadir ninguna caja nueva.</li>
+  </ul>
+  <p class="caveat">Riesgo: es una pantalla clara para un juego oscuro, y el nombre del Cronista arriba a la derecha queda sobre vitela, no sobre el fondo. Es la más bonita de las tres y la que peor convive con el resto de la app tal y como está hoy.</p>
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="variant">
+  <div class="vhead"><span class="vnum">3</span><h2>Heráldica de sangre y hierro</h2><span class="vtag">estandarte oxblood · oro · hierro remachado</span></div>
+  <p class="vlede">Sigue siendo oscuro —convive con el arte actual sin tocar nada más— pero deja de ser gris:
+  el panel se convierte en un estandarte de tela oxblood colgado de una barra de hierro remachada, con trenza de oro
+  en el borde. Es el punto medio: cambia el tono sin cambiar la luminosidad del juego.</p>
+  <div class="swatch-wrap"><div class="swatches">
+    <i style="background:#0f1214" data-n="hierro"></i><i style="background:#5e1b16" data-n="estandarte"></i>
+    <i style="background:#c6983a" data-n="oro"></i><i style="background:#e8c574" data-n="oro claro"></i>
+    <i style="background:#e0cba4" data-n="hueso"></i>
+  </div></div>
+  <div class="stage"><div class="screen mm s-heraldry">
+    <div class="veil"></div><div class="seam"></div>
+    <div class="chron"><span class="mk"></span><div><strong>Leo</strong><small>Cronista</small></div><span class="edit">✎</span></div>
+    <div class="panel">
+      <div class="brand">
+        <div class="kicker">Crónicas de los Reinos Quebrados</div>
+        <h1 class="wordmark">Hostfall</h1>
+        <div class="subtitle"><i></i> Acto I — Coronas sobre cenizas</div>
+      </div>
+      <nav class="nav">
+        <div class="entry"><span class="mark"></span><span>Continuar</span></div>
+        <div class="entry"><span class="mark"></span><span>Jugar</span></div>
+        <div class="entry"><span class="mark"></span><span>Crónicas</span></div>
+        <div class="entry"><span class="mark"></span><span>Huestes</span></div>
+        <div class="entry dis"><span class="mark"></span><span>Cómo jugar</span></div>
+        <div class="entry"><span class="mark"></span><span>Ajustes</span></div>
+      </nav>
+      <div></div>
+    </div>
+    <div class="credits"><span>Version: 0.9.0</span>Desarrollado por Leoocast</div>
+  </div></div>
+  <ul class="changes">
+    <li><b>El verde-gris se va, entra el oxblood.</b> Mismo nivel de oscuridad, saturación completamente distinta. El fondo del juego sigue viéndose por los lados.</li>
+    <li><b>El panel cuelga.</b> Barra de hierro con remaches arriba y tela debajo: el panel deja de flotar sin explicación.</li>
+    <li><b>Escudos en vez de rombos.</b> La viñeta es un escudete heráldico, y el mismo recorte se usa en el botón de editar nombre.</li>
+    <li><b>Trenza de oro en el canto.</b> Un galón de 8px con rayado en vez del filete degradado a transparente.</li>
+  </ul>
+</section>
+
+<div class="close">
+  <h3>Cómo leerlas</h3>
+  <table>
+    <tr><th>Piel</th><th>Cuánto se aleja de hoy</th><th>Qué arrastra</th></tr>
+    <tr><td><b>1 · Tablero y latón</b></td><td>Mucho. Invierte el contraste del menú.</td><td>Obliga a decidir si la mesa de juego también se aclara. Es un cambio de dirección de arte, no de menú.</td></tr>
+    <tr><td><b>2 · Grimorio</b></td><td>Máximo. Cambia luminosidad y paleta.</td><td>Lo mismo que la 1, más el riesgo de que choque con las cartas oscuras. Muy alineada con el lore.</td></tr>
+    <tr><td><b>3 · Heráldica</b></td><td>Medio: misma oscuridad, otro tono.</td><td>Nada. Se puede aplicar sólo al menú y el resto del juego sigue funcionando visualmente.</td></tr>
+  </table>
+  <p class="caveat">Las tres pieles están también aplicadas a la pantalla de juego en <code>juego-tono.html</code>, con el mismo layout, para que puedas ver cuál aguanta cuando hay cartas encima.</p>
+</div>
+
+</div>
+<script>
+function fit(){
+  document.querySelectorAll('.stage').forEach(function(st){
+    var s = st.clientWidth / 1920;
+    var scr = st.querySelector('.screen');
+    if(scr) scr.style.setProperty('--s', s);
+    st.style.height = (1080 * s) + 'px';
+  });
+}
+window.addEventListener('resize', fit);
+document.addEventListener('DOMContentLoaded', fit);
+fit(); setTimeout(fit, 300);
+</script>
+</body>
+</html>

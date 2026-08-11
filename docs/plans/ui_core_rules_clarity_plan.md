@@ -133,8 +133,20 @@ Propuesta inicial:
 
 ### Resultado de la conversación
 
-El agente debe registrar en este documento las tres decisiones aprobadas antes de presentar la Fase
-1. No debe interpretar silencio como aprobación.
+**Aprobada el 2026-08-10.**
+
+- Se conserva el robo vigente: durante Preparación se roba 1; después de Preparación, Fácil roba 2;
+  Normal y Difícil roban 1, o 2 si la Mano está vacía al comenzar el robo.
+- Se conserva la devolución de Fuente vigente: sólo después de Preparación, durante la fase Principal
+  del Cronista y una vez por turno, compartiendo la misma oportunidad con jugar una Fuente. La
+  Fuente va al fondo del Archivo y el Cronista roba 1 carta.
+- Se aprueba el vocabulario visible **Fuente**, **Energía**, **Reserva**, **Acción de Fuente** y
+  **Devolver Fuente**, con la explicación “Pon esta Fuente al fondo de tu Archivo. Roba 1 carta.”
+  **Acción de Fuente** nombra para el jugador el permiso compartido entre jugar y devolver; no exige
+  renombrar el estado interno `energyActionUsedThisTurn`.
+
+Estas decisiones cierran la Fase 0 y autorizan presentar, pero no implementar sin una nueva
+aprobación, la Fase 1.
 
 ## Fase 1 — Rediseñar la presentación de Preparación
 
