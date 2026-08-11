@@ -9,6 +9,10 @@ type BannerState = {
   key: string;
   label: string;
   tone: BannerTone;
+  progress?: Readonly<{
+    current: number;
+    total: number;
+  }>;
 };
 
 const BANNER_DURATION_MS = 1320;
@@ -59,7 +63,17 @@ export function PhaseBanner({ game, setupTurns, suspended = false }: { game: Gam
         <span className="phase-banner-line phase-banner-line-left" />
         <span className="phase-banner-copy">
           <span className="phase-banner-edge-frame" />
-          <span className="phase-banner-text">{visiblePhase.label}</span>
+          <span className="phase-banner-text">
+            <span>{visiblePhase.label}</span>
+            {visiblePhase.progress && (
+              <>
+                {" "}
+                <span className="phase-banner-count">
+                  {visiblePhase.progress.current}/{visiblePhase.progress.total}
+                </span>
+              </>
+            )}
+          </span>
         </span>
         <span className="phase-banner-line phase-banner-line-right" />
       </div>
@@ -74,8 +88,9 @@ function getBannerState(game: GameState, setupTurns: number, t: ReturnType<typeo
     if (setup) {
       return {
         key: `setup-step-${setup.current}-of-${setup.total}`,
-        label: t("phase.setupStepBanner", { current: setup.current, total: setup.total }),
+        label: t("phase.setup"),
         tone: "main",
+        progress: { current: setup.current, total: setup.total },
       };
     }
   }

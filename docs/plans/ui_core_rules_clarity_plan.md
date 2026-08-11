@@ -226,6 +226,8 @@ entender que la acción final despertará a la Hueste.
   derivación pura vive en `src/components/setupPresentation.ts` y cubre una partida reanudada.
 - Los banners de “Fase principal”, “Turno adicional” y “Último turno adicional” se sustituyen por
   **Preparación X/N**. Al pasar de la última Preparación a la Hueste aparece **La Hueste despierta**.
+- El contador `X/N` del banner usa una tipografía de interfaz con cifras tabulares, separada del
+  título ornamental, para que los números sean legibles y no cambien de ancho entre pasos.
 - El banner general de fases usa una placa de hierro sin pictogramas que crece con el texto y
   conserva margen lateral constante. Preparación y Principal armonizan en oliva, Defensa en azul
   acero y Batalla/Hueste mantienen acentos cálidos; banner y botón comparten familia sin repetir
@@ -239,6 +241,8 @@ entender que la acción final despertará a la Hueste.
   la Hueste**. Su lectura accesible comunica el mismo estado sin depender del color.
 - La presentación equivalente existe en ES y EN. No se modificaron reglas, dificultad, robo, Reserva
   ni balance.
+- El componente de estado legado ya no conserva el antiguo mensaje de “turnos del jugador” y el
+  banner elimina su movimiento cuando el sistema solicita movimiento reducido.
 
 La implementación pasó typecheck, la suite completa y el build web. El cierre sigue condicionado a
 comprobar manualmente legibilidad, ubicación, transición final y estados de movimiento reducido.

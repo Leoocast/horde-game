@@ -58,14 +58,19 @@ test("Preparation progress preserves the original total across normal play and r
 
 test("phase banners use content-sized plaques with tone-matched accents", () => {
   const bannerSource = readFileSync(new URL("../src/components/PhaseBanner.tsx", import.meta.url), "utf8");
+  const statusSource = readFileSync(new URL("../src/components/GameStatusBadge.tsx", import.meta.url), "utf8");
   const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.doesNotMatch(bannerSource, /lucide-react|phase-banner-crest|visiblePhase\.Icon/);
   assert.doesNotMatch(stylesSource, /\.phase-banner-crest/);
+  assert.match(bannerSource, /className="phase-banner-count"/u);
+  assert.doesNotMatch(statusSource, /game\.setupRemaining/u);
   assert.match(stylesSource, /\.phase-banner-copy\s*\{[^}]*width:\s*max-content;/su);
   assert.match(stylesSource, /\.phase-banner-copy\s*\{[^}]*padding:\s*0 clamp\(48px, 4\.2vw, 72px\);/su);
+  assert.match(stylesSource, /\.phase-banner-count\s*\{[^}]*font-family:\s*"Outfit"[^}]*font-variant-numeric:\s*tabular-nums;/su);
   assert.match(stylesSource, /\.phase-banner-main\s*\{\s*--phase-accent:\s*#9da86a/u);
   assert.match(stylesSource, /\.phase-banner-defend\s*\{\s*--phase-accent:\s*#6fa8cf/u);
+  assert.match(stylesSource, /@media \(prefers-reduced-motion: reduce\)\s*\{[^}]*\.phase-banner[^}]*animation:\s*none !important;/su);
 });
 
 test("Preparation actions distinguish continuing from awakening the Host", () => {
