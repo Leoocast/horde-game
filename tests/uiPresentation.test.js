@@ -103,6 +103,8 @@ test("Memory, Archive and Life share one row of equal boxes and the Archive owns
   // peek over the edge without the row growing: the Host's copy rests on the top screen edge.
   assert.match(stylesSource, /\.card-pile\s*\{[^}]*width:\s*62px;[^}]*min-height:\s*75px;\s*margin-top:\s*7px;/su);
   assert.match(stylesSource, /\.card-pile::before\s*\{[^}]*top:\s*-7px;/su);
+  // Hovering Memory lights its border; the box itself never moves.
+  assert.doesNotMatch(stylesSource, /\.card-pile-memory:hover,[^}]*\{[^}]*transform:/su);
 
   // Both sides own the same Memory box: the Chronicler's in the row, the Host's beside its panel.
   assert.equal(boardSource.match(/className="card-pile card-pile-memory"/gu)?.length, 2);

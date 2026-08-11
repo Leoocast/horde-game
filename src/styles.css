@@ -11795,12 +11795,22 @@
 
 .card-pile-memory .card-pile-count { color: #dfd6ae; }
 
+/* Sin desplazamiento: la caja no se mueve, sólo se enciende su borde. */
 .card-pile-memory:hover,
 .card-pile-memory:focus-visible {
-  border-color: rgb(190 215 130 / 0.6);
+  border-color: rgb(190 215 130 / 0.72);
   color: #e6f8b8;
   outline: none;
-  transform: translateY(-2px);
+  box-shadow:
+    inset 0 0 0 2px rgb(6 12 12 / 0.45),
+    inset 0 1px 0 rgb(214 232 172 / 0.1),
+    0 10px 22px rgb(0 0 0 / 0.5),
+    0 0 14px rgb(163 199 116 / 0.28);
+}
+
+.card-pile-memory:hover::before,
+.card-pile-memory:focus-visible::before {
+  border-color: rgb(190 215 130 / 0.6);
 }
 
 .card-pile-host { display: flex; }
