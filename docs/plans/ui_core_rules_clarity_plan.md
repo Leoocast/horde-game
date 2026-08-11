@@ -1,6 +1,6 @@
 # Plan de diseño e implementación de claridad en la UI
 
-Estado: **en ejecución fase por fase; Fases 1 a 5 cerradas, Fase 6 en revisión global de UI**
+Estado: **completado; Fases 0 a 6 cerradas tras QA visual del usuario**
 Última actualización: 2026-08-11
 
 ## Objetivo
@@ -616,6 +616,8 @@ una y varias cartas.
 
 ## Fase 6 — Revisar el conjunto antes de diseñar el tutorial
 
+Estado: **cerrada el 2026-08-11 tras QA visual del usuario.**
+
 ### Problema que resuelve
 
 Cada cambio puede funcionar por separado y aun así producir una pantalla demasiado cargada. Esta
@@ -664,6 +666,13 @@ es relevante. El usuario puede pedir simplificación, movimiento o eliminación 
 Después de los ajustes aprobados, actualizar `CLAUDE.md` y `docs/guides/testing.md` con los contratos finales.
 Esta fase no implementa el tutorial.
 
+**Cierre aprobado el 2026-08-11.** La revisión conjunta recorrió Preparación, Archivo y robo,
+Acción de Fuente, Reserva, transiciones de la Mano y ataque al Archivo. El QA iterativo ajustó
+jerarquía, copy, tooltips, trayectorias y estados de Energía hasta la aprobación final del usuario.
+Los contratos permanentes quedaron consolidados en `CLAUDE.md`, `docs/guides/testing.md` y
+`docs/reference/animation_contracts.md`. No queda funcionalidad pendiente dentro de este plan y el
+diseño del tutorial puede retomarse como trabajo separado.
+
 ## Verificación automática durante la implementación
 
 Después de cada fase con cambios de código:
@@ -691,3 +700,6 @@ El diseño del tutorial obligatorio puede retomarse cuando:
 
 En ese momento el tutorial podrá concentrarse en hacer que el jugador realice esas acciones en una
 Primera Semilla guiada, utilizando la misma interfaz que encontrará después.
+
+**Condiciones cumplidas el 2026-08-11.** Este plan queda como registro de las decisiones aprobadas;
+cualquier tutorial futuro debe consumir estos contratos sin reabrirlos implícitamente.

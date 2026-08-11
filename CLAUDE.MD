@@ -403,8 +403,9 @@ aprobado y el plan no autoriza por sí solo cambios de reglas ni la implementaci
 
 Estado vigente de ese plan: las Fases 1 (Preparación), 2 (Archivo y próximo robo), 3 (Acción de
 Fuente), 4 (Reserva y orden de pago) y 5 (ataque al Archivo de la Hueste) están cerradas tras QA
-visual del usuario; la Fase 6 está en revisión global de UI antes del tutorial. El contrato de la
-Fase 5 es: panel **Archivo de la
+visual del usuario; la Fase 6 y el plan completo quedaron cerrados el 2026-08-11 tras la revisión
+global. El tutorial es trabajo posterior y debe reutilizar esta UI sin reabrir sus decisiones
+implícitamente. El contrato de la Fase 5 es: panel **Archivo de la
 Hueste**, conteo `actual → restante`, resultado físico reducido a siluetas y `N`, y tooltip secundario
 **Cálculo del ataque** con la operación compacta `Fuerza ÷ umbral → resultado`. El preview usa
 `hostRules.damagePerArchiveDiscard` y se limita al Archivo restante. La placa de `N` emerge por la
