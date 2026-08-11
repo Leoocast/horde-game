@@ -419,8 +419,8 @@ La infraestructura del tutorial obligatorio se gobierna por
 `docs/plans/guided_tutorial_system_plan.md`, que sigue abierta y no autoriza implementar fases en
 bloque. Antes de cada fase se explica al usuario qué experiencia se construirá y para qué le sirve;
 sólo se implementa tras su aprobación explícita. El sistema debe ser independiente de nombres e IDs
-de decks en su núcleo: las lecciones declaran capacidades, roles y, sólo cuando corresponde,
-referencias calificadas de `ContentCatalog`. Añadir un deck no debe exigir ramas nuevas en el
+de decks en su núcleo: las lecciones declaran recetas exactas, aliases de copias y referencias
+calificadas de `ContentCatalog`. Añadir un deck no debe exigir ramas nuevas en el
 overlay, el gate de acciones ni el orquestador. La sesión activa nunca se reanuda a mitad: sólo se
 persiste la finalización versionada; cerrar o salir obliga a empezar el recorrido desde el primer
 paso.
@@ -432,6 +432,15 @@ intención solicitada puede llegar al engine; una animación iniciada termina du
 se congela a mitad. Se permiten ajustes prácticos menores de layout, intensidad, copy y timing
 durante QA, pero cambiar deck canónico, política sin resume, acciones permitidas o pausa entre beats
 requiere nueva aprobación. Las Fases 1 a 8 siguen pendientes y no hay runtime de guía implementado.
+
+La entrada de diseño para la Fase 1 fija que **cada tutorial es un escenario completamente
+predefinido**: decks, copias exactas, Mano o reparto inicial, Archivo del Cronista en orden,
+apariciones de la Hueste, Campos, Memorias, Fuentes y Reserva. El runtime no busca cartas por
+capacidades, no rellena el resto del deck y no baraja una receta. Las claves calificadas de
+`ContentCatalog` viven en la receta; cada copia recibe un alias semántico que se enlaza a su
+`instanceId`, y los pasos apuntan a ese alias. El reparto inicial puede contener dos, siete o la
+cantidad que diseñe la lección. Esta decisión está registrada para discutir la Fase 1, que aún no
+está aprobada ni implementada.
 
 `playerDrawForecast` en
 `src/engine/TurnManager.ts` es la fuente única para el robo real y su previsión. La devolución

@@ -26,6 +26,8 @@ Las decisiones de producto ya fijadas por el usuario son:
   al controlador por cada deck;
 - la Primera Semilla obligatoria será canónica y usará **El Pacto de Elarion** como deck del
   Cronista;
+- cada tutorial predefine todas sus cartas, zonas y órdenes de aparición; el runtime nunca elige
+  una carta «parecida» o rellena el escenario con el resto del deck;
 - antes de implementar cada fase hay que explicar y revisar qué se hará, por qué se hará y qué
   gana el jugador con ello.
 
@@ -48,49 +50,46 @@ conversar antes de asumirla.
 
 ## Qué significa «escalable para todos los decks»
 
-Escalabilidad no significa ejecutar ciegamente el mismo guion sobre cualquier deck. Algunos decks
-pueden no contener la carta, el coste o el patrón que una lección concreta necesita. Significa que:
+Escalabilidad no significa ejecutar el mismo guion sobre cualquier deck ni elegir cartas al azar o
+por semejanza. Cada tutorial es una receta concreta y reproducible. Significa que:
 
 - el motor de guía, la pausa, el bloqueo de acciones, el resaltado y el cuadro explicativo son
   completamente independientes de los decks;
-- una lección declara qué necesita mediante capacidades y roles semánticos, no mediante preguntas
-  en código como `if deckId === ...`;
+- una lección declara exactamente sus decks, cartas, copias, zonas y orden mediante claves
+  calificadas y aliases semánticos, no mediante preguntas en código como `if deckId === ...`;
 - al añadir un deck, no se editan el overlay, el orquestador ni el store de guía;
-- una lección genérica queda disponible automáticamente cuando el deck satisface sus capacidades;
-- una lección propia de un deck se añade como contenido registrado, traducciones y escenario, no
-  como una rama nueva dentro del framework;
-- una incompatibilidad se detecta al validar contenido o antes de abrir la lección, nunca a mitad de
-  una partida guiada.
+- para enseñar con un deck nuevo se registra otra receta determinista, traducciones y escenario, no
+  una rama nueva dentro del framework;
+- una referencia rota, una copia imposible o un orden incompleto se detecta al validar contenido,
+  nunca a mitad de una partida guiada.
 
-El sistema admitirá tres formas explícitas de compatibilidad:
+El sistema admitirá dos clases de contenido, ambas deterministas:
 
 | Tipo de lección | Uso | Contrato |
 | --- | --- | --- |
-| Canónica | Tutorial obligatorio con una experiencia idéntica para todos | Usa **El Pacto de Elarion** y un escenario fijado mediante claves calificadas del catálogo. No depende del deck que el jugador hubiera seleccionado. |
-| Por capacidades | Conceptos comunes reutilizables | Solicita elementos como «una Fuente jugable» o «una criatura que pueda atacar» y resuelve una instancia válida al iniciar. |
-| Específica de deck | Mecánicas particulares opcionales | Declara la clave calificada del deck y sus requisitos dentro de la definición de contenido; no modifica el framework. |
+| Canónica | Tutorial obligatorio con una experiencia idéntica para todos | Usa **El Pacto de Elarion** y una receta completa fijada mediante claves calificadas del catálogo. No depende del deck que el jugador hubiera seleccionado. |
+| Opcional | Concepto común o mecánica particular de un deck | Declara decks y receta exactos. Si se quiere enseñar el mismo concepto con otro deck, se registra otra receta concreta que reutiliza el runtime y puede reutilizar copy. |
 
 La futura Primera Semilla queda fijada como **canónica** y utilizará El Pacto de Elarion como deck
 del Cronista. Así se puede enseñar siempre la misma secuencia y medir si el jugador la comprendió.
 Esta elección no limita el framework: las lecciones opcionales podrán usar cualquiera de los otros
-dos modos.
+decks mediante su propia receta exacta.
 
 ### Contrato para decks futuros
 
 Registrar un deck nuevo debe cumplir lo siguiente:
 
 1. El framework compila y sus pruebas base siguen pasando sin modificar código de guía.
-2. Las lecciones por capacidades compatibles pueden resolver sus roles sobre el deck nuevo.
-3. Las lecciones incompatibles quedan marcadas como no disponibles con una razón validada.
-4. Si se quiere una lección específica, se añade una definición declarativa; no se programan
-   excepciones por nombre de carta o deck.
+2. El deck nuevo no necesita un tutorial para seguir siendo jugable.
+3. Si se quiere enseñar con él, se añade una definición declarativa con receta exacta; no se
+   programan excepciones por nombre de carta o deck.
+4. El lint valida esa receta contra `ContentCatalog` antes de ofrecerla.
 5. Renombrar el texto visible de una carta no rompe una lección.
 
-Las claves de deck sólo podrán aparecer en la receta o aplicabilidad de una lección canónica o
-específica y siempre calificadas por `ContentCatalog`. Los pasos genéricos no contienen IDs de
-cartas. Una clave calificada de carta sólo se admite como dato de una lección opcional dedicada a
-esa carta; nunca crea una rama en el controlador. Ninguna lección buscará texto visible, interpretará
-el log o decidirá por coordenadas del DOM.
+Las claves de deck y carta aparecen sólo en la receta y siempre calificadas por `ContentCatalog`.
+Cada copia recibe un alias propio —aunque varias usen la misma definición— y los pasos apuntan a ese
+alias, que al construir el escenario se enlaza a un `instanceId`. Ningún paso busca texto visible,
+interpreta el log o decide por coordenadas del DOM.
 
 ## Experiencia base del sistema
 
@@ -124,6 +123,8 @@ que es necesaria.
   entradas.
 - La sesión activa de guía vive fuera de `GameState` y no entra en el resume normal de una partida.
 - La definición de una lección es contenido versionado, validable y traducible.
+- La receta contiene sólo las cartas necesarias para la lección y conserva explícitamente los
+  órdenes `topToBottom` y de aparición. El runtime no completa ni baraja el deck por su cuenta.
 - Los pasos observan resultados semánticos de acciones reales y la finalización de presentaciones;
   no leen `game.log`, no esperan tiempos mágicos y no inspeccionan texto renderizado.
 - Los números que se explican se obtienen de las reglas y selectores reales —por ejemplo,
@@ -144,7 +145,7 @@ puede ajustarlos sin cambiar estos contratos.
 | Fase | Resultado al cerrarla | Beneficio visible o futuro para el jugador |
 | --- | --- | --- |
 | 0. Decisiones | Comportamiento y límites aprobados antes de programar | La guía se sentirá como se espera y no tomará decisiones de producto a escondidas. |
-| 1. Definiciones | Formato validado para describir lecciones y capacidades | Las instrucciones podrán encontrar elementos correctos en decks distintos. |
+| 1. Definiciones | Formato validado para describir lecciones y escenarios exactos | Cada tutorial comenzará siempre con las cartas y órdenes diseñados por el autor. |
 | 2. Acciones | Gate semántico que permite una sola intención | No se podrá romper el recorrido con otra carta, botón, teclado o drag. |
 | 3. Pausa | Checkpoints seguros entre presentaciones | Habrá tiempo ilimitado para leer sin cortar consecuencias visuales. |
 | 4. Interfaz | Spotlight, cuadro, anclas y escudo accesible | Siempre será claro qué mirar y qué hacer. |
@@ -257,21 +258,57 @@ curso altera el contrato y requiere una nueva aprobación explícita.
 
 ---
 
-## Fase 1 — Definiciones de lección, roles y compatibilidad de decks
+## Fase 1 — Definiciones, recetas deterministas y aliases de cartas
 
 Estado: **pendiente**.
 
 ### Antes de iniciar
 
-Se enseñará un ejemplo legible de una lección con tres pasos y dos roles, por ejemplo
-`fuente_a_jugar` y `carta_a_robar`. Se explicará qué partes son comunes a todos los decks y cuáles
-pertenecen sólo al contenido de esa lección.
+Se enseñará un ejemplo legible de una lección con tres pasos y aliases concretos, por ejemplo
+`fuente_inicial`, `eco_a_jugar` y `primer_robo`. Se explicará qué pertenece al runtime común y qué
+pertenece exclusivamente a la receta determinista de esa lección.
 
 ### Para qué le sirve al jugador
 
-Hace que las instrucciones señalen siempre la carta correcta aunque cambien el idioma, el arte, el
-orden del deck o sus nombres visibles. También evita que una actualización añada un deck que rompa
-silenciosamente el tutorial.
+Hace que el tutorial empiece siempre con la Mano, Archivo, Hueste y orden de aparición diseñados. El
+autor puede entregar dos cartas iniciales, siete o cualquier cantidad validada sin introducir cartas
+que la lección no usará. También evita que una actualización cambie silenciosamente esa secuencia.
+
+### Modelo propuesto para una receta
+
+La sintaxis final se decidirá al implementar, pero el contrato conceptual será equivalente a éste:
+
+```yaml
+lessonId: first-seed
+revision: 1
+playerDeck: builtin/player/pact_of_elarion
+hostDeck: builtin/host/<hueste-elegida>
+scenario:
+  openingDeal: [fuente_inicial, eco_a_jugar]
+  playerArchiveTopToBottom: [primer_robo, segundo_robo]
+  playerField: []
+  playerMemory: []
+  playerSources: []
+  playerReserve: 0
+  hostArchiveTopToBottom: [primera_aparicion, segunda_aparicion]
+  hostField: []
+  hostMemory: []
+cards:
+  fuente_inicial: <qualifiedCardKey exacta>
+  eco_a_jugar: <qualifiedCardKey exacta>
+  primer_robo: <qualifiedCardKey exacta>
+  segundo_robo: <qualifiedCardKey exacta>
+  primera_aparicion: <qualifiedCardKey exacta>
+  segunda_aparicion: <qualifiedCardKey exacta>
+```
+
+`openingDeal` define tanto la cantidad como el orden de entrada a la Mano. Puede contener dos,
+siete u otra cantidad definida por el tutorial. `playerArchiveTopToBottom[0]` será la próxima carta
+robada y `hostArchiveTopToBottom[0]` la próxima carta revelada por la Hueste. No se añadirán las
+cartas omitidas del deck completo.
+
+Dos copias de la misma carta usan aliases distintos. Los pasos nunca señalan la definición general:
+señalan la copia exacta, por ejemplo `fuente_inicial`.
 
 ### Trabajo propuesto
 
@@ -282,33 +319,44 @@ silenciosamente el tutorial.
 - Definir un `GuidedLessonDefinition` versionado y una unión tipada de pasos:
   `ExplainStep`, `ActStep` y `ObserveStep`.
 - Crear un registro de lecciones separado del registro de decks.
-- Definir modos de compatibilidad canónica, por capacidades y específica de deck.
-- Crear selectores finitos y tipados para capacidades relevantes: controlador, zona, tipo de carta,
-  coste, fuerza, rasgos y posibilidad real de jugar/atacar.
-- Resolver al inicio nombres de rol a `instanceId` concretos; los pasos posteriores sólo consumen
-  esos roles.
-- Referenciar decks y cartas fijas mediante claves calificadas de `ContentCatalog`.
+- Definir una `ScenarioRecipe` exacta con decks, reglas iniciales, vida, fase, Mano, Archivo, Campo,
+  Memoria, Fuentes, Reserva y orden de la Hueste.
+- Permitir que `openingDeal` contenga la cantidad exacta diseñada, incluidas dos o siete cartas, sin
+  rellenar automáticamente desde el deck completo.
+- Definir de forma única la convención `topToBottom`: el primer alias siempre es el próximo robo o
+  revelado.
+- Resolver aliases de copias predefinidas a `instanceId` concretos; los pasos posteriores sólo
+  consumen esos bindings.
+- Referenciar todos los decks y cartas mediante claves calificadas de `ContentCatalog`.
+- Conservar un seed/RNG determinista para efectos que todavía utilicen azar; una lección debe
+  evitarlos o declarar y validar su resultado esperado.
 - Usar claves de i18n para títulos, explicaciones, ayudas de error y etiquetas de acción.
 - Implementar validación/lint para versiones, IDs únicos, claves de catálogo, roles sin resolver,
-  pasos inalcanzables, capacidades y traducciones.
-- Si el escenario guiado necesita capacidades hoy alojadas en Playground, extraer una utilidad pura
-  a runtime común. El registro de release no puede importar `src/playground/`.
+  aliases duplicados, copias imposibles, zonas, órdenes incompletos, pasos inalcanzables y
+  traducciones.
+- Construir un builder puro de escenarios guiados o extraer una base neutral. El registro de release
+  no puede importar `src/playground/`.
 
-No se permitirá un lenguaje abierto de consultas ni callbacks arbitrarios dentro del contenido.
-Cuando una capacidad nueva sea realmente necesaria, se amplía la unión tipada y se prueba.
+Las cartas creadas como consecuencia de una regla —por ejemplo, un token Invocado por otra carta—
+las sigue produciendo el engine real. La receta predefine la carta que causa el efecto y puede
+declarar el resultado esperado para validarlo; el orquestador no inserta manualmente el resultado.
 
 ### Pruebas mínimas
 
-- Definición válida e inválida por cada tipo de lección.
+- Definición válida e inválida para lección canónica y opcional.
 - Referencias calificadas existentes e inexistentes.
-- Roles resueltos de forma determinista.
-- Un deck fixture con IDs y textos distintos demuestra que no se buscó por nombre visible.
-- Una lección incompatible se rechaza antes de crear la partida.
+- Aliases únicos resueltos a copias e `instanceId` deterministas.
+- `openingDeal` de dos y siete cartas conserva cantidad y orden exactos.
+- Mano, ambos Archivos, Campos y Memorias se reconstruyen sin cartas añadidas implícitamente.
+- Dos copias de la misma carta mantienen identidad y orden separados.
+- Una receta con carta inexistente, demasiadas copias u orden incompleto se rechaza antes de crear
+  la partida.
+- Renombrar texto visible no cambia la secuencia.
 
 ### Criterio de cierre
 
-Se puede registrar y validar una lección pequeña sobre un deck actual y sobre un deck sintético sin
-cambiar el validador ni añadir ramas por deck.
+Se pueden registrar y reconstruir dos recetas exactas —una con Elarion y otra con un deck
+sintético— sin cambiar builder, validador u orquestador y sin que aparezca una carta no declarada.
 
 ---
 
@@ -508,7 +556,7 @@ No se añadirán condicionales de orquestación por deck, definición de carta o
 - Acción incorrecta, target incorrecto y acción rechazada por reglas.
 - Doble clic, eventos repetidos y resultado que llega después de abandonar la sesión.
 - Precondición o ancla ausente falla cerrado.
-- La misma lección por capacidades se ejecuta con dos decks/fixtures distintos.
+- Dos recetas distintas ejecutan la misma secuencia de tipos de paso con decks/fixtures distintos.
 - Ningún paso avanza por texto del log, timeout o simple clic.
 
 ### Criterio de cierre
@@ -539,9 +587,10 @@ sección opcional de aprendizaje con iteraciones rápidas y consistentes.
 - Permitir inspeccionar roles resueltos, intención permitida, anclas y checkpoint actual sin incluir
   esos datos en la UI de release.
 - Integrar el lint de lecciones en los comandos de validación de contenido.
-- Construir una matriz automatizada que itere `ContentCatalog` —sin una lista manual paralela— sobre
-  los dos decks del Cronista y los dos decks de la Hueste actuales, según la aplicabilidad que cada
-  lección declare. Un deck registrado en el futuro entra automáticamente en esta validación.
+- Construir una matriz automatizada que valide cada receta registrada contra `ContentCatalog` —sin
+  una lista manual paralela— y confirme que todas sus cartas pertenecen a los decks declarados. Un
+  deck futuro entra en las pruebas base del framework; sus tutoriales entran en la matriz al
+  registrar sus recetas.
 - Añadir un deck sintético con IDs, textos, orden y arte diferentes como prueba de futuro.
 - Probar que registrar ese deck no exige tocar overlay, sesión, gate u orquestador.
 - Verificar que la regresión ajustada en la Fase 1 sigue bloqueando rutas legacy, seed mágico y
@@ -629,8 +678,8 @@ accidente y compatible con el crecimiento del juego.
 - Resoluciones soportadas, reflow y resize durante cada estado.
 - Mouse, teclado y drag-and-drop.
 - Movimiento normal y reducido.
-- Todos los decks actuales en las lecciones cuyas capacidades correspondan.
-- Deck sintético y definición específica de deck.
+- Todas las recetas registradas para decks actuales.
+- Deck sintético y receta determinista propia.
 - Acción incorrecta, doble input, ancla ausente, precondición inválida y cierre a mitad.
 - Presentaciones simples y secuencias con varios beats.
 - Salida/reinicio, finalización versionada y gate de primer arranque.
