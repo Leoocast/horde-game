@@ -370,9 +370,9 @@ export function DuelHud({ game }: { game: GameState }) {
               <motion.div
                 key="host-archive-discard-counter"
                 className="host-attack-count-host"
-                initial={{ opacity: 0, x: 96, scaleX: 0.28 }}
+                initial={{ opacity: 0, x: 86, scaleX: 0.28 }}
                 animate={{ opacity: 1, x: 0, scaleX: 1 }}
-                exit={{ opacity: 0, x: 96, scaleX: 0.28 }}
+                exit={{ opacity: 0, x: 86, scaleX: 0.28 }}
                 transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
               >
                 <GameTooltip

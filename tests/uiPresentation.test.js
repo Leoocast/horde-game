@@ -247,7 +247,8 @@ test("the Host Archive discard drawer counts departures and closes after the las
   assert.match(duelHudSource, /completedHostMillPreviewCount/u);
   assert.match(millAnimatorSource, /hostMillOriginSelector\(preview\)/u);
   assert.match(stylesSource, /\.host-attack-count-host\s*\{[^}]*right:\s*100%;/su);
-  assert.match(stylesSource, /\.host-deck-counter-cluster\.is-attack-counter-open \.host-memory-pile-host\s*\{[^}]*translateX\(-130px\)/su);
+  assert.match(stylesSource, /\.host-attack-count\s*\{[^}]*border-right:\s*0;/su);
+  assert.match(stylesSource, /\.host-deck-counter-cluster\.is-attack-counter-open \.host-memory-pile-host\s*\{[^}]*translateX\(-108px\)/su);
 });
 
 test("Vaelor uses his personal defense animation only when he wins and survives", () => {

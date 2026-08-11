@@ -566,8 +566,8 @@ la opción 4, **Cartas que caerán**:
 - una placa contigua usa hasta tres siluetas como símbolo de las cartas que irán a Memoria; las
   siluetas nunca intentan repetir o desglosar el total numérico;
 - la placa no lleva copy: las siluetas comunican “cartas” y `N` es el único total visible;
-- al seleccionar atacantes, esa placa emerge por la izquierda del Archivo y desplaza la caja de
-  Memoria todavía más a la izquierda;
+- al seleccionar atacantes, esa placa emerge unida al borde izquierdo como una extensión del
+  Archivo —sin margen ni doble borde— y desplaza la caja de Memoria todavía más a la izquierda;
 - la matemática vive en un tooltip titulado **Cálculo del ataque**, con la forma compacta
   `7 ÷ 3 → 2`; no repite “Fuerza”, “cartas” ni “Memoria”;
 - se usa una flecha y no una igualdad porque la conversión descarta cualquier sobrante;
