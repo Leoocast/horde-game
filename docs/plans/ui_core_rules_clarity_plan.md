@@ -218,7 +218,7 @@ entender que la acción final despertará a la Hueste.
 
 ### Estado de implementación
 
-**Implementada el 2026-08-10; pendiente de QA visual del usuario antes de cerrar la fase.**
+**Cerrada el 2026-08-10 tras QA visual del usuario.**
 
 - El HUD superior sustituye durante Preparación el turno, la fase normal y la cuenta de Oleada por
   el rótulo compacto **Preparación X/N**.
@@ -244,8 +244,8 @@ entender que la acción final despertará a la Hueste.
 - El componente de estado legado ya no conserva el antiguo mensaje de “turnos del jugador” y el
   banner elimina su movimiento cuando el sistema solicita movimiento reducido.
 
-La implementación pasó typecheck, la suite completa y el build web. El cierre sigue condicionado a
-comprobar manualmente legibilidad, ubicación, transición final y estados de movimiento reducido.
+La implementación pasó typecheck, la suite completa y el build web. El QA visual confirmó
+legibilidad, ubicación y transición final; el banner también respeta movimiento reducido.
 
 ## Fase 2 — Mostrar el Archivo del Cronista y anticipar el robo
 
