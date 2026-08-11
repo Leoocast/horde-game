@@ -1,6 +1,6 @@
 # Plan de diseño e implementación de claridad en la UI
 
-Estado: **en ejecución fase por fase; Fases 1 y 2 cerradas, Fase 3 en QA visual**
+Estado: **en ejecución fase por fase; Fases 1 a 3 cerradas, Fase 4 en discusión**
 Última actualización: 2026-08-11
 
 ## Objetivo
@@ -407,10 +407,12 @@ UI comunica que ambas consumen la misma acción.
 
 ### Estado de implementación
 
-**Implementada como prototipo el 2026-08-11; pendiente de QA visual del usuario.**
+**Cerrada el 2026-08-11 tras QA visual del usuario.**
 
 - Únicamente mientras se arrastra una Fuente que `canPlayerRecycleEnergy` permite devolver, el
   indicador existente del Archivo crece hacia la izquierda hasta convertirse en una caja amplia.
+- La expansión del Archivo anima el cambio completo de tamaño; conserva sólo su marco exterior y
+  usa tono y resplandor para comunicar el destino, sin un segundo rectángulo punteado interior.
 - Antes de alcanzar la zona válida comunica **Devolver Fuente · Arrastra a la derecha · Roba 1**.
   Al entrar en ella cambia a **Suelta para devolver · Al Archivo · Roba 1** y refuerza su brillo.
 - Al alcanzar esa región reaparecen el feedback original de devolución: línea punteada con flecha,

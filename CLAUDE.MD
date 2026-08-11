@@ -393,8 +393,8 @@ Fuente, Reserva y ataque al Archivo debe seguir el plan de diseño e implementac
 aprobación del usuario antes de editar código; la preparación técnica queda subordinada al diseño
 aprobado y el plan no autoriza por sí solo cambios de reglas ni la implementación del tutorial.
 
-Estado vigente de ese plan: las Fases 1 (Preparación) y 2 (Archivo y próximo robo) están cerradas; la
-Fase 3 (Acción de Fuente) tiene un prototipo pendiente de QA visual. `playerDrawForecast` en
+Estado vigente de ese plan: las Fases 1 (Preparación), 2 (Archivo y próximo robo) y 3 (Acción de
+Fuente) están cerradas; la Fase 4 (Reserva y orden de pago) está en discusión. `playerDrawForecast` en
 `src/engine/TurnManager.ts` es la fuente única para el robo real y su previsión. La devolución
 conserva el gesto amplio hacia la derecha y sólo expande visualmente el Archivo durante un arrastre
 que `canPlayerRecycleEnergy` considera válido; la UI no debe volver a duplicar esas condiciones.
