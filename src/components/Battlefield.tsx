@@ -663,7 +663,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
         role={canSelectEnergyCore ? "button" : undefined}
         tabIndex={canSelectEnergyCore ? 0 : undefined}
         aria-label={`${t("game.availableEnergy")}: ${availableLandCount} of ${MAX_PLAYER_LANDS}. ${t("game.storedEnergy")}: ${displayedReserveEnergyCount} of ${STORED_ENERGY_CAP}.${reserveSetupActive
-          ? ` ${t("game.reserveSetupAria")}`
+          ? ` ${t("game.reserveSetupTooltip")}`
           : ""}`}
         className={[
           "player-mana-core",
@@ -763,22 +763,14 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
         </div>
         {reserveSetupActive && (
           <GameTooltip
-            content={(
-              <span className="mana-reserve-setup-tooltip">
-                <strong>{t("game.reserveAvailable")}</strong>
-                <span>{t("game.reserveEffectsNow")}</span>
-                <span>{t("game.reserveSourcesAfterHost")}</span>
-              </span>
-            )}
+            content={t("game.reserveSetupTooltip")}
             className="mana-reserve-tooltip-host"
           >
             <span
               className="mana-reserve-tooltip-target"
               tabIndex={0}
-              aria-label={t("game.reserveSetupAria")}
-            >
-              <Hourglass size={10} strokeWidth={2} aria-hidden="true" />
-            </span>
+              aria-label={t("game.reserveSetupTooltip")}
+            />
           </GameTooltip>
         )}
         {tributeOfTheFourSorrowsSourceSelectionActive && <div className="mana-core-target-label">{t("target.discardEnergy")}</div>}

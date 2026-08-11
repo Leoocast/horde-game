@@ -189,12 +189,13 @@ test("Preparation keeps card-generated Reserve available and delays only unused 
   const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.match(battlefieldSource, /reserveSetupActive/u);
-  assert.match(battlefieldSource, /game\.reserveEffectsNow/u);
-  assert.match(battlefieldSource, /game\.reserveSourcesAfterHost/u);
+  assert.match(battlefieldSource, /game\.reserveSetupTooltip/u);
   assert.doesNotMatch(battlefieldSource, /is-setup-latent|is-reserve-latent|LockKeyhole/u);
-  assert.match(translationsSource, /"game\.reserveSetupAria": "La Reserva está disponible durante Preparación/u);
+  assert.doesNotMatch(battlefieldSource, /reserveAvailable|reserveEffectsNow|reserveSourcesAfterHost/u);
+  assert.match(translationsSource, /"game\.reserveSetupTooltip": "Energy from unused Sources is stored once Preparation ends\."/u);
   assert.match(battlefieldSource, /className="mana-reserve-tooltip-host"/u);
-  assert.match(stylesSource, /\.mana-reserve-setup-tooltip\s*\{/u);
+  assert.doesNotMatch(battlefieldSource, /<Hourglass[^>]*reserve/u);
+  assert.doesNotMatch(stylesSource, /\.mana-reserve-setup-tooltip\s*\{/u);
   assert.doesNotMatch(stylesSource, /\.mana-reserve-setup-note\s*\{/u);
   assert.doesNotMatch(stylesSource, /\.mana-energy-track-yellow\.is-setup-latent/u);
 });

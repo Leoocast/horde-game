@@ -8567,17 +8567,18 @@
 
   .mana-reserve-tooltip-host {
     position: absolute;
-    left: 12px;
-    bottom: 61px;
+    /* The energy layer is scaled from the lower-left corner. Match the yellow row's
+       rendered bounds here so the top-side tooltip clears the sockets completely. */
+    left: 20px;
+    bottom: 82px;
     z-index: 8;
     display: block;
-    width: 150px;
-    height: 44px;
+    width: 156px;
+    height: 49px;
     pointer-events: auto;
   }
 
   .mana-reserve-tooltip-target {
-    position: relative;
     display: block;
     width: 100%;
     height: 100%;
@@ -8585,34 +8586,9 @@
     outline: 0;
   }
 
-  .mana-reserve-tooltip-target svg {
-    position: absolute;
-    right: 0;
-    top: 50%;
-    color: rgb(224 197 111 / 0.5);
-    filter: drop-shadow(0 0 5px rgb(220 177 67 / 0.2));
-    transform: translateY(-50%);
-  }
-
-  .mana-reserve-tooltip-target:focus-visible svg {
-    color: #f0d788;
-  }
-
-  .mana-reserve-setup-tooltip {
-    display: grid;
-    min-width: 220px;
-    gap: 4px;
-    text-align: left;
-  }
-
-  .mana-reserve-setup-tooltip strong {
-    color: #f0d788;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .mana-reserve-setup-tooltip > span {
-    color: #d8cfb1;
+  .mana-reserve-tooltip-target:focus-visible {
+    outline: 1px solid rgb(240 215 136 / 0.5);
+    outline-offset: -3px;
   }
 
   .mana-energy-track-blue::before {

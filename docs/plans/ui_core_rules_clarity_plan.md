@@ -238,10 +238,10 @@ entender que la acción final despertará a la Hueste.
 - La acción principal conserva el lenguaje de turnos solicitado en QA: **Turno extra** en los pasos
   intermedios y **Terminar turno** en el último.
 - La pista de Reserva permanece visible y utilizable durante Preparación: los efectos de carta pueden
-  llenarla y esa Energía puede gastarse de inmediato. Un tooltip sobre la pista separa esa disponibilidad de la
-  conversión automática: **Efectos de carta: ahora**; **Fuentes sin usar: tras la Hueste**. No se usa
-  un mensaje permanente, candado ni apagado de orbes, porque sólo se retrasa la conversión de
-  Fuentes, no la Reserva.
+  llenarla y esa Energía puede gastarse de inmediato. La fila amarilla no añade iconos ni mensajes
+  permanentes; durante Preparación su tooltip explica solamente que la Energía de Fuentes sin usar
+  se guarda cuando termina la Preparación. No se usa candado ni apagado de orbes, porque sólo se
+  retrasa esa conversión, no la Reserva.
 - La presentación equivalente existe en ES y EN. No se modificaron reglas, dificultad, robo, Reserva
   ni balance.
 - El componente de estado legado ya no conserva el antiguo mensaje de “turnos del jugador” y el
