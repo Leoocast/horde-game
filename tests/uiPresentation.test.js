@@ -193,8 +193,19 @@ test("Preparation keeps card-generated Reserve available and delays only unused 
   assert.match(battlefieldSource, /game\.reserveSourcesAfterHost/u);
   assert.doesNotMatch(battlefieldSource, /is-setup-latent|is-reserve-latent|LockKeyhole/u);
   assert.match(translationsSource, /"game\.reserveSetupAria": "La Reserva está disponible durante Preparación/u);
-  assert.match(stylesSource, /\.mana-reserve-setup-note\s*\{/u);
+  assert.match(battlefieldSource, /className="mana-reserve-tooltip-host"/u);
+  assert.match(stylesSource, /\.mana-reserve-setup-tooltip\s*\{/u);
+  assert.doesNotMatch(stylesSource, /\.mana-reserve-setup-note\s*\{/u);
   assert.doesNotMatch(stylesSource, /\.mana-energy-track-yellow\.is-setup-latent/u);
+});
+
+test("committed hand cards yield to their specialized play animation without snapping home", () => {
+  const handSource = readFileSync(new URL("../src/components/Hand.tsx", import.meta.url), "utf8");
+
+  assert.match(handSource, /concealCommittedHandCard\(card\.instanceId\);\s*playFromHand/u);
+  assert.match(handSource, /concealCommittedHandCard\(card\.instanceId\);\s*startEnergyRecycle/u);
+  assert.match(handSource, /element\.style\.visibility = "hidden"/u);
+  assert.doesNotMatch(handSource, /exit:\s*\{[^}]*y:\s*-34/su);
 });
 
 test("the Host Archive attack preview shows the physical result and caps it to the Archive", () => {

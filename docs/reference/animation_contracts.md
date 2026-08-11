@@ -22,6 +22,13 @@ outside layout while the remaining slots spring into their new positions; an arr
 from the Archive while the existing slots reorganize. This contract covers normal draw, empty-hand
 bonus draw, playing or Invoking a card, and the replacement draw after returning a Source.
 
+On a valid drop, the dragged DOM card yields immediately to the presentation that owns the action.
+Sources are concealed before `LandPlayAnimator` captures the same release geometry; returned Sources
+yield to `EnergyRecycleAnimator`; Invoked cards yield to their battlefield arrival. The concealed
+copy must never snap back toward the hand underneath the real animation. Invalid drops keep the
+normal drag return. The generic `AnimatePresence` exit changes opacity only and never invents a
+second movement for an action that already has one.
+
 ## Host presentation beats
 
 Every Host reaction plays as one **beat**: one card acting at a time, board locked, engine state committed at the moment the animation says it lands.

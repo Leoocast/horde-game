@@ -57,9 +57,7 @@ const handCardMotion: Variants = {
   }),
   exit: {
     opacity: 0,
-    y: -34,
-    scale: 0.9,
-    transition: { duration: 0.18, ease: [0.4, 0, 1, 1] },
+    transition: { duration: 0.1, ease: "easeOut" },
   },
 };
 
@@ -250,7 +248,22 @@ export function Hand({ game }: { game: GameState }) {
       startSpellTargeting(card.instanceId, window.innerWidth * 0.5, window.innerHeight * 0.5);
       return;
     }
+    concealCommittedHandCard(card.instanceId);
     playFromHand(card, castCard, playLand, selectedPlayerCreatureId, selectedHostCreatureId);
+    restoreHandCardIfCommitFailed(card.instanceId);
+  }
+
+  function concealCommittedHandCard(cardId: string) {
+    const element = innerCardRefs.current.get(cardId);
+    if (element) element.style.visibility = "hidden";
+  }
+
+  function restoreHandCardIfCommitFailed(cardId: string) {
+    window.requestAnimationFrame(() => {
+      if (!useGameStore.getState().game.player.hand.some((card) => card.instanceId === cardId)) return;
+      const element = innerCardRefs.current.get(cardId);
+      if (element) element.style.visibility = "";
+    });
   }
 
   function finishDrag(card: CardInstance, playable: boolean, info: PanInfo) {
@@ -270,7 +283,12 @@ export function Hand({ game }: { game: GameState }) {
     const playZoneY = window.innerHeight * DRAG_PLAY_SCREEN_RATIO;
     const releasedInPlayZone = info.point.y <= playZoneY;
     if (releasedInRecycleZone) {
+      concealCommittedHandCard(card.instanceId);
       startEnergyRecycle(card.instanceId, { x: info.point.x, y: info.point.y });
+      window.requestAnimationFrame(() => {
+        const element = innerCardRefs.current.get(card.instanceId);
+        if (element) element.style.visibility = "";
+      });
       return;
     }
     const shouldPlay = releasedInPlayZone && playable;

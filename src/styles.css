@@ -8565,45 +8565,54 @@
     bottom: 64px;
   }
 
-  .mana-reserve-setup-note {
+  .mana-reserve-tooltip-host {
     position: absolute;
-    left: 18px;
-    bottom: 107px;
+    left: 12px;
+    bottom: 61px;
     z-index: 8;
-    display: flex;
-    width: 178px;
-    align-items: center;
-    gap: 6px;
-    color: #c8b77c;
-    font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
-    line-height: 1;
-    text-transform: uppercase;
-    text-shadow: 0 1px 5px rgb(0 0 0 / 0.85);
+    display: block;
+    width: 150px;
+    height: 44px;
+    pointer-events: auto;
   }
 
-  .mana-reserve-setup-note svg {
-    flex: 0 0 auto;
-    color: #e0c56f;
-    filter: drop-shadow(0 0 5px rgb(220 177 67 / 0.3));
+  .mana-reserve-tooltip-target {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: help;
+    outline: 0;
   }
 
-  .mana-reserve-setup-note span {
-    display: grid;
-    gap: 2px;
+  .mana-reserve-tooltip-target svg {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    color: rgb(224 197 111 / 0.5);
+    filter: drop-shadow(0 0 5px rgb(220 177 67 / 0.2));
+    transform: translateY(-50%);
   }
 
-  .mana-reserve-setup-note strong {
+  .mana-reserve-tooltip-target:focus-visible svg {
     color: #f0d788;
-    font-size: 8px;
-    letter-spacing: 0.16em;
   }
 
-  .mana-reserve-setup-note small {
-    color: #b6ad8b;
-    font-size: 6px;
-    font-weight: 800;
-    letter-spacing: 0.045em;
-    white-space: nowrap;
+  .mana-reserve-setup-tooltip {
+    display: grid;
+    min-width: 220px;
+    gap: 4px;
+    text-align: left;
+  }
+
+  .mana-reserve-setup-tooltip strong {
+    color: #f0d788;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .mana-reserve-setup-tooltip > span {
+    color: #d8cfb1;
   }
 
   .mana-energy-track-blue::before {

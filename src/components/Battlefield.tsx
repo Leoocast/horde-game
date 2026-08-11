@@ -24,6 +24,7 @@ import { StormBuffAnimator } from "./StormBuffAnimator";
 import { HeavyCreatureLanding } from "./HeavyCreatureLanding";
 import { readReserveTransferAnimation, ReserveTransferAnimator, type ReserveTransferAnimation } from "./ReserveTransferAnimator";
 import { displayedReserveEnergy, reserveTransferPresentation } from "./reserveTransferPresentation";
+import { GameTooltip } from "./GameTooltip";
 import { Zone } from "./Zone";
 import { Hourglass, Zap } from "lucide-react";
 import {
@@ -720,16 +721,6 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
               );
             })}
           </div>
-          {reserveSetupActive && (
-            <div className="mana-reserve-setup-note" aria-hidden="true">
-              <Hourglass size={11} strokeWidth={2} />
-              <span>
-                <strong>{t("game.reserveAvailable")}</strong>
-                <small>{t("game.reserveEffectsNow")}</small>
-                <small>{t("game.reserveSourcesAfterHost")}</small>
-              </span>
-            </div>
-          )}
           <div
             className="mana-energy-track mana-energy-track-blue"
             data-energy-track="normal"
@@ -770,6 +761,26 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
             })}
           </div>
         </div>
+        {reserveSetupActive && (
+          <GameTooltip
+            content={(
+              <span className="mana-reserve-setup-tooltip">
+                <strong>{t("game.reserveAvailable")}</strong>
+                <span>{t("game.reserveEffectsNow")}</span>
+                <span>{t("game.reserveSourcesAfterHost")}</span>
+              </span>
+            )}
+            className="mana-reserve-tooltip-host"
+          >
+            <span
+              className="mana-reserve-tooltip-target"
+              tabIndex={0}
+              aria-label={t("game.reserveSetupAria")}
+            >
+              <Hourglass size={10} strokeWidth={2} aria-hidden="true" />
+            </span>
+          </GameTooltip>
+        )}
         {tributeOfTheFourSorrowsSourceSelectionActive && <div className="mana-core-target-label">{t("target.discardEnergy")}</div>}
       </aside>
       {reserveTransferAnimation && (
