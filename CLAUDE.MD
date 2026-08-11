@@ -414,6 +414,25 @@ izquierda y desplaza Memoria; durante la resolución es el origen de cada carta,
 salida y conserva `1` durante el último vuelo. Al aterrizar la última carta se retrae sin mostrar `0`
 y Memoria vuelve junto al Archivo. Los CTA son **Elegir atacantes**, **Atacar el Archivo** y
 **Pasar el combate**.
+
+La infraestructura del tutorial obligatorio se gobierna por
+`docs/plans/guided_tutorial_system_plan.md`, que sigue abierta y no autoriza implementar fases en
+bloque. Antes de cada fase se explica al usuario qué experiencia se construirá y para qué le sirve;
+sólo se implementa tras su aprobación explícita. El sistema debe ser independiente de nombres e IDs
+de decks en su núcleo: las lecciones declaran capacidades, roles y, sólo cuando corresponde,
+referencias calificadas de `ContentCatalog`. Añadir un deck no debe exigir ramas nuevas en el
+overlay, el gate de acciones ni el orquestador. La sesión activa nunca se reanuda a mitad: sólo se
+persiste la finalización versionada; cerrar o salir obliga a empezar el recorrido desde el primer
+paso.
+
+La Fase 0 quedó cerrada el 2026-08-11. La Primera Semilla obligatoria será canónica y usará **El
+Pacto de Elarion** como deck del Cronista; la Hueste y el escenario pertenecen al futuro diseño de
+contenido. El ciclo aprobado es **Explicar → Actuar → Observar → checkpoint estable**. Sólo la
+intención solicitada puede llegar al engine; una animación iniciada termina durante Observar y nunca
+se congela a mitad. Se permiten ajustes prácticos menores de layout, intensidad, copy y timing
+durante QA, pero cambiar deck canónico, política sin resume, acciones permitidas o pausa entre beats
+requiere nueva aprobación. Las Fases 1 a 8 siguen pendientes y no hay runtime de guía implementado.
+
 `playerDrawForecast` en
 `src/engine/TurnManager.ts` es la fuente única para el robo real y su previsión. La devolución
 conserva el gesto amplio hacia la derecha y sólo expande visualmente el Archivo durante un arrastre
