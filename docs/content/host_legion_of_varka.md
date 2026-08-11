@@ -8,8 +8,7 @@ Este documento conserva la identidad narrativa, el mapeo mecánico y la direcci�
 Legión. Los 17 nombres y sus flavor bilingües viven en
 `src/data/decks/host/legion_of_varka/legion_of_varka.json`; el Card Studio sólo proyecta esos datos.
 Los 17 artes fuente viven en `public/cards/legion_of_varka/art/` y sus cartas completas exportadas en
-`public/cards/legion_of_varka/`. La procedencia, prompts resumidos, dimensiones y hashes del lote viven en
-`docs/asset_provenance_legion_of_varka.json`.
+`public/cards/legion_of_varka/`.
 
 Varka es el único Eco de Crónica del deck; los tres Ecos que también llevaban ese modificador
 dejaron de hacerlo sin cambiar estadísticas, cantidades ni reglas.

@@ -6,8 +6,7 @@ Este documento define el lenguaje de reglas y la identidad que usa el producto. 
 de ids vive en `src/engine/hostfallVocabulary.ts` y `src/engine/hostfallZones.ts`; la presentación
 localizada vive en `src/i18n/gameVocabulary.ts` y `src/i18n/rulesText.ts`.
 
-La revisión de licencias necesaria para una publicación comercial es un trabajo separado. La
-procedencia del arte propio generado para los decks se registra en `docs/asset_provenance_*.json`.
+La revisión de licencias necesaria para una publicación comercial es un trabajo separado.
 
 ## Capas de lenguaje
 

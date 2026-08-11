@@ -244,7 +244,7 @@ test("procedural Burn hides the WebGL buffer until its first rendered frame", ()
   assert.match(styles, /\.burn-canvas\s*\{[^}]*opacity:\s*0;/u);
 });
 
-// Migración a un único contexto WebGL: ver docs/plan_webgl_context_budget.md.
+// Migración a un único contexto WebGL: ver docs/plans/webgl_context_budget.md.
 const SHARED_RENDERER_ANIMATORS = [
   "BloodSiphonAnimator",
   "BuffSurgeAnimator",

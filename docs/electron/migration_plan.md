@@ -1,11 +1,11 @@
 # Plan técnico de migración de Hostfall a Electron
 
-Estado: **plan aprobado; migración no iniciada**  
-Última revisión: **2026-08-09**  
+Estado: **Fases 0-4 completadas; Fase 5 en validación comercial; Fase 6 no iniciada**  
+Última revisión: **2026-08-10**  
 Alcance inicial: **Windows x64, offline y distribución mediante Steam**
 
 El progreso operativo y la evidencia de cada fase se registran en
-[`electron_migration_tracking.md`](electron_migration_tracking.md).
+[`migration_tracking.md`](migration_tracking.md).
 
 ## Dictamen
 
@@ -24,7 +24,10 @@ La migración debe preservar, salvo una razón explícita y probada:
 - Playground como herramienta de desarrollo;
 - Card Studio como pipeline de autoría y exportación de cartas.
 
-Los cinco bloqueos principales son:
+Los cinco bloqueos principales detectados en la auditoría inicial fueron los siguientes. Son un
+baseline histórico, no el estado actual: las Fases 0-4 ya resolvieron la vertical desktop necesaria
+para el desarrollo diario. Los blockers vigentes de publicación están en `migration_tracking.md` y
+`release.md`.
 
 1. Vite tiene dos configuraciones versionadas y lee primero la generada `vite.config.js`; un cambio
    sólo en el `.ts` podría ignorarse.
@@ -615,7 +618,7 @@ silenciosamente configuración stale.
 - crear CI Windows x64;
 - aprobar el postinstall de Electron cuando se agregue;
 - fijar ADRs;
-- separar los blockers de fingerprints, auditor y provenance.
+- separar los blockers de fingerprints y auditor.
 
 **Criterios de aceptación:**
 
@@ -808,7 +811,7 @@ determinista, close durante beats y sleep/resume.
   del mismo archivo se serializan y el cierre espera window state, saves, preferencias y logs.
 - Layout de datos: `profile/preferences-v1.json`, `profile/saves/resume-v1.json` y
   `local/window-state-v1.json`; sólo `profile` es candidato a Auto-Cloud futuro. El contrato completo
-  está en `docs/electron_persistence.md`.
+  está en `docs/electron/persistence.md`.
 - `preferences-v1` contiene idioma y mezcla pública de audio. Si aún no existe, importa una vez los
   adapters `localStorage` vigentes; el build web conserva esos mismos adapters.
 - `resume-v1` usa un slot, claves calificadas de deck y revisión exacta de contenido. Su checkpoint
@@ -839,7 +842,7 @@ determinista, close durante beats y sleep/resume.
 - icono, metadata Windows y executable name;
 - no Squirrel/autoUpdater;
 - comparar builds unsigned y firmar después;
-- resolver NOTICE, provenance y SFX pendientes;
+- resolver NOTICE y SFX pendientes;
 - medir tamaño y delta de un asset.
 
 **Criterios de aceptación:**
@@ -855,7 +858,7 @@ determinista, close durante beats y sleep/resume.
 **Tests:** inspección ASAR, allowlist/denylist, hashes, ruta con espacios, firma, offline smoke y delta
 de un asset.
 
-**Riesgos:** duplicar el repo, omitir arte recortado, ASAR gigante o provenance incompleta.
+**Riesgos:** duplicar el repo, omitir arte recortado o producir un ASAR gigante.
 
 **Estado final:** candidato Windows x64 listo para depot.
 
@@ -863,7 +866,7 @@ de un asset.
 staging contiene 185 recursos declarados, el ASAR queda en 8.6 MB sin media grande y dos builds
 unsigned producen los mismos 261 hashes. La fase no se cierra ni habilita Fase 6 hasta resolver
 fingerprints de Card Studio, revisión de SFX, rights/licencia, icono, firma y QA final. Contrato
-operativo: `docs/electron_release.md`.
+operativo: `docs/electron/release.md`.
 
 ## Fase 6 — SteamPipe y rama privada
 
@@ -929,7 +932,6 @@ multi-monitor.
 
 - 61 fingerprints PNG obsoletos;
 - falso positivo `magic`;
-- provenance pendiente;
 - once sonidos `_NEED_REVIEW`;
 - `window.prompt` para coste X;
 - precarga que puede marcar éxito tras ocultar errores;

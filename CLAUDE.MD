@@ -60,7 +60,7 @@ La config web canónica es `vite.config.ts`; para builds manuales pasar siempre
 
 No ejecutar `npm install` ni `pnpm install` salvo necesidad real: `node_modules` ya existe. No
 levantar un servidor ni jugar para verificar; el usuario prueba el juego. Detalle en
-`docs/testing.md`.
+`docs/guides/testing.md`.
 
 ## Estructura
 
@@ -74,7 +74,7 @@ src/
   playground/   escenarios, boards y replays de desarrollo
 dev/
   tools/Decks/  Card Studio y exportación de cartas
-docs/           contratos operativos, lore y procedencia
+docs/           contratos operativos, lore y procedencia; índice en docs/README.md
 scripts/        verificadores y tareas vigentes
 tests/          regresiones del engine, datos y herramientas
 ```
@@ -91,15 +91,17 @@ Separación obligatoria:
 
 ## Migración a Electron
 
-La migración desktop está en curso. Las Fases 0, 1, 2, 3 y 4 están completadas; la Fase 5 está en
-validación. El
-documento canónico de arquitectura es `docs/electron_migration_plan.md` y el avance se registra
-exclusivamente en `docs/electron_migration_tracking.md`.
+La migración desktop necesaria para el desarrollo diario está completada. Las Fases 0-4 están
+cerradas; la Fase 5 conserva validaciones comerciales pendientes y la Fase 6 se hará al preparar el
+release de la demo. El documento canónico de arquitectura es `docs/electron/migration_plan.md` y
+el cierre se registra en `docs/electron/migration_tracking.md`.
 
-Contratos durante la migración:
+Contratos desktop vigentes:
 
 - Conservar el build web hasta estabilizar Steam.
-- No cambiar el schema ni los JSON authored de decks.
+- El congelamiento de contenido terminó: se pueden volver a modificar los JSON authored y añadir
+  cartas/decks. Un cambio de schema debe seguir siendo deliberado, versionado y cubierto por lint y
+  tests; no hacerlo incidentalmente dentro de otro cambio.
 - Playground sigue siendo tooling de desarrollo y no entra al paquete Steam.
 - Card Studio sigue siendo una herramienta local bajo `dev/tools/Decks/`; Electron consume sus
   outputs runtime, no reemplaza ni empaqueta el estudio.
@@ -118,11 +120,11 @@ Contratos durante la migración:
 - Los paths `/cards/...` son referencias lógicas del pack builtin. El adapter web conserva esas
   URLs y el build Electron activa `hostfall://content/...`; main sólo sirve archivos indexados de
   roots registrados.
-- `docs/electron_phase2_json_baseline.json` protege byte por byte decks, manifests y proyecciones
+- `docs/data/baselines/electron_phase2_json_baseline.json` protege byte por byte decks, manifests y proyecciones
   runtime de Card Studio durante esta fase.
 - El renderer release no puede contener recursos remotos, `?playground`, `PlaygroundScreen` ni
   `AudioLabScreen`. Verificarlo con `scripts/audit-offline-runtime.mjs` después de `build:web`.
-- `docs/runtime_asset_inventory.json` es la proyección reproducible del contenido de `dist`; se
+- `docs/data/generated/runtime_asset_inventory.json` es la proyección reproducible del contenido de `dist`; se
   regenera sólo después de un build release intencional.
 - Fase 3 usa Electron 43.3.0 + Forge 7.11.2 exactos. El código está en ASAR, cards/fonts son
   `extraResources`, Card Studio/Playground no se empaquetan y los gates automáticos son
@@ -132,7 +134,7 @@ Contratos durante la migración:
   retenidas para conservar los programas GPU; no crear renderers nuevos en los animadores.
 - Fase 4 separa `profile/preferences-v1.json`, `profile/saves/resume-v1.json` y el local-only
   `local/window-state-v1.json`. El contrato, backups, recuperación, Cloud-worthy data y checkpoints
-  seguros están en `docs/electron_persistence.md`.
+  seguros están en `docs/electron/persistence.md`.
 - El resume guarda sólo `GameState` estable y claves calificadas; nunca Zustand, UI, timers,
   animaciones o Playground. `backgroundThrottling: true` es final y el lifecycle pausa/reanuda audio.
 - Pantalla completa se controla desde ambos menús o F11 y se persiste con el estado local de
@@ -140,12 +142,12 @@ Contratos durante la migración:
 - Fase 5 genera `.electron-staging/resources` exclusivamente desde manifests runtime: 61 PNG,
   61 artes de campo, 57 audios y 6 fuentes. `app.asar` no contiene audio ni source maps; Card Studio,
   Hunters y autoría no entran. El contrato y los blockers comerciales viven en
-  `docs/electron_release.md`.
+  `docs/electron/release.md`.
 
 ## Vocabulario Hostfall
 
-Leer `docs/game_vocabulary.md` antes de cambiar nombres, tipos, zonas, fases, Rasgos, reglas o
-tooltips. Leer también `docs/card_text_rules.md` antes de redactar o modificar texto impreso,
+Leer `docs/reference/game_vocabulary.md` antes de cambiar nombres, tipos, zonas, fases, Rasgos, reglas o
+tooltips. Leer también `docs/reference/card_text_rules.md` antes de redactar o modificar texto impreso,
 puntuación de reglas o elecciones de objetivos.
 La gramática de cartas es propia de Hostfall y no depende de convenciones o reglas externas.
 
@@ -246,14 +248,13 @@ No programar cartas por nombre. La excepción bespoke actual es `tribute_of_the_
 `src/components/TributeOfTheFourSorrowsSelectionOverlay.tsx`.
 Su texto impreso debe describir también los pasos de la Hueste que ejecuta esa secuencia custom.
 
-Para agregar o implementar cartas, seguir `docs/adding_cards.md`. Documentación específica:
+Para agregar o implementar cartas, seguir `docs/guides/adding_cards.md`. Documentación específica:
 
-- `docs/card_text_rules.md`
-- `docs/chronicle_pact_of_elarion.md`
-- `docs/chronicle_court_of_the_crimson_eclipse.md`
-- `docs/host_uprising_of_the_graveless.md`
-- `docs/host_legion_of_varka.md`
-- `docs/goblin_cards.md`
+- `docs/reference/card_text_rules.md`
+- `docs/content/chronicle_pact_of_elarion.md`
+- `docs/content/host_uprising_of_the_graveless.md`
+- `docs/content/host_legion_of_varka.md`
+- `docs/content/goblin_cards.md`
 
 ## Arte y Card Studio
 
@@ -290,9 +291,6 @@ siguen usando el PNG completo.
 Cada carta imprimible declara un `collectorId` global en el JSON runtime. El Acto I usa la serie
 continua `HFA1xxx`; `studio.config.json` sólo aporta `defaultArtist` o una excepción `artist` por
 carta. El renderer imprime un icono de ilustración seguido del nombre del artista dentro del marco.
-
-Los registros `docs/asset_provenance_*.json` conservan prompts, dimensiones y hashes de los lotes de
-arte actuales. Son documentación de activos vigentes.
 
 `showFullCardImage` permite que mano, targeting y previews usen la carta completa. Los stats y
 Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
@@ -345,7 +343,7 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado
   aunque los impactos visuales se escalonen.
 
-Consultar `docs/animation_contracts.md` antes de tocar combate, revelados, muerte, buffs, Burn o
+Consultar `docs/reference/animation_contracts.md` antes de tocar combate, revelados, muerte, buffs, Burn o
 activaciones estáticas.
 
 ## Contrato de animación
@@ -361,7 +359,7 @@ No lanzar efectos relacionados todos a la vez. No recentrar el campo entre beats
 fuente no debe repetirse cuando el mismo evento continúa inmediatamente con líneas, proyectiles o
 impactos. Los resets incrementan `hostSequenceEpoch` para invalidar callbacks viejos.
 
-VFX y Three.js: consultar `docs/vfx_and_threejs.md` y reutilizar materiales/animadores existentes
+VFX y Three.js: consultar `docs/reference/vfx_and_threejs.md` y reutilizar materiales/animadores existentes
 antes de crear otra implementación.
 
 ## UI y audio
@@ -387,9 +385,15 @@ preparación genérica por tipos/efectos antes que un puente permanente por `def
 
 Las seeds podrán presentarse dentro del mundo como **Semillas del Destino**: líneas temporales que
 el Cronista contempla, reescribe y finalmente preserva. El tutorial, el historial de intentos y la
-posible opción de menú asociada están bosquejados en `docs/seeds_of_destiny.md`. Es una dirección de
+posible opción de menú asociada están bosquejados en `docs/plans/seeds_of_destiny.md`. Es una dirección de
 diseño pendiente, no una funcionalidad implementada. El seed `developer` queda expresamente fuera
 de esta narrativa.
+
+Antes de implementar el tutorial obligatorio, la claridad permanente de Preparación, robo, Acción de
+Fuente, Reserva y ataque al Archivo debe seguir el plan de diseño e implementación de
+`docs/plans/ui_core_rules_clarity_plan.md`. Cada fase empieza con una conversación de UI y requiere
+aprobación del usuario antes de editar código; la preparación técnica queda subordinada al diseño
+aprobado y el plan no autoriza por sí solo cambios de reglas ni la implementación del tutorial.
 
 ## Preferencias de trabajo
 
@@ -410,13 +414,13 @@ Leer el archivo específico y sus consumidores. Como rutas de entrada:
 
 - Reglas: `src/engine/GameTypes.ts`, `GameActions.ts`, `EffectResolver.ts`.
 - Secuencias: `src/store/useGameStore.ts`, `hostBeats.ts`, `presentationEffects.ts`.
-- Cartas: `docs/adding_cards.md`, `docs/card_text_rules.md`, JSON del deck, `normalizeDeck.ts`,
+- Cartas: `docs/guides/adding_cards.md`, `docs/reference/card_text_rules.md`, JSON del deck, `normalizeDeck.ts`,
   `deckLint.ts`.
 - Campo: `Battlefield.tsx`, `battlefieldLayout.ts` y sus tests.
 - Targeting: `Targeting.ts` y el overlay correspondiente.
-- Combate: `CombatResolver.ts` y `docs/animation_contracts.md`.
-- VFX: `docs/vfx_and_threejs.md`.
-- Modos: `docs/game_modes.md`.
+- Combate: `CombatResolver.ts` y `docs/reference/animation_contracts.md`.
+- VFX: `docs/reference/vfx_and_threejs.md`.
+- Modos: `docs/plans/game_modes.md`.
 
 La prioridad del proyecto es una experiencia PvE clara, animada y determinista: reglas explícitas,
 datos genéricos, feedback visual fuerte y ninguna identidad ajena en el producto final.

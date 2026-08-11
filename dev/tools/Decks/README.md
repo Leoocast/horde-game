@@ -100,6 +100,10 @@ mano, hover, detalles, colección y animaciones. En ventanas estrechas baja deba
 no crear overflow. `game-art.config.json` y su proyección runtime están excluidos de la huella de
 impresión: guardar únicamente este encuadre no vuelve obsoletos los PNG.
 
+Mejora futura, no planificada: evaluar un botón `Copiar encuadre` después de validar que traducir el
+marco imprimible a la proporción 488×434 produce un punto de partida útil. No deben vincularse ambos
+encuadres ni generarse bitmaps duplicados.
+
 La imagen que se carga se escribe en `public/cards/<deck>/art/<carta>.<ext>` y `artCrop` pasa a
 apuntar ahí. Si el arte anterior tenía otra extensión, el archivo viejo se conserva: hay que
 borrarlo a mano si sobra. Una carta sin arte se dibuja con un marcador y el exportador se niega a

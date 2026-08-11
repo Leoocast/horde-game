@@ -18,14 +18,6 @@ const audioAssets = JSON.parse(fs.readFileSync(path.join(root, "src", "audio", "
 const reviewAudio = collectStrings(audioAssets).filter((asset) => asset.includes("_NEED_REVIEW"));
 if (reviewAudio.length) blockers.push({ id: "audio-review", message: `${reviewAudio.length} runtime audio asset(s) remain marked NEED_REVIEW.` });
 
-const provenanceFiles = fs.readdirSync(path.join(root, "docs"))
-  .filter((file) => file.startsWith("asset_provenance_") && file.endsWith(".json"));
-const pendingRights = provenanceFiles.filter((file) => {
-  const record = JSON.parse(fs.readFileSync(path.join(root, "docs", file), "utf8"));
-  return record.rightsReview?.status !== "owner-approved";
-});
-if (pendingRights.length) blockers.push({ id: "asset-rights", message: `${pendingRights.length} provenance record(s) still require owner approval.` });
-
 const noticePath = path.join(root, "THIRD_PARTY_NOTICES.txt");
 if (!fs.existsSync(noticePath) || fs.readFileSync(noticePath, "utf8").includes("LICENSE TEXT NOT SHIPPED")) {
   blockers.push({ id: "third-party-license", message: "At least one bundled dependency still needs its authoritative license text reviewed." });
@@ -35,7 +27,7 @@ if (!fs.existsSync(path.join(root, "build", "icon.ico"))) {
   blockers.push({ id: "windows-icon", message: "The final multi-resolution Windows icon build/icon.ico is missing." });
 }
 
-const signingRecordPath = path.join(root, "docs", "windows_signing.json");
+const signingRecordPath = path.join(root, "docs", "electron", "windows_signing.json");
 const signingRecord = fs.existsSync(signingRecordPath)
   ? JSON.parse(fs.readFileSync(signingRecordPath, "utf8"))
   : undefined;

@@ -24,6 +24,8 @@ Archivos autoritativos:
 - `src/engine/effectVocabulary.ts`: eventos, condiciones, cantidades y custom handlers válidos.
 - `src/engine/GameTypes.ts`: modelo runtime.
 - `src/data/deckLint.ts`: comprueba lo que realmente sobrevive a la normalización.
+- `src/content/BuiltinContentSource.ts`: registra los decks builtin y su presentación.
+- `src/content/ContentCatalog.ts`: catálogo runtime inmutable del que deriva `DECK_REGISTRY`.
 - `tests/engine.test.js`: ejemplos ejecutables de reglas ya soportadas.
 
 `player_deck.json` y `horde_deck.json` fueron eliminados. No recrearlos: los decks viven bajo
@@ -88,9 +90,9 @@ Reglas:
 - `id` se deriva del `name` inglés: minúsculas, sin apóstrofos y con palabras separadas por `_`.
   `cardIdFromName` y el deck lint hacen cumplir ese contrato. Una vez publicada la identidad, el id
   es estable; si se reemplaza el nombre canónico de una carta, todos sus consumidores se migran en
-  el mismo cambio. Los lookups runtime son globales a `DECK_REGISTRY`, así que no se reutiliza el
-  mismo id para cartas distintas. La excepción es una misma definición de token repetida de forma
-  idéntica en `cards` y `tokens`.
+  el mismo cambio. Los aliases legacy de cartas siguen siendo globales en el catálogo builtin, así
+  que no se reutiliza el mismo id para cartas distintas. La excepción es una misma definición de
+  token repetida de forma idéntica en `cards` y `tokens`.
 - `collectorId` es el identificador impreso y también debe ser globalmente único. El Acto I usa
   `HFA1xxx`: `HF` = Hostfall, `A1` = Acto I y los últimos tres dígitos son la secuencia continua.
   Una misma definición repetida en `cards` y `tokens` conserva el mismo `collectorId`.
@@ -348,7 +350,7 @@ Antes de añadir código de presentación, comprobar:
 - `EFFECT_ANNOUNCEMENTS`: permite generar mensajes de tokens, mill, discard o pérdida de vida.
 - `hostBeats.ts`: handlers genéricos para Burn, auras estáticas, death reveal y pulse normal.
 - `presentationEffects.ts`: helpers de buff, vida, descarte, mill y pago automático.
-- `docs/animation_contracts.md`: orden y tiempos que no se deben romper.
+- `docs/reference/animation_contracts.md`: orden y tiempos que no se deben romper.
 
 Para un look nuevo de la Horda:
 
@@ -438,8 +440,9 @@ cartas anidadas y sobrescritura circular. El contrato completo está en
 `dev/tools/Decks/README.md`.
 
 Al añadir una carta a un deck existente, añadir también su entrada al manifest. Al crear un deck
-nuevo, importarlo y registrarlo una sola vez en `DECK_REGISTRY`; de allí derivan engine, inspector,
-catálogo e imágenes.
+builtin nuevo, importar su JSON y manifest y registrarlo una sola vez en `BUILTIN_DECKS`, dentro de
+`src/content/BuiltinContentSource.ts`. `ContentCatalog` y la fachada readonly `DECK_REGISTRY` se
+derivan de esa fuente; no se editan como un segundo registro.
 
 La llamada de registro de un deck nuevo también debe declarar `presentation` con `keyCardId`,
 `theme`, `descriptionKey` y, para una Horda, `encounterTone`. El deck lint comprueba que
@@ -503,7 +506,7 @@ el tablero alrededor de la prueba.
 - [ ] Los target ids declarados coinciden con los usados por los efectos.
 - [ ] El engine decide reglas, cantidades y targets automáticos.
 - [ ] El store sólo coordina presentación e input.
-- [ ] Los efectos visuales respetan `docs/animation_contracts.md`.
+- [ ] Los efectos visuales respetan `docs/reference/animation_contracts.md`.
 - [ ] Hay un test determinista para cada regla nueva.
 - [ ] `lint-decks.mjs` pasa.
 - [ ] `tsc -b` pasa.

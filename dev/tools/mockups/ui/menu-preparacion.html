@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hostfall — Variantes de la pantalla de preparación</title>
+<style>
+@font-face{font-family:"Cinzel Decorative";src:url(../../../../public/fonts/pact-of-elarion/cinzel-decorative-latin.woff2) format("woff2");font-display:block}
+@font-face{font-family:"Cinzel";src:url(../../../../public/fonts/pact-of-elarion/cinzel-latin.woff2) format("woff2");font-display:block}
+@font-face{font-family:"Lora";src:url(../../../../public/fonts/pact-of-elarion/lora-normal-latin.woff2) format("woff2");font-display:block}
+@font-face{font-family:"Lora";src:url(../../../../public/fonts/pact-of-elarion/lora-italic-latin.woff2) format("woff2");font-style:italic;font-display:block}
+@font-face{font-family:"Oswald";src:url(../../../../public/fonts/pact-of-elarion/oswald-latin.woff2) format("woff2");font-display:block}
+
+:root{--bg:url(../../../../assets/images/background.webp)}
+*{box-sizing:border-box}
+body{margin:0;background:#0a0c0d;color:#d9d4c6;font-family:"Lora",Georgia,serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:52px 24px 110px}
+
+/* ---------- chrome del documento ---------- */
+.doc-head{border-bottom:1px solid #23292b;padding-bottom:34px}
+.doc-kicker{font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:#7b8683}
+.doc-head h1{font-family:"Cinzel Decorative",Georgia,serif;font-size:clamp(30px,5vw,48px);margin:14px 0 0;color:#e3d6b0;font-weight:400;letter-spacing:-.02em;text-wrap:balance}
+.doc-head p{max-width:74ch;color:#9aa39e;font-size:15.5px;line-height:1.65;margin:16px 0 0}
+.variant{margin:64px 0 0}
+.vhead{display:flex;align-items:baseline;gap:15px;flex-wrap:wrap;margin-bottom:8px}
+.vnum{font-family:"Oswald",sans-serif;font-size:12px;letter-spacing:.2em;color:#5f6a67;border:1px solid #2a3134;padding:3px 8px}
+.vhead h2{font-family:"Cinzel Decorative",Georgia,serif;font-weight:400;font-size:28px;margin:0;color:#e6d7ae}
+.vtag{font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#7f8a86}
+.vlede{color:#98a29d;font-size:15px;line-height:1.62;max-width:80ch;margin:0 0 18px}
+.stage{position:relative;overflow:hidden;border:1px solid #262d30;background:#000;box-shadow:0 20px 48px rgba(0,0,0,.6)}
+/* lienzo a 1920×1080: la resolución para la que están calibrados los clamp() actuales */
+.screen{width:1920px;height:1080px;position:relative;overflow:hidden;transform-origin:top left;transform:scale(var(--s,1))}
+.changes{margin:20px 0 0;padding:0;list-style:none;display:grid;gap:9px}
+.changes li{position:relative;padding-left:26px;font-size:14px;line-height:1.55;color:#98a29d}
+.changes li::before{content:"→";position:absolute;left:0;top:0;color:#a8945f;font-family:"Oswald",sans-serif}
+.changes li b{color:#dccfa8;font-weight:400;font-family:"Cinzel",serif}
+.caveat{margin:16px 0 0;font-size:13.5px;line-height:1.6;color:#7d8884;font-style:italic;border-left:2px solid #2c3436;padding-left:14px;max-width:78ch}
+
+/* ============================================================
+   BASE — reproduce el shell de preparación actual (styles.css)
+   ============================================================ */
+.ex{color:#f6e6b8;font-family:Georgia,"Times New Roman",serif;background-color:#080c0f;
+  background-image:
+    linear-gradient(90deg, rgb(4 7 9/.95), rgb(11 17 20/.8) 48%, rgb(4 7 9/.94)),
+    linear-gradient(0deg, rgb(3 6 8/.94), rgb(0 0 0/.14) 60%),
+    var(--bg);
+  background-position:center,center,center 44%;background-repeat:no-repeat;background-size:cover;
+  display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+.ex .veil{position:absolute;inset:0;pointer-events:none;
+  background:
+   radial-gradient(circle at 50% 43%, rgb(0 0 0/.04) 0 17%, rgb(7 11 14/.28) 42%, rgb(2 5 7/.76) 100%),
+   linear-gradient(180deg, rgb(0 0 0/.76), rgb(0 0 0/.08) 20% 68%, rgb(0 0 0/.82)),
+   radial-gradient(ellipse at 50% 44%, rgb(8 13 16/.3), rgb(3 6 8/.6) 74%)}
+/* pavesas del setup */
+.embers{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.embers i{position:absolute;bottom:-10px;border-radius:50%;background:#d8b874;opacity:0;
+  box-shadow:0 0 8px 2px rgb(216 184 116/.4);animation:rise var(--d) linear var(--dl) infinite}
+@keyframes rise{0%{opacity:0;transform:translate3d(0,0,0)}
+ 14%{opacity:var(--pk)}86%{opacity:var(--pk)}100%{opacity:0;transform:translate3d(var(--dx),var(--ry),0)}}
+@media(prefers-reduced-motion:reduce){.embers i{animation:none;opacity:.25}}
+
+.ex header{position:relative;z-index:4;display:grid;min-height:92px;grid-template-columns:190px minmax(0,1fr) 190px;
+  align-items:center;gap:28px;border-bottom:1px solid rgb(155 143 97/.22);padding:12px 64px;
+  background:linear-gradient(180deg, rgb(6 10 12/.96), rgb(9 14 17/.76));box-shadow:0 18px 45px rgb(0 0 0/.22)}
+.ex header::after{position:absolute;right:18%;bottom:-1px;left:18%;height:1px;
+  background:linear-gradient(90deg,transparent, rgb(180 158 91/.72), transparent);
+  box-shadow:0 0 10px rgb(180 158 91/.22);content:""}
+.ex .back{display:flex;width:fit-content;align-items:center;gap:9px;padding:10px 0;color:#849290;font-size:13px;
+  font-weight:800;letter-spacing:.17em;text-transform:uppercase;cursor:default;transition:color 150ms ease,transform 150ms ease}
+.ex .back:hover{color:#efe4c5;transform:translateX(-3px)}
+.ex header > div:nth-child(2){text-align:center}
+.ex header h1{margin:0;color:#ded3b2;font-size:54px;font-weight:500;letter-spacing:.05em;line-height:1;
+  text-transform:uppercase;text-shadow:0 2px 12px rgb(0 0 0/.74), 0 0 26px rgb(156 137 89/.16)}
+.ex .body{position:relative;z-index:1;width:1500px;margin:0 auto;padding:86px 12px 24px}
+.ex footer{position:relative;z-index:4;display:flex;min-height:89px;align-items:center;justify-content:space-between;
+  gap:30px;border-top:1px solid rgb(155 143 97/.2);padding:12px 78px;
+  background:linear-gradient(0deg, rgb(3 6 8/.99), rgb(8 13 16/.88));box-shadow:0 -18px 45px rgb(0 0 0/.2)}
+.ex footer::before{position:absolute;top:-1px;right:10%;left:10%;height:1px;
+  background:linear-gradient(90deg,transparent, rgb(180 158 91/.62), transparent);box-shadow:0 0 10px rgb(180 158 91/.2);content:""}
+.summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 10px;color:#8d9a94;font-size:13px}
+.summary span{color:#8e7b49;font-family:"Trebuchet MS",Verdana,sans-serif;font-size:9px;font-weight:900;
+  letter-spacing:.2em;text-transform:uppercase}
+.summary strong{color:#bdb79d;font-weight:500;letter-spacing:.025em}
+.summary i{color:rgb(156 137 89/.42);font-size:8px;font-style:normal}
+.begin{position:relative;display:flex;min-width:286px;min-height:62px;align-items:center;justify-content:space-between;
+  gap:20px;overflow:hidden;border:1px solid rgb(178 158 92/.6);border-radius:2px;
+  background:linear-gradient(110deg,#3a4240,#1c2828 66%,#2e3836);padding:8px 30px;color:#e3d8b5;cursor:default;
+  box-shadow:inset 0 1px 0 rgb(228 220 182/.06), 0 10px 25px rgb(0 0 0/.34);text-transform:uppercase;
+  transition:border-color 150ms ease,color 150ms ease,filter 150ms ease,transform 150ms ease,box-shadow 180ms ease}
+.begin span{display:block;font-size:19px;letter-spacing:.12em}
+.begin em{font-style:normal;color:#dfca86;font-size:20px}
+.begin:hover{border-color:rgb(190 172 111/.78);color:#e8ddba;filter:brightness(1.1);transform:translateY(-2px);
+  box-shadow:inset 0 1px 0 rgb(240 232 194/.1), 0 14px 30px rgb(0 0 0/.38), 0 0 24px rgb(190 166 91/.16)}
+
+/* acentos de mazo, como en styles.css */
+.ramp{--acc:#78956e;--acc-b:#c9dfad;--acc-s:rgb(91 142 84/.25)}
+.zombie{--acc:#6f6978;--acc-b:#d0c9d7;--acc-s:rgb(56 47 68/.42)}
+
+/* ---------- A · combatientes actuales ---------- */
+.combatants{display:grid;grid-template-columns:minmax(0,1fr) 70px minmax(0,1fr);align-items:stretch;gap:28px}
+.comb{position:relative;display:flex;min-width:0;flex-direction:column;overflow:hidden;cursor:default;
+  border:1px solid color-mix(in srgb, var(--acc) 48%, rgb(126 139 135/.26));
+  background:radial-gradient(circle at 12% 0%, var(--acc-s), transparent 42%),
+             linear-gradient(135deg, rgb(22 30 34/.86), rgb(7 11 14/.92));
+  box-shadow:inset 0 1px 0 rgb(225 226 211/.05), 0 18px 38px rgb(0 0 0/.28), 0 0 26px var(--acc-s);
+  transition:border-color 240ms ease, box-shadow 240ms ease}
+.comb:hover{border-color:color-mix(in srgb, var(--acc) 76%, rgb(126 139 135/.26));
+  box-shadow:inset 0 1px 0 rgb(225 226 211/.08), 0 20px 44px rgb(0 0 0/.32), 0 0 44px var(--acc-s)}
+.comb.host{background:radial-gradient(circle at 88% 0%, var(--acc-s), transparent 42%),
+             linear-gradient(225deg, rgb(22 30 34/.86), rgb(7 11 14/.92))}
+.comb::before{position:absolute;z-index:1;top:0;right:12%;left:12%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--acc),transparent);box-shadow:0 0 12px var(--acc-s);content:""}
+.comb::after{position:absolute;z-index:1;inset:4px;border:1px solid rgb(190 170 105/.08);content:"";pointer-events:none}
+.comb-head{position:relative;z-index:2;display:flex;min-height:56px;align-items:center;justify-content:space-between;
+  border-bottom:1px solid color-mix(in srgb, var(--acc) 28%, transparent);
+  background:linear-gradient(180deg, rgb(31 40 43/.34), rgb(9 14 17/.12));padding:0 16px}
+.comb-head > span{display:flex;align-items:center;gap:7px;color:#8b9a94;font-size:13px;font-weight:900;
+  letter-spacing:.2em;text-transform:uppercase}
+.comb-actions{display:flex;align-items:center;gap:7px}
+.comb-actions button{min-height:34px;border:1px solid color-mix(in srgb, var(--acc) 58%, rgb(126 139 135/.3));
+  background:linear-gradient(180deg, color-mix(in srgb, var(--acc) 26%, transparent), transparent),
+             linear-gradient(180deg, rgb(40 50 52/.44), rgb(14 21 23/.56));
+  padding:0 14px;color:color-mix(in srgb, var(--acc-b) 40%, #aeb9b3);font-family:Georgia,serif;font-size:14px;
+  letter-spacing:.035em;cursor:default;box-shadow:inset 0 1px 0 rgb(229 218 175/.07);
+  transition:border-color 130ms ease, background 130ms ease, color 130ms ease, transform 130ms ease}
+.comb-actions button:hover{border-color:var(--acc-b);color:var(--acc-b);transform:translateY(-1px);
+  background:linear-gradient(180deg, color-mix(in srgb, var(--acc) 46%, transparent), transparent),
+             linear-gradient(180deg, rgb(52 63 65/.5), rgb(18 26 28/.6));
+  box-shadow:inset 0 1px 0 rgb(229 218 175/.1), 0 0 16px var(--acc-s)}
+.feature{position:relative;z-index:2;display:grid;flex:1;min-height:252px;grid-template-columns:190px minmax(0,1fr);
+  align-items:center;gap:32px;padding:22px 30px}
+.art{position:relative;width:168px;aspect-ratio:488/680;overflow:hidden;
+  border:1px solid color-mix(in srgb, var(--acc) 68%, #817651);border-radius:5px;background:#131a1d;
+  box-shadow:8px 11px 18px rgb(0 0 0/.48), 0 0 24px var(--acc-s);transform:rotate(-2deg);
+  transition:transform 320ms cubic-bezier(.16,1,.3,1), box-shadow 320ms ease}
+.comb.host .art{transform:rotate(2deg)}
+.comb:hover .art{border-color:var(--acc-b);transform:rotate(-1deg) translateY(-5px) scale(1.028);
+  box-shadow:10px 14px 24px rgb(0 0 0/.52), 0 0 34px var(--acc-s)}
+.comb.host:hover .art{transform:rotate(1deg) translateY(-5px) scale(1.028)}
+.art img{display:block;width:100%;height:100%;object-fit:cover}
+.copy small{color:color-mix(in srgb, var(--acc-b) 50%, #8b9a94);font-size:12px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+.copy h2{margin:5px 0 7px;color:var(--acc-b);font-size:37px;font-weight:500;line-height:1.04;
+  text-shadow:0 2px 10px rgb(0 0 0/.72), 0 0 18px var(--acc-s)}
+.copy p{margin:0;color:#8d9a94;font-size:16px;line-height:1.4}
+.awake{position:relative;z-index:2;display:flex;min-height:52px;align-items:center;justify-content:center;gap:10px;
+  border-top:1px solid color-mix(in srgb, var(--acc) 30%, transparent);
+  background:linear-gradient(180deg, rgb(9 14 17/.12), color-mix(in srgb, var(--acc) 12%, rgb(9 14 17/.42)));
+  padding:6px 18px;color:#a3aca7;font-size:15px}
+.awake strong{display:inline-grid;min-width:30px;place-items:center;color:#d2bd78;font-size:30px;font-weight:700;
+  line-height:1;text-shadow:0 0 16px rgb(190 166 91/.22)}
+.versus{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#9b8956}
+.versus::before{position:absolute;top:50%;left:50%;width:92px;height:92px;margin:-46px 0 0 -46px;border-radius:50%;
+  background:radial-gradient(circle, rgb(190 166 91/.2), rgb(190 166 91/.06) 46%, transparent 70%);content:""}
+.versus i{width:1px;height:38px;background:linear-gradient(transparent, rgb(151 135 84/.46));display:block}
+.versus i:last-child{background:linear-gradient(rgb(151 135 84/.46), transparent)}
+.versus strong{color:#cbc09e;font-size:17px;letter-spacing:.16em;position:relative}
+.versus em{font-style:normal;font-size:26px;color:#b8a05b;position:relative}
+
+.sec-head{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgb(176 157 96/.14);padding-bottom:10px}
+.sec-head p{margin:0 0 6px;color:#8d7b4b;font-size:11px;font-weight:900;letter-spacing:.28em;text-transform:uppercase}
+.sec-head h2{margin:0;color:#cfc8aa;font-size:29px;font-weight:500;letter-spacing:.08em;text-transform:uppercase}
+.difficulty{margin-top:44px}
+.modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+.mode{--da:200 180 116;position:relative;display:grid;min-height:87px;grid-template-columns:44px minmax(0,1fr);
+  align-items:center;gap:13px;overflow:hidden;border:1px solid rgb(126 139 135/.22);
+  background:linear-gradient(145deg, rgb(26 34 37/.7), rgb(8 13 16/.78));padding:11px 16px;color:#8b9a94;
+  text-align:left;cursor:default;transition:border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease, transform 150ms cubic-bezier(.16,1,.3,1)}
+.mode[data-d="easy"]{--da:142 168 118}
+.mode[data-d="hard"]{--da:184 104 82}
+.mode::before{position:absolute;top:9px;bottom:9px;left:0;width:3px;content:"";
+  background:linear-gradient(180deg,transparent, rgb(var(--da)/.95), transparent);
+  box-shadow:0 0 12px rgb(var(--da)/.52);opacity:0;transform:scaleY(.2)}
+.mode:hover,.mode.on{border-color:rgb(170 153 94/.48);background:linear-gradient(110deg, rgb(45 56 57/.66), rgb(11 18 21/.86));transform:translateY(-1px)}
+.mode.on{box-shadow:inset 0 0 24px rgb(var(--da)/.1), 0 7px 20px rgb(0 0 0/.24)}
+.mode.on::before{opacity:1;transform:scaleY(1)}
+.glyph{display:grid;width:40px;height:40px;place-items:center;border:1px solid rgb(126 139 135/.24);color:#8b9a94;
+  transform:rotate(45deg);font-size:17px}
+.glyph b{transform:rotate(-45deg);display:block;font-weight:400}
+.mode.on .glyph{border-color:rgb(185 165 101/.52);color:#c8b474}
+.mode strong{display:block;color:#aeb9b3;font-size:19px;letter-spacing:.07em;text-transform:uppercase;font-weight:500}
+.mode.on strong{color:#e0d5b3}
+.mode small{display:block;margin-top:4px;font-size:13px;color:#7f8c88;letter-spacing:.01em;text-transform:none}
+.advanced{margin-top:34px;border-top:1px solid rgb(169 151 95/.18);border-bottom:1px solid rgb(169 151 95/.18)}
+.advanced .tog{display:flex;width:100%;min-height:54px;align-items:center;gap:8px;color:#83918c;font-size:11px;
+  font-weight:900;letter-spacing:.15em;text-transform:uppercase;cursor:default}
+.advanced .tog em{margin-left:auto;font-style:normal;color:#69766f;font-weight:700;letter-spacing:.07em}
+.advanced .tog:hover{color:#c9bea0}
+
+/* ============================================================
+   B · CONSECUENCIA — misma estructura, decisiones legibles
+   ============================================================ */
+.vb .mode{grid-template-columns:44px minmax(0,1fr);min-height:104px;align-items:start;padding:15px 16px}
+.vb .mode .glyph{margin-top:3px}
+.vb .mode small{color:#8b968f;font-size:13.5px;line-height:1.35;margin-top:6px}
+.vb .mode.on small{color:#c2cbbc}
+/* el reloj de la Hueste se convierte en la consecuencia del modo elegido */
+.vb .turns{color:#d2bd78;font-weight:700}
+.vb .mode[data-d="hard"].on small,.vb .mode[data-d="hard"].on .turns{color:#d59180}
+.vb .copy h2{font-size:41px}
+.vb .copy small{font-size:11px}
+.vb .comb-head > span{font-size:11px;letter-spacing:.24em;color:#7b8a86}
+.vb .sec-head h2{font-size:22px;letter-spacing:.14em}
+.vb .difficulty{margin-top:38px}
+/* el pie deja de repetir lo que ya está en pantalla */
+.vb .summary strong{font-size:14px}
+
+/* ============================================================
+   C · DUELO — el Cronista y la Hueste dejan de ser simétricos
+   ============================================================ */
+.vc .combatants{grid-template-columns:minmax(0,1.08fr) 92px minmax(0,.92fr)}
+.vc .comb{border-color:color-mix(in srgb, var(--acc) 40%, rgb(126 139 135/.2))}
+/* el Cronista está iluminado */
+.vc .comb.player{box-shadow:inset 0 1px 0 rgb(225 226 211/.07), 0 18px 38px rgb(0 0 0/.3), 0 0 60px var(--acc-s)}
+.vc .comb.player .art{width:210px}
+.vc .comb.player .feature{grid-template-columns:232px minmax(0,1fr)}
+/* la Hueste está fría y detrás */
+.vc .comb.host{filter:saturate(.72) brightness(.86);background:
+   radial-gradient(circle at 88% 0%, var(--acc-s), transparent 42%),
+   linear-gradient(225deg, rgb(16 22 26/.9), rgb(5 8 10/.95))}
+.vc .comb.host:hover{filter:saturate(.9) brightness(1)}
+.vc .comb.host .copy h2{font-size:32px}
+/* la costura central se convierte en una hendidura de luz */
+.vc .versus::before{width:2px;height:100%;margin:0;left:50%;top:0;border-radius:0;transform:translateX(-1px);
+  background:linear-gradient(180deg,transparent, rgb(190 166 91/.5) 22% 78%, transparent);
+  box-shadow:0 0 22px rgb(190 166 91/.28)}
+.vc .versus strong{background:linear-gradient(180deg, rgb(9 13 16/.96), rgb(6 9 12/.96));padding:12px 0;width:92px;text-align:center}
+.vc .versus i{display:none}
+/* medidor de amenaza en lugar de un reloj suelto */
+.threat{position:relative;z-index:2;border-top:1px solid color-mix(in srgb, var(--acc) 30%, transparent);
+  background:linear-gradient(180deg, rgb(9 14 17/.12), color-mix(in srgb, var(--acc) 12%, rgb(9 14 17/.42)));
+  padding:13px 20px 15px}
+.threat .lb{display:flex;align-items:baseline;justify-content:space-between;color:#98a29d;font-size:14px}
+.threat .lb strong{color:#d2bd78;font-size:26px;font-weight:700;line-height:1}
+.threat .bar{display:flex;gap:5px;margin-top:10px}
+.threat .bar i{flex:1;height:5px;background:rgb(126 139 135/.2);display:block}
+.threat .bar i.f{background:linear-gradient(90deg,#a88f4e,#d8bd76);box-shadow:0 0 10px rgb(210 189 120/.5)}
+
+/* ============================================================
+   D · FICHA DE EXPEDICIÓN — una columna, cuatro decisiones
+   ============================================================ */
+.vd .body{width:1180px;padding-top:64px}
+.sheet{border:1px solid rgb(155 143 97/.22);background:linear-gradient(150deg, rgb(20 27 30/.82), rgb(7 11 14/.9));
+  box-shadow:0 22px 50px rgb(0 0 0/.34)}
+.srow{position:relative;display:grid;grid-template-columns:150px 132px minmax(0,1fr) auto;align-items:center;gap:26px;
+  padding:20px 30px;border-bottom:1px solid rgb(126 139 135/.14);cursor:default;transition:background 150ms ease}
+.srow:last-child{border-bottom:0}
+.srow:hover{background:linear-gradient(90deg, rgb(120 133 137/.09), transparent 76%)}
+.srow::before{position:absolute;top:14px;bottom:14px;left:0;width:3px;content:"";background:var(--acc,#a08c52);
+  opacity:0;box-shadow:0 0 12px var(--acc-s,rgb(190 166 91/.4));transition:opacity 150ms ease}
+.srow:hover::before{opacity:1}
+.srow .lb{color:#8b9a94;font-size:11px;font-weight:900;letter-spacing:.22em;text-transform:uppercase}
+.srow .thumb{width:100px;aspect-ratio:488/680;overflow:hidden;border:1px solid color-mix(in srgb, var(--acc,#8a7c4e) 62%, #817651);
+  border-radius:4px;background:#131a1d;box-shadow:4px 6px 14px rgb(0 0 0/.5)}
+.srow .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.srow .val h3{margin:0;color:var(--acc-b,#d8cca9);font-size:27px;font-weight:500;line-height:1.1}
+.srow .val p{margin:6px 0 0;color:#8d9a94;font-size:14.5px;line-height:1.42}
+.srow .val .meta{margin-top:7px;color:#7d8a86;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+.srow .acts{display:flex;gap:8px}
+.srow .acts button{min-height:36px;border:1px solid rgb(126 139 135/.3);background:linear-gradient(180deg, rgb(40 50 52/.44), rgb(14 21 23/.56));
+  padding:0 15px;color:#aeb9b3;font-family:Georgia,serif;font-size:14px;cursor:default;transition:.13s}
+.srow .acts button:hover{border-color:var(--acc-b,#c8b474);color:var(--acc-b,#e0d5b3);transform:translateY(-1px)}
+.srow.compact{grid-template-columns:150px minmax(0,1fr) auto;padding:17px 30px}
+.pick{display:flex;gap:8px}
+.pick .p{border:1px solid rgb(126 139 135/.22);background:linear-gradient(145deg, rgb(26 34 37/.7), rgb(8 13 16/.78));
+  padding:9px 17px;color:#95a09a;font-size:16px;letter-spacing:.05em;cursor:default;transition:.14s;position:relative}
+.pick .p:hover{border-color:rgb(170 153 94/.48);color:#d6dbd2}
+.pick .p.on{border-color:rgb(185 165 101/.6);color:#e6dbb6;background:linear-gradient(145deg, rgb(48 56 50/.8), rgb(14 20 18/.86));
+  box-shadow:inset 0 0 20px rgb(200 180 116/.1)}
+.pick .p em{font-style:normal;display:block;font-size:11px;letter-spacing:.06em;color:#7f8c88;margin-top:4px;font-family:"Trebuchet MS",Verdana,sans-serif}
+.pick .p.on em{color:#b6a878}
+.seedline{display:flex;align-items:center;gap:10px;color:#8b9a94;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+.vd .sheet-head{display:flex;align-items:baseline;justify-content:space-between;padding:16px 30px;
+  border-bottom:1px solid rgb(155 143 97/.22);background:linear-gradient(180deg, rgb(28 36 39/.5), transparent)}
+.vd .sheet-head h2{margin:0;color:#cfc8aa;font-size:19px;font-weight:500;letter-spacing:.2em;text-transform:uppercase}
+.vd .sheet-head span{color:#7d8a86;font-size:12px}
+
+/* ---------- cierre ---------- */
+.close{margin:84px 0 0;border-top:1px solid #23292b;padding-top:36px}
+.close h3{font-family:"Cinzel Decorative",serif;font-weight:400;font-size:24px;color:#e3d6b0;margin:0 0 16px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid #1c2224;vertical-align:top}
+th{font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#a8945f;font-weight:500}
+td{color:#949e99;line-height:1.55}
+td b{color:#d8cca9;font-weight:400;font-family:"Cinzel",serif}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="doc-head">
+  <div class="doc-kicker">Hostfall · preparación de partida · variantes sobre la base actual</div>
+  <h1>Cuatro lecturas de «Escribir Crónica»</h1>
+  <p>Igual que en el menú: la primera pantalla es la actual, reproducida a 1920×1080 con sus valores reales.
+  Las tres siguientes mantienen la cabecera, los dos combatientes, la dificultad y el pie con la acción principal;
+  lo que cambia es qué información se ve, cuánto pesa cada bloque y qué comunica el estado seleccionado.</p>
+</div>
+
+<!-- ===================== A ===================== -->
+<section class="variant">
+  <div class="vhead"><span class="vnum">A</span><h2>Actual</h2><span class="vtag">referencia</span></div>
+  <p class="vlede">Los dos mazos son paneles idénticos y espejados, la dificultad es una fila de tres fichas que sólo
+  dicen un nombre, y la consecuencia real de elegir —cuántos turnos tardas en que despierte la Hueste— vive lejos,
+  en una tira dentro del panel contrario. El pie repite las tres decisiones que ya están arriba.</p>
+  <div class="stage"><div class="screen ex">
+    <div class="veil"></div>
+    <div class="embers">
+      <i style="left:14%;width:3px;height:3px;--d:16s;--dl:-3s;--dx:22px;--ry:-70vh;--pk:.4"></i>
+      <i style="left:36%;width:2px;height:2px;--d:20s;--dl:-9s;--dx:-30px;--ry:-78vh;--pk:.3"></i>
+      <i style="left:62%;width:3.4px;height:3.4px;--d:18s;--dl:-14s;--dx:16px;--ry:-66vh;--pk:.5"></i>
+      <i style="left:81%;width:2.4px;height:2.4px;--d:22s;--dl:-6s;--dx:-18px;--ry:-74vh;--pk:.35"></i>
+    </div>
+    <header>
+      <span class="back">← Menú principal</span>
+      <div><h1>Escribir Crónica</h1></div>
+      <span></span>
+    </header>
+    <div class="body">
+      <div class="combatants">
+        <article class="comb player ramp">
+          <div class="comb-head">
+            <span>◈ Cronista</span>
+            <div class="comb-actions"><button>Inspeccionar mazo</button><button>Cambiar</button></div>
+          </div>
+          <div class="feature">
+            <div class="art"><img src="../../../../public/cards/pact_of_elarion/aelyra_heir_of_elarion.png" alt="Aelyra, Heredera de Elarion"></div>
+            <div class="copy">
+              <small>39 cartas</small>
+              <h2>El Pacto de Elarion</h2>
+              <p>Reúne a los antiguos aliados de Elarion y abre el camino para el regreso de Vaelor.</p>
+            </div>
+          </div>
+        </article>
+        <div class="versus"><i></i><em>⚔</em><strong>VS</strong><i></i></div>
+        <article class="comb host zombie">
+          <div class="comb-head">
+            <span>☠ Hueste</span>
+            <div class="comb-actions"><button>Inspeccionar mazo</button><button>Cambiar</button></div>
+          </div>
+          <div class="feature">
+            <div class="art"><img src="../../../../public/cards/uprising_of_the_graveless/nerezh_graveless_matriarch.png" alt="Nerezh, Matriarca de los Sinsepulcro"></div>
+            <div class="copy">
+              <small>50 cartas</small>
+              <h2>El Alzamiento de los Sinsepulcro</h2>
+              <p>Nerezh despierta a los muertos sin tumba y convierte los recuerdos de los caídos en nuevas fuerzas.</p>
+            </div>
+          </div>
+          <div class="awake"><span>La Hueste despierta después de</span><strong>3</strong><span>turnos</span></div>
+        </article>
+      </div>
+
+      <section class="difficulty">
+        <div class="sec-head"><div><p>Elige tu destino</p><h2>Dificultad</h2></div></div>
+        <div class="modes">
+          <div class="mode" data-d="easy"><span class="glyph"><b>⛨</b></span><span><strong>Aventurero</strong></span></div>
+          <div class="mode on"><span class="glyph"><b>⚔</b></span><span><strong>Veterano</strong></span></div>
+          <div class="mode" data-d="hard"><span class="glyph"><b>☠</b></span><span><strong>Condenado</strong></span></div>
+        </div>
+      </section>
+
+      <section class="advanced">
+        <div class="tog">⚙ Ajustes avanzados <em>Semilla y herramientas de desarrollo</em></div>
+      </section>
+    </div>
+    <footer>
+      <div class="summary">
+        <span>Cronista</span><strong>El Pacto de Elarion</strong><i>◆</i>
+        <span>Hueste</span><strong>El Alzamiento de los Sinsepulcro</strong><i>◆</i>
+        <span>Dificultad</span><strong>Veterano</strong>
+      </div>
+      <div class="begin"><span>Iniciar Crónica</span><em>▶</em></div>
+    </footer>
+  </div></div>
+</section>
+
+<!-- ===================== B ===================== -->
+<section class="variant">
+  <div class="vhead"><span class="vnum">B</span><h2>Consecuencia</h2><span class="vtag">misma estructura · la decisión se explica</span></div>
+  <p class="vlede">El cambio más pequeño con más efecto: cada dificultad dice qué provoca, no sólo cómo se llama.
+  Al elegir ya sabes que la Hueste despierta antes o después, sin tener que mirar la tira del panel de enfrente.
+  El pie deja de repetir los mazos y sólo confirma lo que no está a la vista.</p>
+  <div class="stage"><div class="screen ex vb">
+    <div class="veil"></div>
+    <div class="embers">
+      <i style="left:14%;width:3px;height:3px;--d:16s;--dl:-3s;--dx:22px;--ry:-70vh;--pk:.4"></i>
+      <i style="left:36%;width:2px;height:2px;--d:20s;--dl:-9s;--dx:-30px;--ry:-78vh;--pk:.3"></i>
+      <i style="left:62%;width:3.4px;height:3.4px;--d:18s;--dl:-14s;--dx:16px;--ry:-66vh;--pk:.5"></i>
+      <i style="left:81%;width:2.4px;height:2.4px;--d:22s;--dl:-6s;--dx:-18px;--ry:-74vh;--pk:.35"></i>
+    </div>
+    <header>
+      <span class="back">← Menú principal</span>
+      <div><h1>Escribir Crónica</h1></div>
+      <span></span>
+    </header>
+    <div class="body">
+      <div class="combatants">
+        <article class="comb player ramp">
+          <div class="comb-head">
+            <span>◈ Cronista</span>
+            <div class="comb-actions"><button>Ver mazo</button><button>Cambiar</button></div>
+          </div>
+          <div class="feature">
+            <div class="art"><img src="../../../../public/cards/pact_of_elarion/aelyra_heir_of_elarion.png" alt="Aelyra, Heredera de Elarion"></div>
+            <div class="copy">
+              <small>39 cartas · Aelyra</small>
+              <h2>El Pacto de Elarion</h2>
+              <p>Reúne a los antiguos aliados de Elarion y abre el camino para el regreso de Vaelor.</p>
+            </div>
+          </div>
+        </article>
+        <div class="versus"><i></i><em>⚔</em><strong>VS</strong><i></i></div>
+        <article class="comb host zombie">
+          <div class="comb-head">
+            <span>☠ Hueste</span>
+            <div class="comb-actions"><button>Ver mazo</button><button>Cambiar</button></div>
+          </div>
+          <div class="feature">
+            <div class="art"><img src="../../../../public/cards/uprising_of_the_graveless/nerezh_graveless_matriarch.png" alt="Nerezh, Matriarca de los Sinsepulcro"></div>
+            <div class="copy">
+              <small>50 cartas · Nerezh</small>
+              <h2>El Alzamiento de los Sinsepulcro</h2>
+              <p>Nerezh despierta a los muertos sin tumba y convierte los recuerdos de los caídos en nuevas fuerzas.</p>
+            </div>
+          </div>
+          <div class="awake"><span>Despierta después de</span><strong>3</strong><span>turnos</span></div>
+        </article>
+      </div>
+
+      <section class="difficulty">
+        <div class="sec-head"><div><h2>Dificultad</h2></div></div>
+        <div class="modes">
+          <div class="mode" data-d="easy"><span class="glyph"><b>⛨</b></span><span><strong>Aventurero</strong>
+            <small>Preparas <span class="turns">4</span> turnos antes de que la Hueste despierte.</small></span></div>
+          <div class="mode on"><span class="glyph"><b>⚔</b></span><span><strong>Veterano</strong>
+            <small>Preparas <span class="turns">3</span> turnos antes de que la Hueste despierte.</small></span></div>
+          <div class="mode" data-d="hard"><span class="glyph"><b>☠</b></span><span><strong>Condenado</strong>
+            <small>Preparas <span class="turns">2</span> turnos antes de que la Hueste despierte.</small></span></div>
+        </div>
+      </section>
+
+      <section class="advanced">
+        <div class="tog">⚙ Ajustes avanzados <em>Semilla y herramientas de desarrollo</em></div>
+      </section>
+    </div>
+    <footer>
+      <div class="summary">
+        <span>Semilla</span><strong>hostfall-m4z8-k1qp</strong><i>◆</i>
+        <span>Dificultad</span><strong>Veterano · 3 turnos de preparación</strong>
+      </div>
+      <div class="begin"><span>Iniciar Crónica</span><em>▶</em></div>
+    </footer>
+  </div></div>
+  <ul class="changes">
+    <li><b>La dificultad dice qué hace.</b> Cada ficha lleva su consecuencia en una línea y el número de turnos resaltado. El nombre solo («Veterano») no informa a nadie que juega por primera vez.</li>
+    <li><b>Se va el doble encabezado.</b> «Elige tu destino» + «DIFICULTAD» decían lo mismo dos veces; queda un único título, además más pequeño, porque los mazos deben pesar más que esta sección.</li>
+    <li><b>El pie deja de repetirse.</b> Los dos mazos y la dificultad ya están a la vista; el resumen pasa a mostrar la semilla, que es lo único que no se ve. La acción principal no cambia.</li>
+    <li><b>El nombre del mazo manda dentro del panel.</b> Sube de 37 a 41px y el eyebrow baja de 13 a 11px: primero lees qué mazo es, después de quién es el turno.</li>
+    <li><b>Acciones más cortas.</b> «Inspeccionar mazo» → «Ver mazo». Dos botones de ancho parecido dentro de la cabecera equilibran mejor el panel.</li>
+  </ul>
+  <p class="caveat">Los números (4/3/2 turnos) salen de <code>modes</code> en <code>StartMenu.tsx</code>, así que el texto puede componerse del propio dato en vez de escribirse a mano.</p>
+</section>
+
+<!-- ===================== C ===================== -->
+<section class="variant">
+  <div class="vhead"><span class="vnum">C</span><h2>Duelo</h2><span class="vtag">B + los dos lados dejan de ser espejo</span></div>
+  <p class="vlede">Mismo contenido que B, pero la composición cuenta la historia: tú estás delante y con luz, la Hueste
+  está detrás, fría y más apagada. La línea del centro pasa de ser un adorno con halo a una hendidura de luz que
+  parte la pantalla, y el reloj de despertar se convierte en un medidor de amenaza dentro del panel enemigo.</p>
+  <div class="stage"><div class="screen ex vb vc">
+    <div class="veil"></div>
+    <div class="embers">
+      <i style="left:14%;width:3px;height:3px;--d:16s;--dl:-3s;--dx:22px;--ry:-70vh;--pk:.4"></i>
+      <i style="left:36%;width:2px;height:2px;--d:20s;--dl:-9s;--dx:-30px;--ry:-78vh;--pk:.3"></i>
+      <i style="left:62%;width:3.4px;height:3.4px;--d:18s;--dl:-14s;--dx:16px;--ry:-66vh;--pk:.5"></i>
+      <i style="left:81%;width:2.4px;height:2.4px;--d:22s;--dl:-6s;--dx:-18px;--ry:-74vh;--pk:.35"></i>
+    </div>
+    <header>
+      <span class="back">← Menú principal</span>
+      <div><h1>Escribir Crónica</h1></div>
+      <span></span>
+    </header>
+    <div class="body">
+      <div class="combatants">
+        <article class="comb player ramp">
+          <div class="comb-head">
+            <span>◈ Cronista</span>
+            <div class="comb-actions"><button>Ver mazo</button><button>Cambiar</button></div>
+          </div>
+          <div class="feature">
+            <div class="art"><img src="../../../../public/cards/pact_of_elarion/aelyra_heir_of_elarion.png" alt="Aelyra, Heredera de Elarion"></div>
+            <div class="copy">
+              <small>39 cartas · Aelyra</small>
+              <h2>El Pacto de Elarion</h2>
+              <p>Reúne a los antiguos aliados de Elarion y abre el camino para el regreso de Vaelor.</p>
+            </div>
+          </div>
+        </article>
+        <div class="versus"><strong>VS</strong></div>
+        <article class="comb host zombie">
+          <div class="comb-head">
+            <span>☠ Hueste</span>
+            <div class="comb-actions"><button>Ver mazo</button><button>Cambiar</button></div>
+          </div>
+          <div class="feature">
+            <div class="art"><img src="../../../../public/cards/uprising_of_the_graveless/nerezh_graveless_matriarch.png" alt="Nerezh, Matriarca de los Sinsepulcro"></div>
+            <div class="copy">
+              <small>50 cartas · Nerezh</small>
+              <h2>El Alzamiento de los Sinsepulcro</h2>
+              <p>Despierta y ataca con todo lo que pueda; no toma decisiones tácticas.</p>
+            </div>
+          </div>
+          <div class="threat">
+            <div class="lb"><span>Despierta en</span><strong>3 turnos</strong></div>
+            <div class="bar"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></div>
+          </div>
+        </article>
+      </div>
+
+      <section class="difficulty">
+        <div class="sec-head"><div><h2>Dificultad</h2></div></div>
+        <div class="modes">
+          <div class="mode" data-d="easy"><span class="glyph"><b>⛨</b></span><span><strong>Aventurero</strong>
+            <small>Preparas <span class="turns">4</span> turnos antes de que la Hueste despierte.</small></span></div>
+          <div class="mode on"><span class="glyph"><b>⚔</b></span><span><strong>Veterano</strong>
+            <small>Preparas <span class="turns">3</span> turnos antes de que la Hueste despierte.</small></span></div>
+          <div class="mode" data-d="hard"><span class="glyph"><b>☠</b></span><span><strong>Condenado</strong>
+            <small>Preparas <span class="turns">2</span> turnos antes de que la Hueste despierte.</small></span></div>
+        </div>
+      </section>
+
+      <section class="advanced">
+        <div class="tog">⚙ Ajustes avanzados <em>Semilla y herramientas de desarrollo</em></div>
+      </section>
+    </div>
+    <footer>
+      <div class="summary">
+        <span>Semilla</span><strong>hostfall-m4z8-k1qp</strong><i>◆</i>
+        <span>Dificultad</span><strong>Veterano · 3 turnos de preparación</strong>
+      </div>
+      <div class="begin"><span>Iniciar Crónica</span><em>▶</em></div>
+    </footer>
+  </div></div>
+  <ul class="changes">
+    <li><b>Rejilla desigual.</b> 1.08fr / 0.92fr y un arte más grande en tu lado. La diferencia es pequeña pero suficiente para que la vista empiece por ti.</li>
+    <li><b>La Hueste está en penumbra.</b> Un <code>filter</code> frío que se levanta al pasar el ratón. Sigue siendo perfectamente legible; sólo no compite.</li>
+    <li><b>El VS deja de ser un adorno.</b> Se convierte en la hendidura que separa los dos lados, con el rótulo recortado encima. Fuera el halo que late.</li>
+    <li><b>Medidor de amenaza.</b> El reloj de despertar pasa a barra: se ve de un vistazo cuánto margen tienes, y cambia con la dificultad delante de ti.</li>
+  </ul>
+  <p class="caveat">Ojo con una cosa: hoy los dos paneles comparten componente y estilos. Esta variante obliga a que
+  <code>expedition-combatant-host</code> tenga tratamiento propio de verdad, no sólo el degradado espejado.</p>
+</section>
+
+<!-- ===================== D ===================== -->
+<section class="variant">
+  <div class="vhead"><span class="vnum">D</span><h2>Ficha de expedición</h2><span class="vtag">una columna · cuatro decisiones</span></div>
+  <p class="vlede">La variante más compacta: en lugar de dos paneles enormes y una sección de dificultad debajo, una
+  sola ficha con una fila por decisión —Crónica, Hueste, Dificultad, Semilla— cada una con su valor elegido y su
+  acción de cambio. Desaparece el hueco central, la pantalla deja de necesitar scroll y añadir una quinta decisión
+  el día de mañana es añadir una fila.</p>
+  <div class="stage"><div class="screen ex vd">
+    <div class="veil"></div>
+    <div class="embers">
+      <i style="left:14%;width:3px;height:3px;--d:16s;--dl:-3s;--dx:22px;--ry:-70vh;--pk:.4"></i>
+      <i style="left:36%;width:2px;height:2px;--d:20s;--dl:-9s;--dx:-30px;--ry:-78vh;--pk:.3"></i>
+      <i style="left:62%;width:3.4px;height:3.4px;--d:18s;--dl:-14s;--dx:16px;--ry:-66vh;--pk:.5"></i>
+      <i style="left:81%;width:2.4px;height:2.4px;--d:22s;--dl:-6s;--dx:-18px;--ry:-74vh;--pk:.35"></i>
+    </div>
+    <header>
+      <span class="back">← Menú principal</span>
+      <div><h1>Escribir Crónica</h1></div>
+      <span></span>
+    </header>
+    <div class="body">
+      <div class="sheet">
+        <div class="sheet-head"><h2>Ficha de expedición</h2><span>Cuatro decisiones antes de la primera página</span></div>
+
+        <div class="srow ramp">
+          <div class="lb">Crónica</div>
+          <div class="thumb"><img src="../../../../public/cards/pact_of_elarion/aelyra_heir_of_elarion.png" alt="Aelyra, Heredera de Elarion"></div>
+          <div class="val">
+            <h3>El Pacto de Elarion</h3>
+            <p>Reúne a los antiguos aliados de Elarion y abre el camino para el regreso de Vaelor.</p>
+            <div class="meta">39 cartas · carta clave: Aelyra</div>
+          </div>
+          <div class="acts"><button>Ver mazo</button><button>Cambiar</button></div>
+        </div>
+
+        <div class="srow zombie">
+          <div class="lb">Hueste</div>
+          <div class="thumb"><img src="../../../../public/cards/uprising_of_the_graveless/nerezh_graveless_matriarch.png" alt="Nerezh, Matriarca de los Sinsepulcro"></div>
+          <div class="val">
+            <h3>El Alzamiento de los Sinsepulcro</h3>
+            <p>Nerezh despierta a los muertos sin tumba. No toma decisiones tácticas: revela y ataca.</p>
+            <div class="meta">50 cartas · despierta tras 3 turnos</div>
+          </div>
+          <div class="acts"><button>Ver mazo</button><button>Cambiar</button></div>
+        </div>
+
+        <div class="srow compact">
+          <div class="lb">Dificultad</div>
+          <div class="pick">
+            <div class="p">Aventurero <em>4 turnos de preparación</em></div>
+            <div class="p on">Veterano <em>3 turnos de preparación</em></div>
+            <div class="p">Condenado <em>2 turnos de preparación</em></div>
+          </div>
+          <div></div>
+        </div>
+
+        <div class="srow compact">
+          <div class="lb">Semilla</div>
+          <div class="seedline">hostfall-m4z8-k1qp</div>
+          <div class="acts"><button>Copiar</button><button>Nueva</button><button>Avanzado</button></div>
+        </div>
+      </div>
+    </div>
+    <footer>
+      <div class="summary">
+        <span>Cronista</span><strong>Leo</strong><i>◆</i>
+        <span>Todo listo</span><strong>El Pacto de Elarion contra los Sinsepulcro</strong>
+      </div>
+      <div class="begin"><span>Iniciar Crónica</span><em>▶</em></div>
+    </footer>
+  </div></div>
+  <ul class="changes">
+    <li><b>Una fila por decisión.</b> Etiqueta, miniatura, valor elegido y acción. La misma plantilla sirve para mazos, dificultad y semilla.</li>
+    <li><b>Se acaba el scroll.</b> Hoy la zona central tiene <code>overflow-y:auto</code> y la dificultad puede quedar por debajo del pliegue; aquí todo cabe en pantalla.</li>
+    <li><b>Ajustes avanzados deja de ser una banda.</b> La semilla ya es una fila, así que el acordeón sobra: sólo queda un botón para lo verdaderamente avanzado.</li>
+    <li><b>El acento del mazo se conserva.</b> Cada fila hereda el color de su mazo en el hover y en el nombre, así que no se pierde la identidad que hoy dan los paneles.</li>
+  </ul>
+  <p class="caveat">Lo que se pierde: la teatralidad del VS y del arte grande. Si la pantalla de preparación es un
+  momento importante del juego —y probablemente lo sea— quizá D sea mejor para una futura pantalla de opciones
+  rápidas que para la principal.</p>
+</section>
+
+<div class="close">
+  <h3>Orden que propongo</h3>
+  <table>
+    <tr><th>Paso</th><th>Qué se toca</th><th>Riesgo</th></tr>
+    <tr><td><b>1 · Consecuencia (B)</b></td><td>Texto de las fichas de dificultad, un encabezado menos y el resumen del pie. Todo en <code>StartMenu.tsx</code> y unas pocas reglas <code>.expedition-mode</code>.</td><td>Ninguno. Hay que añadir tres claves a <code>translations.ts</code>.</td></tr>
+    <tr><td><b>2 · Duelo (C)</b></td><td>Rejilla desigual, tratamiento propio del panel de la Hueste, el VS como hendidura y el medidor de amenaza sustituyendo a <code>.expedition-awakening</code>.</td><td>Bajo-medio. Conviene comprobar el contraste del panel de la Hueste antes de dejarlo apagado.</td></tr>
+    <tr><td><b>3 · Ficha (D)</b></td><td>Reescritura del cuerpo de <code>ExpeditionSetup</code>. Los cajones laterales de cambio de mazo siguen valiendo tal cual.</td><td>Medio. Es un cambio de concepto, no de estilo: mejor decidirlo antes de tocar nada.</td></tr>
+  </table>
+</div>
+
+</div>
+<script>
+function fit(){
+  document.querySelectorAll('.stage').forEach(function(st){
+    var s = st.clientWidth / 1920;
+    var scr = st.querySelector('.screen');
+    if(scr) scr.style.setProperty('--s', s);
+    st.style.height = (1080 * s) + 'px';
+  });
+}
+window.addEventListener('resize', fit);
+document.addEventListener('DOMContentLoaded', fit);
+fit(); setTimeout(fit, 300);
+</script>
+</body>
+</html>

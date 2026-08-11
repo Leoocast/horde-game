@@ -50,7 +50,8 @@ Implementaciones utiles como referencia:
   renderer procedural no monta el antiguo destello DOM de pantalla completa; su impacto ya lo
   presentan la explosion del shader, la chamusquina y el numero. Las rutas son rectas salvo la descarga de entrada de Vaelor.
   `ClassicBurnAnimator.tsx` conserva el renderer DOM/CSS anterior como referencia legada, pero
-  ninguna carta registrada lo selecciona. Detalles de forma y estela en `docs/animation_contracts.md`.
+  ninguna carta registrada lo selecciona. Detalles de forma y estela en
+  `docs/reference/animation_contracts.md`.
 
 Para cualquier efecto nuevo:
 
@@ -71,12 +72,12 @@ Para cualquier efecto nuevo:
   descarta el mas antiguo, con lo que ese lienzo queda roto en pantalla. Todos los animadores usan
   ahora el unico renderer de `sharedVfxRenderer.ts`; sus canvas de destino son 2D y no consumen
   cupo WebGL. El contexto compartido se crea de forma diferida y no se destruye entre efectos ni
-  partidas. El diagnostico y la migracion completa estan en `docs/plan_webgl_context_budget.md`.
+  partidas. El diagnostico y la migracion completa estan en `docs/plans/webgl_context_budget.md`.
 - La carga ejecuta `prewarmGameVfx`: crea ese contexto, reserva una superficie capaz de cubrir el
   viewport y compila Burn y las familias de materiales Three.js que usan los animadores. Las
   escenas minimas se retienen para que Three.js conserve los programas GPU y el primer efecto
   visible no pague esa compilacion. No crea una segunda ruta de render ni otro contexto.
-- Respetar la cola y el bloqueo descritos en `docs/animation_contracts.md`.
+- Respetar la cola y el bloqueo descritos en `docs/reference/animation_contracts.md`.
 
 ## Candidato futuro: three.quarks
 
@@ -204,23 +205,6 @@ Enlace: [krautgti/vYReorP](https://codepen.io/krautgti/pen/vYReorP)
 El enlace queda guardado, pero su resultado y codigo aun no fueron inspeccionados. Clasificarlo
 cuando exista una captura o una exportacion HTML/CSS/JS accesible; no inferir la tecnica solo por
 la URL.
-
-## Referencias personales fuera de Hostfall
-
-### Reveal de marca personal
-
-Enlace: [fand/MWMBdbj](https://codepen.io/fand/pen/MWMBdbj)
-
-Reservado como referencia para el reveal de la marca personal de Arky cuando desarrolle su propio
-juego. No pertenece a Hostfall y no debe usarse para definir el lenguaje visual de sus cartas,
-HUD o efectos. Conservar el enlace y esta intencion juntos para no perder su contexto.
-
-Repositorio relacionado: [fand/vfx-js](https://github.com/fand/vfx-js)
-
-VFX-JS aplica efectos WebGL a elementos HTML normales como imagenes y video. Incluye bindings para
-React y efectos componibles, por lo que queda guardado como posible base tecnica para reproducir o
-adaptar el reveal de marca anterior. Tiene licencia MIT. No es una dependencia de Hostfall ni debe
-instalarse en este proyecto solo por conservar la referencia.
 
 ## Referencia de shader
 
