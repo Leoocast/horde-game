@@ -374,7 +374,6 @@ export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameSt
   const lifePaymentAnimation = useGameStore((state) => state.lifePaymentAnimation);
   const bloodPactAnimation = useGameStore((state) => state.bloodPactAnimation);
   const finalBanquetAnimation = useGameStore((state) => state.finalBanquetAnimation);
-  const energyRecycleDragActive = useGameStore((state) => state.energyRecycleDragActive);
   const [graveyardOpen, setGraveyardOpen] = useState(false);
   const [chroniclerName, setChroniclerName] = useState(playerName);
   const [visualLife, setVisualLife] = useState(game.player.life);
@@ -503,14 +502,9 @@ export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameSt
             </div>
           </div>
           <PlayerArchiveForecast game={game} />
-          <motion.div
+          <div
             data-player-life-panel="true"
-            data-energy-recycle-target="true"
             className="energy-recycle-life-target"
-            initial={false}
-            animate={{ scale: energyRecycleDragActive ? 1.045 : 1 }}
-            transition={{ type: "spring", stiffness: 430, damping: 27, mass: 0.55 }}
-            style={{ transformOrigin: "bottom right" }}
           >
           <div
             className={[
@@ -564,7 +558,7 @@ export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameSt
               <Heart size={24} />
             </div>
           </div>
-          </motion.div>
+          </div>
           <GameTooltip content={t("game.viewGraveyard")} side="top" className="player-graveyard-host">
             <button
               data-player-discard-target="true"

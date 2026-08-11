@@ -11746,11 +11746,12 @@
   position: relative;
   display: grid;
   width: 244px;
-  min-height: 54px;
+  height: 54px;
   grid-template-columns: 42px minmax(0, 1fr);
   align-items: center;
   gap: 10px;
   margin-bottom: 8px;
+  margin-left: 0;
   overflow: visible;
   border: 1px solid rgb(137 157 136 / 0.4);
   border-top-color: rgb(184 191 141 / 0.58);
@@ -11762,6 +11763,14 @@
     inset 0 -10px 20px rgb(0 0 0 / 0.16),
     0 10px 24px rgb(0 0 0 / 0.36);
   color: #d8dec2;
+  transform-origin: right center;
+  transition:
+    width 190ms cubic-bezier(0.16, 1, 0.3, 1),
+    height 190ms cubic-bezier(0.16, 1, 0.3, 1),
+    margin-left 190ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .player-archive-forecast::after {
@@ -11786,6 +11795,86 @@
 .player-archive-forecast.is-chaos {
   border-color: rgb(181 84 151 / 0.52);
   border-top-color: rgb(224 127 192 / 0.68);
+}
+
+.player-archive-forecast.is-source-return-target {
+  display: block;
+  width: 310px;
+  height: 98px;
+  margin-left: -66px;
+  overflow: hidden;
+  border-color: rgb(173 176 105 / 0.68);
+  border-top-color: rgb(224 217 139 / 0.8);
+  padding: 0;
+  background:
+    linear-gradient(100deg, rgb(56 63 36 / 0.98), rgb(25 34 25 / 0.99) 54%, rgb(12 20 18 / 0.99));
+  box-shadow:
+    inset 0 1px 0 rgb(250 238 172 / 0.1),
+    0 10px 24px rgb(0 0 0 / 0.4),
+    0 0 20px rgb(143 154 83 / 0.14);
+}
+
+.source-return-target-box {
+  display: grid;
+  width: 100%;
+  min-height: 96px;
+  grid-template-columns: 62px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 13px 18px;
+  color: #ede4b4;
+  text-align: left;
+  animation: source-return-target-in 170ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.source-return-target-copy {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  font-family: "Outfit", "Trebuchet MS", ui-sans-serif, system-ui, sans-serif;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.source-return-target-copy strong {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 850;
+  letter-spacing: 0.11em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.source-return-target-copy span {
+  color: #c5bd7d;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.player-archive-forecast.is-recycle-targeted {
+  border-color: rgb(190 225 147 / 0.82);
+  background:
+    linear-gradient(100deg, rgb(67 79 42 / 0.99), rgb(29 43 29 / 0.99) 54%, rgb(12 23 19 / 0.99));
+  box-shadow:
+    inset 0 1px 0 rgb(239 255 193 / 0.13),
+    0 10px 24px rgb(0 0 0 / 0.4),
+    0 0 24px rgb(75 197 116 / 0.3);
+  transform: scale(1.025);
+}
+
+.player-archive-forecast.is-source-return-target .player-archive-emblem {
+  width: 56px;
+  height: 56px;
+  border-color: rgb(196 204 124 / 0.66);
+  background: linear-gradient(145deg, #465538, #1c2d22);
+  color: #eef0bd;
+}
+
+@keyframes source-return-target-in {
+  from { opacity: 0.35; transform: translateX(5px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .player-archive-emblem {
@@ -11875,7 +11964,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .player-archive-value { animation: none; }
+  .player-archive-value,
+  .source-return-target-box { animation: none; }
+
+  .energy-recycle-drag-path,
+  .energy-recycle-target-ring { animation: none; }
+
+  .player-archive-forecast { transition: none; }
 }
 
 .game-screen .player-life-counter {

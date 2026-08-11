@@ -91,11 +91,31 @@ test("the Chronicler Archive forecast stays visible and owns the draw origin", (
 
   assert.match(boardSource, /<PlayerArchiveForecast game=\{game\}/u);
   assert.match(forecastSource, /data-player-archive-origin="true"/u);
-  assert.doesNotMatch(forecastSource, /<button|onClick=/u);
+  assert.match(forecastSource, /data-energy-recycle-target="true"/u);
+  assert.match(forecastSource, /sourceDragActive \? \(/u);
   assert.match(forecastSource, /<GameTooltip content=\{emptyHandTooltip\}/u);
   assert.doesNotMatch(forecastSource, /game\.drawReasonEmptyHand["']/u);
   assert.match(handSource, /fromArchive:\s*!initialHandIds\.current\.has/u);
   assert.match(stylesSource, /\.player-archive-forecast\s*\{[^}]*width:\s*244px;/su);
+});
+
+test("a recyclable Source keeps the broad right-side gesture while expanding the Archive", () => {
+  const handSource = readFileSync(new URL("../src/components/Hand.tsx", import.meta.url), "utf8");
+  const forecastSource = readFileSync(new URL("../src/components/PlayerArchiveForecast.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.doesNotMatch(handSource, /SourceActionMenu/u);
+  assert.match(handSource, /useSourceActionUiStore/u);
+  assert.match(handSource, /ENERGY_RECYCLE_SCREEN_RATIO = 0\.82/u);
+  assert.match(handSource, /ENERGY_RECYCLE_MIN_HORIZONTAL_DRAG = 48/u);
+  assert.match(handSource, /setDraggingRecyclableSourceId\(energyRecyclable \? card\.instanceId : undefined\)/u);
+  assert.match(handSource, /<EnergyRecycleDragHint/u);
+  assert.match(handSource, /className="energy-recycle-drag-path"/u);
+  assert.match(handSource, /className="energy-recycle-target-ring"/u);
+  assert.match(forecastSource, /className="source-return-target-box"/u);
+  assert.doesNotMatch(forecastSource, /source-return-target-button|recycleSelectedSource/u);
+  assert.match(stylesSource, /\.player-archive-forecast\.is-source-return-target\s*\{[^}]*width:\s*310px;[^}]*height:\s*98px;/su);
+  assert.match(stylesSource, /\.energy-recycle-drag-path\s*\{[^}]*stroke-dasharray:\s*7 8;/su);
 });
 
 test("the Host Archive counter counts attack discards down without displaying zero", () => {

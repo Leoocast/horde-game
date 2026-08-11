@@ -7,6 +7,7 @@ import { canPayWithAutomaticEnergy, totalEnergyCost } from "../engine/EnergySyst
 import { hasValidTargetSequence } from "../engine/Targeting";
 import { isQuickSpell } from "../engine/hostfallVocabulary";
 import { useGameStore } from "../store/useGameStore";
+import { useSourceActionUiStore } from "../store/useSourceActionUiStore";
 import { useTranslation } from "../i18n/useTranslation";
 import { useToastStore } from "../store/useToastStore";
 import { shouldShowFullCardImage } from "../utils/cardImages";
@@ -92,6 +93,7 @@ export function Hand({ game }: { game: GameState }) {
   const lockTributeOfTheFourSorrowsSelectionTarget = useGameStore((state) => state.lockTributeOfTheFourSorrowsSelectionTarget);
   const selectHandLimitDiscard = useGameStore((state) => state.selectHandLimitDiscard);
   const pushToast = useToastStore((state) => state.pushToast);
+  const setDraggingRecyclableSourceId = useSourceActionUiStore((state) => state.setDraggingRecyclableSourceId);
   const [hoveredHandId, setHoveredHandId] = useState<string | undefined>();
   const [suppressedClickId, setSuppressedClickId] = useState<string | undefined>();
   const [draggingCardId, setDraggingCardId] = useState<string | undefined>();
@@ -113,7 +115,10 @@ export function Hand({ game }: { game: GameState }) {
   const handSize = visibleHand.length;
   const handLayoutSignature = visibleHand.map((card) => card.instanceId).join("|");
 
-  useEffect(() => () => setEnergyRecycleDragActive(false), [setEnergyRecycleDragActive]);
+  useEffect(() => () => {
+    setEnergyRecycleDragActive(false);
+    setDraggingRecyclableSourceId(undefined);
+  }, [setDraggingRecyclableSourceId, setEnergyRecycleDragActive]);
 
   useLayoutEffect(() => {
     const region = handRegionRef.current;
@@ -203,13 +208,10 @@ export function Hand({ game }: { game: GameState }) {
   function updateCardDrag(card: CardInstance, pointerX: number, pointerY: number) {
     updateCenterGrabDrag(card.instanceId, pointerX, pointerY);
     const inRecycleZone = isInEnergyRecycleZone(card, pointerX, pointerY);
-    if (!inRecycleZone) {
-      setEnergyRecycleHint(undefined);
-      setEnergyRecycleDragActive(false);
-      return;
-    }
-    setEnergyRecycleHint({ pointer: { x: pointerX, y: pointerY }, target: readEnergyRecycleTarget() });
-    setEnergyRecycleDragActive(true);
+    setEnergyRecycleHint(inRecycleZone
+      ? { pointer: { x: pointerX, y: pointerY }, target: readEnergyRecycleTarget() }
+      : undefined);
+    setEnergyRecycleDragActive(inRecycleZone);
   }
 
   function isInEnergyRecycleZone(card: CardInstance, pointerX: number, pointerY: number): boolean {
@@ -242,6 +244,7 @@ export function Hand({ game }: { game: GameState }) {
     setEnergyRecycleHint(undefined);
     setEnergyRecycleDragActive(false);
     const releasedInRecycleZone = isInEnergyRecycleZone(card, info.point.x, info.point.y);
+    setDraggingRecyclableSourceId(undefined);
     dragOriginCenters.current.delete(card.instanceId);
     dragStartPointers.current.delete(card.instanceId);
     const playZoneY = window.innerHeight * DRAG_PLAY_SCREEN_RATIO;
@@ -390,6 +393,8 @@ export function Hand({ game }: { game: GameState }) {
                   selectHand(card.instanceId);
                   setHoveredCardId(undefined);
                   setHoveredHandId(undefined);
+                  setDraggingRecyclableSourceId(energyRecyclable ? card.instanceId : undefined);
+                  setEnergyRecycleDragActive(false);
                   setDraggingCardId(card.instanceId);
                 }}
                 onDrag={(_, info) => updateCardDrag(card, info.point.x, info.point.y)}

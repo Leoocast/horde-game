@@ -1,7 +1,7 @@
 # Plan de diseño e implementación de claridad en la UI
 
-Estado: **propuesta para discutir fase por fase; no implementada**  
-Última actualización: 2026-08-10
+Estado: **en ejecución fase por fase; Fases 1 y 2 cerradas, Fase 3 en QA visual**
+Última actualización: 2026-08-11
 
 ## Objetivo
 
@@ -322,11 +322,12 @@ vacía.
 
 ### Estado de implementación
 
-**Implementada como prototipo el 2026-08-11; pendiente de QA visual del usuario.**
+**Cerrada el 2026-08-11 tras QA visual del usuario.**
 
 - Una banda compacta sobre el panel de Vida muestra permanentemente **Archivo** y **Próximo robo**
   sin invadir Fuentes/Reserva ni permitir inspeccionar cartas ocultas.
-- La causa se muestra sólo cuando aporta contexto: **Mano vacía · +1**, **Fácil** o **Caos**.
+- **Fácil** y **Caos** se identifican dentro del indicador cuando explican el robo. El bono de Mano
+  vacía conserva el `2` limpio y explica **Mano vacía: +1 carta** mediante tooltip sobre la cifra.
 - `playerDrawForecast` es la única fuente de verdad para la previsión y la resolución real. Limita
   la cifra por las cartas disponibles en el Archivo, distingue Preparación de las reglas de robo 2
   y proyecta correctamente que el robo posterior a la última Preparación ya ocurre tras la Hueste.
@@ -403,6 +404,25 @@ el store y traducciones. La regla sigue resolviéndose en el engine.
 
 Un jugador puede descubrir y ejecutar ambas opciones sin conocer previamente un gesto secreto. La
 UI comunica que ambas consumen la misma acción.
+
+### Estado de implementación
+
+**Implementada como prototipo el 2026-08-11; pendiente de QA visual del usuario.**
+
+- Únicamente mientras se arrastra una Fuente que `canPlayerRecycleEnergy` permite devolver, el
+  indicador existente del Archivo crece hacia la izquierda hasta convertirse en una caja amplia.
+- Antes de alcanzar la zona válida comunica **Devolver Fuente · Arrastra a la derecha · Roba 1**.
+  Al entrar en ella cambia a **Suelta para devolver · Al Archivo · Roba 1** y refuerza su brillo.
+- Al alcanzar esa región reaparecen el feedback original de devolución: línea punteada con flecha,
+  etiqueta flotante y círculo pulsante centrado sobre la caja expandida del Archivo.
+- Se conserva el gesto anterior: desplazamiento horizontal mínimo y liberación en la región amplia
+  superior derecha de la pantalla. No se exige acertar con precisión en el panel del Archivo.
+- El Archivo no cambia al pasar el cursor, seleccionar o enfocar una Fuente, y no incorpora una
+  acción de clic. Jugar conserva exactamente su gesto normal hacia el Campo.
+- El vuelo final termina en el indicador del Archivo del Cronista. La devolución sigue resolviéndose
+  mediante `recycleEnergy`; la presentación no duplica sus reglas de disponibilidad.
+- Jugar o devolver sigue consumiendo el mismo permiso. No cambió timing, frecuencia, balance ni la
+  carta robada.
 
 ## Fase 4 — Clarificar Reserva actual, Reserva prevista y orden de pago
 
