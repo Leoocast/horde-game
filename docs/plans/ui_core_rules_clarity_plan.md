@@ -1,6 +1,6 @@
 # Plan de diseño e implementación de claridad en la UI
 
-Estado: **en ejecución fase por fase; Fases 1 a 4 cerradas, Fase 5 implementada y pendiente de QA visual**
+Estado: **en ejecución fase por fase; Fases 1 a 5 cerradas, Fase 6 en revisión global de UI**
 Última actualización: 2026-08-11
 
 ## Objetivo
@@ -545,7 +545,7 @@ primero, Fuentes después.
 
 ## Fase 5 — Hacer inequívoco el ataque al Archivo de la Hueste
 
-Estado: **implementada el 2026-08-11; pendiente de QA visual del usuario.**
+Estado: **cerrada el 2026-08-11 tras QA visual del usuario.**
 
 ### Problema actual
 
