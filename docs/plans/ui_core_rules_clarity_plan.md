@@ -1,6 +1,6 @@
 # Plan de diseño e implementación de claridad en la UI
 
-Estado: **en ejecución fase por fase; Fases 1 a 3 cerradas, Fase 4 en discusión**
+Estado: **en ejecución fase por fase; Fases 1 a 3 cerradas, Fase 4 en QA visual**
 Última actualización: 2026-08-11
 
 ## Objetivo
@@ -513,6 +513,32 @@ animadores sólo presentan la cantidad ya resuelta o prevista.
 
 La UI nunca promete Reserva que después se pierde y el jugador puede observar claramente Reserva
 primero, Fuentes después.
+
+### Estado de implementación
+
+**Implementada como prototipo el 2026-08-11; pendiente de QA visual del usuario.**
+
+- Se conserva el lenguaje actual de dos pistas y sus orbes; no se añadieron etiquetas, cifras ni
+  paneles permanentes.
+- Durante la Hueste, `pendingStoredEnergy` permanece pendiente y no se presenta todavía como un orbe
+  amarillo. La transferencia comienza únicamente cuando termina la Hueste y regresa el Cronista.
+- Cuando `releasePendingStoredEnergy` convierte esa cantidad en Reserva real, el mismo orbe sale de
+  su socket azul, viaja al primer socket amarillo libre y adopta el acabado dorado cerca del destino.
+  La transferencia reutiliza el lenguaje del flujo de EnergÃ­a de las cartas: una corriente dorada con
+  motas conduce una semilla por una curva orgÃ¡nica; al impactar, el orbe real â€”incluidos su lÃ­quido,
+  reflejo y anillo interiorâ€” crece, brilla y se asienta en el socket. La Fuente azul se regenera con el
+  mismo pulso al concluir la conversiÃ³n.
+- El socket azul queda libre durante el vuelo y recupera su orbe al terminar, mientras el orbe
+  transformado permanece en la pista amarilla como Reserva disponible.
+- La cantidad y los destinos se derivan de la reducción pendiente y del aumento de Reserva ya
+  resueltos por el engine; por ello
+  Preparaciones tempranas, Fuentes usadas y espacios fuera del límite de tres no producen vuelos.
+- La liberación se limita además por las Fuentes que continúan presentes y listas al terminar la
+  Hueste. Una Fuente destruida —por ejemplo, mediante Tributo de los Cuatro Pesares— no conserva
+  una Reserva pendiente fantasma.
+- Varias transferencias se escalonan brevemente. Con movimiento reducido, la transformación usa un
+  fundido en el socket de destino sin recorrido espacial.
+- No cambió la regla de Reserva, el límite de tres ni el orden automático de pago.
 
 ## Fase 5 — Hacer inequívoco el ataque al Archivo de la Hueste
 

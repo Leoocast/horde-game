@@ -22,6 +22,7 @@ import { queueUnusedNormalEnergy, releasePendingStoredEnergy } from "../src/engi
 import { performPlayerDraw, playerDrawForecast, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
 import { cardStatState, sortTraitsForDisplay } from "../src/utils/selectors";
 import { getHandCardPresentationState } from "../src/components/handCardPresentation";
+import { displayedReserveEnergy, reserveTransferPresentation } from "../src/components/reserveTransferPresentation";
 import {
   fitHoverCardDisplay,
   HAND_CARD_DISPLAY_HEIGHT,
@@ -395,6 +396,39 @@ test("standard games keep nine energy cards in the player deck", () => {
   assert.equal(cards.filter((card) => card.kinds.includes("SOURCE")).length, 9);
 });
 
+test("Reserve presentation waits for the Host to finish before moving the Source", () => {
+  const before = { available: 1, pending: 0, stored: 0 };
+  const queued = { available: 1, pending: 1, stored: 0 };
+  const released = { available: 1, pending: 0, stored: 1 };
+
+  assert.equal(reserveTransferPresentation(before, queued), undefined);
+  assert.deepEqual(reserveTransferPresentation(queued, released), {
+    amount: 1,
+    sourceStartIndex: 0,
+    targetStartIndex: 0,
+  });
+  assert.equal(displayedReserveEnergy(before), 0);
+  assert.equal(displayedReserveEnergy(queued), 0);
+  assert.equal(displayedReserveEnergy(released), 1);
+});
+
+test("Reserve transfer respects occupied yellow sockets and the cap", () => {
+  assert.deepEqual(
+    reserveTransferPresentation(
+      { available: 3, pending: 1, stored: 2 },
+      { available: 3, pending: 0, stored: 3 },
+    ),
+    { amount: 1, sourceStartIndex: 2, targetStartIndex: 2 },
+  );
+  assert.equal(
+    reserveTransferPresentation(
+      { available: 2, pending: 0, stored: 3 },
+      { available: 2, pending: 0, stored: 3 },
+    ),
+    undefined,
+  );
+});
+
 test("unused Source Energy stays pending until the Host turn ends", () => {
   const game = createTestGame();
   const lands = addSources(game, 5);
@@ -407,6 +441,22 @@ test("unused Source Energy stays pending until the Host turn ends", () => {
   assert.equal(releasePendingStoredEnergy(game), 3);
   assert.equal(game.player.pendingStoredEnergy, 0);
   assert.equal(game.player.energyPool.stored, 3);
+});
+
+test("a Source destroyed during the Host turn cannot become Stored Energy", () => {
+  const game = createTestGame();
+  game.player.energyPool.stored = 1;
+  const lands = addSources(game, 2);
+
+  const hostTurn = endPlayerTurn(game);
+  assert.equal(hostTurn.player.pendingStoredEnergy, 2);
+  const destroyedSource = hostTurn.player.field.find((card) => card.instanceId === lands[0].instanceId);
+  assert.ok(destroyedSource);
+  destroyPermanent(hostTurn, destroyedSource);
+
+  const nextPlayerTurn = finishHostTurn(hostTurn);
+  assert.equal(nextPlayerTurn.player.pendingStoredEnergy, 0);
+  assert.equal(nextPlayerTurn.player.energyPool.stored, 2);
 });
 
 test("spent Sources do not become Stored Energy", () => {

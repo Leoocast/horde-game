@@ -149,6 +149,27 @@ test("a recyclable Source keeps the broad right-side gesture while lighting up t
   assert.match(stylesSource, /\.energy-recycle-drag-path\s*\{[^}]*stroke-dasharray:\s*7 8;/su);
 });
 
+test("unused blue Source orbs travel into yellow Reserve sockets before reappearing", () => {
+  const battlefieldSource = readFileSync(new URL("../src/components/Battlefield.tsx", import.meta.url), "utf8");
+  const animatorSource = readFileSync(new URL("../src/components/ReserveTransferAnimator.tsx", import.meta.url), "utf8");
+  const presentationSource = readFileSync(new URL("../src/components/reserveTransferPresentation.ts", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(battlefieldSource, /reserveTransferPresentation\(previous, current\)/u);
+  assert.doesNotMatch(battlefieldSource, /"is-pending"/u);
+  assert.match(battlefieldSource, /<ReserveTransferAnimator/u);
+  assert.match(presentationSource, /previous\.pending - current\.pending/u);
+  assert.match(presentationSource, /current\.stored - previous\.stored/u);
+    assert.match(animatorSource, /<EnergyFlowTravel/u);
+    assert.match(animatorSource, /<EnergyFlowImpact/u);
+    assert.match(animatorSource, /reserve-transfer-arrival/u);
+    assert.match(animatorSource, /className="mana-alchemy-orb"/u);
+    assert.match(animatorSource, /className="mana-alchemy-liquid"/u);
+    assert.match(stylesSource, /\.reserve-transfer-arrival-yellow\s*\{/u);
+    assert.match(stylesSource, /\.reserve-transfer-arrival\.is-ready \.mana-alchemy-orb\s*\{/u);
+    assert.match(stylesSource, /\.mana-alchemy-socket\.is-reserve-transfer-source \.mana-alchemy-orb,[^}]*visibility:\s*hidden;/su);
+  });
+
 test("the Host Archive counter counts attack discards down without displaying zero", () => {
   assert.equal(remainingArchiveDiscardPreview(7, 0), 7);
   assert.equal(remainingArchiveDiscardPreview(7, 1), 6);
