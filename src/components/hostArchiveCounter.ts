@@ -1,12 +1,28 @@
-/**
- * The attack declaration owns the total discard preview, while the mill animator progressively
- * moves those cards out of the visible Archive. Only the still-pending amount belongs beside the
- * live Archive count; returning undefined keeps the HUD from flashing a misleading `- 0`.
- */
-export function remainingArchiveDiscardPreview(
-  plannedDiscards: number,
-  alreadyPreviewedDiscards: number,
-): number | undefined {
-  const remaining = Math.max(0, plannedDiscards - alreadyPreviewedDiscards);
-  return remaining > 0 ? remaining : undefined;
+export type HostArchiveAttackPreview = {
+  conversionCount: number;
+  discardCount: number;
+  projectedArchiveCount: number;
+  visibleCardCount: number;
+};
+
+/** Pure presentation model for the attack declaration. It mirrors the engine's integer
+ * conversion and caps the result to cards that actually remain in the Host Archive. */
+export function hostArchiveAttackPreview(
+  archiveCount: number,
+  attackDamage: number,
+  damagePerArchiveDiscard: number,
+): HostArchiveAttackPreview {
+  const safeArchiveCount = Math.max(0, Math.floor(archiveCount));
+  const safeDamage = Math.max(0, attackDamage);
+  const safeThreshold = Math.max(1, damagePerArchiveDiscard);
+  const conversionCount = Math.floor(safeDamage / safeThreshold);
+  const discardCount = Math.min(safeArchiveCount, conversionCount);
+  const visibleCardCount = Math.min(3, discardCount);
+
+  return {
+    conversionCount,
+    discardCount,
+    projectedArchiveCount: safeArchiveCount - discardCount,
+    visibleCardCount,
+  };
 }

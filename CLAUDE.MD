@@ -393,8 +393,13 @@ Fuente, Reserva y ataque al Archivo debe seguir el plan de diseño e implementac
 aprobación del usuario antes de editar código; la preparación técnica queda subordinada al diseño
 aprobado y el plan no autoriza por sí solo cambios de reglas ni la implementación del tutorial.
 
-Estado vigente de ese plan: las Fases 1 (Preparación), 2 (Archivo y próximo robo) y 3 (Acción de
-Fuente) están cerradas; la Fase 4 (Reserva y orden de pago) tiene un prototipo pendiente de QA visual.
+Estado vigente de ese plan: las Fases 1 (Preparación), 2 (Archivo y próximo robo), 3 (Acción de
+Fuente) y 4 (Reserva y orden de pago) están cerradas; la Fase 5 (ataque al Archivo de la Hueste)
+está implementada y pendiente de QA visual del usuario. Su contrato es: panel **Archivo de la
+Hueste**, conteo `actual → restante`, resultado físico reducido a siluetas y `N`, y tooltip secundario
+**Cálculo del ataque** con la operación compacta `Fuerza ÷ umbral → resultado`. El preview usa
+`hostRules.damagePerArchiveDiscard`, se limita al Archivo restante y desaparece cuando comienza la
+resolución animada. Los CTA son **Elegir atacantes**, **Atacar el Archivo** y **Pasar el combate**.
 `playerDrawForecast` en
 `src/engine/TurnManager.ts` es la fuente única para el robo real y su previsión. La devolución
 conserva el gesto amplio hacia la derecha y sólo expande visualmente el Archivo durante un arrastre

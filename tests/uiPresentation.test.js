@@ -18,7 +18,7 @@ import {
 import { grownVfxSurface, sharedVfxSourceTop } from "../src/components/sharedVfxRenderer";
 import { frameLeafRootIndex, frameRootPathSpecs } from "../src/components/GrowthBuffAnimator";
 import { buildStorm, stormBoltTones } from "../src/components/StormBuffAnimator";
-import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
+import { hostArchiveAttackPreview } from "../src/components/hostArchiveCounter";
 import { hostAttackPlayerHitDelay } from "../src/components/hostAttackPresentation";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { playerAttackHostHitDelay } from "../src/components/playerAttackPresentation";
@@ -174,12 +174,51 @@ test("unused blue Source orbs travel into yellow Reserve sockets before reappear
     assert.match(stylesSource, /@keyframes mana-energy-orb-spend-blue[\s\S]*?100%[^}]*saturate\(0\.76\) brightness\(0\.82\)/u);
   });
 
-test("the Host Archive counter counts attack discards down without displaying zero", () => {
-  assert.equal(remainingArchiveDiscardPreview(7, 0), 7);
-  assert.equal(remainingArchiveDiscardPreview(7, 1), 6);
-  assert.equal(remainingArchiveDiscardPreview(7, 6), 1);
-  assert.equal(remainingArchiveDiscardPreview(7, 7), undefined);
-  assert.equal(remainingArchiveDiscardPreview(0, 0), undefined);
+test("the Host Archive attack preview shows the physical result and caps it to the Archive", () => {
+  assert.deepEqual(hostArchiveAttackPreview(42, 7, 3), {
+    conversionCount: 2,
+    discardCount: 2,
+    projectedArchiveCount: 40,
+    visibleCardCount: 2,
+  });
+  assert.deepEqual(hostArchiveAttackPreview(42, 13, 3), {
+    conversionCount: 4,
+    discardCount: 4,
+    projectedArchiveCount: 38,
+    visibleCardCount: 3,
+  });
+  assert.deepEqual(hostArchiveAttackPreview(2, 99, 3), {
+    conversionCount: 33,
+    discardCount: 2,
+    projectedArchiveCount: 0,
+    visibleCardCount: 2,
+  });
+  assert.deepEqual(hostArchiveAttackPreview(42, 2, 3), {
+    conversionCount: 0,
+    discardCount: 0,
+    projectedArchiveCount: 42,
+    visibleCardCount: 0,
+  });
+});
+
+test("the Host attack preview shows cards going to Memory and keeps the math in a tooltip", () => {
+  const duelHudSource = readFileSync(new URL("../src/components/DuelHud.tsx", import.meta.url), "utf8");
+  const phaseOrbSource = readFileSync(new URL("../src/components/PhaseOrb.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(duelHudSource, /t\("game\.hostArchive"\)/u);
+  assert.match(duelHudSource, /className="host-attack-card-loss"/u);
+  assert.match(duelHudSource, /t\("game\.attackCalculation"\)/u);
+  assert.match(duelHudSource, /\u00f7 \$\{archiveDiscardThreshold\} \u2192/u);
+  assert.doesNotMatch(duelHudSource, /host-attack-formula|= -/u);
+  assert.match(stylesSource, /\.host-attack-card-loss i\s*\{/u);
+  assert.match(stylesSource, /\.host-attack-calculation-tooltip\s*\{/u);
+  assert.match(phaseOrbSource, /t\("orb\.chooseAttackers"\)/u);
+  assert.match(phaseOrbSource, /t\("orb\.attackArchive"\)/u);
+  assert.match(phaseOrbSource, /t\("orb\.passCombat"\)/u);
+  assert.equal(translate("es", "orb.chooseAttackers"), "Elegir atacantes");
+  assert.equal(translate("es", "orb.attackArchive"), "Atacar el Archivo");
+  assert.equal(translate("es", "orb.passCombat"), "Pasar el combate");
 });
 
 test("Vaelor uses his personal defense animation only when he wins and survives", () => {

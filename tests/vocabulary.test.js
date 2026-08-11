@@ -26,6 +26,8 @@ test("localized interface copy contains no retired public vocabulary", () => {
 test("the in-game Host counter uses the compact side label", () => {
   assert.equal(translate("en", "game.hostDeck"), "Host");
   assert.equal(translate("es", "game.hostDeck"), "Hueste");
+  assert.equal(translate("en", "game.hostArchive"), "Host Archive");
+  assert.equal(translate("es", "game.hostArchive"), "Archivo de la Hueste");
 });
 
 test("Flying explains that it can defend against other Flying Echoes", () => {

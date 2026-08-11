@@ -243,6 +243,10 @@ entre resoluciones— aplica sólo a la técnica equivocada. Hay dos cosas disti
 El escalado actual —118 `clamp()`, 174 unidades `vw/vh`, 44 media queries— no se ve afectado por
 ninguna de las dos técnicas.
 
+Hay una demostración ejecutable de ambas en [`dev/mockups/`](../../dev/mockups/README.md): materiales
+procedurales y marcos 9-slice sin un solo archivo de imagen, con la paleta y las fuentes reales del
+juego.
+
 ### Propuesta
 
 Es la fase más cara y la de retorno más difuso, por eso va última. **Es opcional:** si sólo se

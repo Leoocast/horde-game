@@ -1,4 +1,4 @@
-import { Archive, Check, Droplet, Heart, Skull, Swords } from "lucide-react";
+import { Archive, Check, Droplet, Heart, Skull } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
@@ -13,7 +13,7 @@ import { Card } from "./Card";
 import { GameTooltip } from "./GameTooltip";
 import { GraveyardViewerModal } from "./GraveyardViewerModal";
 import { hostAttackPlayerHitDelay } from "./hostAttackPresentation";
-import { remainingArchiveDiscardPreview } from "./hostArchiveCounter";
+import { hostArchiveAttackPreview } from "./hostArchiveCounter";
 import { playerAttackHostHitDelay } from "./playerAttackPresentation";
 import { PlayerArchiveForecast } from "./PlayerArchiveForecast";
 import { setupProgress } from "./setupPresentation";
@@ -56,12 +56,16 @@ export function DuelHud({ game }: { game: GameState }) {
   }, 0);
   const archiveDiscardThreshold = game.hostRules.damagePerArchiveDiscard;
   const poisonDiscardThreshold = game.hostRules.poisonPerArchiveDiscard;
-  const pendingArchiveDiscards = Math.floor(pendingDamage / archiveDiscardThreshold);
-  const remainingArchiveDiscards = remainingArchiveDiscardPreview(
-    pendingArchiveDiscards,
-    previewMillPendingInLibrary,
-  );
   const attackCountVisible = game.phase === "combat" && game.activeSide === "player" && game.setupTurnsRemaining === 0 && game.combat.playerAttackers.length > 0;
+  const attackPreviewVisible = attackCountVisible && !playerAttackAnimation && hostMillPreviewCards.length === 0;
+  const archiveAttackPreview = hostArchiveAttackPreview(
+    visualHostLibraryCount,
+    pendingDamage,
+    archiveDiscardThreshold,
+  );
+  const attackCalculation = archiveAttackPreview.conversionCount === archiveAttackPreview.discardCount
+    ? `${pendingDamage} ÷ ${archiveDiscardThreshold} → ${archiveAttackPreview.discardCount}`
+    : `${pendingDamage} ÷ ${archiveDiscardThreshold} → ${archiveAttackPreview.conversionCount} · ${visualHostLibraryCount} → ${archiveAttackPreview.discardCount}`;
   const latestLifestealAttack = lifestealAttackAnimations[lifestealAttackAnimations.length - 1];
 
   useEffect(() => {
@@ -292,20 +296,21 @@ export function DuelHud({ game }: { game: GameState }) {
               <Skull size={24} />
             </div>
             <div className="host-deck-counter-copy">
-              <div className="old-title host-deck-counter-title text-xs font-bold uppercase tracking-wide">{t("game.hostDeck")}</div>
+              <div className="old-title host-deck-counter-title text-xs font-bold uppercase tracking-wide">{t("game.hostArchive")}</div>
               <div className="host-deck-counter-values flex items-end gap-2 leading-none">
                 <div className="host-deck-count text-3xl font-black">{visualHostLibraryCount}</div>
                 <AnimatePresence initial={false} mode="popLayout">
-                  {attackCountVisible && remainingArchiveDiscards !== undefined && (
+                  {attackPreviewVisible && (
                     <motion.span
-                      key={remainingArchiveDiscards}
-                      className="host-deck-pending-mill"
+                      key={archiveAttackPreview.projectedArchiveCount}
+                      className="host-deck-projection"
                       initial={{ opacity: 0, x: -8, scale: 0.8 }}
                       animate={{ opacity: 1, x: 0, scale: 1 }}
                       exit={{ opacity: 0, x: -6, scale: 0.86 }}
                       transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
                     >
-                      - {remainingArchiveDiscards}
+                      <span className="host-deck-projection-arrow" aria-hidden="true">→</span>
+                      <span className="host-deck-projected-count">{archiveAttackPreview.projectedArchiveCount}</span>
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -345,7 +350,7 @@ export function DuelHud({ game }: { game: GameState }) {
             </button>
           </GameTooltip>
           <AnimatePresence initial={false} mode="popLayout">
-            {attackCountVisible && (
+            {attackPreviewVisible && (
               <motion.div
                 key={game.combat.playerAttackers.join("|")}
                 className="host-attack-count-host"
@@ -354,10 +359,29 @@ export function DuelHud({ game }: { game: GameState }) {
                 exit={{ opacity: 0, x: -24, scaleX: 0.62 }}
                 transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
               >
-                <GameTooltip content={t("game.attackMillTooltip", { damage: pendingDamage, count: pendingArchiveDiscards })} side="bottom">
-                  <div className="host-attack-count" aria-label={t("game.attackMillAria", { damage: pendingDamage, count: pendingArchiveDiscards })}>
-                    <Swords size={17} strokeWidth={2.3} />
-                    <span className="host-attack-formula">{pendingDamage} / {archiveDiscardThreshold} = - {pendingArchiveDiscards}</span>
+                <GameTooltip
+                  content={(
+                    <span className="host-attack-calculation-tooltip">
+                      <strong>{t("game.attackCalculation")}</strong>
+                      <span>{attackCalculation}</span>
+                    </span>
+                  )}
+                  side="bottom"
+                >
+                  <div
+                    className="host-attack-count"
+                    tabIndex={0}
+                    aria-label={t("game.attackMillAria", { damage: pendingDamage, count: archiveAttackPreview.discardCount })}
+                  >
+                    <span className="host-attack-card-loss" aria-hidden="true">
+                      {Array.from({ length: archiveAttackPreview.visibleCardCount }, (_, index) => (
+                        <i key={index} />
+                      ))}
+                      {archiveAttackPreview.discardCount === 0 && <i className="is-empty" />}
+                    </span>
+                    <span className="host-attack-result-copy">
+                      <strong>{archiveAttackPreview.discardCount}</strong>
+                    </span>
                   </div>
                 </GameTooltip>
               </motion.div>

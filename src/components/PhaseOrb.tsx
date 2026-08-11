@@ -160,15 +160,15 @@ function getOrbState(
     return { label: t("orb.endTurn"), Icon: Check, action: actions.runHostMain, tone: "host" as const };
   }
   if (game.phase === "combat" && game.combat.playerAttackers.length > 0) {
-    return { label: t("common.confirm"), Icon: Check, action: actions.finishPlayerCombat, tone: "confirm" as const };
+    return { label: t("orb.attackArchive"), Icon: Check, action: actions.finishPlayerCombat, tone: "confirm" as const };
   }
   if (game.phase === "combat") {
-    return { label: t("orb.noAttack"), Icon: Check, action: actions.goToEndStep, tone: "main" as const };
+    return { label: t("orb.passCombat"), Icon: Check, action: actions.goToEndStep, tone: "main" as const };
   }
   if (game.phase === "end") {
     return { label: t("orb.endTurn"), Icon: Check, action: actions.finishPlayerTurnAndRunHost, tone: "host" as const };
   }
-  return { label: t("orb.toBattle"), Icon: Swords, action: actions.startPlayerCombat, tone: "default" as const };
+  return { label: t("orb.chooseAttackers"), Icon: Swords, action: actions.startPlayerCombat, tone: "default" as const };
 }
 
 function getDefendBlockedReason(game: GameState, t: ReturnType<typeof useTranslation>): string | undefined {

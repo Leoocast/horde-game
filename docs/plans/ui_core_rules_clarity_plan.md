@@ -1,6 +1,6 @@
 # Plan de diseño e implementación de claridad en la UI
 
-Estado: **en ejecución fase por fase; Fases 1 a 3 cerradas, Fase 4 en QA visual**
+Estado: **en ejecución fase por fase; Fases 1 a 4 cerradas, Fase 5 implementada y pendiente de QA visual**
 Última actualización: 2026-08-11
 
 ## Objetivo
@@ -516,7 +516,7 @@ primero, Fuentes después.
 
 ### Estado de implementación
 
-**Implementada como prototipo el 2026-08-11; pendiente de QA visual del usuario.**
+**Cerrada el 2026-08-11 tras QA visual del usuario.**
 
 - Se conserva el lenguaje actual de dos pistas y sus orbes; no se añadieron etiquetas, cifras ni
   paneles permanentes.
@@ -527,10 +527,10 @@ primero, Fuentes después.
   amarillo. La transferencia comienza únicamente cuando termina la Hueste y regresa el Cronista.
 - Cuando `releasePendingStoredEnergy` convierte esa cantidad en Reserva real, el mismo orbe sale de
   su socket azul, viaja al primer socket amarillo libre y adopta el acabado dorado cerca del destino.
-  La transferencia reutiliza el lenguaje del flujo de EnergÃ­a de las cartas: una corriente dorada con
-  motas conduce una semilla por una curva orgÃ¡nica; al impactar, el orbe real â€”incluidos su lÃ­quido,
-  reflejo y anillo interiorâ€” crece, brilla y se asienta en el socket. La Fuente azul se regenera con el
-  mismo pulso al concluir la conversiÃ³n.
+  La transferencia reutiliza el lenguaje del flujo de Energía de las cartas: una corriente dorada con
+  motas conduce una semilla por una curva orgánica; al impactar, el orbe real —incluidos su líquido,
+  reflejo y anillo interior— crece, brilla y se asienta en el socket. La Fuente azul se regenera con el
+  mismo pulso al concluir la conversión.
 - El socket azul queda libre durante el vuelo y recupera su orbe al terminar, mientras el orbe
   transformado permanece en la pista amarilla como Reserva disponible.
 - La cantidad y los destinos se derivan de la reducción pendiente y del aumento de Reserva ya
@@ -545,6 +545,8 @@ primero, Fuentes después.
 
 ## Fase 5 — Hacer inequívoco el ataque al Archivo de la Hueste
 
+Estado: **implementada el 2026-08-11; pendiente de QA visual del usuario.**
+
 ### Problema actual
 
 La convención habitual de otros juegos hace pensar que los Ecos atacan a los Ecos enemigos. El panel
@@ -554,53 +556,39 @@ condición de derrota.
 La fórmula actual `daño / umbral = -cartas` exige interpretar división, redondeo y resta al mismo
 tiempo.
 
-### Propuesta inicial para discutir
+### Diseño aprobado e implementado
 
-Reforzar el panel superior:
+Se compararon cuatro variantes en `dev/mockups/host-archive-combat-options.html`. El usuario eligió
+la opción 4, **Cartas que caerán**:
 
-```text
-HUESTE
-Archivo: 24 cartas
-```
+- el panel se identifica permanentemente como **Archivo de la Hueste**;
+- al seleccionar atacantes, el conteo anticipa `actual → restante`;
+- una placa contigua usa hasta tres siluetas como símbolo de las cartas que irán a Memoria; las
+  siluetas nunca intentan repetir o desglosar el total numérico;
+- la placa no lleva copy: las siluetas comunican “cartas” y `N` es el único total visible;
+- la matemática vive en un tooltip titulado **Cálculo del ataque**, con la forma compacta
+  `7 ÷ 3 → 2`; no repite “Fuerza”, “cartas” ni “Memoria”;
+- se usa una flecha y no una igualdad porque la conversión descarta cualquier sobrante;
+- el preview desaparece al comenzar la resolución para que las cartas animadas y los conteos reales
+  comuniquen el resultado sin competir con una previsión ya consumida;
+- **A batalla**, **Confirmar** y **No atacar** pasan a **Elegir atacantes**,
+  **Atacar el Archivo** y **Pasar el combate** respectivamente.
 
-Al entrar en combate:
-
-- el Archivo se ilumina como destino;
-- las trayectorias de los atacantes terminan en él;
-- los Ecos enemigos no parecen targets del ataque normal;
-- **A batalla** cambia a **Elegir atacantes**;
-- **Confirmar** cambia a **Atacar el Archivo**;
-- **No atacar** cambia a **Pasar el combate**.
-
-Sustituir la fórmula principal por una equivalencia y un medidor:
-
-```text
-FUERZA CONTRA EL ARCHIVO
-■ ■ ■ | ■ ■ □
-5 de Fuerza → 1 carta
-Falta 1 para descartar otra
-```
-
-El conteo puede anticipar:
-
-```text
-Archivo: 24 → 23
-```
-
-La fórmula exacta permanece disponible en un tooltip secundario.
+El modelo de presentación usa `hostRules.damagePerArchiveDiscard`, limita el resultado a las cartas
+que realmente quedan en el Archivo y cubre cero, una, varias y más de tres cartas.
 
 ### Beneficio para el jugador
 
 Comprende dónde debe atacar, cómo progresa hacia la victoria y qué conseguirá antes de confirmar el
 combate.
 
-### Decisiones que deben discutirse antes de implementar
+### Decisiones cerradas en esta iteración
 
-- cuánto debe cambiar el panel de la Hueste fuera del combate;
-- aspecto del medidor de bloques;
-- copy para Fuerza insuficiente y Fuerza sobrante;
-- intensidad del foco sobre el Archivo;
-- nombres definitivos de los tres botones de combate.
+- el panel nombra el Archivo también fuera del combate;
+- no se utiliza medidor de bloques;
+- la placa muestra el resultado incluso cuando es cero;
+- la explicación secundaria es puramente matemática;
+- los tres botones de combate nombran la acción concreta.
 
 ### Límites de la fase
 
