@@ -8565,13 +8565,7 @@
     bottom: 64px;
   }
 
-  .mana-energy-track-yellow.is-setup-latent {
-    opacity: 0.36;
-    filter: saturate(0.18) brightness(0.58);
-    transition: opacity 260ms ease, filter 260ms ease;
-  }
-
-  .mana-reserve-latent-note {
+  .mana-reserve-setup-note {
     position: absolute;
     left: 18px;
     bottom: 107px;
@@ -8580,32 +8574,32 @@
     width: 178px;
     align-items: center;
     gap: 6px;
-    color: #9f987b;
+    color: #c8b77c;
     font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
     line-height: 1;
     text-transform: uppercase;
     text-shadow: 0 1px 5px rgb(0 0 0 / 0.85);
   }
 
-  .mana-reserve-latent-note svg {
+  .mana-reserve-setup-note svg {
     flex: 0 0 auto;
-    color: #b9a66d;
-    filter: drop-shadow(0 0 5px rgb(181 153 79 / 0.24));
+    color: #e0c56f;
+    filter: drop-shadow(0 0 5px rgb(220 177 67 / 0.3));
   }
 
-  .mana-reserve-latent-note span {
+  .mana-reserve-setup-note span {
     display: grid;
     gap: 2px;
   }
 
-  .mana-reserve-latent-note strong {
-    color: #c7b986;
+  .mana-reserve-setup-note strong {
+    color: #f0d788;
     font-size: 8px;
     letter-spacing: 0.16em;
   }
 
-  .mana-reserve-latent-note small {
-    color: #817f6e;
+  .mana-reserve-setup-note small {
+    color: #b6ad8b;
     font-size: 6px;
     font-weight: 800;
     letter-spacing: 0.045em;

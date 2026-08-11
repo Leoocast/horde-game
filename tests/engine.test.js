@@ -581,6 +581,27 @@ test("Veiled-Dawn Flower and Liora, Keeper of the Grove fill Stored Energy immed
   assert.equal(nextPlayerTurn.player.energyPool.stored, 3);
 });
 
+test("card effects create usable Reserve during Preparation", () => {
+  const game = createInitialGame(playerDeck, hostDeck, "setup-card-reserve", 2);
+  const gatherer = addCard(game, cardFromDeck("veiled_dawn_flower", "player"));
+
+  const generated = activateAbility(game, gatherer.instanceId, "veiled_dawn_flower_gain_energy");
+  assert.equal(generated.setupTurnsRemaining, 2);
+  assert.equal(generated.lastActionResult?.ok, true);
+  assert.equal(generated.player.energyPool.stored, 1);
+
+  const spell = addCard(
+    generated,
+    customCard("setup_reserve_spell", "player", { zone: "hand", kinds: ["SPELL"], energyCost: 1 }),
+    "player",
+    "hand",
+  );
+  const spent = castCard(generated, spell.instanceId);
+
+  assert.equal(spent.lastActionResult?.ok, true);
+  assert.equal(spent.player.energyPool.stored, 0);
+});
+
 test("Stored Energy can pay a creature cost", () => {
   const game = createTestGame();
   game.player.energyPool.stored = 1;

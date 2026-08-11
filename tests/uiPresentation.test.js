@@ -183,6 +183,20 @@ test("unused blue Source orbs travel into yellow Reserve sockets before reappear
     assert.match(stylesSource, /@keyframes mana-energy-orb-spend-blue[\s\S]*?100%[^}]*saturate\(0\.76\) brightness\(0\.82\)/u);
   });
 
+test("Preparation keeps card-generated Reserve available and delays only unused Sources", () => {
+  const battlefieldSource = readFileSync(new URL("../src/components/Battlefield.tsx", import.meta.url), "utf8");
+  const translationsSource = readFileSync(new URL("../src/i18n/translations.ts", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(battlefieldSource, /reserveSetupActive/u);
+  assert.match(battlefieldSource, /game\.reserveEffectsNow/u);
+  assert.match(battlefieldSource, /game\.reserveSourcesAfterHost/u);
+  assert.doesNotMatch(battlefieldSource, /is-setup-latent|is-reserve-latent|LockKeyhole/u);
+  assert.match(translationsSource, /"game\.reserveSetupAria": "La Reserva está disponible durante Preparación/u);
+  assert.match(stylesSource, /\.mana-reserve-setup-note\s*\{/u);
+  assert.doesNotMatch(stylesSource, /\.mana-energy-track-yellow\.is-setup-latent/u);
+});
+
 test("the Host Archive attack preview shows the physical result and caps it to the Archive", () => {
   assert.deepEqual(hostArchiveAttackPreview(42, 7, 3), {
     conversionCount: 2,

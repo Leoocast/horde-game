@@ -237,8 +237,10 @@ entender que la acción final despertará a la Hueste.
   pendiente. El número de rombos procede de la dificultad y no está fijado en tres.
 - La acción principal conserva el lenguaje de turnos solicitado en QA: **Turno extra** en los pasos
   intermedios y **Terminar turno** en el último.
-- La pista de Reserva permanece visible pero apagada y sellada, con el texto **Se activa al despertar
-  la Hueste**. Su lectura accesible comunica el mismo estado sin depender del color.
+- La pista de Reserva permanece visible y utilizable durante Preparación: los efectos de carta pueden
+  llenarla y esa Energía puede gastarse de inmediato. El aviso separa esa disponibilidad de la
+  conversión automática: **Efectos de carta: ahora**; **Fuentes sin usar: tras la Hueste**. No se usa
+  un candado ni se apagan los orbes, porque sólo se retrasa la conversión de Fuentes, no la Reserva.
 - La presentación equivalente existe en ES y EN. No se modificaron reglas, dificultad, robo, Reserva
   ni balance.
 - El componente de estado legado ya no conserva el antiguo mensaje de “turnos del jugador” y el

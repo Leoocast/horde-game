@@ -429,6 +429,12 @@ imprime nunca; sólo aparece una insignia `+1` cuando `playerDrawForecast` super
 un arrastre válido de Devolver Fuente la caja del Archivo se enciende y crece; el texto de la acción
 pertenece a la etiqueta flotante del arrastre y no vuelve a un panel propio.
 
+Durante Preparación la Reserva no está bloqueada: los efectos de Ecos que generan Energía la llenan
+de inmediato y puede gastarse en ese mismo paso. Lo que espera al turno de la Hueste es sólo la
+conversión automática de Fuentes sin usar. La pista amarilla debe conservar sus orbes y colores
+activos; el aviso de Preparación distingue **Efectos de carta: ahora** de **Fuentes sin usar: tras la
+Hueste** y nunca vuelve a presentar la Reserva completa como sellada.
+
 ## Preferencias de trabajo
 
 - Cambios pequeños y verificables.
