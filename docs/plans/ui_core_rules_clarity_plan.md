@@ -520,6 +520,9 @@ primero, Fuentes después.
 
 - Se conserva el lenguaje actual de dos pistas y sus orbes; no se añadieron etiquetas, cifras ni
   paneles permanentes.
+- La pista azul distingue sus tres estados por material y volumen, no sólo por luminosidad: una
+  Fuente lista es una esfera encendida, una Fuente gastada conserva una esfera de vidrio azul oscuro
+  sin líquido y una Fuente todavía no jugada deja visible únicamente el socket.
 - Durante la Hueste, `pendingStoredEnergy` permanece pendiente y no se presenta todavía como un orbe
   amarillo. La transferencia comienza únicamente cuando termina la Hueste y regresa el Cronista.
 - Cuando `releasePendingStoredEnergy` convierte esa cantidad en Reserva real, el mismo orbe sale de

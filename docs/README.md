@@ -37,6 +37,8 @@ retirado. Su fuente de verdad es el JSON del deck.
 Estos documentos se conservan porque contienen decisiones o validaciones sin terminar:
 
 - [`plans/ui_core_rules_clarity_plan.md`](plans/ui_core_rules_clarity_plan.md) — propuesta no iniciada.
+- [`plans/generated_look_remediation_plan.md`](plans/generated_look_remediation_plan.md) — corrección
+  de las señales visuales que hacen leer la UI como generada; no iniciado.
 - [`plans/seeds_of_destiny.md`](plans/seeds_of_destiny.md) — narrativa y persistencia futura.
 - [`plans/game_modes.md`](plans/game_modes.md) — variantes futuras y compatibilidad de Chaos.
 - [`plans/webgl_context_budget.md`](plans/webgl_context_budget.md) — migración implementada con QA

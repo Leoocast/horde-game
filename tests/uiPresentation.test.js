@@ -168,6 +168,10 @@ test("unused blue Source orbs travel into yellow Reserve sockets before reappear
     assert.match(stylesSource, /\.reserve-transfer-arrival-yellow\s*\{/u);
     assert.match(stylesSource, /\.reserve-transfer-arrival\.is-ready \.mana-alchemy-orb\s*\{/u);
     assert.match(stylesSource, /\.mana-alchemy-socket\.is-reserve-transfer-source \.mana-alchemy-orb,[^}]*visibility:\s*hidden;/su);
+    assert.match(stylesSource, /\.mana-alchemy-socket-blue\.is-spent \.mana-alchemy-liquid\s*\{[^}]*display:\s*none;/su);
+    assert.match(stylesSource, /\.mana-alchemy-socket-blue\.is-spent \.mana-alchemy-orb::after\s*\{[^}]*border-color:\s*transparent;/su);
+    assert.match(stylesSource, /\.mana-alchemy-socket-blue\.is-empty \.mana-alchemy-orb\s*\{[^}]*visibility:\s*hidden;/su);
+    assert.match(stylesSource, /@keyframes mana-energy-orb-spend-blue[\s\S]*?100%[^}]*saturate\(0\.76\) brightness\(0\.82\)/u);
   });
 
 test("the Host Archive counter counts attack discards down without displaying zero", () => {
