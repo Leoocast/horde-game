@@ -15,6 +15,7 @@ import { GraveyardViewerModal } from "./GraveyardViewerModal";
 import { hostAttackPlayerHitDelay } from "./hostAttackPresentation";
 import { remainingArchiveDiscardPreview } from "./hostArchiveCounter";
 import { playerAttackHostHitDelay } from "./playerAttackPresentation";
+import { PlayerArchiveForecast } from "./PlayerArchiveForecast";
 import { setupProgress } from "./setupPresentation";
 
 export function DuelHud({ game }: { game: GameState }) {
@@ -501,6 +502,7 @@ export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameSt
               ))}
             </div>
           </div>
+          <PlayerArchiveForecast game={game} />
           <motion.div
             data-player-life-panel="true"
             data-energy-recycle-target="true"

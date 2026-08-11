@@ -19,7 +19,7 @@ import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
 import { getPowerEndurance, hostInSurge } from "../src/engine/StaticEffects";
 import { targetCandidates, targetCandidatesWithSelectedTargets } from "../src/engine/Targeting";
 import { queueUnusedNormalEnergy, releasePendingStoredEnergy } from "../src/engine/EnergySystem";
-import { performPlayerDraw, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
+import { performPlayerDraw, playerDrawForecast, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
 import { cardStatState, sortTraitsForDisplay } from "../src/utils/selectors";
 import { getHandCardPresentationState } from "../src/components/handCardPresentation";
 import {
@@ -609,6 +609,45 @@ test("an empty hand still draws only one during setup", () => {
 
   assert.deepEqual(game.player.hand.map((card) => card.definitionId), ["setup_draw"]);
   assert.deepEqual(game.player.archive.map((card) => card.definitionId), ["setup_stays_in_deck"]);
+});
+
+test("the player draw forecast matches every authored draw rule and the available Archive", () => {
+  const normal = createTestGame();
+  addCard(normal, customCard("normal_hand", "player", { zone: "hand" }), "player", "hand");
+  addCard(normal, customCard("normal_archive_1", "player", { zone: "archive" }), "player", "archive");
+  addCard(normal, customCard("normal_archive_2", "player", { zone: "archive" }), "player", "archive");
+  assert.deepEqual(playerDrawForecast(normal), { amount: 1, requested: 1, reason: "normal", emptyHandBonus: false });
+
+  const emptyHand = createTestGame();
+  addCard(emptyHand, customCard("empty_archive_1", "player", { zone: "archive" }), "player", "archive");
+  addCard(emptyHand, customCard("empty_archive_2", "player", { zone: "archive" }), "player", "archive");
+  assert.deepEqual(playerDrawForecast(emptyHand), { amount: 2, requested: 2, reason: "empty-hand", emptyHandBonus: true });
+
+  const easy = structuredClone(emptyHand);
+  easy.difficulty = "easy";
+  assert.deepEqual(playerDrawForecast(easy), { amount: 2, requested: 2, reason: "easy", emptyHandBonus: false });
+
+  const setup = structuredClone(emptyHand);
+  setup.setupTurnsRemaining = 2;
+  assert.deepEqual(playerDrawForecast(setup), { amount: 1, requested: 1, reason: "setup", emptyHandBonus: false });
+  assert.deepEqual(playerDrawForecast(setup, { timing: "next" }), { amount: 1, requested: 1, reason: "setup", emptyHandBonus: false });
+
+  const lastSetup = structuredClone(emptyHand);
+  lastSetup.setupTurnsRemaining = 1;
+  assert.deepEqual(playerDrawForecast(lastSetup), { amount: 1, requested: 1, reason: "setup", emptyHandBonus: false });
+  assert.deepEqual(playerDrawForecast(lastSetup, { timing: "next" }), { amount: 2, requested: 2, reason: "empty-hand", emptyHandBonus: true });
+
+  const lastEasySetup = structuredClone(lastSetup);
+  lastEasySetup.difficulty = "easy";
+  assert.deepEqual(playerDrawForecast(lastEasySetup, { timing: "next" }), { amount: 2, requested: 2, reason: "easy", emptyHandBonus: false });
+
+  const chaos = structuredClone(emptyHand);
+  chaos.gameMode = "chaos";
+  assert.deepEqual(playerDrawForecast(chaos), { amount: 2, requested: 2, reason: "chaos", emptyHandBonus: false });
+
+  const limited = createTestGame();
+  addCard(limited, customCard("last_archive_card", "player", { zone: "archive" }), "player", "archive");
+  assert.deepEqual(playerDrawForecast(limited), { amount: 1, requested: 2, reason: "empty-hand", emptyHandBonus: false });
 });
 
 test("recycling puts an energy on the bottom, draws one, and uses the Energy action", () => {

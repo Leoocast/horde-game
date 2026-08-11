@@ -320,6 +320,19 @@ se duplicarán reglas dentro de `DuelHud` o `Hand`.
 La previsión coincide con el robo real en Preparación, Fácil, Normal, Difícil, Mano vacía y Mano no
 vacía.
 
+### Estado de implementación
+
+**Implementada como prototipo el 2026-08-11; pendiente de QA visual del usuario.**
+
+- Una banda compacta sobre el panel de Vida muestra permanentemente **Archivo** y **Próximo robo**
+  sin invadir Fuentes/Reserva ni permitir inspeccionar cartas ocultas.
+- La causa se muestra sólo cuando aporta contexto: **Mano vacía · +1**, **Fácil** o **Caos**.
+- `playerDrawForecast` es la única fuente de verdad para la previsión y la resolución real. Limita
+  la cifra por las cartas disponibles en el Archivo, distingue Preparación de las reglas de robo 2
+  y proyecta correctamente que el robo posterior a la última Preparación ya ocurre tras la Hueste.
+- Las cartas añadidas después de la Mano inicial entran visualmente desde el lado del Archivo.
+- La presentación existe en ES y EN y respeta movimiento reducido.
+
 ## Fase 3 — Hacer visible la acción Devolver Fuente
 
 ### Problema actual

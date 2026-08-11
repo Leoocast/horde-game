@@ -83,6 +83,21 @@ test("Preparation actions distinguish continuing from awakening the Host", () =>
   assert.equal(setupJustCompleted(0, 0), false);
 });
 
+test("the Chronicler Archive forecast stays visible and owns the draw origin", () => {
+  const boardSource = readFileSync(new URL("../src/components/DuelHud.tsx", import.meta.url), "utf8");
+  const forecastSource = readFileSync(new URL("../src/components/PlayerArchiveForecast.tsx", import.meta.url), "utf8");
+  const handSource = readFileSync(new URL("../src/components/Hand.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(boardSource, /<PlayerArchiveForecast game=\{game\}/u);
+  assert.match(forecastSource, /data-player-archive-origin="true"/u);
+  assert.doesNotMatch(forecastSource, /<button|onClick=/u);
+  assert.match(forecastSource, /<GameTooltip content=\{emptyHandTooltip\}/u);
+  assert.doesNotMatch(forecastSource, /game\.drawReasonEmptyHand["']/u);
+  assert.match(handSource, /fromArchive:\s*!initialHandIds\.current\.has/u);
+  assert.match(stylesSource, /\.player-archive-forecast\s*\{[^}]*width:\s*244px;/su);
+});
+
 test("the Host Archive counter counts attack discards down without displaying zero", () => {
   assert.equal(remainingArchiveDiscardPreview(7, 0), 7);
   assert.equal(remainingArchiveDiscardPreview(7, 1), 6);

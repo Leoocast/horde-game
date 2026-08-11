@@ -393,6 +393,10 @@ Fuente, Reserva y ataque al Archivo debe seguir el plan de diseño e implementac
 aprobación del usuario antes de editar código; la preparación técnica queda subordinada al diseño
 aprobado y el plan no autoriza por sí solo cambios de reglas ni la implementación del tutorial.
 
+Estado vigente de ese plan: la Fase 1 (presentación de Preparación) está cerrada y la Fase 2 tiene
+un prototipo pendiente de QA visual. `playerDrawForecast` en `src/engine/TurnManager.ts` es la fuente
+única para el robo real y su previsión; la UI no debe volver a duplicar sus condiciones.
+
 ## Preferencias de trabajo
 
 - Cambios pequeños y verificables.
