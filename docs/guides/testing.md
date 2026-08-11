@@ -113,7 +113,7 @@ La cobertura automática asociada vive principalmente en `tests/engine.test.js` 
 ritmo.
 
 CI corre en Windows x64, instala con `pnpm install --frozen-lockfile` y ejecuta typecheck, suite,
-deck lint, proyección de Card Studio, `build:web`, auditoría offline e inventario runtime. Los
+deck lint, proyección de Card Studio, `build:web` y auditoría offline. Los
 scripts de instalación permitidos están declarados por paquete en `pnpm-workspace.yaml`, sin
 aprobación interactiva.
 
@@ -123,14 +123,20 @@ Después de `build:web`, comprobar que no haya recursos remotos ni tooling de de
 C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\audit-offline-runtime.mjs
 ```
 
-Comprobar el inventario de paths, tamaños y SHA-256 de `dist`:
+El inventario de paths, tamaños y SHA-256 de `dist` es un diagnóstico opcional de release, no un
+gate de desarrollo ni de cada pull request. Para registrar un build release aprobado, generarlo y
+comprobarlo contra ese mismo `dist`:
+
+```bash
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\runtime-asset-inventory.mjs --write
+```
 
 ```bash
 C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\runtime-asset-inventory.mjs --check
 ```
 
-Usar `--write` únicamente después de revisar un cambio intencional del build release. El output
-versionado es `docs/data/generated/runtime_asset_inventory.json`.
+El output versionado es `docs/data/generated/runtime_asset_inventory.json`. Puede quedar desfasado
+durante el desarrollo normal; no regenerarlo por cada cambio de CSS o TypeScript.
 
 ## Como corre la suite
 

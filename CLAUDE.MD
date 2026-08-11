@@ -122,8 +122,9 @@ Contratos desktop vigentes:
   roots registrados.
 - El renderer release no puede contener recursos remotos, `?playground`, `PlaygroundScreen` ni
   `AudioLabScreen`. Verificarlo con `scripts/audit-offline-runtime.mjs` después de `build:web`.
-- `docs/data/generated/runtime_asset_inventory.json` es la proyección reproducible del contenido de `dist`; se
-  regenera sólo después de un build release intencional.
+- `docs/data/generated/runtime_asset_inventory.json` es una captura diagnóstica del último build
+  release aprobado. No es un gate de desarrollo ni del CI básico y puede quedar desfasada entre
+  releases; se regenera sólo después de un build release intencional.
 - Fase 3 usa Electron 43.3.0 + Forge 7.11.2 exactos. El código está en ASAR, cards/fonts son
   `extraResources`, Card Studio/Playground no se empaquetan y los gates automáticos son
   `electron:verify` + `electron:smoke`.

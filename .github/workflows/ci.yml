@@ -49,6 +49,3 @@ jobs:
 
       - name: Audit offline renderer
         run: pnpm run audit:offline
-
-      - name: Check runtime asset inventory
-        run: pnpm run assets:inventory:check
