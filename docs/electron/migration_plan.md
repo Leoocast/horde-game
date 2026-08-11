@@ -690,7 +690,7 @@ silenciosamente configuración stale.
 - el renderer no conoce rutas absolutas;
 - fixtures external adversariales se rechazan;
 - Card Studio sigue generando la misma proyección y el resolver carga sus URLs;
-- JSON authored e image JSON permanecen byte por byte iguales.
+- JSON authored e image JSON se verificaron sin cambios al cerrar la fase.
 
 **Tests:** snapshot de catálogo, equivalencia, determinismo, resolver, fixtures y todos los gates Card
 Studio.

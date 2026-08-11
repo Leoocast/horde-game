@@ -57,4 +57,4 @@ principales son:
 - `docs/content/` — identidad y contratos de los decks vigentes, más previews explícitos.
 - `docs/plans/` — únicamente propuestas o validaciones todavía abiertas.
 - `docs/electron/` — arquitectura desktop, seguimiento, persistencia y release.
-- `docs/data/` — baselines e inventarios generados consumidos por tooling.
+- `docs/data/` — inventarios generados consumidos por tooling.

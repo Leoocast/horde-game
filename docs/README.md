@@ -53,5 +53,4 @@ Estos documentos se conservan porque contienen decisiones o validaciones sin ter
 
 Estos JSON no son notas sueltas: scripts o tests los consumen.
 
-- `data/baselines/` — hashes que protegen el baseline de contenido Electron.
 - `data/generated/` — inventarios reproducibles generados por scripts.

@@ -4,7 +4,7 @@ import path from "node:path";
 import { test } from "node:test";
 
 import runtimeAudioAssets from "../src/audio/runtimeAudioAssets.json";
-import { collectRuntimeResourcePlan, stagingRoot, verifyStaging } from "../scripts/electron-release-assets.mjs";
+import { collectRuntimeResourcePlan, createStaging, stagingRoot, verifyStaging } from "../scripts/electron-release-assets.mjs";
 import { comparePackageManifests } from "../scripts/electron-release-manifest.mjs";
 
 test("Electron release staging is an exact generated allowlist", () => {
@@ -20,7 +20,9 @@ test("Electron release staging is an exact generated allowlist", () => {
 });
 
 test("staged Electron resources match paths, hashes and category totals", () => {
+  const created = createStaging();
   const manifest = verifyStaging();
+  assert.deepEqual(manifest, created);
   assert.deepEqual(manifest.categories.audio.files, 57);
   assert.deepEqual(manifest.categories.cards.files, 122);
   assert.deepEqual(manifest.categories.fonts.files, 6);

@@ -1,7 +1,4 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
-import fs from "node:fs";
-import path from "node:path";
 import { test } from "node:test";
 
 import gameArt from "../src/data/cardStudioGameArt.generated.json";
@@ -186,16 +183,6 @@ test("external content policy rejects handlers, markers, remote URLs, traversal 
     const result = validateExternalContentPolicy(candidate, "local");
     assert.equal(result.ok, false, JSON.stringify(candidate));
     assert.ok(result.issues.length > 0);
-  }
-});
-
-test("Electron Phase 2 leaves authored and Card Studio JSON byte-for-byte at its captured baseline", () => {
-  const baselinePath = path.resolve("docs", "data", "baselines", "electron_phase2_json_baseline.json");
-  const baseline = JSON.parse(fs.readFileSync(baselinePath, "utf8"));
-  assert.equal(Object.keys(baseline.files).length, 10);
-  for (const [relativePath, expectedHash] of Object.entries(baseline.files)) {
-    const actualHash = createHash("sha256").update(fs.readFileSync(path.resolve(relativePath))).digest("hex").toUpperCase();
-    assert.equal(actualHash, expectedHash, `${relativePath} changed during Electron Phase 2`);
   }
 });
 

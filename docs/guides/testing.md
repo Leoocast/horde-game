@@ -136,7 +136,7 @@ archivo no corre nunca.
 | `tests/audioMix.test.js` | Cobertura y validacion del JSON de mezcla, import/export, conversion de dB y prohibicion de volumen escondido en `playSfx` |
 | `tests/vocabulary.test.js` | Vocabulario público retirado, presentación localizada de cartas y ausencia de rutas dormidas de tutorial |
 | `tests/uiPresentation.test.js` | Contratos puros y estáticos de presentación: VFX compartido, Burn, presets, capas y geometría visual |
-| `tests/contentCatalog.test.js` | Snapshot builtin inmutable, 61 identidades, aliases calificados, defaults estrictos, adapters de assets web/desktop, proyecciones de Card Studio, hashes JSON de Fase 2 y rechazo de candidatos external adversariales |
+| `tests/contentCatalog.test.js` | Snapshot builtin inmutable, 61 identidades, aliases calificados, defaults estrictos, adapters de assets web/desktop, proyecciones de Card Studio y rechazo de candidatos external adversariales |
 | `tests/electronSecurity.test.js` | Policy pura de `hostfall://`, traversal/hosts/packs adversariales, MIME, Range, roots e integración de respuestas parciales con CSP |
 | `tests/electronPersistence.test.js` | Rutas cloud-worthy/local-only, escritura atómica, backup, corrupción y validación de window state |
 | `tests/desktopPreferences.test.js` | Envelope v1 de idioma/audio, límites y rechazo de schemas desconocidos |

@@ -216,8 +216,7 @@ Estado: **Completada**
   revision `builtin.hostfall.core@0.0.2-beta.0`.
 - Determinism test: suite completa 316/316; el test de seed y los tests de engine existentes pasan.
 - Card Studio regression: proyección vigente; URLs web idénticas; arte de campo y full-art
-  verificados. Hashes SHA-256 fijados en
-  `docs/data/baselines/electron_phase2_json_baseline.json`.
+  verificados al cierre de la fase.
 - Build/gates: typecheck, deck lint, `card-studio-data --check`, independence strict, dos builds,
   auditor offline e inventario reproducible verdes. Build: 278 archivos, 458349850 bytes.
 - QA manual: juego, Playground y Card Studio aprobados por el usuario.

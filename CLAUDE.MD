@@ -120,8 +120,6 @@ Contratos desktop vigentes:
 - Los paths `/cards/...` son referencias lógicas del pack builtin. El adapter web conserva esas
   URLs y el build Electron activa `hostfall://content/...`; main sólo sirve archivos indexados de
   roots registrados.
-- `docs/data/baselines/electron_phase2_json_baseline.json` protege byte por byte decks, manifests y proyecciones
-  runtime de Card Studio durante esta fase.
 - El renderer release no puede contener recursos remotos, `?playground`, `PlaygroundScreen` ni
   `AudioLabScreen`. Verificarlo con `scripts/audit-offline-runtime.mjs` después de `build:web`.
 - `docs/data/generated/runtime_asset_inventory.json` es la proyección reproducible del contenido de `dist`; se
