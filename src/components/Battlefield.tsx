@@ -22,6 +22,9 @@ import { Card, CardDefenseBadge, CardTraitIconBadges } from "./Card";
 import { GrowthBuffAnimator } from "./GrowthBuffAnimator";
 import { StormBuffAnimator } from "./StormBuffAnimator";
 import { HeavyCreatureLanding } from "./HeavyCreatureLanding";
+import { readReserveTransferAnimation, ReserveTransferAnimator, type ReserveTransferAnimation } from "./ReserveTransferAnimator";
+import { displayedReserveEnergy, reserveTransferPresentation } from "./reserveTransferPresentation";
+import { GameTooltip } from "./GameTooltip";
 import { Zone } from "./Zone";
 import { Hourglass, Zap } from "lucide-react";
 import {
@@ -72,6 +75,8 @@ type EnergyVisualSnapshot = {
   available: number;
   landCount: number;
   phase: GameState["phase"];
+  pending: number;
+  reserve: number;
   seed: string;
   stored: number;
   turnNumber: number;
@@ -242,13 +247,21 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
   const others = displayedCards.filter((card) => !card.kinds.includes("ECHO") && !card.kinds.includes("SOURCE"));
   const availableLandCount = lands.filter((card) => !card.exhausted && !card.activatedThisTurn).length;
   const storedEnergyCount = game.player.energyPool.stored;
+  const pendingStoredEnergyCount = game.player.pendingStoredEnergy;
+  const displayedReserveEnergyCount = displayedReserveEnergy({
+    available: availableLandCount,
+    pending: pendingStoredEnergyCount,
+    stored: storedEnergyCount,
+  });
   const previousEnergyVisual = useRef<EnergyVisualSnapshot | undefined>(undefined);
   const energyTransitionSequence = useRef(0);
+  const reserveTransferSequence = useRef(0);
   const energyTransitionTimer = useRef<number | undefined>(undefined);
   const [energyTransitions, setEnergyTransitions] = useState<{
     normal?: EnergyTrackTransition;
     stored?: EnergyTrackTransition;
   }>({});
+  const [reserveTransferAnimation, setReserveTransferAnimation] = useState<ReserveTransferAnimation | undefined>(undefined);
   const hostCombat = game.activeSide === "host" && game.phase === "combat" && game.combat.hostAttackers.length > 0;
   // The Host attacks with everything able, every turn. Declaring is a rules step that only runs
   // after summons and enter triggers, but the board should read as committed from the moment the
@@ -270,6 +283,8 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
       available: availableLandCount,
       landCount: lands.length,
       phase: game.phase,
+      pending: pendingStoredEnergyCount,
+      reserve: displayedReserveEnergyCount,
       seed: game.seed,
       stored: storedEnergyCount,
       turnNumber: game.turnNumber,
@@ -280,7 +295,13 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
     if (!previous || previous.seed !== current.seed) {
       if (energyTransitionTimer.current) window.clearTimeout(energyTransitionTimer.current);
       setEnergyTransitions({});
+      setReserveTransferAnimation(undefined);
       return;
+    }
+
+    const reserveTransfer = reserveTransferPresentation(previous, current);
+    if (reserveTransfer) {
+      setReserveTransferAnimation(readReserveTransferAnimation(++reserveTransferSequence.current, reserveTransfer));
     }
 
     const turnRefresh =
@@ -305,13 +326,13 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
       };
     }
 
-    if (current.stored !== previous.stored) {
+    if (current.reserve !== previous.reserve && !reserveTransfer) {
       nextTransitions.stored = {
-        direction: current.stored > previous.stored ? "gain" : "spend",
+        direction: current.reserve > previous.reserve ? "gain" : "spend",
         eventId: ++energyTransitionSequence.current,
-        from: previous.stored,
-        source: current.stored > previous.stored && turnRefresh ? "turn" : "card",
-        to: current.stored,
+        from: previous.reserve,
+        source: current.reserve > previous.reserve && turnRefresh ? "turn" : "card",
+        to: current.reserve,
       };
     }
 
@@ -326,9 +347,11 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
     availableLandCount,
     game.activeSide,
     game.phase,
+    game.player.pendingStoredEnergy,
     game.seed,
     game.turnNumber,
     lands.length,
+    displayedReserveEnergyCount,
     side,
     storedEnergyCount,
   ]);
@@ -623,6 +646,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
 
   function LandDock() {
     const landCount = lands.length;
+    const reserveSetupActive = game.gameMode !== "chaos" && game.setupTurnsRemaining > 0;
     const tributeOfTheFourSorrowsSourceSelectionActive = tributeOfTheFourSorrowsSelectionKind === "sacrifice-land";
     const tributeOfTheFourSorrowsSourceTarget = lands.find((card) => !card.exhausted && !card.activatedThisTurn) ?? lands[0];
     const canSelectEnergyCore = tributeOfTheFourSorrowsSourceSelectionActive && !tributeOfTheFourSorrowsSelectionTargetId && Boolean(tributeOfTheFourSorrowsSourceTarget);
@@ -630,6 +654,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
     const storedEnergySlots = Array.from({ length: STORED_ENERGY_CAP });
 
     return (
+      <>
       <aside
         ref={landDockRef}
         data-player-mana-core="true"
@@ -637,7 +662,9 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
         data-audio-click={canSelectEnergyCore ? "valid" : undefined}
         role={canSelectEnergyCore ? "button" : undefined}
         tabIndex={canSelectEnergyCore ? 0 : undefined}
-        aria-label={`${t("game.availableEnergy")}: ${availableLandCount} of ${MAX_PLAYER_LANDS}. ${t("game.storedEnergy")}: ${storedEnergyCount} of ${STORED_ENERGY_CAP}.`}
+        aria-label={`${t("game.availableEnergy")}: ${availableLandCount} of ${MAX_PLAYER_LANDS}. ${t("game.storedEnergy")}: ${displayedReserveEnergyCount} of ${STORED_ENERGY_CAP}.${reserveSetupActive
+          ? ` ${t("game.reserveSetupTooltip")}`
+          : ""}`}
         className={[
           "player-mana-core",
           "player-mana-corner",
@@ -669,6 +696,11 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
               const state = index < storedEnergyCount ? "is-ready" : "is-empty";
               const transition = energyTransitions.stored;
               const changing = energySlotIsChanging(transition, index);
+              const transferTarget = Boolean(
+                reserveTransferAnimation &&
+                index >= reserveTransferAnimation.targetStartIndex &&
+                index < reserveTransferAnimation.targetStartIndex + reserveTransferAnimation.amount,
+              );
               return (
                 <span
                   key={`stored-mana-${index}-${state}-${changing ? transition?.eventId : "stable"}`}
@@ -676,9 +708,11 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
                     "mana-alchemy-socket",
                     "mana-alchemy-socket-yellow",
                     state,
+                    transferTarget ? "is-reserve-transfer-target" : "",
                     changing && transition ? `is-energy-${transition.direction} energy-source-${transition.source}` : "",
                   ].join(" ")}
                   data-energy-kind="stored"
+                  data-energy-index={index}
                   data-energy-state={state.replace("is-", "")}
                   style={changing && transition ? { "--energy-step": energyTransitionStep(transition, index) } as CSSProperties : undefined}
                 >
@@ -701,6 +735,11 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
               const state = index < availableLandCount ? "is-ready" : index < landCount ? "is-spent" : "is-empty";
               const transition = energyTransitions.normal;
               const changing = energySlotIsChanging(transition, index);
+              const transferSource = Boolean(
+                reserveTransferAnimation &&
+                index >= reserveTransferAnimation.sourceStartIndex &&
+                index < reserveTransferAnimation.sourceStartIndex + reserveTransferAnimation.amount,
+              );
               return (
                 <span
                   key={`normal-mana-${index}-${state}-${changing ? transition?.eventId : "stable"}`}
@@ -708,9 +747,11 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
                     "mana-alchemy-socket",
                     "mana-alchemy-socket-blue",
                     state,
+                    transferSource ? "is-reserve-transfer-source" : "",
                     changing && transition ? `is-energy-${transition.direction} energy-source-${transition.source}` : "",
                   ].join(" ")}
                   data-energy-kind="normal"
+                  data-energy-index={index}
                   data-energy-state={state.replace("is-", "")}
                   style={changing && transition ? { "--energy-step": energyTransitionStep(transition, index) } as CSSProperties : undefined}
                 >
@@ -720,8 +761,27 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
             })}
           </div>
         </div>
+        {reserveSetupActive && (
+          <GameTooltip
+            content={t("game.reserveSetupTooltip")}
+            className="mana-reserve-tooltip-host"
+          >
+            <span
+              className="mana-reserve-tooltip-target"
+              tabIndex={0}
+              aria-label={t("game.reserveSetupTooltip")}
+            />
+          </GameTooltip>
+        )}
         {tributeOfTheFourSorrowsSourceSelectionActive && <div className="mana-core-target-label">{t("target.discardEnergy")}</div>}
       </aside>
+      {reserveTransferAnimation && (
+        <ReserveTransferAnimator
+          animation={reserveTransferAnimation}
+          onComplete={() => setReserveTransferAnimation((current) => current?.id === reserveTransferAnimation.id ? undefined : current)}
+        />
+      )}
+      </>
     );
   }
 

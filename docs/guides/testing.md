@@ -86,8 +86,34 @@ queden fingerprints, audio, rights, licencia, icono o firma pendientes.
 Para QA interactivo de desarrollo, el usuario ejecuta `pnpm electron:start`. Los agentes no levantan
 ese servidor ni juegan el build como verificación automática.
 
+## QA manual de claridad de la UI principal
+
+El plan `docs/plans/ui_core_rules_clarity_plan.md` cerró el 2026-08-11. Cambios futuros en la UI
+principal deben conservar este smoke manual:
+
+1. Preparación muestra progreso propio y su último paso anticipa el despertar de la Hueste.
+2. El Archivo del Cronista y el próximo robo coinciden con `playerDrawForecast`, incluida la Mano
+   vacía y las dificultades.
+3. Jugar y devolver una Fuente comparten una sola Acción de Fuente; la devolución entra al Archivo y
+   el reemplazo sale visualmente de él.
+4. La Mano se reorganiza sin saltos al robar, jugar o Invocar. Los drops válidos ceden a su animación
+   especializada y los inválidos regresan a la Mano.
+5. La Reserva generada por cartas funciona durante Preparación. La fila amarilla no se muestra
+   bloqueada; su tooltip de Preparación explica que la Energía de Fuentes sin usar se guarda al
+   terminar esa etapa.
+6. Un pago mixto consume Reserva antes que Fuentes. Al volver del turno de la Hueste, cada orbe azul
+   pendiente viaja y se transforma en su orbe amarillo sin parpadeos ni duplicados.
+7. El ataque identifica al Archivo de la Hueste, anticipa `actual → restante`, usa el umbral real y
+   anima exactamente el número de cartas descartadas hacia Memoria.
+8. Repetir los casos relevantes en ES y EN, con Mano y Reserva vacías/parciales/llenas, teclado y
+   `prefers-reduced-motion` cuando se toque alguno de esos contratos.
+
+La cobertura automática asociada vive principalmente en `tests/engine.test.js` y
+`tests/uiPresentation.test.js`; no sustituye la comprobación visual de trayectorias, solapamientos y
+ritmo.
+
 CI corre en Windows x64, instala con `pnpm install --frozen-lockfile` y ejecuta typecheck, suite,
-deck lint, proyección de Card Studio, `build:web`, auditoría offline e inventario runtime. Los
+deck lint, proyección de Card Studio, `build:web` y auditoría offline. Los
 scripts de instalación permitidos están declarados por paquete en `pnpm-workspace.yaml`, sin
 aprobación interactiva.
 
@@ -97,14 +123,20 @@ Después de `build:web`, comprobar que no haya recursos remotos ni tooling de de
 C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\audit-offline-runtime.mjs
 ```
 
-Comprobar el inventario de paths, tamaños y SHA-256 de `dist`:
+El inventario de paths, tamaños y SHA-256 de `dist` es un diagnóstico opcional de release, no un
+gate de desarrollo ni de cada pull request. Para registrar un build release aprobado, generarlo y
+comprobarlo contra ese mismo `dist`:
+
+```bash
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\runtime-asset-inventory.mjs --write
+```
 
 ```bash
 C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts\runtime-asset-inventory.mjs --check
 ```
 
-Usar `--write` únicamente después de revisar un cambio intencional del build release. El output
-versionado es `docs/data/generated/runtime_asset_inventory.json`.
+El output versionado es `docs/data/generated/runtime_asset_inventory.json`. Puede quedar desfasado
+durante el desarrollo normal; no regenerarlo por cada cambio de CSS o TypeScript.
 
 ## Como corre la suite
 

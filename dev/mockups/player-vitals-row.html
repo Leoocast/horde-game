@@ -1,0 +1,923 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hostfall — Fila [Memoria][Mazo][Vida]: variantes</title>
+<style>
+  :root {
+    --parch: #e9dcbd;
+    --gold-soft: rgb(181 134 66 / 0.4);
+
+    /* Altura común de la fila: la regla del ejercicio es que las tres piezas midan lo mismo. */
+    --row-h: 86px;
+
+    --life-border: rgb(160 166 111 / 0.48);
+    --life-border-top: rgb(196 211 135 / 0.7);
+    --life-bg: linear-gradient(135deg, rgb(15 32 29 / 0.98), rgb(17 26 27 / 0.98) 48%, rgb(9 16 18 / 0.99));
+    --life-count: #e9f5ba;
+    --life-label: #bccc91;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 28px 26px 120px;
+    background:
+      radial-gradient(ellipse at 50% -12%, rgb(72 52 30 / 0.3), transparent 62%),
+      linear-gradient(180deg, #14100c, #0a0806 60%, #070605);
+    color: var(--parch);
+    font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  }
+
+  h1 { margin: 0 0 8px; color: #f2e2b8; font-size: 25px; letter-spacing: 0.04em; }
+  h2 { margin: 0; color: #f2e2b8; font-size: 16px; letter-spacing: 0.03em; }
+  p  { margin: 0; line-height: 1.55; }
+
+  .intro { max-width: 1020px; margin-bottom: 18px; color: rgb(233 220 189 / 0.74); font-size: 14px; }
+  .intro b { color: #f0cf8a; font-weight: 700; }
+  .intro code { color: #f0cf8a; font-size: 13px; }
+
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 24px;
+    border: 1px solid var(--gold-soft);
+    border-radius: 10px;
+    padding: 11px 14px;
+    background: linear-gradient(180deg, rgb(30 22 14 / 0.98), rgb(14 10 7 / 0.99));
+    box-shadow: 0 10px 26px rgb(0 0 0 / 0.6);
+    font-size: 13px;
+  }
+  .toolbar label { display: inline-flex; gap: 7px; align-items: center; cursor: pointer; }
+  .toolbar .hint { margin-left: auto; color: rgb(233 220 189 / 0.48); }
+  .toolbar input { accent-color: #b7cf7e; }
+
+  .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(560px, 1fr)); }
+
+  .proposal {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgb(181 134 66 / 0.28);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgb(26 20 14 / 0.72), rgb(12 10 8 / 0.8));
+    overflow: hidden;
+  }
+  .proposal.is-current { border-color: rgb(190 84 60 / 0.42); }
+  .proposal.is-wide { grid-column: 1 / -1; }
+
+  .proposal > header {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    border-bottom: 1px solid rgb(181 134 66 / 0.2);
+    padding: 12px 16px;
+  }
+  .proposal > header .tag {
+    margin-left: auto;
+    border: 1px solid rgb(181 134 66 / 0.4);
+    border-radius: 999px;
+    padding: 3px 9px;
+    color: #d8bc82;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .proposal.is-current > header .tag { border-color: rgb(200 96 68 / 0.5); color: #e79c82; }
+  .proposal > header .sub { color: rgb(233 220 189 / 0.6); font-size: 12px; }
+
+  .stage {
+    position: relative;
+    height: 250px;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 50% 130%, rgb(48 74 52 / 0.16), transparent 62%),
+      linear-gradient(180deg, #0c1512, #080d0e 70%, #06090a);
+  }
+  body.stage-board .stage::before {
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(90deg, rgb(255 255 255 / 0.018) 0 1px, transparent 1px 46px),
+      repeating-linear-gradient(0deg, rgb(255 255 255 / 0.018) 0 1px, transparent 1px 46px);
+    content: "";
+  }
+  .stage-note {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    color: rgb(233 220 189 / 0.28);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .measure {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    color: rgb(233 220 189 / 0.26);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+  }
+
+  .fake-hand {
+    position: absolute;
+    bottom: 6px;
+    left: 18px;
+    display: flex;
+    gap: 6px;
+    align-items: flex-end;
+    opacity: 0.8;
+  }
+  .fake-hand i {
+    display: block;
+    width: 50px;
+    height: 70px;
+    border: 1px solid rgb(150 168 120 / 0.28);
+    background: linear-gradient(165deg, rgb(40 55 46 / 0.88), rgb(12 20 21 / 0.92));
+    box-shadow: 0 8px 18px rgb(0 0 0 / 0.5);
+  }
+  .fake-hand i:nth-child(1) { transform: rotate(-7deg) translateY(6px); }
+  .fake-hand i:nth-child(2) { transform: rotate(-3deg) translateY(1px); }
+  .fake-hand i:nth-child(3) { transform: rotate(1deg); }
+  .fake-hand i:nth-child(4) { transform: rotate(5deg) translateY(4px); }
+  body.state-empty-hand .fake-hand { display: none; }
+
+  .corner { position: absolute; right: 16px; bottom: 16px; }
+
+  .phase-bar { display: grid; gap: 4px; margin-bottom: 9px; opacity: 0.9; }
+  .phase-bar .labels {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    color: rgb(188 204 145 / 0.5);
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .phase-bar .labels span:nth-child(2) { text-align: center; }
+  .phase-bar .labels span:last-child { text-align: right; }
+  .phase-bar .labels .is-active { color: #dfeeb0; }
+  .phase-bar .track { position: relative; display: grid; height: 10px; grid-template-columns: repeat(3, 1fr); place-items: center; }
+  .phase-bar .track > i { width: 7px; height: 7px; border: 1px solid rgb(160 180 116 / 0.6); background: #101a19; transform: rotate(45deg); }
+  .phase-bar .track > i.is-active { background: #b7cf7e; box-shadow: 0 0 9px rgb(183 207 126 / 0.5); }
+  .phase-bar .track::before {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    left: 8px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgb(160 180 116 / 0.4), transparent);
+    content: "";
+  }
+
+  /* ================= la fila ================= */
+
+  .row {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+    justify-content: flex-end;
+  }
+
+  /* --- pila genérica (Memoria) --- */
+  .pile {
+    position: relative;
+    display: grid;
+    width: 62px;
+    height: var(--row-h);
+    align-content: center;
+    justify-items: center;
+    gap: 5px;
+    border: 1px solid rgb(134 158 102 / 0.34);
+    padding: 6px 4px;
+    background:
+      linear-gradient(180deg, rgb(24 31 33 / 0.97), rgb(8 13 15 / 0.99)),
+      radial-gradient(circle at 50% 0%, rgb(225 205 139 / 0.06), transparent 58%);
+    color: rgb(188 204 145 / 0.8);
+    box-shadow: inset 0 2px 8px rgb(0 0 0 / 0.5), inset 0 1px 0 rgb(255 255 255 / 0.04);
+  }
+  .pile b { color: #e1d19d; font-size: 20px; font-weight: 900; line-height: 1; }
+  .pile .cap {
+    color: rgb(188 204 145 / 0.5);
+    font-size: 7px;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* --- mazo (Archivo) --- */
+  .deck {
+    position: relative;
+    display: grid;
+    width: 68px;
+    height: var(--row-h);
+    align-content: center;
+    justify-items: center;
+    gap: 6px;
+    border: 1px solid rgb(150 168 120 / 0.5);
+    padding: 6px 4px 6px 12px;
+    background:
+      radial-gradient(circle at 56% 42%, rgb(120 165 112 / 0.18), transparent 66%),
+      repeating-linear-gradient(45deg, rgb(255 255 255 / 0.028) 0 3px, transparent 3px 8px),
+      linear-gradient(162deg, #24392f, #101d1e 58%, #0a1315);
+    box-shadow:
+      inset 0 0 0 2px rgb(6 12 12 / 0.45),
+      inset 0 1px 0 rgb(214 232 172 / 0.12),
+      0 10px 22px rgb(0 0 0 / 0.5);
+    color: #cfe0ab;
+  }
+  /* Canto de hojas: el mazo se ve de lado, con grosor real. */
+  .deck::before {
+    position: absolute;
+    top: 5px;
+    bottom: 5px;
+    left: 4px;
+    width: 6px;
+    background: repeating-linear-gradient(0deg, rgb(206 224 171 / 0.4) 0 1px, transparent 1px 3px);
+    content: "";
+    opacity: 0.65;
+  }
+  .deck .motif {
+    display: grid;
+    width: 26px;
+    height: 26px;
+    place-items: center;
+    border: 1px solid rgb(178 199 142 / 0.38);
+    color: rgb(206 224 171 / 0.7);
+    transform: rotate(45deg);
+  }
+  .deck .motif > svg { transform: rotate(-45deg); }
+  .deck b { color: #e7f2c2; font-size: 20px; font-weight: 900; line-height: 1; }
+
+  .draw-badge {
+    position: absolute;
+    z-index: 4;
+    top: -11px;
+    left: -10px;
+    display: none;
+    gap: 3px;
+    align-items: center;
+    border: 1px solid rgb(232 207 122 / 0.7);
+    padding: 3px 6px;
+    background: linear-gradient(180deg, rgb(72 60 26 / 0.98), rgb(28 24 12 / 0.99));
+    color: #f5df9c;
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1;
+    box-shadow: 0 6px 14px rgb(0 0 0 / 0.5);
+    white-space: nowrap;
+  }
+  body.state-empty-hand .draw-badge { display: inline-flex; }
+  .draw-badge small { font-size: 7px; letter-spacing: 0.12em; opacity: 0.78; text-transform: uppercase; }
+
+  /* --- vida --- */
+  .life {
+    position: relative;
+    display: flex;
+    height: var(--row-h);
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1px solid var(--life-border);
+    border-top-color: var(--life-border-top);
+    padding: 8px 12px 8px 14px;
+    background: var(--life-bg);
+    box-shadow:
+      inset 0 1px 0 rgb(229 246 184 / 0.08),
+      inset 0 -12px 26px rgb(0 0 0 / 0.18),
+      0 16px 36px rgb(0 0 0 / 0.48),
+      0 0 24px rgb(87 143 105 / 0.1);
+    color: #f6e6b8;
+  }
+  .life::after {
+    position: absolute;
+    right: -5px;
+    bottom: -5px;
+    width: 9px;
+    height: 9px;
+    border: 1px solid rgb(171 195 119 / 0.58);
+    background: #131d1c;
+    content: "";
+    transform: rotate(45deg);
+  }
+  .life .name {
+    color: var(--life-label);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .life .n {
+    margin-top: 4px;
+    color: var(--life-count);
+    font-size: 36px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 900;
+    line-height: 0.86;
+    text-shadow: 0 0 18px rgb(119 180 94 / 0.22), 0 2px 6px rgb(0 0 0 / 0.7);
+  }
+  .life .emblem {
+    display: grid;
+    width: 46px;
+    height: 46px;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 2px solid rgb(136 179 98 / 0.68);
+    background: linear-gradient(145deg, #31532b, #17271a);
+    color: #d8ffae;
+    box-shadow: inset 0 0 0 3px rgb(7 12 14 / 0.26), 0 0 18px rgb(95 169 76 / 0.16);
+    transform: rotate(45deg);
+  }
+  .life .emblem > svg { transform: rotate(-45deg); }
+
+  /* ============ piezas específicas por variante ============ */
+
+  /* R2: la Vida no es panel, es un sello.
+     El rombo se inscribe en la altura de fila: 61px girados 45° miden 86px de diagonal. */
+  .crest-host {
+    display: grid;
+    width: 88px;
+    height: var(--row-h);
+    place-items: center;
+  }
+  .crest {
+    position: relative;
+    display: grid;
+    width: 61px;
+    height: 61px;
+    place-items: center;
+    border: 2px solid rgb(150 194 108 / 0.72);
+    background:
+      radial-gradient(circle at 42% 34%, rgb(139 205 108 / 0.24), transparent 62%),
+      linear-gradient(145deg, #2e5029, #14231a);
+    box-shadow:
+      inset 0 0 0 4px rgb(7 12 14 / 0.34),
+      0 0 26px rgb(95 169 76 / 0.22),
+      0 14px 30px rgb(0 0 0 / 0.5);
+    transform: rotate(45deg);
+  }
+  .crest > * { transform: rotate(-45deg); }
+  .crest .n {
+    margin-top: 7px;
+    color: #e9f5ba;
+    font-size: 30px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 900;
+    line-height: 0.9;
+    text-shadow: 0 0 16px rgb(119 180 94 / 0.35), 0 2px 6px rgb(0 0 0 / 0.8);
+  }
+  .crest .mini-heart { position: absolute; top: 7px; color: rgb(216 255 174 / 0.6); }
+  .crest-name {
+    margin-bottom: 6px;
+    color: var(--life-label);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-align: right;
+    text-transform: uppercase;
+  }
+
+  /* R3: pilas con silueta de carta. */
+  .card-pile {
+    position: relative;
+    display: grid;
+    width: 62px;
+    height: var(--row-h);
+    align-content: end;
+    justify-items: center;
+    padding-bottom: 7px;
+    border: 1px solid rgb(150 168 120 / 0.45);
+    background:
+      radial-gradient(circle at 50% 36%, rgb(120 165 112 / 0.16), transparent 66%),
+      repeating-linear-gradient(45deg, rgb(255 255 255 / 0.025) 0 3px, transparent 3px 8px),
+      linear-gradient(162deg, #23382e, #0f1c1d);
+    box-shadow: inset 0 0 0 2px rgb(6 12 12 / 0.45), 0 10px 22px rgb(0 0 0 / 0.5);
+    color: #cfe0ab;
+  }
+  .card-pile.is-memory {
+    border-color: rgb(120 132 122 / 0.4);
+    background: linear-gradient(162deg, #1e2528, #0b1113);
+    color: rgb(196 200 178 / 0.75);
+  }
+  .card-pile .glyph { position: absolute; top: 12px; opacity: 0.6; }
+  .card-pile b { color: #e7f2c2; font-size: 19px; font-weight: 900; line-height: 1; }
+  .card-pile.is-memory b { color: #dfd6ae; }
+  .card-pile::before {
+    position: absolute;
+    top: -4px;
+    right: 4px;
+    left: 4px;
+    height: 4px;
+    border: 1px solid rgb(150 168 120 / 0.26);
+    border-bottom: 0;
+    background: #16241f;
+    content: "";
+  }
+  .card-pile.is-memory::before { border-color: rgb(120 132 122 / 0.24); background: #141a1c; }
+
+  /* R5: base compartida bajo las dos pilas. */
+  .piles-group {
+    position: relative;
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+    padding: 0 8px;
+  }
+  .piles-group::before {
+    position: absolute;
+    right: 0;
+    bottom: -7px;
+    left: 0;
+    height: 5px;
+    border: 1px solid rgb(146 132 92 / 0.34);
+    background: linear-gradient(180deg, rgb(48 44 32 / 0.9), rgb(16 15 12 / 0.95));
+    content: "";
+  }
+  .piles-group-cap {
+    position: absolute;
+    top: -13px;
+    left: 8px;
+    color: rgb(188 200 160 / 0.4);
+    font-size: 7px;
+    font-weight: 900;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .divider {
+    position: relative;
+    width: 12px;
+    align-self: stretch;
+  }
+  .divider::before {
+    position: absolute;
+    top: 12%;
+    bottom: 12%;
+    left: 50%;
+    width: 1px;
+    background: linear-gradient(transparent, rgb(164 147 95 / 0.42), transparent);
+    content: "";
+  }
+  .divider::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    border: 1px solid rgb(181 159 86 / 0.5);
+    background: #14100c;
+    content: "";
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+
+  /* R6: pilas hundidas, Vida encendida. Misma altura, distinta luz. */
+  .is-sunken {
+    border-color: rgb(96 108 92 / 0.34);
+    background: linear-gradient(180deg, rgb(16 21 22 / 0.98), rgb(7 11 12 / 0.99));
+    box-shadow: inset 0 4px 12px rgb(0 0 0 / 0.7), inset 0 -1px 0 rgb(255 255 255 / 0.04);
+    filter: saturate(0.6);
+  }
+  .is-lit {
+    border-color: rgb(198 218 132 / 0.75);
+    box-shadow:
+      inset 0 1px 0 rgb(229 246 184 / 0.14),
+      0 0 0 1px rgb(120 160 90 / 0.16),
+      0 18px 40px rgb(0 0 0 / 0.55),
+      0 0 34px rgb(110 180 100 / 0.22);
+  }
+
+  /* R4: nombre fuera de la fila. */
+  .row-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    color: var(--life-label);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .row-head em { color: rgb(188 204 145 / 0.42); font-size: 8px; font-style: normal; letter-spacing: 0.14em; }
+
+  .notes {
+    border-top: 1px solid rgb(181 134 66 / 0.2);
+    padding: 13px 16px 15px;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .notes b { color: #f0cf8a; }
+  .notes ul { margin: 8px 0 0; padding-left: 18px; color: rgb(233 220 189 / 0.76); }
+  .notes li { margin-bottom: 4px; }
+
+  .verdict {
+    margin-top: 26px;
+    border: 1px solid rgb(181 134 66 / 0.32);
+    border-radius: 12px;
+    padding: 16px 18px;
+    background: linear-gradient(180deg, rgb(30 24 16 / 0.8), rgb(12 10 8 / 0.86));
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  .verdict h2 { margin-bottom: 8px; }
+  .verdict ol, .verdict ul { margin: 8px 0 0; padding-left: 20px; color: rgb(233 220 189 / 0.8); }
+  .verdict li { margin-bottom: 6px; }
+  .verdict b { color: #f0cf8a; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="i-heart" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+    </g>
+    <g id="i-book" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 7v14"/>
+      <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>
+    </g>
+    <g id="i-archive" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <rect width="20" height="5" x="2" y="3" rx="1"/>
+      <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/>
+      <path d="M10 12h4"/>
+    </g>
+    <g id="i-layers" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/>
+      <path d="m6.08 10.37-3.48 1.58a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83l-3.5-1.59"/>
+      <path d="m6.08 15.37-3.48 1.58a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83l-3.5-1.59"/>
+    </g>
+  </defs>
+</svg>
+
+<h1>Fila única: <span style="color:#cfe0ab">[Memoria] [Mazo] [Vida]</span></h1>
+
+<p class="intro">
+  Combinación de A + B. Una sola fila horizontal en la esquina inferior derecha, <b>las tres piezas con la
+  misma altura</b> (<code>86&nbsp;px</code>), y el panel de Vida recortado a lo que de verdad necesita: un
+  número de una o dos cifras y su emblema. Se acabaron los rectángulos apilados: leyendo de izquierda a
+  derecha se avanza de <em>montones de cartas</em> a <em>tú</em>, y la única pieza en la esquina misma —la
+  posición más protegida de la pantalla— es la Vida.
+</p>
+<p class="intro">
+  Las seis variantes cambian <b>cómo se marca ese salto</b> entre las dos pilas y la Vida: por forma, por
+  agrupación, por luz o por jerarquía tipográfica. Ninguna muestra "Próximo robo" de forma permanente;
+  la insignia <b>+1</b> aparece sobre el mazo sólo cuando el robo se desvía del normal.
+</p>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="t-empty" /> Mano vacía (robo <b>2</b>)</label>
+  <label><input type="checkbox" id="t-highlife" /> Vida de dos cifras (12)</label>
+  <label><input type="checkbox" id="t-longname" /> Nombre largo</label>
+  <label><input type="checkbox" id="t-board" checked /> Retícula de campo</label>
+  <span class="hint">Altura común de fila: 86&nbsp;px. Todas a tamaño real.</span>
+</div>
+
+<div class="grid">
+
+  <!-- ===================== R1 ===================== -->
+  <section class="proposal">
+    <header>
+      <h2>R1 · Fila pareja</h2>
+      <span class="sub">la lectura directa de tu boceto</span>
+      <span class="tag">base</span>
+    </header>
+    <div class="stage">
+      <span class="stage-note">R1</span>
+      <div class="fake-hand"><i></i><i></i><i></i><i></i></div>
+      <div class="corner">
+        <div class="phase-bar">
+          <div class="labels"><span class="is-active">Principal</span><span>Batalla</span><span>Fin</span></div>
+          <div class="track"><i class="is-active"></i><i></i><i></i></div>
+        </div>
+        <div class="row">
+          <div class="pile">
+            <svg width="16" height="16" viewBox="0 0 24 24"><use href="#i-archive"/></svg>
+            <b>4</b>
+            <span class="cap">Memoria</span>
+          </div>
+          <div class="deck">
+            <span class="draw-badge">+1 <small>robo</small></span>
+            <span class="motif"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#i-book"/></svg></span>
+            <b class="deck-n">19</b>
+          </div>
+          <div class="life" style="width:158px">
+            <div>
+              <div class="name js-name">Leo</div>
+              <div class="n js-life">2</div>
+            </div>
+            <div class="emblem"><svg width="23" height="23" viewBox="0 0 24 24"><use href="#i-heart"/></svg></div>
+          </div>
+        </div>
+      </div>
+      <span class="measure">62 + 68 + 158 · alto 86 · total 308</span>
+    </div>
+    <div class="notes">
+      <b>Cómo separa:</b> por material y por orden. Memoria y Mazo son cajas hundidas y estrechas; la Vida
+      es el único panel ancho, iluminado y con remache. La Memoria gana etiqueta porque es la única de las
+      tres cuya función no se adivina por su forma.
+      <ul>
+        <li>El Mazo enseña el canto de hojas a la izquierda: se ve que es un montón, no una cifra.</li>
+        <li>Es la variante más conservadora: mismo lenguaje de paneles que ya usa el juego.</li>
+        <li>Contra: sigue habiendo tres rectángulos; la separación depende del ancho y del brillo.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== R2 ===================== -->
+  <section class="proposal">
+    <header>
+      <h2>R2 · La Vida deja de ser un panel</h2>
+      <span class="tag">separación por forma</span>
+    </header>
+    <div class="stage">
+      <span class="stage-note">R2</span>
+      <div class="fake-hand"><i></i><i></i><i></i><i></i></div>
+      <div class="corner">
+        <div class="phase-bar">
+          <div class="labels"><span class="is-active">Principal</span><span>Batalla</span><span>Fin</span></div>
+          <div class="track"><i class="is-active"></i><i></i><i></i></div>
+        </div>
+        <div class="crest-name js-name">Leo</div>
+        <div class="row">
+          <div class="pile">
+            <svg width="16" height="16" viewBox="0 0 24 24"><use href="#i-archive"/></svg>
+            <b>4</b>
+            <span class="cap">Memoria</span>
+          </div>
+          <div class="deck">
+            <span class="draw-badge">+1 <small>robo</small></span>
+            <span class="motif"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#i-book"/></svg></span>
+            <b class="deck-n">19</b>
+          </div>
+          <div style="width:12px"></div>
+          <div class="crest-host">
+            <div class="crest">
+              <span class="mini-heart"><svg width="12" height="12" viewBox="0 0 24 24"><use href="#i-heart"/></svg></span>
+              <span class="n js-life">2</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <span class="measure">62 + 68 + 88 (rombo) · alto 86 · total 240</span>
+    </div>
+    <div class="notes">
+      <b>Cómo separa:</b> la Vida abandona la silueta rectangular por completo y se convierte en el sello
+      romboidal que el juego ya usa como emblema. Rectángulos = pilas de cartas; rombo = tú. Es la regla
+      más simple de aprender y la más difícil de malinterpretar.
+      <ul>
+        <li>El nombre del Cronista sube encima de la fila, así que el rombo sólo lleva su número.</li>
+        <li>Cabe en 244&nbsp;px: exactamente el ancho del cluster actual, sin invadir nada.</li>
+        <li>Contra: el rombo recorta el espacio útil; una Vida de tres cifras quedaría apretada.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== R3 ===================== -->
+  <section class="proposal">
+    <header>
+      <h2>R3 · Dos cartas y un panel</h2>
+      <span class="tag">separación por categoría</span>
+    </header>
+    <div class="stage">
+      <span class="stage-note">R3</span>
+      <div class="fake-hand"><i></i><i></i><i></i><i></i></div>
+      <div class="corner">
+        <div class="phase-bar">
+          <div class="labels"><span class="is-active">Principal</span><span>Batalla</span><span>Fin</span></div>
+          <div class="track"><i class="is-active"></i><i></i><i></i></div>
+        </div>
+        <div class="row">
+          <div class="card-pile is-memory">
+            <span class="glyph"><svg width="15" height="15" viewBox="0 0 24 24"><use href="#i-archive"/></svg></span>
+            <b>4</b>
+          </div>
+          <div class="card-pile">
+            <span class="draw-badge">+1 <small>robo</small></span>
+            <span class="glyph"><svg width="15" height="15" viewBox="0 0 24 24"><use href="#i-book"/></svg></span>
+            <b class="deck-n">19</b>
+          </div>
+          <div class="life" style="width:164px">
+            <div>
+              <div class="name js-name">Leo</div>
+              <div class="n js-life">2</div>
+            </div>
+            <div class="emblem"><svg width="23" height="23" viewBox="0 0 24 24"><use href="#i-heart"/></svg></div>
+          </div>
+        </div>
+      </div>
+      <span class="measure">62 + 62 + 164 · alto 86 · total 312</span>
+    </div>
+    <div class="notes">
+      <b>Cómo separa:</b> Memoria y Mazo comparten <em>exactamente</em> la misma silueta —proporción de carta,
+      dorso, borde superior de hojas asomando— y sólo cambian de color: verde vivo el que se roba, gris apagado
+      el que ya se gastó. Dos cosas idénticas y una distinta: el ojo agrupa solo.
+      <ul>
+        <li>Convierte la Memoria en el ancla pedagógica: el jugador ya sabe que ese montón no es su vida.</li>
+        <li>Habla el idioma del juego: son cartas, se dibujan como cartas.</li>
+        <li>Contra: dos siluetas de carta pequeñas junto a la Mano real pueden competir por atención.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== R4 ===================== -->
+  <section class="proposal">
+    <header>
+      <h2>R4 · Nombre fuera, fila mínima</h2>
+      <span class="tag">la más compacta</span>
+    </header>
+    <div class="stage">
+      <span class="stage-note">R4</span>
+      <div class="fake-hand"><i></i><i></i><i></i><i></i></div>
+      <div class="corner">
+        <div class="phase-bar">
+          <div class="labels"><span class="is-active">Principal</span><span>Batalla</span><span>Fin</span></div>
+          <div class="track"><i class="is-active"></i><i></i><i></i></div>
+        </div>
+        <div class="row-head"><span class="js-name">Leo</span><em>Cronista</em></div>
+        <div class="row">
+          <div class="pile">
+            <svg width="16" height="16" viewBox="0 0 24 24"><use href="#i-archive"/></svg>
+            <b>4</b>
+            <span class="cap">Memoria</span>
+          </div>
+          <div class="deck">
+            <span class="draw-badge">+1 <small>robo</small></span>
+            <span class="motif"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#i-book"/></svg></span>
+            <b class="deck-n">19</b>
+          </div>
+          <div class="life" style="width:120px;justify-content:center;gap:10px">
+            <div class="n js-life" style="margin-top:0;font-size:40px">2</div>
+            <div class="emblem"><svg width="23" height="23" viewBox="0 0 24 24"><use href="#i-heart"/></svg></div>
+          </div>
+        </div>
+      </div>
+      <span class="measure">62 + 68 + 120 · alto 86 · total 270</span>
+    </div>
+    <div class="notes">
+      <b>Cómo separa:</b> por densidad. El nombre editable del Cronista sale de la fila y sube a una línea
+      propia, así que el panel de Vida no contiene nada más que el número y el corazón: cero espacio muerto,
+      que era tu queja original.
+      <ul>
+        <li>Número a 40&nbsp;px, el más grande de las seis: la Vida domina sin necesitar ancho.</li>
+        <li>Deja sitio libre a la izquierda para lo que pida la Fase 4 (Reserva y orden de pago).</li>
+        <li>Contra: el nombre queda pequeño y el campo editable pierde presencia.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== R5 ===================== -->
+  <section class="proposal">
+    <header>
+      <h2>R5 · Las pilas comparten estante</h2>
+      <span class="tag">separación por agrupación</span>
+    </header>
+    <div class="stage">
+      <span class="stage-note">R5</span>
+      <div class="fake-hand"><i></i><i></i><i></i><i></i></div>
+      <div class="corner">
+        <div class="phase-bar">
+          <div class="labels"><span class="is-active">Principal</span><span>Batalla</span><span>Fin</span></div>
+          <div class="track"><i class="is-active"></i><i></i><i></i></div>
+        </div>
+        <div class="row">
+          <div class="piles-group">
+            <span class="piles-group-cap">Tus cartas</span>
+            <div class="pile">
+              <svg width="16" height="16" viewBox="0 0 24 24"><use href="#i-archive"/></svg>
+              <b>4</b>
+              <span class="cap">Memoria</span>
+            </div>
+            <div class="deck">
+              <span class="draw-badge">+1 <small>robo</small></span>
+              <span class="motif"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#i-book"/></svg></span>
+              <b class="deck-n">19</b>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="life" style="width:158px">
+            <div>
+              <div class="name js-name">Leo</div>
+              <div class="n js-life">2</div>
+            </div>
+            <div class="emblem"><svg width="23" height="23" viewBox="0 0 24 24"><use href="#i-heart"/></svg></div>
+          </div>
+        </div>
+      </div>
+      <span class="measure">(8+62+8+68+8) + 12 + 158 · alto 86 · total 324</span>
+    </div>
+    <div class="notes">
+      <b>Cómo separa:</b> explícitamente. Memoria y Mazo se apoyan sobre un mismo estante con un rótulo
+      diminuto —<em>tus cartas</em>— y un remache dorado corta la fila antes de la Vida. No se deja la
+      agrupación al criterio del jugador: se dibuja.
+      <ul>
+        <li>El rótulo es la única concesión a explicar con palabras, y son dos.</li>
+        <li>El estante da un lugar natural al arrastre de <em>Devolver Fuente</em>: se suelta sobre esa base.</li>
+        <li>Contra: es la más ancha (324&nbsp;px) y añade un elemento decorativo más que mantener.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== R6 ===================== -->
+  <section class="proposal">
+    <header>
+      <h2>R6 · Pilas hundidas, Vida encendida</h2>
+      <span class="tag">separación por luz</span>
+    </header>
+    <div class="stage">
+      <span class="stage-note">R6</span>
+      <div class="fake-hand"><i></i><i></i><i></i><i></i></div>
+      <div class="corner">
+        <div class="phase-bar">
+          <div class="labels"><span class="is-active">Principal</span><span>Batalla</span><span>Fin</span></div>
+          <div class="track"><i class="is-active"></i><i></i><i></i></div>
+        </div>
+        <div class="row">
+          <div class="pile is-sunken">
+            <svg width="16" height="16" viewBox="0 0 24 24"><use href="#i-archive"/></svg>
+            <b>4</b>
+            <span class="cap">Memoria</span>
+          </div>
+          <div class="deck is-sunken">
+            <span class="draw-badge">+1 <small>robo</small></span>
+            <span class="motif"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#i-book"/></svg></span>
+            <b class="deck-n">19</b>
+          </div>
+          <div class="life is-lit" style="width:158px">
+            <div>
+              <div class="name js-name">Leo</div>
+              <div class="n js-life">2</div>
+            </div>
+            <div class="emblem"><svg width="23" height="23" viewBox="0 0 24 24"><use href="#i-heart"/></svg></div>
+          </div>
+        </div>
+      </div>
+      <span class="measure">62 + 68 + 158 · alto 86 · total 308</span>
+    </div>
+    <div class="notes">
+      <b>Cómo separa:</b> por profundidad, sin tocar ni una medida. Memoria y Mazo se hunden en el tablero
+      (sombra interior, saturación baja); la Vida sobresale hacia el jugador con borde claro y halo verde.
+      Misma altura, mismo ancho de fila, distinta capa de luz.
+      <ul>
+        <li>Es R1 con otra iluminación: si te gusta la fila base, esto es un ajuste de CSS, no un rediseño.</li>
+        <li>El halo de la Vida ya existe en el juego cuando recibe daño o curación; aquí es su estado normal.</li>
+        <li>Contra: en pantallas con poco contraste la diferencia puede diluirse; conviene combinarla con R2 o R3.</li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+
+<div class="verdict">
+  <h2>Qué mirar al elegir</h2>
+  <ul>
+    <li><b>El salto de categoría</b> — R2 (forma) y R3 (silueta de carta) lo hacen con el dibujo; R5 lo dice con
+      un estante; R6 lo hace con luz; R1 y R4 confían en el ancho y la posición.</li>
+    <li><b>El ancho total</b> — R2 es la única que cabe en los 244&nbsp;px del cluster actual. R4 mide 270,
+      R1/R6 308, R3 312 y R5 324. Cuanto más ancha, más se acerca la fila al riel de la Mano.</li>
+    <li><b>Qué queda para la Fase 4</b> — R4 y R2 dejan hueco libre a la izquierda para Reserva y orden de pago;
+      R5 ya lo gastó en el estante.</li>
+  </ul>
+  <p style="margin-top:10px">
+    Mi recomendación: <b>R2</b>, o <b>R3 + R6</b> si prefieres conservar el panel rectangular para la Vida.
+    R2 gana porque el rombo ya es el emblema del Cronista en el juego, no cuesta ancho y elimina la pregunta
+    de raíz: sólo hay un objeto no rectangular en la esquina y es el jugador. R4 es la respuesta directa a
+    "la Vida tiene mucho espacio" si además quieres la fila lo más corta posible.
+  </p>
+</div>
+
+<script>
+  const bind = (id, cls) => {
+    const el = document.getElementById(id);
+    const apply = () => document.body.classList.toggle(cls, el.checked);
+    el.addEventListener("change", apply);
+    apply();
+  };
+  bind("t-empty", "state-empty-hand");
+  bind("t-board", "stage-board");
+
+  const life = document.getElementById("t-highlife");
+  const name = document.getElementById("t-longname");
+  const sync = () => {
+    const n = life.checked ? "12" : "2";
+    document.querySelectorAll(".js-life").forEach((el) => { el.textContent = n; });
+    const label = name.checked ? "Cronista Leo" : "Leo";
+    document.querySelectorAll(".js-name").forEach((el) => { el.textContent = label; });
+    // Con Mano vacía el Archivo pierde una carta más en el próximo robo.
+    const deck = document.getElementById("t-empty").checked ? "19" : "19";
+    document.querySelectorAll(".deck-n").forEach((el) => { el.textContent = deck; });
+  };
+  [life, name, document.getElementById("t-empty")].forEach((el) => el.addEventListener("change", sync));
+  sync();
+</script>
+
+</body>
+</html>

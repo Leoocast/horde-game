@@ -18,15 +18,22 @@ import {
 import { grownVfxSurface, sharedVfxSourceTop } from "../src/components/sharedVfxRenderer";
 import { frameLeafRootIndex, frameRootPathSpecs } from "../src/components/GrowthBuffAnimator";
 import { buildStorm, stormBoltTones } from "../src/components/StormBuffAnimator";
-import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCounter";
+import {
+  completedHostMillPreviewCount,
+  hostArchiveAttackPreview,
+  hostArchiveDiscardCounterValue,
+  hostMillOriginSelector,
+} from "../src/components/hostArchiveCounter";
 import { hostAttackPlayerHitDelay } from "../src/components/hostAttackPresentation";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { playerAttackHostHitDelay } from "../src/components/playerAttackPresentation";
+import { setupJustCompleted, setupPrimaryAction, setupProgress } from "../src/components/setupPresentation";
 import { CardStatsBadge, CardTraitTooltipBadge } from "../src/components/Card";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
 import { PreviewStatsBadge, TraitPills } from "../src/components/CardPreview";
 import { VampireBite } from "../src/components/VampireBite";
 import { cardLabelCamelCase } from "../src/i18n/cardLocalization";
+import { translate } from "../src/i18n/translations";
 import {
   resolveCardBurnMaterial,
   resolveCardBurnScale,
@@ -37,12 +44,241 @@ import {
 import { burnPathCurvature, resolveBurnRenderer } from "../src/store/burnAnimation";
 import { addCard, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
 
-test("the Host Archive counter counts attack discards down without displaying zero", () => {
-  assert.equal(remainingArchiveDiscardPreview(7, 0), 7);
-  assert.equal(remainingArchiveDiscardPreview(7, 1), 6);
-  assert.equal(remainingArchiveDiscardPreview(7, 6), 1);
-  assert.equal(remainingArchiveDiscardPreview(7, 7), undefined);
-  assert.equal(remainingArchiveDiscardPreview(0, 0), undefined);
+test("Preparation progress preserves the original total across normal play and resume", () => {
+  assert.deepEqual(setupProgress(4, 4), { completed: 1, current: 1, total: 4 });
+  assert.deepEqual(setupProgress(4, 3), { completed: 2, current: 2, total: 4 });
+  assert.deepEqual(setupProgress(4, 1), { completed: 4, current: 4, total: 4 });
+  assert.deepEqual(setupProgress(3, 2), { completed: 2, current: 2, total: 3 });
+  assert.deepEqual(setupProgress(2, 0), undefined);
+  assert.deepEqual(setupProgress(0, 2), { completed: 1, current: 1, total: 2 });
+  assert.equal(translate("es", "phase.setupStepBanner", { current: 1, total: 3 }), "Preparación 1/3");
+  assert.equal(translate("en", "phase.setupStepBanner", { current: 1, total: 3 }), "Setup 1/3");
+  assert.deepEqual(
+    [1, 2, 3].map((current) => translate("es", "phase.setupStepShort", { current })),
+    ["Prep. 1", "Prep. 2", "Prep. 3"],
+  );
+  assert.equal(translate("es", "orb.extraTurn"), "Turno extra");
+  assert.equal(translate("es", "orb.endTurn"), "Terminar turno");
+});
+
+test("phase banners use content-sized plaques with tone-matched accents", () => {
+  const bannerSource = readFileSync(new URL("../src/components/PhaseBanner.tsx", import.meta.url), "utf8");
+  const statusSource = readFileSync(new URL("../src/components/GameStatusBadge.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.doesNotMatch(bannerSource, /lucide-react|phase-banner-crest|visiblePhase\.Icon/);
+  assert.doesNotMatch(stylesSource, /\.phase-banner-crest/);
+  assert.match(bannerSource, /className="phase-banner-count"/u);
+  assert.doesNotMatch(statusSource, /game\.setupRemaining/u);
+  assert.match(stylesSource, /\.phase-banner-copy\s*\{[^}]*width:\s*max-content;/su);
+  assert.match(stylesSource, /\.phase-banner-copy\s*\{[^}]*padding:\s*0 clamp\(48px, 4\.2vw, 72px\);/su);
+  assert.match(stylesSource, /\.phase-banner-count\s*\{[^}]*font-family:\s*"Outfit"[^}]*font-variant-numeric:\s*tabular-nums;/su);
+  assert.match(stylesSource, /\.phase-banner-main\s*\{\s*--phase-accent:\s*#9da86a/u);
+  assert.match(stylesSource, /\.phase-banner-defend\s*\{\s*--phase-accent:\s*#6fa8cf/u);
+  assert.match(stylesSource, /@media \(prefers-reduced-motion: reduce\)\s*\{[^}]*\.phase-banner[^}]*animation:\s*none !important;/su);
+});
+
+test("Preparation actions distinguish continuing from awakening the Host", () => {
+  assert.equal(setupPrimaryAction(3), "next");
+  assert.equal(setupPrimaryAction(2), "next");
+  assert.equal(setupPrimaryAction(1), "awaken");
+  assert.equal(setupPrimaryAction(0), undefined);
+  assert.equal(setupJustCompleted(1, 0), true);
+  assert.equal(setupJustCompleted(2, 1), false);
+  assert.equal(setupJustCompleted(0, 0), false);
+});
+
+test("Memory, Archive and Life share one row of equal boxes and the Archive owns the draw origin", () => {
+  const boardSource = readFileSync(new URL("../src/components/DuelHud.tsx", import.meta.url), "utf8");
+  const forecastSource = readFileSync(new URL("../src/components/PlayerArchiveForecast.tsx", import.meta.url), "utf8");
+  const handSource = readFileSync(new URL("../src/components/Hand.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(boardSource, /<PlayerArchiveForecast game=\{game\}/u);
+  assert.match(forecastSource, /data-player-archive-origin="true"/u);
+  assert.match(forecastSource, /data-energy-recycle-target="true"/u);
+  assert.match(handSource, /handArchiveEntryOffset/u);
+  assert.match(handSource, /querySelector<HTMLElement>\("\[data-player-archive-origin='true'\]"\)/u);
+  assert.match(handSource, /<AnimatePresence mode="popLayout">/u);
+  assert.match(handSource, /className="hand-card-drag-layer"/u);
+  assert.doesNotMatch(handSource, /className="hand-card-slot"[\s\S]{0,180}style=\{\{[^}]*x:\s*dragX/su);
+
+  // Memory and the Archive are the same box; only Life keeps the vitals panel.
+  assert.match(boardSource, /className="player-vitals-row"/u);
+  assert.match(forecastSource, /"card-pile card-pile-archive"/u);
+  assert.doesNotMatch(boardSource, /player-graveyard-host|player-graveyard-button/u);
+  assert.match(stylesSource, /\.player-vitals-row\s*\{[^}]*align-items:\s*stretch;/su);
+  // Box (75) plus its reserved tab gutter (7) equals the 82px of the Life panel, so the tab can
+  // peek over the edge without the row growing: the Host's copy rests on the top screen edge.
+  assert.match(stylesSource, /\.card-pile\s*\{[^}]*width:\s*62px;[^}]*min-height:\s*75px;\s*margin-top:\s*7px;/su);
+  assert.match(stylesSource, /\.card-pile::before\s*\{[^}]*top:\s*-7px;/su);
+  // Hovering Memory lights its border; the box itself never moves.
+  assert.doesNotMatch(stylesSource, /\.card-pile-memory:hover,[^}]*\{[^}]*transform:/su);
+
+  // Both sides own the same Memory box: the Chronicler's in the row, the Host's beside its panel.
+  assert.equal(boardSource.match(/className="card-pile card-pile-memory"/gu)?.length, 2);
+  assert.match(boardSource, /className="card-pile-host host-memory-pile-host"/u);
+  assert.match(stylesSource, /\.host-memory-pile-host\s*\{[^}]*right:\s*100%;/su);
+  assert.doesNotMatch(boardSource, /host-deck-graveyard/u);
+  assert.doesNotMatch(stylesSource, /\.host-deck-graveyard/u);
+
+  // The rotated Life crest only fits while the name floor leaves room for it inside the panel.
+  assert.match(stylesSource, /\.game-screen \.player-life-counter\s*\{[^}]*width:\s*180px;/su);
+  assert.match(stylesSource, /\.player-life-copy\s*\{[^}]*min-width:\s*5\.5rem;/su);
+
+  // Both boxes name themselves at their base.
+  assert.match(boardSource, /className="card-pile-label">\{t\("zones\.memory"\)\}/u);
+  assert.match(forecastSource, /className="card-pile-label"[^>]*>\{archiveLabel\}/u);
+
+  // The normal draw is a rule, not permanent UI: the badge only appears when it deviates.
+  assert.match(forecastSource, /const extraDraw = forecast\.amount > 1;/u);
+  assert.match(forecastSource, /\{extraDraw && \(/u);
+  assert.match(forecastSource, /<GameTooltip content=\{emptyHandTooltip\}/u);
+  assert.doesNotMatch(forecastSource, /game\.drawReasonEmptyHand["']/u);
+});
+
+test("a recyclable Source keeps the broad right-side gesture while lighting up the Archive box", () => {
+  const handSource = readFileSync(new URL("../src/components/Hand.tsx", import.meta.url), "utf8");
+  const forecastSource = readFileSync(new URL("../src/components/PlayerArchiveForecast.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.doesNotMatch(handSource, /SourceActionMenu/u);
+  assert.match(handSource, /useSourceActionUiStore/u);
+  assert.match(handSource, /ENERGY_RECYCLE_SCREEN_RATIO = 0\.82/u);
+  assert.match(handSource, /ENERGY_RECYCLE_MIN_HORIZONTAL_DRAG = 48/u);
+  assert.match(handSource, /setDraggingRecyclableSourceId\(energyRecyclable \? card\.instanceId : undefined\)/u);
+  assert.match(handSource, /<EnergyRecycleDragHint/u);
+  assert.match(handSource, /className="energy-recycle-drag-path"/u);
+  assert.match(handSource, /className="energy-recycle-target-ring"/u);
+  // The drop invitation is the box itself glowing and growing; the dragged card already carries
+  // the wording, so the Archive never reopens a panel to repeat it.
+  assert.doesNotMatch(forecastSource, /source-return-target-box|source-return-target-button|recycleSelectedSource/u);
+  assert.match(stylesSource, /\.card-pile\.is-source-return-target\s*\{[^}]*transform:\s*scale\(1\.06\);/su);
+  assert.match(stylesSource, /\.card-pile\.is-recycle-targeted\s*\{[^}]*transform:\s*scale\(1\.12\);/su);
+  assert.match(stylesSource, /\.energy-recycle-drag-path\s*\{[^}]*stroke-dasharray:\s*7 8;/su);
+});
+
+test("unused blue Source orbs travel into yellow Reserve sockets before reappearing", () => {
+  const battlefieldSource = readFileSync(new URL("../src/components/Battlefield.tsx", import.meta.url), "utf8");
+  const animatorSource = readFileSync(new URL("../src/components/ReserveTransferAnimator.tsx", import.meta.url), "utf8");
+  const presentationSource = readFileSync(new URL("../src/components/reserveTransferPresentation.ts", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(battlefieldSource, /reserveTransferPresentation\(previous, current\)/u);
+  assert.doesNotMatch(battlefieldSource, /"is-pending"/u);
+  assert.match(battlefieldSource, /<ReserveTransferAnimator/u);
+  assert.match(presentationSource, /previous\.pending - current\.pending/u);
+  assert.match(presentationSource, /current\.stored - previous\.stored/u);
+    assert.match(animatorSource, /<EnergyFlowTravel/u);
+    assert.match(animatorSource, /<EnergyFlowImpact/u);
+    assert.match(animatorSource, /reserve-transfer-arrival/u);
+    assert.match(animatorSource, /className="mana-alchemy-orb"/u);
+    assert.match(animatorSource, /className="mana-alchemy-liquid"/u);
+    assert.match(stylesSource, /\.reserve-transfer-arrival-yellow\s*\{/u);
+    assert.match(stylesSource, /\.reserve-transfer-arrival\.is-ready \.mana-alchemy-orb\s*\{/u);
+    assert.match(stylesSource, /\.mana-alchemy-socket\.is-reserve-transfer-source \.mana-alchemy-orb,[^}]*visibility:\s*hidden;/su);
+    assert.match(stylesSource, /\.mana-alchemy-socket-blue\.is-spent \.mana-alchemy-liquid\s*\{[^}]*display:\s*none;/su);
+    assert.match(stylesSource, /\.mana-alchemy-socket-blue\.is-spent \.mana-alchemy-orb::after\s*\{[^}]*border-color:\s*transparent;/su);
+    assert.match(stylesSource, /\.mana-alchemy-socket-blue\.is-empty \.mana-alchemy-orb\s*\{[^}]*visibility:\s*hidden;/su);
+    assert.match(stylesSource, /@keyframes mana-energy-orb-spend-blue[\s\S]*?100%[^}]*saturate\(0\.76\) brightness\(0\.82\)/u);
+  });
+
+test("Preparation keeps card-generated Reserve available and delays only unused Sources", () => {
+  const battlefieldSource = readFileSync(new URL("../src/components/Battlefield.tsx", import.meta.url), "utf8");
+  const translationsSource = readFileSync(new URL("../src/i18n/translations.ts", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(battlefieldSource, /reserveSetupActive/u);
+  assert.match(battlefieldSource, /game\.reserveSetupTooltip/u);
+  assert.doesNotMatch(battlefieldSource, /is-setup-latent|is-reserve-latent|LockKeyhole/u);
+  assert.doesNotMatch(battlefieldSource, /reserveAvailable|reserveEffectsNow|reserveSourcesAfterHost/u);
+  assert.match(translationsSource, /"game\.reserveSetupTooltip": "Energy from unused Sources is stored once Preparation ends\."/u);
+  assert.match(battlefieldSource, /className="mana-reserve-tooltip-host"/u);
+  assert.doesNotMatch(battlefieldSource, /<Hourglass[^>]*reserve/u);
+  assert.doesNotMatch(stylesSource, /\.mana-reserve-setup-tooltip\s*\{/u);
+  assert.doesNotMatch(stylesSource, /\.mana-reserve-setup-note\s*\{/u);
+  assert.doesNotMatch(stylesSource, /\.mana-energy-track-yellow\.is-setup-latent/u);
+});
+
+test("committed hand cards yield to their specialized play animation without snapping home", () => {
+  const handSource = readFileSync(new URL("../src/components/Hand.tsx", import.meta.url), "utf8");
+
+  assert.match(handSource, /concealCommittedHandCard\(card\.instanceId\);\s*playFromHand/u);
+  assert.match(handSource, /concealCommittedHandCard\(card\.instanceId\);\s*startEnergyRecycle/u);
+  assert.match(handSource, /element\.style\.visibility = "hidden"/u);
+  assert.doesNotMatch(handSource, /exit:\s*\{[^}]*y:\s*-34/su);
+});
+
+test("the Host Archive attack preview shows the physical result and caps it to the Archive", () => {
+  assert.deepEqual(hostArchiveAttackPreview(42, 7, 3), {
+    conversionCount: 2,
+    discardCount: 2,
+    projectedArchiveCount: 40,
+    visibleCardCount: 2,
+  });
+  assert.deepEqual(hostArchiveAttackPreview(42, 13, 3), {
+    conversionCount: 4,
+    discardCount: 4,
+    projectedArchiveCount: 38,
+    visibleCardCount: 3,
+  });
+  assert.deepEqual(hostArchiveAttackPreview(2, 99, 3), {
+    conversionCount: 33,
+    discardCount: 2,
+    projectedArchiveCount: 0,
+    visibleCardCount: 2,
+  });
+  assert.deepEqual(hostArchiveAttackPreview(42, 2, 3), {
+    conversionCount: 0,
+    discardCount: 0,
+    projectedArchiveCount: 42,
+    visibleCardCount: 0,
+  });
+});
+
+test("the Host attack preview shows cards going to Memory and keeps the math in a tooltip", () => {
+  const duelHudSource = readFileSync(new URL("../src/components/DuelHud.tsx", import.meta.url), "utf8");
+  const phaseOrbSource = readFileSync(new URL("../src/components/PhaseOrb.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(duelHudSource, /t\("game\.hostArchive"\)/u);
+  assert.match(duelHudSource, /className="host-attack-card-loss"/u);
+  assert.match(duelHudSource, /t\("game\.attackCalculation"\)/u);
+  assert.match(duelHudSource, /\u00f7 \$\{archiveDiscardThreshold\} \u2192/u);
+  assert.doesNotMatch(duelHudSource, /host-attack-formula|= -/u);
+  assert.match(stylesSource, /\.host-attack-card-loss i\s*\{/u);
+  assert.match(stylesSource, /\.host-attack-calculation-tooltip\s*\{/u);
+  assert.match(phaseOrbSource, /t\("orb\.chooseAttackers"\)/u);
+  assert.match(phaseOrbSource, /t\("orb\.attackArchive"\)/u);
+  assert.match(phaseOrbSource, /t\("orb\.passCombat"\)/u);
+  assert.equal(translate("es", "orb.chooseAttackers"), "Elegir atacantes");
+  assert.equal(translate("es", "orb.attackArchive"), "Atacar el Archivo");
+  assert.equal(translate("es", "orb.passCombat"), "Pasar el combate");
+});
+
+test("the Host Archive discard drawer counts departures and closes after the last flight without showing zero", () => {
+  const duelHudSource = readFileSync(new URL("../src/components/DuelHud.tsx", import.meta.url), "utf8");
+  const millAnimatorSource = readFileSync(new URL("../src/components/HostMillAnimator.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.equal(hostArchiveDiscardCounterValue(4, 0, false, false), 4);
+  assert.equal(hostArchiveDiscardCounterValue(0, 0, false, false), 0);
+  assert.equal(hostArchiveDiscardCounterValue(4, 1, true, true), 3);
+  assert.equal(hostArchiveDiscardCounterValue(4, 3, true, false), 1);
+  assert.equal(hostArchiveDiscardCounterValue(4, 4, true, true), 1);
+  assert.equal(hostArchiveDiscardCounterValue(4, 4, true, false), undefined);
+  assert.equal(hostArchiveDiscardCounterValue(0, 0, true, false), undefined);
+  assert.equal(hostMillOriginSelector(true), "[data-host-attack-mill-origin='true']");
+  assert.equal(hostMillOriginSelector(false), "[data-host-mill-origin='archive']");
+  assert.equal(completedHostMillPreviewCount(1, true), 0);
+  assert.equal(completedHostMillPreviewCount(1, false), 1);
+  assert.equal(completedHostMillPreviewCount(4, true), 3);
+  assert.match(duelHudSource, /data-host-attack-mill-origin="true"/u);
+  assert.match(duelHudSource, /completedHostMillPreviewCount/u);
+  assert.match(millAnimatorSource, /hostMillOriginSelector\(preview\)/u);
+  assert.match(stylesSource, /\.host-attack-count-host\s*\{[^}]*right:\s*100%;/su);
+  assert.match(stylesSource, /\.host-attack-count\s*\{[^}]*border-right:\s*0;/su);
+  assert.match(stylesSource, /\.host-deck-counter-cluster\.is-attack-counter-open \.host-memory-pile-host\s*\{[^}]*translateX\(-108px\)/su);
 });
 
 test("Vaelor uses his personal defense animation only when he wins and survives", () => {
@@ -588,6 +824,17 @@ test("main menu reserves enough width and breathing room for the Hostfall title"
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
   assert.match(styles, /--main-menu-panel-width:\s*clamp\(380px, 34vw, 590px\)/u);
   assert.match(styles, /\.main-menu-title\s*\{[^}]*margin:\s*16px 0 0;/u);
+});
+
+test("the Hostfall wordmark and Chronicler name use the bundled decorative face", () => {
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(
+    styles,
+    /@font-face\s*\{[^}]*font-family:\s*"Cinzel Decorative";[^}]*font-weight:\s*400;[^}]*cinzel-decorative-latin\.woff2/u,
+  );
+  assert.match(styles, /\.hostfall-wordmark\s*\{[^}]*font-family:\s*"Cinzel Decorative"[^}]*font-weight:\s*400;/u);
+  assert.match(styles, /\.main-menu-chronicler-name\s*\{[^}]*font-family:\s*"Cinzel Decorative"[^}]*font-weight:\s*400;/u);
 });
 
 test("deck setup panels and deck cards opt into shared click audio", () => {

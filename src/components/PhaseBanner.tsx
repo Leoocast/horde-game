@@ -1,7 +1,7 @@
-import { Moon, Shield, Skull, Sparkles, Swords, type LucideIcon } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { useTranslation } from "../i18n/useTranslation";
+import { setupJustCompleted, setupProgress } from "./setupPresentation";
 
 type BannerTone = "main" | "battle" | "defend" | "host";
 
@@ -9,7 +9,10 @@ type BannerState = {
   key: string;
   label: string;
   tone: BannerTone;
-  Icon: LucideIcon;
+  progress?: Readonly<{
+    current: number;
+    total: number;
+  }>;
 };
 
 const BANNER_DURATION_MS = 1320;
@@ -24,24 +27,33 @@ const TONE_CLASS: Record<BannerTone, string> = {
   host: "phase-banner-host",
 };
 
-export function PhaseBanner({ game, suspended = false }: { game: GameState; suspended?: boolean }) {
+export function PhaseBanner({ game, setupTurns, suspended = false }: { game: GameState; setupTurns: number; suspended?: boolean }) {
   const t = useTranslation();
-  const phase = useMemo(() => getBannerState(game, t), [game.activeSide, game.phase, game.combat.hostAttackers.length, game.setupTurnsRemaining, game.turnNumber, game.winner, t]);
+  const phase = useMemo(() => getBannerState(game, setupTurns, t), [game.activeSide, game.phase, game.combat.hostAttackers.length, game.setupTurnsRemaining, game.turnNumber, game.winner, setupTurns, t]);
   const [visiblePhase, setVisiblePhase] = useState<BannerState | undefined>();
+  const previousSetup = useRef({ remaining: game.setupTurnsRemaining, seed: game.seed });
 
   useEffect(() => {
+    const setupAwakened = previousSetup.current.seed === game.seed && setupJustCompleted(
+      previousSetup.current.remaining,
+      game.setupTurnsRemaining,
+    );
+    previousSetup.current = { remaining: game.setupTurnsRemaining, seed: game.seed };
     if (suspended) {
       setVisiblePhase(undefined);
       return;
     }
-    if (!phase) {
+    const nextPhase = setupAwakened
+      ? { key: `setup-awakens-${game.turnNumber}`, label: t("phase.hostAwakens"), tone: "host" as const }
+      : phase;
+    if (!nextPhase) {
       setVisiblePhase(undefined);
       return;
     }
-    setVisiblePhase(phase);
+    setVisiblePhase(nextPhase);
     const timer = window.setTimeout(() => setVisiblePhase(undefined), BANNER_DURATION_MS);
     return () => window.clearTimeout(timer);
-  }, [phase?.key, suspended]);
+  }, [game.seed, game.setupTurnsRemaining, game.turnNumber, phase, suspended, t]);
 
   if (!visiblePhase) return null;
 
@@ -49,38 +61,53 @@ export function PhaseBanner({ game, suspended = false }: { game: GameState; susp
     <div className="phase-banner-shell pointer-events-none fixed inset-0 z-[98] flex items-center justify-center">
       <div className={["phase-banner", TONE_CLASS[visiblePhase.tone], game.gameMode === "chaos" ? "is-chaos" : ""].join(" ")} key={visiblePhase.key}>
         <span className="phase-banner-line phase-banner-line-left" />
-        <span className="phase-banner-crest"><visiblePhase.Icon size={22} strokeWidth={1.65} /></span>
         <span className="phase-banner-copy">
-          <span className="phase-banner-text">{visiblePhase.label}</span>
+          <span className="phase-banner-edge-frame" />
+          <span className="phase-banner-text">
+            <span>{visiblePhase.label}</span>
+            {visiblePhase.progress && (
+              <>
+                {" "}
+                <span className="phase-banner-count">
+                  {visiblePhase.progress.current}/{visiblePhase.progress.total}
+                </span>
+              </>
+            )}
+          </span>
         </span>
         <span className="phase-banner-line phase-banner-line-right" />
-        <span className="phase-banner-edge-frame" />
       </div>
     </div>
   );
 }
 
-function getBannerState(game: GameState, t: ReturnType<typeof useTranslation>): BannerState | undefined {
+function getBannerState(game: GameState, setupTurns: number, t: ReturnType<typeof useTranslation>): BannerState | undefined {
   if (game.winner) return undefined;
   if (game.activeSide === "player" && game.phase === "main" && game.setupTurnsRemaining > 0) {
-    if (game.turnNumber === 1) return { key: `setup-main-${game.turnNumber}`, label: t("phase.mainPhase"), tone: "main", Icon: Sparkles };
-    if (game.setupTurnsRemaining === 1) return { key: `setup-last-extra-${game.turnNumber}`, label: t("phase.lastExtraTurn"), tone: "main", Icon: Sparkles };
-    return { key: `setup-extra-${game.turnNumber}`, label: t("phase.extraTurn"), tone: "main", Icon: Sparkles };
+    const setup = setupProgress(setupTurns, game.setupTurnsRemaining);
+    if (setup) {
+      return {
+        key: `setup-step-${setup.current}-of-${setup.total}`,
+        label: t("phase.setup"),
+        tone: "main",
+        progress: { current: setup.current, total: setup.total },
+      };
+    }
   }
   if (game.activeSide === "host" && game.combat.hostAttackers.length > 0) {
-    return { key: `host-defend-${game.turnNumber}-${game.combat.hostAttackers.length}`, label: t("phase.defendPhase"), tone: "defend", Icon: Shield };
+    return { key: `host-defend-${game.turnNumber}-${game.combat.hostAttackers.length}`, label: t("phase.defendPhase"), tone: "defend" };
   }
   if (game.activeSide === "player" && game.phase === "main") {
-    return { key: `player-main-${game.turnNumber}`, label: t("phase.mainPhase"), tone: "main", Icon: Sparkles };
+    return { key: `player-main-${game.turnNumber}`, label: t("phase.mainPhase"), tone: "main" };
   }
   if (game.activeSide === "player" && game.phase === "combat") {
-    return { key: `player-battle-${game.turnNumber}`, label: t("phase.battlePhase"), tone: "battle", Icon: Swords };
+    return { key: `player-battle-${game.turnNumber}`, label: t("phase.battlePhase"), tone: "battle" };
   }
   if (game.activeSide === "host" && game.phase === "host") {
-    return { key: `host-main-${game.turnNumber}`, label: t("phase.hostPhase"), tone: "host", Icon: Skull };
+    return { key: `host-main-${game.turnNumber}`, label: t("phase.hostPhase"), tone: "host" };
   }
   if (game.phase === "end") {
-    return { key: `${game.activeSide}-end-${game.turnNumber}`, label: t("phase.endPhase"), tone: game.activeSide === "host" ? "host" : "main", Icon: Moon };
+    return { key: `${game.activeSide}-end-${game.turnNumber}`, label: t("phase.endPhase"), tone: game.activeSide === "host" ? "host" : "main" };
   }
   return undefined;
 }

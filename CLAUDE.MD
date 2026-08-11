@@ -122,8 +122,9 @@ Contratos desktop vigentes:
   roots registrados.
 - El renderer release no puede contener recursos remotos, `?playground`, `PlaygroundScreen` ni
   `AudioLabScreen`. Verificarlo con `scripts/audit-offline-runtime.mjs` después de `build:web`.
-- `docs/data/generated/runtime_asset_inventory.json` es la proyección reproducible del contenido de `dist`; se
-  regenera sólo después de un build release intencional.
+- `docs/data/generated/runtime_asset_inventory.json` es una captura diagnóstica del último build
+  release aprobado. No es un gate de desarrollo ni del CI básico y puede quedar desfasada entre
+  releases; se regenera sólo después de un build release intencional.
 - Fase 3 usa Electron 43.3.0 + Forge 7.11.2 exactos. El código está en ASAR, cards/fonts son
   `extraResources`, Card Studio/Playground no se empaquetan y los gates automáticos son
   `electron:verify` + `electron:smoke`.
@@ -357,6 +358,14 @@ No lanzar efectos relacionados todos a la vez. No recentrar el campo entre beats
 fuente no debe repetirse cuando el mismo evento continúa inmediatamente con líneas, proyectiles o
 impactos. Los resets incrementan `hostSequenceEpoch` para invalidar callbacks viejos.
 
+La Mano separa tres transformaciones que no deben volver a compartir el mismo nodo: el slot exterior
+anima entrada/salida y reorganización; una capa intermedia posee el drag; la carta interior posee el
+abanico y el hover. Toda carta robada después del reparto inicial nace en el centro DOM del Archivo
+del Cronista (`data-player-archive-origin`), y un robo múltiple comparte ese origen con entradas
+escalonadas. `AnimatePresence` mantiene el hueco fuera del layout mientras la carta sale para que las
+restantes se reorganicen con spring en vez de saltar. El contrato completo está en
+`docs/reference/animation_contracts.md`.
+
 VFX y Three.js: consultar `docs/reference/vfx_and_threejs.md` y reutilizar materiales/animadores existentes
 antes de crear otra implementación.
 
@@ -392,6 +401,42 @@ Fuente, Reserva y ataque al Archivo debe seguir el plan de diseño e implementac
 `docs/plans/ui_core_rules_clarity_plan.md`. Cada fase empieza con una conversación de UI y requiere
 aprobación del usuario antes de editar código; la preparación técnica queda subordinada al diseño
 aprobado y el plan no autoriza por sí solo cambios de reglas ni la implementación del tutorial.
+
+Estado vigente de ese plan: las Fases 1 (Preparación), 2 (Archivo y próximo robo), 3 (Acción de
+Fuente), 4 (Reserva y orden de pago) y 5 (ataque al Archivo de la Hueste) están cerradas tras QA
+visual del usuario; la Fase 6 y el plan completo quedaron cerrados el 2026-08-11 tras la revisión
+global. El tutorial es trabajo posterior y debe reutilizar esta UI sin reabrir sus decisiones
+implícitamente. El contrato de la Fase 5 es: panel **Archivo de la
+Hueste**, conteo `actual → restante`, resultado físico reducido a siluetas y `N`, y tooltip secundario
+**Cálculo del ataque** con la operación compacta `Fuerza ÷ umbral → resultado`. El preview usa
+`hostRules.damagePerArchiveDiscard` y se limita al Archivo restante. La placa de `N` emerge por la
+izquierda y desplaza Memoria; durante la resolución es el origen de cada carta, desciende con cada
+salida y conserva `1` durante el último vuelo. Al aterrizar la última carta se retrae sin mostrar `0`
+y Memoria vuelve junto al Archivo. Los CTA son **Elegir atacantes**, **Atacar el Archivo** y
+**Pasar el combate**.
+`playerDrawForecast` en
+`src/engine/TurnManager.ts` es la fuente única para el robo real y su previsión. La devolución
+conserva el gesto amplio hacia la derecha y sólo expande visualmente el Archivo durante un arrastre
+que `canPlayerRecycleEnergy` considera válido; la UI no debe volver a duplicar esas condiciones.
+
+La esquina inferior derecha es una sola fila `[Memoria][Archivo][Vida]` de altura común
+(`.player-vitals-row`). Memoria y Archivo son la misma caja de cartas —`.card-pile`, con su tapa
+superior dentro del marco y su nombre impreso en la base— y sólo la Vida conserva el panel de
+vitals. La Memoria de
+la Hueste usa esa misma caja en fila con su panel; ninguna de las dos vuelve a ser un botón que
+asome por detrás del marco. El Archivo del Cronista no
+debe volver a presentarse como una estadística apilada sobre la Vida: la Hueste sí muestra su
+Archivo como barra de vida y esa lectura no debe contagiarse al Cronista. El robo normal no se
+imprime nunca; sólo aparece una insignia `+1` cuando `playerDrawForecast` supera una carta. Durante
+un arrastre válido de Devolver Fuente la caja del Archivo se enciende y crece; el texto de la acción
+pertenece a la etiqueta flotante del arrastre y no vuelve a un panel propio.
+
+Durante Preparación la Reserva no está bloqueada: los efectos de Ecos que generan Energía la llenan
+de inmediato y puede gastarse en ese mismo paso. Lo que espera al turno de la Hueste es sólo la
+conversión automática de Fuentes sin usar. La pista amarilla debe conservar sus orbes y colores
+activos y no añade ningún icono o mensaje permanente. Durante Preparación, el tooltip de la fila
+amarilla dice solamente que la Energía de Fuentes sin usar se guarda cuando termina la Preparación;
+nunca vuelve a presentar la Reserva completa como sellada.
 
 ## Preferencias de trabajo
 

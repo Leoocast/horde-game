@@ -1,5 +1,34 @@
 # Animation contracts
 
+## Player hand transitions
+
+The hand has three independent transform owners. They must remain on separate DOM nodes:
+
+- `.hand-card-slot` owns Archive entry, exit, and Framer Motion layout reflow.
+- `.hand-card-drag-layer` owns pointer-drag `x` / `y` MotionValues.
+- `.hand-card` owns the fan, hover lift, and card rotation.
+
+Putting drag MotionValues back on `.hand-card-slot` overrides its variant and layout transforms. The
+visible regressions are cards appearing from below instead of travelling from the Archive and the
+rest of the hand snapping when a card is played or removed.
+
+Every card added after the initial deal derives its starting translation from the live center of
+`[data-player-archive-origin='true']`. The calculation includes its final slot, fan offset, overlap,
+and hand width, so every card in a multi-draw begins at the same physical Archive position. Cards in
+the same draw batch are staggered by batch order, not by their final index in the complete hand.
+
+The list stays inside `AnimatePresence` with `mode="popLayout"`. A departing card can finish its exit
+outside layout while the remaining slots spring into their new positions; an arriving card flies
+from the Archive while the existing slots reorganize. This contract covers normal draw, empty-hand
+bonus draw, playing or Invoking a card, and the replacement draw after returning a Source.
+
+On a valid drop, the dragged DOM card yields immediately to the presentation that owns the action.
+Sources are concealed before `LandPlayAnimator` captures the same release geometry; returned Sources
+yield to `EnergyRecycleAnimator`; Invoked cards yield to their battlefield arrival. The concealed
+copy must never snap back toward the hand underneath the real animation. Invalid drops keep the
+normal drag return. The generic `AnimatePresence` exit changes opacity only and never invents a
+second movement for an action that already has one.
+
 ## Host presentation beats
 
 Every Host reaction plays as one **beat**: one card acting at a time, board locked, engine state committed at the moment the animation says it lands.

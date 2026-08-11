@@ -9,7 +9,7 @@ export function GameStatusBadge({ game }: { game: GameState }) {
     : game.gameMode === "chaos"
       ? t(hostInSurge(game) ? "game.chaosSurgeActive" : "game.chaosMutationActive")
       : game.setupTurnsRemaining > 0
-        ? t("game.setupRemaining", { count: game.setupTurnsRemaining })
+        ? t("phase.setup")
         : t(hostInSurge(game) ? "game.hostSurgeActive" : "game.normalAlternation");
   const phase = game.phase === "host"
     ? t("phase.hostPhase")

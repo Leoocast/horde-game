@@ -3,6 +3,19 @@ import { emptyEnergyPool } from "./EnergySystem";
 import { drawCards } from "./GameState";
 import { resetOncePerTurnUsage } from "./OncePerTurn";
 
+export type PlayerDrawReason = "normal" | "setup" | "easy" | "empty-hand" | "chaos";
+
+export type PlayerDrawForecast = Readonly<{
+  amount: number;
+  requested: number;
+  reason: PlayerDrawReason;
+  emptyHandBonus: boolean;
+}>;
+
+type PlayerDrawForecastOptions = Readonly<{
+  timing?: "immediate" | "next";
+}>;
+
 export function readySide(game: GameState, side: "player" | "host"): void {
   for (const card of game[side].field) {
     card.exhausted = false;
@@ -65,13 +78,35 @@ export function startPlayerTurnReady(game: GameState): void {
 }
 
 export function performPlayerDraw(game: GameState): void {
-  const drawAmount = game.gameMode === "chaos"
-    ? 2
-    : game.setupTurnsRemaining > 0
-    ? 1
-    : game.difficulty === "easy" || game.player.hand.length === 0
-      ? 2
-      : 1;
-  drawCards(game, "player", drawAmount);
-  game.log.unshift(`Player draws ${drawAmount} card${drawAmount === 1 ? "" : "s"}.`);
+  const forecast = playerDrawForecast(game);
+  drawCards(game, "player", forecast.amount);
+  game.log.unshift(`Player draws ${forecast.amount} card${forecast.amount === 1 ? "" : "s"}.`);
+}
+
+/**
+ * The single source of truth for both the draw resolver and the permanent UI forecast.
+ * `amount` is capped by the Archive so the player sees what can actually be drawn, while
+ * `requested` preserves the rule's intended amount for diagnostics and future effects.
+ */
+export function playerDrawForecast(game: GameState, options: PlayerDrawForecastOptions = {}): PlayerDrawForecast {
+  const setupApplies = options.timing === "next"
+    ? game.setupTurnsRemaining > 1
+    : game.setupTurnsRemaining > 0;
+  const reason: PlayerDrawReason = game.gameMode === "chaos"
+    ? "chaos"
+    : setupApplies
+      ? "setup"
+      : game.difficulty === "easy"
+        ? "easy"
+        : game.player.hand.length === 0
+          ? "empty-hand"
+          : "normal";
+  const requested = reason === "setup" || reason === "normal" ? 1 : 2;
+  const amount = Math.min(requested, game.player.archive.length);
+  return {
+    amount,
+    requested,
+    reason,
+    emptyHandBonus: reason === "empty-hand" && amount > 1,
+  };
 }

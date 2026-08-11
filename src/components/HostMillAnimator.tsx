@@ -5,6 +5,7 @@ import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useCardDetails } from "../utils/cardImages";
+import { hostMillOriginSelector } from "./hostArchiveCounter";
 
 const CARD_WIDTH = 172;
 const CARD_HEIGHT = 240;
@@ -26,14 +27,21 @@ export function HostMillAnimator() {
   return (
     <>
       <div data-audio-click="off" className="fixed inset-0 z-[89]" />
-      <HostMillCard key={active.id} itemId={active.id} definitionId={active.card.definitionId} name={localizedCardName(active.card, language)} onComplete={() => complete(active.id)} />
+      <HostMillCard
+        key={active.id}
+        itemId={active.id}
+        definitionId={active.card.definitionId}
+        name={localizedCardName(active.card, language)}
+        preview={active.preview === true}
+        onComplete={() => complete(active.id)}
+      />
     </>
   );
 }
 
-function HostMillCard({ itemId, definitionId, name, onComplete }: { itemId: string; definitionId: string; name: string; onComplete: () => void }) {
+function HostMillCard({ itemId, definitionId, name, preview, onComplete }: { itemId: string; definitionId: string; name: string; preview: boolean; onComplete: () => void }) {
   const { imageUrl } = useCardDetails(definitionId);
-  const path = useMemo(readHostMillPath, [itemId]);
+  const path = useMemo(() => readHostMillPath(preview), [itemId, preview]);
   const deltaX = path.target.x - path.origin.x;
   const deltaY = path.target.y - path.origin.y;
 
@@ -68,8 +76,10 @@ function HostMillCard({ itemId, definitionId, name, onComplete }: { itemId: stri
   );
 }
 
-function readHostMillPath(): { origin: { x: number; y: number }; target: { x: number; y: number } } {
-  const originRect = document.querySelector<HTMLElement>("[data-host-mill-origin='true']")?.getBoundingClientRect();
+function readHostMillPath(preview: boolean): { origin: { x: number; y: number }; target: { x: number; y: number } } {
+  const originElement = document.querySelector<HTMLElement>(hostMillOriginSelector(preview))
+    ?? document.querySelector<HTMLElement>(hostMillOriginSelector(false));
+  const originRect = originElement?.getBoundingClientRect();
   const targetRect = document.querySelector<HTMLElement>("[data-host-mill-target='true']")?.getBoundingClientRect();
   const origin = originRect
     ? { x: originRect.left + originRect.width / 2, y: originRect.top + originRect.height / 2 }

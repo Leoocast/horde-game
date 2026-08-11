@@ -5,6 +5,7 @@ import { useAudioStore } from "../store/useAudioStore";
 import { useGameStore } from "../store/useGameStore";
 import { useTranslation } from "../i18n/useTranslation";
 import { GameTooltip } from "./GameTooltip";
+import { setupPrimaryAction } from "./setupPresentation";
 
 export function PhaseOrb({ game }: { game: GameState }) {
   const t = useTranslation();
@@ -148,25 +149,26 @@ function getOrbState(
   if (game.activeSide === "host") {
     return { label: t("orb.myTurn"), Icon: Check, action: actions.finishHostTurn, tone: "main" as const };
   }
-  if (game.setupTurnsRemaining > 0) {
-    if (game.setupTurnsRemaining === 1) {
-      return { label: t("orb.endTurn"), Icon: Check, action: actions.finishSetupAndRunHost, tone: "host" as const };
-    }
-    return { label: t("orb.nextTurn"), Icon: FastForward, action: actions.endPlayerTurn, tone: "main" as const };
+  const setupAction = setupPrimaryAction(game.setupTurnsRemaining);
+  if (setupAction === "awaken") {
+    return { label: t("orb.endTurn"), Icon: Check, action: actions.finishSetupAndRunHost, tone: "host" as const };
+  }
+  if (setupAction === "next") {
+    return { label: t("orb.extraTurn"), Icon: FastForward, action: actions.endPlayerTurn, tone: "main" as const };
   }
   if (game.setupCompletePendingHost) {
     return { label: t("orb.endTurn"), Icon: Check, action: actions.runHostMain, tone: "host" as const };
   }
   if (game.phase === "combat" && game.combat.playerAttackers.length > 0) {
-    return { label: t("common.confirm"), Icon: Check, action: actions.finishPlayerCombat, tone: "confirm" as const };
+    return { label: t("orb.attackArchive"), Icon: Check, action: actions.finishPlayerCombat, tone: "confirm" as const };
   }
   if (game.phase === "combat") {
-    return { label: t("orb.noAttack"), Icon: Check, action: actions.goToEndStep, tone: "main" as const };
+    return { label: t("orb.passCombat"), Icon: Check, action: actions.goToEndStep, tone: "main" as const };
   }
   if (game.phase === "end") {
     return { label: t("orb.endTurn"), Icon: Check, action: actions.finishPlayerTurnAndRunHost, tone: "host" as const };
   }
-  return { label: t("orb.toBattle"), Icon: Swords, action: actions.startPlayerCombat, tone: "default" as const };
+  return { label: t("orb.chooseAttackers"), Icon: Swords, action: actions.startPlayerCombat, tone: "default" as const };
 }
 
 function getDefendBlockedReason(game: GameState, t: ReturnType<typeof useTranslation>): string | undefined {

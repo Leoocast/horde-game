@@ -1,4 +1,4 @@
-import { Archive, Check, Droplet, Heart, Skull, Swords } from "lucide-react";
+import { Archive, Check, Droplet, Heart, Skull } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
@@ -13,8 +13,14 @@ import { Card } from "./Card";
 import { GameTooltip } from "./GameTooltip";
 import { GraveyardViewerModal } from "./GraveyardViewerModal";
 import { hostAttackPlayerHitDelay } from "./hostAttackPresentation";
-import { remainingArchiveDiscardPreview } from "./hostArchiveCounter";
+import {
+  completedHostMillPreviewCount,
+  hostArchiveAttackPreview,
+  hostArchiveDiscardCounterValue,
+} from "./hostArchiveCounter";
 import { playerAttackHostHitDelay } from "./playerAttackPresentation";
+import { PlayerArchiveForecast } from "./PlayerArchiveForecast";
+import { setupProgress } from "./setupPresentation";
 
 export function DuelHud({ game }: { game: GameState }) {
   const t = useTranslation();
@@ -45,21 +51,37 @@ export function DuelHud({ game }: { game: GameState }) {
   const normalMillQueueLength = hostMillQueue.filter((item) => !item.preview).length;
   const hostLibraryIds = new Set(game.host.archive.map((card) => card.instanceId));
   const previewMillPendingInLibrary = hostMillPreviewCards.filter((card) => hostLibraryIds.has(card.instanceId)).length;
+  const activeHostMillPreview = hostMillQueue[0]?.preview === true;
+  const completedPreviewMills = completedHostMillPreviewCount(previewMillPendingInLibrary, activeHostMillPreview);
   const pendingMilledAfterActive = Math.max(0, normalMillQueueLength - 1);
   const visualHostLibraryCount = game.host.archive.length + pendingMilledAfterActive - previewMillPendingInLibrary;
-  const visualHostGraveyardCount = Math.max(0, game.host.memory.length - pendingMilledAfterActive + previewMillPendingInLibrary);
+  const visualHostGraveyardCount = Math.max(0, game.host.memory.length - pendingMilledAfterActive + completedPreviewMills);
   const pendingDamage = game.combat.playerAttackers.reduce((total, id) => {
     const attacker = game.player.field.find((card) => card.instanceId === id);
     return attacker ? total + getPowerEndurance(game, attacker).power : total;
   }, 0);
   const archiveDiscardThreshold = game.hostRules.damagePerArchiveDiscard;
   const poisonDiscardThreshold = game.hostRules.poisonPerArchiveDiscard;
-  const pendingArchiveDiscards = Math.floor(pendingDamage / archiveDiscardThreshold);
-  const remainingArchiveDiscards = remainingArchiveDiscardPreview(
-    pendingArchiveDiscards,
-    previewMillPendingInLibrary,
-  );
   const attackCountVisible = game.phase === "combat" && game.activeSide === "player" && game.setupTurnsRemaining === 0 && game.combat.playerAttackers.length > 0;
+  const attackSelectionVisible = attackCountVisible && !playerAttackAnimation && hostMillPreviewCards.length === 0;
+  const attackArchiveStartCount = visualHostLibraryCount + previewMillPendingInLibrary;
+  const archiveAttackPreview = hostArchiveAttackPreview(
+    attackArchiveStartCount,
+    pendingDamage,
+    archiveDiscardThreshold,
+  );
+  const attackCounterValue = attackCountVisible
+    ? hostArchiveDiscardCounterValue(
+        archiveAttackPreview.discardCount,
+        previewMillPendingInLibrary,
+        Boolean(playerAttackAnimation) || hostMillPreviewCards.length > 0,
+        activeHostMillPreview,
+      )
+    : undefined;
+  const attackCounterVisible = attackCounterValue !== undefined;
+  const attackCalculation = archiveAttackPreview.conversionCount === archiveAttackPreview.discardCount
+    ? `${pendingDamage} ÷ ${archiveDiscardThreshold} → ${archiveAttackPreview.discardCount}`
+    : `${pendingDamage} ÷ ${archiveDiscardThreshold} → ${archiveAttackPreview.conversionCount} · ${attackArchiveStartCount} → ${archiveAttackPreview.discardCount}`;
   const latestLifestealAttack = lifestealAttackAnimations[lifestealAttackAnimations.length - 1];
 
   useEffect(() => {
@@ -241,7 +263,7 @@ export function DuelHud({ game }: { game: GameState }) {
           </motion.div>
         )}
         </AnimatePresence>
-        <div className="host-deck-counter-cluster">
+        <div className={["host-deck-counter-cluster", attackCounterVisible ? "is-attack-counter-open" : ""].join(" ")}>
           <div
             data-player-attack-target="host-deck"
             data-host-life-panel="true"
@@ -286,24 +308,25 @@ export function DuelHud({ game }: { game: GameState }) {
                 )}
               </span>
             )}
-            <div data-host-mill-origin="true" data-host-life-emblem="true" className="host-deck-emblem flex h-10 w-10 items-center justify-center border-2">
+            <div data-host-mill-origin="archive" data-host-life-emblem="true" className="host-deck-emblem flex h-10 w-10 items-center justify-center border-2">
               <Skull size={24} />
             </div>
             <div className="host-deck-counter-copy">
-              <div className="old-title host-deck-counter-title text-xs font-bold uppercase tracking-wide">{t("game.hostDeck")}</div>
+              <div className="old-title host-deck-counter-title text-xs font-bold uppercase tracking-wide">{t("game.hostArchive")}</div>
               <div className="host-deck-counter-values flex items-end gap-2 leading-none">
                 <div className="host-deck-count text-3xl font-black">{visualHostLibraryCount}</div>
                 <AnimatePresence initial={false} mode="popLayout">
-                  {attackCountVisible && remainingArchiveDiscards !== undefined && (
+                  {attackSelectionVisible && (
                     <motion.span
-                      key={remainingArchiveDiscards}
-                      className="host-deck-pending-mill"
+                      key={archiveAttackPreview.projectedArchiveCount}
+                      className="host-deck-projection"
                       initial={{ opacity: 0, x: -8, scale: 0.8 }}
                       animate={{ opacity: 1, x: 0, scale: 1 }}
                       exit={{ opacity: 0, x: -6, scale: 0.86 }}
                       transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
                     >
-                      - {remainingArchiveDiscards}
+                      <span className="host-deck-projection-arrow" aria-hidden="true">→</span>
+                      <span className="host-deck-projected-count">{archiveAttackPreview.projectedArchiveCount}</span>
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -326,32 +349,65 @@ export function DuelHud({ game }: { game: GameState }) {
               </GameTooltip>
             )}
           </div>
-          <GameTooltip content={t("game.viewGraveyard")} side="bottom" className="host-deck-graveyard-host">
+          {/* Misma caja de Memoria que el Cronista, en fila con el panel de la Hueste. */}
+          <GameTooltip content={t("game.viewGraveyard")} side="bottom" className="card-pile-host host-memory-pile-host">
             <button
               data-host-mill-target="true"
               data-audio-click="valid"
-              className="host-deck-graveyard flex items-center justify-center border font-black transition"
+              className="card-pile card-pile-memory"
               onClick={() => setGraveyardOpen(true)}
               aria-label={t("game.viewHostGraveyard", { count: visualHostGraveyardCount })}
             >
-              <Archive size={15} strokeWidth={2.4} />
-              <span className="host-deck-graveyard-count">{visualHostGraveyardCount}</span>
+              <span className="card-pile-glyph" aria-hidden="true">
+                <Archive size={15} strokeWidth={2.2} />
+              </span>
+              <span key={`host-memory-${visualHostGraveyardCount}`} className="card-pile-count">{visualHostGraveyardCount}</span>
+              <span className="card-pile-label">{t("zones.memory")}</span>
             </button>
           </GameTooltip>
           <AnimatePresence initial={false} mode="popLayout">
-            {attackCountVisible && (
+            {attackCounterVisible && (
               <motion.div
-                key={game.combat.playerAttackers.join("|")}
+                key="host-archive-discard-counter"
                 className="host-attack-count-host"
-                initial={{ opacity: 0, x: -24, scaleX: 0.62 }}
+                initial={{ opacity: 0, x: 86, scaleX: 0.28 }}
                 animate={{ opacity: 1, x: 0, scaleX: 1 }}
-                exit={{ opacity: 0, x: -24, scaleX: 0.62 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                exit={{ opacity: 0, x: 86, scaleX: 0.28 }}
+                transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
               >
-                <GameTooltip content={t("game.attackMillTooltip", { damage: pendingDamage, count: pendingArchiveDiscards })} side="bottom">
-                  <div className="host-attack-count" aria-label={t("game.attackMillAria", { damage: pendingDamage, count: pendingArchiveDiscards })}>
-                    <Swords size={17} strokeWidth={2.3} />
-                    <span className="host-attack-formula">{pendingDamage} / {archiveDiscardThreshold} = - {pendingArchiveDiscards}</span>
+                <GameTooltip
+                  content={(
+                    <span className="host-attack-calculation-tooltip">
+                      <strong>{t("game.attackCalculation")}</strong>
+                      <span>{attackCalculation}</span>
+                    </span>
+                  )}
+                  side="bottom"
+                >
+                  <div
+                    className="host-attack-count"
+                    tabIndex={0}
+                    aria-label={t("game.attackMillAria", { damage: pendingDamage, count: archiveAttackPreview.discardCount })}
+                  >
+                    <span className="host-attack-card-loss" aria-hidden="true">
+                      {Array.from({ length: archiveAttackPreview.visibleCardCount }, (_, index) => (
+                        <i key={index} />
+                      ))}
+                      {archiveAttackPreview.discardCount === 0 && <i className="is-empty" />}
+                    </span>
+                    <span data-host-attack-mill-origin="true" className="host-attack-result-copy">
+                      <AnimatePresence initial={false} mode="popLayout">
+                        <motion.strong
+                          key={attackCounterValue}
+                          initial={{ opacity: 0, y: -7, scale: 0.82 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 7, scale: 0.82 }}
+                          transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+                        >
+                          {attackCounterValue}
+                        </motion.strong>
+                      </AnimatePresence>
+                    </span>
                   </div>
                 </GameTooltip>
               </motion.div>
@@ -364,7 +420,7 @@ export function DuelHud({ game }: { game: GameState }) {
   );
 }
 
-export function PlayerLifePanel({ game, playerName }: { game: GameState; playerName: string }) {
+export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameState; playerName: string; setupTurns: number }) {
   const t = useTranslation();
   const hostAttackAnimation = useGameStore((state) => state.hostAttackAnimation);
   const lifeDamageAnimationId = useGameStore((state) => state.lifeDamageAnimationId);
@@ -372,7 +428,6 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   const lifePaymentAnimation = useGameStore((state) => state.lifePaymentAnimation);
   const bloodPactAnimation = useGameStore((state) => state.bloodPactAnimation);
   const finalBanquetAnimation = useGameStore((state) => state.finalBanquetAnimation);
-  const energyRecycleDragActive = useGameStore((state) => state.energyRecycleDragActive);
   const [graveyardOpen, setGraveyardOpen] = useState(false);
   const [chroniclerName, setChroniclerName] = useState(playerName);
   const [visualLife, setVisualLife] = useState(game.player.life);
@@ -381,8 +436,14 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   const lastLifeDamageAnimationId = useRef<number | undefined>(undefined);
   const bloodPactLifeFrame = useRef<number | undefined>(undefined);
   const finalBanquetLifeId = useRef<string | undefined>(undefined);
-  const activePhaseIndex = game.phase === "combat" ? 1 : game.phase === "end" ? 2 : 0;
-  const phaseSteps = [t("phase.main"), t("phase.battle"), t("phase.end")];
+  const setup = game.activeSide === "player" ? setupProgress(setupTurns, game.setupTurnsRemaining) : undefined;
+  const activePhaseIndex = setup ? setup.current - 1 : game.phase === "combat" ? 1 : game.phase === "end" ? 2 : 0;
+  const phaseSteps = setup
+    ? Array.from({ length: setup.total }, (_, index) => t("phase.setupStepShort", { current: index + 1 }))
+    : [t("phase.main"), t("phase.battle"), t("phase.end")];
+  const phaseProgressLabel = setup
+    ? `${t("phase.setup")}. ${t("phase.setupStep", { current: setup.current, total: setup.total })}`
+    : t("game.currentPhase", { phase: phaseSteps[activePhaseIndex] });
   const pendingDrain = game.activeSide === "player" && game.phase === "combat"
     ? previewPlayerAttackDrain(game)
     : 0;
@@ -472,7 +533,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
         ].join(" ")}
       >
         <div className="player-life-cluster">
-          <div className={["game-phase-progress", game.gameMode === "chaos" ? "is-chaos" : ""].join(" ")} aria-label={t("game.currentPhase", { phase: phaseSteps[activePhaseIndex] })}>
+          <div className={["game-phase-progress", setup ? "is-setup" : "", game.gameMode === "chaos" ? "is-chaos" : ""].join(" ")} aria-label={phaseProgressLabel}>
             <div className="game-phase-progress-labels" aria-hidden="true">
               {phaseSteps.map((phase, index) => (
                 <span key={phase} className={index === activePhaseIndex ? "is-active" : ""}>{phase}</span>
@@ -494,18 +555,32 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
               ))}
             </div>
           </div>
-          <motion.div
+          {/* One row, three boxes of the same height: Memory and Archive are card piles, Life is the
+              only vitals panel and owns the screen corner. */}
+          <div className="player-vitals-row">
+            <GameTooltip content={t("game.viewGraveyard")} side="top" className="card-pile-host">
+              <button
+                data-player-discard-target="true"
+                data-audio-click="valid"
+                className="card-pile card-pile-memory"
+                onClick={() => setGraveyardOpen(true)}
+                aria-label={t("game.viewPlayerGraveyard", { count: game.player.memory.length })}
+              >
+                <span className="card-pile-glyph" aria-hidden="true">
+                  <Archive size={15} strokeWidth={2.2} />
+                </span>
+                <span key={`memory-${game.player.memory.length}`} className="card-pile-count">{game.player.memory.length}</span>
+                <span className="card-pile-label">{t("zones.memory")}</span>
+              </button>
+            </GameTooltip>
+            <PlayerArchiveForecast game={game} />
+          <div
             data-player-life-panel="true"
-            data-energy-recycle-target="true"
             className="energy-recycle-life-target"
-            initial={false}
-            animate={{ scale: energyRecycleDragActive ? 1.045 : 1 }}
-            transition={{ type: "spring", stiffness: 430, damping: 27, mass: 0.55 }}
-            style={{ transformOrigin: "bottom right" }}
           >
           <div
             className={[
-              "old-panel combatant-vitals combatant-vitals-player player-life-counter flex min-w-44 items-center gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]",
+              "old-panel combatant-vitals combatant-vitals-player player-life-counter flex items-center gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]",
               takingDamage ? "player-life-damage" : "",
               lifeBuffAnimationId ? "player-life-buff" : "",
               bloodPactAnimation?.phase === "impact" || lifePaymentAnimation || finalBanquetAnimation?.phase === "siphon" ? "blood-pact-life-corrupted" : "",
@@ -555,19 +630,8 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
               <Heart size={24} />
             </div>
           </div>
-          </motion.div>
-          <GameTooltip content={t("game.viewGraveyard")} side="top" className="player-graveyard-host">
-            <button
-              data-player-discard-target="true"
-              data-audio-click="valid"
-              className="host-deck-graveyard player-graveyard-button flex items-center justify-center border font-black transition"
-              onClick={() => setGraveyardOpen(true)}
-              aria-label={t("game.viewPlayerGraveyard", { count: game.player.memory.length })}
-            >
-              <Archive size={15} strokeWidth={2.4} />
-              <span className="host-deck-graveyard-count">{game.player.memory.length}</span>
-            </button>
-          </GameTooltip>
+          </div>
+          </div>
         </div>
       </div>
       {graveyardOpen && <GraveyardViewerModal game={game} title={t("game.playerGraveyard")} cards={game.player.memory} onClose={() => setGraveyardOpen(false)} />}

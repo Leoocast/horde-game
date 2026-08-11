@@ -19,9 +19,10 @@ import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
 import { getPowerEndurance, hostInSurge } from "../src/engine/StaticEffects";
 import { targetCandidates, targetCandidatesWithSelectedTargets } from "../src/engine/Targeting";
 import { queueUnusedNormalEnergy, releasePendingStoredEnergy } from "../src/engine/EnergySystem";
-import { performPlayerDraw, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
+import { performPlayerDraw, playerDrawForecast, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
 import { cardStatState, sortTraitsForDisplay } from "../src/utils/selectors";
-import { getHandCardPresentationState } from "../src/components/handCardPresentation";
+import { getHandCardPresentationState, handArchiveEntryOffset } from "../src/components/handCardPresentation";
+import { displayedReserveEnergy, reserveTransferPresentation } from "../src/components/reserveTransferPresentation";
 import {
   fitHoverCardDisplay,
   HAND_CARD_DISPLAY_HEIGHT,
@@ -356,6 +357,20 @@ test("discard selection stays raised while the hovered hand card layers above it
   );
 });
 
+test("drawn hand cards derive their entry translation from the shared Archive origin", () => {
+  assert.deepEqual(handArchiveEntryOffset({
+    archiveCenter: { x: 1000, y: 700 },
+    handCenterX: 500,
+    handBaselineY: 800,
+    cardWidth: 244,
+    cardHeight: 340,
+    handSize: 3,
+    index: 1,
+    stackMargin: -30,
+    fanY: 88,
+  }), { x: 500, y: -18 });
+});
+
 test("previews and raised hand cards use exact card-image geometry", () => {
   assert.deepEqual(
     [HAND_CARD_DISPLAY_WIDTH, HAND_CARD_DISPLAY_HEIGHT],
@@ -395,6 +410,39 @@ test("standard games keep nine energy cards in the player deck", () => {
   assert.equal(cards.filter((card) => card.kinds.includes("SOURCE")).length, 9);
 });
 
+test("Reserve presentation waits for the Host to finish before moving the Source", () => {
+  const before = { available: 1, pending: 0, stored: 0 };
+  const queued = { available: 1, pending: 1, stored: 0 };
+  const released = { available: 1, pending: 0, stored: 1 };
+
+  assert.equal(reserveTransferPresentation(before, queued), undefined);
+  assert.deepEqual(reserveTransferPresentation(queued, released), {
+    amount: 1,
+    sourceStartIndex: 0,
+    targetStartIndex: 0,
+  });
+  assert.equal(displayedReserveEnergy(before), 0);
+  assert.equal(displayedReserveEnergy(queued), 0);
+  assert.equal(displayedReserveEnergy(released), 1);
+});
+
+test("Reserve transfer respects occupied yellow sockets and the cap", () => {
+  assert.deepEqual(
+    reserveTransferPresentation(
+      { available: 3, pending: 1, stored: 2 },
+      { available: 3, pending: 0, stored: 3 },
+    ),
+    { amount: 1, sourceStartIndex: 2, targetStartIndex: 2 },
+  );
+  assert.equal(
+    reserveTransferPresentation(
+      { available: 2, pending: 0, stored: 3 },
+      { available: 2, pending: 0, stored: 3 },
+    ),
+    undefined,
+  );
+});
+
 test("unused Source Energy stays pending until the Host turn ends", () => {
   const game = createTestGame();
   const lands = addSources(game, 5);
@@ -407,6 +455,22 @@ test("unused Source Energy stays pending until the Host turn ends", () => {
   assert.equal(releasePendingStoredEnergy(game), 3);
   assert.equal(game.player.pendingStoredEnergy, 0);
   assert.equal(game.player.energyPool.stored, 3);
+});
+
+test("a Source destroyed during the Host turn cannot become Stored Energy", () => {
+  const game = createTestGame();
+  game.player.energyPool.stored = 1;
+  const lands = addSources(game, 2);
+
+  const hostTurn = endPlayerTurn(game);
+  assert.equal(hostTurn.player.pendingStoredEnergy, 2);
+  const destroyedSource = hostTurn.player.field.find((card) => card.instanceId === lands[0].instanceId);
+  assert.ok(destroyedSource);
+  destroyPermanent(hostTurn, destroyedSource);
+
+  const nextPlayerTurn = finishHostTurn(hostTurn);
+  assert.equal(nextPlayerTurn.player.pendingStoredEnergy, 0);
+  assert.equal(nextPlayerTurn.player.energyPool.stored, 2);
 });
 
 test("spent Sources do not become Stored Energy", () => {
@@ -517,6 +581,27 @@ test("Veiled-Dawn Flower and Liora, Keeper of the Grove fill Stored Energy immed
   assert.equal(nextPlayerTurn.player.energyPool.stored, 3);
 });
 
+test("card effects create usable Reserve during Preparation", () => {
+  const game = createInitialGame(playerDeck, hostDeck, "setup-card-reserve", 2);
+  const gatherer = addCard(game, cardFromDeck("veiled_dawn_flower", "player"));
+
+  const generated = activateAbility(game, gatherer.instanceId, "veiled_dawn_flower_gain_energy");
+  assert.equal(generated.setupTurnsRemaining, 2);
+  assert.equal(generated.lastActionResult?.ok, true);
+  assert.equal(generated.player.energyPool.stored, 1);
+
+  const spell = addCard(
+    generated,
+    customCard("setup_reserve_spell", "player", { zone: "hand", kinds: ["SPELL"], energyCost: 1 }),
+    "player",
+    "hand",
+  );
+  const spent = castCard(generated, spell.instanceId);
+
+  assert.equal(spent.lastActionResult?.ok, true);
+  assert.equal(spent.player.energyPool.stored, 0);
+});
+
 test("Stored Energy can pay a creature cost", () => {
   const game = createTestGame();
   game.player.energyPool.stored = 1;
@@ -609,6 +694,45 @@ test("an empty hand still draws only one during setup", () => {
 
   assert.deepEqual(game.player.hand.map((card) => card.definitionId), ["setup_draw"]);
   assert.deepEqual(game.player.archive.map((card) => card.definitionId), ["setup_stays_in_deck"]);
+});
+
+test("the player draw forecast matches every authored draw rule and the available Archive", () => {
+  const normal = createTestGame();
+  addCard(normal, customCard("normal_hand", "player", { zone: "hand" }), "player", "hand");
+  addCard(normal, customCard("normal_archive_1", "player", { zone: "archive" }), "player", "archive");
+  addCard(normal, customCard("normal_archive_2", "player", { zone: "archive" }), "player", "archive");
+  assert.deepEqual(playerDrawForecast(normal), { amount: 1, requested: 1, reason: "normal", emptyHandBonus: false });
+
+  const emptyHand = createTestGame();
+  addCard(emptyHand, customCard("empty_archive_1", "player", { zone: "archive" }), "player", "archive");
+  addCard(emptyHand, customCard("empty_archive_2", "player", { zone: "archive" }), "player", "archive");
+  assert.deepEqual(playerDrawForecast(emptyHand), { amount: 2, requested: 2, reason: "empty-hand", emptyHandBonus: true });
+
+  const easy = structuredClone(emptyHand);
+  easy.difficulty = "easy";
+  assert.deepEqual(playerDrawForecast(easy), { amount: 2, requested: 2, reason: "easy", emptyHandBonus: false });
+
+  const setup = structuredClone(emptyHand);
+  setup.setupTurnsRemaining = 2;
+  assert.deepEqual(playerDrawForecast(setup), { amount: 1, requested: 1, reason: "setup", emptyHandBonus: false });
+  assert.deepEqual(playerDrawForecast(setup, { timing: "next" }), { amount: 1, requested: 1, reason: "setup", emptyHandBonus: false });
+
+  const lastSetup = structuredClone(emptyHand);
+  lastSetup.setupTurnsRemaining = 1;
+  assert.deepEqual(playerDrawForecast(lastSetup), { amount: 1, requested: 1, reason: "setup", emptyHandBonus: false });
+  assert.deepEqual(playerDrawForecast(lastSetup, { timing: "next" }), { amount: 2, requested: 2, reason: "empty-hand", emptyHandBonus: true });
+
+  const lastEasySetup = structuredClone(lastSetup);
+  lastEasySetup.difficulty = "easy";
+  assert.deepEqual(playerDrawForecast(lastEasySetup, { timing: "next" }), { amount: 2, requested: 2, reason: "easy", emptyHandBonus: false });
+
+  const chaos = structuredClone(emptyHand);
+  chaos.gameMode = "chaos";
+  assert.deepEqual(playerDrawForecast(chaos), { amount: 2, requested: 2, reason: "chaos", emptyHandBonus: false });
+
+  const limited = createTestGame();
+  addCard(limited, customCard("last_archive_card", "player", { zone: "archive" }), "player", "archive");
+  assert.deepEqual(playerDrawForecast(limited), { amount: 1, requested: 2, reason: "empty-hand", emptyHandBonus: false });
 });
 
 test("recycling puts an energy on the bottom, draws one, and uses the Energy action", () => {

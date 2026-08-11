@@ -24,8 +24,12 @@ export function queueUnusedNormalEnergy(game: GameState): number {
 }
 
 export function releasePendingStoredEnergy(game: GameState): number {
+  const survivingUnusedSources = game.player.field.filter(
+    (card) => card.kinds.includes("SOURCE") && !card.exhausted && !card.activatedThisTurn,
+  ).length;
   const released = Math.min(
     game.player.pendingStoredEnergy,
+    survivingUnusedSources,
     Math.max(0, STORED_ENERGY_CAP - game.player.energyPool.stored),
   );
   game.player.energyPool.stored += released;

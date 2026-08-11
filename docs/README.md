@@ -36,11 +36,18 @@ retirado. Su fuente de verdad es el JSON del deck.
 
 Estos documentos se conservan porque contienen decisiones o validaciones sin terminar:
 
-- [`plans/ui_core_rules_clarity_plan.md`](plans/ui_core_rules_clarity_plan.md) — propuesta no iniciada.
+- [`plans/generated_look_remediation_plan.md`](plans/generated_look_remediation_plan.md) — corrección
+  de las señales visuales que hacen leer la UI como generada; no iniciado.
 - [`plans/seeds_of_destiny.md`](plans/seeds_of_destiny.md) — narrativa y persistencia futura.
 - [`plans/game_modes.md`](plans/game_modes.md) — variantes futuras y compatibilidad de Chaos.
 - [`plans/webgl_context_budget.md`](plans/webgl_context_budget.md) — migración implementada con QA
   visual final todavía pendiente.
+
+## Registro de planes cerrados
+
+- [`plans/ui_core_rules_clarity_plan.md`](plans/ui_core_rules_clarity_plan.md) — Fases 0 a 6
+  implementadas y cerradas tras QA visual el 2026-08-11; sus contratos vigentes están resumidos en
+  `CLAUDE.md`, `guides/testing.md` y `reference/animation_contracts.md`.
 
 ## Electron y release
 

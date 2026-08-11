@@ -1,7 +1,7 @@
 # Plan de diseño e implementación de claridad en la UI
 
-Estado: **propuesta para discutir fase por fase; no implementada**  
-Última actualización: 2026-08-10
+Estado: **completado; Fases 0 a 6 cerradas tras QA visual del usuario**
+Última actualización: 2026-08-11
 
 ## Objetivo
 
@@ -216,6 +216,40 @@ respetar resume y persistencia.
 El jugador siempre puede distinguir Preparación de un turno normal, saber en qué paso se encuentra y
 entender que la acción final despertará a la Hueste.
 
+### Estado de implementación
+
+**Cerrada el 2026-08-10 tras QA visual del usuario.**
+
+- El HUD superior sustituye durante Preparación el turno, la fase normal y la cuenta de Oleada por
+  el rótulo compacto **Preparación X/N**.
+- El total original procede de `setupTurns`, que ya se conserva en el guardado de reanudación; la
+  derivación pura vive en `src/components/setupPresentation.ts` y cubre una partida reanudada.
+- Los banners de “Fase principal”, “Turno adicional” y “Último turno adicional” se sustituyen por
+  **Preparación X/N**. Al pasar de la última Preparación a la Hueste aparece **La Hueste despierta**.
+- El contador `X/N` del banner usa una tipografía de interfaz con cifras tabulares, separada del
+  título ornamental, para que los números sean legibles y no cambien de ancho entre pasos.
+- El banner general de fases usa una placa de hierro sin pictogramas que crece con el texto y
+  conserva margen lateral constante. Preparación y Principal armonizan en oliva, Defensa en azul
+  acero y Batalla/Hueste mantienen acentos cálidos; banner y botón comparten familia sin repetir
+  exactamente el mismo color.
+- Durante Preparación, el indicador inferior derecho reemplaza `Principal · Batalla · Final` por un
+  rombo para cada paso (`Prep. 1`, `Prep. 2`, etc.), conservando estados actual, completado y
+  pendiente. El número de rombos procede de la dificultad y no está fijado en tres.
+- La acción principal conserva el lenguaje de turnos solicitado en QA: **Turno extra** en los pasos
+  intermedios y **Terminar turno** en el último.
+- La pista de Reserva permanece visible y utilizable durante Preparación: los efectos de carta pueden
+  llenarla y esa Energía puede gastarse de inmediato. La fila amarilla no añade iconos ni mensajes
+  permanentes; durante Preparación su tooltip explica solamente que la Energía de Fuentes sin usar
+  se guarda cuando termina la Preparación. No se usa candado ni apagado de orbes, porque sólo se
+  retrasa esa conversión, no la Reserva.
+- La presentación equivalente existe en ES y EN. No se modificaron reglas, dificultad, robo, Reserva
+  ni balance.
+- El componente de estado legado ya no conserva el antiguo mensaje de “turnos del jugador” y el
+  banner elimina su movimiento cuando el sistema solicita movimiento reducido.
+
+La implementación pasó typecheck, la suite completa y el build web. El QA visual confirmó
+legibilidad, ubicación y transición final; el banner también respeta movimiento reducido.
+
 ## Fase 2 — Mostrar el Archivo del Cronista y anticipar el robo
 
 ### Problema actual
@@ -289,6 +323,38 @@ se duplicarán reglas dentro de `DuelHud` o `Hand`.
 La previsión coincide con el robo real en Preparación, Fácil, Normal, Difícil, Mano vacía y Mano no
 vacía.
 
+### Estado de implementación
+
+**Cerrada el 2026-08-11 tras QA visual del usuario.**
+
+- Una banda compacta sobre el panel de Vida muestra permanentemente **Archivo** y **Próximo robo**
+  sin invadir Fuentes/Reserva ni permitir inspeccionar cartas ocultas.
+- **Fácil** y **Caos** se identifican dentro del indicador cuando explican el robo. El bono de Mano
+  vacía conserva el `2` limpio y explica **Mano vacía: +1 carta** mediante tooltip sobre la cifra.
+- `playerDrawForecast` es la única fuente de verdad para la previsión y la resolución real. Limita
+  la cifra por las cartas disponibles en el Archivo, distingue Preparación de las reglas de robo 2
+  y proyecta correctamente que el robo posterior a la última Preparación ya ocurre tras la Hueste.
+- Las cartas añadidas después de la Mano inicial entran visualmente desde el lado del Archivo.
+- La presentación existe en ES y EN y respeta movimiento reducido.
+
+**Revisión de presentación aprobada el 2026-08-11.** La banda apilada sobre la Vida confundía el
+Archivo con la Vida, porque compartía la gramática de un panel de vitals y porque la Hueste sí
+muestra su Archivo como barra de vida. Maquetas en `dev/mockups/player-archive-vs-life.html` y
+`dev/mockups/player-vitals-row.html`.
+
+- La esquina es ahora una sola fila `[Memoria][Archivo][Vida]` de altura común. Memoria y Archivo
+  comparten silueta de caja de cartas y sólo cambian de color; la Vida es el único panel de vitals
+  y ocupa la esquina de la pantalla.
+- Cada caja imprime su nombre —**Memoria**, **Archivo**— en la base y lleva una tapa en su canto
+  superior. La tapa vive dentro del marco: la fila de la Hueste se apoya en el borde superior de la
+  pantalla y cualquier adorno que sobresalga se corta ahí.
+- La Memoria de la Hueste usa la misma caja, en fila con su panel. El botón que asomaba por detrás
+  del marco queda retirado en ambos bandos.
+- **Próximo robo** deja de mostrarse de forma permanente: el robo normal es una regla que se aprende
+  una vez. Sólo cuando `playerDrawForecast` supera una carta aparece una insignia `+1` sobre el
+  Archivo, con la razón (Fácil, Caos) o el tooltip de Mano vacía.
+- La previsión sigue saliendo de `playerDrawForecast`; sólo cambió cuándo se pinta.
+
 ## Fase 3 — Hacer visible la acción Devolver Fuente
 
 ### Problema actual
@@ -360,6 +426,33 @@ el store y traducciones. La regla sigue resolviéndose en el engine.
 Un jugador puede descubrir y ejecutar ambas opciones sin conocer previamente un gesto secreto. La
 UI comunica que ambas consumen la misma acción.
 
+### Estado de implementación
+
+**Cerrada el 2026-08-11 tras QA visual del usuario.**
+
+- Únicamente mientras se arrastra una Fuente que `canPlayerRecycleEnergy` permite devolver, el
+  indicador existente del Archivo crece hacia la izquierda hasta convertirse en una caja amplia.
+- La expansión del Archivo anima el cambio completo de tamaño; conserva sólo su marco exterior y
+  usa tono y resplandor para comunicar el destino, sin un segundo rectángulo punteado interior.
+- Antes de alcanzar la zona válida comunica **Devolver Fuente · Arrastra a la derecha · Roba 1**.
+  Al entrar en ella cambia a **Suelta para devolver · Al Archivo · Roba 1** y refuerza su brillo.
+- Al alcanzar esa región reaparecen el feedback original de devolución: línea punteada con flecha,
+  etiqueta flotante y círculo pulsante centrado sobre la caja expandida del Archivo.
+- Se conserva el gesto anterior: desplazamiento horizontal mínimo y liberación en la región amplia
+  superior derecha de la pantalla. No se exige acertar con precisión en el panel del Archivo.
+- El Archivo no cambia al pasar el cursor, seleccionar o enfocar una Fuente, y no incorpora una
+  acción de clic. Jugar conserva exactamente su gesto normal hacia el Campo.
+- El vuelo final termina en el indicador del Archivo del Cronista. La devolución sigue resolviéndose
+  mediante `recycleEnergy`; la presentación no duplica sus reglas de disponibilidad.
+- Jugar o devolver sigue consumiendo el mismo permiso. No cambió timing, frecuencia, balance ni la
+  carta robada.
+
+**Revisión de presentación aprobada el 2026-08-11.** Con el Archivo convertido en caja de cartas, la
+expansión a una caja amplia con texto propio se retira: durante un arrastre válido la caja se
+enciende y crece (`scale(1.06)`, y `scale(1.12)` al entrar en la región de destino). El gesto, sus
+condiciones y el feedback flotante —línea punteada, etiqueta **Devolver Fuente · Suelta para
+devolver** y círculo pulsante— no cambian; el Archivo ya no repite ese texto en un panel propio.
+
 ## Fase 4 — Clarificar Reserva actual, Reserva prevista y orden de pago
 
 ### Problema actual
@@ -424,7 +517,38 @@ animadores sólo presentan la cantidad ya resuelta o prevista.
 La UI nunca promete Reserva que después se pierde y el jugador puede observar claramente Reserva
 primero, Fuentes después.
 
+### Estado de implementación
+
+**Cerrada el 2026-08-11 tras QA visual del usuario.**
+
+- Se conserva el lenguaje actual de dos pistas y sus orbes; no se añadieron etiquetas, cifras ni
+  paneles permanentes.
+- La pista azul distingue sus tres estados por material y volumen, no sólo por luminosidad: una
+  Fuente lista es una esfera encendida, una Fuente gastada conserva una esfera de vidrio azul oscuro
+  sin líquido y una Fuente todavía no jugada deja visible únicamente el socket.
+- Durante la Hueste, `pendingStoredEnergy` permanece pendiente y no se presenta todavía como un orbe
+  amarillo. La transferencia comienza únicamente cuando termina la Hueste y regresa el Cronista.
+- Cuando `releasePendingStoredEnergy` convierte esa cantidad en Reserva real, el mismo orbe sale de
+  su socket azul, viaja al primer socket amarillo libre y adopta el acabado dorado cerca del destino.
+  La transferencia reutiliza el lenguaje del flujo de Energía de las cartas: una corriente dorada con
+  motas conduce una semilla por una curva orgánica; al impactar, el orbe real —incluidos su líquido,
+  reflejo y anillo interior— crece, brilla y se asienta en el socket. La Fuente azul se regenera con el
+  mismo pulso al concluir la conversión.
+- El socket azul queda libre durante el vuelo y recupera su orbe al terminar, mientras el orbe
+  transformado permanece en la pista amarilla como Reserva disponible.
+- La cantidad y los destinos se derivan de la reducción pendiente y del aumento de Reserva ya
+  resueltos por el engine; por ello
+  Preparaciones tempranas, Fuentes usadas y espacios fuera del límite de tres no producen vuelos.
+- La liberación se limita además por las Fuentes que continúan presentes y listas al terminar la
+  Hueste. Una Fuente destruida —por ejemplo, mediante Tributo de los Cuatro Pesares— no conserva
+  una Reserva pendiente fantasma.
+- Varias transferencias se escalonan brevemente. Con movimiento reducido, la transformación usa un
+  fundido en el socket de destino sin recorrido espacial.
+- No cambió la regla de Reserva, el límite de tres ni el orden automático de pago.
+
 ## Fase 5 — Hacer inequívoco el ataque al Archivo de la Hueste
+
+Estado: **cerrada el 2026-08-11 tras QA visual del usuario.**
 
 ### Problema actual
 
@@ -435,53 +559,43 @@ condición de derrota.
 La fórmula actual `daño / umbral = -cartas` exige interpretar división, redondeo y resta al mismo
 tiempo.
 
-### Propuesta inicial para discutir
+### Diseño aprobado e implementado
 
-Reforzar el panel superior:
+Se compararon cuatro variantes en `dev/mockups/host-archive-combat-options.html`. El usuario eligió
+la opción 4, **Cartas que caerán**:
 
-```text
-HUESTE
-Archivo: 24 cartas
-```
+- el panel se identifica permanentemente como **Archivo de la Hueste**;
+- al seleccionar atacantes, el conteo anticipa `actual → restante`;
+- una placa contigua usa hasta tres siluetas como símbolo de las cartas que irán a Memoria; las
+  siluetas nunca intentan repetir o desglosar el total numérico;
+- la placa no lleva copy: las siluetas comunican “cartas” y `N` es el único total visible;
+- al seleccionar atacantes, esa placa emerge unida al borde izquierdo como una extensión del
+  Archivo —sin margen ni doble borde— y desplaza la caja de Memoria todavía más a la izquierda;
+- la matemática vive en un tooltip titulado **Cálculo del ataque**, con la forma compacta
+  `7 ÷ 3 → 2`; no repite “Fuerza”, “cartas” ni “Memoria”;
+- se usa una flecha y no una igualdad porque la conversión descarta cualquier sobrante;
+- al confirmar, cada carta de combate nace en el área numérica de la placa y viaja hacia Memoria;
+  cada salida reduce `N` y Memoria suma la carta sólo al aterrizar;
+- durante el último vuelo la placa conserva `1`; al aterrizar, se retrae dentro del Archivo sin
+  mostrar `0`, mientras Memoria vuelve a su posición normal;
+- **A batalla**, **Confirmar** y **No atacar** pasan a **Elegir atacantes**,
+  **Atacar el Archivo** y **Pasar el combate** respectivamente.
 
-Al entrar en combate:
-
-- el Archivo se ilumina como destino;
-- las trayectorias de los atacantes terminan en él;
-- los Ecos enemigos no parecen targets del ataque normal;
-- **A batalla** cambia a **Elegir atacantes**;
-- **Confirmar** cambia a **Atacar el Archivo**;
-- **No atacar** cambia a **Pasar el combate**.
-
-Sustituir la fórmula principal por una equivalencia y un medidor:
-
-```text
-FUERZA CONTRA EL ARCHIVO
-■ ■ ■ | ■ ■ □
-5 de Fuerza → 1 carta
-Falta 1 para descartar otra
-```
-
-El conteo puede anticipar:
-
-```text
-Archivo: 24 → 23
-```
-
-La fórmula exacta permanece disponible en un tooltip secundario.
+El modelo de presentación usa `hostRules.damagePerArchiveDiscard`, limita el resultado a las cartas
+que realmente quedan en el Archivo y cubre cero, una, varias y más de tres cartas.
 
 ### Beneficio para el jugador
 
 Comprende dónde debe atacar, cómo progresa hacia la victoria y qué conseguirá antes de confirmar el
 combate.
 
-### Decisiones que deben discutirse antes de implementar
+### Decisiones cerradas en esta iteración
 
-- cuánto debe cambiar el panel de la Hueste fuera del combate;
-- aspecto del medidor de bloques;
-- copy para Fuerza insuficiente y Fuerza sobrante;
-- intensidad del foco sobre el Archivo;
-- nombres definitivos de los tres botones de combate.
+- el panel nombra el Archivo también fuera del combate;
+- no se utiliza medidor de bloques;
+- la placa muestra el resultado incluso cuando es cero;
+- la explicación secundaria es puramente matemática;
+- los tres botones de combate nombran la acción concreta.
 
 ### Límites de la fase
 
@@ -501,6 +615,8 @@ Preview, CTA, trayectorias, animación y descarte real identifican al Archivo y 
 una y varias cartas.
 
 ## Fase 6 — Revisar el conjunto antes de diseñar el tutorial
+
+Estado: **cerrada el 2026-08-11 tras QA visual del usuario.**
 
 ### Problema que resuelve
 
@@ -530,6 +646,8 @@ es relevante. El usuario puede pedir simplificación, movimiento o eliminación 
 - movimiento reducido;
 - ataques por debajo, en y por encima del umbral;
 - animaciones y overlays que puedan tapar indicadores;
+- transiciones de la Mano al robar, Invocar, jugar o devolver una Fuente: la carta nueva debe salir
+  del Archivo y las cartas restantes deben reorganizarse sin saltos;
 - estados que no dependan sólo de color.
 
 ### QA manual mínimo del usuario
@@ -547,6 +665,13 @@ es relevante. El usuario puede pedir simplificación, movimiento o eliminación 
 
 Después de los ajustes aprobados, actualizar `CLAUDE.md` y `docs/guides/testing.md` con los contratos finales.
 Esta fase no implementa el tutorial.
+
+**Cierre aprobado el 2026-08-11.** La revisión conjunta recorrió Preparación, Archivo y robo,
+Acción de Fuente, Reserva, transiciones de la Mano y ataque al Archivo. El QA iterativo ajustó
+jerarquía, copy, tooltips, trayectorias y estados de Energía hasta la aprobación final del usuario.
+Los contratos permanentes quedaron consolidados en `CLAUDE.md`, `docs/guides/testing.md` y
+`docs/reference/animation_contracts.md`. No queda funcionalidad pendiente dentro de este plan y el
+diseño del tutorial puede retomarse como trabajo separado.
 
 ## Verificación automática durante la implementación
 
@@ -575,3 +700,6 @@ El diseño del tutorial obligatorio puede retomarse cuando:
 
 En ese momento el tutorial podrá concentrarse en hacer que el jugador realice esas acciones en una
 Primera Semilla guiada, utilizando la misma interfaz que encontrará después.
+
+**Condiciones cumplidas el 2026-08-11.** Este plan queda como registro de las decisiones aprobadas;
+cualquier tutorial futuro debe consumir estos contratos sin reabrirlos implícitamente.
