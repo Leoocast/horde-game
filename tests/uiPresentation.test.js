@@ -99,7 +99,10 @@ test("Memory, Archive and Life share one row of equal boxes and the Archive owns
   assert.match(forecastSource, /"card-pile card-pile-archive"/u);
   assert.doesNotMatch(boardSource, /player-graveyard-host|player-graveyard-button/u);
   assert.match(stylesSource, /\.player-vitals-row\s*\{[^}]*align-items:\s*stretch;/su);
-  assert.match(stylesSource, /\.card-pile\s*\{[^}]*width:\s*62px;[^}]*min-height:\s*82px;/su);
+  // Box (75) plus its reserved tab gutter (7) equals the 82px of the Life panel, so the tab can
+  // peek over the edge without the row growing: the Host's copy rests on the top screen edge.
+  assert.match(stylesSource, /\.card-pile\s*\{[^}]*width:\s*62px;[^}]*min-height:\s*75px;\s*margin-top:\s*7px;/su);
+  assert.match(stylesSource, /\.card-pile::before\s*\{[^}]*top:\s*-7px;/su);
 
   // Both sides own the same Memory box: the Chronicler's in the row, the Host's beside its panel.
   assert.equal(boardSource.match(/className="card-pile card-pile-memory"/gu)?.length, 2);

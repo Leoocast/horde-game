@@ -342,8 +342,9 @@ muestra su Archivo como barra de vida. Maquetas en `dev/mockups/player-archive-v
 - La esquina es ahora una sola fila `[Memoria][Archivo][Vida]` de altura común. Memoria y Archivo
   comparten silueta de caja de cartas y sólo cambian de color; la Vida es el único panel de vitals
   y ocupa la esquina de la pantalla.
-- Cada caja imprime su nombre —**Memoria**, **Archivo**— en la base, y una pestaña sobre el canto
-  superior la presenta como montón de cartas.
+- Cada caja imprime su nombre —**Memoria**, **Archivo**— en la base y lleva una tapa en su canto
+  superior. La tapa vive dentro del marco: la fila de la Hueste se apoya en el borde superior de la
+  pantalla y cualquier adorno que sobresalga se corta ahí.
 - La Memoria de la Hueste usa la misma caja, en fila con su panel. El botón que asomaba por detrás
   del marco queda retirado en ambos bandos.
 - **Próximo robo** deja de mostrarse de forma permanente: el robo normal es una regla que se aprende
