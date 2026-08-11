@@ -6,6 +6,13 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react(), copyRuntimeAudio(), excludeSystemMetadata()],
+  server: {
+    watch: {
+      // Release tests and Forge populate this directory with media that may be locked on Windows.
+      // It is generated output, never a web source or HMR dependency.
+      ignored: ["**/.electron-staging/**"],
+    },
+  },
   define: {
     __HOSTFALL_DESKTOP__: "false",
   },

@@ -6,6 +6,21 @@ import { test } from "node:test";
 import runtimeAudioAssets from "../src/audio/runtimeAudioAssets.json";
 import { collectRuntimeResourcePlan, createStaging, stagingRoot, verifyStaging } from "../scripts/electron-release-assets.mjs";
 import { comparePackageManifests } from "../scripts/electron-release-manifest.mjs";
+import { rendererViteConfig } from "../vite.renderer.config";
+
+test("Electron development ignores generated staging media in the Vite watcher", () => {
+  assert.deepEqual(rendererViteConfig("serve").server?.watch?.ignored, ["**/.electron-staging/**"]);
+});
+
+test("Electron development serves bundled fonts without copying public authoring assets into release", () => {
+  const developmentPublicDir = rendererViteConfig("serve").publicDir;
+  assert.equal(developmentPublicDir, "public");
+  assert.equal(
+    fs.existsSync(path.resolve(String(developmentPublicDir), "fonts/pact-of-elarion/cinzel-decorative-latin.woff2")),
+    true,
+  );
+  assert.equal(rendererViteConfig("build").publicDir, false);
+});
 
 test("Electron release staging is an exact generated allowlist", () => {
   const plan = collectRuntimeResourcePlan();

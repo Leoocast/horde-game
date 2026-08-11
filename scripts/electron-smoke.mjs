@@ -152,6 +152,27 @@ try {
       "hostfall://content/builtin.hostfall.core/cards/pact_of_elarion/art/aelyra_heir_of_elarion.jpg",
     );
     await document.fonts.load('16px "Cinzel"');
+    const decorativeFaces = await document.fonts.load(
+      '400 32px "Cinzel Decorative"',
+      "HOstfAll Chronicler",
+    );
+    const fontCanvas = document.createElement("canvas");
+    const fontContext = fontCanvas.getContext("2d");
+    if (!fontContext) throw new Error("2D font measurement is unavailable.");
+    fontContext.font = '400 32px "Cinzel Decorative", monospace';
+    const decorativeWidth = fontContext.measureText("HOstfAll Chronicler").width;
+    fontContext.font = "400 32px monospace";
+    const fallbackWidth = fontContext.measureText("HOstfAll Chronicler").width;
+    const wordmark = document.querySelector(".hostfall-wordmark");
+    if (!(wordmark instanceof HTMLElement)) throw new Error("Hostfall wordmark is absent.");
+    const wordmarkStyle = getComputedStyle(wordmark);
+    const wordmarkText = wordmark.textContent ?? "";
+    const wordmarkFontFamily = wordmarkStyle.fontFamily;
+    const wordmarkFont = `${wordmarkStyle.fontStyle} ${wordmarkStyle.fontWeight} ${wordmarkStyle.fontSize}`;
+    fontContext.font = `${wordmarkFont} ${wordmarkFontFamily}`;
+    const wordmarkWidth = fontContext.measureText(wordmarkText).width;
+    fontContext.font = `${wordmarkFont} Georgia`;
+    const wordmarkFallbackWidth = fontContext.measureText(wordmarkText).width;
 
     const audio = new Audio(audioUrl);
     audio.preload = "metadata";
@@ -195,6 +216,13 @@ try {
       fullCard,
       fieldArt,
       fontReady: document.fonts.check('16px "Cinzel"'),
+      decorativeFaceCount: decorativeFaces.length,
+      decorativeFontReady: document.fonts.check('400 32px "Cinzel Decorative"'),
+      decorativeWidth,
+      fallbackWidth,
+      wordmarkFontFamily,
+      wordmarkWidth,
+      wordmarkFallbackWidth,
       audioDuration: audio.duration,
       seekTarget,
       webgl: true,
@@ -207,6 +235,11 @@ try {
   assert.ok(mediaState.fullCard.width > 0 && mediaState.fullCard.height > 0);
   assert.ok(mediaState.fieldArt.width > 0 && mediaState.fieldArt.height > 0);
   assert.equal(mediaState.fontReady, true);
+  assert.ok(mediaState.decorativeFaceCount > 0);
+  assert.equal(mediaState.decorativeFontReady, true);
+  assert.notEqual(mediaState.decorativeWidth, mediaState.fallbackWidth);
+  assert.match(mediaState.wordmarkFontFamily, /Cinzel Decorative/u);
+  assert.notEqual(mediaState.wordmarkWidth, mediaState.wordmarkFallbackWidth);
   assert.ok(mediaState.audioDuration > 0);
   assert.equal(mediaState.webgl, true);
   if (mediaState.contextLossExtension) {

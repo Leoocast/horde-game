@@ -105,13 +105,13 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
     <main className={`duel-table game-screen h-screen overflow-hidden ${encounterEntering ? "is-encounter-entering" : ""}`}>
       <GameFireflies chaos={game.gameMode === "chaos"} />
       <AppHeader
-        left={game.openingHandAccepted ? <TurnPhaseHud game={game} /> : undefined}
+        left={game.openingHandAccepted ? <TurnPhaseHud game={game} setupTurns={setupTurns} /> : undefined}
         setupTurns={setupTurns}
         elevated={!game.openingHandAccepted}
         onReturnToMenu={() => setShowHomeConfirmation(true)}
       />
       <DuelHud game={game} />
-      <PhaseBanner game={game} suspended={encounterEntering || !game.openingHandAccepted} />
+      <PhaseBanner game={game} setupTurns={setupTurns} suspended={encounterEntering || !game.openingHandAccepted} />
       {game.openingHandAccepted && <PhaseOrb game={game} />}
       <CombatArrows game={game} hiddenDefenseLinkIds={hiddenDefenseLinkIds} />
       <CounterTargetingOverlay game={game} />
@@ -140,7 +140,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
         <div data-audio-click="off" className={["effect-focus-backdrop", closingEffectCardId ? "effect-focus-backdrop-closing" : ""].join(" ")} onClick={() => selectActiveEffectCard(undefined)} />
       )}
       <CardPreview />
-      <PlayerLifePanel game={game} playerName={playerName} />
+      <PlayerLifePanel game={game} playerName={playerName} setupTurns={setupTurns} />
       <ToastStack variant={game.winner ? "menu" : "game"} />
       {surgeTransitionActive && <SurgeTransition onComplete={completeSurgeTransition} />}
       <div className="game-battlefield-stage grid h-[calc(100vh-72px)] grid-cols-1 overflow-hidden pb-40">

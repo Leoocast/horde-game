@@ -2,16 +2,31 @@ import { motion } from "framer-motion";
 import type { GameState } from "../engine/GameTypes";
 import { hostSurgeTurn } from "../engine/StaticEffects";
 import { useTranslation } from "../i18n/useTranslation";
+import { setupProgress } from "./setupPresentation";
 
-export function TurnPhaseHud({ game }: { game: GameState }) {
+export function TurnPhaseHud({ game, setupTurns }: { game: GameState; setupTurns: number }) {
   const t = useTranslation();
   const hostReady = game.activeSide === "host" && game.phase === "host" && game.combat.hostAttackers.length === 0;
   const owner = game.activeSide === "host" && game.phase !== "end" && !hostReady ? t("turn.host") : t("turn.chronicler");
-  const setupActive = game.activeSide === "player" && game.setupTurnsRemaining > 0;
-  const phaseKey = setupActive ? "phase.setup" : hostReady ? "phase.end" : game.phase === "host" ? "phase.hostPhase" : (`phase.${game.phase}` as const);
+  const setup = game.activeSide === "player" ? setupProgress(setupTurns, game.setupTurnsRemaining) : undefined;
+  const phaseKey = hostReady ? "phase.end" : game.phase === "host" ? "phase.hostPhase" : (`phase.${game.phase}` as const);
   const phase = t(phaseKey);
   const hostTurn = game.activeSide === "host" && !hostReady;
   const turnsUntilSurge = Math.max(0, hostSurgeTurn(game) - game.hostTurnNumber);
+
+  if (setup) {
+    const stepLabel = t("phase.setupStep", { current: setup.current, total: setup.total });
+    const compactLabel = t("phase.setupStepBanner", { current: setup.current, total: setup.total });
+    return (
+      <div
+        className="game-turn-hud is-setup flex h-10 items-center px-4 text-center text-[#f6e6b8]"
+        aria-label={`${t("phase.setup")}. ${stepLabel}`}
+      >
+        <div className="game-setup-heading whitespace-nowrap text-sm font-black uppercase leading-none">{compactLabel}</div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={[

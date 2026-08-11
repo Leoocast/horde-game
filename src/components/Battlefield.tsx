@@ -23,7 +23,7 @@ import { GrowthBuffAnimator } from "./GrowthBuffAnimator";
 import { StormBuffAnimator } from "./StormBuffAnimator";
 import { HeavyCreatureLanding } from "./HeavyCreatureLanding";
 import { Zone } from "./Zone";
-import { Hourglass, Zap } from "lucide-react";
+import { Hourglass, LockKeyhole, Zap } from "lucide-react";
 import {
   createBattlefieldArrivalRegistry,
   groupBattlefieldCopies,
@@ -623,6 +623,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
 
   function LandDock() {
     const landCount = lands.length;
+    const reserveLatent = game.gameMode !== "chaos" && game.setupTurnsRemaining > 0;
     const tributeOfTheFourSorrowsSourceSelectionActive = tributeOfTheFourSorrowsSelectionKind === "sacrifice-land";
     const tributeOfTheFourSorrowsSourceTarget = lands.find((card) => !card.exhausted && !card.activatedThisTurn) ?? lands[0];
     const canSelectEnergyCore = tributeOfTheFourSorrowsSourceSelectionActive && !tributeOfTheFourSorrowsSelectionTargetId && Boolean(tributeOfTheFourSorrowsSourceTarget);
@@ -637,11 +638,14 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
         data-audio-click={canSelectEnergyCore ? "valid" : undefined}
         role={canSelectEnergyCore ? "button" : undefined}
         tabIndex={canSelectEnergyCore ? 0 : undefined}
-        aria-label={`${t("game.availableEnergy")}: ${availableLandCount} of ${MAX_PLAYER_LANDS}. ${t("game.storedEnergy")}: ${storedEnergyCount} of ${STORED_ENERGY_CAP}.`}
+        aria-label={`${t("game.availableEnergy")}: ${availableLandCount} of ${MAX_PLAYER_LANDS}. ${reserveLatent
+          ? `${t("game.reserve")}: ${t("game.reserveAwakens")}`
+          : `${t("game.storedEnergy")}: ${storedEnergyCount} of ${STORED_ENERGY_CAP}`}.`}
         className={[
           "player-mana-core",
           "player-mana-corner",
           game.activeSide === "player" ? "is-player-turn" : "",
+          reserveLatent ? "is-reserve-latent" : "",
           tributeOfTheFourSorrowsSourceSelectionActive ? "is-targeting" : "",
         ].join(" ")}
         onClick={() => {
@@ -656,7 +660,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
       >
         <div className="mana-corner-energy-layer" aria-hidden="true">
           <div
-            className="mana-energy-track mana-energy-track-yellow"
+            className={["mana-energy-track", "mana-energy-track-yellow", reserveLatent ? "is-setup-latent" : ""].join(" ")}
             data-energy-track="stored"
           >
             {energyTransitions.stored && (
@@ -687,6 +691,15 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
               );
             })}
           </div>
+          {reserveLatent && (
+            <div className="mana-reserve-latent-note" aria-hidden="true">
+              <LockKeyhole size={11} strokeWidth={2} />
+              <span>
+                <strong>{t("game.reserve")}</strong>
+                <small>{t("game.reserveAwakens")}</small>
+              </span>
+            </div>
+          )}
           <div
             className="mana-energy-track mana-energy-track-blue"
             data-energy-track="normal"

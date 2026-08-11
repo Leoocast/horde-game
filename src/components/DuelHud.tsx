@@ -15,6 +15,7 @@ import { GraveyardViewerModal } from "./GraveyardViewerModal";
 import { hostAttackPlayerHitDelay } from "./hostAttackPresentation";
 import { remainingArchiveDiscardPreview } from "./hostArchiveCounter";
 import { playerAttackHostHitDelay } from "./playerAttackPresentation";
+import { setupProgress } from "./setupPresentation";
 
 export function DuelHud({ game }: { game: GameState }) {
   const t = useTranslation();
@@ -364,7 +365,7 @@ export function DuelHud({ game }: { game: GameState }) {
   );
 }
 
-export function PlayerLifePanel({ game, playerName }: { game: GameState; playerName: string }) {
+export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameState; playerName: string; setupTurns: number }) {
   const t = useTranslation();
   const hostAttackAnimation = useGameStore((state) => state.hostAttackAnimation);
   const lifeDamageAnimationId = useGameStore((state) => state.lifeDamageAnimationId);
@@ -381,8 +382,14 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
   const lastLifeDamageAnimationId = useRef<number | undefined>(undefined);
   const bloodPactLifeFrame = useRef<number | undefined>(undefined);
   const finalBanquetLifeId = useRef<string | undefined>(undefined);
-  const activePhaseIndex = game.phase === "combat" ? 1 : game.phase === "end" ? 2 : 0;
-  const phaseSteps = [t("phase.main"), t("phase.battle"), t("phase.end")];
+  const setup = game.activeSide === "player" ? setupProgress(setupTurns, game.setupTurnsRemaining) : undefined;
+  const activePhaseIndex = setup ? setup.current - 1 : game.phase === "combat" ? 1 : game.phase === "end" ? 2 : 0;
+  const phaseSteps = setup
+    ? Array.from({ length: setup.total }, (_, index) => t("phase.setupStepShort", { current: index + 1 }))
+    : [t("phase.main"), t("phase.battle"), t("phase.end")];
+  const phaseProgressLabel = setup
+    ? `${t("phase.setup")}. ${t("phase.setupStep", { current: setup.current, total: setup.total })}`
+    : t("game.currentPhase", { phase: phaseSteps[activePhaseIndex] });
   const pendingDrain = game.activeSide === "player" && game.phase === "combat"
     ? previewPlayerAttackDrain(game)
     : 0;
@@ -472,7 +479,7 @@ export function PlayerLifePanel({ game, playerName }: { game: GameState; playerN
         ].join(" ")}
       >
         <div className="player-life-cluster">
-          <div className={["game-phase-progress", game.gameMode === "chaos" ? "is-chaos" : ""].join(" ")} aria-label={t("game.currentPhase", { phase: phaseSteps[activePhaseIndex] })}>
+          <div className={["game-phase-progress", setup ? "is-setup" : "", game.gameMode === "chaos" ? "is-chaos" : ""].join(" ")} aria-label={phaseProgressLabel}>
             <div className="game-phase-progress-labels" aria-hidden="true">
               {phaseSteps.map((phase, index) => (
                 <span key={phase} className={index === activePhaseIndex ? "is-active" : ""}>{phase}</span>

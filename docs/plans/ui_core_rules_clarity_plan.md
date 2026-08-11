@@ -216,6 +216,33 @@ respetar resume y persistencia.
 El jugador siempre puede distinguir Preparación de un turno normal, saber en qué paso se encuentra y
 entender que la acción final despertará a la Hueste.
 
+### Estado de implementación
+
+**Implementada el 2026-08-10; pendiente de QA visual del usuario antes de cerrar la fase.**
+
+- El HUD superior sustituye durante Preparación el turno, la fase normal y la cuenta de Oleada por
+  el rótulo compacto **Preparación X/N**.
+- El total original procede de `setupTurns`, que ya se conserva en el guardado de reanudación; la
+  derivación pura vive en `src/components/setupPresentation.ts` y cubre una partida reanudada.
+- Los banners de “Fase principal”, “Turno adicional” y “Último turno adicional” se sustituyen por
+  **Preparación X/N**. Al pasar de la última Preparación a la Hueste aparece **La Hueste despierta**.
+- El banner general de fases usa una placa de hierro sin pictogramas que crece con el texto y
+  conserva margen lateral constante. Preparación y Principal armonizan en oliva, Defensa en azul
+  acero y Batalla/Hueste mantienen acentos cálidos; banner y botón comparten familia sin repetir
+  exactamente el mismo color.
+- Durante Preparación, el indicador inferior derecho reemplaza `Principal · Batalla · Final` por un
+  rombo para cada paso (`Prep. 1`, `Prep. 2`, etc.), conservando estados actual, completado y
+  pendiente. El número de rombos procede de la dificultad y no está fijado en tres.
+- La acción principal conserva el lenguaje de turnos solicitado en QA: **Turno extra** en los pasos
+  intermedios y **Terminar turno** en el último.
+- La pista de Reserva permanece visible pero apagada y sellada, con el texto **Se activa al despertar
+  la Hueste**. Su lectura accesible comunica el mismo estado sin depender del color.
+- La presentación equivalente existe en ES y EN. No se modificaron reglas, dificultad, robo, Reserva
+  ni balance.
+
+La implementación pasó typecheck, la suite completa y el build web. El cierre sigue condicionado a
+comprobar manualmente legibilidad, ubicación, transición final y estados de movimiento reducido.
+
 ## Fase 2 — Mostrar el Archivo del Cronista y anticipar el robo
 
 ### Problema actual

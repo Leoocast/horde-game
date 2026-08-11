@@ -22,11 +22,13 @@ import { remainingArchiveDiscardPreview } from "../src/components/hostArchiveCou
 import { hostAttackPlayerHitDelay } from "../src/components/hostAttackPresentation";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { playerAttackHostHitDelay } from "../src/components/playerAttackPresentation";
+import { setupJustCompleted, setupPrimaryAction, setupProgress } from "../src/components/setupPresentation";
 import { CardStatsBadge, CardTraitTooltipBadge } from "../src/components/Card";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
 import { PreviewStatsBadge, TraitPills } from "../src/components/CardPreview";
 import { VampireBite } from "../src/components/VampireBite";
 import { cardLabelCamelCase } from "../src/i18n/cardLocalization";
+import { translate } from "../src/i18n/translations";
 import {
   resolveCardBurnMaterial,
   resolveCardBurnScale,
@@ -36,6 +38,45 @@ import {
 } from "../src/store/combatAnimation";
 import { burnPathCurvature, resolveBurnRenderer } from "../src/store/burnAnimation";
 import { addCard, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
+
+test("Preparation progress preserves the original total across normal play and resume", () => {
+  assert.deepEqual(setupProgress(4, 4), { completed: 1, current: 1, total: 4 });
+  assert.deepEqual(setupProgress(4, 3), { completed: 2, current: 2, total: 4 });
+  assert.deepEqual(setupProgress(4, 1), { completed: 4, current: 4, total: 4 });
+  assert.deepEqual(setupProgress(3, 2), { completed: 2, current: 2, total: 3 });
+  assert.deepEqual(setupProgress(2, 0), undefined);
+  assert.deepEqual(setupProgress(0, 2), { completed: 1, current: 1, total: 2 });
+  assert.equal(translate("es", "phase.setupStepBanner", { current: 1, total: 3 }), "Preparación 1/3");
+  assert.equal(translate("en", "phase.setupStepBanner", { current: 1, total: 3 }), "Setup 1/3");
+  assert.deepEqual(
+    [1, 2, 3].map((current) => translate("es", "phase.setupStepShort", { current })),
+    ["Prep. 1", "Prep. 2", "Prep. 3"],
+  );
+  assert.equal(translate("es", "orb.extraTurn"), "Turno extra");
+  assert.equal(translate("es", "orb.endTurn"), "Terminar turno");
+});
+
+test("phase banners use content-sized plaques with tone-matched accents", () => {
+  const bannerSource = readFileSync(new URL("../src/components/PhaseBanner.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.doesNotMatch(bannerSource, /lucide-react|phase-banner-crest|visiblePhase\.Icon/);
+  assert.doesNotMatch(stylesSource, /\.phase-banner-crest/);
+  assert.match(stylesSource, /\.phase-banner-copy\s*\{[^}]*width:\s*max-content;/su);
+  assert.match(stylesSource, /\.phase-banner-copy\s*\{[^}]*padding:\s*0 clamp\(48px, 4\.2vw, 72px\);/su);
+  assert.match(stylesSource, /\.phase-banner-main\s*\{\s*--phase-accent:\s*#9da86a/u);
+  assert.match(stylesSource, /\.phase-banner-defend\s*\{\s*--phase-accent:\s*#6fa8cf/u);
+});
+
+test("Preparation actions distinguish continuing from awakening the Host", () => {
+  assert.equal(setupPrimaryAction(3), "next");
+  assert.equal(setupPrimaryAction(2), "next");
+  assert.equal(setupPrimaryAction(1), "awaken");
+  assert.equal(setupPrimaryAction(0), undefined);
+  assert.equal(setupJustCompleted(1, 0), true);
+  assert.equal(setupJustCompleted(2, 1), false);
+  assert.equal(setupJustCompleted(0, 0), false);
+});
 
 test("the Host Archive counter counts attack discards down without displaying zero", () => {
   assert.equal(remainingArchiveDiscardPreview(7, 0), 7);
@@ -588,6 +629,17 @@ test("main menu reserves enough width and breathing room for the Hostfall title"
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
   assert.match(styles, /--main-menu-panel-width:\s*clamp\(380px, 34vw, 590px\)/u);
   assert.match(styles, /\.main-menu-title\s*\{[^}]*margin:\s*16px 0 0;/u);
+});
+
+test("the Hostfall wordmark and Chronicler name use the bundled decorative face", () => {
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(
+    styles,
+    /@font-face\s*\{[^}]*font-family:\s*"Cinzel Decorative";[^}]*font-weight:\s*400;[^}]*cinzel-decorative-latin\.woff2/u,
+  );
+  assert.match(styles, /\.hostfall-wordmark\s*\{[^}]*font-family:\s*"Cinzel Decorative"[^}]*font-weight:\s*400;/u);
+  assert.match(styles, /\.main-menu-chronicler-name\s*\{[^}]*font-family:\s*"Cinzel Decorative"[^}]*font-weight:\s*400;/u);
 });
 
 test("deck setup panels and deck cards opt into shared click audio", () => {
