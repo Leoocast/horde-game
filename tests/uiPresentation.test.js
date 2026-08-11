@@ -83,7 +83,7 @@ test("Preparation actions distinguish continuing from awakening the Host", () =>
   assert.equal(setupJustCompleted(0, 0), false);
 });
 
-test("the Chronicler Archive forecast stays visible and owns the draw origin", () => {
+test("Memory, Archive and Life share one row of equal boxes and the Archive owns the draw origin", () => {
   const boardSource = readFileSync(new URL("../src/components/DuelHud.tsx", import.meta.url), "utf8");
   const forecastSource = readFileSync(new URL("../src/components/PlayerArchiveForecast.tsx", import.meta.url), "utf8");
   const handSource = readFileSync(new URL("../src/components/Hand.tsx", import.meta.url), "utf8");
@@ -92,14 +92,38 @@ test("the Chronicler Archive forecast stays visible and owns the draw origin", (
   assert.match(boardSource, /<PlayerArchiveForecast game=\{game\}/u);
   assert.match(forecastSource, /data-player-archive-origin="true"/u);
   assert.match(forecastSource, /data-energy-recycle-target="true"/u);
-  assert.match(forecastSource, /sourceDragActive \? \(/u);
+  assert.match(handSource, /fromArchive:\s*!initialHandIds\.current\.has/u);
+
+  // Memory and the Archive are the same box; only Life keeps the vitals panel.
+  assert.match(boardSource, /className="player-vitals-row"/u);
+  assert.match(forecastSource, /"card-pile card-pile-archive"/u);
+  assert.doesNotMatch(boardSource, /player-graveyard-host|player-graveyard-button/u);
+  assert.match(stylesSource, /\.player-vitals-row\s*\{[^}]*align-items:\s*stretch;/su);
+  assert.match(stylesSource, /\.card-pile\s*\{[^}]*width:\s*62px;[^}]*min-height:\s*82px;/su);
+
+  // Both sides own the same Memory box: the Chronicler's in the row, the Host's beside its panel.
+  assert.equal(boardSource.match(/className="card-pile card-pile-memory"/gu)?.length, 2);
+  assert.match(boardSource, /className="card-pile-host host-memory-pile-host"/u);
+  assert.match(stylesSource, /\.host-memory-pile-host\s*\{[^}]*right:\s*100%;/su);
+  assert.doesNotMatch(boardSource, /host-deck-graveyard/u);
+  assert.doesNotMatch(stylesSource, /\.host-deck-graveyard/u);
+
+  // The rotated Life crest only fits while the name floor leaves room for it inside the panel.
+  assert.match(stylesSource, /\.game-screen \.player-life-counter\s*\{[^}]*width:\s*180px;/su);
+  assert.match(stylesSource, /\.player-life-copy\s*\{[^}]*min-width:\s*5\.5rem;/su);
+
+  // Both boxes name themselves at their base.
+  assert.match(boardSource, /className="card-pile-label">\{t\("zones\.memory"\)\}/u);
+  assert.match(forecastSource, /className="card-pile-label"[^>]*>\{archiveLabel\}/u);
+
+  // The normal draw is a rule, not permanent UI: the badge only appears when it deviates.
+  assert.match(forecastSource, /const extraDraw = forecast\.amount > 1;/u);
+  assert.match(forecastSource, /\{extraDraw && \(/u);
   assert.match(forecastSource, /<GameTooltip content=\{emptyHandTooltip\}/u);
   assert.doesNotMatch(forecastSource, /game\.drawReasonEmptyHand["']/u);
-  assert.match(handSource, /fromArchive:\s*!initialHandIds\.current\.has/u);
-  assert.match(stylesSource, /\.player-archive-forecast\s*\{[^}]*width:\s*244px;/su);
 });
 
-test("a recyclable Source keeps the broad right-side gesture while expanding the Archive", () => {
+test("a recyclable Source keeps the broad right-side gesture while lighting up the Archive box", () => {
   const handSource = readFileSync(new URL("../src/components/Hand.tsx", import.meta.url), "utf8");
   const forecastSource = readFileSync(new URL("../src/components/PlayerArchiveForecast.tsx", import.meta.url), "utf8");
   const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
@@ -112,9 +136,11 @@ test("a recyclable Source keeps the broad right-side gesture while expanding the
   assert.match(handSource, /<EnergyRecycleDragHint/u);
   assert.match(handSource, /className="energy-recycle-drag-path"/u);
   assert.match(handSource, /className="energy-recycle-target-ring"/u);
-  assert.match(forecastSource, /className="source-return-target-box"/u);
-  assert.doesNotMatch(forecastSource, /source-return-target-button|recycleSelectedSource/u);
-  assert.match(stylesSource, /\.player-archive-forecast\.is-source-return-target\s*\{[^}]*width:\s*310px;[^}]*height:\s*98px;/su);
+  // The drop invitation is the box itself glowing and growing; the dragged card already carries
+  // the wording, so the Archive never reopens a panel to repeat it.
+  assert.doesNotMatch(forecastSource, /source-return-target-box|source-return-target-button|recycleSelectedSource/u);
+  assert.match(stylesSource, /\.card-pile\.is-source-return-target\s*\{[^}]*transform:\s*scale\(1\.06\);/su);
+  assert.match(stylesSource, /\.card-pile\.is-recycle-targeted\s*\{[^}]*transform:\s*scale\(1\.12\);/su);
   assert.match(stylesSource, /\.energy-recycle-drag-path\s*\{[^}]*stroke-dasharray:\s*7 8;/su);
 });
 

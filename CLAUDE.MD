@@ -399,6 +399,17 @@ Fuente) están cerradas; la Fase 4 (Reserva y orden de pago) está en discusión
 conserva el gesto amplio hacia la derecha y sólo expande visualmente el Archivo durante un arrastre
 que `canPlayerRecycleEnergy` considera válido; la UI no debe volver a duplicar esas condiciones.
 
+La esquina inferior derecha es una sola fila `[Memoria][Archivo][Vida]` de altura común
+(`.player-vitals-row`). Memoria y Archivo son la misma caja de cartas —`.card-pile`, con su pestaña
+superior y su nombre impreso en la base— y sólo la Vida conserva el panel de vitals. La Memoria de
+la Hueste usa esa misma caja en fila con su panel; ninguna de las dos vuelve a ser un botón que
+asome por detrás del marco. El Archivo del Cronista no
+debe volver a presentarse como una estadística apilada sobre la Vida: la Hueste sí muestra su
+Archivo como barra de vida y esa lectura no debe contagiarse al Cronista. El robo normal no se
+imprime nunca; sólo aparece una insignia `+1` cuando `playerDrawForecast` supera una carta. Durante
+un arrastre válido de Devolver Fuente la caja del Archivo se enciende y crece; el texto de la acción
+pertenece a la etiqueta flotante del arrastre y no vuelve a un panel propio.
+
 ## Preferencias de trabajo
 
 - Cambios pequeños y verificables.

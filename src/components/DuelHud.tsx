@@ -328,16 +328,20 @@ export function DuelHud({ game }: { game: GameState }) {
               </GameTooltip>
             )}
           </div>
-          <GameTooltip content={t("game.viewGraveyard")} side="bottom" className="host-deck-graveyard-host">
+          {/* Misma caja de Memoria que el Cronista, en fila con el panel de la Hueste. */}
+          <GameTooltip content={t("game.viewGraveyard")} side="bottom" className="card-pile-host host-memory-pile-host">
             <button
               data-host-mill-target="true"
               data-audio-click="valid"
-              className="host-deck-graveyard flex items-center justify-center border font-black transition"
+              className="card-pile card-pile-memory"
               onClick={() => setGraveyardOpen(true)}
               aria-label={t("game.viewHostGraveyard", { count: visualHostGraveyardCount })}
             >
-              <Archive size={15} strokeWidth={2.4} />
-              <span className="host-deck-graveyard-count">{visualHostGraveyardCount}</span>
+              <span className="card-pile-glyph" aria-hidden="true">
+                <Archive size={15} strokeWidth={2.2} />
+              </span>
+              <span key={`host-memory-${visualHostGraveyardCount}`} className="card-pile-count">{visualHostGraveyardCount}</span>
+              <span className="card-pile-label">{t("zones.memory")}</span>
             </button>
           </GameTooltip>
           <AnimatePresence initial={false} mode="popLayout">
@@ -501,14 +505,32 @@ export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameSt
               ))}
             </div>
           </div>
-          <PlayerArchiveForecast game={game} />
+          {/* One row, three boxes of the same height: Memory and Archive are card piles, Life is the
+              only vitals panel and owns the screen corner. */}
+          <div className="player-vitals-row">
+            <GameTooltip content={t("game.viewGraveyard")} side="top" className="card-pile-host">
+              <button
+                data-player-discard-target="true"
+                data-audio-click="valid"
+                className="card-pile card-pile-memory"
+                onClick={() => setGraveyardOpen(true)}
+                aria-label={t("game.viewPlayerGraveyard", { count: game.player.memory.length })}
+              >
+                <span className="card-pile-glyph" aria-hidden="true">
+                  <Archive size={15} strokeWidth={2.2} />
+                </span>
+                <span key={`memory-${game.player.memory.length}`} className="card-pile-count">{game.player.memory.length}</span>
+                <span className="card-pile-label">{t("zones.memory")}</span>
+              </button>
+            </GameTooltip>
+            <PlayerArchiveForecast game={game} />
           <div
             data-player-life-panel="true"
             className="energy-recycle-life-target"
           >
           <div
             className={[
-              "old-panel combatant-vitals combatant-vitals-player player-life-counter flex min-w-44 items-center gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]",
+              "old-panel combatant-vitals combatant-vitals-player player-life-counter flex items-center gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]",
               takingDamage ? "player-life-damage" : "",
               lifeBuffAnimationId ? "player-life-buff" : "",
               bloodPactAnimation?.phase === "impact" || lifePaymentAnimation || finalBanquetAnimation?.phase === "siphon" ? "blood-pact-life-corrupted" : "",
@@ -559,18 +581,7 @@ export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameSt
             </div>
           </div>
           </div>
-          <GameTooltip content={t("game.viewGraveyard")} side="top" className="player-graveyard-host">
-            <button
-              data-player-discard-target="true"
-              data-audio-click="valid"
-              className="host-deck-graveyard player-graveyard-button flex items-center justify-center border font-black transition"
-              onClick={() => setGraveyardOpen(true)}
-              aria-label={t("game.viewPlayerGraveyard", { count: game.player.memory.length })}
-            >
-              <Archive size={15} strokeWidth={2.4} />
-              <span className="host-deck-graveyard-count">{game.player.memory.length}</span>
-            </button>
-          </GameTooltip>
+          </div>
         </div>
       </div>
       {graveyardOpen && <GraveyardViewerModal game={game} title={t("game.playerGraveyard")} cards={game.player.memory} onClose={() => setGraveyardOpen(false)} />}

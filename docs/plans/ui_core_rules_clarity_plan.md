@@ -334,6 +334,23 @@ vacía.
 - Las cartas añadidas después de la Mano inicial entran visualmente desde el lado del Archivo.
 - La presentación existe en ES y EN y respeta movimiento reducido.
 
+**Revisión de presentación aprobada el 2026-08-11.** La banda apilada sobre la Vida confundía el
+Archivo con la Vida, porque compartía la gramática de un panel de vitals y porque la Hueste sí
+muestra su Archivo como barra de vida. Maquetas en `dev/mockups/player-archive-vs-life.html` y
+`dev/mockups/player-vitals-row.html`.
+
+- La esquina es ahora una sola fila `[Memoria][Archivo][Vida]` de altura común. Memoria y Archivo
+  comparten silueta de caja de cartas y sólo cambian de color; la Vida es el único panel de vitals
+  y ocupa la esquina de la pantalla.
+- Cada caja imprime su nombre —**Memoria**, **Archivo**— en la base, y una pestaña sobre el canto
+  superior la presenta como montón de cartas.
+- La Memoria de la Hueste usa la misma caja, en fila con su panel. El botón que asomaba por detrás
+  del marco queda retirado en ambos bandos.
+- **Próximo robo** deja de mostrarse de forma permanente: el robo normal es una regla que se aprende
+  una vez. Sólo cuando `playerDrawForecast` supera una carta aparece una insignia `+1` sobre el
+  Archivo, con la razón (Fácil, Caos) o el tooltip de Mano vacía.
+- La previsión sigue saliendo de `playerDrawForecast`; sólo cambió cuándo se pinta.
+
 ## Fase 3 — Hacer visible la acción Devolver Fuente
 
 ### Problema actual
@@ -425,6 +442,12 @@ UI comunica que ambas consumen la misma acción.
   mediante `recycleEnergy`; la presentación no duplica sus reglas de disponibilidad.
 - Jugar o devolver sigue consumiendo el mismo permiso. No cambió timing, frecuencia, balance ni la
   carta robada.
+
+**Revisión de presentación aprobada el 2026-08-11.** Con el Archivo convertido en caja de cartas, la
+expansión a una caja amplia con texto propio se retira: durante un arrastre válido la caja se
+enciende y crece (`scale(1.06)`, y `scale(1.12)` al entrar en la región de destino). El gesto, sus
+condiciones y el feedback flotante —línea punteada, etiqueta **Devolver Fuente · Suelta para
+devolver** y círculo pulsante— no cambian; el Archivo ya no repite ese texto en un panel propio.
 
 ## Fase 4 — Clarificar Reserva actual, Reserva prevista y orden de pago
 
