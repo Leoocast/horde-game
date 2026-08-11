@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hostfall — Exploración de estilos de menú</title>
+<style>
+@font-face{font-family:"CinzelDec";src:url(../../../../public/fonts/pact-of-elarion/cinzel-decorative-latin.woff2) format("woff2");font-display:block}
+@font-face{font-family:"Cinzel";src:url(../../../../public/fonts/pact-of-elarion/cinzel-latin.woff2) format("woff2");font-display:block}
+@font-face{font-family:"Lora";src:url(../../../../public/fonts/pact-of-elarion/lora-normal-latin.woff2) format("woff2");font-display:block}
+@font-face{font-family:"Lora";src:url(../../../../public/fonts/pact-of-elarion/lora-italic-latin.woff2) format("woff2");font-style:italic;font-display:block}
+@font-face{font-family:"Oswald";src:url(../../../../public/fonts/pact-of-elarion/oswald-latin.woff2) format("woff2");font-display:block}
+
+:root{
+  --bg:url(../../../../assets/images/background.webp);
+  --ink:#e9e2d2; --dim:#8a938f; --gold:#c2a761; --paper:#c9b58a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#0a0c0d;color:#d9d4c6;font-family:"Lora",Georgia,serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:56px 24px 120px}
+
+/* ---------- doc chrome ---------- */
+.doc-head{border-bottom:1px solid #23292b;padding-bottom:38px;margin-bottom:54px}
+.doc-kicker{font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:#7b8683}
+.doc-head h1{font-family:"CinzelDec",Georgia,serif;font-size:clamp(32px,5vw,52px);margin:14px 0 0;color:#e3d6b0;font-weight:400;letter-spacing:-.02em}
+.doc-head p{max-width:70ch;color:#9aa39e;font-size:16px;line-height:1.65;margin:18px 0 0}
+
+.diag{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1px;background:#202628;border:1px solid #202628;margin:34px 0 0}
+.diag>div{background:#0e1214;padding:18px 20px}
+.diag h4{font-family:"Oswald",sans-serif;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#c2a761;margin:0 0 8px}
+.diag p{margin:0;font-size:13.5px;line-height:1.6;color:#8f9994}
+
+/* ---------- variant frame ---------- */
+.variant{margin:78px 0 0}
+.vhead{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+.vnum{font-family:"Oswald",sans-serif;font-size:12px;letter-spacing:.2em;color:#5f6a67;border:1px solid #2a3134;padding:3px 8px}
+.vhead h2{font-family:"CinzelDec",Georgia,serif;font-weight:400;font-size:30px;margin:0;color:#e6d7ae}
+.vtag{font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#7f8a86}
+.vlede{color:#98a29d;font-size:15px;line-height:1.6;max-width:78ch;margin:0 0 20px}
+.stage{position:relative;overflow:hidden;border:1px solid #262d30;background:#000;box-shadow:0 26px 60px rgba(0,0,0,.6)}
+.screen{width:1280px;height:720px;position:relative;overflow:hidden;transform-origin:top left;transform:scale(var(--s,1))}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:22px;margin:20px 0 0;padding:0;list-style:none}
+.notes li{font-size:13.5px;line-height:1.62;color:#8f9994;border-top:1px solid #262d30;padding-top:12px}
+.notes b{display:block;font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#a8945f;margin-bottom:6px;font-weight:500}
+.hint{font-size:12.5px;color:#6c7773;font-style:italic;margin:14px 0 0}
+
+/* ============================================================
+   01 — CÓDICE ABIERTO
+   ============================================================ */
+.s1{background:
+   radial-gradient(ellipse at 50% 42%, #241a12 0%, #120d09 55%, #070504 100%);
+}
+.s1::before{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(96deg, rgba(0,0,0,.35) 0 3px, rgba(255,255,255,.012) 3px 9px);opacity:.5}
+.book{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:1058px;height:610px;display:flex;
+  filter:drop-shadow(0 40px 60px rgba(0,0,0,.75))}
+.page{position:relative;width:529px;height:100%;overflow:hidden;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(120,86,44,.16), transparent 55%),
+    radial-gradient(ellipse at 78% 84%, rgba(96,66,32,.2), transparent 50%),
+    linear-gradient(180deg,#d3bd93 0%, #c3ad84 100%);
+  background-color:#c3ad84}
+.page::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(58,38,18,.42) 100%),
+    repeating-linear-gradient(0deg, rgba(90,64,30,.05) 0 2px, transparent 2px 5px)}
+.page.left{border-radius:5px 0 0 5px;
+  box-shadow:inset -34px 0 42px -18px rgba(52,33,14,.75), inset 3px 0 0 rgba(255,255,255,.14)}
+.page.right{border-radius:0 5px 5px 0;
+  box-shadow:inset 34px 0 42px -18px rgba(52,33,14,.75), inset -3px 0 0 rgba(255,255,255,.14)}
+.page-inner{position:relative;z-index:2;height:100%;padding:52px 54px}
+
+.exlibris{font-family:"Lora",serif;font-style:italic;font-size:13px;color:#6d5433;letter-spacing:.02em}
+.seal{width:184px;height:184px;margin:34px auto 0;border-radius:50%;position:relative;
+  background:
+   repeating-conic-gradient(from 0deg, rgba(93,66,33,.5) 0 3deg, transparent 3deg 9deg),
+   radial-gradient(circle, transparent 44%, rgba(93,66,33,.55) 45% 47%, transparent 48%),
+   radial-gradient(circle, rgba(93,66,33,.3) 0 26%, transparent 27%);
+  opacity:.62;
+  -webkit-mask-image:radial-gradient(circle, #000 62%, transparent 78%);
+  mask-image:radial-gradient(circle, #000 62%, transparent 78%)}
+.seal::after{content:"❦";position:absolute;inset:0;display:grid;place-items:center;font-size:52px;color:#5d4221;opacity:.8}
+.s1 .wordmark{font-family:"CinzelDec",serif;font-size:74px;line-height:1;color:#3a2712;text-align:center;margin:30px 0 0;
+  text-shadow:0 1px 0 rgba(255,255,255,.28)}
+.s1 .act{text-align:center;font-family:"Cinzel",serif;font-size:13px;letter-spacing:.42em;color:#6f5432;margin-top:16px}
+.s1 .quill{position:absolute;left:54px;bottom:44px;font-family:"Lora",serif;font-style:italic;font-size:14px;color:#7a5f39}
+
+.index-h{font-family:"Cinzel",serif;font-size:15px;letter-spacing:.36em;color:#6b5130;text-transform:uppercase}
+.index-rule{height:1px;background:linear-gradient(90deg,#7b5f37,rgba(123,95,55,.15));margin:12px 0 26px}
+.folio{display:flex;align-items:baseline;gap:14px;padding:13px 8px 13px 0;cursor:default;position:relative}
+.folio .num{font-family:"Cinzel",serif;font-size:14px;color:#8b6c40;width:34px;flex:0 0 34px}
+.folio .nm{font-family:"Cinzel",serif;font-size:25px;color:#33240f;letter-spacing:.01em}
+.folio .lead{flex:1;border-bottom:1px dotted rgba(90,66,33,.55);transform:translateY(-5px)}
+.folio .pg{font-family:"Lora",serif;font-size:14px;color:#7d6039}
+.folio:hover{background:rgba(120,84,38,.11)}
+.folio:hover .nm{color:#5c1f14}
+.folio:hover::before{content:"";position:absolute;left:-16px;top:50%;width:9px;height:9px;border-radius:50%;
+  transform:translateY(-50%);background:radial-gradient(circle at 35% 30%,#a3402c,#5e1c11);
+  box-shadow:0 1px 2px rgba(0,0,0,.5)}
+.folio.off .nm,.folio.off .pg,.folio.off .num{color:#9a8258}
+.folio.off .nm{text-decoration:line-through;text-decoration-color:rgba(120,50,30,.5)}
+.ribbon{position:absolute;top:-10px;left:610px;width:26px;height:250px;z-index:3;
+  background:linear-gradient(180deg,#7d2418,#59180f);box-shadow:2px 0 6px rgba(0,0,0,.5)}
+.ribbon::after{content:"";position:absolute;bottom:-16px;left:0;border-left:13px solid #59180f;border-right:13px solid #59180f;border-bottom:16px solid transparent}
+
+/* ============================================================
+   02 — PIEDRA TALLADA
+   ============================================================ */
+.s2{background:var(--bg) center/cover no-repeat, #171b1d}
+.s2::before{content:"";position:absolute;inset:0;background:
+  radial-gradient(ellipse at 22% 40%, rgba(214,142,58,.20), transparent 55%),
+  linear-gradient(180deg, rgba(4,7,8,.78), rgba(4,7,8,.30) 34%, rgba(3,5,6,.9))}
+.s2 .frame{position:absolute;inset:26px;border:2px solid rgba(0,0,0,.55);
+  box-shadow:inset 0 0 0 1px rgba(190,168,110,.18), inset 0 0 90px rgba(0,0,0,.75)}
+.corner{position:absolute;width:56px;height:56px;border:2px solid rgba(176,152,96,.55)}
+.corner.tl{top:26px;left:26px;border-right:0;border-bottom:0}
+.corner.tr{top:26px;right:26px;border-left:0;border-bottom:0}
+.corner.bl{bottom:26px;left:26px;border-right:0;border-top:0}
+.corner.br{bottom:26px;right:26px;border-left:0;border-top:0}
+.carve{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.s2 .wordmark{font-family:"CinzelDec",serif;font-size:92px;color:#5c666b;line-height:1;
+  text-shadow:0 -2px 1px rgba(0,0,0,.92), 0 2px 0 rgba(214,222,225,.13), 0 3px 14px rgba(0,0,0,.5);margin-bottom:8px}
+.s2 .act{font-family:"Cinzel",serif;font-size:12px;letter-spacing:.5em;color:#5a6469;
+  text-shadow:0 -1px 0 rgba(0,0,0,.9),0 1px 0 rgba(220,230,232,.10);margin-bottom:40px}
+.carve-item{font-family:"Cinzel",serif;font-size:33px;letter-spacing:.1em;text-transform:uppercase;color:#68737a;
+  padding:9px 26px;position:relative;cursor:default;
+  text-shadow:0 -2px 1px rgba(0,0,0,.9), 0 2px 0 rgba(216,226,229,.12);transition:color .18s,text-shadow .18s}
+.carve-item:hover{color:#f0cf85;text-shadow:0 0 22px rgba(226,168,64,.75), 0 -1px 0 rgba(0,0,0,.7), 0 2px 3px rgba(0,0,0,.6)}
+.carve-item:hover::before,.carve-item:hover::after{content:"";position:absolute;top:50%;width:34px;height:1px;
+  background:linear-gradient(90deg,transparent,#d2a95c);box-shadow:0 0 8px rgba(226,168,64,.6)}
+.carve-item:hover::before{left:-26px}
+.carve-item:hover::after{right:-26px;transform:scaleX(-1)}
+.carve-item.off{color:#4c5459;opacity:.6}
+.carve-item.off:hover{color:#4c5459;text-shadow:0 -2px 1px rgba(0,0,0,.9)}
+.s2 .foot{position:absolute;left:0;right:0;bottom:52px;text-align:center;font-family:"Lora",serif;font-style:italic;
+  font-size:14px;color:#6d7a7e;z-index:2}
+
+/* ============================================================
+   03 — HIERRO Y LACRE
+   ============================================================ */
+.s3{background:radial-gradient(ellipse at 26% 46%, #23282b 0%, #0e1214 58%, #05070800 100%), #060809}
+.s3::before{content:"";position:absolute;inset:0;background:var(--bg) 60% center/cover no-repeat;opacity:.22;
+  filter:contrast(1.15) brightness(.6)}
+.s3::after{content:"";position:absolute;inset:0;background:
+  radial-gradient(circle at 21% 26%, rgba(226,163,66,.22), transparent 42%),
+  linear-gradient(90deg, rgba(3,5,6,.92) 0 26%, rgba(3,5,6,.35) 62%, rgba(3,5,6,.9))}
+.s3 .col{position:absolute;z-index:2;left:96px;top:0;bottom:0;width:470px;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.banner{position:relative;align-self:flex-start;width:430px;margin-bottom:34px;padding:26px 0 34px;text-align:center;
+  background:linear-gradient(180deg,#5c1d14,#3d120c 62%,#2b0c07);
+  clip-path:polygon(0 0,100% 0,100% 84%,50% 100%,0 84%);
+  box-shadow:0 14px 30px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.12)}
+.banner::before{content:"";position:absolute;inset:6px 8px 14px;border:1px solid rgba(212,178,104,.35);
+  clip-path:polygon(0 0,100% 0,100% 84%,50% 100%,0 84%)}
+.s3 .wordmark{font-family:"CinzelDec",serif;font-size:47px;color:#e6cf95;line-height:1;
+  text-shadow:0 2px 0 rgba(0,0,0,.6), 0 0 26px rgba(230,170,70,.28)}
+.s3 .act{font-family:"Cinzel",serif;font-size:10px;letter-spacing:.44em;color:#c39b5e;margin-top:9px}
+.plate{position:relative;width:430px;height:59px;display:flex;align-items:center;padding-left:60px;cursor:default;
+  background:linear-gradient(180deg,#40464a 0%, #292f33 42%, #1a1f22 100%);
+  border:1px solid #0a0c0d;border-radius:3px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16), inset 0 -3px 8px rgba(0,0,0,.65), 0 5px 12px rgba(0,0,0,.55);
+  transition:transform .12s, box-shadow .12s, background .12s}
+.plate .rv{position:absolute;width:7px;height:7px;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%, #8e989d, #3b4245 60%, #14181a);
+  box-shadow:0 1px 1px rgba(0,0,0,.8)}
+.plate .rv.a{left:12px;top:11px}.plate .rv.b{left:12px;bottom:11px}
+.plate .rv.c{right:12px;top:11px}.plate .rv.d{right:12px;bottom:11px}
+.plate span.lb{font-family:"Oswald",sans-serif;font-size:20px;letter-spacing:.17em;text-transform:uppercase;color:#c8bb99;
+  text-shadow:0 -1px 0 rgba(0,0,0,.85), 0 1px 0 rgba(255,255,255,.07)}
+.plate .wax{position:absolute;left:22px;top:50%;transform:translateY(-50%) scale(.4);width:26px;height:26px;border-radius:50%;
+  background:radial-gradient(circle at 34% 28%, #b4442e, #6a1d12 70%);opacity:0;
+  box-shadow:0 2px 5px rgba(0,0,0,.6), inset 0 -3px 6px rgba(0,0,0,.45);transition:.16s}
+.plate .wax::after{content:"✦";position:absolute;inset:0;display:grid;place-items:center;font-size:12px;color:rgba(0,0,0,.35)}
+.plate:hover{background:linear-gradient(180deg,#4d5347 0%, #34382c 42%, #23261c 100%);transform:translateX(6px);
+  box-shadow:inset 0 1px 0 rgba(255,220,150,.22), inset 0 -3px 8px rgba(0,0,0,.65), 0 5px 18px rgba(0,0,0,.6), -3px 0 18px rgba(226,168,64,.18)}
+.plate:hover span.lb{color:#f2dfae}
+.plate:hover .wax{opacity:1;transform:translateY(-50%) scale(1)}
+.plate.off{filter:grayscale(.6) brightness(.62)}
+.plate.off:hover{transform:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.16), inset 0 -3px 8px rgba(0,0,0,.65), 0 5px 12px rgba(0,0,0,.55)}
+.plate.off:hover .wax{opacity:0}
+.s3 .foot{position:absolute;z-index:2;left:96px;bottom:44px;font-family:"Oswald",sans-serif;font-size:11px;
+  letter-spacing:.2em;text-transform:uppercase;color:#5e6a66}
+
+/* ============================================================
+   04 — MANO DE CARTAS
+   ============================================================ */
+.s4{background:radial-gradient(ellipse at 50% 30%, #1c2429 0%, #0a0e11 62%, #050708 100%)}
+.s4::before{content:"";position:absolute;inset:0;background:var(--bg) center 20%/cover no-repeat;opacity:.3;
+  -webkit-mask-image:linear-gradient(180deg,#000,transparent 68%);mask-image:linear-gradient(180deg,#000,transparent 68%)}
+.s4 .top{position:absolute;z-index:2;left:0;right:0;top:88px;text-align:center}
+.s4 .wordmark{font-family:"CinzelDec",serif;font-size:80px;color:#dbcb9e;line-height:1;
+  text-shadow:0 6px 30px rgba(0,0,0,.9)}
+.s4 .act{font-family:"Cinzel",serif;font-size:11px;letter-spacing:.5em;color:#7d8a8c;margin-top:14px}
+.s4 .prompt{position:absolute;z-index:3;left:0;right:0;top:352px;text-align:center;
+  font-family:"Lora",serif;font-style:italic;font-size:16px;color:#8d9894}
+.hand{position:absolute;z-index:4;left:50%;bottom:-104px;transform:translateX(-50%);display:flex;align-items:flex-end}
+.hcard{width:176px;height:250px;margin:0 -18px;border-radius:9px;position:relative;cursor:default;
+  transform-origin:50% 118%;transform:rotate(var(--r)) translateY(var(--y));
+  background:linear-gradient(180deg,#1d2226,#10151a);
+  border:2px solid #7d6836;box-shadow:0 -6px 26px rgba(0,0,0,.7), inset 0 0 0 1px rgba(0,0,0,.6);
+  transition:transform .2s cubic-bezier(.2,.8,.3,1), box-shadow .2s, filter .2s}
+.hcard .art{position:absolute;inset:9px 9px 74px;border-radius:4px;overflow:hidden;
+  background:linear-gradient(170deg, hsl(var(--h) 34% 34%), hsl(var(--h) 40% 12%));
+  box-shadow:inset 0 0 24px rgba(0,0,0,.65)}
+.hcard .art::after{content:var(--g);position:absolute;inset:0;display:grid;place-items:center;font-size:52px;
+  color:rgba(255,255,255,.22);text-shadow:0 2px 10px rgba(0,0,0,.6)}
+.hcard .plateNm{position:absolute;left:9px;right:9px;bottom:9px;height:58px;border-radius:4px;display:grid;place-items:center;
+  padding:0 8px;text-align:center;background:linear-gradient(180deg,#2a2f33,#171b1e);border:1px solid rgba(190,164,102,.35)}
+.hcard .plateNm b{font-family:"Cinzel",serif;font-size:15px;font-weight:400;letter-spacing:.06em;color:#e0d3ad;line-height:1.2}
+.hcard:hover{transform:rotate(0deg) translateY(-74px) scale(1.07);z-index:9;
+  box-shadow:0 -10px 40px rgba(0,0,0,.8), 0 0 32px rgba(226,180,90,.32), inset 0 0 0 1px rgba(0,0,0,.6);
+  border-color:#d3b16a}
+.hcard.off{filter:grayscale(.85) brightness(.5)}
+.hcard.off:hover{transform:rotate(var(--r)) translateY(var(--y));box-shadow:0 -6px 26px rgba(0,0,0,.7);border-color:#7d6836}
+.s4 .foot{position:absolute;z-index:5;right:34px;bottom:26px;font-family:"Oswald",sans-serif;font-size:10px;
+  letter-spacing:.2em;text-transform:uppercase;color:#5b6663}
+
+/* ============================================================
+   05 — ARCADA GÓTICA
+   ============================================================ */
+.s5{background:linear-gradient(180deg,#0c1216 0%,#070b0e 60%,#04070a 100%)}
+.s5::before{content:"";position:absolute;inset:0;background:var(--bg) center/cover no-repeat;opacity:.16;filter:brightness(.5)}
+.rose{position:absolute;z-index:2;left:50%;top:44px;transform:translateX(-50%);width:132px;height:132px;border-radius:50%;
+  background:
+    repeating-conic-gradient(from 0deg, rgba(226,168,64,.30) 0 10deg, rgba(84,42,110,.32) 10deg 20deg, rgba(52,96,120,.32) 20deg 30deg),
+    radial-gradient(circle, rgba(240,206,132,.55) 0 16%, transparent 17%);
+  box-shadow:0 0 60px rgba(226,168,64,.22), inset 0 0 0 3px rgba(0,0,0,.55);
+  -webkit-mask-image:radial-gradient(circle,#000 68%,transparent 72%);mask-image:radial-gradient(circle,#000 68%,transparent 72%)}
+.s5 .wordmark{position:absolute;z-index:2;left:0;right:0;top:196px;text-align:center;font-family:"CinzelDec",serif;
+  font-size:58px;color:#dccb9c;text-shadow:0 4px 26px rgba(0,0,0,.9)}
+.arcade{position:absolute;z-index:2;left:50%;bottom:78px;transform:translateX(-50%);display:flex;gap:14px;align-items:flex-end}
+.arch{position:relative;width:184px;height:296px;border-radius:92px 92px 5px 5px;overflow:hidden;cursor:default;
+  background:
+    repeating-linear-gradient(58deg, rgba(0,0,0,.5) 0 1px, transparent 1px 26px),
+    repeating-linear-gradient(-58deg, rgba(0,0,0,.5) 0 1px, transparent 1px 26px),
+    linear-gradient(180deg, hsl(var(--h) 38% 26%), hsl(var(--h) 44% 9%));
+  box-shadow:inset 0 0 0 5px #14181b, inset 0 0 40px rgba(0,0,0,.75), 0 10px 26px rgba(0,0,0,.6);
+  filter:brightness(.62) saturate(.75);transition:filter .22s, box-shadow .22s, transform .22s}
+.arch .lbl{position:absolute;left:0;right:0;bottom:26px;text-align:center;font-family:"Cinzel",serif;font-size:17px;
+  letter-spacing:.1em;text-transform:uppercase;color:#e8dcb6;text-shadow:0 2px 8px rgba(0,0,0,.9)}
+.arch .gl{position:absolute;left:0;right:0;top:58px;text-align:center;font-size:38px;color:rgba(255,255,255,.5);
+  text-shadow:0 2px 12px rgba(0,0,0,.7)}
+.arch:hover{filter:brightness(1.25) saturate(1.15);transform:translateY(-6px);
+  box-shadow:inset 0 0 0 5px #14181b, inset 0 0 50px rgba(255,220,150,.25), 0 0 60px hsl(var(--h) 70% 45% / .5), 0 12px 30px rgba(0,0,0,.6)}
+.arch::after{content:"";position:absolute;left:-10%;right:-10%;bottom:-58px;height:58px;opacity:0;
+  background:radial-gradient(ellipse at 50% 0%, hsl(var(--h) 80% 55% / .55), transparent 70%);transition:opacity .22s}
+.arch:hover::after{opacity:1}
+.arch.off{filter:grayscale(1) brightness(.3)}
+.arch.off:hover{transform:none;filter:grayscale(1) brightness(.3);box-shadow:inset 0 0 0 5px #14181b, inset 0 0 40px rgba(0,0,0,.75)}
+.arch.off:hover::after{opacity:0}
+.s5 .floor{position:absolute;left:0;right:0;bottom:0;height:78px;
+  background:linear-gradient(180deg, rgba(10,14,17,0), rgba(6,9,11,.9)),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 1px, transparent 1px 64px)}
+
+/* ============================================================
+   06 — MARGINALIA
+   ============================================================ */
+.s6{background:#080a0b}
+.s6::before{content:"";position:absolute;inset:0;background:
+  radial-gradient(ellipse at 88% 50%, rgba(198,160,92,.16), transparent 55%),
+  radial-gradient(ellipse at 8% 88%, rgba(120,32,24,.14), transparent 55%)}
+.s6 .rail{position:absolute;z-index:2;left:44px;top:50%;transform:translateY(-50%) rotate(180deg);writing-mode:vertical-rl;
+  font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:#4f5a57}
+.s6 .rail::after{content:"";position:absolute;left:50%;top:-70px;width:1px;height:52px;background:#3a4442}
+.s6 .wordmark{position:absolute;z-index:1;left:-46px;top:96px;font-family:"CinzelDec",serif;font-size:176px;line-height:.86;
+  color:#141b1c;letter-spacing:-.045em;white-space:nowrap}
+.s6 .wordmark em{display:block;font-style:normal;color:#1a2223}
+.s6 .stamp{position:absolute;z-index:2;left:118px;top:474px;font-family:"Lora",serif;font-style:italic;font-size:15px;
+  color:#6e7a77;max-width:290px;line-height:1.6}
+.s6 .stamp::before{content:"";display:block;width:52px;height:2px;background:#7c2418;margin-bottom:14px}
+.s6 .list{position:absolute;z-index:3;right:96px;top:50%;transform:translateY(-50%);width:520px;text-align:right}
+.mrow{display:flex;align-items:baseline;justify-content:flex-end;gap:20px;padding:11px 0;cursor:default;
+  border-bottom:1px solid rgba(255,255,255,.045)}
+.mrow .mi{font-family:"Oswald",sans-serif;font-size:11px;color:#455150;letter-spacing:.14em;order:2;width:26px;text-align:left}
+.mrow .mn{font-family:"Cinzel",serif;font-size:27px;letter-spacing:.03em;color:#77837f;order:1;transition:color .16s,transform .16s}
+.mrow .note{order:0;font-family:"Lora",serif;font-style:italic;font-size:12.5px;color:#4d5856;opacity:0;transition:opacity .16s}
+.mrow:hover .mn{color:#f2e7c6;transform:translateX(-8px)}
+.mrow:hover .mi{color:#c2a761}
+.mrow:hover .note{opacity:1}
+.mrow.lead{border-bottom:1px solid rgba(194,167,97,.3);padding-bottom:20px;margin-bottom:8px}
+.mrow.lead .mn{font-family:"CinzelDec",serif;font-size:47px;color:#e9dcb4}
+.mrow.lead:hover .mn{color:#fff4d6}
+.mrow.lead .note{opacity:1;color:#6d7a77}
+.mrow.off .mn{color:#39423f}
+.mrow.off:hover .mn{color:#39423f;transform:none}
+.s6 .foot{position:absolute;z-index:3;right:96px;bottom:40px;font-family:"Oswald",sans-serif;font-size:10px;
+  letter-spacing:.22em;text-transform:uppercase;color:#414c4a}
+
+/* ---------- close ---------- */
+.close{margin:96px 0 0;border-top:1px solid #23292b;padding-top:40px}
+.close h3{font-family:"CinzelDec",serif;font-weight:400;font-size:26px;color:#e3d6b0;margin:0 0 20px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid #1c2224;vertical-align:top}
+th{font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#a8945f;font-weight:500}
+td{color:#949e99;line-height:1.55}
+td b{color:#d8cca9;font-weight:400;font-family:"Cinzel",serif}
+</style>
+
+<div class="wrap">
+<div class="doc-head">
+  <div class="doc-kicker">Hostfall · dirección de arte de interfaz</div>
+  <h1>Seis menús que no parecen generados</h1>
+  <p>Antes de los mockups, el diagnóstico: lo que hace que el menú actual «huela a IA» no es el color ni la tipografía,
+  es un conjunto de gestos que aparecen por defecto en cualquier interfaz generada. Cada pantalla de abajo es real
+  (1280×720, tus fuentes, tu fondo) e interactiva: pasa el ratón por encima de las opciones.</p>
+
+  <div class="diag">
+    <div><h4>1 · Panel de cristal</h4><p><code>backdrop-filter: blur()</code> sobre una foto es el gesto SaaS por excelencia. Un juego de 2003 no difumina: apoya materia sólida sobre la escena.</p></div>
+    <div><h4>2 · Filete dorado de 1px</h4><p>Líneas hairline con degradado a transparente y rombitos ◆ como viñetas. Es el «fantasy por defecto»: decoración sin material ni peso.</p></div>
+    <div><h4>3 · Micro-mayúsculas espaciadas</h4><p>El kicker de 10px con <code>letter-spacing: .28em</code> encima del título es la firma visual de las landing pages, no de un menú de juego.</p></div>
+    <div><h4>4 · Lista simétrica y neutra</h4><p>Seis entradas idénticas, mismo tamaño, mismo peso. Nada dice qué es lo importante ni de qué está hecho el menú.</p></div>
+    <div><h4>5 · Fondo sin autoría</h4><p>El más grave: <code>background.webp</code> es losa gris sin foco. Sin ilustración, todo el carácter recae en el CSS — y el CSS por defecto es el de la IA.</p></div>
+  </div>
+</div>
+
+<!-- ============ 01 ============ -->
+<section class="variant">
+  <div class="vhead"><span class="vnum">01</span><h2>Códice abierto</h2><span class="vtag">diegético · el menú es la Crónica</span></div>
+  <p class="vlede">El menú no es una interfaz sobre el juego: es el objeto del juego. Eres el Cronista, así que lo que ves es su códice abierto sobre la mesa. Las opciones son entradas de un índice con folio; las bloqueadas están tachadas a tinta, no atenuadas al 42%.</p>
+  <div class="stage"><div class="screen s1">
+    <div class="book">
+      <div class="page left"><div class="page-inner">
+        <div class="exlibris">Ex libris — Leo, Cronista</div>
+        <div class="seal"></div>
+        <div class="wordmark">Hostfall</div>
+        <div class="act">ACTO PRIMERO</div>
+        <div class="quill">«Lo que se recuerda, vuelve.»</div>
+      </div></div>
+      <div class="ribbon"></div>
+      <div class="page right"><div class="page-inner">
+        <div class="index-h">Índice</div><div class="index-rule"></div>
+        <div class="folio"><span class="num">I</span><span class="nm">Continuar</span><span class="lead"></span><span class="pg">fol. xii</span></div>
+        <div class="folio"><span class="num">II</span><span class="nm">Nueva Crónica</span><span class="lead"></span><span class="pg">fol. i</span></div>
+        <div class="folio"><span class="num">III</span><span class="nm">Crónicas</span><span class="lead"></span><span class="pg">fol. xxx</span></div>
+        <div class="folio"><span class="num">IV</span><span class="nm">Huestes</span><span class="lead"></span><span class="pg">fol. xli</span></div>
+        <div class="folio off"><span class="num">V</span><span class="nm">Cómo jugar</span><span class="lead"></span><span class="pg">—</span></div>
+        <div class="folio"><span class="num">VI</span><span class="nm">Ajustes</span><span class="lead"></span><span class="pg">fol. lx</span></div>
+      </div></div>
+    </div>
+  </div></div>
+  <ul class="notes">
+    <li><b>Por qué no lee a IA</b>Ningún gesto es genérico: pergamino, tinta, lacre y numeración romana vienen del lore, no del kit de UI. El hover deja un sello de cera en el margen.</li>
+    <li><b>Riesgo</b>Es el más caro de mantener: cada pantalla nueva (Ajustes, Colección) tiene que caber en una página. Y aclara mucho el menú — hay que vigilar que siga siendo «dark».</li>
+    <li><b>Coste</b>Alto. Textura de papel decente (una imagen, no CSS), tipografía de tinta y transición de pasar página. Pero es el que da identidad más fuerte de los seis.</li>
+  </ul>
+</section>
+
+<!-- ============ 02 ============ -->
+<section class="variant">
+  <div class="vhead"><span class="vnum">02</span><h2>Piedra tallada</h2><span class="vtag">sin panel · usa el fondo que ya tienes</span></div>
+  <p class="vlede">Elimina el panel de cristal por completo. Las opciones están grabadas en la losa del fondo, con relieve real (sombra arriba, luz abajo), y al pasar el ratón la talla se llena de luz de brasero. El fondo pasa de relleno a superficie.</p>
+  <div class="stage"><div class="screen s2">
+    <div class="frame"></div><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+    <div class="carve">
+      <div class="wordmark">Hostfall</div>
+      <div class="act">ACTO PRIMERO</div>
+      <div class="carve-item">Continuar</div>
+      <div class="carve-item">Nueva Crónica</div>
+      <div class="carve-item">Crónicas</div>
+      <div class="carve-item">Huestes</div>
+      <div class="carve-item off">Cómo jugar</div>
+      <div class="carve-item">Ajustes</div>
+    </div>
+    <div class="foot">Leo, Cronista — v0.9</div>
+  </div></div>
+  <ul class="notes">
+    <li><b>Por qué no lee a IA</b>No hay panel, ni blur, ni filete dorado. El texto es materia: está hundido en la piedra. El calor entra por un solo lado, lo que rompe la simetría plana.</li>
+    <li><b>Riesgo</b>Depende de que el fondo tenga textura legible. Con la losa actual funciona; si la cambias por algo muy oscuro, el grabado se pierde.</li>
+    <li><b>Coste</b>Muy bajo — es casi todo <code>text-shadow</code> y quitar cosas. Es la opción que puedes probar hoy mismo sin arte nuevo.</li>
+  </ul>
+</section>
+
+<!-- ============ 03 ============ -->
+<section class="variant">
+  <div class="vhead"><span class="vnum">03</span><h2>Hierro y lacre</h2><span class="vtag">chapa remachada · Heroes III / Diablo II</span></div>
+  <p class="vlede">La referencia directa a los menús de PC de principios de los 2000: placas de hierro biseladas con remaches, un estandarte de tela con el título, y un sello de lacre que aparece en la opción activa. Botones que pesan.</p>
+  <div class="stage"><div class="screen s3">
+    <div class="col">
+      <div class="banner"><div class="wordmark">Hostfall</div><div class="act">ACTO PRIMERO</div></div>
+      <div class="plate"><i class="rv a"></i><i class="rv b"></i><i class="rv c"></i><i class="rv d"></i><span class="wax"></span><span class="lb">Continuar</span></div>
+      <div class="plate"><i class="rv a"></i><i class="rv b"></i><i class="rv c"></i><i class="rv d"></i><span class="wax"></span><span class="lb">Nueva Crónica</span></div>
+      <div class="plate"><i class="rv a"></i><i class="rv b"></i><i class="rv c"></i><i class="rv d"></i><span class="wax"></span><span class="lb">Crónicas</span></div>
+      <div class="plate"><i class="rv a"></i><i class="rv b"></i><i class="rv c"></i><i class="rv d"></i><span class="wax"></span><span class="lb">Huestes</span></div>
+      <div class="plate off"><i class="rv a"></i><i class="rv b"></i><i class="rv c"></i><i class="rv d"></i><span class="wax"></span><span class="lb">Cómo jugar</span></div>
+      <div class="plate"><i class="rv a"></i><i class="rv b"></i><i class="rv c"></i><i class="rv d"></i><span class="wax"></span><span class="lb">Ajustes</span></div>
+    </div>
+    <div class="foot">Leo, Cronista · v0.9</div>
+  </div></div>
+  <ul class="notes">
+    <li><b>Por qué no lee a IA</b>Los remaches y el bisel son detalles que nadie pone «por defecto»: implican una decisión de material. El lacre da un estado activo con significado, no un borde de foco.</li>
+    <li><b>Riesgo</b>Es el más nostálgico y también el más fácil de que quede kitsch. La clave es un solo material coherente y no mezclar hierro con oro por todas partes.</li>
+    <li><b>Coste</b>Bajo-medio. Todo en CSS, pero mejora mucho con dos texturas pequeñas (metal rayado + tela) que puede generar Card Studio.</li>
+  </ul>
+</section>
+
+<!-- ============ 04 ============ -->
+<section class="variant">
+  <div class="vhead"><span class="vnum">04</span><h2>Mano de cartas</h2><span class="vtag">el menú es lo que el juego es</span></div>
+  <p class="vlede">Las opciones son cartas repartidas en la mesa. Es coherencia total con el producto: aprendes el gesto del juego (pasar el ratón, la carta se eleva y se ilumina) antes de empezar la partida, y reutilizas el componente de carta que ya tienes.</p>
+  <div class="stage"><div class="screen s4">
+    <div class="top"><div class="wordmark">Hostfall</div><div class="act">ACTO PRIMERO</div></div>
+    <div class="prompt">Roba una carta para comenzar</div>
+    <div class="hand">
+      <div class="hcard" style="--r:-13deg;--y:22px;--h:150;--g:'❖'"><div class="art"></div><div class="plateNm"><b>Continuar</b></div></div>
+      <div class="hcard" style="--r:-8deg;--y:8px;--h:38;--g:'✦'"><div class="art"></div><div class="plateNm"><b>Nueva<br>Crónica</b></div></div>
+      <div class="hcard" style="--r:-3deg;--y:0px;--h:212;--g:'❦'"><div class="art"></div><div class="plateNm"><b>Crónicas</b></div></div>
+      <div class="hcard" style="--r:3deg;--y:0px;--h:352;--g:'☠'"><div class="art"></div><div class="plateNm"><b>Huestes</b></div></div>
+      <div class="hcard off" style="--r:8deg;--y:8px;--h:200;--g:'?'"><div class="art"></div><div class="plateNm"><b>Cómo jugar</b></div></div>
+      <div class="hcard" style="--r:13deg;--y:22px;--h:30;--g:'⚙'"><div class="art"></div><div class="plateNm"><b>Ajustes</b></div></div>
+    </div>
+    <div class="foot">Leo, Cronista · v0.9</div>
+  </div></div>
+  <ul class="notes">
+    <li><b>Por qué no lee a IA</b>Es una decisión de producto, no de estilo. Ninguna plantilla propone «el menú es una mano de cartas»; y aquí las cartas serían reales, con el arte de tus mazos.</li>
+    <li><b>Riesgo</b>Escala mal: seis cartas caben, diez no. Y Ajustes como carta es raro — probablemente la fila de servicio (ajustes, salir, idioma) debería quedarse como iconos en una esquina.</li>
+    <li><b>Coste</b>Medio, pero reutiliza el renderer de cartas y el arte que ya existe. Aquí el «arte» de cada carta es un degradado de relleno; en real serían cartas impresas de verdad.</li>
+  </ul>
+</section>
+
+<!-- ============ 05 ============ -->
+<section class="variant">
+  <div class="vhead"><span class="vnum">05</span><h2>Arcada gótica</h2><span class="vtag">arquitectura · luz de vitral</span></div>
+  <p class="vlede">Las opciones son portales de una nave: cada arco es un vitral apagado que se enciende al acercarte y derrama color sobre el suelo. Convierte la navegación en un lugar, y da un color propio a cada sección (Crónicas, Huestes, Ajustes).</p>
+  <div class="stage"><div class="screen s5">
+    <div class="rose"></div>
+    <div class="wordmark">Hostfall</div>
+    <div class="arcade">
+      <div class="arch" style="--h:150"><div class="gl">❖</div><div class="lbl">Continuar</div></div>
+      <div class="arch" style="--h:36"><div class="gl">✦</div><div class="lbl">Jugar</div></div>
+      <div class="arch" style="--h:212"><div class="gl">❦</div><div class="lbl">Crónicas</div></div>
+      <div class="arch" style="--h:352"><div class="gl">☠</div><div class="lbl">Huestes</div></div>
+      <div class="arch off" style="--h:200"><div class="gl">?</div><div class="lbl">Cómo jugar</div></div>
+      <div class="arch" style="--h:30"><div class="gl">⚙</div><div class="lbl">Ajustes</div></div>
+    </div>
+    <div class="floor"></div>
+  </div></div>
+  <ul class="notes">
+    <li><b>Por qué no lee a IA</b>El menú tiene profundidad y dirección de luz. El estado activo no es un borde: es iluminación que afecta al suelo, algo que ninguna plantilla hace.</li>
+    <li><b>Riesgo</b>La disposición horizontal choca con tu pantalla de Ajustes vertical, y el vitral empuja el tono hacia «catedral» más que hacia «crónica». Menos flexible si añades opciones.</li>
+    <li><b>Coste</b>Medio-alto. El vitral en CSS puro se ve pobre; querrías seis piezas de arte reales, una por sección.</li>
+  </ul>
+</section>
+
+<!-- ============ 06 ============ -->
+<section class="variant">
+  <div class="vhead"><span class="vnum">06</span><h2>Marginalia</h2><span class="vtag">editorial · oscuro y asimétrico</span></div>
+  <p class="vlede">La respuesta minimalista: nada de ornamento, todo jerarquía. El título es enorme y se sale del encuadre (deja de ser un logo centrado y pasa a ser tipografía), la lista es asimétrica, y las anotaciones al margen aparecen al pasar el ratón como notas del Cronista.</p>
+  <div class="stage"><div class="screen s6">
+    <div class="rail">Acto primero · Crónica de Leo</div>
+    <div class="wordmark">Host<em>fall</em></div>
+    <div class="stamp">Partida guardada hace dos días. La Hueste despierta en tres turnos.</div>
+    <div class="list">
+      <div class="mrow lead"><span class="note">turno 7 · Pacto de Elarion</span><span class="mn">Continuar</span><span class="mi">01</span></div>
+      <div class="mrow"><span class="note">elige Crónica y Hueste</span><span class="mn">Nueva Crónica</span><span class="mi">02</span></div>
+      <div class="mrow"><span class="note">2 mazos · 61 cartas</span><span class="mn">Crónicas</span><span class="mi">03</span></div>
+      <div class="mrow"><span class="note">2 archivos</span><span class="mn">Huestes</span><span class="mi">04</span></div>
+      <div class="mrow off"><span class="note">aún sin escribir</span><span class="mn">Cómo jugar</span><span class="mi">05</span></div>
+      <div class="mrow"><span class="note">idioma, audio, semilla</span><span class="mn">Ajustes</span><span class="mi">06</span></div>
+    </div>
+    <div class="foot">v0.9 · Leoocast</div>
+  </div></div>
+  <ul class="notes">
+    <li><b>Por qué no lee a IA</b>Rompe las cinco reglas del diagnóstico a la vez: sin panel, sin filete, sin kicker, sin simetría y sin depender del fondo. La jerarquía hace el trabajo que hacía la decoración.</li>
+    <li><b>Riesgo</b>Es el menos «medieval». Sostiene el tono por tipografía y contención, así que si luego el resto del juego es muy barroco, el menú se despega.</li>
+    <li><b>Coste</b>Bajo. Es sobre todo borrar y reescalar. Y las anotaciones al margen ya las puedes rellenar con datos reales del guardado.</li>
+  </ul>
+</section>
+
+<div class="close">
+  <h3>Cómo elegiría yo</h3>
+  <table>
+    <tr><th>Si quieres…</th><th>Ve a</th><th>Por qué</th></tr>
+    <tr><td>Probar algo hoy, sin arte nuevo</td><td><b>02 Piedra tallada</b> o <b>06 Marginalia</b></td><td>Ambos son mayoritariamente <em>quitar</em> CSS: el panel de cristal, el filete dorado y el kicker. Se pueden montar sobre el StartMenu actual sin tocar la estructura de componentes.</td></tr>
+    <tr><td>Una identidad que nadie confunda</td><td><b>01 Códice abierto</b></td><td>Es el único donde el menú <em>es</em> la ficción. Alinea la UI con Cronista/Crónica/Capítulo, que ya es tu vocabulario canónico.</td></tr>
+    <tr><td>Nostalgia PC 2003 explícita</td><td><b>03 Hierro y lacre</b></td><td>Es literalmente el lenguaje de Heroes III. Cumple tu brief de «estrategia/cartas de principios de los 2000» sin ambigüedad.</td></tr>
+    <tr><td>Coherencia con el juego de cartas</td><td><b>04 Mano de cartas</b></td><td>Reutiliza tu mejor activo (las cartas impresas) y enseña el gesto principal antes de la partida.</td></tr>
+  </table>
+  <p class="hint">Nota transversal, más importante que cualquiera de los seis: mientras el fondo del menú sea la losa gris sin foco, cualquier estilo tendrá que sostener la identidad solo con CSS — y ahí es donde siempre aparece el aroma a plantilla. Una sola ilustración autoral de fondo (una figura, un horizonte, un objeto) sube más el listón que las seis propuestas juntas.</p>
+</div>
+</div>
+
+<script>
+function fit(){
+  document.querySelectorAll('.stage').forEach(function(st){
+    var s = st.clientWidth / 1280;
+    var scr = st.querySelector('.screen');
+    if(scr) scr.style.setProperty('--s', s);
+    st.style.height = (720 * s) + 'px';
+  });
+}
+window.addEventListener('resize', fit);
+document.addEventListener('DOMContentLoaded', fit);
+fit();
+setTimeout(fit, 300);
+</script>
+
+</html>

@@ -1,5 +1,5 @@
 import type { ActionCost, ActivatedAbility, CardDefinition, DeckList, EffectDefinition, Trait, Side } from "../engine/GameTypes";
-import type { NewDeckAbility, NewDeckCard, NewDeckList } from "./deckCatalog";
+import type { NewDeckAbility, NewDeckCard, NewDeckList } from "../content/contracts";
 import { normalizeAuthoredDeck } from "./authoredDeckNormalizer";
 
 export function normalizeDeck(rawDeck: NewDeckList): DeckList {

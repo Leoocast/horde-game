@@ -5,17 +5,65 @@
 @font-face {
   font-family: "Hostfall Card Lora";
   font-style: normal;
-  font-weight: 400 600;
+  font-weight: 400 700;
   font-display: swap;
   src: url("/fonts/pact-of-elarion/lora-normal-latin.woff2") format("woff2");
 }
 
 @font-face {
+  font-family: "Hostfall Card Lora";
+  font-style: italic;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/pact-of-elarion/lora-italic-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Cinzel";
+  font-style: normal;
+  font-weight: 500 900;
+  font-display: swap;
+  src: url("/fonts/pact-of-elarion/cinzel-latin.woff2") format("woff2");
+}
+
+@font-face {
   font-family: "Cinzel Decorative";
   font-style: normal;
-  font-weight: 400;
+  font-weight: 700;
   font-display: swap;
   src: url("/fonts/pact-of-elarion/cinzel-decorative-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Lora";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/pact-of-elarion/lora-normal-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Lora";
+  font-style: italic;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/pact-of-elarion/lora-italic-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Outfit";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("/fonts/pact-of-elarion/outfit-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Oswald";
+  font-style: normal;
+  font-weight: 600 700;
+  font-display: swap;
+  src: url("/fonts/pact-of-elarion/oswald-latin.woff2") format("woff2");
 }
 
 @layer base {
@@ -14395,20 +14443,39 @@
   text-transform: uppercase;
 }
 
-.game-loading-credits a {
+.game-loading-credits button {
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
   color: #718079;
-  text-decoration: none;
+  cursor: pointer;
   transition: color 150ms ease;
 }
 
-.game-loading-credits a:hover,
-.game-loading-credits a:focus-visible {
+.game-loading-credits button:hover,
+.game-loading-credits button:focus-visible {
   color: #cfbd7e;
   outline: none;
 }
+
+.app-fatal-error {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  gap: 12px;
+  padding: 32px;
+  background: #080c0d;
+  color: #d9cfaa;
+  text-align: center;
+}
+
+.app-fatal-error p,
+.app-fatal-error h1,
+.app-fatal-error span { margin: 0; }
 
 .game-loading-credits svg {
   width: 11px;

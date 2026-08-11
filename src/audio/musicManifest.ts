@@ -1,3 +1,6 @@
+import { resolveBuiltinAudioUrl } from "../content/bootstrap";
+import runtimeAudioAssets from "./runtimeAudioAssets.json";
+
 export type MusicVariant = "battle" | "climax";
 export type MusicCategory = "battle" | "menu" | "result";
 
@@ -12,94 +15,89 @@ type MusicCollection = {
 export const musicCollections = {
   zombiesBattle1: makeBattleCollection(
     "Zombies — Battle #1",
-    new URL("../../assets/music/battle/Zombies/battle_1.mp3", import.meta.url).href,
-    new URL("../../assets/music/battle/Zombies/climax_1.mp3", import.meta.url).href,
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.zombiesBattle1.battle),
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.zombiesBattle1.climax),
   ),
   goblinsBattle1: makeBattleCollection(
     "Goblins — Battle #1",
-    new URL("../../assets/music/battle/Goblins/battle_1.mp3", import.meta.url).href,
-    new URL("../../assets/music/battle/Goblins/climax_1.mp3", import.meta.url).href,
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.goblinsBattle1.battle),
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.goblinsBattle1.climax),
   ),
   clownsBattle1: makeBattleCollection(
     "Clowns — Battle #1",
-    new URL("../../assets/music/battle/Clowns/Battle.mp3", import.meta.url).href,
-    new URL("../../assets/music/battle/Clowns/Climax.mp3", import.meta.url).href,
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.clownsBattle1.battle),
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.clownsBattle1.climax),
   ),
   fairyBattle1: makeBattleCollection(
     "Fairy — Battle #1",
-    new URL("../../assets/music/battle/Fairy/Battle_1.mp3", import.meta.url).href,
-    new URL("../../assets/music/battle/Fairy/Climax_1.mp3", import.meta.url).href,
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.fairyBattle1.battle),
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.fairyBattle1.climax),
   ),
   piratesBattle1: makeBattleCollection(
     "Pirates — Battle #1",
-    new URL("../../assets/music/battle/Pirates/Battle_1.mp3", import.meta.url).href,
-    new URL("../../assets/music/battle/Pirates/Climax_1.mp3", import.meta.url).href,
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.piratesBattle1.battle),
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.piratesBattle1.climax),
   ),
   piratesBattle2: makeBattleCollection(
     "Pirates — Battle #2",
-    new URL("../../assets/music/battle/Pirates/Battle_2.mp3", import.meta.url).href,
-    new URL("../../assets/music/battle/Pirates/Climax_2.mp3", import.meta.url).href,
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.piratesBattle2.battle),
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.piratesBattle2.climax),
   ),
   piratesBattle3: makeBattleCollection(
     "Pirates — Battle #3",
-    new URL("../../assets/music/battle/Pirates/Battle_3.mp3", import.meta.url).href,
-    new URL("../../assets/music/battle/Pirates/Climax_3.mp3", import.meta.url).href,
-  ),
-  otherBattle1: makeBattleCollection(
-    "Other — Battle #1",
-    new URL("../../assets/music/battle/Other/Battle_1.mp3", import.meta.url).href,
-    new URL("../../assets/music/battle/Other/Climax_1.mp3", import.meta.url).href,
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.piratesBattle3.battle),
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.piratesBattle3.climax),
   ),
   otherBattle2: makeBattleCollection(
     "Other — Battle #2",
-    new URL("../../assets/music/battle/Other/Battle_2.mp3", import.meta.url).href,
-    new URL("../../assets/music/battle/Other/Climax_2.mp3", import.meta.url).href,
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.otherBattle2.battle),
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.otherBattle2.climax),
   ),
   otherBattle3: makeBattleCollection(
     "Other — Battle #3",
-    new URL("../../assets/music/battle/Other/Battle_3.mp3", import.meta.url).href,
-    new URL("../../assets/music/battle/Other/Climax_3.mp3", import.meta.url).href,
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.otherBattle3.battle),
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.otherBattle3.climax),
   ),
   otherBattle4: makeBattleCollection(
     "Other — Battle #4",
-    new URL("../../assets/music/battle/Other/Battle_4.mp3", import.meta.url).href,
-    new URL("../../assets/music/battle/Other/Climax_4.mp3", import.meta.url).href,
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.otherBattle4.battle),
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.otherBattle4.climax),
   ),
   otherBattleGoty1: makeBattleCollection(
     "Other — GOTY Battle #1",
-    new URL("../../assets/music/battle/Other/Battle_Goty_1.mp3", import.meta.url).href,
-    new URL("../../assets/music/battle/Other/Climax_Goty_1.mp3", import.meta.url).href,
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.otherBattleGoty1.battle),
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.otherBattleGoty1.climax),
   ),
   mainMenuMoonlitJourney: makeSingleTrack(
     "Moonlit Journey",
     "menu",
-    new URL("../../assets/music/main_menu/10. Moonlit Journey (Loop).mp3", import.meta.url).href,
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.mainMenuMoonlitJourney.battle),
   ),
   mainMenuWhispersBeyond: makeSingleTrack(
     "Whispers Beyond",
     "menu",
-    new URL("../../assets/music/main_menu/3. Whispers Beyond (Loop).mp3", import.meta.url).href,
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.mainMenuWhispersBeyond.battle),
   ),
   mainMenuFalconreach: makeSingleTrack(
     "Falconreach",
     "menu",
-    new URL("../../assets/music/main_menu/9. Falconreach.mp3", import.meta.url).href,
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.mainMenuFalconreach.battle),
   ),
   mainMenuAmbient7: makeSingleTrack(
     "Ambient 7",
     "menu",
-    new URL("../../assets/music/main_menu/Ambient 7 Loop.mp3", import.meta.url).href,
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.mainMenuAmbient7.battle),
   ),
   winTheme: makeSingleTrack(
     "Victory",
     "result",
-    new URL("../../assets/music/sfx/Victory.mp3", import.meta.url).href,
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.winTheme.battle),
     false,
   ),
   lossTheme: makeSingleTrack(
     "Defeat",
     "result",
-    new URL("../../assets/music/sfx/Lose.mp3", import.meta.url).href,
+    resolveBuiltinAudioUrl(runtimeAudioAssets.music.lossTheme.battle),
     false,
   ),
 } as const satisfies Record<string, MusicCollection>;

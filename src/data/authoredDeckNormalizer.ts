@@ -1,4 +1,4 @@
-import type { NewDeckCard, NewDeckList } from "./deckCatalog";
+import type { NewDeckCard, NewDeckList } from "../content/contracts";
 import { HOSTFALL_DECK_SCHEMA_VERSION } from "../engine/hostfallVocabulary";
 import { isHostfallAuthoredZone, toRuntimeZone } from "../engine/hostfallZones";
 

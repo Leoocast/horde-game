@@ -159,7 +159,8 @@ export type GameStore = {
   playerDeckId: string;
   hostDeckId: string;
   reset: (seed?: string, setupTurns?: number, playerDeckId?: string, hostDeckId?: string, difficulty?: DifficultyMode, gameMode?: GameMode) => void;
-  /** Plants an already-built GameState (Playground scenarios). Same store cleanup as `reset`. */
+  /** Plants an already-built GameState (Playground scenarios or a validated resume checkpoint).
+   *  Same store cleanup as `reset`; no presentation state crosses the boundary. */
   loadScenario: (game: GameState, deckIds: { playerDeckId: string; hostDeckId: string }) => void;
   setSeed: (seed: string) => void;
   acceptOpeningHand: () => void;

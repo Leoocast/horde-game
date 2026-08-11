@@ -9,7 +9,7 @@ import * as THREE from "three";
  * efecto dibuja su escena en este lienzo compartido y copia el resultado a su propio lienzo 2D, que
  * no consume cupo.
  *
- * Contexto y diseño completos en `docs/plan_webgl_context_budget.md`.
+ * Contexto y diseño completos en `docs/plans/webgl_context_budget.md`.
  */
 
 export type SharedVfxFrame = {
@@ -90,6 +90,56 @@ function acquireRenderer(): THREE.WebGLRenderer | null {
   }
 }
 
+function prepareSharedSurface(
+  active: THREE.WebGLRenderer,
+  width: number,
+  height: number,
+  pixelRatio: number,
+  outputEncoding: THREE.TextureEncoding = THREE.sRGBEncoding,
+): { pixelWidth: number; pixelHeight: number } {
+  active.setClearColor(0x000000, 0);
+  active.setPixelRatio(1);
+  active.outputEncoding = outputEncoding;
+
+  const pixelWidth = Math.max(1, Math.round(width * pixelRatio));
+  const pixelHeight = Math.max(1, Math.round(height * pixelRatio));
+  const grown = grownVfxSurface(surface, pixelWidth, pixelHeight);
+  if (grown.width !== surface.width || grown.height !== surface.height) {
+    surface = grown;
+    active.setSize(surface.width, surface.height, false);
+  }
+
+  active.setViewport(0, 0, pixelWidth, pixelHeight);
+  active.setScissor(0, 0, pixelWidth, pixelHeight);
+  active.setScissorTest(true);
+  return { pixelWidth, pixelHeight };
+}
+
+/**
+ * Compila y ejecuta una escena mientras la pantalla de carga sigue visible. Las escenas de
+ * calentamiento se conservan durante la sesión para que Three.js mantenga vivos los programas
+ * GPU que después reutilizan los animadores reales.
+ */
+export function warmSharedVfxFrame(frame: SharedVfxFrame): boolean {
+  const active = acquireRenderer();
+  if (!active) return false;
+
+  prepareSharedSurface(
+    active,
+    frame.width,
+    frame.height,
+    frame.pixelRatio,
+    frame.outputEncoding,
+  );
+  active.clear();
+  active.compile(frame.scene, frame.camera);
+  active.render(frame.scene, frame.camera);
+  // Evita que el driver difiera la compilación hasta el primer efecto visible.
+  active.getContext().finish();
+  active.setScissorTest(false);
+  return true;
+}
+
 /** True cuando el navegador no puede dar contexto WebGL: el animador debe mostrar su respaldo. */
 export function sharedVfxUnavailable(): boolean {
   return unavailable && !renderer;
@@ -107,23 +157,15 @@ export function renderSharedVfxFrame(
   if (!active) return false;
 
   // El renderer es compartido: ningún efecto puede heredar estado global del fotograma anterior.
-  active.setClearColor(0x000000, 0);
-  active.setPixelRatio(1);
-  active.outputEncoding = frame.outputEncoding ?? THREE.sRGBEncoding;
-
-  const pixelWidth = Math.max(1, Math.round(frame.width * frame.pixelRatio));
-  const pixelHeight = Math.max(1, Math.round(frame.height * frame.pixelRatio));
-
-  const grown = grownVfxSurface(surface, pixelWidth, pixelHeight);
-  if (grown.width !== surface.width || grown.height !== surface.height) {
-    surface = grown;
-    active.setSize(surface.width, surface.height, false);
-  }
+  const { pixelWidth, pixelHeight } = prepareSharedSurface(
+    active,
+    frame.width,
+    frame.height,
+    frame.pixelRatio,
+    frame.outputEncoding,
+  );
 
   // El resto de la superficie pertenece a otros efectos: se limpia y se dibuja sólo este recorte.
-  active.setViewport(0, 0, pixelWidth, pixelHeight);
-  active.setScissor(0, 0, pixelWidth, pixelHeight);
-  active.setScissorTest(true);
   active.clear();
   active.render(frame.scene, frame.camera);
   active.setScissorTest(false);

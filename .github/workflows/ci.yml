@@ -1,0 +1,54 @@
+name: Baseline CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-x64:
+    name: Windows x64
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.16.0
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          architecture: x64
+          cache: pnpm
+
+      - name: Install dependencies from lockfile
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Lint decks
+        run: pnpm run decks:lint
+
+      - name: Check Card Studio projections
+        run: pnpm run cards:data:check
+
+      - name: Build web renderer
+        run: pnpm run build:web
+
+      - name: Audit offline renderer
+        run: pnpm run audit:offline
+
+      - name: Check runtime asset inventory
+        run: pnpm run assets:inventory:check

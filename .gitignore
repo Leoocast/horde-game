@@ -1,8 +1,13 @@
 node_modules/
 dist/
+.vite/
+.electron-staging/
+out/
+.playwright/
 .pnpm-store/
 *.tsbuildinfo
 *.log
 .env
 .env.*
 dev/tools/Decks/*/exported-png/
+.DS_Store

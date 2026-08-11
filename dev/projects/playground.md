@@ -384,6 +384,6 @@ Lo que falta para el creador de flujos completo:
 
 ## Ver tambien
 
-- `docs/testing.md` — como se verifica el proyecto
-- `docs/animation_contracts.md` — contratos de animacion que el timeline debe respetar
+- `docs/guides/testing.md` — como se verifica el proyecto
+- `docs/reference/animation_contracts.md` — contratos de animacion que el timeline debe respetar
 - `CLAUDE.md` — contexto general del proyecto
