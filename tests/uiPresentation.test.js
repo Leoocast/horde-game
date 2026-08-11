@@ -18,7 +18,12 @@ import {
 import { grownVfxSurface, sharedVfxSourceTop } from "../src/components/sharedVfxRenderer";
 import { frameLeafRootIndex, frameRootPathSpecs } from "../src/components/GrowthBuffAnimator";
 import { buildStorm, stormBoltTones } from "../src/components/StormBuffAnimator";
-import { hostArchiveAttackPreview } from "../src/components/hostArchiveCounter";
+import {
+  completedHostMillPreviewCount,
+  hostArchiveAttackPreview,
+  hostArchiveDiscardCounterValue,
+  hostMillOriginSelector,
+} from "../src/components/hostArchiveCounter";
 import { hostAttackPlayerHitDelay } from "../src/components/hostAttackPresentation";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { playerAttackHostHitDelay } from "../src/components/playerAttackPresentation";
@@ -219,6 +224,30 @@ test("the Host attack preview shows cards going to Memory and keeps the math in 
   assert.equal(translate("es", "orb.chooseAttackers"), "Elegir atacantes");
   assert.equal(translate("es", "orb.attackArchive"), "Atacar el Archivo");
   assert.equal(translate("es", "orb.passCombat"), "Pasar el combate");
+});
+
+test("the Host Archive discard drawer counts departures and closes after the last flight without showing zero", () => {
+  const duelHudSource = readFileSync(new URL("../src/components/DuelHud.tsx", import.meta.url), "utf8");
+  const millAnimatorSource = readFileSync(new URL("../src/components/HostMillAnimator.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.equal(hostArchiveDiscardCounterValue(4, 0, false, false), 4);
+  assert.equal(hostArchiveDiscardCounterValue(0, 0, false, false), 0);
+  assert.equal(hostArchiveDiscardCounterValue(4, 1, true, true), 3);
+  assert.equal(hostArchiveDiscardCounterValue(4, 3, true, false), 1);
+  assert.equal(hostArchiveDiscardCounterValue(4, 4, true, true), 1);
+  assert.equal(hostArchiveDiscardCounterValue(4, 4, true, false), undefined);
+  assert.equal(hostArchiveDiscardCounterValue(0, 0, true, false), undefined);
+  assert.equal(hostMillOriginSelector(true), "[data-host-attack-mill-origin='true']");
+  assert.equal(hostMillOriginSelector(false), "[data-host-mill-origin='archive']");
+  assert.equal(completedHostMillPreviewCount(1, true), 0);
+  assert.equal(completedHostMillPreviewCount(1, false), 1);
+  assert.equal(completedHostMillPreviewCount(4, true), 3);
+  assert.match(duelHudSource, /data-host-attack-mill-origin="true"/u);
+  assert.match(duelHudSource, /completedHostMillPreviewCount/u);
+  assert.match(millAnimatorSource, /hostMillOriginSelector\(preview\)/u);
+  assert.match(stylesSource, /\.host-attack-count-host\s*\{[^}]*right:\s*100%;/su);
+  assert.match(stylesSource, /\.host-deck-counter-cluster\.is-attack-counter-open \.host-memory-pile-host\s*\{[^}]*translateX\(-130px\)/su);
 });
 
 test("Vaelor uses his personal defense animation only when he wins and survives", () => {

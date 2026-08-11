@@ -11751,11 +11751,12 @@
 .host-attack-count-host {
   position: absolute;
   top: 14px;
-  left: 100%;
+  right: 100%;
   z-index: -1;
   width: 122px;
   height: 54px;
-  transform-origin: left center;
+  margin-right: 8px;
+  transform-origin: right center;
 }
 
 .host-attack-count-host > .game-tooltip-host {
@@ -11825,8 +11826,10 @@
 }
 
 .host-attack-result-copy {
+  position: relative;
   display: flex;
   min-width: 0;
+  min-height: 24px;
   align-items: center;
   justify-content: center;
   text-align: left;
@@ -11989,6 +11992,13 @@
   right: 100%;
   bottom: 0;
   margin-right: 8px;
+  transform: translateX(0);
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.host-deck-counter-cluster.is-attack-counter-open .host-memory-pile-host {
+  transform: translateX(-130px);
 }
 
 /* La Vida define la altura de la fila; las pilas se estiran hasta igualarla. */

@@ -566,11 +566,15 @@ la opción 4, **Cartas que caerán**:
 - una placa contigua usa hasta tres siluetas como símbolo de las cartas que irán a Memoria; las
   siluetas nunca intentan repetir o desglosar el total numérico;
 - la placa no lleva copy: las siluetas comunican “cartas” y `N` es el único total visible;
+- al seleccionar atacantes, esa placa emerge por la izquierda del Archivo y desplaza la caja de
+  Memoria todavía más a la izquierda;
 - la matemática vive en un tooltip titulado **Cálculo del ataque**, con la forma compacta
   `7 ÷ 3 → 2`; no repite “Fuerza”, “cartas” ni “Memoria”;
 - se usa una flecha y no una igualdad porque la conversión descarta cualquier sobrante;
-- el preview desaparece al comenzar la resolución para que las cartas animadas y los conteos reales
-  comuniquen el resultado sin competir con una previsión ya consumida;
+- al confirmar, cada carta de combate nace en el área numérica de la placa y viaja hacia Memoria;
+  cada salida reduce `N` y Memoria suma la carta sólo al aterrizar;
+- durante el último vuelo la placa conserva `1`; al aterrizar, se retrae dentro del Archivo sin
+  mostrar `0`, mientras Memoria vuelve a su posición normal;
 - **A batalla**, **Confirmar** y **No atacar** pasan a **Elegir atacantes**,
   **Atacar el Archivo** y **Pasar el combate** respectivamente.
 

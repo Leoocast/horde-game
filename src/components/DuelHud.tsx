@@ -13,7 +13,11 @@ import { Card } from "./Card";
 import { GameTooltip } from "./GameTooltip";
 import { GraveyardViewerModal } from "./GraveyardViewerModal";
 import { hostAttackPlayerHitDelay } from "./hostAttackPresentation";
-import { hostArchiveAttackPreview } from "./hostArchiveCounter";
+import {
+  completedHostMillPreviewCount,
+  hostArchiveAttackPreview,
+  hostArchiveDiscardCounterValue,
+} from "./hostArchiveCounter";
 import { playerAttackHostHitDelay } from "./playerAttackPresentation";
 import { PlayerArchiveForecast } from "./PlayerArchiveForecast";
 import { setupProgress } from "./setupPresentation";
@@ -47,9 +51,11 @@ export function DuelHud({ game }: { game: GameState }) {
   const normalMillQueueLength = hostMillQueue.filter((item) => !item.preview).length;
   const hostLibraryIds = new Set(game.host.archive.map((card) => card.instanceId));
   const previewMillPendingInLibrary = hostMillPreviewCards.filter((card) => hostLibraryIds.has(card.instanceId)).length;
+  const activeHostMillPreview = hostMillQueue[0]?.preview === true;
+  const completedPreviewMills = completedHostMillPreviewCount(previewMillPendingInLibrary, activeHostMillPreview);
   const pendingMilledAfterActive = Math.max(0, normalMillQueueLength - 1);
   const visualHostLibraryCount = game.host.archive.length + pendingMilledAfterActive - previewMillPendingInLibrary;
-  const visualHostGraveyardCount = Math.max(0, game.host.memory.length - pendingMilledAfterActive + previewMillPendingInLibrary);
+  const visualHostGraveyardCount = Math.max(0, game.host.memory.length - pendingMilledAfterActive + completedPreviewMills);
   const pendingDamage = game.combat.playerAttackers.reduce((total, id) => {
     const attacker = game.player.field.find((card) => card.instanceId === id);
     return attacker ? total + getPowerEndurance(game, attacker).power : total;
@@ -57,15 +63,25 @@ export function DuelHud({ game }: { game: GameState }) {
   const archiveDiscardThreshold = game.hostRules.damagePerArchiveDiscard;
   const poisonDiscardThreshold = game.hostRules.poisonPerArchiveDiscard;
   const attackCountVisible = game.phase === "combat" && game.activeSide === "player" && game.setupTurnsRemaining === 0 && game.combat.playerAttackers.length > 0;
-  const attackPreviewVisible = attackCountVisible && !playerAttackAnimation && hostMillPreviewCards.length === 0;
+  const attackSelectionVisible = attackCountVisible && !playerAttackAnimation && hostMillPreviewCards.length === 0;
+  const attackArchiveStartCount = visualHostLibraryCount + previewMillPendingInLibrary;
   const archiveAttackPreview = hostArchiveAttackPreview(
-    visualHostLibraryCount,
+    attackArchiveStartCount,
     pendingDamage,
     archiveDiscardThreshold,
   );
+  const attackCounterValue = attackCountVisible
+    ? hostArchiveDiscardCounterValue(
+        archiveAttackPreview.discardCount,
+        previewMillPendingInLibrary,
+        Boolean(playerAttackAnimation) || hostMillPreviewCards.length > 0,
+        activeHostMillPreview,
+      )
+    : undefined;
+  const attackCounterVisible = attackCounterValue !== undefined;
   const attackCalculation = archiveAttackPreview.conversionCount === archiveAttackPreview.discardCount
     ? `${pendingDamage} ÷ ${archiveDiscardThreshold} → ${archiveAttackPreview.discardCount}`
-    : `${pendingDamage} ÷ ${archiveDiscardThreshold} → ${archiveAttackPreview.conversionCount} · ${visualHostLibraryCount} → ${archiveAttackPreview.discardCount}`;
+    : `${pendingDamage} ÷ ${archiveDiscardThreshold} → ${archiveAttackPreview.conversionCount} · ${attackArchiveStartCount} → ${archiveAttackPreview.discardCount}`;
   const latestLifestealAttack = lifestealAttackAnimations[lifestealAttackAnimations.length - 1];
 
   useEffect(() => {
@@ -247,7 +263,7 @@ export function DuelHud({ game }: { game: GameState }) {
           </motion.div>
         )}
         </AnimatePresence>
-        <div className="host-deck-counter-cluster">
+        <div className={["host-deck-counter-cluster", attackCounterVisible ? "is-attack-counter-open" : ""].join(" ")}>
           <div
             data-player-attack-target="host-deck"
             data-host-life-panel="true"
@@ -292,7 +308,7 @@ export function DuelHud({ game }: { game: GameState }) {
                 )}
               </span>
             )}
-            <div data-host-mill-origin="true" data-host-life-emblem="true" className="host-deck-emblem flex h-10 w-10 items-center justify-center border-2">
+            <div data-host-mill-origin="archive" data-host-life-emblem="true" className="host-deck-emblem flex h-10 w-10 items-center justify-center border-2">
               <Skull size={24} />
             </div>
             <div className="host-deck-counter-copy">
@@ -300,7 +316,7 @@ export function DuelHud({ game }: { game: GameState }) {
               <div className="host-deck-counter-values flex items-end gap-2 leading-none">
                 <div className="host-deck-count text-3xl font-black">{visualHostLibraryCount}</div>
                 <AnimatePresence initial={false} mode="popLayout">
-                  {attackPreviewVisible && (
+                  {attackSelectionVisible && (
                     <motion.span
                       key={archiveAttackPreview.projectedArchiveCount}
                       className="host-deck-projection"
@@ -350,14 +366,14 @@ export function DuelHud({ game }: { game: GameState }) {
             </button>
           </GameTooltip>
           <AnimatePresence initial={false} mode="popLayout">
-            {attackPreviewVisible && (
+            {attackCounterVisible && (
               <motion.div
-                key={game.combat.playerAttackers.join("|")}
+                key="host-archive-discard-counter"
                 className="host-attack-count-host"
-                initial={{ opacity: 0, x: -24, scaleX: 0.62 }}
+                initial={{ opacity: 0, x: 96, scaleX: 0.28 }}
                 animate={{ opacity: 1, x: 0, scaleX: 1 }}
-                exit={{ opacity: 0, x: -24, scaleX: 0.62 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                exit={{ opacity: 0, x: 96, scaleX: 0.28 }}
+                transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
               >
                 <GameTooltip
                   content={(
@@ -379,8 +395,18 @@ export function DuelHud({ game }: { game: GameState }) {
                       ))}
                       {archiveAttackPreview.discardCount === 0 && <i className="is-empty" />}
                     </span>
-                    <span className="host-attack-result-copy">
-                      <strong>{archiveAttackPreview.discardCount}</strong>
+                    <span data-host-attack-mill-origin="true" className="host-attack-result-copy">
+                      <AnimatePresence initial={false} mode="popLayout">
+                        <motion.strong
+                          key={attackCounterValue}
+                          initial={{ opacity: 0, y: -7, scale: 0.82 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 7, scale: 0.82 }}
+                          transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+                        >
+                          {attackCounterValue}
+                        </motion.strong>
+                      </AnimatePresence>
                     </span>
                   </div>
                 </GameTooltip>

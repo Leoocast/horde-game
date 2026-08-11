@@ -398,8 +398,11 @@ Fuente) y 4 (Reserva y orden de pago) están cerradas; la Fase 5 (ataque al Arch
 está implementada y pendiente de QA visual del usuario. Su contrato es: panel **Archivo de la
 Hueste**, conteo `actual → restante`, resultado físico reducido a siluetas y `N`, y tooltip secundario
 **Cálculo del ataque** con la operación compacta `Fuerza ÷ umbral → resultado`. El preview usa
-`hostRules.damagePerArchiveDiscard`, se limita al Archivo restante y desaparece cuando comienza la
-resolución animada. Los CTA son **Elegir atacantes**, **Atacar el Archivo** y **Pasar el combate**.
+`hostRules.damagePerArchiveDiscard` y se limita al Archivo restante. La placa de `N` emerge por la
+izquierda y desplaza Memoria; durante la resolución es el origen de cada carta, desciende con cada
+salida y conserva `1` durante el último vuelo. Al aterrizar la última carta se retrae sin mostrar `0`
+y Memoria vuelve junto al Archivo. Los CTA son **Elegir atacantes**, **Atacar el Archivo** y
+**Pasar el combate**.
 `playerDrawForecast` en
 `src/engine/TurnManager.ts` es la fuente única para el robo real y su previsión. La devolución
 conserva el gesto amplio hacia la derecha y sólo expande visualmente el Archivo durante un arrastre
