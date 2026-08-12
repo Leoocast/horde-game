@@ -11,9 +11,22 @@ export type GuidedRect = Readonly<{
 
 export type GuidedSize = Readonly<{ width: number; height: number }>;
 export type GuidedPoint = Readonly<{ left: number; top: number }>;
+export type GuidedBounds = Readonly<{ left: number; top: number; width: number; height: number }>;
 
 const VIEWPORT_MARGIN = 16;
 const TARGET_GAP = 22;
+
+/** Includes visual controls that deliberately overflow their semantic anchor, such as an Echo's Action button. */
+export function guidedUnionBounds(
+  rects: readonly Pick<DOMRectReadOnly, "left" | "top" | "width" | "height">[],
+): GuidedBounds | undefined {
+  if (rects.length === 0) return undefined;
+  const left = Math.min(...rects.map((rect) => rect.left));
+  const top = Math.min(...rects.map((rect) => rect.top));
+  const right = Math.max(...rects.map((rect) => rect.left + rect.width));
+  const bottom = Math.max(...rects.map((rect) => rect.top + rect.height));
+  return Object.freeze({ left, top, width: right - left, height: bottom - top });
+}
 
 export function paddedGuidedRect(
   key: string,

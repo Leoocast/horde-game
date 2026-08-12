@@ -232,6 +232,9 @@ export type GuidedStepCopy = Readonly<{
   bodyKey: TranslationKey;
 }>;
 
+export const GUIDED_CALLOUT_VISIBILITIES = ["visible", "hidden"] as const;
+export type GuidedCalloutVisibility = (typeof GUIDED_CALLOUT_VISIBILITIES)[number];
+
 /** Optional authored teaching aid. It renders resolved card copies without changing game state. */
 export type GuidedCardComparison = Readonly<{
   kind: "cardComparison";
@@ -243,6 +246,7 @@ type GuidedStepBase = Readonly<{
   id: string;
   copy: GuidedStepCopy;
   highlights: readonly GuidedHighlightRef[];
+  callout?: GuidedCalloutVisibility;
   presentation?: GuidedCardComparison;
   preconditions?: readonly GuidedPrecondition[];
   nextStepId?: string;

@@ -6,6 +6,7 @@ import { DEFAULT_PLAYER_DECK_LAND_COUNT } from "../engine/GameState";
 import type { Phase, Side } from "../engine/GameTypes";
 import { isTranslationKey } from "../i18n/translations";
 import {
+  GUIDED_CALLOUT_VISIBILITIES,
   GUIDED_INTENT_CONTEXTS,
   GUIDED_INTENT_KINDS,
   GUIDED_HIGHLIGHT_ROLES,
@@ -25,6 +26,7 @@ const ID_PATTERN = /^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?$/u;
 const ALIAS_PATTERN = /^[a-z][a-z0-9_]*$/u;
 const PHASES = new Set<Phase>(["untap", "draw", "main", "combat", "end", "host"]);
 const INTENT_KINDS = new Set<string>(GUIDED_INTENT_KINDS);
+const CALLOUT_VISIBILITIES = new Set<string>(GUIDED_CALLOUT_VISIBILITIES);
 const INTENT_CONTEXTS = new Set<string>(GUIDED_INTENT_CONTEXTS);
 const HIGHLIGHT_ROLES = new Set<string>(GUIDED_HIGHLIGHT_ROLES);
 const RECEIPT_KINDS = new Set<string>(GUIDED_RECEIPT_KINDS);
@@ -346,6 +348,9 @@ function validateSteps(
     steps.set(step.id, step);
     if (!isTranslationKey(String(step.copy?.titleKey))) problems.push(`Step "${step.id}" has unknown title translation key.`);
     if (!isTranslationKey(String(step.copy?.bodyKey))) problems.push(`Step "${step.id}" has unknown body translation key.`);
+    if (step.callout !== undefined && !CALLOUT_VISIBILITIES.has(step.callout)) {
+      problems.push(`Step "${step.id}" has unknown callout visibility "${String(step.callout)}".`);
+    }
     if (!Array.isArray(step.highlights)) problems.push(`Step "${step.id}" highlights must be an array.`);
     for (const highlight of step.highlights ?? []) {
       if (highlight.role !== undefined && !HIGHLIGHT_ROLES.has(highlight.role)) {

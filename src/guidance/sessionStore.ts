@@ -335,8 +335,9 @@ export class GuidedSessionStore {
   }
 
   #emit(): void {
-    const currentStepIndex = this.#definition && this.#currentStep
-      ? this.#definition.steps.findIndex((step) => step.id === this.#currentStep?.id) + 1
+    const visibleSteps = this.#definition?.steps.filter((step) => step.callout !== "hidden");
+    const currentStepIndex = visibleSteps && this.#currentStep?.callout !== "hidden"
+      ? visibleSteps.findIndex((step) => step.id === this.#currentStep?.id) + 1
       : undefined;
     this.#snapshot = freezeSnapshot({
       status: this.#status,
@@ -345,7 +346,7 @@ export class GuidedSessionStore {
       lessonRevision: this.#definition?.revision,
       currentStep: this.#currentStep,
       currentStepIndex: currentStepIndex && currentStepIndex > 0 ? currentStepIndex : undefined,
-      stepCount: this.#definition?.steps.length,
+      stepCount: visibleSteps?.length,
       mode: this.#mode,
       bindings: this.#bindings,
       presentationSettled: this.#presentationSettled,

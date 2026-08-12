@@ -531,7 +531,9 @@ tratarse todavía como ritmo o copy pedagógico definitivo.
 
 Las comparaciones grandes de cartas son una presentación genérica declarada por alias mediante
 `presentation.cardComparison`; el runtime resuelve las instancias predefinidas y enfatiza su coste
-sin conocer nombres de cartas ni selectores de la UI.
+sin conocer nombres de cartas ni selectores de la UI. La comparación se centra en pantalla y el
+énfasis reutiliza el coste impreso en la esquina superior izquierda de cada carta: no se superpone
+una insignia ni una representación nueva de Energía.
 
 En los pasos de Fuente, la acción apunta de la carta en Mano a `player.field`; sólo después de que
 termine su entrada se ilumina `player.sources` para explicar la Energía obtenida. Una Fuente en
@@ -539,6 +541,13 @@ Campo se representa como orbe y ya no conserva una carta individual visible, por
 posterior debe intentar iluminar su alias. Las Invocaciones de Liora y Maela incluyen además un paso
 `observe` explícito sobre `player.field` antes de cambiar de explicación. El ancla visual
 `player.sources` mide la unión real de las dos pistas de orbes, no el panel decorativo de la esquina.
+Los checkpoints `observe` breves pueden declarar `callout: "hidden"`: conservan la espera estable
+entre acciones, pero no muestran un mensaje fugaz ni cuentan en la numeración visible. Las anclas de
+carta ocultan el marco dorado del spotlight y conservan la indicación propia de la carta; si aparece
+una acción contextual fuera de sus límites, el descendiente marcado con
+`data-guided-anchor-extension="true"` amplía el hueco interactivo y la zona evitada por el recuadro.
+El oscurecimiento del tutorial usa 40 % de opacidad y el texto admite párrafos separados para evitar
+bloques densos.
 
 `playerDrawForecast` en
 `src/engine/TurnManager.ts` es la fuente única para el robo real y su previsión. La devolución

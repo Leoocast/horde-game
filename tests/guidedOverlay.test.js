@@ -8,6 +8,7 @@ import {
   guidedConnectorPath,
   guidedDomTargetAllowed,
   guidedSurfaceAnchorKey,
+  guidedUnionBounds,
   placeGuidedCallout,
   resolveGuidedAnchors,
   validateGuidedLesson,
@@ -75,6 +76,13 @@ test("origin and destination highlights produce a directional connector", () => 
   ]), undefined);
 });
 
+test("a highlighted card can extend its spotlight to an overflow action", () => {
+  assert.deepEqual(guidedUnionBounds([
+    { left: 100, top: 200, width: 120, height: 160 },
+    { left: 228, top: 246, width: 148, height: 52 },
+  ]), { left: 100, top: 200, width: 276, height: 160 });
+});
+
 test("the DOM shield opens only authored Act anchors while overlay controls remain usable", () => {
   const card = guidedCardAnchorKey("source");
   const field = guidedSurfaceAnchorKey("player.field");
@@ -122,14 +130,21 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(overlay, /highlight\.anchor === "card\.preview"/u);
   assert.match(overlay, /data-card-preview-visible=/u);
   assert.match(overlay, /<GuidedCardComparison cards=\{comparisonCards\}/u);
-  assert.match(comparison, /guided-card-comparison-cost/u);
-  assert.match(comparison, /guided\.cardComparison\.energyCost/u);
+  assert.match(comparison, /guided-card-comparison-cost-accessible/u);
+  assert.doesNotMatch(comparison, /<Zap|guided-card-comparison-cost"/u);
   assert.match(battlefield, /"battlefield:player:sources-visual"/u);
   assert.match(battlefield, /className="guided-player-sources-anchor"/u);
+  assert.match(battlefield, /data-guided-anchor-extension="true"/u);
   assert.doesNotMatch(overlay, /closest\("#guided-tutorial-overlay/u);
+  assert.match(overlay, /showCallout && \(/u);
+  assert.match(overlay, /guidedUnionBounds/u);
   assert.match(styles, /\.guided-tutorial-overlay\[data-mode="explain"\],[\s\S]*?pointer-events: auto;/u);
   assert.match(styles, /guided-tutorial-overlay:not\(\[data-card-preview-visible="true"\]\)/u);
-  assert.match(styles, /\.guided-card-comparison-cost\s*\{/u);
+  assert.match(styles, /\.guided-card-comparison\s*\{[^}]*left:\s*50%;[^}]*transform:\s*translate\(-50%, -50%\);/su);
+  assert.match(styles, /\.guided-card-comparison-frame::after\s*\{/u);
+  assert.match(styles, /\.guided-tutorial-dimmer\s*\{\s*fill:\s*rgb\(2 4 4 \/ 0\.4\);\s*\}/u);
+  assert.match(styles, /\.guided-tutorial-ring\[data-anchor-key\^="card:"\]\s*\{\s*display:\s*none;\s*\}/u);
+  assert.match(styles, /\.guided-tutorial-body p\s*\{[^}]*font-size:\s*16px;/su);
   assert.match(styles, /\.guided-player-sources-anchor\s*\{[^}]*width:\s*174px;[^}]*height:\s*85px;/su);
 });
 

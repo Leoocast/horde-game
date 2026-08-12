@@ -20581,7 +20581,7 @@ body.playground-active .phase-banner-shell {
   pointer-events: none;
 }
 
-.guided-tutorial-dimmer { fill: rgb(2 4 4 / 0.55); }
+.guided-tutorial-dimmer { fill: rgb(2 4 4 / 0.4); }
 
 .guided-tutorial-overlay[data-mode="explain"],
 .guided-tutorial-overlay[data-mode="observe"] {
@@ -20599,6 +20599,8 @@ body.playground-active .phase-banner-shell {
     inset 0 0 14px rgb(225 190 91 / 0.13);
   pointer-events: none;
 }
+
+.guided-tutorial-ring[data-anchor-key^="card:"] { display: none; }
 
 .guided-tutorial-overlay[data-mode="act"] .guided-tutorial-ring {
   animation: guided-tutorial-ready 1.9s ease-in-out infinite;
@@ -20627,14 +20629,14 @@ body.playground-active .phase-banner-shell {
 
 .guided-tutorial-callout {
   position: absolute;
-  width: min(370px, calc(100vw - 32px));
+  width: min(430px, calc(100vw - 32px));
   box-sizing: border-box;
   overflow: visible;
   border: 1px solid rgb(160 148 102 / 0.46);
   border-top-color: rgb(218 201 142 / 0.68);
   border-radius: 2px;
   outline: none;
-  padding: 22px 22px 18px;
+  padding: 24px 25px 20px;
   background:
     radial-gradient(circle at 18% 0%, rgb(196 189 153 / 0.075), transparent 44%),
     linear-gradient(145deg, rgb(28 35 38 / 0.985), rgb(7 12 15 / 0.995));
@@ -20691,7 +20693,7 @@ body.playground-active .phase-banner-shell {
   border-bottom: 1px solid rgb(166 154 104 / 0.2);
   padding: 0 0 10px 13px;
   color: #7f8c87;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 850;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -20699,7 +20701,7 @@ body.playground-active .phase-banner-shell {
 
 .guided-tutorial-step b {
   color: #a99a6d;
-  font-size: 9px;
+  font-size: 10px;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.16em;
 }
@@ -20708,19 +20710,24 @@ body.playground-active .phase-banner-shell {
   margin: 15px 0 9px;
   color: #e2d7b8;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 23px;
+  font-size: 25px;
   font-weight: 500;
   letter-spacing: 0.035em;
   line-height: 1.14;
   text-shadow: 0 3px 13px rgb(0 0 0 / 0.66);
 }
 
-.guided-tutorial-callout p {
+.guided-tutorial-body {
+  display: grid;
+  gap: 10px;
+}
+
+.guided-tutorial-body p {
   margin: 0;
   color: #b8c0bf;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: 16px;
+  line-height: 1.5;
 }
 
 .guided-tutorial-feedback {
@@ -20767,13 +20774,14 @@ body.playground-active .phase-banner-shell {
 .guided-card-comparison {
   position: absolute;
   top: 50%;
-  left: clamp(24px, 7vw, 112px);
+  left: 50%;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: clamp(16px, 2.2vw, 30px);
-  max-width: calc(100vw - 500px);
+  max-width: calc(100vw - 48px);
   pointer-events: none;
-  transform: translateY(-50%);
+  transform: translate(-50%, -50%);
 }
 
 .guided-card-comparison-item {
@@ -20788,6 +20796,21 @@ body.playground-active .phase-banner-shell {
   width: 100%;
   aspect-ratio: 488 / 680;
   filter: drop-shadow(0 24px 26px rgb(0 0 0 / 0.72));
+}
+
+.guided-card-comparison-frame::after {
+  position: absolute;
+  top: 2.1%;
+  left: 3.1%;
+  width: 8.4%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgb(137 220 255 / 0.08);
+  box-shadow:
+    0 0 9px 3px rgb(132 221 255 / 0.72),
+    0 0 23px 9px rgb(65 169 219 / 0.42);
+  content: "";
+  animation: guided-card-cost-focus 1.8s ease-in-out infinite;
 }
 
 .guided-card-comparison-frame > img {
@@ -20808,48 +20831,14 @@ body.playground-active .phase-banner-shell {
   padding: 20px;
 }
 
-.guided-card-comparison-cost {
+.guided-card-comparison-cost-accessible {
   position: absolute;
-  top: -13px;
-  left: -13px;
-  display: grid;
-  width: 72px;
-  height: 72px;
-  place-items: center;
-  border: 3px solid #e6ca70;
-  border-radius: 50%;
-  background: radial-gradient(circle at 36% 30%, #75d1f2 0 18%, #1d779d 43%, #092738 72%);
-  box-shadow: 0 0 0 4px rgb(5 13 15 / 0.92), 0 0 28px rgb(98 203 243 / 0.85);
-  color: #fff7cf;
-  animation: guided-card-cost-focus 1.8s ease-in-out infinite;
-}
-
-.guided-card-comparison-cost svg {
-  position: absolute;
-  top: 7px;
-  left: 7px;
-  width: 17px;
-  height: 17px;
-  color: #d6f6ff;
-  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.8));
-}
-
-.guided-card-comparison-cost b {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 31px;
-  line-height: 1;
-  text-shadow: 0 2px 4px rgb(0 0 0 / 0.9);
-}
-
-.guided-card-comparison-cost small {
-  position: absolute;
-  bottom: -24px;
-  color: #e5d7ac;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-shadow: 0 2px 4px #000;
-  text-transform: uppercase;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .guided-card-comparison-item figcaption {
@@ -20863,16 +20852,16 @@ body.playground-active .phase-banner-shell {
 }
 
 .guided-tutorial-overlay.has-card-comparison .guided-tutorial-callout {
-  top: 50% !important;
-  right: clamp(24px, 6vw, 96px);
-  left: auto !important;
+  top: 20px !important;
+  right: auto;
+  left: 50% !important;
   animation: none;
-  transform: translateY(-50%);
+  transform: translateX(-50%);
 }
 
 @keyframes guided-card-cost-focus {
-  0%, 100% { filter: brightness(0.96); transform: scale(1); }
-  50% { filter: brightness(1.18); transform: scale(1.055); }
+  0%, 100% { filter: brightness(0.92); opacity: 0.62; transform: scale(0.96); }
+  50% { filter: brightness(1.22); opacity: 1; transform: scale(1.12); }
 }
 
 body:has(.guided-tutorial-overlay) .game-tooltip,
@@ -20904,7 +20893,8 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
 
 @media (max-width: 560px) {
   .guided-tutorial-callout { padding: 16px 17px 13px; }
-  .guided-tutorial-callout h2 { font-size: 18px; }
+  .guided-tutorial-callout h2 { font-size: 21px; }
+  .guided-tutorial-body p { font-size: 15px; }
   .guided-tutorial-continue { width: 100%; }
 }
 
@@ -20935,7 +20925,7 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
     animation: none;
   }
 
-  .guided-card-comparison-cost { animation: none; }
+  .guided-card-comparison-frame::after { animation: none; }
 
   .guided-tutorial-ring.is-rejected { border-width: 5px; }
 }

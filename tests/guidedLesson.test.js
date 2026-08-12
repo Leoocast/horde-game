@@ -86,7 +86,7 @@ test("First Seed plays each Source before explaining the Energy it generated", (
 
   const explanation = step("explain-source-energy");
   assert.deepEqual(explanation.highlights, [{ kind: "surface", anchor: "player.sources" }]);
-  assert.match(translate("es", explanation.copy.bodyKey), /^La Fuente entró a tu Campo y generó 1 de Energía\./u);
+  assert.match(translate("es", explanation.copy.bodyKey), /^Esta Fuente generó 1 de Energía\./u);
 
   const secondAction = step("play-second-source");
   assert.equal(translate("es", secondAction.copy.bodyKey), "Juega la segunda Fuente iluminada en tu Campo.");
@@ -116,6 +116,23 @@ test("guided Spanish labels preserve real accented characters", () => {
   assert.equal(translate("es", "guided.mode.act"), "Tu acción");
   assert.equal(translate("es", "guided.blocked"), "Usa solamente la acción iluminada.");
   assert.equal(translate("es", "guided.anchorMissingTitle"), "La lección debe reiniciarse");
+});
+
+test("First Seed keeps short automatic observations silent", () => {
+  const silentObserveIds = [
+    "observe-first-source",
+    "draw-maela",
+    "observe-second-source",
+    "observe-liora-entry",
+    "draw-heirs-shield",
+    "observe-maela-entry",
+  ];
+  for (const id of silentObserveIds) {
+    const step = FIRST_SEED_LESSON.steps.find((candidate) => candidate.id === id);
+    assert.equal(step.kind, "observe");
+    assert.equal(step.callout, "hidden");
+  }
+  assert.match(translate("es", "guided.firstSeed.sourceEnergyBody"), /\n\n/u);
 });
 
 test("an exact guided recipe keeps only its authored Hand and Archive order", () => {
@@ -239,6 +256,10 @@ test("step validation catches broken aliases, translations and graph edges befor
     validateGuidedLesson(implicitMulligan, contentCatalog).some((problem) => /unknown intent kind/u.test(problem)),
     "mulligan must wait for an authored replacement-Hand schema instead of shuffling",
   );
+
+  const invalidCallout = builtinLesson();
+  invalidCallout.steps[0].callout = "brief";
+  assert.ok(validateGuidedLesson(invalidCallout, contentCatalog).some((problem) => /unknown callout visibility/u.test(problem)));
 });
 
 test("step preconditions are declarative, exact and validated before orchestration", () => {

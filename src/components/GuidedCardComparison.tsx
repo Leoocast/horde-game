@@ -1,4 +1,3 @@
-import { Zap } from "lucide-react";
 import type { CardInstance } from "../engine/GameTypes";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
@@ -31,13 +30,8 @@ function GuidedComparisonCard({ card }: { card: CardInstance }) {
         {details.imageUrl
           ? <img src={details.imageUrl} alt={name} draggable={false} />
           : <span className="guided-card-comparison-fallback">{name}</span>}
-        <span
-          className="guided-card-comparison-cost"
-          aria-label={t("guided.cardComparison.energyCost", { count: cost })}
-        >
-          <Zap aria-hidden="true" />
-          <b>{cost}</b>
-          <small>{t("guided.cardComparison.cost")}</small>
+        <span className="guided-card-comparison-cost-accessible">
+          {t("guided.cardComparison.energyCost", { count: cost })}
         </span>
       </div>
       <figcaption>{name}</figcaption>

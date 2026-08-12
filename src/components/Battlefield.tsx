@@ -1321,6 +1321,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
       {effectActive && primaryAbility && (
         <button
           data-audio-click="off"
+          data-guided-anchor-extension="true"
           className="effect-action-button"
           onClick={(event) => {
             event.stopPropagation();

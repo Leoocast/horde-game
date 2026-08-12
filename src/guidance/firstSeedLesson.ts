@@ -118,6 +118,7 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
     {
       id: "observe-first-source",
       kind: "observe",
+      callout: "hidden",
       copy: { titleKey: "guided.firstSeed.sourceEnteringTitle", bodyKey: "guided.firstSeed.sourceEnteringBody" },
       highlights: [{ kind: "surface", anchor: "player.sources" }],
       expectedReceipt: { kind: "source.played", cardAlias: "first_source" },
@@ -156,6 +157,7 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
     {
       id: "draw-maela",
       kind: "observe",
+      callout: "hidden",
       copy: { titleKey: "guided.firstSeed.drawMaelaTitle", bodyKey: "guided.firstSeed.drawMaelaBody" },
       highlights: [
         { kind: "surface", anchor: "player.archive", role: "origin" },
@@ -192,6 +194,7 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
     {
       id: "observe-second-source",
       kind: "observe",
+      callout: "hidden",
       copy: { titleKey: "guided.firstSeed.sourceEnteringTitle", bodyKey: "guided.firstSeed.sourceEnteringBody" },
       highlights: [{ kind: "surface", anchor: "player.sources" }],
       expectedReceipt: { kind: "source.played", cardAlias: "second_source" },
@@ -223,6 +226,7 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
     {
       id: "observe-liora-entry",
       kind: "observe",
+      callout: "hidden",
       copy: { titleKey: "guided.firstSeed.echoEnteringTitle", bodyKey: "guided.firstSeed.echoEnteringBody" },
       highlights: [{ kind: "surface", anchor: "player.field" }],
       expectedReceipt: { kind: "card.played", cardAlias: "liora" },
@@ -260,6 +264,7 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
     {
       id: "draw-heirs-shield",
       kind: "observe",
+      callout: "hidden",
       copy: { titleKey: "guided.firstSeed.drawShieldTitle", bodyKey: "guided.firstSeed.drawShieldBody" },
       highlights: [
         { kind: "surface", anchor: "player.archive", role: "origin" },
@@ -329,6 +334,7 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
     {
       id: "observe-maela-entry",
       kind: "observe",
+      callout: "hidden",
       copy: { titleKey: "guided.firstSeed.echoEnteringTitle", bodyKey: "guided.firstSeed.echoEnteringBody" },
       highlights: [{ kind: "surface", anchor: "player.field" }],
       expectedReceipt: { kind: "card.played", cardAlias: "maela" },

@@ -15,6 +15,7 @@ import {
   guidedInteractionGate,
   guidedRectsEqual,
   guidedSessionStore,
+  guidedUnionBounds,
   paddedGuidedRect,
   placeGuidedCallout,
   resolveGuidedAnchors,
@@ -82,6 +83,7 @@ export function GuidedTutorialOverlay() {
     || comparisonCards.length < comparisonExpected
     || resolved.some((anchor) => !anchor.element)
     || rects.length < resolved.length;
+  const showCallout = session.currentStep?.callout !== "hidden";
 
   useLayoutEffect(() => {
     if (!active) {
@@ -91,7 +93,7 @@ export function GuidedTutorialOverlay() {
     let frame = 0;
     const measure = () => {
       const next = resolved.flatMap((anchor) => {
-        const bounds = anchor.element?.getBoundingClientRect();
+        const bounds = anchor.element ? guidedAnchorBounds(anchor.element) : undefined;
         if (!bounds || bounds.width <= 0 || bounds.height <= 0) return [];
         return [paddedGuidedRect(anchor.key, anchor.role, bounds)];
       });
@@ -113,7 +115,7 @@ export function GuidedTutorialOverlay() {
   }, [active, resolved]);
 
   useLayoutEffect(() => {
-    if (!active || !calloutRef.current || typeof ResizeObserver === "undefined") return;
+    if (!active || !showCallout || !calloutRef.current || typeof ResizeObserver === "undefined") return;
     const callout = calloutRef.current;
     const measure = () => {
       const bounds = callout.getBoundingClientRect();
@@ -126,7 +128,7 @@ export function GuidedTutorialOverlay() {
     observer.observe(callout);
     measure();
     return () => observer.disconnect();
-  }, [active, session.currentStep?.id]);
+  }, [active, session.currentStep?.id, showCallout]);
 
   useEffect(() => {
     if (!active) return;
@@ -154,13 +156,13 @@ export function GuidedTutorialOverlay() {
         continueRef.current.focus({ preventScroll: true });
         return;
       }
-      calloutRef.current?.focus({ preventScroll: true });
+      if (showCallout) calloutRef.current?.focus({ preventScroll: true });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [active, resolved, session.canContinue, session.currentStep?.id, session.mode]);
+  }, [active, resolved, session.canContinue, session.currentStep?.id, session.mode, showCallout]);
 
   useEffect(() => {
-    if (!active) return;
+    if (!active || !showCallout) return;
     const restorations = resolved.flatMap((anchor) => {
       if (!anchor.element) return [];
       const describedElement = focusableWithin(anchor.element) ?? anchor.element;
@@ -173,7 +175,7 @@ export function GuidedTutorialOverlay() {
         : describedElement.setAttribute("aria-describedby", previous)];
     });
     return () => restorations.forEach((restore) => restore());
-  }, [active, resolved, session.currentStep?.id]);
+  }, [active, resolved, session.currentStep?.id, showCallout]);
 
   useEffect(() => {
     if (!active || !session.mode) return;
@@ -288,6 +290,7 @@ export function GuidedTutorialOverlay() {
   const calloutPosition = placeGuidedCallout(viewport, calloutSize, missingAnchor ? [] : rects);
   const title = missingAnchor ? t("guided.anchorMissingTitle") : t(session.currentStep.copy.titleKey);
   const body = missingAnchor ? t("guided.anchorMissingBody") : t(session.currentStep.copy.bodyKey);
+  const bodyParagraphs = body.split(/\n{2,}/u).filter(Boolean);
   const modeLabel = t(`guided.mode.${session.mode}` as const);
   const finalExplanation = session.mode === "explain" && !session.currentStep.nextStepId;
   const cardPreviewVisible = session.currentStep.highlights.some(
@@ -340,6 +343,7 @@ export function GuidedTutorialOverlay() {
         <GuidedCardComparison cards={comparisonCards} />
       )}
 
+      {showCallout && (
       <section
         ref={calloutRef}
         className="guided-tutorial-callout"
@@ -357,7 +361,9 @@ export function GuidedTutorialOverlay() {
           {session.currentStepIndex && session.stepCount && <b>{session.currentStepIndex} / {session.stepCount}</b>}
         </div>
         <h2 id="guided-tutorial-title">{title}</h2>
-        <p id="guided-tutorial-body">{body}</p>
+        <div id="guided-tutorial-body" className="guided-tutorial-body">
+          {bodyParagraphs.map((paragraph, index) => <p key={`${session.currentStep?.id}:body:${index}`}>{paragraph}</p>)}
+        </div>
         <div className="guided-tutorial-feedback" role="status" aria-live="polite">{feedback}</div>
         {session.mode === "explain" && !missingAnchor && (
           <button
@@ -372,6 +378,7 @@ export function GuidedTutorialOverlay() {
           </button>
         )}
       </section>
+      )}
     </div>,
     document.body,
   );
@@ -397,6 +404,16 @@ function findGuidedCard(
 function readViewport() {
   if (typeof window === "undefined") return Object.freeze({ width: 1280, height: 720 });
   return Object.freeze({ width: window.innerWidth, height: window.innerHeight });
+}
+
+function guidedAnchorBounds(element: HTMLElement) {
+  const elements = [
+    element,
+    ...element.querySelectorAll<HTMLElement>("[data-guided-anchor-extension='true']"),
+  ];
+  return guidedUnionBounds(elements.map((candidate) => candidate.getBoundingClientRect()).filter(
+    (bounds) => bounds.width > 0 && bounds.height > 0,
+  ));
 }
 
 function focusableWithin(element: HTMLElement): HTMLElement | undefined {
