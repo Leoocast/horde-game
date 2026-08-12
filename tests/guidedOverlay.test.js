@@ -93,12 +93,22 @@ test("lesson validation rejects unknown highlight roles and Act steps without a 
   const emptyAct = structuredClone(GUIDANCE_LAB_LESSON);
   emptyAct.steps.find((step) => step.kind === "act").highlights = [];
   assert.ok(validateGuidedLesson(emptyAct, contentCatalog).some((problem) => /requires at least one highlight/u.test(problem)));
+
+  const repeatedComparison = structuredClone(GUIDANCE_LAB_LESSON);
+  repeatedComparison.steps[0].presentation = {
+    kind: "cardComparison",
+    cardAliases: ["source_to_play", "source_to_play"],
+    emphasis: "energyCost",
+  };
+  assert.ok(validateGuidedLesson(repeatedComparison, contentCatalog).some((problem) => /comparison repeats alias/u.test(problem)));
 });
 
 test("the real Board mounts the overlay and its capture shield covers every input family", async () => {
-  const [board, overlay, card, styles] = await Promise.all([
+  const [board, battlefield, overlay, comparison, card, styles] = await Promise.all([
     readFile(new URL("../src/components/Board.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/Battlefield.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/GuidedTutorialOverlay.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/GuidedCardComparison.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/Card.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/styles.css", import.meta.url), "utf8"),
   ]);
@@ -109,8 +119,18 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(card, /tabIndex=\{selectionDisabled \? undefined : 0\}/u);
   assert.match(card, /onKeyboardActivate \?\? onSelect/u);
   assert.match(overlay, /data-guided-overlay-control="true"/u);
+  assert.match(overlay, /highlight\.anchor === "card\.preview"/u);
+  assert.match(overlay, /data-card-preview-visible=/u);
+  assert.match(overlay, /<GuidedCardComparison cards=\{comparisonCards\}/u);
+  assert.match(comparison, /guided-card-comparison-cost/u);
+  assert.match(comparison, /guided\.cardComparison\.energyCost/u);
+  assert.match(battlefield, /"battlefield:player:sources-visual"/u);
+  assert.match(battlefield, /className="guided-player-sources-anchor"/u);
   assert.doesNotMatch(overlay, /closest\("#guided-tutorial-overlay/u);
   assert.match(styles, /\.guided-tutorial-overlay\[data-mode="explain"\],[\s\S]*?pointer-events: auto;/u);
+  assert.match(styles, /guided-tutorial-overlay:not\(\[data-card-preview-visible="true"\]\)/u);
+  assert.match(styles, /\.guided-card-comparison-cost\s*\{/u);
+  assert.match(styles, /\.guided-player-sources-anchor\s*\{[^}]*width:\s*174px;[^}]*height:\s*85px;/su);
 });
 
 function fakeElement({ isConnected }) {

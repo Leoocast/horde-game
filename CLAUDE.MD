@@ -436,7 +436,8 @@ intención solicitada puede llegar al engine; una animación iniciada termina du
 se congela a mitad. Se permiten ajustes prácticos menores de layout, intensidad, copy y timing
 durante QA, pero cambiar deck canónico, política sin resume, acciones permitidas o pausa entre beats
 requiere nueva aprobación. El framework quedó cerrado con las Fases 0 a 5 y 7; las antiguas Fases 6
-y 8 fueron eliminadas por decisión explícita del usuario. El guion final aún no existe.
+y 8 fueron eliminadas por decisión explícita del usuario. La Primera Semilla tiene ya una primera
+versión jugable registrada; su ritmo y contenido siguen abiertos a QA e iteración con el usuario.
 
 La Fase 1 quedó cerrada el 2026-08-11 y fija que **cada tutorial es un escenario completamente
 predefinido**: decks, copias exactas, Mano o reparto inicial, Archivo del Cronista en orden,
@@ -444,8 +445,9 @@ apariciones de la Hueste, Campos, Memorias, Fuentes y Reserva. El runtime no bus
 capacidades, no rellena el resto del deck y no baraja una receta. Las claves calificadas de
 `ContentCatalog` viven en la receta; cada copia recibe un alias semántico que se enlaza a su
 `instanceId`, y los pasos apuntan a ese alias. El reparto inicial puede contener dos, siete o la
-cantidad que diseñe la lección. Los contratos, validador, registro vacío de release y builder puro
-viven en `src/guidance/`; no importan Playground y no contienen todavía el guion real. Una receta
+  cantidad que diseñe la lección. Los contratos, validador, registro release y builder puro viven
+  en `src/guidance/`; no importan Playground y no contienen lógica particular de una lección. Una
+  receta
 inválida falla antes de crear el `GameState`, y el builder descarta todo el reparto normal para dejar
 únicamente las cartas declaradas en el orden `topToBottom` authored.
 Mulligan no es una intención authorable en schema v1: una lección puede pedir aceptar su Mano exacta,
@@ -509,9 +511,34 @@ bindings, timers o `GameState`. Entrar, reiniciar, salir o completar una lecció
 resume normal, que sólo se oculta mientras exista una lección obligatoria pendiente. Onboarding de
 nombre y tutorial completado son estados independientes. Settings en tutorial conserva idioma,
 audio, pantalla, reinicio total y salida, y oculta toda mutación o inspección del escenario. El
-registro release continúa vacío hasta aprobar el contenido real de la Primera Semilla.
-El menú **Cómo jugar** ya abre su panel lateral y muestra **Tutorial básico** como «Próximamente»;
-esa entrada se habilita automáticamente cuando la Primera Semilla se registre.
+registro release contiene la primera versión jugable de `first-seed`. El menú **Cómo jugar** abre su
+panel lateral y ofrece **Tutorial básico**; la misma lección se inicia obligatoriamente mientras su
+revisión pedagógica no figure como completada. En development este gate obligatorio se desactiva
+para que recargar no interrumpa el trabajo: la lección permanece disponible manualmente desde
+**Cómo jugar**. Los builds de producto conservan el gate.
+
+La revisión 2 de **La Primera Semilla** usa **El Pacto de Elarion** contra **El Alzamiento de los
+Sinsepulcro** y empieza al inicio de Preparación 1/3. Su Mano inicial exacta contiene dos Fuentes,
+Liora y Vaelor. En 1/3 juega una Fuente, presenta Energía y el límite de una Fuente por turno, y
+compara Liora y Vaelor en grande para señalar sus costes y mostrar que ninguno puede Invocarse con
+una sola Energía. En 2/3 roba a Maela, juega la segunda Fuente e Invoca a Liora; explica que las dos
+Fuentes quedaron Agotadas y que Liora está Estabilizándose. En 3/3 roba Escudo de la Heredera,
+muestra que las Fuentes vuelven a estar listas y que la Energía anterior no se acumuló, usa la
+Acción ya estabilizada de Liora para añadir una Energía a la Reserva y dejarla Agotada, y paga a
+Maela con esa Reserva más las dos Fuentes. Cierra explicando Skyguard y la defensa preparada, antes
+de terminar el último turno o despertar a la Hueste. Es un primer borrador jugable: no debe
+tratarse todavía como ritmo o copy pedagógico definitivo.
+
+Las comparaciones grandes de cartas son una presentación genérica declarada por alias mediante
+`presentation.cardComparison`; el runtime resuelve las instancias predefinidas y enfatiza su coste
+sin conocer nombres de cartas ni selectores de la UI.
+
+En los pasos de Fuente, la acción apunta de la carta en Mano a `player.field`; sólo después de que
+termine su entrada se ilumina `player.sources` para explicar la Energía obtenida. Una Fuente en
+Campo se representa como orbe y ya no conserva una carta individual visible, por lo que ningún paso
+posterior debe intentar iluminar su alias. Las Invocaciones de Liora y Maela incluyen además un paso
+`observe` explícito sobre `player.field` antes de cambiar de explicación. El ancla visual
+`player.sources` mide la unión real de las dos pistas de orbes, no el panel decorativo de la esquina.
 
 `playerDrawForecast` en
 `src/engine/TurnManager.ts` es la fuente única para el robo real y su previsión. La devolución

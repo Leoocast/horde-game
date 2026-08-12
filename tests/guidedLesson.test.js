@@ -6,16 +6,117 @@ import { test } from "node:test";
 import { ContentCatalog } from "../src/content/ContentCatalog";
 import { contentCatalog } from "../src/content/bootstrap";
 import {
+  BASIC_TUTORIAL_LESSON_ID,
+  FIRST_SEED_LESSON,
   GUIDED_LESSON_SCHEMA_VERSION,
   GuidedLessonRegistry,
   buildGuidedScenario,
+  guidedLessonRegistry,
   validateGuidedLesson,
 } from "../src/guidance";
+import { activateAbility, castCard } from "../src/engine/GameActions";
+import { endPlayerTurn } from "../src/engine/PhaseManager";
+import { translate } from "../src/i18n/translations";
 
 const PLAYER_DECK = "hostfall.core/pact_of_elarion";
 const HOST_DECK = "hostfall.core/uprising_of_the_graveless";
 const PLAYER_CARD = (id) => `${PLAYER_DECK}/${id}`;
 const HOST_CARD = (id) => `${HOST_DECK}/${id}`;
+
+test("First Seed teaches its exact three-step Preparation sequence and stops after Maela", () => {
+  assert.deepEqual(validateGuidedLesson(FIRST_SEED_LESSON, contentCatalog), []);
+  assert.equal(BASIC_TUTORIAL_LESSON_ID, FIRST_SEED_LESSON.id);
+  assert.equal(guidedLessonRegistry.require(BASIC_TUTORIAL_LESSON_ID).revision, 2);
+  assert.equal(guidedLessonRegistry.require(BASIC_TUTORIAL_LESSON_ID).mode, "required");
+  const built = buildGuidedScenario(FIRST_SEED_LESSON, contentCatalog);
+  const id = (alias) => built.bindings[alias].instanceId;
+  let game = built.game;
+
+  assert.equal(game.setupTurnsRemaining, 3);
+  assert.deepEqual(game.player.hand.map((card) => card.instanceId), [
+    id("first_source"),
+    id("second_source"),
+    id("liora"),
+    id("vaelor"),
+  ]);
+  assert.equal(game.player.field.length, 0);
+  assert.equal(game.host.archive.length, 6);
+
+  game = castCard(game, id("first_source"));
+  assert.equal(game.player.field.find((card) => card.instanceId === id("first_source")).exhausted, false);
+  game = endPlayerTurn(game);
+  assert.equal(game.setupTurnsRemaining, 2);
+  assert.equal(game.player.pendingStoredEnergy, 0);
+  assert.equal(game.player.hand.some((card) => card.instanceId === id("maela")), true);
+
+  game = castCard(game, id("second_source"));
+  game = castCard(game, id("liora"));
+  assert.equal(game.player.field.find((card) => card.instanceId === id("first_source")).exhausted, true);
+  assert.equal(game.player.field.find((card) => card.instanceId === id("second_source")).exhausted, true);
+  assert.equal(game.player.field.find((card) => card.instanceId === id("liora")).stabilizing, true);
+  game = endPlayerTurn(game);
+  assert.equal(game.setupTurnsRemaining, 1);
+  assert.equal(game.player.field.find((card) => card.instanceId === id("liora")).stabilizing, false);
+  assert.equal(game.player.field.find((card) => card.instanceId === id("liora")).exhausted, false);
+  assert.equal(game.player.hand.some((card) => card.instanceId === id("heirs_shield")), true);
+
+  game = activateAbility(game, id("liora"), "liora_keeper_of_the_grove_gain_energy");
+  assert.equal(game.player.field.find((card) => card.instanceId === id("liora")).exhausted, true);
+  assert.equal(game.player.energyPool.stored, 1);
+  game = castCard(game, id("maela"));
+  assert.equal(game.player.energyPool.stored, 0);
+  assert.equal(game.player.field.find((card) => card.instanceId === id("first_source")).exhausted, true);
+  assert.equal(game.player.field.find((card) => card.instanceId === id("second_source")).exhausted, true);
+  assert.equal(game.player.field.find((card) => card.instanceId === id("maela")).stabilizing, true);
+  assert.deepEqual(game.player.hand.map((card) => card.instanceId), [id("vaelor"), id("heirs_shield")]);
+  assert.equal(game.setupTurnsRemaining, 1);
+});
+
+test("First Seed plays each Source before explaining the Energy it generated", () => {
+  const step = (id) => FIRST_SEED_LESSON.steps.find((candidate) => candidate.id === id);
+  const firstAction = step("play-first-source");
+  assert.equal(translate("es", firstAction.copy.bodyKey), "Juega la Fuente iluminada en tu Campo.");
+  assert.deepEqual(firstAction.highlights.at(-1), { kind: "surface", anchor: "player.field", role: "destination" });
+  assert.equal(firstAction.nextStepId, "observe-first-source");
+
+  const firstObservation = step("observe-first-source");
+  assert.equal(firstObservation.kind, "observe");
+  assert.deepEqual(firstObservation.highlights, [{ kind: "surface", anchor: "player.sources" }]);
+  assert.deepEqual(firstObservation.expectedReceipt, { kind: "source.played", cardAlias: "first_source" });
+
+  const explanation = step("explain-source-energy");
+  assert.deepEqual(explanation.highlights, [{ kind: "surface", anchor: "player.sources" }]);
+  assert.match(translate("es", explanation.copy.bodyKey), /^La Fuente entró a tu Campo y generó 1 de Energía\./u);
+
+  const secondAction = step("play-second-source");
+  assert.equal(translate("es", secondAction.copy.bodyKey), "Juega la segunda Fuente iluminada en tu Campo.");
+  assert.deepEqual(secondAction.highlights.at(-1), { kind: "surface", anchor: "player.field", role: "destination" });
+  assert.equal(secondAction.nextStepId, "observe-second-source");
+  assert.deepEqual(step("observe-second-source").highlights, [{ kind: "surface", anchor: "player.sources" }]);
+  assert.equal(
+    step("explain-liora-affordable").highlights.some((highlight) => highlight.kind === "card" && /source/u.test(highlight.alias)),
+    false,
+  );
+
+  const lioraAction = step("play-liora");
+  assert.equal(lioraAction.nextStepId, "observe-liora-entry");
+  assert.deepEqual(step("observe-liora-entry").highlights, [{ kind: "surface", anchor: "player.field" }]);
+  assert.deepEqual(step("observe-liora-entry").expectedReceipt, { kind: "card.played", cardAlias: "liora" });
+  assert.equal(
+    step("explain-energy-spent").highlights.some((highlight) => highlight.kind === "card" && /source/u.test(highlight.alias)),
+    false,
+  );
+
+  assert.equal(step("play-maela").nextStepId, "observe-maela-entry");
+  assert.deepEqual(step("observe-maela-entry").highlights, [{ kind: "surface", anchor: "player.field" }]);
+  assert.deepEqual(step("observe-maela-entry").expectedReceipt, { kind: "card.played", cardAlias: "maela" });
+});
+
+test("guided Spanish labels preserve real accented characters", () => {
+  assert.equal(translate("es", "guided.mode.act"), "Tu acción");
+  assert.equal(translate("es", "guided.blocked"), "Usa solamente la acción iluminada.");
+  assert.equal(translate("es", "guided.anchorMissingTitle"), "La lección debe reiniciarse");
+});
 
 test("an exact guided recipe keeps only its authored Hand and Archive order", () => {
   const lesson = builtinLesson();

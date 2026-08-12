@@ -93,6 +93,7 @@ export const GUIDED_SURFACE_ANCHORS = [
   "host.field",
   "host.archive",
   "host.memory",
+  "card.preview",
 ] as const;
 
 export type GuidedSurfaceAnchor = (typeof GUIDED_SURFACE_ANCHORS)[number];
@@ -110,6 +111,7 @@ export type GuidedHighlightRef =
  */
 export const GUIDED_INTENT_KINDS = [
   "opening.accept",
+  "card.inspect",
   "card.play",
   "source.recycle",
   "ability.activate",
@@ -166,6 +168,7 @@ export type GuidedIntentSpec = Readonly<{
 /** Authored outcomes. Phase 2 provides the ephemeral receipts that satisfy these matchers. */
 export const GUIDED_RECEIPT_KINDS = [
   "opening.accepted",
+  "card.inspected",
   "card.played",
   "source.played",
   "source.recycled",
@@ -181,6 +184,7 @@ export const GUIDED_RECEIPT_KINDS = [
   "setup.stepEnded",
   "phase.changed",
   "player.drew",
+  "player.discarded",
   "reserve.released",
   "host.resolved",
   "attacker.selected",
@@ -228,10 +232,18 @@ export type GuidedStepCopy = Readonly<{
   bodyKey: TranslationKey;
 }>;
 
+/** Optional authored teaching aid. It renders resolved card copies without changing game state. */
+export type GuidedCardComparison = Readonly<{
+  kind: "cardComparison";
+  cardAliases: readonly GuidedCardAlias[];
+  emphasis: "energyCost";
+}>;
+
 type GuidedStepBase = Readonly<{
   id: string;
   copy: GuidedStepCopy;
   highlights: readonly GuidedHighlightRef[];
+  presentation?: GuidedCardComparison;
   preconditions?: readonly GuidedPrecondition[];
   nextStepId?: string;
 }>;

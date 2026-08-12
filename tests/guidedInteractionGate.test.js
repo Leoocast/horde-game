@@ -175,6 +175,29 @@ test("the real store blocks wrong cards, commits the authored card once and emit
   });
 });
 
+test("guided card inspection accepts only the authored right-click target", async () => {
+  await withStoreHarness(async () => {
+    const game = createTestGame("guided-card-inspection");
+    preparePlayerMain(game);
+    const authored = addCard(game, customCard("guided-inspect-authored", "host"));
+    const other = addCard(game, customCard("guided-inspect-other", "host"));
+    useGameStore.getState().loadScenario(game, { playerDeckId: "pact_of_elarion", hostDeckId: "uprising_of_the_graveless" });
+    guidedInteractionGate.activate(policy({
+      bindings: { authored: authored.instanceId, other: other.instanceId },
+      allowedIntent: { kind: "card.inspect", cardAlias: "authored" },
+    }));
+
+    useGameStore.getState().setFocusedCardId(other.instanceId);
+    assert.equal(useGameStore.getState().focusedCardId, undefined);
+    assert.equal(guidedInteractionGate.snapshot().lastRejection.reason, "card-mismatch");
+
+    useGameStore.getState().setFocusedCardId(authored.instanceId);
+    assert.equal(useGameStore.getState().focusedCardId, authored.instanceId);
+    assert.equal(guidedInteractionGate.snapshot().receipts.at(-1).kind, "card.inspected");
+    assert.equal(guidedInteractionGate.snapshot().receipts.at(-1).cardAlias, "authored");
+  });
+});
+
 test("an engine rejection produces no receipt and leaves the Act step retryable", async () => {
   await withStoreHarness(async () => {
     const game = createTestGame("guided-store-rejected");

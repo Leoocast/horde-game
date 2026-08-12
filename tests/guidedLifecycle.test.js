@@ -93,6 +93,8 @@ test("App isolates tutorial sessions from resume and Settings hides scenario mut
     readFile(new URL("../src/components/SettingsMenu.tsx", import.meta.url), "utf8"),
   ]);
   assert.match(app, /if \(screen !== "game"\) return;/u);
+  assert.match(app, /const requiredLesson = IS_DEV \? undefined : guidedProductLifecycle\.nextRequiredLesson\(\);/u);
+  assert.match(app, /if \(!requiredLesson\) return;/u);
   assert.match(app, /resumeStatus=\{requiredLesson \? "none" : desktopResume\.status\}/u);
 
   const launch = app.slice(app.indexOf("function launchGuidedLesson"), app.indexOf("function restartGuidedLesson"));

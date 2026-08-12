@@ -24,6 +24,8 @@ import {
   type GuidedSize,
 } from "../guidance";
 import { useTranslation } from "../i18n/useTranslation";
+import { useGameStore } from "../store/useGameStore";
+import { GuidedCardComparison } from "./GuidedCardComparison";
 
 const subscribeSession = (listener: () => void) => guidedSessionStore.subscribe(listener);
 const readSession = () => guidedSessionStore.snapshot();
@@ -38,6 +40,7 @@ const ARROW_ID = "guided-tutorial-arrowhead";
 
 export function GuidedTutorialOverlay() {
   const t = useTranslation();
+  const game = useGameStore((state) => state.game);
   const session = useSyncExternalStore(subscribeSession, readSession, readSession);
   const anchorSnapshot = useSyncExternalStore(subscribeAnchors, readAnchors, readAnchors);
   const interaction = useSyncExternalStore(subscribeInteraction, readInteraction, readInteraction);
@@ -63,7 +66,22 @@ export function GuidedTutorialOverlay() {
   const unboundHighlight = Boolean(session.currentStep?.highlights.some(
     (highlight) => highlight.kind === "card" && !session.bindings[highlight.alias],
   ));
-  const missingAnchor = unboundHighlight || resolved.some((anchor) => !anchor.element) || rects.length < resolved.length;
+  const comparisonCards = useMemo(() => {
+    const presentation = session.currentStep?.presentation;
+    if (presentation?.kind !== "cardComparison") return Object.freeze([]);
+    return Object.freeze(presentation.cardAliases.flatMap((alias) => {
+      const instanceId = session.bindings[alias];
+      const card = instanceId ? findGuidedCard(game, instanceId) : undefined;
+      return card ? [card] : [];
+    }));
+  }, [game, session.bindings, session.currentStep]);
+  const comparisonExpected = session.currentStep?.presentation?.kind === "cardComparison"
+    ? session.currentStep.presentation.cardAliases.length
+    : 0;
+  const missingAnchor = unboundHighlight
+    || comparisonCards.length < comparisonExpected
+    || resolved.some((anchor) => !anchor.element)
+    || rects.length < resolved.length;
 
   useLayoutEffect(() => {
     if (!active) {
@@ -272,13 +290,21 @@ export function GuidedTutorialOverlay() {
   const body = missingAnchor ? t("guided.anchorMissingBody") : t(session.currentStep.copy.bodyKey);
   const modeLabel = t(`guided.mode.${session.mode}` as const);
   const finalExplanation = session.mode === "explain" && !session.currentStep.nextStepId;
+  const cardPreviewVisible = session.currentStep.highlights.some(
+    (highlight) => highlight.kind === "surface" && highlight.anchor === "card.preview",
+  );
 
   return createPortal(
     <div
       id="guided-tutorial-overlay"
-      className={["guided-tutorial-overlay", feedback ? "has-rejection" : ""].join(" ")}
+      className={[
+        "guided-tutorial-overlay",
+        feedback ? "has-rejection" : "",
+        comparisonCards.length > 0 ? "has-card-comparison" : "",
+      ].join(" ")}
       data-mode={session.mode}
       data-step-id={session.currentStep.id}
+      data-card-preview-visible={cardPreviewVisible ? "true" : "false"}
       data-feedback-pulse={feedbackPulse}
     >
       <svg className="guided-tutorial-mask" aria-hidden="true">
@@ -309,6 +335,10 @@ export function GuidedTutorialOverlay() {
           aria-hidden="true"
         />
       ))}
+
+      {!missingAnchor && comparisonCards.length > 0 && (
+        <GuidedCardComparison cards={comparisonCards} />
+      )}
 
       <section
         ref={calloutRef}
@@ -345,6 +375,23 @@ export function GuidedTutorialOverlay() {
     </div>,
     document.body,
   );
+}
+
+function findGuidedCard(
+  game: ReturnType<typeof useGameStore.getState>["game"],
+  instanceId: string,
+) {
+  return [
+    ...game.player.hand,
+    ...game.player.archive,
+    ...game.player.field,
+    ...game.player.memory,
+    ...game.player.oblivion,
+    ...game.host.archive,
+    ...game.host.field,
+    ...game.host.memory,
+    ...game.host.oblivion,
+  ].find((card) => card.instanceId === instanceId);
 }
 
 function readViewport() {

@@ -783,9 +783,9 @@ el contenido real sea aprobado. No se debe hacer obligatorio un recorrido fictic
   developer mode.
 - Salir descarta la sesión y la siguiente entrada reconstruye la receta desde su primer paso.
   Reiniciar usa también el orquestador, no un `reset` normal.
-- «Cómo jugar» abre la lección registrada disponible sin publicar todavía un catálogo. Mientras el
-  registro release siga vacío, el panel muestra **Tutorial básico** como «Próximamente» y no existe
-  un gate falso. Al registrar la Primera Semilla, esa entrada se habilita sin cambiar el menú.
+- «Cómo jugar» abre la lección registrada disponible sin publicar todavía un catálogo. El registro
+  release contiene ya `first-seed`, por lo que **Tutorial básico** está habilitado sin introducir
+  lógica especial en el menú.
 - `setupTurnsTotal` forma parte de la receta exacta para que el HUD mantenga el total original aunque
   una lección empiece en un punto posterior de Preparación.
 
@@ -819,8 +819,31 @@ simularlo.
 - Telemetría remota o servicios online.
 - Publicar herramientas de autoría dentro del build para jugadores.
 
-## Siguiente trabajo
+## Contenido actual y siguiente trabajo
 
-El framework está cerrado. El siguiente trabajo es diseñar la Primera Semilla como contenido real:
-guion, receta exacta de Elarion y la Hueste, pasos pedagógicos, copy y QA del recorrido completo
-desde **Cómo jugar → Tutorial básico** y desde el gate obligatorio de primer arranque.
+El framework está cerrado. La revisión 2 de la Primera Semilla está registrada como lección
+obligatoria y también se abre desde **Cómo jugar → Tutorial básico**. Usa Elarion contra los
+Sinsepulcro y, por ahora, cubre solamente los tres turnos de Preparación. Su secuencia exacta:
+
+1. explica el objetivo de vaciar el Archivo de la Hueste y los tres turnos consecutivos que recibe
+   el jugador para prepararse;
+2. empieza Preparación 1/3 con dos Fuentes, Liora y Vaelor en Mano; juega una Fuente y explica qué
+   genera, para qué sirve y el límite de una Fuente por turno;
+3. presenta Liora y Vaelor juntos y en grande, enfatiza sus costes y muestra que una sola Energía
+   no alcanza para Invocar a ninguno;
+4. en Preparación 2/3 roba a Maela, juega la segunda Fuente e Invoca a Liora con ambas; distingue
+   entre Fuentes Agotadas y un Eco Estabilizándose que todavía no puede usar su Acción;
+5. en Preparación 3/3 roba Escudo de la Heredera, enfoca la Energía regenerada y aclara que la
+   Energía anterior no se acumuló durante Preparación;
+6. usa la Acción de Liora ya estabilizada: Liora queda Agotada y añade una Energía a la Reserva;
+   después Invoca a Maela pagando con esa Reserva y las dos Fuentes;
+7. explica Skyguard, la defensa de Campo y Cielo, y que terminar el último turno despertaría a la
+   Hueste. La lección se detiene antes de ejecutar esa acción.
+
+La ampliación visual de Liora y Vaelor usa `presentation.cardComparison`, una extensión genérica
+del contrato que recibe alias predefinidos y el énfasis semántico `energyCost`; no introduce lógica
+por nombre de carta en la UI ni en el runtime.
+
+Esta secuencia es un borrador para QA dentro del juego, no el ritmo ni el copy definitivo. El
+siguiente trabajo es recorrer únicamente esta sección con el usuario y ajustar mensajes, pausas y
+presentación antes de diseñar el despertar de la Hueste o cualquier enseñanza de combate.

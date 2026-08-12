@@ -44,7 +44,7 @@ export const GUIDED_GAMEPLAY_ENTRY_POINTS = [
 
 export type GameplayIntent =
   | Readonly<{ kind: "opening.accept" | "opening.mulligan" }>
-  | Readonly<{ kind: "card.play" | "source.recycle"; cardId: string; targetIds?: readonly string[] }>
+  | Readonly<{ kind: "card.inspect" | "card.play" | "source.recycle"; cardId: string; targetIds?: readonly string[] }>
   | Readonly<{ kind: "ability.activate"; cardId: string; abilityId: string; targetIds?: readonly string[] }>
   | Readonly<{ kind: "target.choose"; context: GuidedIntentContext; targetId: string }>
   | Readonly<{ kind: "target.deselect" | "target.cancel"; context: GuidedIntentContext }>

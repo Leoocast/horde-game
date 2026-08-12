@@ -356,6 +356,7 @@ function validateSteps(
         if (!SURFACE_ANCHORS.has(highlight.anchor)) problems.push(`Step "${step.id}" uses unknown surface anchor "${highlight.anchor}".`);
       } else problems.push(`Step "${step.id}" has an unknown highlight kind.`);
     }
+    validateStepPresentation(step, cards, problems);
     validatePreconditions(step, cards, problems);
     if (step.kind === "act") {
       if (step.highlights.length === 0) problems.push(`Act step "${step.id}" requires at least one highlight.`);
@@ -377,6 +378,32 @@ function validateSteps(
     if (step.nextStepId && !steps.has(step.nextStepId)) problems.push(`Step "${step.id}" points to missing step "${step.nextStepId}".`);
   }
   validateStepGraph(definition.startStepId, steps, problems);
+}
+
+function validateStepPresentation(
+  step: GuidedStep,
+  cards: Readonly<Record<GuidedCardAlias, GuidedCardSpec>>,
+  problems: string[],
+): void {
+  const presentation = step.presentation;
+  if (presentation === undefined) return;
+  if (presentation.kind !== "cardComparison") {
+    problems.push(`Step "${step.id}" has an unknown presentation kind.`);
+    return;
+  }
+  if (presentation.emphasis !== "energyCost") {
+    problems.push(`Step "${step.id}" has an unknown card-comparison emphasis.`);
+  }
+  if (!Array.isArray(presentation.cardAliases) || presentation.cardAliases.length < 2 || presentation.cardAliases.length > 3) {
+    problems.push(`Step "${step.id}" card comparison requires two or three aliases.`);
+    return;
+  }
+  const seen = new Set<string>();
+  for (const alias of presentation.cardAliases) {
+    validateAliasRef(step.id, alias, cards, problems);
+    if (seen.has(alias)) problems.push(`Step "${step.id}" card comparison repeats alias "${alias}".`);
+    seen.add(alias);
+  }
 }
 
 function validatePreconditions(
@@ -461,6 +488,7 @@ function validateIntentShape(
 ): void {
   if (!intent?.kind || !INTENT_KINDS.has(intent.kind)) return;
   const requireCard = [
+    "card.inspect",
     "card.play",
     "source.recycle",
     "ability.activate",

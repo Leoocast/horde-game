@@ -69,7 +69,9 @@ export default function App() {
   const [preferencesReady, setPreferencesReady] = useState(false);
   const [requiredTutorialOffered, setRequiredTutorialOffered] = useState(false);
   const guidedLifecycle = useSyncExternalStore(subscribeGuidedLifecycle, readGuidedLifecycle, readGuidedLifecycle);
-  const requiredLesson = guidedProductLifecycle.nextRequiredLesson();
+  // Development keeps required lessons opt-in so reloads never interrupt iteration. Release builds
+  // preserve the mandatory first-run gate.
+  const requiredLesson = IS_DEV ? undefined : guidedProductLifecycle.nextRequiredLesson();
   const basicTutorialLesson = guidedLessonRegistry.find(BASIC_TUTORIAL_LESSON_ID);
 
   useEffect(() => {
@@ -196,11 +198,10 @@ export default function App() {
 
   useEffect(() => {
     if (loading || !preferencesReady || requestInitialName || requiredTutorialOffered || screen !== "start") return;
-    const lesson = guidedProductLifecycle.nextRequiredLesson();
-    if (!lesson) return;
+    if (!requiredLesson) return;
     setRequiredTutorialOffered(true);
-    launchGuidedLesson(lesson.id);
-  }, [guidedLifecycle.cursor, loading, preferencesReady, requestInitialName, requiredTutorialOffered, screen]);
+    launchGuidedLesson(requiredLesson.id);
+  }, [guidedLifecycle.cursor, loading, preferencesReady, requestInitialName, requiredLesson, requiredTutorialOffered, screen]);
 
   useEffect(() => {
     if (screen !== "tutorial" || guidedLifecycle.status !== "completed") return;
@@ -363,10 +364,9 @@ export default function App() {
             setBootRevision((revision) => revision + 1);
           }}
           onStart={(options) => {
-            const pendingLesson = guidedProductLifecycle.nextRequiredLesson();
-            if (pendingLesson) {
+            if (requiredLesson) {
               setRequiredTutorialOffered(true);
-              launchGuidedLesson(pendingLesson.id);
+              launchGuidedLesson(requiredLesson.id);
               return;
             }
             void deleteDesktopResume();

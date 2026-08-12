@@ -8631,6 +8631,15 @@
     transform-origin: left bottom;
   }
 
+  .guided-player-sources-anchor {
+    position: absolute;
+    left: 6px;
+    bottom: 18px;
+    width: 174px;
+    height: 85px;
+    pointer-events: none;
+  }
+
   .mana-energy-track {
     position: absolute;
     z-index: 6;
@@ -8638,6 +8647,10 @@
     display: flex;
     align-items: center;
     gap: 6px;
+  }
+
+  .guided-player-sources-anchor .mana-energy-track {
+    left: 12px;
   }
 
   .mana-energy-track::before {
@@ -8673,6 +8686,14 @@
 
   .mana-energy-track-yellow {
     bottom: 64px;
+  }
+
+  .guided-player-sources-anchor .mana-energy-track-blue {
+    bottom: 2px;
+  }
+
+  .guided-player-sources-anchor .mana-energy-track-yellow {
+    bottom: 46px;
   }
 
   .mana-reserve-tooltip-host {
@@ -20743,11 +20764,125 @@ body.playground-active .phase-banner-shell {
 
 .guided-tutorial-continue:disabled { cursor: wait; opacity: 0.48; }
 
+.guided-card-comparison {
+  position: absolute;
+  top: 50%;
+  left: clamp(24px, 7vw, 112px);
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2.2vw, 30px);
+  max-width: calc(100vw - 500px);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.guided-card-comparison-item {
+  width: clamp(180px, 17vw, 238px);
+  margin: 0;
+  color: #ddd2b5;
+  text-align: center;
+}
+
+.guided-card-comparison-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 488 / 680;
+  filter: drop-shadow(0 24px 26px rgb(0 0 0 / 0.72));
+}
+
+.guided-card-comparison-frame > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 4.918% / 3.529%;
+  object-fit: cover;
+}
+
+.guided-card-comparison-fallback {
+  display: grid;
+  height: 100%;
+  place-items: center;
+  border: 1px solid rgb(194 175 113 / 0.55);
+  border-radius: 8px;
+  background: #10191b;
+  padding: 20px;
+}
+
+.guided-card-comparison-cost {
+  position: absolute;
+  top: -13px;
+  left: -13px;
+  display: grid;
+  width: 72px;
+  height: 72px;
+  place-items: center;
+  border: 3px solid #e6ca70;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 30%, #75d1f2 0 18%, #1d779d 43%, #092738 72%);
+  box-shadow: 0 0 0 4px rgb(5 13 15 / 0.92), 0 0 28px rgb(98 203 243 / 0.85);
+  color: #fff7cf;
+  animation: guided-card-cost-focus 1.8s ease-in-out infinite;
+}
+
+.guided-card-comparison-cost svg {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  width: 17px;
+  height: 17px;
+  color: #d6f6ff;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.8));
+}
+
+.guided-card-comparison-cost b {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 31px;
+  line-height: 1;
+  text-shadow: 0 2px 4px rgb(0 0 0 / 0.9);
+}
+
+.guided-card-comparison-cost small {
+  position: absolute;
+  bottom: -24px;
+  color: #e5d7ac;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-shadow: 0 2px 4px #000;
+  text-transform: uppercase;
+}
+
+.guided-card-comparison-item figcaption {
+  overflow: hidden;
+  margin-top: 12px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
+  text-overflow: ellipsis;
+  text-shadow: 0 3px 8px #000;
+  white-space: nowrap;
+}
+
+.guided-tutorial-overlay.has-card-comparison .guided-tutorial-callout {
+  top: 50% !important;
+  right: clamp(24px, 6vw, 96px);
+  left: auto !important;
+  animation: none;
+  transform: translateY(-50%);
+}
+
+@keyframes guided-card-cost-focus {
+  0%, 100% { filter: brightness(0.96); transform: scale(1); }
+  50% { filter: brightness(1.18); transform: scale(1.055); }
+}
+
 body:has(.guided-tutorial-overlay) .game-tooltip,
 body:has(.guided-tutorial-overlay) .game-tooltip-portal,
-body:has(.guided-tutorial-overlay) .card-preview-dismiss-layer,
-body:has(.guided-tutorial-overlay) .card-preview-cropped-frame,
-body:has(.guided-tutorial-overlay) [data-card-preview-locked="true"] {
+body:has(.guided-tutorial-overlay) .card-preview-dismiss-layer {
+  display: none !important;
+}
+
+body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) .card-preview-cropped-frame,
+body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data-card-preview-locked="true"] {
   display: none !important;
 }
 
@@ -20773,12 +20908,34 @@ body:has(.guided-tutorial-overlay) [data-card-preview-locked="true"] {
   .guided-tutorial-continue { width: 100%; }
 }
 
+@media (max-width: 900px) {
+  .guided-card-comparison {
+    top: 22px;
+    left: 50%;
+    max-width: calc(100vw - 24px);
+    transform: translateX(-50%);
+  }
+
+  .guided-card-comparison-item { width: min(37vw, 180px); }
+
+  .guided-tutorial-overlay.has-card-comparison .guided-tutorial-callout {
+    top: auto !important;
+    right: 16px;
+    bottom: 16px;
+    left: 16px !important;
+    width: auto;
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .guided-tutorial-overlay[data-mode="act"] .guided-tutorial-ring,
   .guided-tutorial-ring.is-rejected,
   .guided-tutorial-callout {
     animation: none;
   }
+
+  .guided-card-comparison-cost { animation: none; }
 
   .guided-tutorial-ring.is-rejected { border-width: 5px; }
 }

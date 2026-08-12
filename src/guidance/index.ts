@@ -2,6 +2,7 @@ export * from "./buildGuidedScenario";
 export * from "./anchorRegistry";
 export * from "./beatBarrier";
 export * from "./contracts";
+export * from "./firstSeedLesson";
 export * from "./GuidedLessonRegistry";
 export * from "./interactionGate";
 export * from "./inputShield";

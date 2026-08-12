@@ -669,7 +669,6 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
       <aside
         ref={(element) => {
           landDockRef.current = element;
-          guidedAnchorRegistry.set(guidedSurfaceAnchorKey("player.sources"), "battlefield:player:sources", element);
         }}
         data-player-mana-core="true"
         data-tribute-of-the-four-sorrows-mana-target={tributeOfTheFourSorrowsSourceSelectionActive ? "true" : undefined}
@@ -696,6 +695,14 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
         }}
       >
         <div className="mana-corner-energy-layer" aria-hidden="true">
+          <div
+            ref={(element) => guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey("player.sources"),
+              "battlefield:player:sources-visual",
+              element,
+            )}
+            className="guided-player-sources-anchor"
+          >
           <div
             ref={(element) => guidedAnchorRegistry.set(
               guidedSurfaceAnchorKey("player.reserve"),
@@ -778,6 +785,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
                 </span>
               );
             })}
+          </div>
           </div>
         </div>
         {reserveSetupActive && (

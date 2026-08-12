@@ -1017,7 +1017,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
   setHoveredCardId: (id) => set({ hoveredCardId: id }),
-  setFocusedCardId: (id) => set({ focusedCardId: id }),
+  setFocusedCardId: (id) => {
+    if (id && !gameplayIntentAllowed({ kind: "card.inspect", cardId: id })) return;
+    set({ focusedCardId: id });
+    if (id) publishGameplayReceipt({ kind: "card.inspected", cardId: id });
+  },
   advancePhase: (phase) => {
     const intent = phaseAdvanceIntent(get().game, phase);
     if (!gameplayIntentAllowed(intent)) return;
@@ -2130,6 +2134,19 @@ function publishGuidedTransitionReceipts(previous: GameState, next: GameState): 
       targetIds: drawnCardIds,
       amount: drawnCardIds.length,
       reason: playerDrawReason(previous, next),
+    });
+  }
+
+  const nextPlayerMemoryIds = new Set(next.player.memory.map((card) => card.instanceId));
+  const discardedPlayerCardIds = previous.player.hand
+    .filter((card) => nextPlayerMemoryIds.has(card.instanceId))
+    .map((card) => card.instanceId);
+  if (discardedPlayerCardIds.length > 0) {
+    publishGameplayReceipt({
+      kind: "player.discarded",
+      targetIds: discardedPlayerCardIds,
+      amount: discardedPlayerCardIds.length,
+      reason: "effect",
     });
   }
 
