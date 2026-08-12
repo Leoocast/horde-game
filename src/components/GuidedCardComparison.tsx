@@ -3,6 +3,7 @@ import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { useCardDetails } from "../utils/cardImages";
+import { CardCostBadge } from "./Card";
 
 export function GuidedCardComparison({
   cards,
@@ -30,6 +31,7 @@ function GuidedComparisonCard({ card }: { card: CardInstance }) {
         {details.imageUrl
           ? <img src={details.imageUrl} alt={name} draggable={false} />
           : <span className="guided-card-comparison-fallback">{name}</span>}
+        <CardCostBadge card={card} />
         <span className="guided-card-comparison-cost-accessible">
           {t("guided.cardComparison.energyCost", { count: cost })}
         </span>

@@ -50,6 +50,7 @@ export function GuidedTutorialOverlay() {
   const [calloutSize, setCalloutSize] = useState<GuidedSize>(CALLOUT_FALLBACK_SIZE);
   const [feedback, setFeedback] = useState<string>();
   const [feedbackPulse, setFeedbackPulse] = useState(0);
+  const [dismissedActionCalloutStepId, setDismissedActionCalloutStepId] = useState<string>();
   const calloutRef = useRef<HTMLElement>(null);
   const continueRef = useRef<HTMLButtonElement>(null);
   const feedbackTimerRef = useRef<number | undefined>(undefined);
@@ -83,7 +84,14 @@ export function GuidedTutorialOverlay() {
     || comparisonCards.length < comparisonExpected
     || resolved.some((anchor) => !anchor.element)
     || rects.length < resolved.length;
-  const showCallout = session.currentStep?.callout !== "hidden";
+  const dismissCalloutOnAction = session.currentStep?.kind === "act"
+    && session.currentStep.allowedIntent.kind === "phase.continueSetup";
+  const showCallout = session.currentStep?.callout !== "hidden"
+    && dismissedActionCalloutStepId !== session.currentStep?.id;
+
+  useEffect(() => {
+    setDismissedActionCalloutStepId(undefined);
+  }, [session.currentStep?.id, session.sessionId]);
 
   useLayoutEffect(() => {
     if (!active) {
@@ -216,10 +224,16 @@ export function GuidedTutorialOverlay() {
       activeKeys,
       isControl(target),
     );
+    const dismissActionCallout = () => {
+      if (dismissCalloutOnAction && session.currentStep?.id) {
+        setDismissedActionCalloutStepId(session.currentStep.id);
+      }
+    };
 
     const handlePointerDown = (event: PointerEvent) => {
       if (targetAllowed(event.target)) {
         allowedPointers.add(event.pointerId);
+        dismissActionCallout();
         return;
       }
       block(event);
@@ -229,7 +243,10 @@ export function GuidedTutorialOverlay() {
       block(event);
     };
     const handleEvent = (event: Event) => {
-      if (targetAllowed(event.target)) return;
+      if (targetAllowed(event.target)) {
+        dismissActionCallout();
+        return;
+      }
       block(event);
     };
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -246,7 +263,10 @@ export function GuidedTutorialOverlay() {
         cycleGuidedFocus(event.shiftKey, session.mode!, resolved, calloutRef, continueRef);
         return;
       }
-      if (targetAllowed(event.target)) return;
+      if (targetAllowed(event.target)) {
+        if (event.key === "Enter" || event.key === " ") dismissActionCallout();
+        return;
+      }
       block(event);
       focusPreferredTarget(session.mode!, resolved, calloutRef, continueRef);
     };
@@ -273,7 +293,7 @@ export function GuidedTutorialOverlay() {
       document.removeEventListener("drop", handleEvent, true);
       document.removeEventListener("keydown", handleKeyDown, true);
     };
-  }, [active, activeKeys, resolved, session.mode, t]);
+  }, [active, activeKeys, dismissCalloutOnAction, resolved, session.currentStep?.id, session.mode, t]);
 
   useEffect(() => {
     const rejection = interaction.lastRejection;
@@ -310,36 +330,40 @@ export function GuidedTutorialOverlay() {
       data-card-preview-visible={cardPreviewVisible ? "true" : "false"}
       data-feedback-pulse={feedbackPulse}
     >
-      <svg className="guided-tutorial-mask" aria-hidden="true">
-        <defs>
-          <mask id={MASK_ID} maskUnits="userSpaceOnUse" x="0" y="0" width={viewport.width} height={viewport.height}>
-            <rect x="0" y="0" width={viewport.width} height={viewport.height} fill="white" />
-            {!missingAnchor && rects.map((rect) => (
-              <rect key={`${rect.key}:${rect.role}`} x={rect.left} y={rect.top} width={rect.width} height={rect.height} rx="7" fill="black" />
-            ))}
-          </mask>
-          <marker id={ARROW_ID} viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" />
-          </marker>
-        </defs>
-        <rect className="guided-tutorial-dimmer" x="0" y="0" width={viewport.width} height={viewport.height} mask={`url(#${MASK_ID})`} />
-        {!missingAnchor && connectorPath && (
-          <path className="guided-tutorial-connector" d={connectorPath} markerEnd={`url(#${ARROW_ID})`} />
-        )}
-      </svg>
+      {showCallout && (
+        <>
+          <svg className="guided-tutorial-mask" aria-hidden="true">
+            <defs>
+              <mask id={MASK_ID} maskUnits="userSpaceOnUse" x="0" y="0" width={viewport.width} height={viewport.height}>
+                <rect x="0" y="0" width={viewport.width} height={viewport.height} fill="white" />
+                {!missingAnchor && rects.map((rect) => (
+                  <rect key={`${rect.key}:${rect.role}`} x={rect.left} y={rect.top} width={rect.width} height={rect.height} rx="7" fill="black" />
+                ))}
+              </mask>
+              <marker id={ARROW_ID} viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" />
+              </marker>
+            </defs>
+            <rect className="guided-tutorial-dimmer" x="0" y="0" width={viewport.width} height={viewport.height} mask={`url(#${MASK_ID})`} />
+            {!missingAnchor && connectorPath && (
+              <path className="guided-tutorial-connector" d={connectorPath} markerEnd={`url(#${ARROW_ID})`} />
+            )}
+          </svg>
 
-      {!missingAnchor && rects.map((rect) => (
-        <span
-          key={`${rect.key}:${rect.role}:${feedbackPulse}`}
-          className={["guided-tutorial-ring", feedback ? "is-rejected" : ""].join(" ")}
-          data-anchor-key={rect.key}
-          data-anchor-role={rect.role}
-          style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
-          aria-hidden="true"
-        />
-      ))}
+          {!missingAnchor && rects.map((rect) => (
+            <span
+              key={`${rect.key}:${rect.role}:${feedbackPulse}`}
+              className={["guided-tutorial-ring", feedback ? "is-rejected" : ""].join(" ")}
+              data-anchor-key={rect.key}
+              data-anchor-role={rect.role}
+              style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
+              aria-hidden="true"
+            />
+          ))}
+        </>
+      )}
 
-      {!missingAnchor && comparisonCards.length > 0 && (
+      {showCallout && !missingAnchor && comparisonCards.length > 0 && (
         <GuidedCardComparison cards={comparisonCards} />
       )}
 

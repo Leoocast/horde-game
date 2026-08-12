@@ -128,7 +128,11 @@ export function Board({
         onReturnToMenu={() => setShowHomeConfirmation(true)}
       />
       <DuelHud game={game} />
-      <PhaseBanner game={game} setupTurns={setupTurns} suspended={encounterEntering || !game.openingHandAccepted} />
+      <PhaseBanner
+        game={game}
+        setupTurns={setupTurns}
+        suspended={encounterEntering || !game.openingHandAccepted || sessionKind === "tutorial"}
+      />
       {game.openingHandAccepted && <PhaseOrb game={game} />}
       <CombatArrows game={game} hiddenDefenseLinkIds={hiddenDefenseLinkIds} />
       <CounterTargetingOverlay game={game} />

@@ -131,21 +131,30 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(overlay, /data-card-preview-visible=/u);
   assert.match(overlay, /<GuidedCardComparison cards=\{comparisonCards\}/u);
   assert.match(comparison, /guided-card-comparison-cost-accessible/u);
+  assert.match(comparison, /import \{ CardCostBadge \} from "\.\/Card";/u);
+  assert.match(comparison, /<CardCostBadge card=\{card\} \/>/u);
   assert.doesNotMatch(comparison, /<Zap|guided-card-comparison-cost"/u);
   assert.match(battlefield, /"battlefield:player:sources-visual"/u);
   assert.match(battlefield, /className="guided-player-sources-anchor"/u);
   assert.match(battlefield, /data-guided-anchor-extension="true"/u);
   assert.doesNotMatch(overlay, /closest\("#guided-tutorial-overlay/u);
   assert.match(overlay, /showCallout && \(/u);
+  assert.match(overlay, /\{showCallout && \(\s*<>\s*<svg className="guided-tutorial-mask"/su);
+  assert.match(overlay, /\{showCallout && !missingAnchor && comparisonCards\.length > 0 && \(/u);
+  assert.match(overlay, /allowedIntent\.kind === "phase\.continueSetup"/u);
+  assert.match(overlay, /setDismissedActionCalloutStepId\(session\.currentStep\.id\)/u);
   assert.match(overlay, /guidedUnionBounds/u);
   assert.match(styles, /\.guided-tutorial-overlay\[data-mode="explain"\],[\s\S]*?pointer-events: auto;/u);
   assert.match(styles, /guided-tutorial-overlay:not\(\[data-card-preview-visible="true"\]\)/u);
   assert.match(styles, /\.guided-card-comparison\s*\{[^}]*left:\s*50%;[^}]*transform:\s*translate\(-50%, -50%\);/su);
-  assert.match(styles, /\.guided-card-comparison-frame::after\s*\{/u);
-  assert.match(styles, /\.guided-tutorial-dimmer\s*\{\s*fill:\s*rgb\(2 4 4 \/ 0\.4\);\s*\}/u);
+  assert.match(styles, /\.guided-card-comparison-item\s*\{[^}]*width:\s*clamp\(300px, 31vw, 450px\);/su);
+  assert.match(styles, /\.guided-card-comparison-frame > \.card-cost-badge\s*\{/u);
+  assert.doesNotMatch(styles, /\.guided-card-comparison-frame::after\s*\{/u);
+  assert.match(styles, /\.guided-tutorial-dimmer\s*\{\s*fill:\s*rgb\(2 4 4 \/ 0\.3\);\s*\}/u);
   assert.match(styles, /\.guided-tutorial-ring\[data-anchor-key\^="card:"\]\s*\{\s*display:\s*none;\s*\}/u);
   assert.match(styles, /\.guided-tutorial-body p\s*\{[^}]*font-size:\s*16px;/su);
   assert.match(styles, /\.guided-player-sources-anchor\s*\{[^}]*width:\s*174px;[^}]*height:\s*85px;/su);
+  assert.match(board, /sessionKind === "tutorial"/u);
 });
 
 function fakeElement({ isConnected }) {

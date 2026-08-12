@@ -20581,7 +20581,7 @@ body.playground-active .phase-banner-shell {
   pointer-events: none;
 }
 
-.guided-tutorial-dimmer { fill: rgb(2 4 4 / 0.4); }
+.guided-tutorial-dimmer { fill: rgb(2 4 4 / 0.3); }
 
 .guided-tutorial-overlay[data-mode="explain"],
 .guided-tutorial-overlay[data-mode="observe"] {
@@ -20773,7 +20773,7 @@ body.playground-active .phase-banner-shell {
 
 .guided-card-comparison {
   position: absolute;
-  top: 50%;
+  top: 61%;
   left: 50%;
   display: flex;
   align-items: center;
@@ -20785,7 +20785,7 @@ body.playground-active .phase-banner-shell {
 }
 
 .guided-card-comparison-item {
-  width: clamp(180px, 17vw, 238px);
+  width: clamp(300px, 31vw, 450px);
   margin: 0;
   color: #ddd2b5;
   text-align: center;
@@ -20795,21 +20795,12 @@ body.playground-active .phase-banner-shell {
   position: relative;
   width: 100%;
   aspect-ratio: 488 / 680;
+  container-type: inline-size;
   filter: drop-shadow(0 24px 26px rgb(0 0 0 / 0.72));
 }
 
-.guided-card-comparison-frame::after {
-  position: absolute;
-  top: 2.1%;
-  left: 3.1%;
-  width: 8.4%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: rgb(137 220 255 / 0.08);
-  box-shadow:
-    0 0 9px 3px rgb(132 221 255 / 0.72),
-    0 0 23px 9px rgb(65 169 219 / 0.42);
-  content: "";
+.guided-card-comparison-frame > .card-cost-badge {
+  transform-origin: center;
   animation: guided-card-cost-focus 1.8s ease-in-out infinite;
 }
 
@@ -20906,7 +20897,7 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
     transform: translateX(-50%);
   }
 
-  .guided-card-comparison-item { width: min(37vw, 180px); }
+  .guided-card-comparison-item { width: min(42vw, 360px); }
 
   .guided-tutorial-overlay.has-card-comparison .guided-tutorial-callout {
     top: auto !important;
@@ -20925,7 +20916,7 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
     animation: none;
   }
 
-  .guided-card-comparison-frame::after { animation: none; }
+  .guided-card-comparison-frame > .card-cost-badge { animation: none; }
 
   .guided-tutorial-ring.is-rejected { border-width: 5px; }
 }
