@@ -140,6 +140,33 @@ test("step validation catches broken aliases, translations and graph edges befor
   );
 });
 
+test("step preconditions are declarative, exact and validated before orchestration", () => {
+  const valid = builtinLesson();
+  valid.steps[0].preconditions = [
+    { kind: "card.inZone", cardAlias: "source_initial", side: "player", zone: "hand" },
+    { kind: "phase.is", phase: "main" },
+    { kind: "side.isActive", side: "player" },
+    { kind: "setup.remaining", amount: 3 },
+    { kind: "energy.available", amount: 0 },
+    { kind: "energy.stored", amount: 0 },
+  ];
+  assert.deepEqual(validateGuidedLesson(valid, contentCatalog), []);
+
+  const broken = builtinLesson();
+  broken.steps[0].preconditions = [
+    { kind: "card.inZone", cardAlias: "missing_copy", side: "host", zone: "hand" },
+    { kind: "phase.is", phase: "mystery" },
+    { kind: "energy.stored", amount: 99 },
+    { kind: "mystery.condition" },
+  ];
+  const problems = validateGuidedLesson(broken, contentCatalog);
+  assert.ok(problems.some((problem) => /undefined card alias "missing_copy"/u.test(problem)));
+  assert.ok(problems.some((problem) => /unavailable zone "hand"/u.test(problem)));
+  assert.ok(problems.some((problem) => /phase\.is uses an unknown phase/u.test(problem)));
+  assert.ok(problems.some((problem) => /energy\.stored cannot exceed/u.test(problem)));
+  assert.ok(problems.some((problem) => /unknown precondition kind/u.test(problem)));
+});
+
 test("Act steps require exact semantic scope for targets, abilities and combat", () => {
   const targetWithoutContext = builtinLesson();
   targetWithoutContext.steps[1].allowedIntent = { kind: "target.choose", targetAlias: "source_initial" };

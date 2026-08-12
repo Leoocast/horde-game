@@ -10,6 +10,7 @@ import {
   GUIDED_INTENT_KINDS,
   GUIDED_HIGHLIGHT_ROLES,
   GUIDED_LESSON_SCHEMA_VERSION,
+  GUIDED_PRECONDITION_KINDS,
   GUIDED_RECEIPT_KINDS,
   GUIDED_SURFACE_ANCHORS,
   type GuidedCardAlias,
@@ -28,6 +29,8 @@ const INTENT_CONTEXTS = new Set<string>(GUIDED_INTENT_CONTEXTS);
 const HIGHLIGHT_ROLES = new Set<string>(GUIDED_HIGHLIGHT_ROLES);
 const RECEIPT_KINDS = new Set<string>(GUIDED_RECEIPT_KINDS);
 const SURFACE_ANCHORS = new Set<string>(GUIDED_SURFACE_ANCHORS);
+const PRECONDITION_KINDS = new Set<string>(GUIDED_PRECONDITION_KINDS);
+const ZONE_NAMES = new Set<string>(["archive", "hand", "field", "memory", "oblivion"]);
 
 type ZoneKey = keyof GuidedScenarioZones;
 
@@ -348,6 +351,7 @@ function validateSteps(
         if (!SURFACE_ANCHORS.has(highlight.anchor)) problems.push(`Step "${step.id}" uses unknown surface anchor "${highlight.anchor}".`);
       } else problems.push(`Step "${step.id}" has an unknown highlight kind.`);
     }
+    validatePreconditions(step, cards, problems);
     if (step.kind === "act") {
       if (step.highlights.length === 0) problems.push(`Act step "${step.id}" requires at least one highlight.`);
       if (!INTENT_KINDS.has(step.allowedIntent?.kind)) problems.push(`Step "${step.id}" has unknown intent kind.`);
@@ -368,6 +372,48 @@ function validateSteps(
     if (step.nextStepId && !steps.has(step.nextStepId)) problems.push(`Step "${step.id}" points to missing step "${step.nextStepId}".`);
   }
   validateStepGraph(definition.startStepId, steps, problems);
+}
+
+function validatePreconditions(
+  step: GuidedStep,
+  cards: Readonly<Record<GuidedCardAlias, GuidedCardSpec>>,
+  problems: string[],
+): void {
+  if (step.preconditions === undefined) return;
+  if (!Array.isArray(step.preconditions)) {
+    problems.push(`Step "${step.id}" preconditions must be an array.`);
+    return;
+  }
+  for (const condition of step.preconditions) {
+    if (!condition || typeof condition !== "object" || !PRECONDITION_KINDS.has(condition.kind)) {
+      problems.push(`Step "${step.id}" has an unknown precondition kind.`);
+      continue;
+    }
+    if (condition.kind === "card.inZone") {
+      validateAliasRef(step.id, condition.cardAlias, cards, problems);
+      if (condition.side !== "player" && condition.side !== "host") {
+        problems.push(`Step "${step.id}" card.inZone requires a known side.`);
+      }
+      if (!ZONE_NAMES.has(condition.zone) || (condition.side === "host" && condition.zone === "hand")) {
+        problems.push(`Step "${step.id}" card.inZone uses unavailable zone "${String(condition.zone)}".`);
+      }
+      continue;
+    }
+    if (condition.kind === "phase.is") {
+      if (!PHASES.has(condition.phase)) problems.push(`Step "${step.id}" phase.is uses an unknown phase.`);
+      continue;
+    }
+    if (condition.kind === "side.isActive") {
+      if (condition.side !== "player" && condition.side !== "host") {
+        problems.push(`Step "${step.id}" side.isActive requires a known side.`);
+      }
+      continue;
+    }
+    validateInteger(`Step "${step.id}" ${condition.kind}`, condition.amount, 0, problems);
+    if (condition.kind === "energy.stored" && condition.amount > STORED_ENERGY_CAP) {
+      problems.push(`Step "${step.id}" energy.stored cannot exceed ${STORED_ENERGY_CAP}.`);
+    }
+  }
 }
 
 function validateMatcherAliases(

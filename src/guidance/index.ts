@@ -5,6 +5,7 @@ export * from "./contracts";
 export * from "./GuidedLessonRegistry";
 export * from "./interactionGate";
 export * from "./inputShield";
+export * from "./lessonOrchestrator";
 export * from "./overlayGeometry";
 export * from "./presentationActivity";
 export * from "./presentationSettled";

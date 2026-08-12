@@ -161,6 +161,11 @@ export function GuidedTutorialOverlay() {
     if (!active || !session.mode) return;
     const allowedPointers = new Set<number>();
     let lastFeedbackAt = 0;
+    const blockedMessage = session.mode === "explain"
+      ? t("guided.blocked.explain")
+      : session.mode === "observe"
+      ? t("guided.blocked.observe")
+      : t("guided.blocked");
 
     const reject = (message: string) => {
       const now = performance.now();
@@ -172,7 +177,7 @@ export function GuidedTutorialOverlay() {
       feedbackTimerRef.current = window.setTimeout(() => setFeedback(undefined), 1800);
     };
 
-    const block = (event: Event, message = t("guided.blocked")) => {
+    const block = (event: Event, message = blockedMessage) => {
       if (event.cancelable) event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
@@ -180,7 +185,7 @@ export function GuidedTutorialOverlay() {
     };
 
     const isControl = (target: EventTarget | null) => target instanceof Element && Boolean(
-      target.closest("#guided-tutorial-overlay, [data-guided-system-control='true']"),
+      target.closest("[data-guided-overlay-control='true'], [data-guided-system-control='true']"),
     );
     const targetAllowed = (target: EventTarget | null) => guidedDomTargetAllowed(
       session.mode!,
@@ -308,7 +313,9 @@ export function GuidedTutorialOverlay() {
         aria-labelledby="guided-tutorial-title"
         aria-describedby="guided-tutorial-body"
         tabIndex={-1}
+        data-guided-overlay-control="true"
       >
+        <span className="guided-tutorial-callout-mark" aria-hidden="true" />
         <div className="guided-tutorial-step">
           <span>{modeLabel}</span>
           {session.currentStepIndex && session.stepCount && <b>{session.currentStepIndex} / {session.stepCount}</b>}

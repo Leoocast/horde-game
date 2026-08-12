@@ -14,7 +14,7 @@ const readActivity = () => guidedPresentationActivity.snapshot();
 const subscribeBarrier = (listener: () => void) => guidedBeatBarrier.subscribe(listener);
 const readBarrier = () => guidedBeatBarrier.snapshot();
 
-export function GuidanceLabPanel({ onStart }: { onStart: () => void }) {
+export function GuidanceLabPanel({ onStart, onStop }: { onStart: () => void; onStop: () => void }) {
   const gameStore = useGameStore();
   const session = useSyncExternalStore(subscribeSession, readSession, readSession);
   const activity = useSyncExternalStore(subscribeActivity, readActivity, readActivity);
@@ -38,7 +38,7 @@ export function GuidanceLabPanel({ onStart }: { onStart: () => void }) {
             {session.status === "running" ? "Restart fixture" : "Start fixture"}
           </button>
           {session.status === "running" && (
-            <button data-guided-system-control="true" className="playground-button" type="button" onClick={() => guidedSessionStore.stop()}>
+            <button data-guided-system-control="true" className="playground-button" type="button" onClick={onStop}>
               Stop
             </button>
           )}

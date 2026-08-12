@@ -96,10 +96,11 @@ test("lesson validation rejects unknown highlight roles and Act steps without a 
 });
 
 test("the real Board mounts the overlay and its capture shield covers every input family", async () => {
-  const [board, overlay, card] = await Promise.all([
+  const [board, overlay, card, styles] = await Promise.all([
     readFile(new URL("../src/components/Board.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/GuidedTutorialOverlay.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/Card.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/styles.css", import.meta.url), "utf8"),
   ]);
   assert.match(board, /<GuidedTutorialOverlay\s*\/>/u);
   for (const eventName of ["pointerdown", "pointerup", "click", "dblclick", "contextmenu", "dragstart", "dragover", "drop", "keydown"]) {
@@ -107,6 +108,9 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   }
   assert.match(card, /tabIndex=\{selectionDisabled \? undefined : 0\}/u);
   assert.match(card, /onKeyboardActivate \?\? onSelect/u);
+  assert.match(overlay, /data-guided-overlay-control="true"/u);
+  assert.doesNotMatch(overlay, /closest\("#guided-tutorial-overlay/u);
+  assert.match(styles, /\.guided-tutorial-overlay\[data-mode="explain"\],[\s\S]*?pointer-events: auto;/u);
 });
 
 function fakeElement({ isConnected }) {

@@ -1,4 +1,5 @@
-import type { GuidedCardAlias, GuidedLessonDefinition, GuidedStep } from "./contracts";
+import type { GameState, Side, ZoneName } from "../engine/GameTypes";
+import type { GuidedCardAlias, GuidedLessonDefinition, GuidedPrecondition, GuidedStep } from "./contracts";
 import {
   GuidedInteractionGate,
   receiptMatchesSpec,
@@ -36,6 +37,7 @@ export type StartGuidedSessionInput = Readonly<{
   definition: GuidedLessonDefinition;
   bindings: Readonly<Record<GuidedCardAlias, string>>;
   sessionId?: string;
+  gameState?: () => GameState;
 }>;
 
 /**
@@ -60,6 +62,7 @@ export class GuidedSessionStore {
   #sessionCounter = 0;
   #checkEpoch = 0;
   #probe: CheckpointProbe | undefined;
+  #gameState: (() => GameState) | undefined;
   #scheduleCheckpoint: CheckpointScheduler = (check) => queueMicrotask(check);
   #endReason: GuidedSessionEndReason | undefined;
   #errorMessage: string | undefined;
@@ -83,7 +86,7 @@ export class GuidedSessionStore {
     if (schedule) this.#scheduleCheckpoint = schedule;
   }
 
-  start({ definition, bindings, sessionId }: StartGuidedSessionInput): string {
+  start({ definition, bindings, sessionId, gameState }: StartGuidedSessionInput): string {
     this.invalidate("presentation-reset");
     this.#definition = definition;
     this.#steps = new Map(definition.steps.map((step) => [step.id, step]));
@@ -92,13 +95,20 @@ export class GuidedSessionStore {
     this.#status = "running";
     this.#sessionId = sessionId ?? `guided-session-${++this.#sessionCounter}`;
     this.#bindings = Object.freeze({ ...bindings });
+    this.#gameState = gameState;
     this.#presentationSettled = false;
     this.#observeReceiptSatisfied = this.#currentStep.kind === "observe" && !this.#currentStep.expectedReceipt;
     this.#observeNextStepId = this.#currentStep.kind === "observe" ? this.#currentStep.nextStepId : undefined;
     this.#receiptCursor = this.#gate.snapshot().receiptCursor;
     this.#endReason = undefined;
     this.#errorMessage = undefined;
-    this.#activateCurrentPolicy();
+    try {
+      this.#assertStepPreconditions(this.#currentStep);
+      this.#activateCurrentPolicy();
+    } catch (error) {
+      this.fail(error);
+      throw error;
+    }
     this.#emit();
     this.#requestCheckpointCheck();
     return this.#sessionId;
@@ -111,8 +121,7 @@ export class GuidedSessionStore {
       this.#complete();
       return true;
     }
-    this.#enterAuthoredStep(this.#requireStep(nextStepId));
-    return true;
+    return this.#enterAuthoredStep(this.#requireStep(nextStepId));
   }
 
   notifyCheckpointState(settled: boolean): void {
@@ -134,6 +143,7 @@ export class GuidedSessionStore {
     if (this.#status !== "running") return;
     this.#status = "aborted";
     this.#endReason = "stopped";
+    this.#gameState = undefined;
     this.#checkEpoch += 1;
     this.#gate.deactivate();
     this.#barrier.release();
@@ -145,6 +155,7 @@ export class GuidedSessionStore {
     this.#status = "aborted";
     this.#endReason = "error";
     this.#errorMessage = error instanceof Error ? error.message : String(error);
+    this.#gameState = undefined;
     this.#checkEpoch += 1;
     this.#gate.deactivate();
     this.#barrier.invalidate();
@@ -161,6 +172,7 @@ export class GuidedSessionStore {
     this.#status = "aborted";
     this.#endReason = reason;
     this.#presentationSettled = false;
+    this.#gameState = undefined;
     this.#emit();
   }
 
@@ -184,6 +196,7 @@ export class GuidedSessionStore {
     this.#status = "inactive";
     this.#sessionId = undefined;
     this.#bindings = Object.freeze({});
+    this.#gameState = undefined;
     this.#presentationSettled = false;
     this.#observeReceiptSatisfied = false;
     this.#observeNextStepId = undefined;
@@ -200,6 +213,7 @@ export class GuidedSessionStore {
     );
     if (receipts.length === 0) return;
     for (const receipt of receipts) {
+      if (this.#status !== "running") break;
       this.#receiptCursor = receipt.cursor;
       if (this.#mode === "act") {
         this.#enterObservationAfterAction(receipt);
@@ -207,13 +221,14 @@ export class GuidedSessionStore {
       }
       if (this.#mode === "observe") this.#acceptObserveReceipt(receipt);
     }
-    this.#emit();
+    if (this.#status === "running") this.#emit();
   }
 
   #enterObservationAfterAction(receipt: GuidedGameplayReceipt): void {
     const nextStepId = this.#currentStep?.nextStepId;
     const next = nextStepId ? this.#requireStep(nextStepId) : undefined;
     if (next?.kind === "observe") {
+      if (!this.#preconditionsAllow(next)) return;
       this.#currentStep = next;
       this.#observeNextStepId = next.nextStepId;
       this.#observeReceiptSatisfied = next.expectedReceipt ? receiptMatchesSpec(receipt, next.expectedReceipt) : true;
@@ -246,7 +261,8 @@ export class GuidedSessionStore {
     this.#enterAuthoredStep(this.#requireStep(nextStepId));
   }
 
-  #enterAuthoredStep(step: GuidedStep): void {
+  #enterAuthoredStep(step: GuidedStep): boolean {
+    if (!this.#preconditionsAllow(step)) return false;
     this.#currentStep = step;
     this.#mode = step.kind;
     this.#presentationSettled = false;
@@ -255,6 +271,7 @@ export class GuidedSessionStore {
     this.#activateCurrentPolicy();
     this.#emit();
     this.#requestCheckpointCheck();
+    return true;
   }
 
   #activateCurrentPolicy(): void {
@@ -276,6 +293,7 @@ export class GuidedSessionStore {
     this.#status = "completed";
     this.#checkEpoch += 1;
     this.#presentationSettled = true;
+    this.#gameState = undefined;
     this.#gate.deactivate();
     this.#barrier.release();
     this.#emit();
@@ -294,6 +312,26 @@ export class GuidedSessionStore {
     const step = this.#steps.get(stepId);
     if (!step) throw new Error(`Guided session cannot find step "${stepId}" in lesson "${this.#definition?.id}".`);
     return step;
+  }
+
+  #assertStepPreconditions(step: GuidedStep): void {
+    if (!step?.preconditions?.length) return;
+    const game = this.#gameState?.();
+    if (!game) throw new Error(`Guided step "${step.id}" requires game-state preconditions, but no game-state probe was configured.`);
+    for (const condition of step.preconditions) {
+      if (guidedPreconditionSatisfied(condition, game, this.#bindings)) continue;
+      throw new Error(`Guided step "${step.id}" failed precondition ${describePrecondition(condition)}.`);
+    }
+  }
+
+  #preconditionsAllow(step: GuidedStep): boolean {
+    try {
+      this.#assertStepPreconditions(step);
+      return true;
+    } catch (error) {
+      this.fail(error);
+      return false;
+    }
   }
 
   #emit(): void {
@@ -319,6 +357,32 @@ export class GuidedSessionStore {
     });
     for (const listener of this.#listeners) listener(this.#snapshot);
   }
+}
+
+export function guidedPreconditionSatisfied(
+  condition: GuidedPrecondition,
+  game: GameState,
+  bindings: Readonly<Record<GuidedCardAlias, string>>,
+): boolean {
+  if (condition.kind === "phase.is") return game.phase === condition.phase;
+  if (condition.kind === "side.isActive") return game.activeSide === condition.side;
+  if (condition.kind === "setup.remaining") return game.setupTurnsRemaining === condition.amount;
+  if (condition.kind === "energy.available") return game.player.energyPool.available === condition.amount;
+  if (condition.kind === "energy.stored") return game.player.energyPool.stored === condition.amount;
+  const instanceId = bindings[condition.cardAlias];
+  return Boolean(instanceId && zoneCards(game, condition.side, condition.zone).some((card) => card.instanceId === instanceId));
+}
+
+function zoneCards(game: GameState, side: Side, zone: ZoneName) {
+  if (side === "player") return game.player[zone];
+  return game.host[zone as Exclude<ZoneName, "hand">] ?? [];
+}
+
+function describePrecondition(condition: GuidedPrecondition): string {
+  if (condition.kind === "card.inZone") return `${condition.kind}(${condition.cardAlias},${condition.side}.${condition.zone})`;
+  if (condition.kind === "phase.is") return `${condition.kind}(${condition.phase})`;
+  if (condition.kind === "side.isActive") return `${condition.kind}(${condition.side})`;
+  return `${condition.kind}(${condition.amount})`;
 }
 
 function freezeSnapshot(snapshot: GuidedSessionSnapshot): GuidedSessionSnapshot {

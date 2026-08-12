@@ -20437,8 +20437,8 @@ body.playground-active .phase-banner-shell {
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  color: #eee0b8;
-  font-family: Georgia, "Times New Roman", serif;
+  color: #d7d4c3;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
 }
 
 .guided-tutorial-mask {
@@ -20450,7 +20450,12 @@ body.playground-active .phase-banner-shell {
   pointer-events: none;
 }
 
-.guided-tutorial-dimmer { fill: rgb(2 4 4 / 0.84); }
+.guided-tutorial-dimmer { fill: rgb(2 4 4 / 0.55); }
+
+.guided-tutorial-overlay[data-mode="explain"],
+.guided-tutorial-overlay[data-mode="observe"] {
+  pointer-events: auto;
+}
 
 .guided-tutorial-ring {
   position: absolute;
@@ -20493,22 +20498,58 @@ body.playground-active .phase-banner-shell {
   position: absolute;
   width: min(370px, calc(100vw - 32px));
   box-sizing: border-box;
-  border: 1px solid #ad8446;
-  outline: 1px solid rgb(8 7 5 / 0.9);
-  padding: 19px 20px 16px;
+  overflow: visible;
+  border: 1px solid rgb(160 148 102 / 0.46);
+  border-top-color: rgb(218 201 142 / 0.68);
+  border-radius: 2px;
+  outline: none;
+  padding: 22px 22px 18px;
   background:
-    linear-gradient(145deg, rgb(39 29 17 / 0.99), rgb(14 13 10 / 0.995)),
-    #12100c;
+    radial-gradient(circle at 18% 0%, rgb(196 189 153 / 0.075), transparent 44%),
+    linear-gradient(145deg, rgb(28 35 38 / 0.985), rgb(7 12 15 / 0.995));
   box-shadow:
-    0 16px 38px rgb(0 0 0 / 0.78),
-    inset 0 0 0 3px rgb(95 67 31 / 0.22);
+    inset 0 1px 0 rgb(238 223 174 / 0.08),
+    inset 0 -24px 40px rgb(0 0 0 / 0.18),
+    0 26px 64px rgb(0 0 0 / 0.68);
   pointer-events: auto;
-  clip-path: polygon(0 8px, 8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px));
+  animation: guided-tutorial-callout-in 190ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.guided-tutorial-callout::before {
+  position: absolute;
+  top: 0;
+  right: 1px;
+  left: 1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(231 218 170 / 0.27), transparent);
+  content: "";
+}
+
+.guided-tutorial-callout::after {
+  position: absolute;
+  right: 18px;
+  bottom: -5px;
+  left: 18px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(182 166 105 / 0.48), transparent);
+  content: "";
+}
+
+.guided-tutorial-callout-mark {
+  position: absolute;
+  top: -6px;
+  left: 22px;
+  width: 11px;
+  height: 11px;
+  border: 1px solid rgb(190 172 111 / 0.64);
+  background: #111b17;
+  box-shadow: 0 0 12px rgb(176 157 92 / 0.2);
+  transform: rotate(45deg);
 }
 
 .guided-tutorial-callout:focus-visible {
-  outline: 2px solid #e2c36c;
-  outline-offset: -5px;
+  outline: 1px solid rgb(224 204 140 / 0.9);
+  outline-offset: 3px;
 }
 
 .guided-tutorial-step {
@@ -20516,61 +20557,78 @@ body.playground-active .phase-banner-shell {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  color: #b99d64;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.17em;
+  border-bottom: 1px solid rgb(166 154 104 / 0.2);
+  padding: 0 0 10px 13px;
+  color: #7f8c87;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
 }
 
-.guided-tutorial-step b { color: #dfca98; font-variant-numeric: tabular-nums; }
+.guided-tutorial-step b {
+  color: #a99a6d;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.16em;
+}
 
 .guided-tutorial-callout h2 {
-  margin: 11px 0 8px;
-  color: #f1dfaa;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.025em;
-  line-height: 1.2;
+  margin: 15px 0 9px;
+  color: #e2d7b8;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 23px;
+  font-weight: 500;
+  letter-spacing: 0.035em;
+  line-height: 1.14;
+  text-shadow: 0 3px 13px rgb(0 0 0 / 0.66);
 }
 
 .guided-tutorial-callout p {
   margin: 0;
-  color: #d3c9ae;
+  color: #b8c0bf;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-  font-size: 13px;
-  line-height: 1.52;
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .guided-tutorial-feedback {
   min-height: 18px;
-  margin-top: 7px;
-  color: #e5a07e;
+  margin-top: 8px;
+  color: #d99175;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.025em;
   line-height: 1.35;
 }
 
 .guided-tutorial-continue {
-  width: 100%;
-  height: 38px;
-  border: 1px solid #98743d;
-  margin-top: 6px;
-  background: linear-gradient(#503a1d, #281c0d);
-  color: #efd69a;
-  font-family: Georgia, "Times New Roman", serif;
+  display: block;
+  width: auto;
+  min-width: 148px;
+  height: 42px;
+  border: 1px solid rgb(178 158 92 / 0.58);
+  margin: 7px 0 0 auto;
+  background: linear-gradient(110deg, #3a4240, #1c2828 66%, #2e3836);
+  color: #e3d8b5;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   font-size: 11px;
   font-weight: 900;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
+  padding: 0 22px;
   text-transform: uppercase;
+  box-shadow: inset 0 1px 0 rgb(228 220 182 / 0.07), 0 8px 18px rgb(0 0 0 / 0.28);
+  transition: border-color 150ms ease, color 150ms ease, filter 150ms ease, transform 150ms ease;
 }
 
 .guided-tutorial-continue:hover:not(:disabled),
 .guided-tutorial-continue:focus-visible {
-  border-color: #e0bb68;
-  background: linear-gradient(#674a23, #34230f);
-  color: #fff0be;
+  border-color: rgb(205 185 120 / 0.78);
+  color: #fff0ca;
+  filter: brightness(1.08);
+  outline: none;
+  transform: translateY(-1px);
 }
 
 .guided-tutorial-continue:disabled { cursor: wait; opacity: 0.48; }
@@ -20594,14 +20652,21 @@ body:has(.guided-tutorial-overlay) [data-card-preview-locked="true"] {
   70% { transform: translateX(4px); }
 }
 
+@keyframes guided-tutorial-callout-in {
+  from { opacity: 0; transform: translateY(9px) scale(0.975); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 @media (max-width: 560px) {
   .guided-tutorial-callout { padding: 16px 17px 13px; }
   .guided-tutorial-callout h2 { font-size: 18px; }
+  .guided-tutorial-continue { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .guided-tutorial-overlay[data-mode="act"] .guided-tutorial-ring,
-  .guided-tutorial-ring.is-rejected {
+  .guided-tutorial-ring.is-rejected,
+  .guided-tutorial-callout {
     animation: none;
   }
 

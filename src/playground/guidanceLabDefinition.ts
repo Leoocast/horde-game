@@ -1,5 +1,9 @@
 import { contentCatalog } from "../content/bootstrap";
-import { buildGuidedScenario, GUIDED_LESSON_SCHEMA_VERSION, type GuidedLessonDefinition } from "../guidance";
+import {
+  GUIDED_LESSON_SCHEMA_VERSION,
+  GuidedLessonRegistry,
+  type GuidedLessonDefinition,
+} from "../guidance";
 
 /** Dev-only vertical slice. It validates the pause cycle without becoming the First Seed's copy. */
 export const GUIDANCE_LAB_LESSON: GuidedLessonDefinition = {
@@ -55,6 +59,11 @@ export const GUIDANCE_LAB_LESSON: GuidedLessonDefinition = {
       kind: "explain",
       copy: { titleKey: "guided.lab.explainSourceTitle", bodyKey: "guided.lab.explainSourceBody" },
       highlights: [{ kind: "card", alias: "source_to_play" }],
+      preconditions: [
+        { kind: "card.inZone", cardAlias: "source_to_play", side: "player", zone: "hand" },
+        { kind: "phase.is", phase: "main" },
+        { kind: "side.isActive", side: "player" },
+      ],
       nextStepId: "play-source",
     },
     {
@@ -66,6 +75,10 @@ export const GUIDANCE_LAB_LESSON: GuidedLessonDefinition = {
         { kind: "surface", anchor: "player.field", role: "destination" },
       ],
       allowedIntent: { kind: "card.play", cardAlias: "source_to_play" },
+      preconditions: [
+        { kind: "card.inZone", cardAlias: "source_to_play", side: "player", zone: "hand" },
+        { kind: "energy.available", amount: 0 },
+      ],
       nextStepId: "observe-source",
     },
     {
@@ -74,6 +87,9 @@ export const GUIDANCE_LAB_LESSON: GuidedLessonDefinition = {
       copy: { titleKey: "guided.lab.observeSourceTitle", bodyKey: "guided.lab.observeSourceBody" },
       highlights: [{ kind: "surface", anchor: "player.sources" }],
       expectedReceipt: { kind: "source.played", cardAlias: "source_to_play" },
+      preconditions: [
+        { kind: "card.inZone", cardAlias: "source_to_play", side: "player", zone: "field" },
+      ],
       nextStepId: "source-settled",
     },
     {
@@ -81,15 +97,11 @@ export const GUIDANCE_LAB_LESSON: GuidedLessonDefinition = {
       kind: "explain",
       copy: { titleKey: "guided.lab.sourceSettledTitle", bodyKey: "guided.lab.sourceSettledBody" },
       highlights: [{ kind: "surface", anchor: "player.sources" }],
+      preconditions: [
+        { kind: "card.inZone", cardAlias: "source_to_play", side: "player", zone: "field" },
+      ],
     },
   ],
 };
 
-export function buildGuidanceLabBoard() {
-  const built = buildGuidedScenario(GUIDANCE_LAB_LESSON, contentCatalog);
-  return {
-    ...built,
-    playerDeckId: contentCatalog.requireDeck(built.playerDeckKey, "player").deck.id,
-    hostDeckId: contentCatalog.requireDeck(built.hostDeckKey, "host").deck.id,
-  };
-}
+export const GUIDANCE_LAB_REGISTRY = new GuidedLessonRegistry(contentCatalog, [GUIDANCE_LAB_LESSON]);

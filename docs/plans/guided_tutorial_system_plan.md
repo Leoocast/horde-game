@@ -1,6 +1,6 @@
 # Plan por fases — Sistema de guía, pausa y resaltado
 
-Estado: **abierto; Fases 0 a 3 cerradas, Fase 4 implementada y en QA manual, Fases 5 a 8 pendientes.**
+Estado: **abierto; Fases 0 a 4 cerradas, Fase 5 implementada y en QA manual, Fases 6 a 8 pendientes.**
 
 Última actualización: **2026-08-11**.
 
@@ -558,7 +558,7 @@ por finalización semántica e invalidación de callbacks al abandonar.
 
 ## Fase 4 — Anclas, spotlight, cuadro explicativo y escudo de input
 
-Estado: **implementada el 2026-08-11; pendiente de QA visual del usuario.**
+Estado: **cerrada el 2026-08-11 tras QA visual del usuario.**
 
 ### Antes de iniciar
 
@@ -635,6 +635,9 @@ cuando aplica, desde dónde arrastrar y dónde soltar.
 - La pestaña **Guide** usa copy propio ES/EN y prueba la vertical real: Explicar resalta la Fuente,
   Actuar muestra origen y Campo como destino, Observar sigue la entrada y el último checkpoint
   enfoca las Fuentes. Reiniciar/Stop siguen disponibles sólo como controles del laboratorio dev.
+- El QA visual fijó el oscurecimiento general en 55%, adoptó el azul carbón y la tipografía legible
+  de Settings para el cuadro, y eliminó las reacciones hover del tablero durante Explicar y
+  Observar. El feedback bloqueado distingue entre leer, esperar y ejecutar la acción iluminada.
 
 ### Límites cerrados de la fase
 
@@ -648,14 +651,15 @@ cuando aplica, desde dónde arrastrar y dónde soltar.
 
 ### Criterio de cierre
 
-Pendiente de QA manual. El usuario debe aprobar visualmente el sistema sobre la UI vigente y poder
-identificar la única acción válida sin depender del texto del cuadro.
+Cumplido el 2026-08-11 y aprobado en QA manual por el usuario. El spotlight conserva legibilidad del
+tablero, el cuadro pertenece al lenguaje visual de los menús y la única acción válida se distingue
+sin que los pasos de explicación aparenten ser interactivos.
 
 ---
 
 ## Fase 5 — Orquestador declarativo de lecciones
 
-Estado: **pendiente**.
+Estado: **implementada el 2026-08-11; pendiente de QA funcional del usuario.**
 
 ### Antes de iniciar
 
@@ -693,10 +697,32 @@ No se añadirán condicionales de orquestación por deck, definición de carta o
 - Dos recetas distintas ejecutan la misma secuencia de tipos de paso con decks/fixtures distintos.
 - Ningún paso avanza por texto del log, timeout o simple clic.
 
+### Implementación materializada
+
+- `GuidedLessonOrchestrator` es la entrada única para iniciar una lección registrada por ID,
+  construir su escenario exacto, cargarlo en el GameStore y comenzar la sesión con los aliases ya
+  resueltos. También reconstruye desde cero al reiniciar y coordina una salida segura.
+- El orquestador no conoce decks ni cartas. La misma clase fue probada con fixtures equivalentes de
+  El Pacto de Elarion y La Corte del Eclipse Carmesí; sólo cambian sus definiciones declarativas.
+- Los pasos pueden declarar precondiciones tipadas para zona de una copia, fase, bando activo,
+  Preparación y Energía. Se validan junto con la receta y se vuelven a evaluar contra el GameState
+  real antes de entrar al paso.
+- Una precondición rota falla cerrada: aborta la sesión, desactiva permisos, invalida beats retenidos
+  y conserva diagnóstico. Nunca lanza una excepción a través del handler de gameplay que produjo el
+  receipt.
+- Inicio, reinicio, salida y error publican eventos efímeros con cursor, lección, revisión y sesión;
+  son observables para telemetría futura, pero no participan en las condiciones de progreso.
+- Guidance Lab ya no construye ni arranca manualmente su sesión. Registra su fixture y usa el mismo
+  orquestador de producción; **Restart fixture** reconstruye todas las zonas y bindings desde la
+  receta, y **Stop** cancela la sesión y su presentación.
+- El state machine de la Fase 3 sigue siendo el único dueño de Explicar → Actuar → Observar. El
+  orquestador carga y recupera; no resuelve reglas, no interpreta logs y no duplica el engine.
+
 ### Criterio de cierre
 
-Una lección fixture puede completarse de principio a fin y su controlador no contiene conocimiento
-de los decks usados para probarla.
+Pendiente de QA manual. El usuario debe completar la fixture, reiniciarla desde un paso intermedio y
+detenerla, comprobando que siempre vuelve al mismo tablero inicial y que no queda input bloqueado al
+salir.
 
 ---
 

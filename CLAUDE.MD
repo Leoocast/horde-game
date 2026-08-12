@@ -435,8 +435,8 @@ contenido. El ciclo aprobado es **Explicar → Actuar → Observar → checkpoin
 intención solicitada puede llegar al engine; una animación iniciada termina durante Observar y nunca
 se congela a mitad. Se permiten ajustes prácticos menores de layout, intensidad, copy y timing
 durante QA, pero cambiar deck canónico, política sin resume, acciones permitidas o pausa entre beats
-requiere nueva aprobación. La Fase 4 está implementada y pendiente de QA visual; las Fases 5 a 8
-siguen pendientes y el guion final aún no existe.
+requiere nueva aprobación. Las Fases 0 a 4 están cerradas; la Fase 5 está implementada y pendiente
+de QA funcional; las Fases 6 a 8 siguen pendientes y el guion final aún no existe.
 
 La Fase 1 quedó cerrada el 2026-08-11 y fija que **cada tutorial es un escenario completamente
 predefinido**: decks, copias exactas, Mano o reparto inicial, Archivo del Cronista en orden,
@@ -476,7 +476,8 @@ epoch para las entradas de Mano, la transferencia a Reserva y los beats de reacc
 los flags del store forma `isGuidedPresentationSettled`. Reset, carga y salida invalidan callbacks,
 tokens y continuaciones retenidas.
 
-La Fase 4 del framework está implementada y en QA manual. `GuidedAnchorRegistry` enlaza superficies
+La Fase 4 del framework quedó cerrada con QA manual aprobada por el usuario el 2026-08-11.
+`GuidedAnchorRegistry` enlaza superficies
 semánticas y aliases resueltos a refs reales, con varios propietarios durante transiciones de zona;
 el overlay no consulta selectores ni identidades de deck. `GuidedTutorialOverlay` vive en un portal
 de capa 20000, mide con `ResizeObserver` y seguimiento por frame, admite varios recortes y roles
@@ -485,7 +486,18 @@ ancla. Su escudo capture bloquea pointer, clic, contexto, drag y teclado antes d
 Actuar sólo atraviesan las anclas authored y el gate semántico vuelve a validar el compromiso.
 Tooltips/previews quedan suprimidos, los intentos incorrectos producen feedback visual y textual,
 el foco queda contenido y las cartas admiten Enter/Espacio. La pestaña dev **Guide** es la vertical
-de QA; no es contenido de release ni el guion de la Primera Semilla.
+de QA; no es contenido de release ni el guion de la Primera Semilla. El QA final fijó el dimmer en
+55%, alineó el cuadro al azul carbón de Settings y bloqueó también el hover del tablero durante
+Explicar y Observar.
+
+La Fase 5 está implementada y pendiente de QA manual. `GuidedLessonOrchestrator` inicia una lección
+registrada por ID, construye y carga su receta exacta, entrega aliases al `GuidedSessionStore`, y
+ofrece reinicio total y salida segura sin conocer decks o cartas. Las precondiciones declarativas
+`card.inZone`, `phase.is`, `side.isActive`, `setup.remaining`, `energy.available` y `energy.stored`
+se validan en autoría y se comprueban contra el `GameState` real al entrar a cada paso; un fallo
+aborta cerrado sin propagarse por el handler de gameplay. Sus eventos efímeros de inicio, reinicio,
+salida y error son observables, pero nunca determinan progreso. Guidance Lab usa ya este orquestador
+en lugar de construir y arrancar la sesión manualmente; sigue siendo sólo una fixture dev.
 
 `playerDrawForecast` en
 `src/engine/TurnManager.ts` es la fuente única para el robo real y su previsión. La devolución

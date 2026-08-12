@@ -204,6 +204,23 @@ export type GuidedReceiptSpec = Readonly<{
   reason?: string;
 }>;
 
+export const GUIDED_PRECONDITION_KINDS = [
+  "card.inZone",
+  "phase.is",
+  "side.isActive",
+  "setup.remaining",
+  "energy.available",
+  "energy.stored",
+] as const;
+
+export type GuidedPrecondition =
+  | Readonly<{ kind: "card.inZone"; cardAlias: GuidedCardAlias; side: Side; zone: "archive" | "hand" | "field" | "memory" | "oblivion" }>
+  | Readonly<{ kind: "phase.is"; phase: Phase }>
+  | Readonly<{ kind: "side.isActive"; side: Side }>
+  | Readonly<{ kind: "setup.remaining"; amount: number }>
+  | Readonly<{ kind: "energy.available"; amount: number }>
+  | Readonly<{ kind: "energy.stored"; amount: number }>;
+
 export type GuidedStepCopy = Readonly<{
   titleKey: TranslationKey;
   bodyKey: TranslationKey;
@@ -213,6 +230,7 @@ type GuidedStepBase = Readonly<{
   id: string;
   copy: GuidedStepCopy;
   highlights: readonly GuidedHighlightRef[];
+  preconditions?: readonly GuidedPrecondition[];
   nextStepId?: string;
 }>;
 

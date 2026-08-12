@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Board } from "../components/Board";
+import { contentCatalog } from "../content/bootstrap";
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
 import { ActionsPanel } from "./panels/ActionsPanel";
@@ -22,8 +23,8 @@ import { CardsPanel } from "./panels/CardsPanel";
 import { ScenarioPanel } from "./panels/ScenarioPanel";
 import { TimelinePanel } from "./panels/TimelinePanel";
 import { GuidanceLabPanel } from "./panels/GuidanceLabPanel";
-import { buildGuidanceLabBoard, GUIDANCE_LAB_LESSON } from "./guidanceLabDefinition";
-import { guidedSessionStore, toGuidedInteractionBindings } from "../guidance";
+import { GUIDANCE_LAB_LESSON, GUIDANCE_LAB_REGISTRY } from "./guidanceLabDefinition";
+import { createGameStoreGuidedLessonHost, GuidedLessonOrchestrator, guidedSessionStore } from "../guidance";
 import {
   deleteStoredBoard,
   deleteStoredReplay,
@@ -46,6 +47,13 @@ import {
   type ScenarioDefinition,
 } from "./scenario";
 import { executeStep, isPlaygroundBusy, isWaitingForInput, type TimelineStep } from "./timeline";
+
+const guidanceLabOrchestrator = new GuidedLessonOrchestrator(
+  contentCatalog,
+  GUIDANCE_LAB_REGISTRY,
+  guidedSessionStore,
+  createGameStoreGuidedLessonHost(useGameStore),
+);
 
 type PlaygroundTab = "scenario" | "cards" | "board" | "actions" | "timeline" | "guidance";
 
@@ -270,12 +278,12 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
 
   function startGuidanceLab() {
     try {
-      const built = buildGuidanceLabBoard();
-      loadScenario(built.game, { playerDeckId: built.playerDeckId, hostDeckId: built.hostDeckId });
-      guidedSessionStore.start({
-        definition: GUIDANCE_LAB_LESSON,
-        bindings: toGuidedInteractionBindings(built.bindings),
-      });
+      const session = guidedSessionStore.snapshot();
+      if (session.lessonId === GUIDANCE_LAB_LESSON.id && session.status !== "inactive") {
+        guidanceLabOrchestrator.restart();
+      } else {
+        guidanceLabOrchestrator.start(GUIDANCE_LAB_LESSON.id);
+      }
       setReplayCursor(undefined);
       setAutoPlaying(false);
     } catch (error) {
@@ -285,8 +293,7 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
   }
 
   function returnToMenu() {
-    guidedSessionStore.invalidate("presentation-reset");
-    useGameStore.getState().stopGamePresentation();
+    guidanceLabOrchestrator.stop();
     onReturnToMenu();
   }
 
@@ -403,7 +410,9 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
                 onDeleteReplay={removeReplay}
               />
             )}
-            {tab === "guidance" && <GuidanceLabPanel onStart={startGuidanceLab} />}
+            {tab === "guidance" && (
+              <GuidanceLabPanel onStart={startGuidanceLab} onStop={() => guidanceLabOrchestrator.stop()} />
+            )}
           </div>
         </section>
       </div>
