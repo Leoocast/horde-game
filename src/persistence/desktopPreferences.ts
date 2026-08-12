@@ -1,4 +1,5 @@
 import type { AppLanguage } from "../i18n/translations";
+import { guidedProgressStore, parseGuidedProgress, type GuidedProgressEnvelope } from "../guidance/progress";
 import { useAudioStore } from "../store/useAudioStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 
@@ -16,6 +17,8 @@ export type DesktopPreferencesEnvelope = Readonly<{
       musicEnabled: boolean;
       musicVolume: number;
     }>;
+    /** Optional only while reading preferences-v1 files created before guided lessons existed. */
+    guidedLessons?: GuidedProgressEnvelope;
   }>;
 }>;
 
@@ -34,6 +37,7 @@ export function createDesktopPreferencesEnvelope(savedAt = new Date().toISOStrin
         musicEnabled: audio.musicEnabled,
         musicVolume: audio.musicVolume,
       }),
+      guidedLessons: guidedProgressStore.snapshot(),
     }),
   });
 }
@@ -45,6 +49,10 @@ export function parseDesktopPreferences(value: unknown): DesktopPreferencesEnvel
   if ((language !== "en" && language !== "es") || !isRecord(audio)) return undefined;
   if (typeof audio.sfxEnabled !== "boolean" || typeof audio.musicEnabled !== "boolean") return undefined;
   if (!isUnitNumber(audio.sfxVolume) || !isUnitNumber(audio.musicVolume)) return undefined;
+  const guidedLessons = "guidedLessons" in value.values
+    ? parseGuidedProgress(value.values.guidedLessons)
+    : undefined;
+  if ("guidedLessons" in value.values && !guidedLessons) return undefined;
   return Object.freeze({
     kind: "hostfall-preferences",
     formatVersion: DESKTOP_PREFERENCES_VERSION,
@@ -57,6 +65,7 @@ export function parseDesktopPreferences(value: unknown): DesktopPreferencesEnvel
         musicEnabled: audio.musicEnabled,
         musicVolume: audio.musicVolume,
       }),
+      ...(guidedLessons ? { guidedLessons } : {}),
     }),
   });
 }
@@ -71,7 +80,12 @@ export async function initializeDesktopPreferences(): Promise<() => void> {
 
   const candidates = await bridge.readPreferences();
   const stored = parseDesktopPreferences(candidates.primary) ?? parseDesktopPreferences(candidates.backup);
-  if (stored) applyDesktopPreferences(stored);
+  if (stored) {
+    applyDesktopPreferences(stored);
+    // Additive v1 migration: old preference files remain valid and inherit any web completion
+    // imported before desktop became authoritative.
+    if (!stored.values.guidedLessons) await bridge.writePreferences(createDesktopPreferencesEnvelope());
+  }
   else await bridge.writePreferences(createDesktopPreferencesEnvelope());
 
   let writeTimer: number | undefined;
@@ -84,10 +98,16 @@ export async function initializeDesktopPreferences(): Promise<() => void> {
   };
   const unsubscribeLanguage = useLanguageStore.subscribe(scheduleWrite);
   const unsubscribeAudio = useAudioStore.subscribe(scheduleWrite);
+  // Completion is a one-shot milestone, not a continuously dragged preference. Dispatch it
+  // immediately so closing right after the final lesson frame does not wait on the audio debounce.
+  const unsubscribeGuidedProgress = guidedProgressStore.subscribe(() => {
+    void bridge.writePreferences(createDesktopPreferencesEnvelope()).catch(() => undefined);
+  });
   return () => {
     if (writeTimer !== undefined) window.clearTimeout(writeTimer);
     unsubscribeLanguage();
     unsubscribeAudio();
+    unsubscribeGuidedProgress();
   };
 }
 
@@ -99,6 +119,7 @@ function applyDesktopPreferences(preferences: DesktopPreferencesEnvelope): void 
   audioStore.setSfxVolume(audio.sfxVolume);
   audioStore.setMusicEnabled(audio.musicEnabled);
   audioStore.setMusicVolume(audio.musicVolume);
+  if (preferences.values.guidedLessons) guidedProgressStore.hydrate(preferences.values.guidedLessons);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -1,4 +1,4 @@
-import { AlertTriangle, Home } from "lucide-react";
+import { AlertTriangle, Home, RotateCcw } from "lucide-react";
 import { useEffect, useLayoutEffect, useState, type CSSProperties } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useGameStore } from "../store/useGameStore";
@@ -42,15 +42,29 @@ import { RootsTouchedSkyAnimator } from "./RootsTouchedSkyAnimator";
 import { EnergyFlowAnimator } from "./EnergyFlowAnimator";
 import { GuidedTutorialOverlay } from "./GuidedTutorialOverlay";
 import { useHiddenDefenseLinkIds } from "./useDefenseLinkVisibility";
+import { IS_DEV } from "../utils/devMode";
 
 type Props = {
   playerName: string;
   setupTurns: number;
   encounterEntering?: boolean;
+  sessionKind?: "normal" | "tutorial";
+  tutorialInterrupted?: boolean;
+  tutorialErrorMessage?: string;
+  onRestartTutorial?: () => void;
   onReturnToMenu: () => void;
 };
 
-export function Board({ playerName, setupTurns, encounterEntering = false, onReturnToMenu }: Props) {
+export function Board({
+  playerName,
+  setupTurns,
+  encounterEntering = false,
+  sessionKind = "normal",
+  tutorialInterrupted = false,
+  tutorialErrorMessage,
+  onRestartTutorial,
+  onReturnToMenu,
+}: Props) {
   const t = useTranslation();
   const game = useGameStore((state) => state.game);
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
@@ -109,6 +123,8 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
         left={game.openingHandAccepted ? <TurnPhaseHud game={game} setupTurns={setupTurns} /> : undefined}
         setupTurns={setupTurns}
         elevated={!game.openingHandAccepted}
+        sessionKind={sessionKind}
+        onRestartTutorial={onRestartTutorial}
         onReturnToMenu={() => setShowHomeConfirmation(true)}
       />
       <DuelHud game={game} />
@@ -158,22 +174,50 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <OpeningHandOverlay game={game} />
       <GuidedTutorialOverlay />
 
-      {game.winner === "host" && <DefeatModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}
-      {game.winner === "player" && <VictoryModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}
+      {sessionKind === "normal" && game.winner === "host" && <DefeatModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}
+      {sessionKind === "normal" && game.winner === "player" && <VictoryModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}
+
+      {sessionKind === "tutorial" && tutorialInterrupted && (
+        <div data-guided-system-control="true" className="game-home-backdrop fixed inset-0 z-[20040] flex items-center justify-center p-6 text-[#e4ddc2]" role="presentation">
+          <section className="old-panel game-dialog game-home-dialog w-full max-w-md p-6" role="dialog" aria-modal="true" aria-labelledby="tutorial-interrupted-title">
+            <div className="flex items-start gap-3">
+              <div className="game-dialog-icon flex h-10 w-10 shrink-0 items-center justify-center"><AlertTriangle size={20} /></div>
+              <div>
+                <div className="game-dialog-kicker">{t("guided.lifecycle.interruptedKicker")}</div>
+                <h2 id="tutorial-interrupted-title" className="old-title mt-1 text-xl font-medium uppercase tracking-[0.08em]">{t("guided.lifecycle.interruptedTitle")}</h2>
+                <p className="mt-2 text-sm text-[#8d9a94]">{t("guided.lifecycle.interruptedBody")}</p>
+                {IS_DEV && tutorialErrorMessage && <pre className="mt-3 max-h-24 overflow-auto whitespace-pre-wrap text-xs text-[#c8a985]">{tutorialErrorMessage}</pre>}
+              </div>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button className="game-dialog-action flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onReturnToMenu}>
+                <Home size={16} /> {t("guided.lifecycle.exit")}
+              </button>
+              <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onRestartTutorial}>
+                <RotateCcw size={16} /> {t("guided.lifecycle.restart")}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       {homeConfirmationPresence.mounted && (
-        <div className={["game-home-backdrop fixed inset-0 z-[450] flex items-center justify-center p-6 text-[#e4ddc2]", homeConfirmationPresence.closing ? "is-closing" : ""].join(" ")} role="presentation">
+        <div
+          {...(sessionKind === "tutorial" ? { "data-guided-system-control": "true" } : {})}
+          className={[`game-home-backdrop fixed inset-0 ${sessionKind === "tutorial" ? "z-[20040]" : "z-[450]"} flex items-center justify-center p-6 text-[#e4ddc2]`, homeConfirmationPresence.closing ? "is-closing" : ""].join(" ")}
+          role="presentation"
+        >
           <section className={["old-panel game-dialog game-home-dialog w-full max-w-md p-6", homeConfirmationPresence.closing ? "is-closing" : ""].join(" ")} role="dialog" aria-modal="true" aria-labelledby="return-home-title">
             <div className="flex items-start gap-3">
               <div className="game-dialog-icon flex h-10 w-10 shrink-0 items-center justify-center">
                 <AlertTriangle size={20} />
               </div>
               <div>
-                <div className="game-dialog-kicker">{t("game.leaveBattlefield")}</div>
+                <div className="game-dialog-kicker">{t(sessionKind === "tutorial" ? "guided.lifecycle.leaveKicker" : "game.leaveBattlefield")}</div>
                 <h2 id="return-home-title" className="old-title mt-1 text-xl font-medium uppercase tracking-[0.08em]">
-                  {t("game.returnHomeQuestion")}
+                  {t(sessionKind === "tutorial" ? "guided.lifecycle.leaveTitle" : "game.returnHomeQuestion")}
                 </h2>
-                <p className="mt-2 text-sm text-[#8d9a94]">{t("game.progressLost")}</p>
+                <p className="mt-2 text-sm text-[#8d9a94]">{t(sessionKind === "tutorial" ? "guided.lifecycle.leaveBody" : "game.progressLost")}</p>
               </div>
             </div>
 
@@ -183,7 +227,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
               </button>
               <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onReturnToMenu}>
                 <Home size={16} />
-                {t("game.returnHome")}
+                {t(sessionKind === "tutorial" ? "guided.lifecycle.exit" : "game.returnHome")}
               </button>
             </div>
           </section>

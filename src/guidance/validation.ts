@@ -133,7 +133,12 @@ function validateScenarioScalars(definition: GuidedLessonDefinition, problems: s
   if (!PHASES.has(scenario.phase)) problems.push(`Unknown guided scenario phase "${String(scenario.phase)}".`);
   validateInteger("turnNumber", scenario.turnNumber, 1, problems);
   validateInteger("hostTurnNumber", scenario.hostTurnNumber, 0, problems);
+  validateInteger("setupTurnsTotal", scenario.setupTurnsTotal, 0, problems);
   validateInteger("setupTurnsRemaining", scenario.setupTurnsRemaining, 0, problems);
+  if (Number.isInteger(scenario.setupTurnsTotal) && Number.isInteger(scenario.setupTurnsRemaining)
+    && scenario.setupTurnsRemaining > scenario.setupTurnsTotal) {
+    problems.push("setupTurnsRemaining cannot exceed setupTurnsTotal.");
+  }
   validateInteger("mulligansTaken", scenario.mulligansTaken, 0, problems);
   if (typeof scenario.setupCompletePendingHost !== "boolean") problems.push("setupCompletePendingHost must be boolean.");
   if (typeof scenario.openingHandAccepted !== "boolean") problems.push("openingHandAccepted must be boolean.");

@@ -184,6 +184,9 @@ export function GuidedTutorialOverlay() {
       reject(message);
     };
 
+    const isSystemControl = (target: EventTarget | null) => target instanceof Element && Boolean(
+      target.closest("[data-guided-system-control='true']"),
+    );
     const isControl = (target: EventTarget | null) => target instanceof Element && Boolean(
       target.closest("[data-guided-overlay-control='true'], [data-guided-system-control='true']"),
     );
@@ -210,6 +213,9 @@ export function GuidedTutorialOverlay() {
       block(event);
     };
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Restricted Settings and lifecycle confirmations live above the guide layer and own their
+      // keyboard behavior while focused.
+      if (isSystemControl(event.target)) return;
       if (event.key === "Escape") {
         block(event, t("guided.escapeBlocked"));
         return;

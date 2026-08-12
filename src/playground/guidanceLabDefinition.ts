@@ -21,6 +21,7 @@ export const GUIDANCE_LAB_LESSON: GuidedLessonDefinition = {
     phase: "main",
     turnNumber: 1,
     hostTurnNumber: 0,
+    setupTurnsTotal: 3,
     setupTurnsRemaining: 0,
     setupCompletePendingHost: false,
     openingHandAccepted: true,

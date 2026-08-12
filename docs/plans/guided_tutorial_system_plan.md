@@ -1,6 +1,6 @@
 # Plan por fases — Sistema de guía, pausa y resaltado
 
-Estado: **abierto; Fases 0 a 5 cerradas, Fases 6 a 8 pendientes.**
+Estado: **abierto; Fases 0 a 5 cerradas, Fase 7 implementada y pendiente de QA funcional, Fase 8 pendiente.**
 
 Última actualización: **2026-08-11**.
 
@@ -150,7 +150,6 @@ puede ajustarlos sin cambiar estos contratos.
 | 3. Pausa | Checkpoints seguros entre presentaciones | Habrá tiempo ilimitado para leer sin cortar consecuencias visuales. |
 | 4. Interfaz | Spotlight, cuadro, anclas y escudo accesible | Siempre será claro qué mirar y qué hacer. |
 | 5. Orquestación | Recorrido declarativo completo | Cada paso avanzará por una acción real confirmada. |
-| 6. Autoría | Laboratorio, lint y matriz automática de decks | Los nuevos decks no romperán lecciones existentes silenciosamente. |
 | 7. Ciclo de vida | Primer arranque, salida, finalización y no-resume | Al interrumpir se volverá a un inicio comprensible; al completar no se repetirá por accidente. |
 | 8. QA | Framework aprobado sobre UI, idiomas y decks | La Primera Semilla podrá diseñarse sobre una base estable. |
 
@@ -288,6 +287,8 @@ startStepId: introduction
 scenario:
   playerDeckKey: hostfall.core/pact_of_elarion
   hostDeckKey: hostfall.core/<hueste-elegida>
+  setupTurnsTotal: 3
+  setupTurnsRemaining: 3
   player:
     storedEnergy: 0
   zones:
@@ -726,47 +727,9 @@ input bloqueado.
 
 ---
 
-## Fase 6 — Herramientas de autoría y prueba explícita de escalabilidad
-
-Estado: **pendiente**.
-
-### Antes de iniciar
-
-Se enseñará cómo un futuro autor prueba un paso, cambia de deck y descubre un requisito inválido.
-Se decidirá qué controles son útiles sin exponer herramientas de desarrollo al jugador final.
-
-### Para qué le sirve al jugador
-
-Reduce tutoriales rotos después de actualizar cartas o añadir decks. También permite crear la
-sección opcional de aprendizaje con iteraciones rápidas y consistentes.
-
-### Trabajo propuesto
-
-- Añadir un laboratorio de guía sólo para developer mode/Playground: elegir lección, deck, paso,
-  idioma y estado de movimiento reducido.
-- Permitir inspeccionar roles resueltos, intención permitida, anclas y checkpoint actual sin incluir
-  esos datos en la UI de release.
-- Integrar el lint de lecciones en los comandos de validación de contenido.
-- Construir una matriz automatizada que valide cada receta registrada contra `ContentCatalog` —sin
-  una lista manual paralela— y confirme que todas sus cartas pertenecen a los decks declarados. Un
-  deck futuro entra en las pruebas base del framework; sus tutoriales entran en la matriz al
-  registrar sus recetas.
-- Añadir un deck sintético con IDs, textos, orden y arte diferentes como prueba de futuro.
-- Probar que registrar ese deck no exige tocar overlay, sesión, gate u orquestador.
-- Verificar que la regresión ajustada en la Fase 1 sigue bloqueando rutas legacy, seed mágico y
-  hardcoding de cartas sin impedir el nuevo framework registrado.
-- Verificar que el build de release excluye el laboratorio y no importa módulos de Playground.
-
-### Criterio de cierre
-
-El framework supera la matriz de decks actuales y el deck sintético; añadir o renombrar contenido
-no requiere editar el núcleo de guía.
-
----
-
 ## Fase 7 — Ciclo de vida, finalización y entradas desde el producto
 
-Estado: **pendiente**.
+Estado: **implementada el 2026-08-11; pendiente de QA funcional con una lección registrada.**
 
 ### Antes de iniciar
 
@@ -802,6 +765,30 @@ inicio coherente; quien ya terminó puede jugar normalmente o repetir una lecci�
 Los hooks públicos pueden quedar conectados a una lección fixture sólo en developer mode hasta que
 el contenido real sea aprobado. No se debe hacer obligatorio un recorrido ficticio en release.
 
+### Resultado implementado
+
+- `GuidedProductLifecycle` enlaza el registro de lecciones, el orquestador y la sesión efímera sin
+  entrar en `GameState`.
+- `App` usa una pantalla explícita `tutorial`; únicamente `game` activa
+  `startDesktopResumeCheckpointing`.
+- Entrar, repetir, reiniciar, abandonar o completar una lección nunca elimina el resume normal. Si
+  existe una lección `required` pendiente, «Continuar» se oculta y «Jugar» abre esa lección.
+- Al completar se persisten sólo `lessonId`, `completedRevision` y `completedAt`. La revisión de la
+  definición es pedagógica: sólo se incrementa cuando el aprendizaje obligatorio debe repetirse.
+- Web usa `hostfall-guided-progress:v1`. Desktop guarda el mismo envelope dentro de
+  `profile/preferences-v1.json`; los archivos v1 anteriores lo incorporan de forma aditiva.
+- La clave de onboarding del nombre permanece independiente. Su ausencia o presencia nunca se
+  interpreta como una lección completada.
+- Ajustes tiene una variante de tutorial por encima del spotlight: conserva idioma, audio,
+  pantalla, reiniciar la lección y salir; oculta seed, RNG, zonas, log, reinicio normal y acciones de
+  developer mode.
+- Salir descarta la sesión y la siguiente entrada reconstruye la receta desde su primer paso.
+  Reiniciar usa también el orquestador, no un `reset` normal.
+- «Cómo jugar» abre la lección registrada disponible sin publicar todavía un catálogo. Mientras el
+  registro release siga vacío, el botón conserva su estado no disponible y no existe un gate falso.
+- `setupTurnsTotal` forma parte de la receta exacta para que el HUD mantenga el total original aunque
+  una lección empiece en un punto posterior de Preparación.
+
 ### Pruebas mínimas
 
 - Usuario nuevo entra al tutorial requerido; usuario que lo completó entra al menú normal.
@@ -813,8 +800,10 @@ el contenido real sea aprobado. No se debe hacer obligatorio un recorrido fictic
 
 ### Criterio de cierre
 
-El ciclo completo cumple la regla «completado o desde el principio» y no contamina el sistema de
-resume de partidas.
+La cobertura automática demuestra la regla «completado o desde el principio» y que el sistema de
+resume de partidas queda aislado. El cierre funcional queda pendiente hasta recorrer entrada,
+reinicio, salida y finalización con una lección registrada; no se distribuirá la fixture dev para
+simular ese contenido.
 
 ---
 
@@ -838,8 +827,7 @@ accidente y compatible con el crecimiento del juego.
 - Resoluciones soportadas, reflow y resize durante cada estado.
 - Mouse, teclado y drag-and-drop.
 - Movimiento normal y reducido.
-- Todas las recetas registradas para decks actuales.
-- Deck sintético y receta determinista propia.
+- Todas las recetas registradas.
 - Acción incorrecta, doble input, ancla ausente, precondición inválida y cierre a mitad.
 - Presentaciones simples y secuencias con varios beats.
 - Salida/reinicio, finalización versionada y gate de primer arranque.
@@ -851,14 +839,13 @@ accidente y compatible con el crecimiento del juego.
 - Contratos estables documentados en `CLAUDE.md` y referencias técnicas relevantes.
 - Estado y límites de cada fase registrados en este plan.
 - Una lección fixture que no se distribuye como tutorial final.
-- Guía breve para añadir nuevas lecciones y probar un deck nuevo.
+- Guía breve para añadir y probar una nueva lección exacta.
 - Lista de decisiones que pertenecen al contenido de la Primera Semilla, no al framework.
 
 ### Criterio de cierre
 
-El usuario aprueba el QA interactivo, no quedan rutas de input sin cubrir y la matriz automática
-demuestra que el sistema no depende de los decks actuales. Sólo entonces comienza, en un trabajo
-separado, el diseño del guion obligatorio.
+El usuario aprueba el QA interactivo y no quedan rutas de input sin cubrir en las lecciones
+registradas. Sólo entonces comienza, en un trabajo separado, el diseño del guion obligatorio.
 
 ## Fuera de alcance de este plan
 
@@ -873,7 +860,7 @@ separado, el diseño del guion obligatorio.
 
 ## Condición para empezar el diseño del tutorial obligatorio
 
-El diseño de contenido puede comenzar cuando las Fases 0 a 8 estén cerradas o, si se desea trabajar
+El diseño de contenido puede comenzar cuando las Fases 0 a 5, 7 y 8 estén cerradas o, si se desea trabajar
 en paralelo, cuando las Fases 0 a 5 estén estables y las restantes tengan contratos que ya no
 cambiarán el formato de las lecciones. En ambos casos, el guion será otro documento y tendrá su
 propio ciclo de conversación, aprobación, implementación y QA.

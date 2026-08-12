@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState, useSyncExternalStore } from "react";
 import { AudioClickListener } from "./components/AudioClickListener";
 import { Board } from "./components/Board";
 import { DeckInspector } from "./components/DeckInspector";
@@ -22,6 +22,9 @@ import {
   type DesktopResumeLoad,
 } from "./persistence/resumeService";
 import { restoreResumeGame } from "./persistence/resumeSave";
+import { initializeGuidedProgressPersistence } from "./persistence/guidedProgressPersistence";
+import { guidedProductLifecycle } from "./guidance/productRuntime";
+import { guidedLessonRegistry } from "./guidance/registry";
 
 // The conditional imports are compile-time: release builds remove both developer modules instead
 // of merely hiding their entry buttons.
@@ -32,6 +35,11 @@ const AudioLabScreen = import.meta.env.DEV
   ? lazy(() => import("./audio-lab/AudioLabScreen").then((module) => ({ default: module.AudioLabScreen })))
   : undefined;
 
+type AppScreen = "start" | "deckInspector" | "game" | "tutorial" | "playground" | "audioLab";
+
+const subscribeGuidedLifecycle = (listener: () => void) => guidedProductLifecycle.subscribe(listener);
+const readGuidedLifecycle = () => guidedProductLifecycle.snapshot();
+
 export default function App() {
   const reset = useGameStore((state) => state.reset);
   const loadScenario = useGameStore((state) => state.loadScenario);
@@ -39,7 +47,7 @@ export default function App() {
   const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
   const playSfx = useAudioStore((state) => state.playSfx);
   const stopMusic = useAudioStore((state) => state.stopMusic);
-  const [screen, setScreen] = useState<"start" | "deckInspector" | "game" | "playground" | "audioLab">("start");
+  const [screen, setScreen] = useState<AppScreen>("start");
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [bootRevision, setBootRevision] = useState(0);
   const [loading, setLoading] = useState(() => !hasPreloadedGameAssets());
@@ -58,6 +66,11 @@ export default function App() {
     gameMode: GameMode;
   } | null>(null);
   const [desktopResume, setDesktopResume] = useState<DesktopResumeLoad>({ status: "none" });
+  const [preferencesReady, setPreferencesReady] = useState(false);
+  const [requiredTutorialOffered, setRequiredTutorialOffered] = useState(false);
+  const guidedLifecycle = useSyncExternalStore(subscribeGuidedLifecycle, readGuidedLifecycle, readGuidedLifecycle);
+  const requiredLesson = guidedProductLifecycle.nextRequiredLesson();
+  const repeatableLesson = requiredLesson ?? guidedLessonRegistry.lessons[0];
 
   useEffect(() => {
     return registerDesktopLifecycle();
@@ -83,13 +96,21 @@ export default function App() {
   useEffect(() => {
     let active = true;
     let dispose: (() => void) | undefined;
-    void initializeDesktopPreferences().then((cleanup) => {
-      if (active) dispose = cleanup;
-      else cleanup();
-    });
+    const disposeGuidedProgress = initializeGuidedProgressPersistence();
+    void initializeDesktopPreferences()
+      .then((cleanup) => {
+        if (active) {
+          dispose = cleanup;
+          setPreferencesReady(true);
+        } else cleanup();
+      })
+      .catch(() => {
+        if (active) setPreferencesReady(true);
+      });
     return () => {
       active = false;
       dispose?.();
+      disposeGuidedProgress();
     };
   }, []);
 
@@ -173,7 +194,45 @@ export default function App() {
     };
   }, [launchTransition, startBattleMusic]);
 
-  if (loading) return <GameLoadingScreen percent={loadingProgress.percent} label={loadingProgress.label} leaving={loadingLeaving} />;
+  useEffect(() => {
+    if (loading || !preferencesReady || requestInitialName || requiredTutorialOffered || screen !== "start") return;
+    const lesson = guidedProductLifecycle.nextRequiredLesson();
+    if (!lesson) return;
+    setRequiredTutorialOffered(true);
+    launchGuidedLesson(lesson.id);
+  }, [guidedLifecycle.cursor, loading, preferencesReady, requestInitialName, requiredTutorialOffered, screen]);
+
+  useEffect(() => {
+    if (screen !== "tutorial" || guidedLifecycle.status !== "completed") return;
+    setPreserveMenuMusic(false);
+    setMenuReturnScreen("home");
+    setScreen("start");
+  }, [guidedLifecycle.status, screen]);
+
+  function launchGuidedLesson(lessonId: string) {
+    const lesson = guidedLessonRegistry.require(lessonId);
+    setSetupTurns(lesson.scenario.setupTurnsTotal);
+    setPreserveMenuMusic(false);
+    stopMusic();
+    guidedProductLifecycle.start(lesson.id);
+    setScreen("tutorial");
+    startBattleMusic(true);
+  }
+
+  function restartGuidedLesson() {
+    guidedProductLifecycle.restart();
+  }
+
+  function leaveGuidedLesson() {
+    guidedProductLifecycle.stop();
+    setPreserveMenuMusic(false);
+    setMenuReturnScreen("home");
+    setScreen("start");
+  }
+
+  if (loading || !preferencesReady) {
+    return <GameLoadingScreen percent={loading ? loadingProgress.percent : 100} label={loading ? loadingProgress.label : "ready"} leaving={loadingLeaving} />;
+  }
 
   const transitionOverlay = launchTransition ? (
     <EncounterTransition
@@ -273,8 +332,12 @@ export default function App() {
             stopMusic();
             setScreen("audioLab");
           } : undefined}
-          resumeStatus={desktopResume.status}
-          onContinue={desktopResume.save ? () => {
+          onOpenHowToPlay={repeatableLesson ? () => {
+            setRequiredTutorialOffered(true);
+            launchGuidedLesson(repeatableLesson.id);
+          } : undefined}
+          resumeStatus={requiredLesson ? "none" : desktopResume.status}
+          onContinue={!requiredLesson && desktopResume.save ? () => {
             const save = desktopResume.save!;
             const deckIds = resumeDeckIds(save);
             stopMusic();
@@ -292,6 +355,7 @@ export default function App() {
             setDesktopResume({ status: "none" });
           } : undefined}
           onRestartFirstTime={() => {
+            setRequiredTutorialOffered(false);
             setScreen("start");
             setMenuReturnScreen("home");
             setPreserveMenuMusic(false);
@@ -299,6 +363,12 @@ export default function App() {
             setBootRevision((revision) => revision + 1);
           }}
           onStart={(options) => {
+            const pendingLesson = guidedProductLifecycle.nextRequiredLesson();
+            if (pendingLesson) {
+              setRequiredTutorialOffered(true);
+              launchGuidedLesson(pendingLesson.id);
+              return;
+            }
             void deleteDesktopResume();
             setDesktopResume({ status: "none" });
             setPreserveMenuMusic(false);
@@ -336,7 +406,11 @@ export default function App() {
         playerName={playerName}
         setupTurns={setupTurns}
         encounterEntering={Boolean(launchTransition)}
-        onReturnToMenu={() => {
+        sessionKind={screen === "tutorial" ? "tutorial" : "normal"}
+        tutorialInterrupted={screen === "tutorial" && (guidedLifecycle.status === "aborted" || guidedLifecycle.status === "failed")}
+        tutorialErrorMessage={guidedLifecycle.errorMessage}
+        onRestartTutorial={screen === "tutorial" ? restartGuidedLesson : undefined}
+        onReturnToMenu={screen === "tutorial" ? leaveGuidedLesson : () => {
           void deleteDesktopResume();
           setDesktopResume({ status: "none" });
           setPreserveMenuMusic(false);

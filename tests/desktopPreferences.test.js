@@ -20,3 +20,20 @@ test("desktop preferences reject unknown schemas and unsafe volumes", () => {
   assert.equal(parseDesktopPreferences({ ...validPreferences, formatVersion: 2 }), undefined);
   assert.equal(parseDesktopPreferences({ ...validPreferences, values: { ...validPreferences.values, audio: { ...validPreferences.values.audio, musicVolume: 12 } } }), undefined);
 });
+
+test("desktop preferences accept the additive completion-only guided progress", () => {
+  const guidedLessons = {
+    kind: "hostfall-guided-progress",
+    formatVersion: 1,
+    completions: [{ lessonId: "first-seed", completedRevision: 1, completedAt: "2026-08-11T00:00:00.000Z" }],
+  };
+  const withGuidance = {
+    ...validPreferences,
+    values: { ...validPreferences.values, guidedLessons },
+  };
+  assert.deepEqual(parseDesktopPreferences(JSON.parse(JSON.stringify(withGuidance))), withGuidance);
+  assert.equal(
+    parseDesktopPreferences({ ...withGuidance, values: { ...withGuidance.values, guidedLessons: { ...guidedLessons, formatVersion: 2 } } }),
+    undefined,
+  );
+});

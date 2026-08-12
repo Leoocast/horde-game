@@ -435,8 +435,8 @@ contenido. El ciclo aprobado es **Explicar → Actuar → Observar → checkpoin
 intención solicitada puede llegar al engine; una animación iniciada termina durante Observar y nunca
 se congela a mitad. Se permiten ajustes prácticos menores de layout, intensidad, copy y timing
 durante QA, pero cambiar deck canónico, política sin resume, acciones permitidas o pausa entre beats
-requiere nueva aprobación. Las Fases 0 a 5 están cerradas; las Fases 6 a 8 siguen pendientes y el
-guion final aún no existe.
+requiere nueva aprobación. Las Fases 0 a 5 están cerradas; la Fase 7 está implementada y pendiente
+de QA funcional con contenido registrado, la Fase 8 sigue pendiente y el guion final aún no existe.
 
 La Fase 1 quedó cerrada el 2026-08-11 y fija que **cada tutorial es un escenario completamente
 predefinido**: decks, copias exactas, Mano o reparto inicial, Archivo del Cronista en orden,
@@ -499,6 +499,17 @@ se validan en autoría y se comprueban contra el `GameState` real al entrar a ca
 aborta cerrado sin propagarse por el handler de gameplay. Sus eventos efímeros de inicio, reinicio,
 salida y error son observables, pero nunca determinan progreso. Guidance Lab usa ya este orquestador
 en lugar de construir y arrancar la sesión manualmente; sigue siendo sólo una fixture dev.
+
+La antigua Fase 6 de herramientas de autoría fue eliminada por decisión explícita del usuario; no
+queda como mejora futura. La Fase 7 usa `GuidedProductLifecycle` y una pantalla `tutorial` separada:
+sólo la pantalla `game` activa autosave. Web persiste finalización en
+`hostfall-guided-progress:v1`; desktop la guarda dentro de `profile/preferences-v1.json`. El registro
+contiene únicamente `lessonId`, revisión pedagógica completada y fecha, nunca paso, escenario,
+bindings, timers o `GameState`. Entrar, reiniciar, salir o completar una lección preserva cualquier
+resume normal, que sólo se oculta mientras exista una lección obligatoria pendiente. Onboarding de
+nombre y tutorial completado son estados independientes. Settings en tutorial conserva idioma,
+audio, pantalla, reinicio total y salida, y oculta toda mutación o inspección del escenario. El
+registro release continúa vacío hasta aprobar el contenido real de la Primera Semilla.
 
 `playerDrawForecast` en
 `src/engine/TurnManager.ts` es la fuente única para el robo real y su previsión. La devolución

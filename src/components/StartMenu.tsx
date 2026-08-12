@@ -37,6 +37,8 @@ type Props = {
   onOpenPlayground?: () => void;
   /** Only provided in development builds; edits the checked-in per-file audio mix. */
   onOpenAudioLab?: () => void;
+  /** Opens the currently registered lesson entry. The button stays unavailable without content. */
+  onOpenHowToPlay?: () => void;
   resumeStatus?: "none" | "available" | "recovered" | "corrupt";
   onContinue?: () => void;
   onDiscardResume?: () => void;
@@ -52,7 +54,7 @@ const modes: Array<{ id: DifficultyMode; setupTurns: number }> = [
   { id: "hard", setupTurns: 2 },
 ];
 
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, resumeStatus = "none", onContinue, onDiscardResume, onStart }: Props) {
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, onOpenHowToPlay, resumeStatus = "none", onContinue, onDiscardResume, onStart }: Props) {
   const t = useTranslation();
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [mode, setMode] = useState<DifficultyMode>("easy");
@@ -285,7 +287,13 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
               <span className="main-menu-entry-mark" />
               <span>{t("menu.hosts")}</span>
             </button>
-            <button className="main-menu-entry is-disabled group" type="button" disabled title={t("menu.howToPlayUnavailable")}>
+            <button
+              className={`main-menu-entry group ${onOpenHowToPlay ? "" : "is-disabled"}`}
+              type="button"
+              disabled={!onOpenHowToPlay}
+              title={onOpenHowToPlay ? undefined : t("menu.howToPlayUnavailable")}
+              onClick={onOpenHowToPlay}
+            >
               <span className="main-menu-entry-mark" />
               <span>{t("menu.howToPlay")}</span>
             </button>

@@ -52,6 +52,8 @@ export type GuidedScenarioRecipe = Readonly<{
   phase: Phase;
   turnNumber: number;
   hostTurnNumber: number;
+  /** Original Preparation length used by the persistent progress UI. */
+  setupTurnsTotal: number;
   setupTurnsRemaining: number;
   setupCompletePendingHost: boolean;
   openingHandAccepted: boolean;
