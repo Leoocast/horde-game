@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowLeft, AudioLines, ChevronLeft, ChevronRight, Construction, Copy, Dices, Eye, Feather, Github, Play, RefreshCw, RotateCcw, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, AudioLines, BookOpen, ChevronLeft, ChevronRight, Construction, Copy, Dices, Eye, Feather, Github, Play, RefreshCw, RotateCcw, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
 import { AnimatePresence, motion, useIsPresent } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { findDeckKeyCard, type InspectableDeck } from "../data/deckCatalog";
@@ -37,16 +37,16 @@ type Props = {
   onOpenPlayground?: () => void;
   /** Only provided in development builds; edits the checked-in per-file audio mix. */
   onOpenAudioLab?: () => void;
-  /** Opens the currently registered lesson entry. The button stays unavailable without content. */
-  onOpenHowToPlay?: () => void;
+  /** Starts the registered First Seed. The catalog shell remains visible without content. */
+  onOpenBasicTutorial?: () => void;
   resumeStatus?: "none" | "available" | "recovered" | "corrupt";
   onContinue?: () => void;
   onDiscardResume?: () => void;
   onStart: (options: { playerName: string; mode: DifficultyMode; gameMode: GameMode; setupTurns: number; seed: string }) => void;
 };
 
-type MenuScreen = "home" | "setup" | "chaos" | "chronicles" | "hosts" | "settings";
-type ClosingMenuScreen = Extract<MenuScreen, "chronicles" | "hosts" | "settings">;
+type MenuScreen = "home" | "setup" | "chaos" | "chronicles" | "hosts" | "howToPlay" | "settings";
+type ClosingMenuScreen = Extract<MenuScreen, "chronicles" | "hosts" | "howToPlay" | "settings">;
 
 const modes: Array<{ id: DifficultyMode; setupTurns: number }> = [
   { id: "easy", setupTurns: 4 },
@@ -54,7 +54,7 @@ const modes: Array<{ id: DifficultyMode; setupTurns: number }> = [
   { id: "hard", setupTurns: 2 },
 ];
 
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, onOpenHowToPlay, resumeStatus = "none", onContinue, onDiscardResume, onStart }: Props) {
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, onOpenBasicTutorial, resumeStatus = "none", onContinue, onDiscardResume, onStart }: Props) {
   const t = useTranslation();
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [mode, setMode] = useState<DifficultyMode>("easy");
@@ -172,7 +172,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   }
 
   function closeMenuPanel() {
-    if (menuScreen === "chronicles" || menuScreen === "hosts" || menuScreen === "settings") setClosingMenuScreen(menuScreen);
+    if (menuScreen === "chronicles" || menuScreen === "hosts" || menuScreen === "howToPlay" || menuScreen === "settings") setClosingMenuScreen(menuScreen);
   }
 
   async function copySeed() {
@@ -287,13 +287,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
               <span className="main-menu-entry-mark" />
               <span>{t("menu.hosts")}</span>
             </button>
-            <button
-              className={`main-menu-entry group ${onOpenHowToPlay ? "" : "is-disabled"}`}
-              type="button"
-              disabled={!onOpenHowToPlay}
-              title={onOpenHowToPlay ? undefined : t("menu.howToPlayUnavailable")}
-              onClick={onOpenHowToPlay}
-            >
+            <button className={`main-menu-entry group ${menuScreen === "howToPlay" ? "is-active" : ""}`} type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("howToPlay"); }}>
               <span className="main-menu-entry-mark" />
               <span>{t("menu.howToPlay")}</span>
             </button>
@@ -374,6 +368,37 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
                     </button>
                   </div>
                 )}
+              </section>
+            </div>
+          </section>
+        )}
+        {menuScreen === "howToPlay" && (
+          <section className={`main-settings-screen how-to-play-screen ${closingMenuScreen === "howToPlay" ? "is-closing" : ""}`} aria-label={t("menu.howToPlay")}>
+            <header className="main-settings-header">
+              <button className="menu-screen-back" type="button" onClick={closeMenuPanel}><ArrowLeft size={16} /> {t("common.back")}</button>
+              <h2>{t("menu.howToPlay")}</h2>
+              <span>{t("howToPlay.description")}</span>
+            </header>
+
+            <div className="main-settings-content old-scrollbar">
+              <section className="main-settings-section how-to-play-lessons">
+                <div className="main-settings-section-title">{t("howToPlay.tutorials")}</div>
+                <button
+                  className="how-to-play-lesson"
+                  type="button"
+                  disabled={!onOpenBasicTutorial}
+                  onClick={onOpenBasicTutorial}
+                >
+                  <span className="how-to-play-lesson-icon" aria-hidden="true"><BookOpen size={25} /></span>
+                  <span className="how-to-play-lesson-copy">
+                    <small>{t("howToPlay.firstSeed")}</small>
+                    <strong>{t("howToPlay.basicTutorial")}</strong>
+                    <span>{t("howToPlay.basicDescription")}</span>
+                  </span>
+                  <span className={`how-to-play-lesson-status ${onOpenBasicTutorial ? "is-ready" : ""}`}>
+                    {t(onOpenBasicTutorial ? "howToPlay.start" : "howToPlay.comingSoon")}
+                  </span>
+                </button>
               </section>
             </div>
           </section>

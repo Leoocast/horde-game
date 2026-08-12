@@ -1,6 +1,6 @@
 # Plan por fases — Sistema de guía, pausa y resaltado
 
-Estado: **abierto; Fases 0 a 5 cerradas, Fase 7 implementada y pendiente de QA funcional, Fase 8 pendiente.**
+Estado: **cerrado; Fases 0 a 5 y 7 completadas. Las antiguas Fases 6 y 8 fueron eliminadas por decisión del usuario.**
 
 Última actualización: **2026-08-11**.
 
@@ -151,7 +151,6 @@ puede ajustarlos sin cambiar estos contratos.
 | 4. Interfaz | Spotlight, cuadro, anclas y escudo accesible | Siempre será claro qué mirar y qué hacer. |
 | 5. Orquestación | Recorrido declarativo completo | Cada paso avanzará por una acción real confirmada. |
 | 7. Ciclo de vida | Primer arranque, salida, finalización y no-resume | Al interrumpir se volverá a un inicio comprensible; al completar no se repetirá por accidente. |
-| 8. QA | Framework aprobado sobre UI, idiomas y decks | La Primera Semilla podrá diseñarse sobre una base estable. |
 
 ---
 
@@ -729,7 +728,7 @@ input bloqueado.
 
 ## Fase 7 — Ciclo de vida, finalización y entradas desde el producto
 
-Estado: **implementada el 2026-08-11; pendiente de QA funcional con una lección registrada.**
+Estado: **cerrada el 2026-08-11 tras revisión técnica general.**
 
 ### Antes de iniciar
 
@@ -785,7 +784,8 @@ el contenido real sea aprobado. No se debe hacer obligatorio un recorrido fictic
 - Salir descarta la sesión y la siguiente entrada reconstruye la receta desde su primer paso.
   Reiniciar usa también el orquestador, no un `reset` normal.
 - «Cómo jugar» abre la lección registrada disponible sin publicar todavía un catálogo. Mientras el
-  registro release siga vacío, el botón conserva su estado no disponible y no existe un gate falso.
+  registro release siga vacío, el panel muestra **Tutorial básico** como «Próximamente» y no existe
+  un gate falso. Al registrar la Primera Semilla, esa entrada se habilita sin cambiar el menú.
 - `setupTurnsTotal` forma parte de la receta exacta para que el HUD mantenga el total original aunque
   una lección empiece en un punto posterior de Preparación.
 
@@ -800,52 +800,13 @@ el contenido real sea aprobado. No se debe hacer obligatorio un recorrido fictic
 
 ### Criterio de cierre
 
-La cobertura automática demuestra la regla «completado o desde el principio» y que el sistema de
-resume de partidas queda aislado. El cierre funcional queda pendiente hasta recorrer entrada,
-reinicio, salida y finalización con una lección registrada; no se distribuirá la fixture dev para
-simular ese contenido.
+Cumplido. La cobertura automática demuestra la regla «completado o desde el principio», el resume
+de partidas queda aislado y la revisión general supera typecheck, suite, build y auditoría offline.
+El recorrido humano de entrada, reinicio, salida y finalización se validará como aceptación de la
+Primera Semilla real; no es un pendiente del framework ni se distribuirá una fixture falsa para
+simularlo.
 
 ---
-
-## Fase 8 — QA integral y entrega para diseñar la Primera Semilla
-
-Estado: **pendiente**.
-
-### Antes de iniciar
-
-Se presentará una matriz de QA centrada en la experiencia, no sólo en tipos y tests. El usuario
-elegirá los recorridos que quiere jugar personalmente antes de declarar estable el framework.
-
-### Para qué le sirve al jugador
-
-Garantiza que el tutorial real se diseñe sobre una base confiable: legible, imposible de saltar por
-accidente y compatible con el crecimiento del juego.
-
-### Validación propuesta
-
-- ES y EN, textos cortos y largos.
-- Resoluciones soportadas, reflow y resize durante cada estado.
-- Mouse, teclado y drag-and-drop.
-- Movimiento normal y reducido.
-- Todas las recetas registradas.
-- Acción incorrecta, doble input, ancla ausente, precondición inválida y cierre a mitad.
-- Presentaciones simples y secuencias con varios beats.
-- Salida/reinicio, finalización versionada y gate de primer arranque.
-- Build offline/release sin laboratorio ni dependencia de Playground.
-- Typecheck, suite completa, lint de decks/lecciones y build según `docs/guides/testing.md`.
-
-### Entregables de cierre
-
-- Contratos estables documentados en `CLAUDE.md` y referencias técnicas relevantes.
-- Estado y límites de cada fase registrados en este plan.
-- Una lección fixture que no se distribuye como tutorial final.
-- Guía breve para añadir y probar una nueva lección exacta.
-- Lista de decisiones que pertenecen al contenido de la Primera Semilla, no al framework.
-
-### Criterio de cierre
-
-El usuario aprueba el QA interactivo y no quedan rutas de input sin cubrir en las lecciones
-registradas. Sólo entonces comienza, en un trabajo separado, el diseño del guion obligatorio.
 
 ## Fuera de alcance de este plan
 
@@ -858,9 +819,8 @@ registradas. Sólo entonces comienza, en un trabajo separado, el diseño del gui
 - Telemetría remota o servicios online.
 - Publicar herramientas de autoría dentro del build para jugadores.
 
-## Condición para empezar el diseño del tutorial obligatorio
+## Siguiente trabajo
 
-El diseño de contenido puede comenzar cuando las Fases 0 a 5, 7 y 8 estén cerradas o, si se desea trabajar
-en paralelo, cuando las Fases 0 a 5 estén estables y las restantes tengan contratos que ya no
-cambiarán el formato de las lecciones. En ambos casos, el guion será otro documento y tendrá su
-propio ciclo de conversación, aprobación, implementación y QA.
+El framework está cerrado. El siguiente trabajo es diseñar la Primera Semilla como contenido real:
+guion, receta exacta de Elarion y la Hueste, pasos pedagógicos, copy y QA del recorrido completo
+desde **Cómo jugar → Tutorial básico** y desde el gate obligatorio de primer arranque.

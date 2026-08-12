@@ -3944,6 +3944,100 @@
     padding: 14px 2px;
   }
 
+  .how-to-play-lessons {
+    width: min(100%, 840px);
+  }
+
+  .how-to-play-lesson {
+    display: grid;
+    width: 100%;
+    min-height: 142px;
+    grid-template-columns: 68px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 22px;
+    border: 1px solid rgb(145 154 157 / 0.24);
+    border-left-color: rgb(174 151 87 / 0.54);
+    margin-top: 20px;
+    padding: 24px 26px;
+    background:
+      linear-gradient(100deg, rgb(52 65 68 / 0.22), transparent 68%),
+      rgb(7 13 15 / 0.48);
+    color: #c7c8c1;
+    text-align: left;
+    transition: border-color 170ms ease, background-color 170ms ease, transform 170ms ease;
+  }
+
+  .how-to-play-lesson:not(:disabled):hover,
+  .how-to-play-lesson:not(:disabled):focus-visible {
+    border-color: rgb(190 171 112 / 0.62);
+    background-color: rgb(31 42 44 / 0.46);
+    outline: none;
+    transform: translateX(4px);
+  }
+
+  .how-to-play-lesson:disabled {
+    cursor: default;
+  }
+
+  .how-to-play-lesson-icon {
+    display: inline-flex;
+    width: 58px;
+    height: 58px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgb(164 145 89 / 0.38);
+    background: rgb(12 21 23 / 0.8);
+    color: #b6a46f;
+    box-shadow: inset 0 0 22px rgb(174 151 87 / 0.06);
+  }
+
+  .how-to-play-lesson-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+  }
+
+  .how-to-play-lesson-copy small {
+    color: #8f7f53;
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+  }
+
+  .how-to-play-lesson-copy strong {
+    margin-top: 7px;
+    color: #d8d0b7;
+    font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+    font-size: 23px;
+    font-weight: 650;
+    letter-spacing: 0.05em;
+  }
+
+  .how-to-play-lesson-copy > span {
+    margin-top: 8px;
+    color: #758287;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .how-to-play-lesson-status {
+    min-width: 116px;
+    border: 1px solid rgb(126 138 141 / 0.22);
+    padding: 9px 13px;
+    color: #778488;
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: 0.15em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .how-to-play-lesson-status.is-ready {
+    border-color: rgb(180 158 91 / 0.52);
+    color: #d4bf82;
+  }
+
   .main-settings-label {
     color: #c7c8c1;
     font-size: 16px;
@@ -4220,6 +4314,22 @@
     .main-settings-control,
     .main-settings-seed-control {
       justify-content: flex-start;
+    }
+
+    .how-to-play-lesson {
+      grid-template-columns: 52px minmax(0, 1fr);
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .how-to-play-lesson-icon {
+      width: 48px;
+      height: 48px;
+    }
+
+    .how-to-play-lesson-status {
+      grid-column: 2;
+      justify-self: start;
     }
   }
 

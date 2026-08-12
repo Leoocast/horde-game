@@ -2,6 +2,8 @@ import { contentCatalog } from "../content/bootstrap";
 import type { GuidedLessonDefinition } from "./contracts";
 import { GuidedLessonRegistry } from "./GuidedLessonRegistry";
 
+export const BASIC_TUTORIAL_LESSON_ID = "first-seed";
+
 /**
  * Release registry. It remains empty until the First Seed's authored content is approved; tests and
  * Guidance Lab creates an isolated registry from its fixture instead of shipping a fake lesson.

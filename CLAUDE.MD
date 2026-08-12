@@ -435,8 +435,8 @@ contenido. El ciclo aprobado es **Explicar → Actuar → Observar → checkpoin
 intención solicitada puede llegar al engine; una animación iniciada termina durante Observar y nunca
 se congela a mitad. Se permiten ajustes prácticos menores de layout, intensidad, copy y timing
 durante QA, pero cambiar deck canónico, política sin resume, acciones permitidas o pausa entre beats
-requiere nueva aprobación. Las Fases 0 a 5 están cerradas; la Fase 7 está implementada y pendiente
-de QA funcional con contenido registrado, la Fase 8 sigue pendiente y el guion final aún no existe.
+requiere nueva aprobación. El framework quedó cerrado con las Fases 0 a 5 y 7; las antiguas Fases 6
+y 8 fueron eliminadas por decisión explícita del usuario. El guion final aún no existe.
 
 La Fase 1 quedó cerrada el 2026-08-11 y fija que **cada tutorial es un escenario completamente
 predefinido**: decks, copias exactas, Mano o reparto inicial, Archivo del Cronista en orden,
@@ -510,6 +510,8 @@ resume normal, que sólo se oculta mientras exista una lección obligatoria pend
 nombre y tutorial completado son estados independientes. Settings en tutorial conserva idioma,
 audio, pantalla, reinicio total y salida, y oculta toda mutación o inspección del escenario. El
 registro release continúa vacío hasta aprobar el contenido real de la Primera Semilla.
+El menú **Cómo jugar** ya abre su panel lateral y muestra **Tutorial básico** como «Próximamente»;
+esa entrada se habilita automáticamente cuando la Primera Semilla se registre.
 
 `playerDrawForecast` en
 `src/engine/TurnManager.ts` es la fuente única para el robo real y su previsión. La devolución

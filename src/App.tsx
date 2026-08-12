@@ -24,7 +24,7 @@ import {
 import { restoreResumeGame } from "./persistence/resumeSave";
 import { initializeGuidedProgressPersistence } from "./persistence/guidedProgressPersistence";
 import { guidedProductLifecycle } from "./guidance/productRuntime";
-import { guidedLessonRegistry } from "./guidance/registry";
+import { BASIC_TUTORIAL_LESSON_ID, guidedLessonRegistry } from "./guidance/registry";
 
 // The conditional imports are compile-time: release builds remove both developer modules instead
 // of merely hiding their entry buttons.
@@ -70,7 +70,7 @@ export default function App() {
   const [requiredTutorialOffered, setRequiredTutorialOffered] = useState(false);
   const guidedLifecycle = useSyncExternalStore(subscribeGuidedLifecycle, readGuidedLifecycle, readGuidedLifecycle);
   const requiredLesson = guidedProductLifecycle.nextRequiredLesson();
-  const repeatableLesson = requiredLesson ?? guidedLessonRegistry.lessons[0];
+  const basicTutorialLesson = guidedLessonRegistry.find(BASIC_TUTORIAL_LESSON_ID);
 
   useEffect(() => {
     return registerDesktopLifecycle();
@@ -332,9 +332,9 @@ export default function App() {
             stopMusic();
             setScreen("audioLab");
           } : undefined}
-          onOpenHowToPlay={repeatableLesson ? () => {
+          onOpenBasicTutorial={basicTutorialLesson ? () => {
             setRequiredTutorialOffered(true);
-            launchGuidedLesson(repeatableLesson.id);
+            launchGuidedLesson(basicTutorialLesson.id);
           } : undefined}
           resumeStatus={requiredLesson ? "none" : desktopResume.status}
           onContinue={!requiredLesson && desktopResume.save ? () => {

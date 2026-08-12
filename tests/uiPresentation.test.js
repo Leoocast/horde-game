@@ -846,6 +846,18 @@ test("deck setup panels and deck cards opt into shared click audio", () => {
   assert.match(decksView, /onClick=\{\(\) => \{\s*playSfx\("click"\);\s*onOpen\(\);/u);
 });
 
+test("How to Play opens a right-side catalog and keeps Basic Tutorial content-gated", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(startMenu, /type MenuScreen = [^;]*"howToPlay"/u);
+  assert.match(startMenu, /setMenuScreen\("howToPlay"\)/u);
+  assert.match(startMenu, /main-settings-screen how-to-play-screen/u);
+  assert.match(startMenu, /howToPlay\.basicTutorial/u);
+  assert.match(startMenu, /disabled=\{!onOpenBasicTutorial\}/u);
+  assert.match(styles, /\.how-to-play-lesson\s*\{[^}]*grid-template-columns:/u);
+});
+
 test("deck detail close buttons inherit their deck palette", () => {
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
   assert.match(styles, /\.deck-collection-modal-close\s*\{[^}]*var\(--deck-accent,[^}]*var\(--deck-accent-bright,[^}]*var\(--deck-accent-soft,/u);
