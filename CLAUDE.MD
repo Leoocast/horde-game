@@ -435,8 +435,8 @@ contenido. El ciclo aprobado es **Explicar → Actuar → Observar → checkpoin
 intención solicitada puede llegar al engine; una animación iniciada termina durante Observar y nunca
 se congela a mitad. Se permiten ajustes prácticos menores de layout, intensidad, copy y timing
 durante QA, pero cambiar deck canónico, política sin resume, acciones permitidas o pausa entre beats
-requiere nueva aprobación. Las Fases 0 a 4 están cerradas; la Fase 5 está implementada y pendiente
-de QA funcional; las Fases 6 a 8 siguen pendientes y el guion final aún no existe.
+requiere nueva aprobación. Las Fases 0 a 5 están cerradas; las Fases 6 a 8 siguen pendientes y el
+guion final aún no existe.
 
 La Fase 1 quedó cerrada el 2026-08-11 y fija que **cada tutorial es un escenario completamente
 predefinido**: decks, copias exactas, Mano o reparto inicial, Archivo del Cronista en orden,
@@ -490,7 +490,8 @@ de QA; no es contenido de release ni el guion de la Primera Semilla. El QA final
 55%, alineó el cuadro al azul carbón de Settings y bloqueó también el hover del tablero durante
 Explicar y Observar.
 
-La Fase 5 está implementada y pendiente de QA manual. `GuidedLessonOrchestrator` inicia una lección
+La Fase 5 quedó cerrada con QA manual aprobada por el usuario el 2026-08-11.
+`GuidedLessonOrchestrator` inicia una lección
 registrada por ID, construye y carga su receta exacta, entrega aliases al `GuidedSessionStore`, y
 ofrece reinicio total y salida segura sin conocer decks o cartas. Las precondiciones declarativas
 `card.inZone`, `phase.is`, `side.isActive`, `setup.remaining`, `energy.available` y `energy.stored`

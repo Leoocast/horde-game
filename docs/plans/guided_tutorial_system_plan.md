@@ -1,6 +1,6 @@
 # Plan por fases — Sistema de guía, pausa y resaltado
 
-Estado: **abierto; Fases 0 a 4 cerradas, Fase 5 implementada y en QA manual, Fases 6 a 8 pendientes.**
+Estado: **abierto; Fases 0 a 5 cerradas, Fases 6 a 8 pendientes.**
 
 Última actualización: **2026-08-11**.
 
@@ -659,7 +659,7 @@ sin que los pasos de explicación aparenten ser interactivos.
 
 ## Fase 5 — Orquestador declarativo de lecciones
 
-Estado: **implementada el 2026-08-11; pendiente de QA funcional del usuario.**
+Estado: **cerrada el 2026-08-11 tras QA funcional del usuario.**
 
 ### Antes de iniciar
 
@@ -720,9 +720,9 @@ No se añadirán condicionales de orquestación por deck, definición de carta o
 
 ### Criterio de cierre
 
-Pendiente de QA manual. El usuario debe completar la fixture, reiniciarla desde un paso intermedio y
-detenerla, comprobando que siempre vuelve al mismo tablero inicial y que no queda input bloqueado al
-salir.
+Cumplido el 2026-08-11 y aprobado en QA manual por el usuario. La fixture se completa de extremo a
+extremo, reinicia desde un paso intermedio reconstruyendo su escenario exacto y se detiene sin dejar
+input bloqueado.
 
 ---
 
