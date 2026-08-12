@@ -6,6 +6,7 @@ import { useGameStore } from "../store/useGameStore";
 import { useTranslation } from "../i18n/useTranslation";
 import { GameTooltip } from "./GameTooltip";
 import { setupPrimaryAction } from "./setupPresentation";
+import { runGuidedSystemAction } from "../guidance/interactionGate";
 
 export function PhaseOrb({ game }: { game: GameState }) {
   const t = useTranslation();
@@ -52,14 +53,14 @@ export function PhaseOrb({ game }: { game: GameState }) {
     endPlayerTurn({ runHostAfter: true });
     const latest = useGameStore.getState().game;
     if (latest.activeSide === "host" && latest.phase === "host") {
-      useGameStore.getState().runHostMain();
+      runGuidedSystemAction(() => useGameStore.getState().runHostMain());
     }
   };
   const finishSetupAndRunHost = () => {
     endPlayerTurn({ runHostAfter: true });
     const latest = useGameStore.getState().game;
     if (latest.activeSide === "host" && latest.phase === "host") {
-      useGameStore.getState().runHostMain();
+      runGuidedSystemAction(() => useGameStore.getState().runHostMain());
     }
   };
 

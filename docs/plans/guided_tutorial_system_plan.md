@@ -1,6 +1,6 @@
 # Plan por fases — Sistema de guía, pausa y resaltado
 
-Estado: **abierto; Fase 0 cerrada y Fases 1 a 8 pendientes. No implementado.**
+Estado: **abierto; Fases 0 a 2 cerradas, Fases 3 a 8 pendientes. Gate semántico implementado; sin UI, pausa ni orquestación.**
 
 Última actualización: **2026-08-11**.
 
@@ -211,13 +211,13 @@ descarta la sesión actual y crea otra desde el primer paso.
 
 ### Inventario inicial de entradas
 
-La Fase 2 convertirá estas familias en una unión tipada de intenciones. Este inventario evita cubrir
+La Fase 2 convirtió estas familias en una unión tipada de intenciones. Este inventario evita cubrir
 sólo los botones usados por la Primera Semilla y dejar rutas laterales sin gate.
 
 | Familia | Entradas actuales que debe cubrir | Tratamiento durante una guía |
 | --- | --- | --- |
-| Mano inicial | aceptar y hacer mulligan | Sólo la intención declarada por el paso. |
-| Mano y Fuentes | seleccionar carta, jugar Fuente, devolver Fuente y jugar una carta | El rol resuelto limita la instancia y, cuando aplica, el destino. |
+| Mano inicial | aceptar y hacer mulligan | Aceptar cruza el gate; mulligan permanece siempre bloqueado en schema v1. |
+| Mano y Fuentes | inspeccionar carta, jugar Fuente, reciclar Fuente y jugar una carta | Inspeccionar sigue siendo preview; el rol resuelto limita cada compromiso real y su destino. |
 | Objetivos y elecciones | iniciar, fijar, deseleccionar, cancelar y confirmar targets; descartes obligatorios y elecciones especiales | El paso declara la secuencia completa; un target visualmente correcto no basta si el engine lo rechaza. |
 | Habilidades | seleccionar un permanente y activar una habilidad | Se autoriza por rol de instancia y habilidad semántica, no por nombre visible. |
 | Avance de fase | CTA de Preparación, iniciar/pasar combate, terminar turno y entregar el control a la Hueste | Cada CTA es una intención distinta aunque hoy comparta el mismo componente visual. |
@@ -260,7 +260,7 @@ curso altera el contrato y requiere una nueva aprobación explícita.
 
 ## Fase 1 — Definiciones, recetas deterministas y aliases de cartas
 
-Estado: **pendiente**.
+Estado: **cerrada el 2026-08-11.**
 
 ### Antes de iniciar
 
@@ -274,32 +274,35 @@ Hace que el tutorial empiece siempre con la Mano, Archivo, Hueste y orden de apa
 autor puede entregar dos cartas iniciales, siete o cualquier cantidad validada sin introducir cartas
 que la lección no usará. También evita que una actualización cambie silenciosamente esa secuencia.
 
-### Modelo propuesto para una receta
+### Modelo implementado para una receta
 
-La sintaxis final se decidirá al implementar, pero el contrato conceptual será equivalente a éste:
+La definición TypeScript implementada sigue este contrato conceptual abreviado; el schema real
+exige además los valores iniciales y todas las zonas, aunque estén vacías:
 
 ```yaml
-lessonId: first-seed
+schemaVersion: 1
+id: first-seed
 revision: 1
-playerDeck: builtin/player/pact_of_elarion
-hostDeck: builtin/host/<hueste-elegida>
+mode: required
+startStepId: introduction
 scenario:
-  openingDeal: [fuente_inicial, eco_a_jugar]
-  playerArchiveTopToBottom: [primer_robo, segundo_robo]
-  playerField: []
-  playerMemory: []
-  playerSources: []
-  playerReserve: 0
-  hostArchiveTopToBottom: [primera_aparicion, segunda_aparicion]
-  hostField: []
-  hostMemory: []
+  playerDeckKey: hostfall.core/pact_of_elarion
+  hostDeckKey: hostfall.core/<hueste-elegida>
+  player:
+    storedEnergy: 0
+  zones:
+    openingDeal: [fuente_inicial, eco_a_jugar]
+    playerArchiveTopToBottom: [primer_robo, segundo_robo]
+    playerField: []
+    playerMemory: []
+    hostArchiveTopToBottom: [primera_aparicion, segunda_aparicion]
+    hostField: []
+    hostMemory: []
 cards:
-  fuente_inicial: <qualifiedCardKey exacta>
-  eco_a_jugar: <qualifiedCardKey exacta>
-  primer_robo: <qualifiedCardKey exacta>
-  segundo_robo: <qualifiedCardKey exacta>
-  primera_aparicion: <qualifiedCardKey exacta>
-  segunda_aparicion: <qualifiedCardKey exacta>
+  fuente_inicial:
+    cardKey: hostfall.core/pact_of_elarion/<carta-exacta>
+  eco_a_jugar:
+    cardKey: hostfall.core/pact_of_elarion/<carta-exacta>
 ```
 
 `openingDeal` define tanto la cantidad como el orden de entrada a la Mano. Puede contener dos,
@@ -331,7 +334,7 @@ señalan la copia exacta, por ejemplo `fuente_inicial`.
 - Conservar un seed/RNG determinista para efectos que todavía utilicen azar; una lección debe
   evitarlos o declarar y validar su resultado esperado.
 - Usar claves de i18n para títulos, explicaciones, ayudas de error y etiquetas de acción.
-- Implementar validación/lint para versiones, IDs únicos, claves de catálogo, roles sin resolver,
+- Implementar validación/lint para versiones, IDs únicos, claves de catálogo, aliases sin resolver,
   aliases duplicados, copias imposibles, zonas, órdenes incompletos, pasos inalcanzables y
   traducciones.
 - Construir un builder puro de escenarios guiados o extraer una base neutral. El registro de release
@@ -353,16 +356,40 @@ declarar el resultado esperado para validarlo; el orquestador no inserta manualm
   la partida.
 - Renombrar texto visible no cambia la secuencia.
 
+### Implementación cerrada
+
+- `src/guidance/contracts.ts` define schema v1, pasos Explicar/Actuar/Observar, recetas exactas,
+  aliases, highlights y nombres authored de intenciones/receipts conectados al store por la Fase 2.
+- `src/guidance/validation.ts` valida claves calificadas de `ContentCatalog`, pertenencia al deck,
+  cantidades máximas reales, cada zona aunque esté vacía, aliases únicos, orden, combate, energía,
+  traducciones y grafo de pasos. Una definición inválida no puede construir una partida parcial.
+- `src/guidance/buildGuidedScenario.ts` elimina el reparto y barajado normales y reconstruye sólo las
+  copias declaradas. `openingDeal` conserva cantidad/orden, ambos Archivos usan `topToBottom` y el
+  seed sólo inicializa el RNG de efectos posteriores.
+- `GuidedLessonRegistry` congela y valida definiciones antes de registrarlas. El registro de release
+  queda deliberadamente vacío hasta aprobar el contenido real de la Primera Semilla.
+- Una receta puede mostrar una Mano inicial pendiente de aceptar, pero no puede autorizar mulligan
+  todavía: permitirlo sin un schema de Manos de reemplazo exactas reintroduciría un barajado no
+  authored. Si una lección futura enseña mulligan, ese schema se diseña y aprueba primero.
+- El runtime de guía no importa `src/playground/`; el builder de producción usa contratos del engine
+  y `ContentCatalog` directamente.
+- La regresión del tutorial retirado ahora bloquea sus archivos, seed mágico y cartas hardcodeadas,
+  sin prohibir la infraestructura nueva por su vocabulario.
+- `tests/guidedLesson.test.js` cubre repartos de dos y siete cartas, orden exacto, ausencia de relleno,
+  zonas/Reserva/combate, duplicados, cantidades imposibles, traducciones, grafo, registro, rename
+  visible y un catálogo sintético.
+
 ### Criterio de cierre
 
-Se pueden registrar y reconstruir dos recetas exactas —una con Elarion y otra con un deck
-sintético— sin cambiar builder, validador u orquestador y sin que aparezca una carta no declarada.
+Cumplido el 2026-08-11. Se registran y reconstruyen dos recetas exactas —una con Elarion y otra con
+un deck sintético— sin cambiar builder o validador y sin que aparezca una carta no declarada. La
+suite confirma además copias separadas, orden estable y la independencia de nombres visibles.
 
 ---
 
 ## Fase 2 — Frontera semántica y bloqueo real de acciones
 
-Estado: **pendiente**.
+Estado: **cerrada el 2026-08-11**.
 
 ### Antes de iniciar
 
@@ -405,10 +432,47 @@ bloqueo estará aquí.
 - Sin sesión de guía, todas las rutas conservan el comportamiento actual.
 - Las acciones automáticas y animaciones autorizadas pueden terminar.
 
+### Resultado implementado
+
+- `src/guidance/interactionGate.ts` define `GameplayIntent`, el gate central, rechazos tipados,
+  receipts efímeros, bindings de alias a `instanceId`, cursor monotónico y comparación exacta de
+  cartas, objetivos, habilidades, selecciones y asignaciones de bloqueo.
+- El gate es un no-op sin una guía activa. En `explain` y `observe` bloquea toda intención del
+  jugador; en `act` acepta únicamente la intención authored. Un receipt aceptado consume la acción
+  del paso para impedir doble clic o doble compromiso, pero un rechazo real del engine no consume
+  el paso y permite reintentar.
+- `GUIDED_GAMEPLAY_ENTRY_POINTS` clasifica las entradas públicas de gameplay del store. Una prueba
+  de regresión exige que cada una cruce `gameplayIntentAllowed`; selecciones de preview, movimiento
+  del puntero y callbacks de animación no se disfrazan de gameplay.
+- `useGameStore` aplica la misma frontera a clic, teclado, menú contextual y drag-and-drop porque
+  todas esas rutas terminan en la misma mutación semántica. Las cartas con objetivos publican
+  primero `targeting.started`, luego `target.selected` y sólo publican `target.confirmed` /
+  `card.played` después de una confirmación válida.
+- Las continuaciones automáticas usan `runGuidedSystemAction`: pueden completar una animación o un
+  beat ya autorizado, pero la excepción existe sólo durante esa llamada y no abre el gate para el
+  siguiente input del jugador.
+- Los cambios reales de `GameState` producen receipts sin leer `game.log`: aceptación de Mano,
+  final de un paso de Preparación, cambio de fase, robo con cantidad/motivo, liberación de Reserva y
+  cartas efectivamente retiradas del Archivo de la Hueste. Los commits directos publican primero su
+  resultado de acción y las consecuencias automáticas se observan después.
+- El schema de pasos exige contexto para targeting/discard, `abilityId` para habilidades, aliases
+  exactos para cartas/objetivos y asignaciones completas para defensa. Mulligan continúa bloqueado
+  por el schema v1.
+- `tests/guidedInteractionGate.test.js` cubre modo inactivo, bloqueo en Explicar/Observar, matching
+  exacto, doble compromiso, rechazo del engine reintentable, flujo de targeting, automatismos,
+  robo doble por Mano vacía, Reserva, mill del Archivo y cobertura de cada entrada pública.
+
+### Límites cerrados de la fase
+
+- Todavía no existe máscara, spotlight, cuadro explicativo ni pulso visual de rechazo.
+- Todavía no existe el runtime que recorre los pasos; la Fase 3 consumirá estos receipts y políticas.
+- El bloqueo DOM en fase capture será una segunda defensa visual en la fase de overlay. La autoridad
+  de reglas ya está en el store y no depende de selectores CSS.
+
 ### Criterio de cierre
 
-No existe una ruta pública de gameplay capaz de saltarse el gate, y el juego normal no presenta
-cambios funcionales cuando la guía está inactiva.
+Cumplido el 2026-08-11. Las entradas públicas clasificadas no pueden saltarse el gate, los commits
+rechazados no emiten receipts y el juego normal conserva su comportamiento con la guía inactiva.
 
 ---
 

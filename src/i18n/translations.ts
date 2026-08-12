@@ -777,3 +777,8 @@ export function translate(language: AppLanguage, key: TranslationKey, params?: T
 export function translationValues(language: AppLanguage): readonly string[] {
   return Object.values(translations[language]);
 }
+
+/** Runtime guard for declarative content that stores translation keys outside TypeScript. */
+export function isTranslationKey(value: string): value is TranslationKey {
+  return Object.prototype.hasOwnProperty.call(english, value);
+}

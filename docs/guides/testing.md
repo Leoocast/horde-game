@@ -165,8 +165,10 @@ archivo no corre nunca.
 | `tests/playgroundScenario.test.js` | Construccion, validacion, snapshot y reproducibilidad de escenarios |
 | `tests/playgroundActions.test.js` | Acciones del laboratorio usando reglas reales: energia, cast, muerte, movimiento de zona y eventos |
 | `tests/playgroundStorage.test.js` | Round-trip del schema v4 Hostfall, import/export, parseo defensivo y rechazo sin migración de versiones retiradas |
+| `tests/guidedLesson.test.js` | Schema y builder de guía: recetas exactas, aliases por copia, repartos de dos/siete cartas, orden `topToBottom`, zonas/combate/Reserva, rechazo de contenido inválido y prueba con un catálogo sintético |
+| `tests/guidedInteractionGate.test.js` | Gate semántico de guía: intenciones exactas, contextos/targets, receipts y cursores, doble compromiso, rechazo reintentable del engine, targeting multietapa, automatismos, robo por Mano vacía, Reserva, mill y cobertura de entradas públicas del store |
 | `tests/audioMix.test.js` | Cobertura y validacion del JSON de mezcla, import/export, conversion de dB y prohibicion de volumen escondido en `playSfx` |
-| `tests/vocabulary.test.js` | Vocabulario público retirado, presentación localizada de cartas y ausencia de rutas dormidas de tutorial |
+| `tests/vocabulary.test.js` | Vocabulario público retirado, presentación localizada de cartas y ausencia de archivos, seed mágico o cartas hardcodeadas del tutorial retirado |
 | `tests/uiPresentation.test.js` | Contratos puros y estáticos de presentación: VFX compartido, Burn, presets, capas y geometría visual |
 | `tests/contentCatalog.test.js` | Snapshot builtin inmutable, 61 identidades, aliases calificados, defaults estrictos, adapters de assets web/desktop, proyecciones de Card Studio y rechazo de candidatos external adversariales |
 | `tests/electronSecurity.test.js` | Policy pura de `hostfall://`, traversal/hosts/packs adversariales, MIME, Range, roots e integración de respuestas parciales con CSP |
@@ -216,4 +218,5 @@ frecuencia y fueron una fuente de documentacion atrasada.
 - Un WIP declarado no falla la suite; una habilidad que promete estar soportada y no coincide con
   el vocabulario del engine si la rompe.
 - `tests/vocabulary.test.js` impide que regresen términos públicos retirados, valida la
-  presentación localizada de todas las cartas y confirma que no quede una ruta de tutorial dormida.
+  presentación localizada de todas las cartas y bloquea específicamente las rutas legacy del
+  tutorial retirado sin prohibir el nuevo framework declarativo.

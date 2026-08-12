@@ -7,7 +7,7 @@ import { buildChaosMutations, prepareChaosDeck } from "./ChaosMode";
 const DEVELOPER_SEED = "developer";
 const STANDARD_STARTING_LIFE = 50;
 const CHAOS_STARTING_LIFE = 35;
-const DEFAULT_PLAYER_DECK_LAND_COUNT = 9;
+export const DEFAULT_PLAYER_DECK_LAND_COUNT = 9;
 const DEVELOPER_OPENING_HAND = ["the_judgment_of_elarion", "the_judgment_of_elarion"];
 const DEVELOPER_RANDOM_OPENING_CARDS = 5;
 const DEVELOPER_HOST_OPENING_ARCHIVE = ["varkas_minion", "summoner_of_the_ranks"];

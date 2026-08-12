@@ -431,16 +431,37 @@ contenido. El ciclo aprobado es **Explicar → Actuar → Observar → checkpoin
 intención solicitada puede llegar al engine; una animación iniciada termina durante Observar y nunca
 se congela a mitad. Se permiten ajustes prácticos menores de layout, intensidad, copy y timing
 durante QA, pero cambiar deck canónico, política sin resume, acciones permitidas o pausa entre beats
-requiere nueva aprobación. Las Fases 1 a 8 siguen pendientes y no hay runtime de guía implementado.
+requiere nueva aprobación. Las Fases 3 a 8 siguen pendientes; ya existe el gate semántico, pero no
+hay UI, pausa ni orquestador de guía implementados.
 
-La entrada de diseño para la Fase 1 fija que **cada tutorial es un escenario completamente
+La Fase 1 quedó cerrada el 2026-08-11 y fija que **cada tutorial es un escenario completamente
 predefinido**: decks, copias exactas, Mano o reparto inicial, Archivo del Cronista en orden,
 apariciones de la Hueste, Campos, Memorias, Fuentes y Reserva. El runtime no busca cartas por
 capacidades, no rellena el resto del deck y no baraja una receta. Las claves calificadas de
 `ContentCatalog` viven en la receta; cada copia recibe un alias semántico que se enlaza a su
 `instanceId`, y los pasos apuntan a ese alias. El reparto inicial puede contener dos, siete o la
-cantidad que diseñe la lección. Esta decisión está registrada para discutir la Fase 1, que aún no
-está aprobada ni implementada.
+cantidad que diseñe la lección. Los contratos, validador, registro vacío de release y builder puro
+viven en `src/guidance/`; no importan Playground y no contienen todavía el guion real. Una receta
+inválida falla antes de crear el `GameState`, y el builder descarta todo el reparto normal para dejar
+únicamente las cartas declaradas en el orden `topToBottom` authored.
+Mulligan no es una intención authorable en schema v1: una lección puede pedir aceptar su Mano exacta,
+pero enseñar a reescribirla requerirá una versión que predefina también cada Mano de reemplazo.
+
+La Fase 2 quedó cerrada el 2026-08-11. `src/guidance/interactionGate.ts` es la frontera semántica
+única para las acciones deliberadas del jugador: recibe `GameplayIntent` tipados, compara aliases
+contra `instanceId`, bloquea todo durante pasos Explicar/Observar y deja pasar sólo la carta,
+objetivo, habilidad, selección o asignación authored durante Actuar. Fuera de una guía es un no-op.
+Cada entrada pública clasificada en `GUIDED_GAMEPLAY_ENTRY_POINTS` debe llamar
+`gameplayIntentAllowed`; una regresión estática lo exige. Un receipt aceptado consume el compromiso
+del paso y evita dobles clics, mientras que un rechazo del engine no publica receipt y permite
+reintentar. `runGuidedSystemAction` es la excepción acotada para terminar continuaciones automáticas
+ya autorizadas; nunca debe envolver el primer compromiso de un handler ni autorizar input nuevo.
+
+Los receipts son efímeros, tienen cursor monotónico y conservan `sessionId`/`stepId`. El store los
+emite por resultados semánticos reales —incluidos targeting multietapa, fin de Preparación, robo con
+cantidad y motivo, Reserva liberada y descartes del Archivo de la Hueste— sin leer logs. El registro
+de rechazos tipados será la fuente del futuro pulso visual. Todavía no existe el runtime que recorre
+pasos ni el overlay; eso empieza en las Fases 3 y 4.
 
 `playerDrawForecast` en
 `src/engine/TurnManager.ts` es la fuente única para el robo real y su previsión. La devolución

@@ -64,11 +64,27 @@ test("the retired tutorial cannot be reintroduced through a dormant source path"
   const sourceFiles = fs.readdirSync(sourceRoot, { recursive: true, withFileTypes: true })
     .filter((entry) => entry.isFile() && /\.(?:ts|tsx)$/.test(entry.name))
     .map((entry) => path.join(entry.parentPath, entry.name));
-  const occurrences = sourceFiles
-    .filter((file) => /tutorial/i.test(fs.readFileSync(file, "utf8")))
-    .map((file) => path.relative(sourceRoot, file));
+  const relativeFiles = sourceFiles.map((file) => path.relative(sourceRoot, file).replaceAll("\\", "/"));
+  const retiredPaths = ["components/TutorialGuide.tsx", "engine/Tutorial.ts"];
+  assert.deepEqual(relativeFiles.filter((file) => retiredPaths.includes(file)), []);
 
-  assert.deepEqual(occurrences, []);
+  const magicSeedOccurrences = [];
+  const retiredCardOccurrences = [];
+  for (const file of sourceFiles) {
+    const relative = path.relative(sourceRoot, file);
+    const lines = fs.readFileSync(file, "utf8").split(/\r?\n/u);
+    lines.forEach((line, index) => {
+      if (/seed/iu.test(line) && /["']tutorial["']/iu.test(line)) {
+        magicSeedOccurrences.push(`${relative}:${index + 1}`);
+      }
+      if (/\b(?:llanowar_elves|beast_kin_ranger)\b/iu.test(line)) {
+        retiredCardOccurrences.push(`${relative}:${index + 1}`);
+      }
+    });
+  }
+
+  assert.deepEqual(magicSeedOccurrences, [], "the retired seed-magic path returned");
+  assert.deepEqual(retiredCardOccurrences, [], "retired hardcoded tutorial cards returned");
 });
 
 test("card images stay local and remote card-provider metadata cannot return", () => {
