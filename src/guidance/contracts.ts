@@ -73,8 +73,14 @@ export type GuidedScenarioRecipe = Readonly<{
 }>;
 
 export const GUIDED_SURFACE_ANCHORS = [
+  "opening.hand",
+  "opening.primaryAction",
+  "selection.primaryAction",
+  "selection.cancelAction",
   "setup.progress",
   "phase.primaryAction",
+  "phase.selectAllAction",
+  "phase.cancelAction",
   "player.hand",
   "player.field",
   "player.archive",
@@ -89,9 +95,12 @@ export const GUIDED_SURFACE_ANCHORS = [
 
 export type GuidedSurfaceAnchor = (typeof GUIDED_SURFACE_ANCHORS)[number];
 
+export const GUIDED_HIGHLIGHT_ROLES = ["focus", "origin", "destination"] as const;
+export type GuidedHighlightRole = (typeof GUIDED_HIGHLIGHT_ROLES)[number];
+
 export type GuidedHighlightRef =
-  | Readonly<{ kind: "card"; alias: GuidedCardAlias }>
-  | Readonly<{ kind: "surface"; anchor: GuidedSurfaceAnchor }>;
+  | Readonly<{ kind: "card"; alias: GuidedCardAlias; role?: GuidedHighlightRole }>
+  | Readonly<{ kind: "surface"; anchor: GuidedSurfaceAnchor; role?: GuidedHighlightRole }>;
 
 /**
  * Authored action names. Phase 2 maps these to the store's real GameplayIntent union. Mulligan is

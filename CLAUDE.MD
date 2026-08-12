@@ -435,8 +435,8 @@ contenido. El ciclo aprobado es **Explicar → Actuar → Observar → checkpoin
 intención solicitada puede llegar al engine; una animación iniciada termina durante Observar y nunca
 se congela a mitad. Se permiten ajustes prácticos menores de layout, intensidad, copy y timing
 durante QA, pero cambiar deck canónico, política sin resume, acciones permitidas o pausa entre beats
-requiere nueva aprobación. Las Fases 4 a 8 siguen pendientes; ya existen el gate semántico, la
-sesión de pausa y los checkpoints, pero no hay spotlight, cuadro ni guion final implementados.
+requiere nueva aprobación. La Fase 4 está implementada y pendiente de QA visual; las Fases 5 a 8
+siguen pendientes y el guion final aún no existe.
 
 La Fase 1 quedó cerrada el 2026-08-11 y fija que **cada tutorial es un escenario completamente
 predefinido**: decks, copias exactas, Mano o reparto inicial, Archivo del Cronista en orden,
@@ -467,13 +467,25 @@ cantidad y motivo, Reserva liberada y descartes del Archivo de la Hueste— sin 
 de rechazos tipados será la fuente del futuro pulso visual. El runtime de sesión existe desde la
 Fase 3; el overlay comienza en la Fase 4.
 
-La Fase 3 quedó cerrada el 2026-08-11. `GuidedSessionStore` vive fuera de `GameState` y coordina
+La Fase 3 quedó cerrada con QA manual aprobada por el usuario el 2026-08-11. `GuidedSessionStore`
+vive fuera de `GameState` y coordina
 **Explicar → Actuar → Observar → checkpoint** usando los receipts del gate y el estado real de
 presentación. `GuidedBeatBarrier` sólo retiene el inicio del siguiente beat automático: nunca
 congela una animación o un commit ya iniciado. `GuidedPresentationActivityRegistry` usa tokens con
 epoch para las entradas de Mano, la transferencia a Reserva y los beats de reacciones; junto con
 los flags del store forma `isGuidedPresentationSettled`. Reset, carga y salida invalidan callbacks,
-tokens y continuaciones retenidas. La Fase 4 añadirá el overlay, anclas, escudo DOM y copy visible.
+tokens y continuaciones retenidas.
+
+La Fase 4 del framework está implementada y en QA manual. `GuidedAnchorRegistry` enlaza superficies
+semánticas y aliases resueltos a refs reales, con varios propietarios durante transiciones de zona;
+el overlay no consulta selectores ni identidades de deck. `GuidedTutorialOverlay` vive en un portal
+de capa 20000, mide con `ResizeObserver` y seguimiento por frame, admite varios recortes y roles
+`focus`/`origin`/`destination`, coloca el cuadro evitando objetivos y falla cerrado si falta una
+ancla. Su escudo capture bloquea pointer, clic, contexto, drag y teclado antes del handler; durante
+Actuar sólo atraviesan las anclas authored y el gate semántico vuelve a validar el compromiso.
+Tooltips/previews quedan suprimidos, los intentos incorrectos producen feedback visual y textual,
+el foco queda contenido y las cartas admiten Enter/Espacio. La pestaña dev **Guide** es la vertical
+de QA; no es contenido de release ni el guion de la Primera Semilla.
 
 `playerDrawForecast` en
 `src/engine/TurnManager.ts` es la fuente única para el robo real y su previsión. La devolución

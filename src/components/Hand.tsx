@@ -21,7 +21,13 @@ import {
 import { getHandCardPresentationState, handArchiveEntryOffset } from "./handCardPresentation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, motionValue, type MotionValue, type PanInfo, type Variants } from "framer-motion";
-import { guidedPresentationActivity, type GuidedPresentationActivityToken } from "../guidance";
+import {
+  guidedAnchorRegistry,
+  guidedCardAnchorKey,
+  guidedPresentationActivity,
+  guidedSurfaceAnchorKey,
+  type GuidedPresentationActivityToken,
+} from "../guidance";
 
 const DRAG_PLAY_SCREEN_RATIO = 0.7;
 const ENERGY_RECYCLE_SCREEN_RATIO = 0.82;
@@ -382,7 +388,13 @@ export function Hand({ game }: { game: GameState }) {
         "player-hand-shell pointer-events-none fixed inset-x-0 bottom-0 h-56 overflow-visible",
         draggingCardId ? "z-[150]" : tribute_of_the_four_sorrowsDiscardMode || handLimitDiscardActive ? "z-[110]" : "z-[70]",
       ].join(" ")}>
-        <div ref={handRegionRef} className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}>
+        <div
+          ref={(element) => {
+            handRegionRef.current = element;
+            guidedAnchorRegistry.set(guidedSurfaceAnchorKey("player.hand"), "hand:surface", element);
+          }}
+          className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}
+        >
           <div
             ref={handCardsRef}
             className="player-hand-cards flex items-end justify-center overflow-visible"
@@ -493,6 +505,7 @@ export function Hand({ game }: { game: GameState }) {
                   ref={(el) => {
                     if (el) innerCardRefs.current.set(card.instanceId, el);
                     else innerCardRefs.current.delete(card.instanceId);
+                    guidedAnchorRegistry.set(guidedCardAnchorKey(card.instanceId), `hand:${card.instanceId}`, el);
                   }}
                   className={[
                     "hand-card",
@@ -546,6 +559,25 @@ export function Hand({ game }: { game: GameState }) {
                           return;
                         }
                         selectHand(card.instanceId);
+                      }}
+                      onKeyboardActivate={() => {
+                        if (handLimitDiscardActive) {
+                          selectHandLimitDiscard(handLimitTargetLocked ? undefined : card.instanceId);
+                          return;
+                        }
+                        if (tributeOfTheFourSorrowsSelectionActive) {
+                          if (discardTargetable) lockTributeOfTheFourSorrowsSelectionTarget(card.instanceId);
+                          return;
+                        }
+                        if (playable) {
+                          playCard(card);
+                          return;
+                        }
+                        pushToast({
+                          title: t("error.cannotPlay"),
+                          message: getUnplayableReason(game, card, unresolvedTriggerCount, t),
+                          tone: "warning",
+                        });
                       }}
                       onLeave={() => {
                         if (selectedHandId === card.instanceId) selectHand(undefined);

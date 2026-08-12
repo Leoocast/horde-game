@@ -21,7 +21,6 @@ export function GuidanceLabPanel({ onStart }: { onStart: () => void }) {
   const barrier = useSyncExternalStore(subscribeBarrier, readBarrier, readBarrier);
   const blockers = guidedPresentationBlockers(gameStore, activity);
   const allowedIntent = session.currentStep?.kind === "act" ? session.currentStep.allowedIntent : undefined;
-  const terminalExplanation = session.mode === "explain" && !session.currentStep?.nextStepId;
 
   return (
     <div className="playground-panel">
@@ -35,21 +34,11 @@ export function GuidanceLabPanel({ onStart }: { onStart: () => void }) {
           settlement; it is not the authored First Seed.
         </p>
         <div className="playground-button-row">
-          <button className="playground-button is-primary" type="button" onClick={onStart}>
+          <button data-guided-system-control="true" className="playground-button is-primary" type="button" onClick={onStart}>
             {session.status === "running" ? "Restart fixture" : "Start fixture"}
           </button>
-          {session.status === "running" && session.mode === "explain" && (
-            <button
-              className="playground-button"
-              type="button"
-              disabled={!session.canContinue}
-              onClick={() => guidedSessionStore.continueExplanation()}
-            >
-              {terminalExplanation ? "Finish fixture" : "Continue"}
-            </button>
-          )}
           {session.status === "running" && (
-            <button className="playground-button" type="button" onClick={() => guidedSessionStore.stop()}>
+            <button data-guided-system-control="true" className="playground-button" type="button" onClick={() => guidedSessionStore.stop()}>
               Stop
             </button>
           )}
@@ -80,7 +69,7 @@ export function GuidanceLabPanel({ onStart }: { onStart: () => void }) {
             <span className="playground-group-title">Expected interaction</span>
             <span className="playground-group-badge">{session.mode}</span>
           </header>
-          {session.mode === "explain" && <div className="playground-empty">Read, then use Continue.</div>}
+          {session.mode === "explain" && <div className="playground-empty">Read, then use the callout on the Board.</div>}
           {session.mode === "act" && (
             <div className="playground-empty">
               Use the real Board: {allowedIntent?.kind ?? "—"}

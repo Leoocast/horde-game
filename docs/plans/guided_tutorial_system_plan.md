@@ -1,6 +1,6 @@
 # Plan por fases — Sistema de guía, pausa y resaltado
 
-Estado: **abierto; Fases 0 a 3 cerradas, Fases 4 a 8 pendientes. Pausa y checkpoints implementados; spotlight y cuadro todavía pendientes.**
+Estado: **abierto; Fases 0 a 3 cerradas, Fase 4 implementada y en QA manual, Fases 5 a 8 pendientes.**
 
 Última actualización: **2026-08-11**.
 
@@ -549,16 +549,16 @@ control. Al mismo tiempo, conserva consecuencias visuales completas y fáciles d
 
 ### Criterio de cierre
 
-Cumplido el 2026-08-11. La vertical del Guidance Lab se detiene, acepta únicamente la Fuente exacta,
-observa su entrada real al Campo y vuelve a detenerse. Las regresiones cubren espera indefinida,
-tokens visuales, barrera entre beats, movimiento reducido por finalización semántica e invalidación
-de callbacks al abandonar.
+Cumplido el 2026-08-11 y aprobado en QA manual por el usuario. La vertical del Guidance Lab se
+detiene, acepta únicamente la Fuente exacta, observa su entrada real al Campo y vuelve a detenerse.
+Las regresiones cubren espera indefinida, tokens visuales, barrera entre beats, movimiento reducido
+por finalización semántica e invalidación de callbacks al abandonar.
 
 ---
 
 ## Fase 4 — Anclas, spotlight, cuadro explicativo y escudo de input
 
-Estado: **pendiente**.
+Estado: **implementada el 2026-08-11; pendiente de QA visual del usuario.**
 
 ### Antes de iniciar
 
@@ -602,10 +602,54 @@ cuando aplica, desde dónde arrastrar y dónde soltar.
 - Un ancla ausente activa la recuperación segura, no desbloquea el tablero.
 - El orden de capas funciona con preview de carta, animaciones y modales aprobados.
 
+### Implementación materializada
+
+- `GuidedAnchorRegistry` recibe anclas desde los componentes mediante refs reales. Las lecciones
+  resuelven aliases a `instanceId` y luego a una ancla `card:*`; nunca consultan nombres de cartas
+  ni selectores CSS. El registro conserva propietarios simultáneos para que una carta pueda pasar
+  de Mano a Campo sin perder el spotlight durante el relevo visual.
+- La UI registra las superficies compartidas de reparto inicial, Preparación, acciones primaria y
+  secundarias, selecciones, Mano, Campo, Fuentes, Reserva, Archivos, Memorias y Vida. Una
+  presentación futura sólo debe registrar su ref en la misma API; no modifica el overlay.
+- Los highlights aceptan los roles opcionales `focus`, `origin` y `destination`. El overlay admite
+  varios recortes y dibuja una conexión direccional únicamente cuando la receta declara ambos
+  extremos, sin inferir qué significa una carta o una zona.
+- `GuidedTutorialOverlay` se monta una sola vez sobre el Board y se proyecta en `document.body` en
+  la capa `z-index: 20000`. Usa una máscara SVG, mide los refs con `ResizeObserver` y sigue su
+  posición por frame mientras la guía está activa; el cuadro elige la ubicación con menor
+  solapamiento y se vuelve a medir ante reflow, resize o cambio de idioma.
+- El escudo DOM captura pointer, clic, doble clic, menú contextual, drag/drop y teclado. Explicar y
+  Observar bloquean gameplay completo; Actuar sólo deja atravesar los highlights del paso. Un gesto
+  de pointer que comenzó en el origen permitido puede terminar su drag, pero el gate semántico de
+  la Fase 2 vuelve a comprobar la intención exacta antes del commit.
+- Un intento fuera del objetivo no llega al handler: muestra una frase breve y convierte el borde
+  dorado en un pulso rojo. Los rechazos semánticos del store alimentan el mismo feedback.
+- El cuadro administra foco, `aria-labelledby`/`aria-describedby`, lectura de estado y ciclo de
+  tabulación. Las cartas reales ahora admiten activación por teclado; en Mano, Enter/Espacio ejecuta
+  la misma ruta de juego que el drag. `Escape` no atraviesa el escudo.
+- Tooltips y previews se suprimen mientras el overlay está activo. Movimiento reducido conserva
+  contraste y feedback mediante un borde estático más grueso en lugar de sacudidas o pulsos.
+- Si falta una ancla, la máscara se cierra por completo y el cuadro informa que la lección debe
+  reiniciarse; no se desbloquea el tablero. La salida/reconstrucción de producto se conectará en la
+  Fase 7.
+- La pestaña **Guide** usa copy propio ES/EN y prueba la vertical real: Explicar resalta la Fuente,
+  Actuar muestra origen y Campo como destino, Observar sigue la entrada y el último checkpoint
+  enfoca las Fuentes. Reiniciar/Stop siguen disponibles sólo como controles del laboratorio dev.
+
+### Límites cerrados de la fase
+
+- El overlay presenta y bloquea; no avanza pasos ni resuelve reglas. La Fase 5 construirá el
+  orquestador declarativo completo sobre estos contratos.
+- No existe todavía una lección registrada en release ni el copy de la Primera Semilla.
+- La confirmación de salida, el reinicio de producto y la política de tutorial obligatorio pertenecen
+  a la Fase 7. El mensaje de ancla ausente falla cerrado mientras tanto.
+- `z-index: 20000` es la capa de guía. Una futura superficie verdaderamente sistémica debe declarar
+  una capa superior; previews, tooltips, settings de partida y animaciones comunes permanecen debajo.
+
 ### Criterio de cierre
 
-El usuario aprueba visualmente el sistema sobre la UI vigente y puede identificar la única acción
-válida sin depender del texto del cuadro.
+Pendiente de QA manual. El usuario debe aprobar visualmente el sistema sobre la UI vigente y poder
+identificar la única acción válida sin depender del texto del cuadro.
 
 ---
 

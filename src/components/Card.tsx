@@ -1,4 +1,4 @@
-import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from "react";
+import type { CSSProperties, KeyboardEvent, MouseEvent, PointerEvent, ReactNode } from "react";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { localizedCardName, localizedTraitLabel, localizedTraitTooltip, naturalCaseTraitLabel } from "../i18n/cardLocalization";
@@ -35,6 +35,7 @@ type Props = {
   suppressStabilizing?: boolean;
   suppressCardId?: boolean;
   onSelect?: () => void;
+  onKeyboardActivate?: () => void;
   onLeave?: () => void;
   onPointerDown?: (event: PointerEvent<HTMLElement>) => void;
   onContextMenu?: (event: MouseEvent<HTMLElement>) => void;
@@ -57,7 +58,7 @@ type Props = {
   glowBorderWidth?: number;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressStabilizing, suppressCardId, onSelect, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, showCroppedTitle = false, clipActionSweep = false, preferNativeImageRendering = false, useBattlefieldArt = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressStabilizing, suppressCardId, onSelect, onKeyboardActivate, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, showCroppedTitle = false, clipActionSweep = false, preferNativeImageRendering = false, useBattlefieldArt = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
@@ -160,6 +161,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       data-audio-click={selectionDisabled ? undefined : "valid"}
       draggable={false}
       role={selectionDisabled ? undefined : "button"}
+      tabIndex={selectionDisabled ? undefined : 0}
       aria-label={[
         localizedName,
         card.exhausted && !usesHostExhaustedStyle ? t("card.exhausted") : "",
@@ -186,6 +188,13 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         if (shouldSuppressClick?.()) return;
         setHoveredCardId(undefined);
         if (!selectionDisabled) onSelect?.();
+      }}
+      onKeyDown={(event: KeyboardEvent<HTMLElement>) => {
+        if (selectionDisabled || event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
+        event.preventDefault();
+        if (shouldSuppressClick?.()) return;
+        setHoveredCardId(undefined);
+        (onKeyboardActivate ?? onSelect)?.();
       }}
       style={style}
       className={[

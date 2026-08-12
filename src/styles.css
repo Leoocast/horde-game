@@ -20428,3 +20428,182 @@ body.playground-active .phase-banner-shell {
   .audio-lab-controls { align-items: stretch; flex-direction: column; }
   .audio-lab-search { width: 100%; }
 }
+
+/* Guided lesson layer. It sits above gameplay/tooltips; system-level crash/result surfaces may use
+   a higher explicit layer. The actual highlighted nodes never move or change stacking context. */
+.guided-tutorial-overlay {
+  position: fixed;
+  z-index: 20000;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  color: #eee0b8;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.guided-tutorial-mask {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.guided-tutorial-dimmer { fill: rgb(2 4 4 / 0.84); }
+
+.guided-tutorial-ring {
+  position: absolute;
+  box-sizing: border-box;
+  border: 3px solid #e2c36c;
+  border-radius: 7px;
+  box-shadow:
+    0 0 0 2px rgb(21 13 4 / 0.92),
+    0 0 20px rgb(225 190 91 / 0.68),
+    inset 0 0 14px rgb(225 190 91 / 0.13);
+  pointer-events: none;
+}
+
+.guided-tutorial-overlay[data-mode="act"] .guided-tutorial-ring {
+  animation: guided-tutorial-ready 1.9s ease-in-out infinite;
+}
+
+.guided-tutorial-ring.is-rejected {
+  border-color: #c8664c;
+  animation: guided-tutorial-rejected 180ms ease-in-out 3;
+  box-shadow:
+    0 0 0 2px rgb(28 8 4 / 0.94),
+    0 0 24px rgb(205 74 48 / 0.82),
+    inset 0 0 18px rgb(205 74 48 / 0.18);
+}
+
+.guided-tutorial-connector {
+  fill: none;
+  stroke: #e4c66e;
+  stroke-width: 3;
+  stroke-dasharray: 8 7;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 5px rgb(228 198 110 / 0.75));
+  marker-end: url("#guided-tutorial-arrowhead");
+}
+
+#guided-tutorial-arrowhead path { fill: #e4c66e; }
+
+.guided-tutorial-callout {
+  position: absolute;
+  width: min(370px, calc(100vw - 32px));
+  box-sizing: border-box;
+  border: 1px solid #ad8446;
+  outline: 1px solid rgb(8 7 5 / 0.9);
+  padding: 19px 20px 16px;
+  background:
+    linear-gradient(145deg, rgb(39 29 17 / 0.99), rgb(14 13 10 / 0.995)),
+    #12100c;
+  box-shadow:
+    0 16px 38px rgb(0 0 0 / 0.78),
+    inset 0 0 0 3px rgb(95 67 31 / 0.22);
+  pointer-events: auto;
+  clip-path: polygon(0 8px, 8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px));
+}
+
+.guided-tutorial-callout:focus-visible {
+  outline: 2px solid #e2c36c;
+  outline-offset: -5px;
+}
+
+.guided-tutorial-step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #b99d64;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.guided-tutorial-step b { color: #dfca98; font-variant-numeric: tabular-nums; }
+
+.guided-tutorial-callout h2 {
+  margin: 11px 0 8px;
+  color: #f1dfaa;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  line-height: 1.2;
+}
+
+.guided-tutorial-callout p {
+  margin: 0;
+  color: #d3c9ae;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.52;
+}
+
+.guided-tutorial-feedback {
+  min-height: 18px;
+  margin-top: 7px;
+  color: #e5a07e;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.guided-tutorial-continue {
+  width: 100%;
+  height: 38px;
+  border: 1px solid #98743d;
+  margin-top: 6px;
+  background: linear-gradient(#503a1d, #281c0d);
+  color: #efd69a;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.guided-tutorial-continue:hover:not(:disabled),
+.guided-tutorial-continue:focus-visible {
+  border-color: #e0bb68;
+  background: linear-gradient(#674a23, #34230f);
+  color: #fff0be;
+}
+
+.guided-tutorial-continue:disabled { cursor: wait; opacity: 0.48; }
+
+body:has(.guided-tutorial-overlay) .game-tooltip,
+body:has(.guided-tutorial-overlay) .game-tooltip-portal,
+body:has(.guided-tutorial-overlay) .card-preview-dismiss-layer,
+body:has(.guided-tutorial-overlay) .card-preview-cropped-frame,
+body:has(.guided-tutorial-overlay) [data-card-preview-locked="true"] {
+  display: none !important;
+}
+
+@keyframes guided-tutorial-ready {
+  0%, 100% { filter: brightness(0.9); }
+  50% { filter: brightness(1.2); }
+}
+
+@keyframes guided-tutorial-rejected {
+  0%, 100% { transform: translateX(0); }
+  35% { transform: translateX(-4px); }
+  70% { transform: translateX(4px); }
+}
+
+@media (max-width: 560px) {
+  .guided-tutorial-callout { padding: 16px 17px 13px; }
+  .guided-tutorial-callout h2 { font-size: 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guided-tutorial-overlay[data-mode="act"] .guided-tutorial-ring,
+  .guided-tutorial-ring.is-rejected {
+    animation: none;
+  }
+
+  .guided-tutorial-ring.is-rejected { border-width: 5px; }
+}

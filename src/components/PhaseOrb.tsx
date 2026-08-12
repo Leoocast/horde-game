@@ -7,6 +7,7 @@ import { useTranslation } from "../i18n/useTranslation";
 import { GameTooltip } from "./GameTooltip";
 import { setupPrimaryAction } from "./setupPresentation";
 import { runGuidedSystemAction } from "../guidance/interactionGate";
+import { guidedAnchorRegistry, guidedSurfaceAnchorKey } from "../guidance/anchorRegistry";
 
 export function PhaseOrb({ game }: { game: GameState }) {
   const t = useTranslation();
@@ -86,6 +87,11 @@ export function PhaseOrb({ game }: { game: GameState }) {
       <div className={["game-phase-orb fixed right-4 top-[46%] z-[80] -translate-y-1/2", game.gameMode === "chaos" ? "is-chaos" : ""].join(" ")}>
         <GameTooltip content={orbTooltip} visible={Boolean(orbTooltip)}>
           <button
+            ref={(element) => guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey("phase.primaryAction"),
+              "phase-orb:primary-action",
+              element,
+            )}
             data-audio-click="off"
             data-tone={state.tone}
             onClick={runOrbAction}
@@ -103,18 +109,50 @@ export function PhaseOrb({ game }: { game: GameState }) {
           <div className="game-phase-secondary">
             {showAttackAll && (
               <GameTooltip content={t("orb.allTooltip")} className="game-phase-secondary-tooltip">
-                <button data-audio-click="valid" onClick={attackAll} disabled={Boolean(game.winner) || attackAnimating} className="game-phase-secondary-button is-all">
+                <button
+                  ref={(element) => guidedAnchorRegistry.set(
+                    guidedSurfaceAnchorKey("phase.selectAllAction"),
+                    "phase-orb:select-all",
+                    element,
+                  )}
+                  data-audio-click="valid"
+                  onClick={attackAll}
+                  disabled={Boolean(game.winner) || attackAnimating}
+                  className="game-phase-secondary-button is-all"
+                >
                   <Swords size={17} /> <span>{t("orb.all")}</span>
                 </button>
               </GameTooltip>
             )}
             {showCancelDefense && (
-              <button data-audio-click="valid" onClick={cancelBlocks} disabled={Boolean(game.winner) || attackAnimating} className="game-phase-secondary-button is-cancel" title={t("orb.cancelBlocks")}>
+                <button
+                  ref={(element) => guidedAnchorRegistry.set(
+                    guidedSurfaceAnchorKey("phase.cancelAction"),
+                    "phase-orb:cancel-defense",
+                    element,
+                  )}
+                  data-audio-click="valid"
+                  onClick={cancelBlocks}
+                  disabled={Boolean(game.winner) || attackAnimating}
+                  className="game-phase-secondary-button is-cancel"
+                  title={t("orb.cancelBlocks")}
+                >
                 <X size={17} /> <span>{t("common.cancel")}</span>
               </button>
             )}
             {showCancelAttack && (
-              <button data-audio-click="valid" onClick={cancelPlayerAttackers} disabled={Boolean(game.winner) || attackAnimating} className="game-phase-secondary-button is-cancel" title={t("orb.cancelAttackers")}>
+                <button
+                  ref={(element) => guidedAnchorRegistry.set(
+                    guidedSurfaceAnchorKey("phase.cancelAction"),
+                    "phase-orb:cancel-attack",
+                    element,
+                  )}
+                  data-audio-click="valid"
+                  onClick={cancelPlayerAttackers}
+                  disabled={Boolean(game.winner) || attackAnimating}
+                  className="game-phase-secondary-button is-cancel"
+                  title={t("orb.cancelAttackers")}
+                >
                 <X size={17} /> <span>{t("common.cancel")}</span>
               </button>
             )}

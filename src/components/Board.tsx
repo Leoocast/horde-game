@@ -40,6 +40,7 @@ import { DrainEssenceSmokeAnimator } from "./DrainEssenceAnimator";
 import { FinalBanquetAnimator } from "./FinalBanquetAnimator";
 import { RootsTouchedSkyAnimator } from "./RootsTouchedSkyAnimator";
 import { EnergyFlowAnimator } from "./EnergyFlowAnimator";
+import { GuidedTutorialOverlay } from "./GuidedTutorialOverlay";
 import { useHiddenDefenseLinkIds } from "./useDefenseLinkVisibility";
 
 type Props = {
@@ -155,6 +156,7 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       </div>
       {game.openingHandAccepted && <Hand game={game} />}
       <OpeningHandOverlay game={game} />
+      <GuidedTutorialOverlay />
 
       {game.winner === "host" && <DefeatModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}
       {game.winner === "player" && <VictoryModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}

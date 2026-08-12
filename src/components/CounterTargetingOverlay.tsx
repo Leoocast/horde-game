@@ -11,6 +11,7 @@ import { shouldShowFullCardImage } from "../utils/cardImages";
 import { targetArrowCurve } from "./tacticalArrowGeometry";
 import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 import { Card } from "./Card";
+import { guidedAnchorRegistry, guidedCardAnchorKey, guidedSurfaceAnchorKey } from "../guidance";
 
 const ARROW_COLOR = "#4ade80";
 
@@ -113,7 +114,17 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
         <TacticalArrowGlyph curve={arrow} color={ARROW_COLOR} />
       </svg>
       <aside className="counter-target-source-panel">
-        <div ref={sourceRef} className="counter-target-source-card">
+        <div
+          ref={(element) => {
+            sourceRef.current = element;
+            guidedAnchorRegistry.set(
+              guidedCardAnchorKey(source.instanceId),
+              `counter-targeting:source:${source.instanceId}`,
+              element,
+            );
+          }}
+          className="counter-target-source-card"
+        >
           <Card
             game={game}
             card={source}
@@ -134,6 +145,11 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
         </div>
         <div className="counter-target-actions">
           <button
+            ref={(element) => guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey("selection.cancelAction"),
+              "counter-targeting:cancel",
+              element,
+            )}
             data-audio-click="valid"
             className="counter-target-button counter-target-cancel"
             onClick={locked ? deselectTarget : cancelTargeting}
@@ -142,7 +158,18 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
           >
             {locked ? <X size={22} /> : t("common.cancel")}
           </button>
-          <button data-audio-click={locked ? "valid" : undefined} className="counter-target-button counter-target-confirm" disabled={!locked} onClick={confirmTargeting} title={t("common.confirm")}>
+          <button
+            ref={(element) => guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey("selection.primaryAction"),
+              "counter-targeting:confirm",
+              element,
+            )}
+            data-audio-click={locked ? "valid" : undefined}
+            className="counter-target-button counter-target-confirm"
+            disabled={!locked}
+            onClick={confirmTargeting}
+            title={t("common.confirm")}
+          >
             <Check size={24} />
           </button>
         </div>

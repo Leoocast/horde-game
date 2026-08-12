@@ -40,6 +40,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
+import { guidedAnchorRegistry, guidedCardAnchorKey, guidedSurfaceAnchorKey } from "../guidance";
 
 type Props = {
   game: GameState;
@@ -627,7 +628,17 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
   return (
     <>
       <Zone title={`${side === "player" ? t("setup.playerSide") : t("setup.hostSide")} ${t("zones.field")}`} count={side === "player" ? creatures.length + others.length : cards.length} hideHeader>
-        <div ref={boardRef} className="battlefield-side-content">
+        <div
+          ref={(element) => {
+            boardRef.current = element;
+            guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey(side === "player" ? "player.field" : "host.field"),
+              `battlefield:${side}:surface`,
+              element,
+            );
+          }}
+          className="battlefield-side-content"
+        >
           <BattlefieldRowSurface
             cardsEmpty={creatures.length === 0}
             cropCreatureCards={cropCreatureCards}
@@ -656,7 +667,10 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
     return (
       <>
       <aside
-        ref={landDockRef}
+        ref={(element) => {
+          landDockRef.current = element;
+          guidedAnchorRegistry.set(guidedSurfaceAnchorKey("player.sources"), "battlefield:player:sources", element);
+        }}
         data-player-mana-core="true"
         data-tribute-of-the-four-sorrows-mana-target={tributeOfTheFourSorrowsSourceSelectionActive ? "true" : undefined}
         data-audio-click={canSelectEnergyCore ? "valid" : undefined}
@@ -683,6 +697,11 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
       >
         <div className="mana-corner-energy-layer" aria-hidden="true">
           <div
+            ref={(element) => guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey("player.reserve"),
+              "battlefield:player:reserve",
+              element,
+            )}
             className="mana-energy-track mana-energy-track-yellow"
             data-energy-track="stored"
           >
@@ -1055,6 +1074,11 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
       >
       <div className="battlefield-card-reflow" data-card-reflow-id={card.instanceId}>
       <div
+        ref={(element) => guidedAnchorRegistry.set(
+          guidedCardAnchorKey(card.instanceId),
+          `battlefield:${side}:${card.instanceId}`,
+          element,
+        )}
         data-card-slot-id={card.instanceId}
         data-summoning={useNewSummoning && firstTimeOnThisBattlefield ? "true" : undefined}
         data-entry-delay={0}

@@ -148,6 +148,7 @@ export class GuidedInteractionGate {
   #attemptCursor = 0;
   #receipts: GuidedGameplayReceipt[] = [];
   #lastRejection: GuidedIntentRejection | undefined;
+  #snapshot = createInteractionSnapshot();
   #listeners = new Set<(snapshot: GuidedInteractionSnapshot) => void>();
   #systemActionDepth = 0;
   #completedStepKey: string | undefined;
@@ -238,13 +239,7 @@ export class GuidedInteractionGate {
   }
 
   snapshot(): GuidedInteractionSnapshot {
-    return Object.freeze({
-      policy: this.#policy,
-      receiptCursor: this.#receiptCursor,
-      attemptCursor: this.#attemptCursor,
-      receipts: Object.freeze([...this.#receipts]),
-      lastRejection: this.#lastRejection,
-    });
+    return this.#snapshot;
   }
 
   subscribe(listener: (snapshot: GuidedInteractionSnapshot) => void): () => void {
@@ -274,8 +269,14 @@ export class GuidedInteractionGate {
   }
 
   #notify(): void {
-    const snapshot = this.snapshot();
-    for (const listener of this.#listeners) listener(snapshot);
+    this.#snapshot = createInteractionSnapshot(
+      this.#policy,
+      this.#receiptCursor,
+      this.#attemptCursor,
+      this.#receipts,
+      this.#lastRejection,
+    );
+    for (const listener of this.#listeners) listener(this.#snapshot);
   }
 }
 
@@ -374,6 +375,22 @@ function freezePolicy(policy: GuidedInteractionPolicy): GuidedInteractionPolicy 
             : undefined,
         })
       : undefined,
+  });
+}
+
+function createInteractionSnapshot(
+  policy?: GuidedInteractionPolicy,
+  receiptCursor = 0,
+  attemptCursor = 0,
+  receipts: readonly GuidedGameplayReceipt[] = [],
+  lastRejection?: GuidedIntentRejection,
+): GuidedInteractionSnapshot {
+  return Object.freeze({
+    policy,
+    receiptCursor,
+    attemptCursor,
+    receipts: Object.freeze([...receipts]),
+    lastRejection,
   });
 }
 

@@ -6,6 +6,7 @@ import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { shouldShowFullCardImage } from "../utils/cardImages";
 import { Card } from "./Card";
+import { guidedAnchorRegistry, guidedCardAnchorKey, guidedSurfaceAnchorKey } from "../guidance";
 
 export function OpeningHandOverlay({ game }: { game: GameState }) {
   const t = useTranslation();
@@ -18,7 +19,14 @@ export function OpeningHandOverlay({ game }: { game: GameState }) {
   return (
     <div className="opening-hand-overlay fixed inset-0 z-[420] flex items-center justify-center" role="presentation">
       <section className="opening-hand-layout" role="dialog" aria-modal="true" aria-label={t("mulligan.title")}>
-        <div className="opening-hand-cards">
+        <div
+          ref={(element) => guidedAnchorRegistry.set(
+            guidedSurfaceAnchorKey("opening.hand"),
+            "opening-hand:surface",
+            element,
+          )}
+          className="opening-hand-cards"
+        >
           {game.player.hand.map((card, index) => {
             const showFullImage = shouldShowFullCardImage(card.definitionId);
             const useNativeHdRendering =
@@ -33,7 +41,14 @@ export function OpeningHandOverlay({ game }: { game: GameState }) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ delay: index * 0.055, duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div className="opening-hand-card">
+                <div
+                  ref={(element) => guidedAnchorRegistry.set(
+                    guidedCardAnchorKey(card.instanceId),
+                    `opening-hand:${card.instanceId}`,
+                    element,
+                  )}
+                  className="opening-hand-card"
+                >
                   <Card
                     game={game}
                     card={card}
@@ -57,7 +72,17 @@ export function OpeningHandOverlay({ game }: { game: GameState }) {
         </div>
 
         <div className="opening-hand-actions">
-          <button data-audio-click="valid" className="opening-hand-button opening-hand-button-accept" type="button" onClick={acceptOpeningHand}>
+          <button
+            ref={(element) => guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey("opening.primaryAction"),
+              "opening-hand:primary-action",
+              element,
+            )}
+            data-audio-click="valid"
+            className="opening-hand-button opening-hand-button-accept"
+            type="button"
+            onClick={acceptOpeningHand}
+          >
             <Check size={18} />
             {t("mulligan.accept")}
           </button>

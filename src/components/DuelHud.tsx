@@ -21,6 +21,7 @@ import {
 import { playerAttackHostHitDelay } from "./playerAttackPresentation";
 import { PlayerArchiveForecast } from "./PlayerArchiveForecast";
 import { setupProgress } from "./setupPresentation";
+import { guidedAnchorRegistry, guidedSurfaceAnchorKey } from "../guidance";
 
 export function DuelHud({ game }: { game: GameState }) {
   const t = useTranslation();
@@ -244,11 +245,26 @@ export function DuelHud({ game }: { game: GameState }) {
                 </span>
                 <div className="counter-target-actions">
                   {tributeOfTheFourSorrowsSelectionTargetId && (
-                    <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={deselectTributeOfTheFourSorrowsSelectionTarget} title={t("common.cancel")}>
+                    <button
+                      ref={(element) => guidedAnchorRegistry.set(
+                        guidedSurfaceAnchorKey("selection.cancelAction"),
+                        "tribute-selection:cancel",
+                        element,
+                      )}
+                      data-audio-click="valid"
+                      className="counter-target-button counter-target-cancel"
+                      onClick={deselectTributeOfTheFourSorrowsSelectionTarget}
+                      title={t("common.cancel")}
+                    >
                       {t("common.cancel")}
                     </button>
                   )}
                   <button
+                    ref={(element) => guidedAnchorRegistry.set(
+                      guidedSurfaceAnchorKey("selection.primaryAction"),
+                      "tribute-selection:confirm",
+                      element,
+                    )}
                     data-audio-click={tributeOfTheFourSorrowsSelectionTargetId ? "valid" : undefined}
                     className="counter-target-button counter-target-confirm"
                     disabled={!tributeOfTheFourSorrowsSelectionTargetId}
@@ -265,6 +281,11 @@ export function DuelHud({ game }: { game: GameState }) {
         </AnimatePresence>
         <div className={["host-deck-counter-cluster", attackCounterVisible ? "is-attack-counter-open" : ""].join(" ")}>
           <div
+            ref={(element) => guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey("host.archive"),
+              "duel-hud:host-archive",
+              element,
+            )}
             data-player-attack-target="host-deck"
             data-host-life-panel="true"
             className={[
@@ -352,6 +373,11 @@ export function DuelHud({ game }: { game: GameState }) {
           {/* Misma caja de Memoria que el Cronista, en fila con el panel de la Hueste. */}
           <GameTooltip content={t("game.viewGraveyard")} side="bottom" className="card-pile-host host-memory-pile-host">
             <button
+              ref={(element) => guidedAnchorRegistry.set(
+                guidedSurfaceAnchorKey("host.memory"),
+                "duel-hud:host-memory",
+                element,
+              )}
               data-host-mill-target="true"
               data-audio-click="valid"
               className="card-pile card-pile-memory"
@@ -560,6 +586,11 @@ export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameSt
           <div className="player-vitals-row">
             <GameTooltip content={t("game.viewGraveyard")} side="top" className="card-pile-host">
               <button
+                ref={(element) => guidedAnchorRegistry.set(
+                  guidedSurfaceAnchorKey("player.memory"),
+                  "duel-hud:player-memory",
+                  element,
+                )}
                 data-player-discard-target="true"
                 data-audio-click="valid"
                 className="card-pile card-pile-memory"
@@ -575,6 +606,11 @@ export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameSt
             </GameTooltip>
             <PlayerArchiveForecast game={game} />
           <div
+            ref={(element) => guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey("player.life"),
+              "duel-hud:player-life",
+              element,
+            )}
             data-player-life-panel="true"
             className="energy-recycle-life-target"
           >

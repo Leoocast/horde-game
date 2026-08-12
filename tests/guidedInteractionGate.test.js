@@ -13,6 +13,22 @@ import { useAudioStore } from "../src/store/useAudioStore";
 import { useGameStore } from "../src/store/useGameStore";
 import { addCard, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
 
+test("interaction snapshots remain referentially stable until the gate changes", () => {
+  const gate = new GuidedInteractionGate();
+  const initial = gate.snapshot();
+  assert.equal(gate.snapshot(), initial);
+
+  let notified;
+  gate.subscribe((snapshot) => {
+    notified = snapshot;
+  });
+  gate.activate(policy({ mode: "explain" }));
+
+  assert.notEqual(gate.snapshot(), initial);
+  assert.equal(gate.snapshot(), notified);
+  assert.equal(gate.snapshot(), gate.snapshot());
+});
+
 test("the gate is a no-op outside a guide and blocks every intent during explain/observe", () => {
   const gate = new GuidedInteractionGate();
   assert.deepEqual(gate.authorize({ kind: "opening.mulligan" }), { allowed: true });

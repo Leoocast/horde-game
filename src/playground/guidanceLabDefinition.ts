@@ -53,22 +53,25 @@ export const GUIDANCE_LAB_LESSON: GuidedLessonDefinition = {
     {
       id: "explain-source",
       kind: "explain",
-      copy: { titleKey: "mulligan.title", bodyKey: "mulligan.accept" },
+      copy: { titleKey: "guided.lab.explainSourceTitle", bodyKey: "guided.lab.explainSourceBody" },
       highlights: [{ kind: "card", alias: "source_to_play" }],
       nextStepId: "play-source",
     },
     {
       id: "play-source",
       kind: "act",
-      copy: { titleKey: "mulligan.title", bodyKey: "mulligan.accept" },
-      highlights: [{ kind: "card", alias: "source_to_play" }],
+      copy: { titleKey: "guided.lab.playSourceTitle", bodyKey: "guided.lab.playSourceBody" },
+      highlights: [
+        { kind: "card", alias: "source_to_play", role: "origin" },
+        { kind: "surface", anchor: "player.field", role: "destination" },
+      ],
       allowedIntent: { kind: "card.play", cardAlias: "source_to_play" },
       nextStepId: "observe-source",
     },
     {
       id: "observe-source",
       kind: "observe",
-      copy: { titleKey: "mulligan.title", bodyKey: "mulligan.accept" },
+      copy: { titleKey: "guided.lab.observeSourceTitle", bodyKey: "guided.lab.observeSourceBody" },
       highlights: [{ kind: "surface", anchor: "player.sources" }],
       expectedReceipt: { kind: "source.played", cardAlias: "source_to_play" },
       nextStepId: "source-settled",
@@ -76,7 +79,7 @@ export const GUIDANCE_LAB_LESSON: GuidedLessonDefinition = {
     {
       id: "source-settled",
       kind: "explain",
-      copy: { titleKey: "mulligan.title", bodyKey: "mulligan.accept" },
+      copy: { titleKey: "guided.lab.sourceSettledTitle", bodyKey: "guided.lab.sourceSettledBody" },
       highlights: [{ kind: "surface", anchor: "player.sources" }],
     },
   ],

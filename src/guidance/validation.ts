@@ -8,6 +8,7 @@ import { isTranslationKey } from "../i18n/translations";
 import {
   GUIDED_INTENT_CONTEXTS,
   GUIDED_INTENT_KINDS,
+  GUIDED_HIGHLIGHT_ROLES,
   GUIDED_LESSON_SCHEMA_VERSION,
   GUIDED_RECEIPT_KINDS,
   GUIDED_SURFACE_ANCHORS,
@@ -24,6 +25,7 @@ const ALIAS_PATTERN = /^[a-z][a-z0-9_]*$/u;
 const PHASES = new Set<Phase>(["untap", "draw", "main", "combat", "end", "host"]);
 const INTENT_KINDS = new Set<string>(GUIDED_INTENT_KINDS);
 const INTENT_CONTEXTS = new Set<string>(GUIDED_INTENT_CONTEXTS);
+const HIGHLIGHT_ROLES = new Set<string>(GUIDED_HIGHLIGHT_ROLES);
 const RECEIPT_KINDS = new Set<string>(GUIDED_RECEIPT_KINDS);
 const SURFACE_ANCHORS = new Set<string>(GUIDED_SURFACE_ANCHORS);
 
@@ -338,12 +340,16 @@ function validateSteps(
     if (!isTranslationKey(String(step.copy?.bodyKey))) problems.push(`Step "${step.id}" has unknown body translation key.`);
     if (!Array.isArray(step.highlights)) problems.push(`Step "${step.id}" highlights must be an array.`);
     for (const highlight of step.highlights ?? []) {
+      if (highlight.role !== undefined && !HIGHLIGHT_ROLES.has(highlight.role)) {
+        problems.push(`Step "${step.id}" uses unknown highlight role "${String(highlight.role)}".`);
+      }
       if (highlight.kind === "card") validateAliasRef(step.id, highlight.alias, cards, problems);
       else if (highlight.kind === "surface") {
         if (!SURFACE_ANCHORS.has(highlight.anchor)) problems.push(`Step "${step.id}" uses unknown surface anchor "${highlight.anchor}".`);
       } else problems.push(`Step "${step.id}" has an unknown highlight kind.`);
     }
     if (step.kind === "act") {
+      if (step.highlights.length === 0) problems.push(`Act step "${step.id}" requires at least one highlight.`);
       if (!INTENT_KINDS.has(step.allowedIntent?.kind)) problems.push(`Step "${step.id}" has unknown intent kind.`);
       validateMatcherAliases(step.id, step.allowedIntent, cards, problems);
       validateIntentShape(step.id, step.allowedIntent, problems);

@@ -11,6 +11,7 @@ import { targetArrowCurve } from "./tacticalArrowGeometry";
 import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 import { Card } from "./Card";
 import { shouldRevealOverlappedTargets } from "./targetingGeometry";
+import { guidedAnchorRegistry, guidedCardAnchorKey, guidedSurfaceAnchorKey } from "../guidance";
 
 const FRIENDLY_ARROW = "#4ade80";
 const ENEMY_ARROW = "#f04438";
@@ -190,7 +191,14 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
         className="counter-target-source-panel"
       >
         <div
-          ref={sourceRef}
+          ref={(element) => {
+            sourceRef.current = element;
+            guidedAnchorRegistry.set(
+              guidedCardAnchorKey(spell.instanceId),
+              `spell-targeting:source:${spell.instanceId}`,
+              element,
+            );
+          }}
           data-spell-source-card-id={spell.instanceId}
           className="counter-target-source-card"
         >
@@ -214,6 +222,11 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
         </div>
         <div className="counter-target-actions">
           <button
+            ref={(element) => guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey("selection.cancelAction"),
+              "spell-targeting:cancel",
+              element,
+            )}
             data-audio-click="valid"
             className="counter-target-button counter-target-cancel"
             onClick={hasAnyTarget ? deselectTarget : cancelTargeting}
@@ -222,7 +235,18 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
           >
             {hasAnyTarget ? <X size={22} /> : t("common.cancel")}
           </button>
-          <button data-audio-click={complete ? "valid" : undefined} className="counter-target-button counter-target-confirm" disabled={!complete} onClick={confirmTargeting} title={t("common.confirm")}>
+          <button
+            ref={(element) => guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey("selection.primaryAction"),
+              "spell-targeting:confirm",
+              element,
+            )}
+            data-audio-click={complete ? "valid" : undefined}
+            className="counter-target-button counter-target-confirm"
+            disabled={!complete}
+            onClick={confirmTargeting}
+            title={t("common.confirm")}
+          >
             <Check size={24} />
           </button>
         </div>
