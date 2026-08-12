@@ -21,6 +21,7 @@ import {
 import { getHandCardPresentationState, handArchiveEntryOffset } from "./handCardPresentation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, motionValue, type MotionValue, type PanInfo, type Variants } from "framer-motion";
+import { guidedPresentationActivity, type GuidedPresentationActivityToken } from "../guidance";
 
 const DRAG_PLAY_SCREEN_RATIO = 0.7;
 const ENERGY_RECYCLE_SCREEN_RATIO = 0.82;
@@ -124,6 +125,8 @@ export function Hand({ game }: { game: GameState }) {
   const handSize = visibleHand.length;
   const handLayoutSignature = visibleHand.map((card) => card.instanceId).join("|");
   const previousVisibleHandIds = useRef(new Set(visibleHand.map((card) => card.instanceId)));
+  const animatedHandIds = useRef(new Set<string>());
+  const handEntryActivities = useRef(new Map<string, GuidedPresentationActivityToken>());
   const enteringHandIds = visibleHand
     .filter((card) => !previousVisibleHandIds.current.has(card.instanceId))
     .map((card) => card.instanceId);
@@ -132,11 +135,30 @@ export function Hand({ game }: { game: GameState }) {
   useEffect(() => () => {
     setEnergyRecycleDragActive(false);
     setDraggingRecyclableSourceId(undefined);
+    for (const token of handEntryActivities.current.values()) token.end();
+    handEntryActivities.current.clear();
   }, [setDraggingRecyclableSourceId, setEnergyRecycleDragActive]);
 
   useLayoutEffect(() => {
+    const visibleIds = new Set(visibleHand.map((card) => card.instanceId));
+    for (const id of animatedHandIds.current) {
+      if (visibleIds.has(id)) continue;
+      animatedHandIds.current.delete(id);
+      handEntryActivities.current.get(id)?.end();
+      handEntryActivities.current.delete(id);
+    }
+    for (const id of visibleIds) {
+      if (animatedHandIds.current.has(id)) continue;
+      animatedHandIds.current.add(id);
+      handEntryActivities.current.set(id, guidedPresentationActivity.begin("hand.entry", id));
+    }
     previousVisibleHandIds.current = new Set(visibleHand.map((card) => card.instanceId));
   }, [handLayoutSignature]);
+
+  function completeHandEntry(id: string) {
+    handEntryActivities.current.get(id)?.end();
+    handEntryActivities.current.delete(id);
+  }
 
   useLayoutEffect(() => {
     const region = handRegionRef.current;
@@ -433,6 +455,7 @@ export function Hand({ game }: { game: GameState }) {
                 transition={{
                   layout: { type: "spring", stiffness: 420, damping: 38, mass: 0.55 },
                 }}
+                onAnimationComplete={() => completeHandEntry(card.instanceId)}
                 className="hand-card-slot"
                 style={{ position: "relative", zIndex: handZIndex }}
               >

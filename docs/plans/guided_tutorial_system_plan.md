@@ -1,6 +1,6 @@
 # Plan por fases — Sistema de guía, pausa y resaltado
 
-Estado: **abierto; Fases 0 a 2 cerradas, Fases 3 a 8 pendientes. Gate semántico implementado; sin UI, pausa ni orquestación.**
+Estado: **abierto; Fases 0 a 3 cerradas, Fases 4 a 8 pendientes. Pausa y checkpoints implementados; spotlight y cuadro todavía pendientes.**
 
 Última actualización: **2026-08-11**.
 
@@ -478,7 +478,7 @@ rechazados no emiten receipts y el juego normal conserva su comportamiento con l
 
 ## Fase 3 — Ciclo de pausa y checkpoints de presentación
 
-Estado: **pendiente**.
+Estado: **cerrada el 2026-08-11.**
 
 ### Antes de iniciar
 
@@ -515,6 +515,30 @@ control. Al mismo tiempo, conserva consecuencias visuales completas y fáciles d
 - No migra todas las animaciones del juego a un scheduler nuevo.
 - No añade todavía spotlight ni cuadro final.
 
+### Implementación materializada
+
+- `GuidedSessionStore` mantiene sesión, paso, modo, bindings y permiso de avance fuera de
+  `GameState`. Consume los receipts reales del gate y recorre
+  `Explicar → Actuar → Observar → checkpoint` sin resolver reglas.
+- `GuidedBeatBarrier` retiene únicamente el inicio del siguiente beat automático. Los runners de
+  reacciones del Cronista y la Hueste, las llegadas y el inicio de combate consultan esta barrera;
+  el beat que ya empezó conserva su commit y termina completo.
+- `GuidedPresentationActivityRegistry` publica tokens con epoch para presentaciones locales y beats.
+  La Mano, la transferencia a la Reserva y los runners automáticos ya registran inicio/fin; un token
+  de un tablero abandonado no puede asentarse sobre el siguiente.
+- `isGuidedPresentationSettled` distingue presentación activa de trabajo meramente encolado o de
+  una selección estable. Así puede existir un checkpoint con reacciones pendientes detrás de la
+  barrera sin fingir que una animación en curso terminó.
+- Reset, carga de escenario, salida y fin de partida invalidan barrera, tokens, epochs de combate y
+  temporizadores compartidos. La secuencia de ataque del Cronista también quedó protegida contra
+  callbacks de una sesión anterior.
+- Developer Mode incorpora la pestaña **Guide** del Playground. Su fixture exacto de Elarion monta
+  el Board real y muestra modo, paso, receipts, tokens, blockers y beats retenidos. Este fixture es
+  tooling de desarrollo y no es el contenido de la Primera Semilla.
+- La comprobación posterior a un cambio de reglas ocurre en el siguiente frame de presentación, no
+  tras un número fijo de milisegundos. Esto da tiempo a React/Framer Motion para registrar una
+  animación local antes de declarar el checkpoint estable.
+
 ### Pruebas mínimas
 
 - La espera de lectura puede durar indefinidamente sin cambiar `GameState`.
@@ -525,8 +549,10 @@ control. Al mismo tiempo, conserva consecuencias visuales completas y fáciles d
 
 ### Criterio de cierre
 
-Una secuencia de prueba puede detenerse, aceptar una única acción, terminar su presentación y
-detenerse de nuevo sin temporizadores mágicos ni estado residual.
+Cumplido el 2026-08-11. La vertical del Guidance Lab se detiene, acepta únicamente la Fuente exacta,
+observa su entrada real al Campo y vuelve a detenerse. Las regresiones cubren espera indefinida,
+tokens visuales, barrera entre beats, movimiento reducido por finalización semántica e invalidación
+de callbacks al abandonar.
 
 ---
 

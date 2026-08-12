@@ -388,6 +388,10 @@ El seed literal `developer` activa una preparación determinista para probar car
 Es una herramienta, no parte del lore. Si se añade una carta que necesita setup especial, preferir
 preparación genérica por tipos/efectos antes que un puente permanente por `definitionId`.
 
+El Playground incluye una pestaña dev-only **Guide**. Monta un fixture exacto de Elarion sobre el
+Board real y diagnostica el ciclo de pausa, la intención autorizada, receipts, tokens visuales y
+beats retenidos. No es el guion ni el copy de la Primera Semilla y no entra al bundle de release.
+
 ## Dirección narrativa futura
 
 Las seeds podrán presentarse dentro del mundo como **Semillas del Destino**: líneas temporales que
@@ -431,8 +435,8 @@ contenido. El ciclo aprobado es **Explicar → Actuar → Observar → checkpoin
 intención solicitada puede llegar al engine; una animación iniciada termina durante Observar y nunca
 se congela a mitad. Se permiten ajustes prácticos menores de layout, intensidad, copy y timing
 durante QA, pero cambiar deck canónico, política sin resume, acciones permitidas o pausa entre beats
-requiere nueva aprobación. Las Fases 3 a 8 siguen pendientes; ya existe el gate semántico, pero no
-hay UI, pausa ni orquestador de guía implementados.
+requiere nueva aprobación. Las Fases 4 a 8 siguen pendientes; ya existen el gate semántico, la
+sesión de pausa y los checkpoints, pero no hay spotlight, cuadro ni guion final implementados.
 
 La Fase 1 quedó cerrada el 2026-08-11 y fija que **cada tutorial es un escenario completamente
 predefinido**: decks, copias exactas, Mano o reparto inicial, Archivo del Cronista en orden,
@@ -460,8 +464,16 @@ ya autorizadas; nunca debe envolver el primer compromiso de un handler ni autori
 Los receipts son efímeros, tienen cursor monotónico y conservan `sessionId`/`stepId`. El store los
 emite por resultados semánticos reales —incluidos targeting multietapa, fin de Preparación, robo con
 cantidad y motivo, Reserva liberada y descartes del Archivo de la Hueste— sin leer logs. El registro
-de rechazos tipados será la fuente del futuro pulso visual. Todavía no existe el runtime que recorre
-pasos ni el overlay; eso empieza en las Fases 3 y 4.
+de rechazos tipados será la fuente del futuro pulso visual. El runtime de sesión existe desde la
+Fase 3; el overlay comienza en la Fase 4.
+
+La Fase 3 quedó cerrada el 2026-08-11. `GuidedSessionStore` vive fuera de `GameState` y coordina
+**Explicar → Actuar → Observar → checkpoint** usando los receipts del gate y el estado real de
+presentación. `GuidedBeatBarrier` sólo retiene el inicio del siguiente beat automático: nunca
+congela una animación o un commit ya iniciado. `GuidedPresentationActivityRegistry` usa tokens con
+epoch para las entradas de Mano, la transferencia a Reserva y los beats de reacciones; junto con
+los flags del store forma `isGuidedPresentationSettled`. Reset, carga y salida invalidan callbacks,
+tokens y continuaciones retenidas. La Fase 4 añadirá el overlay, anclas, escudo DOM y copy visible.
 
 `playerDrawForecast` en
 `src/engine/TurnManager.ts` es la fuente única para el robo real y su previsión. La devolución

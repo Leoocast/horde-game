@@ -20,6 +20,18 @@ let buffAnimationTimer: number | undefined;
 let lifeBuffAnimationTimer: number | undefined;
 let autoPaidLandFlashTimer: number | undefined;
 
+/** Clears the small shared presentation clocks when a board/session is replaced. */
+export function resetPresentationEffectTimers(): void {
+  if (typeof window !== "undefined") {
+    if (buffAnimationTimer !== undefined) window.clearTimeout(buffAnimationTimer);
+    if (lifeBuffAnimationTimer !== undefined) window.clearTimeout(lifeBuffAnimationTimer);
+    if (autoPaidLandFlashTimer !== undefined) window.clearTimeout(autoPaidLandFlashTimer);
+  }
+  buffAnimationTimer = undefined;
+  lifeBuffAnimationTimer = undefined;
+  autoPaidLandFlashTimer = undefined;
+}
+
 export function uiText(key: TranslationKey, params?: Record<string, string | number>): string {
   return translate(useLanguageStore.getState().language, key, params);
 }

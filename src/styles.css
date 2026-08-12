@@ -17759,6 +17759,24 @@
 
 .playground-button-row { display: flex; flex-wrap: wrap; gap: 6px; }
 
+.playground-guidance-readout {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+}
+
+.playground-guidance-readout > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  color: #aca386;
+  font-size: 11px;
+}
+
+.playground-guidance-readout dt { color: #756e5d; }
+.playground-guidance-readout dd { margin: 0; color: #ded2ad; text-align: right; }
+
 .playground-button {
   display: inline-flex;
   min-height: 32px;

@@ -24,6 +24,7 @@ try {
   await server.ssrLoadModule("/tests/playgroundStorage.test.js");
   await server.ssrLoadModule("/tests/guidedLesson.test.js");
   await server.ssrLoadModule("/tests/guidedInteractionGate.test.js");
+  await server.ssrLoadModule("/tests/guidedSession.test.js");
   await server.ssrLoadModule("/tests/audioMix.test.js");
   await server.ssrLoadModule("/tests/vocabulary.test.js");
   await server.ssrLoadModule("/tests/uiPresentation.test.js");

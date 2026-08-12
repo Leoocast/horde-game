@@ -37,8 +37,8 @@ retirado. Su fuente de verdad es el JSON del deck.
 Estos documentos se conservan porque contienen decisiones o validaciones sin terminar:
 
 - [`plans/guided_tutorial_system_plan.md`](plans/guided_tutorial_system_plan.md) — implementación
-  por fases del framework escalable de pausa, bloqueo, resaltado y explicación; Fases 0 a 2
-  cerradas, con gate semántico pero sin UI/pausa/orquestación ni el guion de la Primera Semilla.
+  por fases del framework escalable de pausa, bloqueo, resaltado y explicación; Fases 0 a 3
+  cerradas, con sesión/checkpoints pero sin spotlight, cuadro ni el guion de la Primera Semilla.
 - [`plans/generated_look_remediation_plan.md`](plans/generated_look_remediation_plan.md) — corrección
   de las señales visuales que hacen leer la UI como generada; no iniciado.
 - [`plans/seeds_of_destiny.md`](plans/seeds_of_destiny.md) — narrativa y persistencia futura.

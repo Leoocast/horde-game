@@ -21,6 +21,7 @@ import {
 import { useToastStore } from "./useToastStore";
 import { useGameStore, type BurnAnimationTarget } from "./useGameStore";
 import { hasQueuedPlayerTriggers, scheduleQueuedPlayerTriggers } from "./playerBeats";
+import { guidedBeatBarrier, guidedPresentationActivity, guidedSessionStore } from "../guidance/runtime";
 import {
   BUFF_ANIMATION_MS,
   appendHostMillAnimations,
@@ -112,9 +113,11 @@ export function scheduleHostInvokedTriggers(
   const sequenceId = ++hostAutoTriggerSequenceId;
   const runNext = (index: number) => {
     if (sequenceId !== hostAutoTriggerSequenceId) return;
+    if (!guidedBeatBarrier.request("host.invoked-trigger", () => runNext(index))) return;
     const card = cards[index];
     if (!card) {
       useGameStore.setState({ hostAutoTriggerCount: 0 });
+      if (onComplete && !guidedBeatBarrier.request("host.invoked-trigger", onComplete)) return;
       onComplete?.();
       return;
     }
@@ -143,6 +146,7 @@ export function scheduleHostInvokedTriggers(
     const triggerStartMs = activationAlreadyShown ? 40 : HOST_ENTER_TRIGGER_START_MS;
     const triggerResolveMs = activationAlreadyShown ? 80 : HOST_ENTER_TRIGGER_RESOLVE_MS;
     const triggerHandoffMs = activationAlreadyShown ? 40 : 180;
+    const activity = guidedPresentationActivity.begin("host.invoked-trigger", card.instanceId);
     useGameStore.setState({ hostAutoTriggerCount: 1 });
     window.setTimeout(() => {
       if (sequenceId !== hostAutoTriggerSequenceId) return;
@@ -177,7 +181,10 @@ export function scheduleHostInvokedTriggers(
       captureStaticAuraBeats();
       window.setTimeout(() => {
         if (sequenceId === hostAutoTriggerSequenceId) {
-          scheduleQueuedHostTriggers(() => runNext(index + 1));
+          scheduleQueuedHostTriggers(() => {
+            activity.end();
+            runNext(index + 1);
+          });
         }
       }, triggerHandoffMs);
     }, triggerStartMs + triggerResolveMs);
@@ -196,6 +203,7 @@ export function scheduleHostArrivalEffects(cards: CardInstance[], onComplete?: (
     }, HOST_ENTRY_WAIT_POLL_MS);
     return;
   }
+  if (!guidedBeatBarrier.request("host.arrival", () => scheduleHostArrivalEffects(cards, onComplete))) return;
   const auraSourceIds = [
     ...new Set(useGameStore.getState().pendingStaticAuras.map((aura) => aura.sourceId)),
   ];
@@ -218,6 +226,7 @@ export function startHostCombatSequence(): void {
     }, HOST_ENTRY_WAIT_POLL_MS);
     return;
   }
+  if (!guidedBeatBarrier.request("host.combat", startHostCombatSequence)) return;
   captureStaticAuraBeats();
   flushStaticAuraBeats();
   const begun = beginHostCombat(useGameStore.getState().game, { deferTriggeredEvents: true });
@@ -341,6 +350,7 @@ export function scheduleQueuedHostTriggers(onComplete?: () => void): void {
     window.setTimeout(() => scheduleQueuedHostTriggers(onComplete), 120);
     return;
   }
+  if (!guidedBeatBarrier.request("host.trigger", () => scheduleQueuedHostTriggers(onComplete))) return;
   const sequenceId = hostAutoTriggerSequenceId;
   let event: EventItem | undefined;
   let sources: CardInstance[] = [];
@@ -381,6 +391,7 @@ export function scheduleQueuedHostTriggers(onComplete?: () => void): void {
       scheduleQueuedPlayerTriggers(() => scheduleQueuedHostTriggers(onComplete));
       return;
     }
+    if (onComplete && !guidedBeatBarrier.request("host.trigger", onComplete)) return;
     onComplete?.();
     return;
   }
@@ -389,28 +400,42 @@ export function scheduleQueuedHostTriggers(onComplete?: () => void): void {
   // already outlasted the reflow (the burn resolves at 500ms and runs to 1180ms) sit through a
   // second full settle of dead air. Only ever wait for what is actually left.
   let boardChangedAt: number | undefined;
-  claimedHandler.run({
-    event: claimedEvent,
-    sources,
-    sequenceId,
-    resolve: () => {
-      const changed = resolveBeatEvent(claimedEvent, sources[0]?.instanceId);
-      if (changed) boardChangedAt = performance.now();
-      return changed;
-    },
-    done: () => {
-      if (sequenceId !== hostAutoTriggerSequenceId) return;
-      const settled = boardChangedAt === undefined ? BOARD_SETTLE_MS : performance.now() - boardChangedAt;
-      const remaining = Math.max(0, BOARD_SETTLE_MS - settled);
-      if (remaining === 0) {
-        scheduleQueuedHostTriggers(onComplete);
-        return;
-      }
-      window.setTimeout(() => {
-        if (sequenceId === hostAutoTriggerSequenceId) scheduleQueuedHostTriggers(onComplete);
-      }, remaining);
-    },
-  });
+  let beatFinished = false;
+  const activity = guidedPresentationActivity.begin("host.trigger-beat", claimedHandler.id);
+  const finishBeat = () => {
+    if (beatFinished) return;
+    beatFinished = true;
+    activity.end();
+    scheduleQueuedHostTriggers(onComplete);
+  };
+  try {
+    claimedHandler.run({
+      event: claimedEvent,
+      sources,
+      sequenceId,
+      resolve: () => {
+        const changed = resolveBeatEvent(claimedEvent, sources[0]?.instanceId);
+        if (changed) boardChangedAt = performance.now();
+        return changed;
+      },
+      done: () => {
+        if (sequenceId !== hostAutoTriggerSequenceId) return;
+        const settled = boardChangedAt === undefined ? BOARD_SETTLE_MS : performance.now() - boardChangedAt;
+        const remaining = Math.max(0, BOARD_SETTLE_MS - settled);
+        if (remaining === 0) {
+          finishBeat();
+          return;
+        }
+        window.setTimeout(() => {
+          if (sequenceId === hostAutoTriggerSequenceId) finishBeat();
+        }, remaining);
+      },
+    });
+  } catch (error) {
+    activity.end();
+    guidedSessionStore.fail(error);
+    throw error;
+  }
 }
 
 // Commits one beat's engine effect. With `sourceId`, only that card's triggers resolve and the

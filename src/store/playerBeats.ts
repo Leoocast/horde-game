@@ -16,6 +16,7 @@ import {
   uiText,
 } from "./presentationEffects";
 import { buffAnimationVariantForCard } from "./buffAnimation";
+import { guidedBeatBarrier, guidedPresentationActivity } from "../guidance/runtime";
 
 // Automatic player reactions use the same contract as Host beats: one source announces itself,
 // then the engine commits that source's effect exactly when the presentation lands. The sequence
@@ -46,6 +47,7 @@ export function scheduleQueuedPlayerTriggers(onComplete?: () => void): void {
 
 function scheduleNextPlayerTrigger(sequenceId: number, onComplete?: () => void): void {
   if (sequenceId !== playerTriggerSequenceId) return;
+  if (!guidedBeatBarrier.request("player.trigger", () => scheduleNextPlayerTrigger(sequenceId, onComplete))) return;
 
   let event: EventItem | undefined;
   let source: CardInstance | undefined;
@@ -78,10 +80,12 @@ function scheduleNextPlayerTrigger(sequenceId: number, onComplete?: () => void):
   const claimedEvent = event;
   const claimedSource = source;
   if (!claimedEvent || !claimedSource) {
+    if (onComplete && !guidedBeatBarrier.request("player.trigger", onComplete)) return;
     onComplete?.();
     return;
   }
 
+  const activity = guidedPresentationActivity.begin("player.trigger-beat", claimedSource.instanceId);
   useAudioStore.getState().playSfx("activateEffect");
   useGameStore.getState().triggerEffectActivationPulse(claimedSource.instanceId);
   useToastStore.getState().pushToast({
@@ -100,6 +104,7 @@ function scheduleNextPlayerTrigger(sequenceId: number, onComplete?: () => void):
       : PLAYER_TRIGGER_NO_BUFF_HANDOFF_MS;
     window.setTimeout(() => {
       if (sequenceId === playerTriggerSequenceId) {
+        activity.end();
         scheduleNextPlayerTrigger(sequenceId, onComplete);
       }
     }, handoffMs);

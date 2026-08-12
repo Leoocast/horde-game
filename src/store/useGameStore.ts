@@ -60,6 +60,7 @@ import {
   monsterSfx,
   notifyDiscardEffects,
   playDrawOneIfPlayerDrew,
+  resetPresentationEffectTimers,
   resumeAfterDiscardPause,
   showActionToast,
   startBuffBeat,
@@ -96,6 +97,12 @@ import {
   type GameplayBlockAssignment,
   type GameplayIntent,
 } from "../guidance/interactionGate";
+import {
+  guidedPresentationActivity,
+  guidedSessionStore,
+  isGuidedPresentationSettled,
+  scheduleGuidedCheckpointEvaluation,
+} from "../guidance";
 import { playerDrawForecast } from "../engine/TurnManager";
 
 export type GameStore = {
@@ -308,6 +315,7 @@ let energyFlowCommit: (() => Partial<GameStore>) | undefined;
 let energyFlowAfterCommit: (() => void) | undefined;
 const publishedGuidedTransitionStates = new WeakSet<GameState>();
 let hostCombatSequenceId = 0;
+let playerCombatSequenceId = 0;
 
 export type HostAttackAnimation = {
   attackerId: string;
@@ -1594,6 +1602,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
     publishGameplayReceipt({ kind: "archiveAttack.confirmed", targetIds: attackers });
+    const sequenceId = ++playerCombatSequenceId;
 
     const previewMillCards = previewPlayerCombatMillCards(game, attackers);
     const personalAttackAnimations = new Map<string, PersonalAttackAnimationPlan>(
@@ -1632,6 +1641,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         : undefined;
       const startAt = elapsed;
       window.setTimeout(() => {
+        if (sequenceId !== playerCombatSequenceId) return;
         if (!customAnimation || customAnimation.effect.type !== "fireball") {
           useAudioStore.getState().playSfx("attack");
         }
@@ -1663,12 +1673,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }, startAt);
       if (customAnimation?.effect.type === "fireball") {
         window.setTimeout(() => {
+          if (sequenceId !== playerCombatSequenceId) return;
           const active = useGameStore.getState().playerAttackAnimation;
           if (active?.attackerId !== attackerId || active.eventId !== index) return;
           useAudioStore.getState().playSfx(pickRandomSfx(fireballCastSfx));
         }, startAt + customAnimation.castMs);
       }
       window.setTimeout(() => {
+        if (sequenceId !== playerCombatSequenceId) return;
         const active = useGameStore.getState().playerAttackAnimation;
         if (
           customAnimation?.effect.type === "fireball" &&
@@ -1716,11 +1728,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }, startAt + impactOffset);
       for (const preview of attackerMillCards) {
         window.setTimeout(() => {
+          if (sequenceId !== playerCombatSequenceId) return;
           useGameStore.getState().queueHostMillPreview(preview.card);
         }, startAt + impactOffset + preview.cardIndexInHit * (HOST_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS));
       }
       if (burnAnimationId && customAnimation) {
         window.setTimeout(() => {
+          if (sequenceId !== playerCombatSequenceId) return;
           useGameStore.setState((state) =>
             state.burnAnimation?.id === burnAnimationId
               ? { burnAnimation: undefined }
@@ -1735,6 +1749,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
 
     window.setTimeout(() => {
+      if (sequenceId !== playerCombatSequenceId) return;
       const latest = get().game;
       const resolved = resolvePlayerCombat(latest, { skipDrain: true, skipPoison: true });
       const next = advancePhase(resolved, "end");
@@ -2007,6 +2022,22 @@ useGameStore.subscribe((state, previousState) => {
     if (guidedInteractionGate.snapshot().policy?.sessionId !== sessionId) return;
     publishGuidedTransitionReceipts(previousGame, nextGame);
   });
+});
+
+function guidedCheckpointIsSettled(): boolean {
+  return isGuidedPresentationSettled(useGameStore.getState(), guidedPresentationActivity.snapshot());
+}
+
+guidedSessionStore.configureCheckpointProbe(guidedCheckpointIsSettled, scheduleGuidedCheckpointEvaluation);
+guidedPresentationActivity.subscribe(() => {
+  guidedSessionStore.notifyCheckpointState(guidedCheckpointIsSettled());
+});
+useGameStore.subscribe((state) => {
+  if (state.game.winner) {
+    guidedSessionStore.notifyGameEnded();
+    return;
+  }
+  guidedSessionStore.notifyCheckpointState(guidedCheckpointIsSettled());
 });
 
 function phaseAdvanceIntent(game: GameState, target?: Phase): GameplayIntent {
@@ -2463,8 +2494,12 @@ function clearEnergyFlowPresentation(): void {
 
 function cancelScheduledPresentation(): void {
   hostCombatSequenceId += 1;
+  playerCombatSequenceId += 1;
   resetHostSequence();
   resetPlayerTriggerSequence();
+  resetPresentationEffectTimers();
+  guidedSessionStore.invalidate("presentation-reset");
+  guidedPresentationActivity.reset();
 
   if (typeof window !== "undefined") {
     if (activeEffectCloseTimer !== undefined) window.clearTimeout(activeEffectCloseTimer);
