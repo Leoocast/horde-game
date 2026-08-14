@@ -153,6 +153,13 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(styles, /\.guided-tutorial-dimmer\s*\{\s*fill:\s*rgb\(2 4 4 \/ 0\.3\);\s*\}/u);
   assert.match(styles, /\.guided-tutorial-ring\[data-anchor-key\^="card:"\]\s*\{\s*display:\s*none;\s*\}/u);
   assert.match(styles, /\.guided-tutorial-body p\s*\{[^}]*font-size:\s*16px;/su);
+  assert.match(
+    styles,
+    /\.guided-tutorial-overlay\s*\{[^}]*font-family:\s*"Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;/su,
+  );
+  assert.match(styles, /\.guided-tutorial-callout h2\s*\{[^}]*font-family:\s*inherit;[^}]*font-weight:\s*600;/su);
+  assert.match(styles, /\.guided-tutorial-body p\s*\{[^}]*font-family:\s*inherit;/su);
+  assert.match(styles, /\.guided-tutorial-continue\s*\{[^}]*font-family:\s*inherit;/su);
   assert.match(styles, /\.guided-player-sources-anchor\s*\{[^}]*width:\s*174px;[^}]*height:\s*85px;/su);
   assert.match(board, /sessionKind === "tutorial"/u);
 });
