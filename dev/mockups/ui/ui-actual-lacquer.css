@@ -1,0 +1,1333 @@
+/* ============================================================================
+   Hostfall — UI actual × Laca del Cronista
+   Reproduce los componentes reales del juego (geometría y estructura copiadas de
+   src/styles.css) y los expone en dos materiales: la piel oliva/ámbar de hoy y la
+   laca azul-plata. Sólo cambian los tokens de color; las medidas son las mismas.
+   Maqueta suelta: no se importa desde src/.
+   ========================================================================== */
+
+@font-face {
+  font-family: "Cinzel";
+  font-weight: 500 900;
+  font-display: block;
+  src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Lora";
+  font-weight: 400 700;
+  font-display: block;
+  src: url("../assets/fonts/lora-normal-latin.woff2") format("woff2");
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #08090a;
+  color: #cbbfa6;
+  font-family: "Lora", Georgia, serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 1.2rem;
+  align-items: center;
+  padding: 0.7rem 1.5rem;
+  background: rgb(8 7 6 / 0.96);
+  border-bottom: 1px solid rgb(255 255 255 / 0.09);
+}
+
+.topbar__brand {
+  margin-right: auto;
+  font-family: "Cinzel", serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: #b9a67f;
+}
+
+.modebar {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.chip {
+  appearance: none;
+  cursor: pointer;
+  padding: 0.42rem 0.9rem;
+  font-family: "Cinzel", serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #cbbfa6;
+  background: rgb(255 255 255 / 0.04);
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 2px;
+}
+
+.chip:hover {
+  color: #fff;
+  border-color: rgb(255 255 255 / 0.32);
+}
+
+.chip[aria-pressed="true"] {
+  color: #eaf3ff;
+  background: rgb(47 124 176 / 0.22);
+  border-color: rgb(157 180 204 / 0.7);
+}
+
+.page {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 5rem;
+}
+
+.intro {
+  max-width: 92ch;
+  margin: 0 0 1.5rem;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #9a8f79;
+}
+
+.intro b {
+  color: #d3c6a8;
+}
+
+.stack {
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* ==========================================================================
+   Tokens: piel actual (oliva + ámbar) y Laca del Cronista (azul + plata)
+   ========================================================================== */
+.ui-theme[data-ui="actual"] {
+  /* superficie base de paneles */
+  --panel-border: rgb(183 164 102 / 0.38);
+  --panel-bg: linear-gradient(145deg, rgb(22 29 30 / 0.96), rgb(7 13 15 / 0.98)),
+    radial-gradient(circle at 18% 0%, rgb(221 199 130 / 0.08), transparent 42%);
+  --panel-inset: inset 0 1px 0 rgb(238 223 174 / 0.07), inset 0 0 32px rgb(0 0 0 / 0.22),
+    0 18px 36px rgb(0 0 0 / 0.42);
+  --panel-soft-border: rgb(163 119 54 / 0.55);
+  --panel-soft-bg: radial-gradient(circle at 50% 0%, rgb(255 216 129 / 0.1), transparent 60%),
+    linear-gradient(180deg, rgb(74 65 45 / 0.74), rgb(25 22 16 / 0.74));
+  --title-ink: #d6c58f;
+
+  /* panel de la Hueste */
+  --host-border: rgb(183 164 102 / 0.52);
+  --host-border-top: rgb(224 203 135 / 0.78);
+  --host-bg: linear-gradient(135deg, rgb(40 25 22 / 0.98), rgb(19 23 25 / 0.98) 48%, rgb(10 16 18 / 0.99));
+  --host-glow: 0 0 26px rgb(171 111 66 / 0.13);
+  --host-hairline: rgb(205 178 104 / 0.68);
+  --host-title: #c9b980;
+  --host-count: #fff0b2;
+  --host-count-glow: rgb(218 153 88 / 0.28);
+  --host-emblem-border: rgb(214 168 96 / 0.62);
+  --host-emblem-bg: linear-gradient(145deg, #4a2c1c, #221512);
+  --host-emblem-ink: #ffd9a3;
+
+  /* panel de Vida */
+  --life-border: rgb(160 166 111 / 0.48);
+  --life-border-top: rgb(196 211 135 / 0.7);
+  --life-bg: linear-gradient(135deg, rgb(15 32 29 / 0.98), rgb(17 26 27 / 0.98) 48%, rgb(9 16 18 / 0.99));
+  --life-glow: 0 0 24px rgb(87 143 105 / 0.1);
+  --life-hairline: rgb(164 190 111 / 0.6);
+  --life-title: #bccc91;
+  --life-count: #e9f5ba;
+  --life-count-glow: rgb(119 180 94 / 0.22);
+  --life-emblem-border: rgb(136 179 98 / 0.68);
+  --life-emblem-bg: linear-gradient(145deg, #31532b, #17271a);
+  --life-emblem-ink: #d8ffae;
+  --life-diamond-bg: #131d1c;
+  --life-diamond-border: rgb(171 195 119 / 0.58);
+
+  /* cajas de cartas */
+  --pile-border: rgb(150 168 120 / 0.45);
+  --pile-bg: radial-gradient(circle at 50% 36%, rgb(120 165 112 / 0.16), transparent 66%),
+    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.025) 0 3px, transparent 3px 8px),
+    linear-gradient(162deg, #23382e, #0f1c1d);
+  --pile-ink: #cfe0ab;
+  --pile-count: #e7f2c2;
+  --pile-tab-bg: linear-gradient(180deg, #1b2c25, #16241f);
+  --pile-hover: rgb(190 215 130 / 0.72);
+  --memory-border: rgb(120 132 122 / 0.42);
+  --memory-bg: linear-gradient(162deg, #1e2528, #0b1113);
+  --memory-ink: rgb(196 200 178 / 0.75);
+  --memory-count: #dfd6ae;
+  --memory-tab-bg: linear-gradient(180deg, #181f22, #141a1c);
+
+  /* progreso de fase */
+  --phase-line: linear-gradient(90deg, transparent, rgb(226 111 39 / 0.72) 12%, #f09a4a 50%, rgb(226 111 39 / 0.72) 88%, transparent);
+  --phase-line-glow: 0 0 8px rgb(225 91 24 / 0.34);
+  --phase-diamond-border: rgb(224 113 47 / 0.72);
+  --phase-diamond-bg: #25150e;
+  --phase-diamond-done: #a84c1d;
+  --phase-diamond-active: linear-gradient(135deg, #ffd278, #e65f1e 70%);
+  --phase-diamond-active-border: #ffd08c;
+  --phase-diamond-active-glow: 0 0 0 3px rgb(238 112 35 / 0.16), 0 0 13px #ed712d, 0 0 24px rgb(231 83 20 / 0.65);
+  --phase-label: rgb(207 136 86 / 0.58);
+  --phase-label-active: #ffc27b;
+  --phase-label-active-glow: 0 0 9px rgb(239 104 35 / 0.82);
+
+  /* botón de fase */
+  --phase-btn-border: rgb(184 164 101 / 0.64);
+  --phase-btn-bg: linear-gradient(110deg, #615737, #332f21 66%, #4a432d);
+  --phase-btn-glow: 0 0 26px rgb(185 157 79 / 0.18);
+  --phase-btn-ink: #f4e7c0;
+  --phase-btn-host-border: rgb(236 165 78 / 0.82);
+  --phase-btn-host-bg: linear-gradient(110deg, #9b4b1d, #54220f 66%, #743515);
+  --phase-btn-host-glow: 0 0 30px rgb(224 91 26 / 0.34);
+  --phase-btn-host-ink: #ffe3bb;
+
+  /* diálogo y controles */
+  --dialog-border: rgb(160 148 102 / 0.4);
+  --dialog-border-top: rgb(202 182 116 / 0.72);
+  --dialog-bg: linear-gradient(145deg, rgb(25 31 32 / 0.97), rgb(7 12 14 / 0.99));
+  --dialog-kicker: #7f8c87;
+  --dialog-body: #8d9a94;
+  --dialog-icon-border: rgb(164 149 98 / 0.42);
+  --dialog-icon-bg: rgb(31 37 37 / 0.68);
+  --dialog-icon-ink: #c8b678;
+  --action-border: rgb(126 139 135 / 0.36);
+  --action-bg: linear-gradient(180deg, rgb(36 44 45 / 0.94), rgb(12 18 20 / 0.98));
+  --action-ink: #aeb9b3;
+  --action-hover-border: rgb(190 172 111 / 0.58);
+  --action-hover-ink: #e8ddba;
+  --action-primary-border: rgb(178 158 92 / 0.6);
+  --action-primary-bg: linear-gradient(110deg, #3a4240, #1c2828 66%, #2e3836);
+  --action-primary-ink: #e3d8b5;
+  --control-border: rgb(179 128 59 / 0.8);
+  --control-bg: linear-gradient(180deg, #51311b, #21130b);
+  --control-ink: #f7d996;
+  --control-active-bg: linear-gradient(180deg, #5f7f25, #263d13);
+  --control-active-ink: #fff0a8;
+  --control-danger-bg: linear-gradient(180deg, #8a2f17, #3a110a);
+  --control-danger-ink: #ffd7a0;
+
+  /* mesa */
+  --table-bg: radial-gradient(120% 80% at 50% 0%, #26241d 0%, #0b0d0c 62%);
+  --table-vignette: rgb(0 0 0 / 0.55);
+  --chip-border: rgb(160 150 96 / 0.4);
+  --chip-bg: linear-gradient(180deg, rgb(38 44 38 / 0.9), rgb(12 17 16 / 0.95));
+  --chip-ink: #cdd7ae;
+  --chip-mine-border: rgb(176 205 122 / 0.55);
+  --hand-border: rgb(183 164 102 / 0.45);
+  --hand-bg: linear-gradient(180deg, #2a2d22, #12140f);
+  --hand-ink: #d8cfa6;
+  --hand-playable: rgb(210 197 119 / 0.96);
+}
+
+.ui-theme[data-ui="lacquer"] {
+  --panel-border: rgb(157 180 204 / 0.34);
+  --panel-bg: linear-gradient(145deg, rgb(21 34 50 / 0.96), rgb(8 13 22 / 0.98)),
+    radial-gradient(circle at 18% 0%, rgb(157 200 255 / 0.1), transparent 42%);
+  --panel-inset: inset 0 1px 0 rgb(214 234 255 / 0.09), inset 0 0 32px rgb(0 0 0 / 0.24),
+    0 18px 36px rgb(0 0 0 / 0.46);
+  --panel-soft-border: rgb(101 133 166 / 0.5);
+  --panel-soft-bg: radial-gradient(circle at 50% 0%, rgb(126 190 255 / 0.1), transparent 60%),
+    linear-gradient(180deg, rgb(31 48 68 / 0.74), rgb(11 18 28 / 0.78));
+  --title-ink: #b6cbe2;
+
+  --host-border: rgb(157 180 204 / 0.5);
+  --host-border-top: rgb(205 226 246 / 0.72);
+  --host-bg: linear-gradient(135deg, rgb(44 24 28 / 0.96), rgb(15 25 38 / 0.98) 48%, rgb(7 12 20 / 0.99));
+  --host-glow: 0 0 26px rgb(150 60 52 / 0.16);
+  --host-hairline: rgb(196 152 128 / 0.6);
+  --host-title: #c3a99c;
+  --host-count: #ffe0cd;
+  --host-count-glow: rgb(206 104 74 / 0.3);
+  --host-emblem-border: rgb(198 120 96 / 0.6);
+  --host-emblem-bg: linear-gradient(145deg, #4a2220, #1a1720);
+  --host-emblem-ink: #ffc9ae;
+
+  --life-border: rgb(157 180 204 / 0.46);
+  --life-border-top: rgb(206 230 252 / 0.7);
+  --life-bg: linear-gradient(135deg, rgb(18 36 55 / 0.98), rgb(14 24 38 / 0.98) 48%, rgb(7 12 20 / 0.99));
+  --life-glow: 0 0 24px rgb(47 124 176 / 0.18);
+  --life-hairline: rgb(140 186 226 / 0.55);
+  --life-title: #9db4cc;
+  --life-count: #eaf3ff;
+  --life-count-glow: rgb(76 168 232 / 0.3);
+  --life-emblem-border: rgb(140 186 226 / 0.66);
+  --life-emblem-bg: linear-gradient(145deg, #1d4a72, #0d1c2e);
+  --life-emblem-ink: #cfe9ff;
+  --life-diamond-bg: #101d2c;
+  --life-diamond-border: rgb(157 190 220 / 0.55);
+
+  --pile-border: rgb(126 160 194 / 0.45);
+  --pile-bg: radial-gradient(circle at 50% 36%, rgb(76 148 208 / 0.16), transparent 66%),
+    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.025) 0 3px, transparent 3px 8px),
+    linear-gradient(162deg, #1b3145, #0a131f);
+  --pile-ink: #bcd4e8;
+  --pile-count: #e6f2ff;
+  --pile-tab-bg: linear-gradient(180deg, #16283a, #12202e);
+  --pile-hover: rgb(140 200 255 / 0.72);
+  --memory-border: rgb(116 134 156 / 0.42);
+  --memory-bg: linear-gradient(162deg, #1c242e, #0a0f16);
+  --memory-ink: rgb(186 198 212 / 0.75);
+  --memory-count: #d5e2f0;
+  --memory-tab-bg: linear-gradient(180deg, #172029, #121922);
+
+  --phase-line: linear-gradient(90deg, transparent, rgb(76 150 208 / 0.72) 12%, #7fd0ff 50%, rgb(76 150 208 / 0.72) 88%, transparent);
+  --phase-line-glow: 0 0 8px rgb(47 124 176 / 0.4);
+  --phase-diamond-border: rgb(120 180 224 / 0.72);
+  --phase-diamond-bg: #0e1c2a;
+  --phase-diamond-done: #2f6f9e;
+  --phase-diamond-active: linear-gradient(135deg, #d6f2ff, #2f8fd0 70%);
+  --phase-diamond-active-border: #cfeaff;
+  --phase-diamond-active-glow: 0 0 0 3px rgb(64 152 214 / 0.18), 0 0 13px #4aa6e0, 0 0 24px rgb(40 122 190 / 0.6);
+  --phase-label: rgb(140 172 200 / 0.6);
+  --phase-label-active: #b9e2ff;
+  --phase-label-active-glow: 0 0 9px rgb(64 158 224 / 0.8);
+
+  --phase-btn-border: rgb(157 180 204 / 0.62);
+  --phase-btn-bg: linear-gradient(110deg, #35506e, #16222f 66%, #294056);
+  --phase-btn-glow: 0 0 26px rgb(64 140 200 / 0.22);
+  --phase-btn-ink: #e2effb;
+  --phase-btn-host-border: rgb(216 132 104 / 0.8);
+  --phase-btn-host-bg: linear-gradient(110deg, #8c3624, #431410 66%, #6a2a1d);
+  --phase-btn-host-glow: 0 0 30px rgb(196 76 44 / 0.32);
+  --phase-btn-host-ink: #ffddc9;
+
+  --dialog-border: rgb(140 168 196 / 0.38);
+  --dialog-border-top: rgb(190 216 240 / 0.7);
+  --dialog-bg: linear-gradient(145deg, rgb(20 32 46 / 0.97), rgb(6 11 18 / 0.99));
+  --dialog-kicker: #7d8ea1;
+  --dialog-body: #90a4ba;
+  --dialog-icon-border: rgb(146 176 206 / 0.42);
+  --dialog-icon-bg: rgb(24 37 52 / 0.7);
+  --dialog-icon-ink: #a9c8e4;
+  --action-border: rgb(120 145 170 / 0.36);
+  --action-bg: linear-gradient(180deg, rgb(31 46 63 / 0.94), rgb(10 16 24 / 0.98));
+  --action-ink: #a9bcce;
+  --action-hover-border: rgb(160 200 236 / 0.58);
+  --action-hover-ink: #dceaf8;
+  --action-primary-border: rgb(150 190 226 / 0.6);
+  --action-primary-bg: linear-gradient(110deg, #33506c, #16242f 66%, #29415a);
+  --action-primary-ink: #dceaf8;
+  --control-border: rgb(120 160 200 / 0.75);
+  --control-bg: linear-gradient(180deg, #24405c, #0e1826);
+  --control-ink: #d6ecff;
+  --control-active-bg: linear-gradient(180deg, #2f7cb0, #113349);
+  --control-active-ink: #eaf7ff;
+  --control-danger-bg: linear-gradient(180deg, #8a3320, #37110c);
+  --control-danger-ink: #ffd7c0;
+
+  --table-bg: radial-gradient(120% 80% at 50% 0%, #1a2634 0%, #06090e 62%);
+  --table-vignette: rgb(0 0 0 / 0.55);
+  --chip-border: rgb(130 160 190 / 0.4);
+  --chip-bg: linear-gradient(180deg, rgb(28 44 62 / 0.9), rgb(9 14 22 / 0.95));
+  --chip-ink: #c2d6e8;
+  --chip-mine-border: rgb(140 200 255 / 0.55);
+  --hand-border: rgb(157 180 204 / 0.45);
+  --hand-bg: linear-gradient(180deg, #22303f, #0e141c);
+  --hand-ink: #cfdeec;
+  --hand-playable: rgb(190 226 255 / 0.96);
+}
+
+/* ==========================================================================
+   Contenedor de cada tema
+   ========================================================================== */
+.ui-theme {
+  position: relative;
+  border: 1px solid rgb(255 255 255 / 0.07);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.theme-tag {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 30;
+  padding: 0.28rem 0.7rem;
+  font-family: "Cinzel", serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #e6dcc2;
+  background: rgb(0 0 0 / 0.6);
+  border: 1px solid rgb(255 255 255 / 0.14);
+}
+
+/* mesa de juego reproducida */
+.duel-table {
+  position: relative;
+  height: 620px;
+  background: var(--table-bg);
+  overflow: hidden;
+}
+
+.duel-table::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 45%, transparent 40%, var(--table-vignette));
+}
+
+/* --- Paneles base (copia de .old-panel / .old-panel-soft en .game-screen) --- */
+.old-panel {
+  border: 1px solid var(--panel-border);
+  border-radius: 2px;
+  background: var(--panel-bg);
+  box-shadow: var(--panel-inset);
+}
+
+.old-panel-soft {
+  border: 1px solid var(--panel-soft-border);
+  border-radius: 8px;
+  background: var(--panel-soft-bg);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06), inset 0 -18px 24px rgb(0 0 0 / 0.2);
+}
+
+.old-title {
+  color: var(--title-ink);
+  font-family: Georgia, "Times New Roman", ui-serif, serif;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.66);
+}
+
+/* --- Archivo de la Hueste -------------------------------------------------- */
+.host-deck-counter-cluster {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 6;
+  width: 304px;
+  transform: translateX(-50%);
+}
+
+.host-deck-counter {
+  position: relative;
+  display: flex;
+  width: 304px;
+  min-height: 82px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 15px;
+  overflow: visible;
+  border: 1px solid var(--host-border);
+  border-top-color: var(--host-border-top);
+  border-radius: 0;
+  padding: 10px 16px 10px 20px;
+  background: var(--host-bg);
+  box-shadow: inset 0 1px 0 rgb(255 231 177 / 0.1), inset 0 -12px 26px rgb(0 0 0 / 0.2),
+    0 16px 36px rgb(0 0 0 / 0.5), var(--host-glow);
+}
+
+.host-deck-counter::before {
+  content: "";
+  position: absolute;
+  right: 18px;
+  bottom: -5px;
+  left: 18px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--host-hairline), transparent);
+}
+
+.host-deck-counter::after {
+  content: "";
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--host-hairline);
+  background: var(--life-diamond-bg);
+  transform: rotate(45deg);
+}
+
+.host-deck-emblem {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 2px solid var(--host-emblem-border);
+  background: var(--host-emblem-bg);
+  color: var(--host-emblem-ink);
+  box-shadow: inset 0 0 0 3px rgb(7 12 14 / 0.26);
+}
+
+.host-deck-counter-copy {
+  min-width: 105px;
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.host-deck-counter-title {
+  color: var(--host-title);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.host-deck-counter-values {
+  display: flex;
+  margin-top: 3px;
+  align-items: center;
+  gap: 8px;
+  line-height: 1;
+}
+
+.host-deck-count {
+  color: var(--host-count);
+  font-family: "Trebuchet MS", Verdana, Tahoma, sans-serif;
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 0.86;
+  text-shadow: 0 0 18px var(--host-count-glow), 0 2px 6px rgb(0 0 0 / 0.7);
+}
+
+.host-deck-projection {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  color: var(--host-title);
+  font-family: "Trebuchet MS", Verdana, Tahoma, sans-serif;
+  font-size: 19px;
+  font-weight: 900;
+}
+
+/* El Veneno sólo aparece cuando hay contadores; se apoya en la esquina para no
+   estrechar el título. */
+.host-poison-status {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+
+.host-poison-count {
+  color: #a9d17f;
+  font-family: "Trebuchet MS", Verdana, Tahoma, sans-serif;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.host-poison-label {
+  color: rgb(150 170 140 / 0.7);
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* --- Cajas de cartas (Memoria / Archivo) ----------------------------------- */
+.card-pile-host {
+  display: flex;
+}
+
+.host-memory-pile-host {
+  position: absolute;
+  top: 0;
+  right: 100%;
+  bottom: 0;
+  margin-right: 8px;
+}
+
+.card-pile {
+  position: relative;
+  display: grid;
+  width: 62px;
+  min-height: 75px;
+  margin-top: 7px;
+  align-content: end;
+  justify-items: center;
+  gap: 4px;
+  border: 1px solid var(--pile-border);
+  border-radius: 0;
+  padding: 0 4px 8px;
+  background: var(--pile-bg);
+  box-shadow: inset 0 0 0 2px rgb(6 12 12 / 0.45), inset 0 1px 0 rgb(214 232 172 / 0.1),
+    0 10px 22px rgb(0 0 0 / 0.5);
+  color: var(--pile-ink);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.card-pile::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  right: 6px;
+  left: 6px;
+  height: 8px;
+  border: 1px solid var(--pile-border);
+  border-bottom: 0;
+  background: var(--pile-tab-bg);
+}
+
+.card-pile-glyph {
+  position: absolute;
+  top: 8px;
+  opacity: 0.62;
+}
+
+.card-pile-count {
+  color: var(--pile-count);
+  font-family: "Trebuchet MS", Verdana, Tahoma, sans-serif;
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 2px 5px rgb(0 0 0 / 0.7);
+}
+
+.card-pile-label {
+  color: rgb(188 204 145 / 0.62);
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.card-pile-memory {
+  border-color: var(--memory-border);
+  background: var(--memory-bg);
+  color: var(--memory-ink);
+  cursor: pointer;
+}
+
+.card-pile-memory::before {
+  border-color: var(--memory-border);
+  background: var(--memory-tab-bg);
+}
+
+.card-pile-memory .card-pile-count {
+  color: var(--memory-count);
+}
+
+.card-pile:hover {
+  border-color: var(--pile-hover);
+  box-shadow: inset 0 0 0 2px rgb(6 12 12 / 0.45), inset 0 1px 0 rgb(214 232 172 / 0.1),
+    0 10px 22px rgb(0 0 0 / 0.5), 0 0 14px var(--pile-hover);
+}
+
+/* --- Vida y fila de vitals -------------------------------------------------- */
+.player-life-cluster {
+  position: absolute;
+  right: 16px;
+  bottom: 132px;
+  z-index: 6;
+  width: 320px;
+}
+
+.player-vitals-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  justify-content: flex-end;
+}
+
+.player-life-counter {
+  position: relative;
+  display: flex;
+  width: 180px;
+  min-height: 82px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  overflow: visible;
+  border: 1px solid var(--life-border);
+  border-top-color: var(--life-border-top);
+  border-radius: 0;
+  padding: 10px 14px 10px 16px;
+  background: var(--life-bg);
+  box-shadow: inset 0 1px 0 rgb(229 246 184 / 0.08), inset 0 -12px 26px rgb(0 0 0 / 0.18),
+    0 16px 36px rgb(0 0 0 / 0.48), var(--life-glow);
+}
+
+.player-life-counter::before {
+  content: "";
+  position: absolute;
+  right: 18px;
+  bottom: -5px;
+  left: 18px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--life-hairline), transparent);
+}
+
+.player-life-counter::after {
+  content: "";
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--life-diamond-border);
+  background: var(--life-diamond-bg);
+  transform: rotate(45deg);
+}
+
+.player-life-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.player-life-title {
+  color: var(--life-title);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.player-life-values {
+  margin-top: 3px;
+}
+
+.player-life-count {
+  color: var(--life-count);
+  font-family: "Trebuchet MS", Verdana, Tahoma, sans-serif;
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 0.86;
+  text-shadow: 0 0 18px var(--life-count-glow), 0 2px 6px rgb(0 0 0 / 0.7);
+}
+
+.player-life-emblem {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 2px solid var(--life-emblem-border);
+  border-radius: 0;
+  background: var(--life-emblem-bg);
+  color: var(--life-emblem-ink);
+  box-shadow: inset 0 0 0 3px rgb(7 12 14 / 0.26);
+  transform: rotate(45deg);
+}
+
+.player-life-emblem > svg {
+  transform: rotate(-45deg);
+}
+
+/* --- Progreso de fase ------------------------------------------------------- */
+.game-phase-progress {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 12px);
+  left: 0;
+  height: 47px;
+  pointer-events: none;
+}
+
+.game-phase-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  color: var(--phase-label);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.game-phase-progress-labels span {
+  width: 52px;
+  text-align: center;
+}
+
+.game-phase-progress-labels span:first-child {
+  text-align: left;
+}
+
+.game-phase-progress-labels span:last-child {
+  text-align: right;
+}
+
+.game-phase-progress-labels .is-active {
+  color: var(--phase-label-active);
+  text-shadow: var(--phase-label-active-glow);
+}
+
+.game-phase-progress-track {
+  position: relative;
+  display: flex;
+  height: 18px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4px 18px 0;
+}
+
+.game-phase-progress-line {
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  left: 2px;
+  height: 1px;
+  background: var(--phase-line);
+  box-shadow: var(--phase-line-glow);
+  transform: translateY(-50%);
+}
+
+.game-phase-progress-step {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+}
+
+.game-phase-progress-diamond {
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--phase-diamond-border);
+  background: var(--phase-diamond-bg);
+  box-shadow: inset 0 0 3px rgb(255 255 255 / 0.12), 0 0 5px rgb(0 0 0 / 0.2);
+  transform: rotate(45deg);
+}
+
+.game-phase-progress-step.is-complete .game-phase-progress-diamond {
+  background: var(--phase-diamond-done);
+}
+
+.game-phase-progress-step.is-active .game-phase-progress-diamond {
+  border-color: var(--phase-diamond-active-border);
+  background: var(--phase-diamond-active);
+  box-shadow: var(--phase-diamond-active-glow);
+}
+
+/* --- Botón de fase ---------------------------------------------------------- */
+.game-phase-orb {
+  position: absolute;
+  right: 16px;
+  top: 46%;
+  z-index: 8;
+  display: grid;
+  gap: 10px;
+  transform: translateY(-50%);
+}
+
+.game-phase-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px;
+  cursor: pointer;
+  border: 1px solid var(--phase-btn-border);
+  border-radius: 0;
+  background: var(--phase-btn-bg);
+  color: var(--phase-btn-ink);
+  font-family: "Trebuchet MS", Verdana, Tahoma, sans-serif;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-shadow: inset 0 0 0 4px rgb(5 10 12 / 0.24), inset 0 1px 0 rgb(246 230 179 / 0.18),
+    0 18px 38px rgb(0 0 0 / 0.52), var(--phase-btn-glow);
+  transition: border-color 160ms ease, filter 160ms ease, box-shadow 180ms ease,
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.game-phase-button:hover {
+  filter: brightness(1.16) saturate(1.08);
+  transform: translateY(-3px) scale(1.045);
+}
+
+.game-phase-button:active {
+  filter: brightness(1.24) saturate(1.16);
+  transform: translateY(2px) scale(0.945);
+  transition-duration: 65ms;
+}
+
+.game-phase-button[data-tone="host"] {
+  border-color: var(--phase-btn-host-border);
+  background: var(--phase-btn-host-bg);
+  color: var(--phase-btn-host-ink);
+  box-shadow: inset 0 0 0 4px rgb(52 15 6 / 0.28), inset 0 1px 0 rgb(255 230 168 / 0.24),
+    0 18px 40px rgb(0 0 0 / 0.54), var(--phase-btn-host-glow);
+}
+
+/* --- Pistas de Energía (colores de identidad, iguales en las dos pieles) ----- */
+.guided-player-sources-anchor {
+  position: absolute;
+  bottom: 126px;
+  left: 12px;
+  z-index: 6;
+  display: grid;
+  gap: 6px;
+}
+
+.mana-energy-track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mana-alchemy-socket {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 35px;
+  height: 37px;
+  flex: 0 0 35px;
+  place-items: center;
+  filter: drop-shadow(0 5px 5px rgb(0 0 0 / 0.48));
+}
+
+.mana-alchemy-socket::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 31px;
+  height: 31px;
+  border: 1px solid rgb(131 143 126 / 0.42);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(8 17 17 / 0.96) 0 52%, transparent 54%),
+    linear-gradient(145deg, #55635d, #253330 42%, #0b1515 78%);
+  box-shadow: inset 0 0 0 2px rgb(5 11 11 / 0.86), inset 1px 1px 0 rgb(216 201 159 / 0.08),
+    0 0 0 1px rgb(3 8 8 / 0.88), 0 4px 7px rgb(0 0 0 / 0.46);
+  transform: translate(-50%, -50%);
+}
+
+.ui-theme[data-ui="lacquer"] .mana-alchemy-socket::before {
+  border-color: rgb(126 150 176 / 0.42);
+  background: radial-gradient(circle, rgb(8 14 22 / 0.96) 0 52%, transparent 54%),
+    linear-gradient(145deg, #4f6076, #22303f 42%, #090f16 78%);
+}
+
+.mana-alchemy-socket::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 0;
+  width: 27px;
+  height: 27px;
+  border: 1px solid rgb(4 10 10 / 0.9);
+  border-radius: 50%;
+  box-shadow: inset 0 2px 5px rgb(0 0 0 / 0.72), inset 0 -1px 0 rgb(216 201 159 / 0.045);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.mana-alchemy-orb {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 25px;
+  height: 25px;
+  overflow: hidden;
+  border: 1px solid rgb(137 160 158 / 0.48);
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 30%, #536763, #243b39 48%, #091716 82%);
+  box-shadow: inset 2px 2px 3px rgb(224 235 224 / 0.12), inset -4px -5px 7px rgb(0 0 0 / 0.62),
+    0 0 0 1px rgb(5 12 12 / 0.84);
+}
+
+.mana-alchemy-orb::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 4px;
+  z-index: 3;
+  width: 7px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgb(240 235 207 / 0.64);
+  box-shadow: 0 0 4px rgb(216 201 159 / 0.36);
+  transform: rotate(-28deg);
+}
+
+.mana-alchemy-orb::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  z-index: 2;
+  border: 1px solid rgb(239 253 255 / 0.14);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.mana-alchemy-liquid {
+  position: absolute;
+  inset: 3px;
+  display: block;
+  border-radius: 42% 58% 55% 45% / 47% 41% 59% 53%;
+  opacity: 0.78;
+  transform-origin: 48% 53%;
+}
+
+.mana-alchemy-socket-blue.is-ready {
+  filter: drop-shadow(0 5px 5px rgb(0 0 0 / 0.52)) drop-shadow(0 0 9px rgb(46 151 236 / 0.68));
+}
+
+.mana-alchemy-socket-blue.is-ready .mana-alchemy-orb {
+  border-color: rgb(185 232 255 / 0.88);
+  background: radial-gradient(circle at 36% 28%, #effcff, #79d4ff 22%, #2786d2 55%, #092e62 82%);
+  box-shadow: inset 2px 2px 4px rgb(238 252 255 / 0.76), inset -5px -6px 8px rgb(3 24 58 / 0.72),
+    0 0 8px rgb(92 201 255 / 0.86), 0 0 17px rgb(38 115 226 / 0.64);
+}
+
+.mana-alchemy-socket-blue.is-ready .mana-alchemy-liquid {
+  background: conic-gradient(
+    from 20deg,
+    rgb(228 251 255 / 0.92),
+    rgb(55 169 239 / 0.14),
+    rgb(126 222 255 / 0.86),
+    rgb(11 72 164 / 0.18),
+    rgb(228 251 255 / 0.92)
+  );
+  box-shadow: inset 0 0 7px rgb(218 248 255 / 0.5);
+  animation: mana-swirl 4.2s linear infinite;
+}
+
+.mana-alchemy-socket-blue.is-spent .mana-alchemy-orb {
+  border-color: rgb(113 171 205 / 0.7);
+  background: radial-gradient(circle at 34% 26%, rgb(174 213 228 / 0.52) 0 5%, transparent 18%),
+    radial-gradient(circle at 40% 32%, #456579, #172f40 48%, #06131b 82%);
+  filter: saturate(0.76) brightness(0.82);
+}
+
+.mana-alchemy-socket-blue.is-spent .mana-alchemy-liquid {
+  display: none;
+}
+
+.mana-alchemy-socket-yellow.is-ready {
+  filter: drop-shadow(0 5px 5px rgb(0 0 0 / 0.52)) drop-shadow(0 0 10px rgb(236 164 38 / 0.72));
+}
+
+.mana-alchemy-socket-yellow.is-ready .mana-alchemy-orb {
+  border-color: rgb(255 232 151 / 0.92);
+  background: radial-gradient(circle at 36% 28%, #fffde0, #ffda70 22%, #d28a24 55%, #542608 82%);
+  box-shadow: inset 2px 2px 4px rgb(255 251 216 / 0.78), inset -5px -6px 8px rgb(67 27 4 / 0.74),
+    0 0 9px rgb(255 202 84 / 0.9), 0 0 18px rgb(218 127 26 / 0.66);
+}
+
+.mana-alchemy-socket-yellow.is-ready .mana-alchemy-liquid {
+  background: conic-gradient(
+    from 20deg,
+    rgb(255 251 208 / 0.94),
+    rgb(225 140 29 / 0.14),
+    rgb(255 219 103 / 0.88),
+    rgb(139 64 13 / 0.18),
+    rgb(255 251 208 / 0.94)
+  );
+  box-shadow: inset 0 0 7px rgb(255 244 191 / 0.54);
+  animation: mana-swirl 4.6s linear infinite reverse;
+}
+
+.mana-alchemy-socket.is-empty .mana-alchemy-orb {
+  opacity: 0.3;
+}
+
+@keyframes mana-swirl {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mana-alchemy-liquid {
+    animation: none !important;
+  }
+}
+
+/* --- Campo y mano ----------------------------------------------------------- */
+.battlefield {
+  position: absolute;
+  top: 96px;
+  right: 360px;
+  left: 200px;
+  display: grid;
+  gap: 18px;
+}
+
+.field-strip {
+  display: flex;
+  min-height: 92px;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.field-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--chip-border);
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 8px 16px rgb(0 0 0 / 0.45);
+}
+
+.field-chip b {
+  font-family: "Trebuchet MS", Verdana, Tahoma, sans-serif;
+  font-weight: 900;
+}
+
+.field-chip.is-mine {
+  border-color: var(--chip-mine-border);
+}
+
+.field-chip.is-stabilizing {
+  opacity: 0.72;
+  border-style: dashed;
+}
+
+.field-chip.is-swarm {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 4px 4px 0 -1px var(--chip-bg),
+    5px 5px 0 -1px var(--chip-border), 0 8px 16px rgb(0 0 0 / 0.45);
+}
+
+.hand-strip {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  z-index: 5;
+  display: flex;
+  gap: 10px;
+  transform: translateX(-50%);
+}
+
+.hand-card {
+  display: grid;
+  width: 78px;
+  height: 106px;
+  place-items: end center;
+  padding-bottom: 8px;
+  border: 1px solid var(--hand-border);
+  background: var(--hand-bg);
+  color: var(--hand-ink);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 14px 26px rgb(0 0 0 / 0.55);
+}
+
+.hand-card i {
+  font-size: 10px;
+  font-style: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hand-card:nth-child(1) {
+  transform: rotate(-7deg) translateY(8px);
+}
+.hand-card:nth-child(2) {
+  transform: rotate(-3deg) translateY(2px);
+}
+.hand-card:nth-child(4) {
+  transform: rotate(3deg) translateY(2px);
+}
+.hand-card:nth-child(5) {
+  transform: rotate(7deg) translateY(8px);
+}
+
+.hand-card.is-playable {
+  border-width: 2px;
+  border-color: var(--hand-playable);
+  box-shadow: 0 0 18px rgb(255 255 255 / 0.14), 0 14px 26px rgb(0 0 0 / 0.55);
+}
+
+/* --- Superficies fuera del tablero ------------------------------------------ */
+.offboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+  background: linear-gradient(rgb(0 0 0 / 0.4), rgb(0 0 0 / 0.6));
+  border-top: 1px solid rgb(255 255 255 / 0.06);
+}
+
+.offboard__label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-family: "Cinzel", serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.35);
+}
+
+.game-home-backdrop {
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: radial-gradient(circle at 50% 42%, rgb(38 48 49 / 0.2), transparent 44%), rgb(1 4 5 / 0.82);
+}
+
+.game-home-dialog {
+  width: min(420px, 100%);
+  padding: 1.25rem;
+  border: 1px solid var(--dialog-border);
+  border-top-color: var(--dialog-border-top);
+  background: var(--dialog-bg);
+  box-shadow: inset 0 1px 0 rgb(230 214 162 / 0.08), 0 30px 80px rgb(0 0 0 / 0.62);
+}
+
+.dialog-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.game-dialog-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--dialog-icon-border);
+  background: var(--dialog-icon-bg);
+  color: var(--dialog-icon-ink);
+  box-shadow: inset 0 1px 0 rgb(235 220 169 / 0.08);
+}
+
+.game-dialog-kicker {
+  color: var(--dialog-kicker);
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: 0.23em;
+  text-transform: uppercase;
+}
+
+.dialog-title {
+  margin: 0.25rem 0 0;
+  font-size: 1.15rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dialog-body {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--dialog-body);
+}
+
+.dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.game-dialog-action {
+  height: 44px;
+  cursor: pointer;
+  border: 1px solid var(--action-border);
+  background: var(--action-bg);
+  color: var(--action-ink);
+  font-family: "Trebuchet MS", Verdana, Tahoma, sans-serif;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: inset 0 1px 0 rgb(228 220 182 / 0.06);
+  transition: border-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+
+.game-dialog-action:hover {
+  border-color: var(--action-hover-border);
+  color: var(--action-hover-ink);
+  transform: translateY(-1px);
+}
+
+.game-dialog-action-primary {
+  border-color: var(--action-primary-border);
+  background: var(--action-primary-bg);
+  color: var(--action-primary-ink);
+}
+
+.offboard__panel {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.control-button,
+.control-button-active,
+.control-button-danger,
+.wide-button {
+  display: inline-flex;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 12px;
+  cursor: pointer;
+  border: 1px solid var(--control-border);
+  border-radius: 6px;
+  background: var(--control-bg);
+  color: var(--control-ink);
+  font-family: "Trebuchet MS", Verdana, Tahoma, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: inset 0 1px 0 rgb(255 239 190 / 0.2);
+}
+
+.control-button-active {
+  background: var(--control-active-bg);
+  color: var(--control-active-ink);
+}
+
+.control-button-danger {
+  background: var(--control-danger-bg);
+  color: var(--control-danger-ink);
+}
+
+.wide-button {
+  width: 100%;
+  height: 40px;
+}
+
+.game-tooltip {
+  max-width: 240px;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--dialog-border);
+  background: var(--dialog-bg);
+  color: var(--dialog-body);
+  font-size: 0.82rem;
+  box-shadow: 0 12px 26px rgb(0 0 0 / 0.6);
+}
+
+.game-tooltip b {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--title-ink);
+  font-family: "Cinzel", serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.game-status-badge {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--control-border);
+  background: var(--action-bg);
+  color: var(--action-ink);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}

@@ -1,0 +1,1071 @@
+/* ============================================================================
+   Hostfall — Comparativa tipográfica
+   La piel visual es la actual del juego. Lo único que cambia entre conjuntos son
+   las familias. Todas las candidatas son OFL o Apache 2.0: se pueden empaquetar
+   y vender dentro del ejecutable sin regalías.
+   Inglés es el idioma principal; el español se usa como prueba de encaje, porque
+   sus cadenas son más largas y son las que revientan un hueco fijo.
+   Maqueta suelta: no se importa desde src/.
+   ========================================================================== */
+
+/* --- Ya empaquetadas por el juego (cartas) --------------------------------- */
+@font-face {
+  font-family: "Cinzel";
+  font-weight: 500 900;
+  font-display: block;
+  src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cinzel Decorative";
+  font-weight: 400 700;
+  font-display: block;
+  src: url("../assets/fonts/cinzel-decorative-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Lora";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: block;
+  src: url("../assets/fonts/lora-normal-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Lora";
+  font-style: italic;
+  font-weight: 400 700;
+  font-display: block;
+  src: url("../assets/fonts/lora-italic-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Oswald";
+  font-weight: 400 700;
+  font-display: block;
+  src: url("../assets/fonts/oswald-latin.woff2") format("woff2");
+}
+
+/* --- Candidatas descargadas (OFL) ------------------------------------------ */
+@font-face {
+  font-family: "Marcellus";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/marcellus-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Marcellus SC";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/marcellus-sc-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cormorant Garamond";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/cormorant-garamond-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cormorant Garamond";
+  font-weight: 600;
+  font-display: block;
+  src: url("../assets/fonts/cormorant-garamond-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cormorant SC";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/cormorant-sc-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cormorant SC";
+  font-weight: 600;
+  font-display: block;
+  src: url("../assets/fonts/cormorant-sc-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Alegreya";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/alegreya-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Alegreya";
+  font-weight: 700;
+  font-display: block;
+  src: url("../assets/fonts/alegreya-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Alegreya SC";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/alegreya-sc-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Alegreya SC";
+  font-weight: 700;
+  font-display: block;
+  src: url("../assets/fonts/alegreya-sc-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "EB Garamond";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/eb-garamond-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "EB Garamond";
+  font-weight: 600;
+  font-display: block;
+  src: url("../assets/fonts/eb-garamond-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Spectral";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/spectral-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Spectral";
+  font-weight: 600;
+  font-display: block;
+  src: url("../assets/fonts/spectral-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Spectral SC";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/spectral-sc-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Spectral SC";
+  font-weight: 600;
+  font-display: block;
+  src: url("../assets/fonts/spectral-sc-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IM Fell English SC";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/im-fell-english-sc-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Almendra SC";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/almendra-sc-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cardo";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/cardo-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cardo";
+  font-weight: 700;
+  font-display: block;
+  src: url("../assets/fonts/cardo-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Barlow Condensed";
+  font-weight: 500;
+  font-display: block;
+  src: url("../assets/fonts/barlow-condensed-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Barlow Condensed";
+  font-weight: 700;
+  font-display: block;
+  src: url("../assets/fonts/barlow-condensed-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Archivo Narrow";
+  font-weight: 500;
+  font-display: block;
+  src: url("../assets/fonts/archivo-narrow-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Archivo Narrow";
+  font-weight: 700;
+  font-display: block;
+  src: url("../assets/fonts/archivo-narrow-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Fira Sans Condensed";
+  font-weight: 500;
+  font-display: block;
+  src: url("../assets/fonts/fira-sans-condensed-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Fira Sans Condensed";
+  font-weight: 700;
+  font-display: block;
+  src: url("../assets/fonts/fira-sans-condensed-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Bebas Neue";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/bebas-neue-400.woff2") format("woff2");
+}
+
+/* --------------------------------------------------------------------------
+   Roles tipográficos. Cada conjunto sólo redefine estas variables.
+     --f-display : título del juego / menú principal
+     --f-head    : títulos de panel, botones, pestañas
+     --f-num     : contadores grandes y micro-etiquetas del HUD
+     --f-body    : texto corrido, diálogos, tutorial
+   Las de peso/tracking existen porque una condensada necesita menos aire que
+   una romana; sin ellas la comparación sería injusta.
+   -------------------------------------------------------------------------- */
+
+[data-set="actual"] {
+  --f-display: Georgia, "Times New Roman", serif;
+  --f-head: Georgia, "Times New Roman", serif;
+  --f-num: "Trebuchet MS", Verdana, Tahoma, sans-serif;
+  --f-body: "Trebuchet MS", Verdana, Tahoma, sans-serif;
+  --num-weight: 900;
+  --head-weight: 700;
+  --head-track: 0.08em;
+  --micro-track: 0.14em;
+}
+
+[data-set="cronica"] {
+  --f-display: "Cinzel", Georgia, serif;
+  --f-head: "Cinzel", Georgia, serif;
+  --f-num: "Oswald", sans-serif;
+  --f-body: "Lora", Georgia, serif;
+  --num-weight: 700;
+  --head-weight: 700;
+  --head-track: 0.14em;
+  --micro-track: 0.14em;
+}
+
+[data-set="inscripcion"] {
+  --f-display: "Marcellus", Georgia, serif;
+  --f-head: "Marcellus SC", Georgia, serif;
+  --f-num: "Barlow Condensed", sans-serif;
+  --f-body: "EB Garamond", Georgia, serif;
+  --num-weight: 700;
+  --head-weight: 400;
+  --head-track: 0.1em;
+  --micro-track: 0.12em;
+}
+
+[data-set="garamond"] {
+  --f-display: "EB Garamond", Georgia, serif;
+  --f-head: "Spectral SC", Georgia, serif;
+  --f-num: "Archivo Narrow", sans-serif;
+  --f-body: "EB Garamond", Georgia, serif;
+  --num-weight: 700;
+  --head-weight: 600;
+  --head-track: 0.1em;
+  --micro-track: 0.12em;
+}
+
+[data-set="alegreya"] {
+  --f-display: "Alegreya SC", Georgia, serif;
+  --f-head: "Alegreya SC", Georgia, serif;
+  --f-num: "Fira Sans Condensed", sans-serif;
+  --f-body: "Alegreya", Georgia, serif;
+  --num-weight: 700;
+  --head-weight: 700;
+  --head-track: 0.1em;
+  --micro-track: 0.12em;
+}
+
+[data-set="cormorant"] {
+  --f-display: "Cormorant SC", Georgia, serif;
+  --f-head: "Cormorant SC", Georgia, serif;
+  --f-num: "Barlow Condensed", sans-serif;
+  --f-body: "Cormorant Garamond", Georgia, serif;
+  --num-weight: 700;
+  --head-weight: 600;
+  --head-track: 0.12em;
+  --micro-track: 0.14em;
+}
+
+[data-set="imprenta"] {
+  --f-display: "IM Fell English SC", Georgia, serif;
+  --f-head: "IM Fell English SC", Georgia, serif;
+  --f-num: "Archivo Narrow", sans-serif;
+  --f-body: "Spectral", Georgia, serif;
+  --num-weight: 700;
+  --head-weight: 400;
+  --head-track: 0.08em;
+  --micro-track: 0.1em;
+}
+
+[data-set="grimorio"] {
+  --f-display: "Almendra SC", Georgia, serif;
+  --f-head: "Cinzel", Georgia, serif;
+  --f-num: "Bebas Neue", sans-serif;
+  --f-body: "Cardo", Georgia, serif;
+  --num-weight: 400;
+  --head-weight: 700;
+  --head-track: 0.14em;
+  --micro-track: 0.16em;
+}
+
+[data-set="estandarte"] {
+  --f-display: "Bebas Neue", sans-serif;
+  --f-head: "Barlow Condensed", sans-serif;
+  --f-num: "Bebas Neue", sans-serif;
+  --f-body: "Spectral", Georgia, serif;
+  --num-weight: 400;
+  --head-weight: 700;
+  --head-track: 0.14em;
+  --micro-track: 0.16em;
+}
+
+[data-set="cardo"] {
+  --f-display: "Cardo", Georgia, serif;
+  --f-head: "Spectral SC", Georgia, serif;
+  --f-num: "Fira Sans Condensed", sans-serif;
+  --f-body: "Cardo", Georgia, serif;
+  --num-weight: 700;
+  --head-weight: 600;
+  --head-track: 0.1em;
+  --micro-track: 0.12em;
+}
+
+/* ==========================================================================
+   Chrome de la maqueta
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(120% 80% at 50% 0%, #1d1c17 0%, #08090a 62%);
+  color: #cbbfa6;
+  font-family: "Lora", Georgia, serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.2rem;
+  align-items: center;
+  padding: 0.7rem 1.5rem;
+  background: rgb(8 7 6 / 0.97);
+  border-bottom: 1px solid rgb(255 255 255 / 0.09);
+}
+
+.topbar__brand {
+  font-family: "Cinzel", serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: #b9a67f;
+}
+
+.topbar__spacer {
+  flex: 1;
+}
+
+.setbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.chip {
+  appearance: none;
+  cursor: pointer;
+  padding: 0.38rem 0.75rem;
+  font-family: "Cinzel", serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #cbbfa6;
+  background: rgb(255 255 255 / 0.04);
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 2px;
+}
+
+.chip:hover {
+  color: #fff;
+  border-color: rgb(255 255 255 / 0.32);
+}
+
+.chip[aria-pressed="true"] {
+  color: #f4e6c4;
+  background: rgb(220 180 95 / 0.16);
+  border-color: rgb(220 180 95 / 0.6);
+}
+
+.chip--lang[aria-pressed="true"] {
+  color: #d6ecff;
+  background: rgb(47 124 176 / 0.22);
+  border-color: rgb(120 180 224 / 0.7);
+}
+
+.page {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 5rem;
+}
+
+.intro {
+  max-width: 96ch;
+  margin: 0 0 1.75rem;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #9a8f79;
+}
+
+.intro b {
+  color: #d3c6a8;
+}
+
+.intro code {
+  font-family: Consolas, monospace;
+  font-size: 0.85em;
+  color: #c8a985;
+}
+
+.bay {
+  margin: 0 0 2.75rem;
+}
+
+.bay__title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 0.9rem;
+  font-family: "Cinzel", serif;
+  font-size: 0.76rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #c9a24a;
+}
+
+.bay__title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, currentColor, transparent);
+  opacity: 0.4;
+}
+
+.bay__note {
+  margin: -0.4rem 0 1.2rem;
+  max-width: 96ch;
+  font-size: 0.86rem;
+  color: #877d6a;
+}
+
+/* ==========================================================================
+   Superficies del juego (piel actual, sólo cambia la tipografía)
+   ========================================================================== */
+.surface {
+  --gold: #d6c58f;
+  --olive: #bccc91;
+  border: 1px solid rgb(183 164 102 / 0.38);
+  border-radius: 2px;
+  background: linear-gradient(145deg, rgb(22 29 30 / 0.96), rgb(7 13 15 / 0.98)),
+    radial-gradient(circle at 18% 0%, rgb(221 199 130 / 0.08), transparent 42%);
+  box-shadow: inset 0 1px 0 rgb(238 223 174 / 0.07), inset 0 0 32px rgb(0 0 0 / 0.22),
+    0 18px 36px rgb(0 0 0 / 0.42);
+}
+
+.set-tag {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+  padding: 0.28rem 0.65rem;
+  background: rgb(0 0 0 / 0.55);
+  border: 1px solid rgb(255 255 255 / 0.14);
+}
+
+.set-tag strong {
+  font-family: "Cinzel", serif;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #e6dcc2;
+}
+
+.set-tag span {
+  font-size: 0.72rem;
+  color: #8a7f6a;
+}
+
+.set-tag--current {
+  border-color: rgb(224 113 47 / 0.5);
+}
+
+.set-tag--current strong {
+  color: #ffd08c;
+}
+
+/* --- Menú principal --------------------------------------------------------- */
+.menu {
+  display: grid;
+  gap: 1.1rem;
+  padding: 1.75rem 2rem 2rem;
+  min-height: 320px;
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+}
+
+.menu__title {
+  margin: 0;
+  font-family: var(--f-display);
+  font-size: 2.5rem;
+  font-weight: var(--head-weight);
+  line-height: 1.05;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #f0e0b6;
+  text-shadow: 0 2px 0 rgb(0 0 0 / 0.6), 0 0 22px rgb(226 150 60 / 0.18);
+}
+
+.menu__sub {
+  margin: -0.5rem 0 0;
+  font-family: var(--f-body);
+  font-size: 0.88rem;
+  font-style: italic;
+  color: #8f856f;
+}
+
+.menu__items {
+  display: grid;
+  gap: 0.45rem;
+  width: min(280px, 100%);
+}
+
+.menu__item {
+  appearance: none;
+  cursor: pointer;
+  padding: 0.65rem 1rem;
+  font-family: var(--f-head);
+  font-size: 0.9rem;
+  font-weight: var(--head-weight);
+  letter-spacing: var(--head-track);
+  text-transform: uppercase;
+  color: #f7d996;
+  background: linear-gradient(180deg, #51311b, #21130b);
+  border: 1px solid rgb(179 128 59 / 0.8);
+  border-radius: 2px;
+  box-shadow: inset 0 1px 0 rgb(255 239 190 / 0.2);
+}
+
+.menu__item:hover {
+  filter: brightness(1.14);
+}
+
+.menu__item--ghost {
+  color: #cbbfa6;
+  background: linear-gradient(180deg, rgb(36 44 45 / 0.94), rgb(12 18 20 / 0.98));
+  border-color: rgb(126 139 135 / 0.36);
+}
+
+/* --- HUD (medidas reales del juego) ------------------------------------------ */
+.hud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
+  padding: 1.5rem;
+}
+
+.pile {
+  position: relative;
+  display: grid;
+  width: 62px;
+  min-height: 75px;
+  margin-top: 7px;
+  align-content: end;
+  justify-items: center;
+  gap: 4px;
+  border: 1px solid rgb(150 168 120 / 0.45);
+  padding: 0 4px 8px;
+  background: radial-gradient(circle at 50% 36%, rgb(120 165 112 / 0.16), transparent 66%),
+    linear-gradient(162deg, #23382e, #0f1c1d);
+  box-shadow: inset 0 0 0 2px rgb(6 12 12 / 0.45), 0 10px 22px rgb(0 0 0 / 0.5);
+}
+
+.pile::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  right: 6px;
+  left: 6px;
+  height: 8px;
+  border: 1px solid rgb(150 168 120 / 0.34);
+  border-bottom: 0;
+  background: linear-gradient(180deg, #1b2c25, #16241f);
+}
+
+.pile--memory {
+  border-color: rgb(120 132 122 / 0.42);
+  background: linear-gradient(162deg, #1e2528, #0b1113);
+}
+
+.pile__count {
+  font-family: var(--f-num);
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--num-weight);
+  line-height: 1;
+  color: #e7f2c2;
+  text-shadow: 0 2px 5px rgb(0 0 0 / 0.7);
+}
+
+.pile__label {
+  max-width: 54px;
+  overflow: hidden;
+  font-family: var(--f-num);
+  font-size: 7px;
+  font-weight: var(--num-weight);
+  letter-spacing: var(--micro-track);
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgb(188 204 145 / 0.62);
+}
+
+.vital {
+  position: relative;
+  display: flex;
+  width: 180px;
+  min-height: 82px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid rgb(160 166 111 / 0.48);
+  border-top-color: rgb(196 211 135 / 0.7);
+  padding: 10px 14px 10px 16px;
+  background: linear-gradient(135deg, rgb(15 32 29 / 0.98), rgb(17 26 27 / 0.98) 48%, rgb(9 16 18 / 0.99));
+  box-shadow: inset 0 1px 0 rgb(229 246 184 / 0.08), 0 16px 36px rgb(0 0 0 / 0.48);
+}
+
+.vital--host {
+  width: 304px;
+  border-color: rgb(183 164 102 / 0.52);
+  border-top-color: rgb(224 203 135 / 0.78);
+  background: linear-gradient(135deg, rgb(40 25 22 / 0.98), rgb(19 23 25 / 0.98) 48%, rgb(10 16 18 / 0.99));
+}
+
+.vital__copy {
+  min-width: 0;
+}
+
+.vital__title {
+  font-family: var(--f-head);
+  font-size: 10px;
+  font-weight: var(--head-weight);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--olive);
+}
+
+.vital--host .vital__title {
+  color: #c9b980;
+}
+
+.vital__count {
+  margin-top: 3px;
+  font-family: var(--f-num);
+  font-size: 38px;
+  font-weight: var(--num-weight);
+  font-variant-numeric: tabular-nums;
+  line-height: 0.86;
+  color: #e9f5ba;
+  text-shadow: 0 0 18px rgb(119 180 94 / 0.22), 0 2px 6px rgb(0 0 0 / 0.7);
+}
+
+.vital--host .vital__count {
+  color: #fff0b2;
+  text-shadow: 0 0 18px rgb(218 153 88 / 0.28), 0 2px 6px rgb(0 0 0 / 0.7);
+}
+
+.vital__projection {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  margin-left: 8px;
+  font-family: var(--f-num);
+  font-size: 19px;
+  font-weight: var(--num-weight);
+  color: #c9b980;
+}
+
+.vital__emblem {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  place-items: center;
+  border: 2px solid rgb(136 179 98 / 0.68);
+  background: linear-gradient(145deg, #31532b, #17271a);
+  color: #d8ffae;
+  box-shadow: inset 0 0 0 3px rgb(7 12 14 / 0.26);
+  transform: rotate(45deg);
+}
+
+.vital__emblem svg {
+  transform: rotate(-45deg);
+}
+
+.phase-strip {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  font-family: var(--f-num);
+  font-size: 8px;
+  font-weight: var(--num-weight);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: rgb(207 136 86 / 0.58);
+}
+
+.phase-strip span {
+  width: 52px;
+  overflow: hidden;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.phase-strip span:first-child {
+  text-align: left;
+}
+
+.phase-strip span:last-child {
+  text-align: right;
+}
+
+.phase-strip .is-active {
+  color: #ffc27b;
+  text-shadow: 0 0 9px rgb(239 104 35 / 0.82);
+}
+
+/* --- Botones ------------------------------------------------------------------ */
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 1.25rem;
+}
+
+.btn-control,
+.btn-phase,
+.btn-action {
+  cursor: pointer;
+  font-family: var(--f-head);
+  font-weight: var(--head-weight);
+  letter-spacing: var(--head-track);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.btn-control {
+  height: 36px;
+  padding: 0 12px;
+  font-size: 12px;
+  color: #f7d996;
+  background: linear-gradient(180deg, #51311b, #21130b);
+  border: 1px solid rgb(179 128 59 / 0.8);
+  border-radius: 2px;
+  box-shadow: inset 0 1px 0 rgb(255 239 190 / 0.2);
+}
+
+.btn-phase {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px;
+  font-size: 12px;
+  color: #ffe3bb;
+  background: linear-gradient(110deg, #9b4b1d, #54220f 66%, #743515);
+  border: 1px solid rgb(236 165 78 / 0.82);
+  box-shadow: inset 0 0 0 4px rgb(52 15 6 / 0.28), 0 18px 40px rgb(0 0 0 / 0.54);
+}
+
+.btn-action {
+  height: 44px;
+  width: 186px;
+  padding: 0 0.8rem;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  overflow: hidden;
+  color: #aeb9b3;
+  background: linear-gradient(180deg, rgb(36 44 45 / 0.94), rgb(12 18 20 / 0.98));
+  border: 1px solid rgb(126 139 135 / 0.36);
+}
+
+.btn-action--primary {
+  color: #e3d8b5;
+  border-color: rgb(178 158 92 / 0.6);
+  background: linear-gradient(110deg, #3a4240, #1c2828 66%, #2e3836);
+}
+
+/* --- Diálogo y tutorial -------------------------------------------------------- */
+.dialog {
+  padding: 1.25rem;
+}
+
+.dialog__kicker {
+  font-family: var(--f-num);
+  font-size: 8px;
+  font-weight: var(--num-weight);
+  letter-spacing: 0.23em;
+  text-transform: uppercase;
+  color: #7f8c87;
+}
+
+.dialog__title {
+  margin: 0.3rem 0 0;
+  font-family: var(--f-head);
+  font-size: 1.2rem;
+  font-weight: var(--head-weight);
+  letter-spacing: var(--head-track);
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.dialog__body {
+  margin: 0.6rem 0 0;
+  font-family: var(--f-body);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #8d9a94;
+}
+
+.tutorial {
+  padding: 1.25rem;
+  border-left: 3px solid rgb(224 113 47 / 0.6);
+}
+
+.tutorial__step {
+  font-family: var(--f-num);
+  font-size: 9px;
+  font-weight: var(--num-weight);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #a4907a;
+}
+
+.tutorial__title {
+  margin: 0.3rem 0 0.5rem;
+  font-family: var(--f-head);
+  font-size: 1.05rem;
+  font-weight: var(--head-weight);
+  letter-spacing: var(--head-track);
+  text-transform: uppercase;
+  color: #e7d9b4;
+}
+
+.tutorial__body {
+  margin: 0;
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.5;
+  color: #b8c0bf;
+}
+
+.tutorial__body + .tutorial__body {
+  margin-top: 0.6rem;
+}
+
+/* --- Texto de carta ------------------------------------------------------------ */
+.card-text {
+  padding: 1.1rem 1.25rem;
+}
+
+.card-text__name {
+  margin: 0;
+  font-family: var(--f-head);
+  font-size: 1rem;
+  font-weight: var(--head-weight);
+  letter-spacing: var(--head-track);
+  color: var(--gold);
+}
+
+.card-text__rules {
+  margin: 0.5rem 0 0;
+  font-family: var(--f-body);
+  font-size: 0.94rem;
+  line-height: 1.5;
+  color: #d3c9ae;
+}
+
+.card-text__flavor {
+  margin: 0.5rem 0 0;
+  font-family: var(--f-body);
+  font-size: 0.86rem;
+  font-style: italic;
+  color: #938972;
+}
+
+/* ==========================================================================
+   Rejillas de comparación
+   ========================================================================== */
+.compare {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  align-items: start;
+}
+
+.compare--wide {
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+}
+
+.compare__cell {
+  min-width: 0;
+}
+
+/* --- Especímenes --------------------------------------------------------------- */
+.specimen {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  gap: 0.75rem 1.25rem;
+  align-items: center;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid rgb(255 255 255 / 0.06);
+}
+
+.specimen:last-child {
+  border-bottom: 0;
+}
+
+.specimen__name {
+  font-family: "Cinzel", serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8a7f6a;
+}
+
+.specimen__name b {
+  display: block;
+  color: #d0b678;
+  font-weight: 700;
+}
+
+.specimen__sample {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.5rem;
+  align-items: baseline;
+}
+
+.sample-display {
+  font-family: var(--f-display);
+  font-size: 1.7rem;
+  font-weight: var(--head-weight);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #f0e0b6;
+}
+
+.sample-head {
+  font-family: var(--f-head);
+  font-size: 0.95rem;
+  font-weight: var(--head-weight);
+  letter-spacing: var(--head-track);
+  text-transform: uppercase;
+  color: #d6c58f;
+}
+
+.sample-num {
+  font-family: var(--f-num);
+  font-size: 2.2rem;
+  font-weight: var(--num-weight);
+  font-variant-numeric: tabular-nums;
+  color: #e9f5ba;
+}
+
+.sample-body {
+  font-family: var(--f-body);
+  font-size: 0.95rem;
+  color: #b8c0bf;
+}
+
+/* ==========================================================================
+   Prueba de encaje
+   ========================================================================== */
+.fit {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.fit th,
+.fit td {
+  padding: 0.42rem 0.7rem;
+  text-align: left;
+  border-bottom: 1px solid rgb(255 255 255 / 0.06);
+  white-space: nowrap;
+}
+
+.fit thead th {
+  background: #14140f;
+  font-family: "Cinzel", serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #b09a6a;
+}
+
+.fit tbody th {
+  font-family: "Cinzel", serif;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #d0b678;
+}
+
+.fit td {
+  font-family: Consolas, monospace;
+  color: #9a917d;
+}
+
+.fit__slot {
+  font-family: "Lora", Georgia, serif !important;
+  color: #b8ad93 !important;
+  white-space: normal !important;
+  min-width: 220px;
+}
+
+.fit__slot small {
+  display: block;
+  color: #7c7462;
+  font-size: 0.76rem;
+}
+
+.fit .ok {
+  color: #9ec36a;
+}
+
+.fit .tight {
+  color: #e0b45c;
+}
+
+.fit .over {
+  color: #e07a5a;
+  font-weight: 700;
+}
+
+.fit__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin: 0.9rem 0 0;
+  font-size: 0.82rem;
+  color: #877d6a;
+}

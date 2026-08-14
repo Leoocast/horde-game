@@ -24,7 +24,7 @@ const TYPES = {
 
 createServer(async (req, res) => {
   const requested = decodeURIComponent((req.url ?? "/").split("?")[0]);
-  const relative = normalize(requested === "/" ? "/main-menu.html" : requested).replace(/^([/\\])+/, "");
+  const relative = normalize(requested === "/" ? "/index.html" : requested).replace(/^([/\\])+/, "");
 
   // normalize() ya colapsó los "..", pero el prefijo se verifica igual antes de leer.
   const target = join(ROOT, relative);

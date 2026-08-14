@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hostfall — Comparativa tipográfica</title>
+    <link rel="stylesheet" href="ui-typography.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <span class="topbar__brand">Hostfall · Tipografía</span>
+      <nav class="setbar" id="langbar" aria-label="Idioma">
+        <button class="chip chip--lang" data-lang="en" aria-pressed="true">EN</button>
+        <button class="chip chip--lang" data-lang="es" aria-pressed="false">ES</button>
+      </nav>
+      <span class="topbar__spacer"></span>
+      <nav class="setbar" id="setbar" aria-label="Conjuntos">
+        <button class="chip" data-set-pick="all" aria-pressed="true">Todos</button>
+      </nav>
+    </header>
+
+    <main class="page">
+      <p class="intro">
+        La piel visual es la tuya, sin tocar: lo único que cambia entre columnas son las familias.
+        <b>Inglés es el idioma principal</b>, así que las muestras salen en inglés por defecto; el
+        <b>español es la prueba de estrés</b>, porque sus cadenas son más largas y son las que revientan un
+        hueco fijo (<code>Host Archive</code> = 12 caracteres, <code>Archivo de la Hueste</code> = 20).
+        Todas las cadenas salen de <code>src/i18n/translations.ts</code>, no están inventadas.
+        <b>Todas las candidatas son OFL o Apache 2.0</b>: se empaquetan dentro del ejecutable y se venden
+        sin regalías ni atribución en pantalla.
+      </p>
+
+      <!-- ============================================================ -->
+      <section class="bay">
+        <h2 class="bay__title">Prueba de encaje</h2>
+        <p class="bay__note">
+          Medición real: se renderiza cada cadena con la familia, el tamaño y el tracking que tiene hoy en
+          el juego, y se compara con el ancho disponible del hueco. <b>Rojo = se sale</b> (hay que recortar
+          el texto, bajar el cuerpo o descartar la fuente); <b>ámbar = entra con menos de 6 px de aire</b>;
+          verde = holgado. Cambia a ES arriba para ver el caso peor.
+        </p>
+        <div class="surface" style="overflow-x: auto">
+          <table class="fit" id="fit-table"></table>
+        </div>
+        <p class="fit__legend">
+          <span class="ok">■ holgado</span><span class="tight">■ justo (&lt; 6 px)</span
+          ><span class="over">■ se sale</span>
+        </p>
+      </section>
+
+      <!-- ============================================================ -->
+      <section class="bay">
+        <h2 class="bay__title">Cara a cara · los cuatro roles</h2>
+        <p class="bay__note">
+          Cada fila es un rol tipográfico con la misma muestra en todos los conjuntos. Sirve para descartar
+          rápido: si un conjunto te molesta aquí, no hace falta mirarlo montado.
+        </p>
+        <div class="surface" id="specimens"></div>
+      </section>
+
+      <section class="bay">
+        <h2 class="bay__title">HUD · contadores y micro-etiquetas</h2>
+        <p class="bay__note">
+          Medidas reales del juego: pila de 62 px, panel de Vida de 180 px, panel de la Hueste de 304 px,
+          etiquetas de fase de 52 px. Si algo se corta aquí, se corta en el juego.
+        </p>
+        <div class="compare compare--wide" id="huds"></div>
+      </section>
+
+      <section class="bay">
+        <h2 class="bay__title">Menú principal</h2>
+        <div class="compare" id="menus"></div>
+      </section>
+
+      <section class="bay">
+        <h2 class="bay__title">Botones</h2>
+        <div class="compare" id="buttons"></div>
+      </section>
+
+      <section class="bay">
+        <h2 class="bay__title">Diálogo</h2>
+        <div class="compare" id="dialogs"></div>
+      </section>
+
+      <section class="bay">
+        <h2 class="bay__title">Overlay del tutorial</h2>
+        <p class="bay__note">
+          Hoy este texto está declarado en <code>Inter</code>, que no está empaquetada: en Windows acaba
+          renderizando en Segoe UI, la fuente del sistema operativo.
+        </p>
+        <div class="compare" id="tutorials"></div>
+      </section>
+
+      <section class="bay">
+        <h2 class="bay__title">Texto de carta</h2>
+        <p class="bay__note">
+          Control de coherencia: las cartas impresas ya usan Lora y Cinzel. Cuanto más se parezca la UI a
+          esto, más se lee todo como un mismo producto.
+        </p>
+        <div class="compare" id="cards"></div>
+      </section>
+    </main>
+
+    <script>
+      /* ---------------------------------------------------------------- datos */
+      const SETS = [
+        { id: "actual", name: "Actual", fonts: "Georgia · Trebuchet MS", license: "sistema (no empaquetada)" },
+        { id: "cronica", name: "Crónica", fonts: "Cinzel · Oswald · Lora", license: "OFL · ya empaquetadas" },
+        { id: "inscripcion", name: "Inscripción", fonts: "Marcellus SC · Barlow Cond. · EB Garamond", license: "OFL" },
+        { id: "garamond", name: "Garamond", fonts: "EB Garamond · Spectral SC · Archivo Narrow", license: "OFL" },
+        { id: "alegreya", name: "Alegreya", fonts: "Alegreya SC · Fira Sans Cond. · Alegreya", license: "OFL" },
+        { id: "cormorant", name: "Cormorant", fonts: "Cormorant SC · Barlow Cond.", license: "OFL" },
+        { id: "imprenta", name: "Imprenta", fonts: "IM Fell English SC · Archivo Narrow · Spectral", license: "OFL" },
+        { id: "grimorio", name: "Grimorio", fonts: "Almendra SC · Cinzel · Bebas · Cardo", license: "OFL" },
+        { id: "estandarte", name: "Estandarte", fonts: "Bebas Neue · Barlow Cond. · Spectral", license: "OFL" },
+        { id: "cardo", name: "Cardo", fonts: "Cardo · Spectral SC · Fira Sans Cond.", license: "OFL" },
+      ];
+
+      // Cadenas reales de src/i18n/translations.ts
+      const COPY = {
+        en: {
+          title: "Hostfall",
+          kicker: "Chronicles of the Shattered Realms",
+          play: "Play",
+          continue: "Continue",
+          howToPlay: "How to Play",
+          settings: "Settings",
+          life: "Life",
+          memory: "Memory",
+          archive: "Archive",
+          hostArchive: "Host Archive",
+          phases: ["Setup", "Main", "Battle", "End"],
+          activePhase: 1,
+          hostTurn: "Host Turn",
+          endTurn: "End Turn",
+          chooseAttackers: "Choose attackers",
+          leaveKicker: "Leave the Field",
+          leaveTitle: "Return home?",
+          leaveBody: "Your current game progress will be lost.",
+          keep: "Keep playing",
+          returnHome: "Return home",
+          tutorialStep: "Step 3 of 12",
+          tutorialTitle: "Choose attackers",
+          tutorialBody: "Enter combat to see which Echoes can attack.",
+          tutorialBody2: "End the turn. The one unused Source will become 1 Reserve after the Host acts.",
+          cardName: "Liora, Warden of the Threshold",
+          cardRules:
+            "<b>Summon:</b> put a +1/+1 counter on another allied Echo. While Liora is Stabilizing she cannot attack or use her Action.",
+          cardFlavor: "“Remember for us, Chronicler. We no longer can.”",
+        },
+        es: {
+          title: "Hostfall",
+          kicker: "Crónicas de los Reinos Quebrados",
+          play: "Jugar",
+          continue: "Continuar",
+          howToPlay: "Cómo jugar",
+          settings: "Ajustes",
+          life: "Vida",
+          memory: "Memoria",
+          archive: "Archivo",
+          hostArchive: "Archivo de la Hueste",
+          phases: ["Preparación", "Principal", "Batalla", "Final"],
+          activePhase: 1,
+          hostTurn: "Turno de la Hueste",
+          endTurn: "Terminar turno",
+          chooseAttackers: "Elegir atacantes",
+          leaveKicker: "Abandonar el Campo",
+          leaveTitle: "¿Volver al inicio?",
+          leaveBody: "Perderás el progreso de la partida actual.",
+          keep: "Seguir jugando",
+          returnHome: "Volver al inicio",
+          tutorialStep: "Paso 3 de 12",
+          tutorialTitle: "Elige atacantes",
+          tutorialBody: "Entra al combate para comprobar qué Ecos pueden atacar.",
+          tutorialBody2:
+            "Termina el turno. La única Fuente sin usar se convertirá en 1 de Reserva después de que actúe la Hueste.",
+          cardName: "Liora, Guardiana del Umbral",
+          cardRules:
+            "<b>Invocación:</b> añade un contador +1/+1 a otro Eco aliado. Mientras Liora esté Estabilizándose, no puede atacar ni usar su Acción.",
+          cardFlavor: "«Recuerda por nosotros, Cronista. Nosotros ya no podemos.»",
+        },
+      };
+
+      /* Huecos reales del juego: ancho disponible, tamaño y tracking con los que
+         se renderiza hoy. Los anchos salen de src/styles.css.               */
+      const SLOTS = [
+        {
+          id: "hostTitle",
+          label: "Título del panel de la Hueste",
+          hint: ".host-deck-counter-copy · 304 px − emblema − paddings",
+          avail: 158,
+          size: 10,
+          track: 0.2,
+          weightVar: "--head-weight",
+          fontVar: "--f-head",
+          upper: true,
+          key: "hostArchive",
+        },
+        {
+          id: "lifeTitle",
+          label: "Título del panel de Vida",
+          hint: ".player-life-title · 180 px − emblema 48 − paddings",
+          avail: 92,
+          size: 10,
+          track: 0.2,
+          weightVar: "--head-weight",
+          fontVar: "--f-head",
+          upper: true,
+          key: "life",
+        },
+        {
+          id: "pileMemory",
+          label: "Etiqueta de la caja Memoria",
+          hint: ".card-pile-label · caja de 62 px",
+          avail: 54,
+          size: 7,
+          track: 0.14,
+          weightVar: "--num-weight",
+          fontVar: "--f-num",
+          upper: true,
+          key: "memory",
+        },
+        {
+          id: "phaseActive",
+          label: "Etiqueta de fase activa",
+          hint: ".game-phase-progress-labels span · 52 px",
+          avail: 52,
+          size: 8,
+          track: 0.13,
+          weightVar: "--num-weight",
+          fontVar: "--f-num",
+          upper: true,
+          key: "phaseActive",
+        },
+        {
+          id: "menuItem",
+          label: "Entrada del menú principal",
+          hint: ".menu__item · columna de 280 px − paddings",
+          avail: 248,
+          size: 14.4,
+          track: 0.14,
+          weightVar: "--head-weight",
+          fontVar: "--f-head",
+          upper: true,
+          key: "howToPlay",
+        },
+        {
+          id: "dialogAction",
+          label: "Botón del diálogo",
+          hint: ".game-dialog-action · rejilla de 2 columnas en 420 px",
+          avail: 170,
+          size: 11,
+          track: 0.14,
+          weightVar: "--head-weight",
+          fontVar: "--f-head",
+          upper: true,
+          key: "returnHome",
+        },
+        {
+          id: "phaseButton",
+          label: "Botón de fase",
+          hint: ".game-phase-button · ancho máximo cómodo 220 px",
+          avail: 220,
+          size: 12,
+          track: 0.1,
+          weightVar: "--head-weight",
+          fontVar: "--f-head",
+          upper: true,
+          key: "chooseAttackers",
+        },
+        {
+          id: "bigNumber",
+          label: "Contador grande + proyección",
+          hint: ".host-deck-count 38 px + .host-deck-projection 19 px",
+          avail: 150,
+          size: 38,
+          track: 0,
+          weightVar: "--num-weight",
+          fontVar: "--f-num",
+          upper: false,
+          key: "bigNumber",
+        },
+      ];
+
+      function slotText(slot, lang) {
+        const copy = COPY[lang];
+        if (slot.key === "phaseActive") return copy.phases[copy.activePhase];
+        if (slot.key === "bigNumber") return "188";
+        // La pista de fases sólo muestra Principal / Batalla / Final: no hay hueco
+        // fijo donde quepa el turno de la Hueste, así que no se mide contra uno.
+        return copy[slot.key];
+      }
+
+      /* ------------------------------------------------------------ plantillas */
+      const heart = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 20s-7-4.4-7-9a4 4 0 017-2.6A4 4 0 0119 11c0 4.6-7 9-7 9z"/></svg>`;
+      const arrow = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h13M13 6l6 6-6 6"/></svg>`;
+
+      const PARTS = {
+        menu: (c) => `
+          <div class="menu">
+            <h1 class="menu__title">${c.title}</h1>
+            <p class="menu__sub">${c.kicker}</p>
+            <div class="menu__items">
+              <button class="menu__item">${c.play}</button>
+              <button class="menu__item menu__item--ghost">${c.continue}</button>
+              <button class="menu__item menu__item--ghost">${c.howToPlay}</button>
+              <button class="menu__item menu__item--ghost">${c.settings}</button>
+            </div>
+          </div>`,
+        hud: (c) => `
+          <div class="hud">
+            <div class="pile pile--memory"><span class="pile__count">4</span><span class="pile__label">${c.memory}</span></div>
+            <div class="pile"><span class="pile__count">23</span><span class="pile__label">${c.archive}</span></div>
+            <div class="vital">
+              <div class="vital__copy">
+                <div class="vital__title">${c.life}</div>
+                <div class="vital__count">24</div>
+              </div>
+              <div class="vital__emblem">${heart}</div>
+            </div>
+            <div class="vital vital--host">
+              <div class="vital__copy">
+                <div class="vital__title">${c.hostArchive}</div>
+                <div class="vital__count">18<span class="vital__projection">→ 15</span></div>
+              </div>
+            </div>
+            <div class="phase-strip">
+              ${c.phases
+                .map((p, i) => `<span class="${i === c.activePhase ? "is-active" : ""}">${p}</span>`)
+                .join("")}
+            </div>
+          </div>`,
+        buttons: (c) => `
+          <div class="buttons">
+            <button class="btn-phase">${c.hostTurn} ${arrow}</button>
+            <button class="btn-control">${c.endTurn}</button>
+            <button class="btn-control">${c.chooseAttackers}</button>
+            <button class="btn-action">${c.keep}</button>
+            <button class="btn-action btn-action--primary">${c.returnHome}</button>
+          </div>`,
+        dialog: (c) => `
+          <div class="dialog">
+            <div class="dialog__kicker">${c.leaveKicker}</div>
+            <h3 class="dialog__title">${c.leaveTitle}</h3>
+            <p class="dialog__body">${c.leaveBody}</p>
+          </div>`,
+        tutorial: (c) => `
+          <div class="tutorial">
+            <div class="tutorial__step">${c.tutorialStep}</div>
+            <h3 class="tutorial__title">${c.tutorialTitle}</h3>
+            <p class="tutorial__body">${c.tutorialBody}</p>
+            <p class="tutorial__body">${c.tutorialBody2}</p>
+          </div>`,
+        card: (c) => `
+          <div class="card-text">
+            <h3 class="card-text__name">${c.cardName}</h3>
+            <p class="card-text__rules">${c.cardRules}</p>
+            <p class="card-text__flavor">${c.cardFlavor}</p>
+          </div>`,
+      };
+
+      const SPECIMENS = [
+        { role: "Display", pick: (c) => `<span class="sample-display">${c.title}</span>` },
+        {
+          role: "Head",
+          pick: (c) =>
+            `<span class="sample-head">${c.hostArchive}</span><span class="sample-head">${c.chooseAttackers}</span>`,
+        },
+        {
+          role: "Num",
+          pick: () => `<span class="sample-num">24</span><span class="sample-num">1234567890</span>`,
+        },
+        { role: "Body", pick: (c) => `<span class="sample-body">${c.tutorialBody}</span>` },
+      ];
+
+      /* ---------------------------------------------------------------- estado */
+      let lang = "en";
+      let pick = "all";
+
+      const setbar = document.getElementById("setbar");
+      for (const set of SETS) {
+        const chip = document.createElement("button");
+        chip.className = "chip";
+        chip.dataset.setPick = set.id;
+        chip.textContent = set.name;
+        chip.setAttribute("aria-pressed", "false");
+        setbar.append(chip);
+      }
+
+      function visibleSets() {
+        return pick === "all" ? SETS : SETS.filter((s) => s.id === pick);
+      }
+
+      function tagFor(set) {
+        return `<div class="set-tag${set.id === "actual" ? " set-tag--current" : ""}"><strong>${
+          set.name
+        }</strong><span>${set.fonts} · ${set.license}</span></div>`;
+      }
+
+      function renderSurfaces() {
+        const copy = COPY[lang];
+        const targets = {
+          menus: "menu",
+          huds: "hud",
+          buttons: "buttons",
+          dialogs: "dialog",
+          tutorials: "tutorial",
+          cards: "card",
+        };
+        for (const [id, part] of Object.entries(targets)) {
+          const host = document.getElementById(id);
+          host.innerHTML = "";
+          for (const set of visibleSets()) {
+            const cell = document.createElement("div");
+            cell.className = "compare__cell";
+            cell.innerHTML = `${tagFor(set)}<div class="surface" data-set="${set.id}">${PARTS[part](copy)}</div>`;
+            host.append(cell);
+          }
+        }
+      }
+
+      function renderSpecimens() {
+        const copy = COPY[lang];
+        const host = document.getElementById("specimens");
+        host.innerHTML = "";
+        for (const spec of SPECIMENS) {
+          for (const set of visibleSets()) {
+            const row = document.createElement("div");
+            row.className = "specimen";
+            row.dataset.set = set.id;
+            row.innerHTML = `<div class="specimen__name">${spec.role}<b>${set.name}</b></div><div class="specimen__sample">${spec.pick(
+              copy,
+            )}</div>`;
+            host.append(row);
+          }
+        }
+      }
+
+      /* ------------------------------------------------------ prueba de encaje */
+      const ruler = document.createElement("span");
+      ruler.style.cssText =
+        "position:fixed;left:-9999px;top:0;white-space:nowrap;visibility:hidden;pointer-events:none";
+      document.body.append(ruler);
+
+      // Sonda para leer las variables de cada conjunto sin montarlo.
+      const probe = document.createElement("div");
+      probe.style.cssText = "position:fixed;left:-9999px;top:0;visibility:hidden";
+      document.body.append(probe);
+
+      function setVars(setId) {
+        probe.dataset.set = setId;
+        const cs = getComputedStyle(probe);
+        return {
+          head: cs.getPropertyValue("--f-head").trim(),
+          num: cs.getPropertyValue("--f-num").trim(),
+          headWeight: cs.getPropertyValue("--head-weight").trim() || "700",
+          numWeight: cs.getPropertyValue("--num-weight").trim() || "700",
+        };
+      }
+
+      function measure(text, font, weight, size, track, upper) {
+        ruler.style.fontFamily = font;
+        ruler.style.fontWeight = weight;
+        ruler.style.fontSize = `${size}px`;
+        ruler.style.letterSpacing = `${track}em`;
+        ruler.style.textTransform = upper ? "uppercase" : "none";
+        ruler.textContent = text;
+        return ruler.getBoundingClientRect().width;
+      }
+
+      async function renderFit() {
+        const table = document.getElementById("fit-table");
+        const sets = visibleSets();
+
+        // Cargar de verdad cada familia en cada cuerpo antes de medir; si no, se
+        // mide la fuente de reserva y el resultado es basura.
+        for (const set of SETS) {
+          const vars = setVars(set.id);
+          for (const slot of SLOTS) {
+            const font = slot.fontVar === "--f-head" ? vars.head : vars.num;
+            const weight = slot.fontVar === "--f-head" ? vars.headWeight : vars.numWeight;
+            try {
+              await document.fonts.load(`${weight} ${slot.size}px ${font}`);
+            } catch {}
+          }
+        }
+        await document.fonts.ready;
+
+        const head = `<thead><tr><th class="fit__slot">Hueco</th><th>Disponible</th>${sets
+          .map((s) => `<th>${s.name}</th>`)
+          .join("")}</tr></thead>`;
+
+        const rows = SLOTS.map((slot) => {
+          const text = slotText(slot, lang);
+          const cells = sets
+            .map((set) => {
+              const vars = setVars(set.id);
+              const font = slot.fontVar === "--f-head" ? vars.head : vars.num;
+              const weight = slot.fontVar === "--f-head" ? vars.headWeight : vars.numWeight;
+              const w = measure(text, font, weight, slot.size, slot.track, slot.upper);
+              const slack = slot.avail - w;
+              const cls = slack < 0 ? "over" : slack < 6 ? "tight" : "ok";
+              const mark = slack < 0 ? "✗" : slack < 6 ? "!" : "✓";
+              return `<td class="${cls}">${mark} ${Math.round(w)} px</td>`;
+            })
+            .join("");
+          return `<tr><th class="fit__slot">${slot.label}<small>${slot.hint} — «${text}»</small></th><td>${slot.avail} px</td>${cells}</tr>`;
+        }).join("");
+
+        table.innerHTML = `${head}<tbody>${rows}</tbody>`;
+      }
+
+      function renderAll() {
+        renderSurfaces();
+        renderSpecimens();
+        renderFit();
+        for (const chip of setbar.querySelectorAll(".chip")) {
+          chip.setAttribute("aria-pressed", String(chip.dataset.setPick === pick));
+        }
+        for (const chip of document.querySelectorAll(".chip--lang")) {
+          chip.setAttribute("aria-pressed", String(chip.dataset.lang === lang));
+        }
+        try {
+          localStorage.setItem("hostfall-typography", JSON.stringify({ lang, pick }));
+        } catch {}
+      }
+
+      setbar.addEventListener("click", (event) => {
+        const chip = event.target.closest(".chip");
+        if (!chip) return;
+        pick = chip.dataset.setPick;
+        renderAll();
+      });
+
+      document.getElementById("langbar").addEventListener("click", (event) => {
+        const chip = event.target.closest(".chip");
+        if (!chip) return;
+        lang = chip.dataset.lang;
+        document.documentElement.lang = lang;
+        renderAll();
+      });
+
+      try {
+        const saved = JSON.parse(localStorage.getItem("hostfall-typography") ?? "null");
+        if (saved) {
+          lang = saved.lang ?? "en";
+          pick = saved.pick ?? "all";
+        }
+      } catch {}
+      renderAll();
+    </script>
+  </body>
+</html>

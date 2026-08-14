@@ -1,0 +1,1670 @@
+/* ============================================================================
+   Hostfall — Kit de interfaz (maqueta)
+   Seis pieles sobre los mismos componentes. Nada de esto se importa desde src/.
+   Todas las texturas son procedurales (feTurbulence + gradientes): no hay
+   ningún PNG comprometido todavía.
+   ========================================================================== */
+
+@font-face {
+  font-family: "Cinzel";
+  font-weight: 500 900;
+  font-display: block;
+  src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cinzel Decorative";
+  font-weight: 400 700;
+  font-display: block;
+  src: url("../assets/fonts/cinzel-decorative-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Lora";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: block;
+  src: url("../assets/fonts/lora-normal-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Lora";
+  font-style: italic;
+  font-weight: 400 700;
+  font-display: block;
+  src: url("../assets/fonts/lora-italic-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Oswald";
+  font-weight: 500 700;
+  font-display: block;
+  src: url("../assets/fonts/oswald-latin.woff2") format("woff2");
+}
+
+/* --------------------------------------------------------------------------
+   Texturas procedurales compartidas
+   -------------------------------------------------------------------------- */
+:root {
+  /* grano fino, para dar suciedad a cualquier superficie */
+  --tex-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
+  /* fibra larga: pergamino, papel, tela */
+  --tex-fiber: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.035' numOctaves='5' stitchTiles='stitch'/%3E%3CfeDiffuseLighting surfaceScale='1.5' diffuseConstant='1.05' lighting-color='%23ffffff'%3E%3CfeDistantLight azimuth='250' elevation='62'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23f)'/%3E%3C/svg%3E");
+  /* piedra / metal martillado */
+  --tex-stone: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.05' numOctaves='5' stitchTiles='stitch'/%3E%3CfeDiffuseLighting surfaceScale='3.2' diffuseConstant='1' lighting-color='%23ffffff'%3E%3CfeDistantLight azimuth='230' elevation='52'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23s)'/%3E%3C/svg%3E");
+  /* cuero granulado */
+  --tex-leather: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='l'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.28' numOctaves='4' stitchTiles='stitch'/%3E%3CfeDiffuseLighting surfaceScale='1.6' diffuseConstant='1' lighting-color='%23ffffff'%3E%3CfeDistantLight azimuth='215' elevation='60'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23l)'/%3E%3C/svg%3E");
+
+  /* voluta de esquina (máscara: sólo importa el alfa) */
+  --orn-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Cg fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M2 42V12C2 6 6 2 12 2h30'/%3E%3Cpath d='M8 36V15c0-4 3-7 7-7h21' stroke-width='1.2'/%3E%3Cpath d='M14 26c0-7 5-12 12-12 4 0 7 3 7 6.5S30 27 26.5 27 21 24 21 21' stroke-width='1.5'/%3E%3C/g%3E%3Ccircle cx='21' cy='21' r='2.2' fill='%23000'/%3E%3C/svg%3E");
+  /* filete ornamental horizontal */
+  --orn-rule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 14' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.4'%3E%3Cpath d='M0 7h94M146 7h94'/%3E%3Cpath d='M104 7l16-5 16 5-16 5z'/%3E%3Cpath d='M94 7c4-4 6-4 10 0-4 4-6 4-10 0z'/%3E%3Cpath d='M146 7c-4-4-6-4-10 0 4 4 6 4 10 0z'/%3E%3C/g%3E%3C/svg%3E");
+  /* corona / cresta para cabeceras de estandarte */
+  --orn-crest: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 40'%3E%3Cg fill='%23000'%3E%3Cpath d='M4 7l12 9L32 1l16 15 12-9-5 24H9z'/%3E%3Crect x='7' y='33' width='50' height='6' rx='3'/%3E%3Ccircle cx='4' cy='6' r='4'/%3E%3Ccircle cx='60' cy='6' r='4'/%3E%3Ccircle cx='32' cy='2' r='4'/%3E%3C/g%3E%3C/svg%3E");
+  /* marca de verificación */
+  --orn-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' d='M3.5 10.5l4.5 4.5L17 5'/%3E%3C/svg%3E");
+  --orn-x: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' d='M4 4l12 12M16 4L4 16'/%3E%3C/svg%3E");
+  --orn-caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%23000' d='M3 6h14l-7 9z'/%3E%3C/svg%3E");
+}
+
+/* ==========================================================================
+   PIEL 1 — HIERRO Y CARMESÍ  (paneles negros, hilo de oro, cabecera roja)
+   ========================================================================== */
+[data-skin="iron"] {
+  --page: #0d0c0b;
+  --page-tint: radial-gradient(120% 90% at 50% 0%, #241c17 0%, #0d0c0b 70%);
+
+  --ink: #d9cbb2;
+  --ink-soft: #a3937c;
+  --ink-mute: #6f6455;
+  --title-ink: #f2e6cb;
+
+  --gold: #c9a24a;
+  --gold-dim: #6d5628;
+  --accent: #8f2318;
+  --accent-hi: #b83a24;
+  --good: #6f9a35;
+
+  --panel-bg: linear-gradient(#191512, #100d0b);
+  --panel-tex: var(--tex-grain);
+  --panel-tex-op: 0.18;
+  --panel-tex-blend: overlay;
+  --panel-edge: #2c2620;
+  --panel-radius: 3px;
+  --panel-shadow: 0 18px 44px rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(201, 162, 74, 0.24);
+  --plate-bg: linear-gradient(#0b0908, #131010);
+  --plate-edge: rgba(201, 162, 74, 0.22);
+
+  --head-bg: linear-gradient(#7d2016, #4d1109);
+  --head-ink: #f6e7c8;
+  --head-edge: rgba(201, 162, 74, 0.55);
+  --head-height: 40px;
+
+  --btn-hi: #2b241d;
+  --btn-lo: #16120f;
+  --btn-edge: #6d5628;
+  --btn-ink: #e6d6b4;
+  --btn-radius: 3px;
+  --btn-pad: 0.62rem 1.35rem;
+  --btn-bevel: inset 0 1px 0 rgba(255, 236, 190, 0.16), inset 0 -2px 0 rgba(0, 0, 0, 0.55);
+
+  --font-display: "Cinzel Decorative", serif;
+  --font-head: "Cinzel", serif;
+  --font-body: "Lora", serif;
+  --font-num: "Oswald", sans-serif;
+  --head-tracking: 0.16em;
+}
+
+/* ==========================================================================
+   PIEL 2 — PERGAMINO DE CAMPAÑA  (papel, tinta sepia, barras burdeos)
+   ========================================================================== */
+[data-skin="parchment"] {
+  --page: #241a12;
+  --page-tint: radial-gradient(120% 90% at 50% 0%, #3b2a1c 0%, #16100b 75%);
+
+  --ink: #4b3521;
+  --ink-soft: #6b5238;
+  --ink-mute: #7a5f3e;
+  --title-ink: #5a2f1c;
+
+  --gold: #8a6a35;
+  --gold-dim: #b39a62;
+  --accent: #8d2020;
+  --accent-hi: #ad3226;
+  --good: #4f7020;
+
+  --panel-bg: linear-gradient(#e8cfa5, #dcbd8f 55%, #cfa877);
+  --panel-tex: var(--tex-fiber);
+  --panel-tex-op: 0.5;
+  --panel-tex-blend: multiply;
+  --panel-edge: #a98a5c;
+  --panel-radius: 4px;
+  --panel-shadow: 0 20px 46px rgba(0, 0, 0, 0.55), inset 0 0 60px rgba(120, 78, 34, 0.35);
+  --plate-bg: linear-gradient(rgba(158, 118, 70, 0.28), rgba(120, 84, 44, 0.34));
+  --plate-edge: rgba(107, 76, 40, 0.45);
+
+  --head-bg: linear-gradient(rgba(224, 197, 152, 0.9), rgba(203, 168, 118, 0.9));
+  --head-ink: #5a2f1c;
+  --head-edge: rgba(120, 84, 40, 0.6);
+  --head-height: 42px;
+
+  --btn-hi: #d9b686;
+  --btn-lo: #bd9560;
+  --btn-edge: #7c5a2f;
+  --btn-ink: #422a16;
+  --btn-radius: 4px;
+  --btn-pad: 0.6rem 1.35rem;
+  --btn-bevel: inset 0 1px 0 rgba(255, 244, 216, 0.7), inset 0 -2px 0 rgba(88, 58, 26, 0.35);
+
+  --font-display: "Cinzel Decorative", serif;
+  --font-head: "Cinzel", serif;
+  --font-body: "Lora", serif;
+  --font-num: "Oswald", sans-serif;
+  --head-tracking: 0.1em;
+}
+
+/* ==========================================================================
+   PIEL 3 — PIEDRA Y BRONCE  (losas talladas, remaches, botones gordos)
+   ========================================================================== */
+[data-skin="stone"] {
+  --page: #121110;
+  --page-tint: radial-gradient(120% 90% at 50% 0%, #2a2723 0%, #100f0e 72%);
+
+  --ink: #cfc5b4;
+  --ink-soft: #9d9384;
+  --ink-mute: #6c6558;
+  --title-ink: #efe3c9;
+
+  --gold: #b0813f;
+  --gold-dim: #6a4d24;
+  --accent: #a8621d;
+  --accent-hi: #cd7f2c;
+  --good: #7a9a3a;
+
+  --panel-bg: linear-gradient(#4a453d, #33302b 45%, #262320);
+  --panel-tex: var(--tex-stone);
+  --panel-tex-op: 0.42;
+  --panel-tex-blend: overlay;
+  --panel-edge: #1b1917;
+  --panel-radius: 2px;
+  --panel-shadow: 0 22px 40px rgba(0, 0, 0, 0.7), inset 0 2px 0 rgba(255, 240, 210, 0.12),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.5);
+  --plate-bg: linear-gradient(#1d1b19, #262421);
+  --plate-edge: rgba(0, 0, 0, 0.6);
+
+  --head-bg: linear-gradient(#5a5148, #3a342d);
+  --head-ink: #f0dfba;
+  --head-edge: rgba(176, 129, 63, 0.5);
+  --head-height: 46px;
+
+  --btn-hi: #6b6157;
+  --btn-lo: #3b3630;
+  --btn-edge: #171513;
+  --btn-ink: #f2e6cd;
+  --btn-radius: 2px;
+  --btn-pad: 0.85rem 1.6rem;
+  --btn-bevel: inset 0 2px 0 rgba(255, 240, 210, 0.22), inset 0 -4px 0 rgba(0, 0, 0, 0.55),
+    inset 3px 0 0 rgba(0, 0, 0, 0.2), inset -3px 0 0 rgba(0, 0, 0, 0.2);
+
+  --font-display: "Cinzel", serif;
+  --font-head: "Cinzel", serif;
+  --font-body: "Lora", serif;
+  --font-num: "Oswald", sans-serif;
+  --head-tracking: 0.18em;
+}
+
+/* ==========================================================================
+   PIEL 4 — SANGRE Y ORO  (heráldica, doble marco dorado, estandartes)
+   ========================================================================== */
+[data-skin="heraldry"] {
+  --page: #0b0708;
+  --page-tint: radial-gradient(120% 90% at 50% 0%, #2b1414 0%, #0b0708 72%);
+
+  --ink: #e2d3b4;
+  --ink-soft: #b6a17e;
+  --ink-mute: #7d6c52;
+  --title-ink: #fbeecd;
+
+  --gold: #dcb45f;
+  --gold-dim: #8a6a2c;
+  --accent: #6d1116;
+  --accent-hi: #9d1f21;
+  --good: #6f9a35;
+
+  --panel-bg: linear-gradient(#3a1013, #260a0d 60%, #1a0709);
+  --panel-tex: var(--tex-grain);
+  --panel-tex-op: 0.2;
+  --panel-tex-blend: overlay;
+  --panel-edge: #dcb45f;
+  --panel-radius: 2px;
+  --panel-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(220, 180, 95, 0.35),
+    inset 0 0 0 6px rgba(12, 6, 6, 0.9), inset 0 0 0 7px rgba(220, 180, 95, 0.5);
+  --plate-bg: linear-gradient(#160709, #230c0e);
+  --plate-edge: rgba(220, 180, 95, 0.38);
+
+  --head-bg: linear-gradient(#8d181c, #5c0f12);
+  --head-ink: #fbeecd;
+  --head-edge: rgba(220, 180, 95, 0.85);
+  --head-height: 44px;
+
+  --btn-hi: #7c1418;
+  --btn-lo: #4a0c0f;
+  --btn-edge: #dcb45f;
+  --btn-ink: #fbeecd;
+  --btn-radius: 2px;
+  --btn-pad: 0.62rem 1.5rem;
+  --btn-bevel: inset 0 1px 0 rgba(255, 220, 160, 0.3), inset 0 -3px 0 rgba(0, 0, 0, 0.5);
+
+  --font-display: "Cinzel Decorative", serif;
+  --font-head: "Cinzel", serif;
+  --font-body: "Lora", serif;
+  --font-num: "Oswald", sans-serif;
+  --head-tracking: 0.2em;
+}
+
+/* ==========================================================================
+   PIEL 5 — LACA DEL CRONISTA  (azul profundo, plata, brillo arcano)
+   ========================================================================== */
+[data-skin="lacquer"] {
+  --page: #070a0f;
+  --page-tint: radial-gradient(120% 90% at 50% 0%, #14202f 0%, #070a0f 72%);
+
+  --ink: #c7d6e6;
+  --ink-soft: #90a4ba;
+  --ink-mute: #5f7186;
+  --title-ink: #eaf3ff;
+
+  --gold: #9db4cc;
+  --gold-dim: #4d637b;
+  --accent: #1d4a72;
+  --accent-hi: #2f7cb0;
+  --good: #4f9a7a;
+
+  --panel-bg: linear-gradient(#152232, #0c1421 60%, #080d16);
+  --panel-tex: var(--tex-grain);
+  --panel-tex-op: 0.14;
+  --panel-tex-blend: overlay;
+  --panel-edge: #2b3c50;
+  --panel-radius: 5px;
+  --panel-shadow: 0 20px 48px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(157, 180, 204, 0.28),
+    inset 0 0 40px rgba(47, 124, 176, 0.12);
+  --plate-bg: linear-gradient(#070c14, #0e1724);
+  --plate-edge: rgba(157, 180, 204, 0.24);
+
+  --head-bg: linear-gradient(#1d3350, #0d1a29);
+  --head-ink: #dceaf8;
+  --head-edge: rgba(157, 180, 204, 0.5);
+  --head-height: 40px;
+
+  --btn-hi: #23364c;
+  --btn-lo: #101c2b;
+  --btn-edge: #4d637b;
+  --btn-ink: #dceaf8;
+  --btn-radius: 5px;
+  --btn-pad: 0.62rem 1.4rem;
+  --btn-bevel: inset 0 1px 0 rgba(210, 232, 255, 0.2), inset 0 -2px 0 rgba(0, 0, 0, 0.55);
+
+  --font-display: "Cinzel", serif;
+  --font-head: "Cinzel", serif;
+  --font-body: "Lora", serif;
+  --font-num: "Oswald", sans-serif;
+  --head-tracking: 0.16em;
+}
+
+/* ==========================================================================
+   PIEL 6 — CÓDICE DE CUERO  (cuero, latón, costura, marfil)
+   ========================================================================== */
+[data-skin="codex"] {
+  --page: #14100c;
+  --page-tint: radial-gradient(120% 90% at 50% 0%, #33261a 0%, #120e0a 74%);
+
+  --ink: #e8dcc2;
+  --ink-soft: #b7a687;
+  --ink-mute: #86775f;
+  --title-ink: #f6ecd4;
+
+  --gold: #c08b3e;
+  --gold-dim: #7a5623;
+  --accent: #7a4318;
+  --accent-hi: #a4642a;
+  --good: #6f9a35;
+
+  --panel-bg: linear-gradient(#5a3d24, #40291733 40%, #33210f), linear-gradient(#4a3220, #33210f);
+  --panel-tex: var(--tex-leather);
+  --panel-tex-op: 0.45;
+  --panel-tex-blend: multiply;
+  --panel-edge: #241708;
+  --panel-radius: 8px;
+  --panel-shadow: 0 20px 46px rgba(0, 0, 0, 0.68), inset 0 1px 0 rgba(255, 226, 176, 0.16),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.45);
+  --plate-bg: linear-gradient(#2a1b0e, #38240f);
+  --plate-edge: rgba(192, 139, 62, 0.35);
+
+  --head-bg: linear-gradient(#6b4823, #4a3016);
+  --head-ink: #f6ecd4;
+  --head-edge: rgba(192, 139, 62, 0.55);
+  --head-height: 42px;
+
+  --btn-hi: #7b5227;
+  --btn-lo: #4c3116;
+  --btn-edge: #2a1a0a;
+  --btn-ink: #f6ecd4;
+  --btn-radius: 8px;
+  --btn-pad: 0.66rem 1.4rem;
+  --btn-bevel: inset 0 1px 0 rgba(255, 224, 172, 0.28), inset 0 -3px 0 rgba(0, 0, 0, 0.5);
+
+  --font-display: "Cinzel Decorative", serif;
+  --font-head: "Cinzel", serif;
+  --font-body: "Lora", serif;
+  --font-num: "Oswald", sans-serif;
+  --head-tracking: 0.12em;
+}
+
+/* ==========================================================================
+   Página de la maqueta (chrome neutro, no forma parte del kit)
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--page-tint), var(--page);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  align-items: center;
+  padding: 0.7rem 1.5rem;
+  background: linear-gradient(rgba(8, 7, 6, 0.96), rgba(8, 7, 6, 0.88));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(6px);
+}
+
+.topbar__brand {
+  font-family: var(--font-head);
+  font-size: 0.82rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #b9a67f;
+  margin-right: auto;
+}
+
+.skinbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.skinchip {
+  appearance: none;
+  cursor: pointer;
+  font-family: var(--font-head);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.42rem 0.85rem;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: #cbbfa6;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.skinchip:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+.skinchip[aria-pressed="true"] {
+  background: rgba(220, 180, 95, 0.16);
+  border-color: rgba(220, 180, 95, 0.6);
+  color: #f4e6c4;
+}
+
+.skinchip i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: block;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+.page {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 6rem;
+}
+
+.bay {
+  margin: 0 0 3.25rem;
+}
+
+.bay__title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 0.25rem;
+  font-family: var(--font-head);
+  font-size: 0.78rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.bay__title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, currentColor, transparent);
+  opacity: 0.45;
+}
+
+.bay__note {
+  margin: 0 0 1.4rem;
+  font-size: 0.85rem;
+  color: var(--ink-mute);
+  max-width: 70ch;
+}
+
+.grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  align-items: start;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cell__label {
+  font-family: var(--font-num);
+  font-size: 0.66rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+/* ==========================================================================
+   COMPONENTES
+   ========================================================================== */
+
+/* --- Panel ---------------------------------------------------------------- */
+.panel {
+  position: relative;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-edge);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+  color: var(--ink);
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--panel-tex);
+  background-size: 240px;
+  opacity: var(--panel-tex-op);
+  mix-blend-mode: var(--panel-tex-blend);
+  pointer-events: none;
+}
+
+.panel > * {
+  position: relative;
+}
+
+.panel__head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: var(--head-height);
+  padding: 0 0.7rem 0 1.1rem;
+  background: var(--head-bg);
+  border-bottom: 1px solid var(--head-edge);
+  border-radius: var(--panel-radius) var(--panel-radius) 0 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.panel__title {
+  flex: 1;
+  margin: 0;
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: var(--head-tracking);
+  text-transform: uppercase;
+  color: var(--head-ink);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+}
+
+.panel__body {
+  padding: 1.1rem 1.2rem 1.25rem;
+}
+
+/* esquinas ornamentadas opcionales */
+.corners {
+  position: absolute;
+  inset: 5px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.corners span {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  background: var(--gold);
+  opacity: 0.8;
+  -webkit-mask: var(--orn-corner) center / contain no-repeat;
+  mask: var(--orn-corner) center / contain no-repeat;
+}
+
+.corners span:nth-child(1) {
+  top: 0;
+  left: 0;
+}
+.corners span:nth-child(2) {
+  top: 0;
+  right: 0;
+  transform: scaleX(-1);
+}
+.corners span:nth-child(3) {
+  bottom: 0;
+  left: 0;
+  transform: scaleY(-1);
+}
+.corners span:nth-child(4) {
+  bottom: 0;
+  right: 0;
+  transform: scale(-1);
+}
+
+/* la voluta superior izquierda no debe pisar el título */
+.panel:has(> .corners) .panel__title {
+  padding-left: 1.3rem;
+}
+
+/* superficie hundida dentro de un panel */
+.plate {
+  background: var(--plate-bg);
+  border: 1px solid var(--plate-edge);
+  border-radius: 2px;
+  box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.55);
+  padding: 0.85rem 1rem;
+}
+
+/* filete ornamental */
+.rule {
+  height: 14px;
+  background: var(--gold);
+  opacity: 0.55;
+  -webkit-mask: var(--orn-rule) center / 100% 100% no-repeat;
+  mask: var(--orn-rule) center / 100% 100% no-repeat;
+  margin: 0.9rem 0;
+}
+
+/* --- Tipografía ----------------------------------------------------------- */
+.t-display {
+  font-family: var(--font-display);
+  font-size: 2.1rem;
+  line-height: 1.1;
+  margin: 0;
+  color: var(--title-ink);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+}
+
+.t-title {
+  font-family: var(--font-head);
+  font-size: 1.15rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0;
+  color: var(--title-ink);
+}
+
+.t-eyebrow {
+  font-family: var(--font-num);
+  font-size: 0.68rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0;
+}
+
+.t-body {
+  margin: 0;
+  color: var(--ink);
+}
+
+.t-rules {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.t-flavor {
+  margin: 0;
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+.t-num {
+  font-family: var(--font-num);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--title-ink);
+}
+
+.t-key {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+/* --- Botones -------------------------------------------------------------- */
+.btn {
+  position: relative;
+  appearance: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: var(--btn-pad);
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--btn-ink);
+  background: linear-gradient(var(--btn-hi), var(--btn-lo));
+  border: 1px solid var(--btn-edge);
+  border-radius: var(--btn-radius);
+  box-shadow: var(--btn-bevel), 0 2px 0 rgba(0, 0, 0, 0.4);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
+  transition: filter 0.12s, transform 0.08s, box-shadow 0.12s;
+}
+
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--tex-grain);
+  background-size: 180px;
+  opacity: 0.12;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.btn:hover {
+  filter: brightness(1.18);
+}
+
+.btn:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.6);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.btn[disabled] {
+  cursor: not-allowed;
+  filter: grayscale(0.7) brightness(0.6);
+  opacity: 0.75;
+}
+
+.btn--primary {
+  background: linear-gradient(var(--accent-hi), var(--accent));
+  border-color: var(--gold);
+  color: #fff3d8;
+}
+
+.btn--danger {
+  background: linear-gradient(#a32a1c, #5d130c);
+  border-color: #d08a4a;
+  color: #ffe6cf;
+}
+
+.btn--good {
+  background: linear-gradient(color-mix(in srgb, var(--good) 80%, #fff 20%), var(--good));
+  border-color: color-mix(in srgb, var(--good) 50%, #000 50%);
+  color: #f4ffe2;
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--gold) 55%, transparent);
+  color: var(--ink);
+  box-shadow: none;
+}
+
+.btn--ghost:hover {
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+}
+
+.btn--wide {
+  width: 100%;
+  padding-inline: 2rem;
+}
+
+.btn--sm {
+  padding: 0.35rem 0.8rem;
+  font-size: 0.7rem;
+}
+
+.btn--lg {
+  padding: 1rem 2.4rem;
+  font-size: 0.98rem;
+  letter-spacing: 0.18em;
+}
+
+/* variantes de forma, disponibles en cualquier piel */
+.btn--notch {
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+
+.btn--ribbon {
+  clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 50%, 100% 100%, 0 100%, 14px 50%);
+  padding-inline: 2.1rem;
+}
+
+.btn--arrow {
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 0 100%);
+  padding-right: 2.2rem;
+}
+
+.btn--pill {
+  border-radius: 999px;
+}
+
+/* botón cuadrado de icono */
+.btn--icon {
+  width: 46px;
+  height: 46px;
+  padding: 0;
+}
+
+.btn--icon .glyph {
+  width: 22px;
+  height: 22px;
+  background: currentColor;
+  -webkit-mask: var(--glyph) center / contain no-repeat;
+  mask: var(--glyph) center / contain no-repeat;
+}
+
+/* cierre de ventana */
+.btn--close {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 2px;
+}
+
+.btn--close .glyph {
+  width: 14px;
+  height: 14px;
+  background: currentColor;
+  -webkit-mask: var(--orn-x) center / contain no-repeat;
+  mask: var(--orn-x) center / contain no-repeat;
+}
+
+/* estandarte de cabecera con cresta */
+.crest-btn {
+  position: relative;
+  padding-top: 1.35rem;
+}
+
+.crest-btn::before {
+  content: "";
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 46px;
+  height: 28px;
+  background: var(--gold);
+  -webkit-mask: var(--orn-crest) center / contain no-repeat;
+  mask: var(--orn-crest) center / contain no-repeat;
+}
+
+/* --- Controles ------------------------------------------------------------ */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field__label {
+  font-family: var(--font-head);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.input,
+.select {
+  appearance: none;
+  width: 100%;
+  padding: 0.55rem 0.8rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: var(--plate-bg);
+  border: 1px solid var(--plate-edge);
+  border-radius: var(--btn-radius);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+.select {
+  padding-right: 2.2rem;
+  background-image: var(--orn-caret);
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  background-size: 16px;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.hotkey {
+  min-width: 120px;
+  text-align: center;
+  font-family: var(--font-num);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  background: linear-gradient(var(--btn-hi), var(--btn-lo));
+  border: 1px solid var(--btn-edge);
+  color: var(--btn-ink);
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--btn-radius);
+  box-shadow: var(--btn-bevel);
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  font-size: 0.92rem;
+}
+
+.check input {
+  appearance: none;
+  margin: 0;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--btn-edge);
+  border-radius: 2px;
+  background: linear-gradient(var(--btn-hi), var(--btn-lo));
+  box-shadow: var(--btn-bevel);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.check input::after {
+  content: "";
+  width: 15px;
+  height: 15px;
+  background: var(--gold);
+  transform: scale(0);
+  transition: transform 0.12s;
+  -webkit-mask: var(--orn-check) center / contain no-repeat;
+  mask: var(--orn-check) center / contain no-repeat;
+}
+
+.check input:checked::after {
+  transform: scale(1);
+}
+
+.check input:checked {
+  border-color: var(--gold);
+}
+
+/* toggle diamante (piel pergamino usa este) */
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  cursor: pointer;
+}
+
+.switch input {
+  appearance: none;
+  margin: 0;
+  width: 62px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid var(--btn-edge);
+  background: var(--plate-bg);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+  position: relative;
+  cursor: pointer;
+}
+
+.switch input::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  transform: translateY(-50%);
+  background: linear-gradient(var(--gold), var(--gold-dim));
+  border-radius: 50%;
+  transition: left 0.16s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.switch input:checked {
+  background: linear-gradient(var(--accent), color-mix(in srgb, var(--accent) 60%, #000));
+}
+
+.switch input:checked::after {
+  left: 37px;
+}
+
+/* slider */
+.slider {
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-runnable-track {
+  height: 14px;
+  border-radius: 999px;
+  border: 1px solid var(--btn-edge);
+  background: linear-gradient(
+      90deg,
+      var(--accent-hi) 0%,
+      var(--accent) var(--val, 60%),
+      transparent var(--val, 60%)
+    ),
+    var(--plate-bg);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.55);
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  margin-top: -5px;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(var(--gold), var(--gold-dim));
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.slider--round::-webkit-slider-thumb {
+  clip-path: none;
+  border-radius: 50%;
+}
+
+/* stepper */
+.stepper {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--btn-edge);
+  border-radius: var(--btn-radius);
+  overflow: hidden;
+  background: var(--plate-bg);
+}
+
+.stepper button {
+  appearance: none;
+  cursor: pointer;
+  width: 34px;
+  border: 0;
+  background: linear-gradient(var(--btn-hi), var(--btn-lo));
+  color: var(--btn-ink);
+  font-family: var(--font-num);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.stepper span {
+  min-width: 56px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-num);
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+/* tabs */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  border-bottom: 1px solid var(--plate-edge);
+}
+
+.tab {
+  appearance: none;
+  cursor: pointer;
+  padding: 0.55rem 1.15rem;
+  font-family: var(--font-head);
+  font-size: 0.76rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  background: linear-gradient(rgba(255, 255, 255, 0.05), transparent);
+  border: 1px solid var(--plate-edge);
+  border-bottom: 0;
+  border-radius: var(--btn-radius) var(--btn-radius) 0 0;
+}
+
+.tab:hover {
+  color: var(--ink);
+}
+
+.tab[aria-selected="true"] {
+  color: var(--title-ink);
+  background: linear-gradient(var(--btn-hi), var(--btn-lo));
+  border-color: var(--gold);
+  box-shadow: inset 0 2px 0 var(--gold);
+}
+
+/* lista con scroll */
+.list {
+  max-height: 190px;
+  overflow: auto;
+  border: 1px solid var(--plate-edge);
+  background: var(--plate-bg);
+  box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.5);
+}
+
+.list__group {
+  padding: 0.4rem 0.85rem;
+  font-family: var(--font-head);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border-bottom: 1px solid var(--plate-edge);
+}
+
+.list__item {
+  padding: 0.4rem 0.85rem;
+  cursor: pointer;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.list__item:hover {
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+  color: var(--ink);
+}
+
+.list__item[aria-current="true"] {
+  color: var(--title-ink);
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+.list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.list::-webkit-scrollbar-thumb {
+  background: linear-gradient(var(--gold), var(--gold-dim));
+  border: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+/* --- Ranuras e iconos ------------------------------------------------------ */
+.slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+  gap: 0.5rem;
+}
+
+.slot {
+  aspect-ratio: 1;
+  border: 1px solid var(--plate-edge);
+  border-radius: 3px;
+  background: var(--plate-bg);
+  box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.6);
+  display: grid;
+  place-items: center;
+  position: relative;
+  color: var(--ink-mute);
+  font-family: var(--font-num);
+  font-size: 0.8rem;
+}
+
+.slot--filled {
+  border-color: var(--gold);
+  background: radial-gradient(80% 80% at 50% 25%, color-mix(in srgb, var(--accent) 55%, transparent), var(--plate-bg));
+  color: var(--title-ink);
+}
+
+.slot__count {
+  position: absolute;
+  right: 3px;
+  bottom: 2px;
+  font-family: var(--font-num);
+  font-size: 0.72rem;
+  color: var(--title-ink);
+  text-shadow: 0 1px 2px #000;
+}
+
+.slot--round {
+  border-radius: 50%;
+}
+
+/* --- HUD ------------------------------------------------------------------- */
+.res {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.85rem 0.25rem 0.3rem;
+  background: linear-gradient(var(--btn-hi), var(--btn-lo));
+  border: 1px solid var(--btn-edge);
+  border-radius: 999px;
+  box-shadow: var(--btn-bevel);
+}
+
+.res__orb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(60% 60% at 35% 30%, #fff6, transparent 70%),
+    linear-gradient(var(--gold), var(--gold-dim));
+  border: 1px solid rgba(0, 0, 0, 0.55);
+}
+
+.res__value {
+  font-family: var(--font-num);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--title-ink);
+}
+
+.bar {
+  position: relative;
+  height: 22px;
+  border: 1px solid var(--btn-edge);
+  border-radius: 3px;
+  background: var(--plate-bg);
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.bar__fill {
+  position: absolute;
+  inset: 1px auto 1px 1px;
+  border-radius: 2px;
+  background: linear-gradient(#b8452c, #6d1c10);
+  box-shadow: inset 0 1px 0 rgba(255, 200, 160, 0.4);
+}
+
+.bar__fill--host {
+  background: linear-gradient(#6f8a34, #33450f);
+}
+
+.bar__text {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-num);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  color: #fff;
+  text-shadow: 0 1px 2px #000;
+}
+
+.pips {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.pip {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--btn-edge);
+  background: var(--plate-bg);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6);
+}
+
+.pip--on {
+  background: radial-gradient(60% 60% at 35% 30%, #cfe9ff, #2f7cb0 60%, #123a58);
+  border-color: #8fc4e6;
+  box-shadow: 0 0 10px rgba(76, 168, 232, 0.55);
+}
+
+.pip--stored {
+  background: radial-gradient(60% 60% at 35% 30%, #ffeeb0, #d5a12c 60%, #6b4a10);
+  border-color: #e8c470;
+  box-shadow: 0 0 10px rgba(224, 176, 64, 0.5);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.16rem 0.7rem;
+  font-family: var(--font-head);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  border: 1px solid var(--gold-dim);
+  background: linear-gradient(rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.25));
+  color: var(--ink);
+}
+
+.badge--trait {
+  border-color: var(--gold);
+  color: var(--title-ink);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+.badge--state {
+  border-radius: 999px;
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--accent-hi) 70%, #fff 30%);
+  color: color-mix(in srgb, var(--accent-hi) 55%, var(--ink) 45%);
+  font-family: var(--font-body);
+  letter-spacing: 0.06em;
+  text-transform: none;
+  font-size: 0.78rem;
+}
+
+.phase {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 2.4rem;
+  background: var(--head-bg);
+  border-top: 1px solid var(--head-edge);
+  border-bottom: 1px solid var(--head-edge);
+  clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 18px 100%, 0 50%);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--head-ink);
+}
+
+/* --- Avisos --------------------------------------------------------------- */
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.55rem 1.1rem 0.55rem 0.8rem;
+  background: linear-gradient(var(--btn-hi), var(--btn-lo));
+  border: 1px solid var(--btn-edge);
+  border-left: 3px solid var(--gold);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 50%, 100% 100%, 0 100%);
+  padding-right: 2rem;
+  font-size: 0.9rem;
+}
+
+.toast__icon {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 3px;
+  background: radial-gradient(70% 70% at 40% 30%, color-mix(in srgb, var(--gold) 70%, #fff), var(--gold-dim));
+  border: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+.toast--war {
+  color: #f0a08a;
+  border-left-color: #b8452c;
+}
+
+.toast--good {
+  color: #bfe08a;
+  border-left-color: var(--good);
+}
+
+.tooltip {
+  max-width: 280px;
+  padding: 0.7rem 0.9rem;
+  background: linear-gradient(rgba(12, 10, 8, 0.97), rgba(6, 5, 4, 0.97));
+  border: 1px solid var(--gold-dim);
+  border-radius: 2px;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  color: #dccfb4;
+  font-size: 0.88rem;
+}
+
+.tooltip strong {
+  display: block;
+  font-family: var(--font-head);
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.3rem;
+}
+
+.log {
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.log b {
+  color: var(--title-ink);
+  font-weight: 700;
+}
+
+/* --- Escenario de modales -------------------------------------------------- */
+.stage {
+  position: relative;
+  min-height: 300px;
+  padding: 1.75rem;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  overflow: hidden;
+  background: radial-gradient(90% 80% at 50% 35%, #2c2620, #0a0908 75%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--tex-grain);
+  background-size: 200px;
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+}
+
+.stage--dim::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.stage > .panel,
+.stage > .modal {
+  position: relative;
+  z-index: 2;
+}
+
+.modal {
+  width: min(560px, 100%);
+}
+
+.modal__foot {
+  display: flex;
+  gap: 0.7rem;
+  justify-content: flex-end;
+  padding: 0 1.2rem 1.2rem;
+}
+
+.modal__foot--center {
+  justify-content: center;
+}
+
+/* diálogo de misión: retrato + nota */
+.quest {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 1rem;
+}
+
+.portrait {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border: 1px solid var(--gold-dim);
+  background: linear-gradient(#2a2119, #120e0a);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
+  display: grid;
+  place-items: end center;
+  padding-bottom: 0.5rem;
+  overflow: hidden;
+}
+
+.portrait::before {
+  content: "";
+  position: absolute;
+  inset: 12% 18% 0;
+  border-radius: 45% 45% 0 0;
+  background: linear-gradient(#4a3a2a, #241b13);
+  box-shadow: inset 0 -20px 30px rgba(0, 0, 0, 0.6);
+}
+
+.portrait figcaption {
+  position: relative;
+  font-family: var(--font-head);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-shadow: 0 1px 3px #000;
+}
+
+.portrait--round {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border-width: 3px;
+}
+
+.note {
+  padding: 1rem 1.1rem;
+  color: #4b3521;
+  background: linear-gradient(#e9d4ab, #d9bc90);
+  border: 1px solid #a98a5c;
+  box-shadow: inset 0 0 40px rgba(140, 96, 44, 0.35), 0 6px 18px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.note::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--tex-fiber);
+  background-size: 260px;
+  opacity: 0.45;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.note > * {
+  position: relative;
+}
+
+.note h4 {
+  margin: 0 0 0.4rem;
+  font-family: var(--font-head);
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  color: #5a2f1c;
+}
+
+/* caja de subtítulos / conversación */
+.speech {
+  display: grid;
+  grid-template-columns: 78px 1fr;
+  gap: 0.9rem;
+  align-items: end;
+  padding: 0.9rem 1.1rem;
+}
+
+.speech__name {
+  font-family: var(--font-head);
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 0.25rem;
+}
+
+.speech__line {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.speech__line--enemy {
+  color: #dd8f6f;
+}
+
+/* --- Colores de muestra ---------------------------------------------------- */
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.swatch {
+  width: 84px;
+  height: 56px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  display: grid;
+  align-content: end;
+  padding: 0.25rem;
+  font-family: var(--font-num);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 2px #000;
+}
+
+/* ==========================================================================
+   Ajustes estructurales por piel
+   ========================================================================== */
+
+/* Piedra: remaches en las esquinas de los paneles */
+[data-skin="stone"] .panel {
+  background-image: radial-gradient(circle at 14px 14px, #8c7f6c 0 3px, rgba(0, 0, 0, 0.5) 3px 5px, transparent 5px),
+    radial-gradient(circle at calc(100% - 14px) 14px, #8c7f6c 0 3px, rgba(0, 0, 0, 0.5) 3px 5px, transparent 5px),
+    radial-gradient(circle at 14px calc(100% - 14px), #8c7f6c 0 3px, rgba(0, 0, 0, 0.5) 3px 5px, transparent 5px),
+    radial-gradient(circle at calc(100% - 14px) calc(100% - 14px), #8c7f6c 0 3px, rgba(0, 0, 0, 0.5) 3px 5px, transparent 5px),
+    var(--panel-bg);
+}
+
+[data-skin="stone"] .panel__head {
+  border-bottom-width: 3px;
+  border-bottom-style: solid;
+}
+
+/* Códice: costura interior */
+[data-skin="codex"] .panel__body {
+  margin: 0 6px 6px;
+  border: 1px dashed rgba(240, 214, 160, 0.35);
+  border-radius: 5px;
+}
+
+[data-skin="codex"] .panel__head {
+  margin: 6px 6px 0;
+  border-radius: 5px;
+  border: 1px solid var(--head-edge);
+}
+
+/* Heráldica: cabecera con doble filete dorado */
+[data-skin="heraldry"] .panel__head {
+  box-shadow: inset 0 0 0 1px rgba(220, 180, 95, 0.5), inset 0 2px 0 rgba(255, 226, 170, 0.25);
+  margin: 8px 8px 0;
+}
+
+[data-skin="heraldry"] .panel__body {
+  margin: 0 8px 8px;
+}
+
+/* Laca: resplandor arcano en cabeceras y botones primarios */
+[data-skin="lacquer"] .panel__head {
+  box-shadow: inset 0 1px 0 rgba(210, 235, 255, 0.18), 0 6px 18px rgba(47, 124, 176, 0.16);
+}
+
+[data-skin="lacquer"] .btn--primary {
+  box-shadow: var(--btn-bevel), 0 0 18px rgba(47, 124, 176, 0.45);
+}
+
+/* Pergamino: el papel no lleva sombra interior negra en las placas */
+[data-skin="parchment"] .plate {
+  box-shadow: inset 0 2px 8px rgba(90, 58, 24, 0.35);
+}
+
+[data-skin="parchment"] .tooltip {
+  background: linear-gradient(#e9d4ab, #d5b184);
+  color: #4b3521;
+  border-color: #8a6a35;
+}
+
+[data-skin="parchment"] .stage {
+  background: radial-gradient(90% 80% at 50% 35%, #55402c, #1a1209 78%);
+}
+
+[data-skin="parchment"] .log b,
+[data-skin="parchment"] .t-num,
+[data-skin="parchment"] .bar__text {
+  color: #3d2612;
+}
+
+[data-skin="parchment"] .bar__text {
+  text-shadow: none;
+}
+
+[data-skin="parchment"] .btn::after,
+[data-skin="parchment"] .panel::before {
+  mix-blend-mode: multiply;
+}
+
+[data-skin="parchment"] .btn {
+  text-shadow: 0 1px 0 rgba(255, 240, 210, 0.5);
+}
+
+[data-skin="parchment"] .btn--primary,
+[data-skin="parchment"] .btn--danger {
+  color: #ffe9cd;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+[data-skin="parchment"] .speech__line--enemy {
+  color: #8f2020;
+}
+
+[data-skin="parchment"] .list__item {
+  border-bottom-color: rgba(80, 52, 22, 0.18);
+}
