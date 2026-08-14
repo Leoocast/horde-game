@@ -1320,6 +1320,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
       )}
       {effectActive && primaryAbility && (
         <button
+          aria-label={abilityButtonText(primaryAbility)}
           data-audio-click="off"
           data-guided-anchor-extension="true"
           className="effect-action-button"

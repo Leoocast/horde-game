@@ -376,6 +376,9 @@ antes de crear otra implementación.
 - `CardPreview` y Details deben reflejar reglas, Rasgos, stats y estados reales.
 - Badges de Rasgo y Estado no comparten semántica visual.
 - Overlays y previews deben respetar los z-index documentados en los propios componentes/CSS.
+- Los botones contextuales de Acción de una carta conservan el contenido semántico propio de su
+  coste y efecto; sólo su placa e interacción reutilizan el material del botón **Continuar** del
+  tutorial, sin volver a la placa recortada legacy.
 - El audio pasa por el sistema central y respeta mute/volumen. No crear `Audio` dispersos en
   componentes.
 - Los SFX del pase nuevo permanecen registrados en el Taller de Sonidos y se activan de forma
@@ -533,7 +536,12 @@ Las comparaciones grandes de cartas son una presentación genérica declarada po
 `presentation.cardComparison`; el runtime resuelve las instancias predefinidas y enfatiza su coste
 sin conocer nombres de cartas ni selectores de la UI. La comparación se centra en pantalla y el
 énfasis reutiliza directamente `CardCostBadge`, el orbe azul que la Mano y el preview superponen en
-la esquina superior izquierda; no se mantiene una representación paralela de Energía. Durante una
+la esquina superior izquierda; no se mantiene una representación paralela de Energía. Las cartas
+se muestran al 80 % del tamaño de la primera versión, sin repetir sus nombres debajo; el recuadro se
+ensancha para quedar claramente por encima y las cartas se elevan bajo él. El coste conserva su
+opacidad mientras pulsa y brilla. Cuando `player.reserve` y `player.sources` producen spotlights
+anidados, sólo el marco exterior conserva el ornamento superior.
+Durante una
 lección, `PhaseBanner` permanece suspendido para no destellar entre checkpoints del guion.
 
 En los pasos de Fuente, la acción apunta de la carta en Mano a `player.field`; sólo después de que
@@ -550,7 +558,7 @@ una acción contextual fuera de sus límites, el descendiente marcado con
 `data-guided-anchor-extension="true"` amplía el hueco interactivo y la zona evitada por el recuadro.
 Al activar `phase.continueSetup`, el overlay retira el recuadro del paso de Acción desde el
 `pointerdown` o teclado aceptado; así no sobrevive un frame mientras comienza el robo automático.
-El oscurecimiento del tutorial usa 30 % de opacidad y el texto admite párrafos separados para evitar
+El oscurecimiento del tutorial usa 35 % de opacidad y el texto admite párrafos separados para evitar
 bloques densos.
 
 `playerDrawForecast` en

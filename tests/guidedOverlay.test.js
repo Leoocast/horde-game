@@ -131,6 +131,7 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(overlay, /data-card-preview-visible=/u);
   assert.match(overlay, /<GuidedCardComparison cards=\{comparisonCards\}/u);
   assert.match(comparison, /guided-card-comparison-cost-accessible/u);
+  assert.doesNotMatch(comparison, /<figcaption/u);
   assert.match(comparison, /import \{ CardCostBadge \} from "\.\/Card";/u);
   assert.match(comparison, /<CardCostBadge card=\{card\} \/>/u);
   assert.doesNotMatch(comparison, /<Zap|guided-card-comparison-cost"/u);
@@ -146,11 +147,17 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(overlay, /guidedUnionBounds/u);
   assert.match(styles, /\.guided-tutorial-overlay\[data-mode="explain"\],[\s\S]*?pointer-events: auto;/u);
   assert.match(styles, /guided-tutorial-overlay:not\(\[data-card-preview-visible="true"\]\)/u);
-  assert.match(styles, /\.guided-card-comparison\s*\{[^}]*left:\s*50%;[^}]*transform:\s*translate\(-50%, -50%\);/su);
-  assert.match(styles, /\.guided-card-comparison-item\s*\{[^}]*width:\s*clamp\(300px, 31vw, 450px\);/su);
+  assert.match(styles, /\.guided-card-comparison\s*\{[^}]*top:\s*58%;[^}]*left:\s*50%;[^}]*transform:\s*translate\(-50%, -50%\);/su);
+  assert.match(styles, /\.guided-card-comparison-item\s*\{[^}]*width:\s*clamp\(240px, 24\.8vw, 360px\);/su);
   assert.match(styles, /\.guided-card-comparison-frame > \.card-cost-badge\s*\{/u);
   assert.doesNotMatch(styles, /\.guided-card-comparison-frame::after\s*\{/u);
-  assert.match(styles, /\.guided-tutorial-dimmer\s*\{\s*fill:\s*rgb\(2 4 4 \/ 0\.3\);\s*\}/u);
+  assert.match(styles, /\.guided-tutorial-overlay\.has-card-comparison \.guided-tutorial-callout\s*\{[^}]*width:\s*min\(580px, calc\(100vw - 48px\)\);/su);
+  const costFocus = styles.match(/@keyframes guided-card-cost-focus\s*\{([\s\S]*?)\n\}/u)?.[1] ?? "";
+  assert.match(costFocus, /drop-shadow/u);
+  assert.doesNotMatch(costFocus, /opacity\s*:/u);
+  assert.match(styles, /\.guided-tutorial-dimmer\s*\{\s*fill:\s*rgb\(2 4 4 \/ 0\.35\);\s*\}/u);
+  assert.match(styles, /\.guided-tutorial-ring::after\s*\{[^}]*transform:\s*translateX\(-50%\) rotate\(45deg\);/su);
+  assert.match(styles, /guided-tutorial-overlay:has\(\.guided-tutorial-ring\[data-anchor-key="surface:player\.sources"\]\)[\s\S]*?guided-tutorial-ring\[data-anchor-key="surface:player\.reserve"\]::after\s*\{\s*display:\s*none;/u);
   assert.match(styles, /\.guided-tutorial-ring\[data-anchor-key\^="card:"\]\s*\{\s*display:\s*none;\s*\}/u);
   assert.match(styles, /\.guided-tutorial-body p\s*\{[^}]*font-size:\s*16px;/su);
   assert.match(

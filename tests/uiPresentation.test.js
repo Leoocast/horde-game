@@ -209,6 +209,18 @@ test("committed hand cards yield to their specialized play animation without sna
   assert.doesNotMatch(handSource, /exit:\s*\{[^}]*y:\s*-34/su);
 });
 
+test("contextual card Actions use the current battlefield CTA treatment", () => {
+  const battlefieldSource = readFileSync(new URL("../src/components/Battlefield.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(battlefieldSource, /aria-label=\{abilityButtonText\(primaryAbility\)\}/u);
+  assert.match(battlefieldSource, /effect-action-symbol-tap[\s\S]*?effect-action-mana-colon[\s\S]*?effect-action-mana-label[\s\S]*?effect-action-symbol-energy/u);
+  assert.match(stylesSource, /\.effect-action-button\s*\{[^}]*border:\s*1px solid rgb\(178 158 92 \/ 0\.58\);[^}]*linear-gradient\(110deg, #3a4240, #1c2828 66%, #2e3836\);/su);
+  assert.match(stylesSource, /\.guided-tutorial-continue\s*\{[^}]*border:\s*1px solid rgb\(178 158 92 \/ 0\.58\);[^}]*linear-gradient\(110deg, #3a4240, #1c2828 66%, #2e3836\);/su);
+  assert.match(stylesSource, /\.effect-action-button:hover,[\s\S]*?transform:\s*translateY\(calc\(-50% - 1px\)\);/u);
+  assert.doesNotMatch(stylesSource, /\.effect-action-button\s*\{[^}]*clip-path:/su);
+});
+
 test("the Host Archive attack preview shows the physical result and caps it to the Archive", () => {
   assert.deepEqual(hostArchiveAttackPreview(42, 7, 3), {
     conversionCount: 2,

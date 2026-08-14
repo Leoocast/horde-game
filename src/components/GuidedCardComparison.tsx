@@ -36,7 +36,6 @@ function GuidedComparisonCard({ card }: { card: CardInstance }) {
           {t("guided.cardComparison.energyCost", { count: cost })}
         </span>
       </div>
-      <figcaption>{name}</figcaption>
     </figure>
   );
 }
