@@ -20774,6 +20774,48 @@ body.playground-active .phase-banner-shell {
   line-height: 1.5;
 }
 
+.guided-glossary-tooltip-host {
+  display: inline;
+}
+
+.guided-glossary-term {
+  display: inline;
+  appearance: none;
+  border: 0;
+  border-radius: 2px;
+  margin: 0;
+  padding: 0 1px;
+  background: transparent;
+  color: #d9bd70;
+  cursor: help;
+  font: inherit;
+  line-height: inherit;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: rgb(225 197 113 / 0.78);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 120ms ease, background-color 120ms ease, text-shadow 120ms ease;
+}
+
+.guided-glossary-term:hover,
+.guided-glossary-term:focus-visible {
+  outline: none;
+  background: rgb(211 184 103 / 0.08);
+  color: #f0d98f;
+  text-shadow: 0 0 10px rgb(225 192 91 / 0.3);
+}
+
+.guided-glossary-tooltip {
+  z-index: 20020;
+  max-width: min(19rem, calc(100vw - 24px));
+  color: #e7dfc5;
+  font-size: 0.86rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  text-align: left;
+}
+
 .guided-tutorial-feedback {
   min-height: 18px;
   margin-top: 8px;
@@ -20899,8 +20941,8 @@ body.playground-active .phase-banner-shell {
   }
 }
 
-body:has(.guided-tutorial-overlay) .game-tooltip,
-body:has(.guided-tutorial-overlay) .game-tooltip-portal,
+body:has(.guided-tutorial-overlay) .game-tooltip:not(.guided-glossary-tooltip),
+body:has(.guided-tutorial-overlay) .game-tooltip-portal:not(.guided-glossary-tooltip),
 body:has(.guided-tutorial-overlay) .card-preview-dismiss-layer {
   display: none !important;
 }

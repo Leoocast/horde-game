@@ -821,7 +821,7 @@ simularlo.
 
 ## Contenido actual y siguiente trabajo
 
-El framework está cerrado. La revisión 2 de la Primera Semilla está registrada como lección
+El framework está cerrado. La revisión 4 de la Primera Semilla está registrada como lección
 obligatoria y también se abre desde **Cómo jugar → Tutorial básico**. Usa Elarion contra los
 Sinsepulcro y, por ahora, cubre solamente los tres turnos de Preparación. Su secuencia exacta:
 
@@ -829,20 +829,27 @@ Sinsepulcro y, por ahora, cubre solamente los tres turnos de Preparación. Su se
    el jugador para prepararse;
 2. empieza Preparación 1/3 con dos Fuentes, Liora y Vaelor en Mano; juega una Fuente y explica qué
    genera, para qué sirve y el límite de una Fuente por turno;
-3. presenta Liora y Vaelor juntos y en grande, enfatiza sus costes y muestra que una sola Energía
+3. presenta Liora y Vaelor juntos y en grande, enfatiza la Energía que requiere cada uno y muestra que una sola Energía
    no alcanza para Invocar a ninguno;
 4. en Preparación 2/3 roba a Maela, juega la segunda Fuente e Invoca a Liora con ambas; distingue
    entre Fuentes Agotadas y un Eco Estabilizándose que todavía no puede usar su Acción;
 5. en Preparación 3/3 roba Escudo de la Heredera, enfoca la Energía regenerada y aclara que la
    Energía anterior no se acumuló durante Preparación;
 6. usa la Acción de Liora ya estabilizada: Liora queda Agotada y añade una Energía a la Reserva;
-   después Invoca a Maela pagando con esa Reserva y las dos Fuentes;
+   después Invoca a Maela canalizando esa Reserva y la Energía de las dos Fuentes;
 7. explica Skyguard, la defensa de Campo y Cielo, y que terminar el último turno despertaría a la
    Hueste. La lección se detiene antes de ejecutar esa acción.
 
 La ampliación visual de Liora y Vaelor usa `presentation.cardComparison`, una extensión genérica
 del contrato que recibe alias predefinidos y el énfasis semántico `energyCost`; no introduce lógica
 por nombre de carta en la UI ni en el runtime.
+
+La revisión 4 reduce cada cuadro visible a un solo párrafo breve. Las definiciones de Archivo,
+Hueste, Fuente, Reserva y demás vocabulario nuevo se declaran por paso y aparecen como términos
+dorados subrayados con tooltip localizado en hover o foco de teclado. El texto principal conserva
+únicamente la idea y la acción necesarias para avanzar. La Energía se reúne, canaliza, libera o
+consume; el tutorial no usa lenguaje transaccional ni convierte la excepción de Preparación en una
+regla general sobre qué Energía permanece entre turnos.
 
 Esta secuencia es un borrador para QA dentro del juego, no el ritmo ni el copy definitivo. El
 siguiente trabajo es recorrer únicamente esta sección con el usuario y ajustar mensajes, pausas y

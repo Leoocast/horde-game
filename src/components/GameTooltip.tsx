@@ -7,9 +7,17 @@ type Props = {
   side?: "top" | "bottom";
   visible?: boolean;
   className?: string;
+  tooltipClassName?: string;
 };
 
-export function GameTooltip({ content, children, side = "top", visible = false, className = "" }: Props) {
+export function GameTooltip({
+  content,
+  children,
+  side = "top",
+  visible = false,
+  className = "",
+  tooltipClassName = "",
+}: Props) {
   const hostRef = useRef<HTMLSpanElement>(null);
   const [interactiveVisible, setInteractiveVisible] = useState(false);
   const [position, setPosition] = useState<{ left: number; top: number }>();
@@ -58,8 +66,15 @@ export function GameTooltip({ content, children, side = "top", visible = false, 
       {open && position && typeof document !== "undefined"
         ? createPortal(
             <span
-              className={["game-tooltip", "game-tooltip-portal", side === "bottom" ? "game-tooltip-bottom" : "game-tooltip-top", "game-tooltip-visible"].join(" ")}
+              className={[
+                "game-tooltip",
+                "game-tooltip-portal",
+                side === "bottom" ? "game-tooltip-bottom" : "game-tooltip-top",
+                "game-tooltip-visible",
+                tooltipClassName,
+              ].filter(Boolean).join(" ")}
               style={tooltipStyle}
+              role="tooltip"
             >
               {content}
             </span>,

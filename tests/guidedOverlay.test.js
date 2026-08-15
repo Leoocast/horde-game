@@ -127,6 +127,9 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(card, /tabIndex=\{selectionDisabled \? undefined : 0\}/u);
   assert.match(card, /onKeyboardActivate \?\? onSelect/u);
   assert.match(overlay, /data-guided-overlay-control="true"/u);
+  assert.match(overlay, /guidedGlossarySegments/u);
+  assert.match(overlay, /data-guided-glossary-term="true"/u);
+  assert.match(overlay, /tooltipClassName="guided-glossary-tooltip"/u);
   assert.match(overlay, /highlight\.anchor === "card\.preview"/u);
   assert.match(overlay, /data-card-preview-visible=/u);
   assert.match(overlay, /<GuidedCardComparison cards=\{comparisonCards\}/u);
@@ -160,6 +163,8 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(styles, /guided-tutorial-overlay:has\(\.guided-tutorial-ring\[data-anchor-key="surface:player\.sources"\]\)[\s\S]*?guided-tutorial-ring\[data-anchor-key="surface:player\.reserve"\]::after\s*\{\s*display:\s*none;/u);
   assert.match(styles, /\.guided-tutorial-ring\[data-anchor-key\^="card:"\]\s*\{\s*display:\s*none;\s*\}/u);
   assert.match(styles, /\.guided-tutorial-body p\s*\{[^}]*font-size:\s*16px;/su);
+  assert.match(styles, /\.guided-glossary-term\s*\{[^}]*color:\s*#d9bd70;[^}]*text-decoration-style:\s*dotted;/su);
+  assert.match(styles, /\.guided-glossary-tooltip\s*\{[^}]*z-index:\s*20020;/su);
   assert.match(
     styles,
     /\.guided-tutorial-overlay\s*\{[^}]*font-family:\s*"Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;/su,

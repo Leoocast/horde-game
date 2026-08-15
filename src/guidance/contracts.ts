@@ -230,7 +230,30 @@ export type GuidedPrecondition =
 export type GuidedStepCopy = Readonly<{
   titleKey: TranslationKey;
   bodyKey: TranslationKey;
+  glossaryTerms?: readonly GuidedGlossaryTermId[];
 }>;
+
+export const GUIDED_GLOSSARY_TERM_IDS = [
+  "host",
+  "archive",
+  "life",
+  "preparation",
+  "field",
+  "hand",
+  "echoes",
+  "source",
+  "energy",
+  "sourceAction",
+  "invoke",
+  "action",
+  "exhausted",
+  "stabilizing",
+  "reserve",
+  "skyguard",
+  "flying",
+] as const;
+
+export type GuidedGlossaryTermId = (typeof GUIDED_GLOSSARY_TERM_IDS)[number];
 
 export const GUIDED_CALLOUT_VISIBILITIES = ["visible", "hidden"] as const;
 export type GuidedCalloutVisibility = (typeof GUIDED_CALLOUT_VISIBILITIES)[number];

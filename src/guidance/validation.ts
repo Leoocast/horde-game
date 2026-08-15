@@ -7,6 +7,7 @@ import type { Phase, Side } from "../engine/GameTypes";
 import { isTranslationKey } from "../i18n/translations";
 import {
   GUIDED_CALLOUT_VISIBILITIES,
+  GUIDED_GLOSSARY_TERM_IDS,
   GUIDED_INTENT_CONTEXTS,
   GUIDED_INTENT_KINDS,
   GUIDED_HIGHLIGHT_ROLES,
@@ -27,6 +28,7 @@ const ALIAS_PATTERN = /^[a-z][a-z0-9_]*$/u;
 const PHASES = new Set<Phase>(["untap", "draw", "main", "combat", "end", "host"]);
 const INTENT_KINDS = new Set<string>(GUIDED_INTENT_KINDS);
 const CALLOUT_VISIBILITIES = new Set<string>(GUIDED_CALLOUT_VISIBILITIES);
+const GLOSSARY_TERM_IDS = new Set<string>(GUIDED_GLOSSARY_TERM_IDS);
 const INTENT_CONTEXTS = new Set<string>(GUIDED_INTENT_CONTEXTS);
 const HIGHLIGHT_ROLES = new Set<string>(GUIDED_HIGHLIGHT_ROLES);
 const RECEIPT_KINDS = new Set<string>(GUIDED_RECEIPT_KINDS);
@@ -348,6 +350,16 @@ function validateSteps(
     steps.set(step.id, step);
     if (!isTranslationKey(String(step.copy?.titleKey))) problems.push(`Step "${step.id}" has unknown title translation key.`);
     if (!isTranslationKey(String(step.copy?.bodyKey))) problems.push(`Step "${step.id}" has unknown body translation key.`);
+    if (step.copy?.glossaryTerms !== undefined && !Array.isArray(step.copy.glossaryTerms)) {
+      problems.push(`Step "${step.id}" glossaryTerms must be an array.`);
+    } else {
+      const seenTerms = new Set<string>();
+      for (const termId of step.copy?.glossaryTerms ?? []) {
+        if (!GLOSSARY_TERM_IDS.has(termId)) problems.push(`Step "${step.id}" uses unknown glossary term "${String(termId)}".`);
+        if (seenTerms.has(termId)) problems.push(`Step "${step.id}" repeats glossary term "${termId}".`);
+        seenTerms.add(termId);
+      }
+    }
     if (step.callout !== undefined && !CALLOUT_VISIBILITIES.has(step.callout)) {
       problems.push(`Step "${step.id}" has unknown callout visibility "${String(step.callout)}".`);
     }

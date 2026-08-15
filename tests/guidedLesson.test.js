@@ -8,9 +8,11 @@ import { contentCatalog } from "../src/content/bootstrap";
 import {
   BASIC_TUTORIAL_LESSON_ID,
   FIRST_SEED_LESSON,
+  GUIDED_GLOSSARY,
   GUIDED_LESSON_SCHEMA_VERSION,
   GuidedLessonRegistry,
   buildGuidedScenario,
+  guidedGlossarySegments,
   guidedLessonRegistry,
   validateGuidedLesson,
 } from "../src/guidance";
@@ -26,7 +28,7 @@ const HOST_CARD = (id) => `${HOST_DECK}/${id}`;
 test("First Seed teaches its exact three-step Preparation sequence and stops after Maela", () => {
   assert.deepEqual(validateGuidedLesson(FIRST_SEED_LESSON, contentCatalog), []);
   assert.equal(BASIC_TUTORIAL_LESSON_ID, FIRST_SEED_LESSON.id);
-  assert.equal(guidedLessonRegistry.require(BASIC_TUTORIAL_LESSON_ID).revision, 3);
+  assert.equal(guidedLessonRegistry.require(BASIC_TUTORIAL_LESSON_ID).revision, 4);
   assert.equal(guidedLessonRegistry.require(BASIC_TUTORIAL_LESSON_ID).mode, "required");
   const built = buildGuidedScenario(FIRST_SEED_LESSON, contentCatalog);
   const id = (alias) => built.bindings[alias].instanceId;
@@ -119,7 +121,7 @@ test("First Seed plays each Source before explaining the Energy it generated", (
   assert.deepEqual(step("observe-maela-entry").expectedReceipt, { kind: "card.played", cardAlias: "maela" });
 });
 
-// Two actions that form a single idea — pay, then spend — must stay back to back. Only a silent
+// Two actions that form a single idea — gather, then Invoke — must stay back to back. Only a silent
 // checkpoint may sit between them, so the player is never asked to read before finishing the idea.
 test("First Seed chains paired actions through silent checkpoints", () => {
   const byId = new Map(FIRST_SEED_LESSON.steps.map((step) => [step.id, step]));
@@ -172,6 +174,71 @@ test("First Seed never stacks more than two callouts between actions", () => {
   assert.ok(visible <= 15, `First Seed shows ${visible} visible steps.`);
 });
 
+test("First Seed keeps every visible callout compact in both languages", () => {
+  for (const step of FIRST_SEED_LESSON.steps.filter((candidate) => candidate.callout !== "hidden")) {
+    for (const language of ["en", "es"]) {
+      const body = translate(language, step.copy.bodyKey);
+      const words = body.trim().split(/\s+/u);
+      assert.doesNotMatch(body, /\n{2,}/u, `${language}/${step.id} contains more than one paragraph.`);
+      assert.ok(words.length <= 35, `${language}/${step.id} contains ${words.length} words.`);
+    }
+  }
+});
+
+test("First Seed presents Energy as channeling and does not generalize Preparation rules", () => {
+  const glossaryDefinitionKeys = Object.values(GUIDED_GLOSSARY).map((entry) => entry.definitionKey);
+  const lessonKeys = FIRST_SEED_LESSON.steps.flatMap((step) => [step.copy.titleKey, step.copy.bodyKey]);
+  for (const language of ["en", "es"]) {
+    const visibleTeachingCopy = [...lessonKeys, ...glossaryDefinitionKeys]
+      .map((key) => translate(language, key))
+      .join("\n");
+    assert.doesNotMatch(
+      visibleTeachingCopy,
+      /\b(?:pay|pays|paying|paid|pagar|paga|pagan|pagando|pagado)\b/iu,
+      `${language} returns to transactional Energy language.`,
+    );
+    assert.doesNotMatch(
+      visibleTeachingCopy,
+      /nothing costs 1|nada cuesta 1|energy does not carry|la energía no pasa|only energy kept in reserve|sólo la energía guardada en reserva/iu,
+      `${language} presents a Preparation-only outcome as a general Energy rule.`,
+    );
+  }
+  assert.match(translate("en", "guided.firstSeed.playMaelaBody"), /Reserve releases 1 Energy first/u);
+  assert.match(translate("es", "guided.firstSeed.playMaelaBody"), /La Reserva libera primero 1 de Energía/u);
+});
+
+test("First Seed glossary enriches only authored localized terms", () => {
+  const objective = FIRST_SEED_LESSON.steps.find((step) => step.id === "explain-objective");
+  const spanish = guidedGlossarySegments(
+    translate("es", objective.copy.bodyKey),
+    objective.copy.glossaryTerms,
+    (key) => translate("es", key),
+  );
+  assert.deepEqual(
+    spanish.filter((segment) => segment.kind === "term").map((segment) => segment.termId),
+    ["archive", "host", "life", "invoke", "echoes"],
+  );
+  assert.ok(spanish.every((segment) => segment.kind === "text" || segment.definition.length > 0));
+
+  const plain = guidedGlossarySegments("Archivo y Hueste", [], (key) => translate("es", key));
+  assert.deepEqual(plain, [{ kind: "text", text: "Archivo y Hueste" }]);
+
+  for (const step of FIRST_SEED_LESSON.steps.filter((candidate) => candidate.copy.glossaryTerms?.length)) {
+    for (const language of ["en", "es"]) {
+      const segments = guidedGlossarySegments(
+        translate(language, step.copy.bodyKey),
+        step.copy.glossaryTerms,
+        (key) => translate(language, key),
+      );
+      assert.deepEqual(
+        new Set(segments.filter((segment) => segment.kind === "term").map((segment) => segment.termId)),
+        new Set(step.copy.glossaryTerms),
+        `${language}/${step.id} declares a glossary term that is not present in its body.`,
+      );
+    }
+  }
+});
+
 test("guided Spanish labels preserve real accented characters", () => {
   assert.equal(translate("es", "guided.mode.act"), "Tu acción");
   assert.equal(translate("es", "guided.blocked"), "Usa solamente la acción iluminada.");
@@ -192,7 +259,7 @@ test("First Seed keeps short automatic observations silent", () => {
     assert.equal(step.kind, "observe");
     assert.equal(step.callout, "hidden");
   }
-  assert.match(translate("es", "guided.firstSeed.sourceEnergyBody"), /\n\n/u);
+  assert.doesNotMatch(translate("es", "guided.firstSeed.sourceEnergyBody"), /\n\n/u);
 });
 
 test("an exact guided recipe keeps only its authored Hand and Archive order", () => {
@@ -320,6 +387,12 @@ test("step validation catches broken aliases, translations and graph edges befor
   const invalidCallout = builtinLesson();
   invalidCallout.steps[0].callout = "brief";
   assert.ok(validateGuidedLesson(invalidCallout, contentCatalog).some((problem) => /unknown callout visibility/u.test(problem)));
+
+  const invalidGlossary = builtinLesson();
+  invalidGlossary.steps[0].copy.glossaryTerms = ["archive", "mystery", "archive"];
+  const glossaryProblems = validateGuidedLesson(invalidGlossary, contentCatalog);
+  assert.ok(glossaryProblems.some((problem) => /unknown glossary term/u.test(problem)));
+  assert.ok(glossaryProblems.some((problem) => /repeats glossary term/u.test(problem)));
 });
 
 test("step preconditions are declarative, exact and validated before orchestration", () => {

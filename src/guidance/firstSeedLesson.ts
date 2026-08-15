@@ -15,13 +15,13 @@ const gravelessCard = (id: string) => `${GRAVELESS}/${id}`;
  *
  * Pacing contract for this revision: a visible callout only appears when it teaches something the
  * player cannot read off the board. Silent `callout: "hidden"` checkpoints hold the stable wait
- * between actions, so two actions that form a single idea — pay, then spend — run back to back
+ * between actions, so two actions that form a single idea — gather, then Invoke — run back to back
  * without a text box between them.
  */
 export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
   schemaVersion: GUIDED_LESSON_SCHEMA_VERSION,
   id: "first-seed",
-  revision: 3,
+  revision: 4,
   mode: "required",
   startStepId: "explain-objective",
   scenario: {
@@ -86,7 +86,11 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
     {
       id: "explain-objective",
       kind: "explain",
-      copy: { titleKey: "guided.firstSeed.objectiveTitle", bodyKey: "guided.firstSeed.objectiveBody" },
+      copy: {
+        titleKey: "guided.firstSeed.objectiveTitle",
+        bodyKey: "guided.firstSeed.objectiveBody",
+        glossaryTerms: ["host", "archive", "life", "invoke", "echoes"],
+      },
       highlights: [{ kind: "surface", anchor: "host.archive" }],
       preconditions: [{ kind: "setup.remaining", amount: 3 }],
       nextStepId: "explain-preparation",
@@ -94,14 +98,22 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
     {
       id: "explain-preparation",
       kind: "explain",
-      copy: { titleKey: "guided.firstSeed.preparationTitle", bodyKey: "guided.firstSeed.preparationBody" },
+      copy: {
+        titleKey: "guided.firstSeed.preparationTitle",
+        bodyKey: "guided.firstSeed.preparationBody",
+        glossaryTerms: ["preparation", "host", "field"],
+      },
       highlights: [{ kind: "surface", anchor: "setup.progress" }],
       nextStepId: "play-first-source",
     },
     {
       id: "play-first-source",
       kind: "act",
-      copy: { titleKey: "guided.firstSeed.firstSourceTitle", bodyKey: "guided.firstSeed.firstSourceBody" },
+      copy: {
+        titleKey: "guided.firstSeed.firstSourceTitle",
+        bodyKey: "guided.firstSeed.firstSourceBody",
+        glossaryTerms: ["source", "energy", "echoes", "field"],
+      },
       highlights: [
         { kind: "card", alias: "first_source", role: "origin" },
         { kind: "surface", anchor: "player.field", role: "destination" },
@@ -126,7 +138,11 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
     {
       id: "explain-source-energy",
       kind: "explain",
-      copy: { titleKey: "guided.firstSeed.sourceEnergyTitle", bodyKey: "guided.firstSeed.sourceEnergyBody" },
+      copy: {
+        titleKey: "guided.firstSeed.sourceEnergyTitle",
+        bodyKey: "guided.firstSeed.sourceEnergyBody",
+        glossaryTerms: ["source", "energy", "sourceAction"],
+      },
       highlights: [{ kind: "surface", anchor: "player.sources" }],
       preconditions: [{ kind: "card.inZone", cardAlias: "first_source", side: "player", zone: "field" }],
       nextStepId: "compare-first-costs",
@@ -134,7 +150,11 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
     {
       id: "compare-first-costs",
       kind: "explain",
-      copy: { titleKey: "guided.firstSeed.compareCostsTitle", bodyKey: "guided.firstSeed.compareCostsBody" },
+      copy: {
+        titleKey: "guided.firstSeed.compareCostsTitle",
+        bodyKey: "guided.firstSeed.compareCostsBody",
+        glossaryTerms: ["energy", "source", "invoke"],
+      },
       highlights: [{ kind: "surface", anchor: "player.sources" }],
       presentation: {
         kind: "cardComparison",
@@ -146,7 +166,11 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
     {
       id: "continue-first-preparation",
       kind: "act",
-      copy: { titleKey: "guided.firstSeed.continueFirstTitle", bodyKey: "guided.firstSeed.continueFirstBody" },
+      copy: {
+        titleKey: "guided.firstSeed.continueFirstTitle",
+        bodyKey: "guided.firstSeed.continueFirstBody",
+        glossaryTerms: ["preparation"],
+      },
       highlights: [{ kind: "surface", anchor: "phase.primaryAction" }],
       allowedIntent: { kind: "phase.continueSetup" },
       preconditions: [{ kind: "setup.remaining", amount: 3 }],
@@ -167,7 +191,11 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
     {
       id: "begin-second-preparation",
       kind: "explain",
-      copy: { titleKey: "guided.firstSeed.secondPreparationTitle", bodyKey: "guided.firstSeed.secondPreparationBody" },
+      copy: {
+        titleKey: "guided.firstSeed.secondPreparationTitle",
+        bodyKey: "guided.firstSeed.secondPreparationBody",
+        glossaryTerms: ["source", "sourceAction"],
+      },
       highlights: [
         { kind: "surface", anchor: "setup.progress" },
         { kind: "card", alias: "maela" },
@@ -181,7 +209,11 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
     {
       id: "play-second-source",
       kind: "act",
-      copy: { titleKey: "guided.firstSeed.secondSourceTitle", bodyKey: "guided.firstSeed.secondSourceBody" },
+      copy: {
+        titleKey: "guided.firstSeed.secondSourceTitle",
+        bodyKey: "guided.firstSeed.secondSourceBody",
+        glossaryTerms: ["sourceAction", "source", "field"],
+      },
       highlights: [
         { kind: "card", alias: "second_source", role: "origin" },
         { kind: "surface", anchor: "player.field", role: "destination" },
@@ -191,7 +223,7 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
       nextStepId: "observe-second-source",
     },
     {
-      // Placing the Source and paying for Liora are one idea, so the checkpoint stays silent and
+      // Placing the Source and Invoking Liora are one idea, so the checkpoint stays silent and
       // the affordability lesson travels inside the Invocation step itself.
       id: "observe-second-source",
       kind: "observe",
@@ -205,7 +237,11 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
     {
       id: "play-liora",
       kind: "act",
-      copy: { titleKey: "guided.firstSeed.playLioraTitle", bodyKey: "guided.firstSeed.playLioraBody" },
+      copy: {
+        titleKey: "guided.firstSeed.playLioraTitle",
+        bodyKey: "guided.firstSeed.playLioraBody",
+        glossaryTerms: ["source", "energy", "invoke"],
+      },
       highlights: [
         { kind: "card", alias: "liora", role: "origin" },
         { kind: "surface", anchor: "player.field", role: "destination" },
@@ -228,10 +264,14 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
       nextStepId: "explain-liora-invoked",
     },
     {
-      // Both consequences of the Invocation — spent Sources and Stabilizing — are one checkpoint.
+      // Both consequences of the Invocation — channeled Sources and Stabilizing — are one checkpoint.
       id: "explain-liora-invoked",
       kind: "explain",
-      copy: { titleKey: "guided.firstSeed.lioraInvokedTitle", bodyKey: "guided.firstSeed.lioraInvokedBody" },
+      copy: {
+        titleKey: "guided.firstSeed.lioraInvokedTitle",
+        bodyKey: "guided.firstSeed.lioraInvokedBody",
+        glossaryTerms: ["exhausted", "stabilizing", "action"],
+      },
       highlights: [
         { kind: "surface", anchor: "player.sources" },
         { kind: "card", alias: "liora" },
@@ -242,7 +282,11 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
     {
       id: "continue-second-preparation",
       kind: "act",
-      copy: { titleKey: "guided.firstSeed.continueSecondTitle", bodyKey: "guided.firstSeed.continueSecondBody" },
+      copy: {
+        titleKey: "guided.firstSeed.continueSecondTitle",
+        bodyKey: "guided.firstSeed.continueSecondBody",
+        glossaryTerms: ["energy"],
+      },
       highlights: [{ kind: "surface", anchor: "phase.primaryAction" }],
       allowedIntent: { kind: "phase.continueSetup" },
       preconditions: [{ kind: "setup.remaining", amount: 2 }],
@@ -265,7 +309,11 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
       // this is where Reserve is named before the player is asked to create one.
       id: "explain-third-preparation",
       kind: "explain",
-      copy: { titleKey: "guided.firstSeed.thirdPreparationTitle", bodyKey: "guided.firstSeed.thirdPreparationBody" },
+      copy: {
+        titleKey: "guided.firstSeed.thirdPreparationTitle",
+        bodyKey: "guided.firstSeed.thirdPreparationBody",
+        glossaryTerms: ["source", "energy", "reserve"],
+      },
       highlights: [
         { kind: "surface", anchor: "setup.progress" },
         { kind: "surface", anchor: "player.sources" },
@@ -280,7 +328,11 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
     {
       id: "activate-liora",
       kind: "act",
-      copy: { titleKey: "guided.firstSeed.activateLioraTitle", bodyKey: "guided.firstSeed.activateLioraBody" },
+      copy: {
+        titleKey: "guided.firstSeed.activateLioraTitle",
+        bodyKey: "guided.firstSeed.activateLioraBody",
+        glossaryTerms: ["action", "energy", "reserve", "preparation"],
+      },
       highlights: [{ kind: "card", alias: "liora" }],
       allowedIntent: {
         kind: "ability.activate",
@@ -291,7 +343,7 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
       nextStepId: "observe-liora-action",
     },
     {
-      // Making the Reserve and spending it are one idea, so this checkpoint only holds the transfer
+      // Making the Reserve and channeling it are one idea, so this checkpoint only holds the transfer
       // animation before the Invocation step states the arithmetic.
       //
       // It declares no preconditions on purpose. An observe step is entered the moment the action's
@@ -309,7 +361,11 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
     {
       id: "play-maela",
       kind: "act",
-      copy: { titleKey: "guided.firstSeed.playMaelaTitle", bodyKey: "guided.firstSeed.playMaelaBody" },
+      copy: {
+        titleKey: "guided.firstSeed.playMaelaTitle",
+        bodyKey: "guided.firstSeed.playMaelaBody",
+        glossaryTerms: ["reserve", "source", "energy", "invoke"],
+      },
       highlights: [
         { kind: "card", alias: "maela", role: "origin" },
         { kind: "surface", anchor: "player.field", role: "destination" },
@@ -336,7 +392,11 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
       // finished defense worth reading, not a separate rule to memorise.
       id: "preparation-ready",
       kind: "explain",
-      copy: { titleKey: "guided.firstSeed.readyTitle", bodyKey: "guided.firstSeed.readyBody" },
+      copy: {
+        titleKey: "guided.firstSeed.readyTitle",
+        bodyKey: "guided.firstSeed.readyBody",
+        glossaryTerms: ["skyguard", "flying", "echoes", "preparation", "stabilizing", "exhausted"],
+      },
       highlights: [
         { kind: "card", alias: "maela" },
         { kind: "card", alias: "liora" },

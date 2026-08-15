@@ -520,14 +520,14 @@ revisión pedagógica no figure como completada. En development este gate obliga
 para que recargar no interrumpa el trabajo: la lección permanece disponible manualmente desde
 **Cómo jugar**. Los builds de producto conservan el gate.
 
-La revisión 3 de **La Primera Semilla** usa **El Pacto de Elarion** contra **El Alzamiento de los
+La revisión 4 de **La Primera Semilla** usa **El Pacto de Elarion** contra **El Alzamiento de los
 Sinsepulcro** y empieza al inicio de Preparación 1/3. Su Mano inicial exacta contiene dos Fuentes,
 Liora y Vaelor. En 1/3 juega una Fuente, enseña la Acción de Fuente y su límite por turno, y compara
 Liora y Vaelor en grande para mostrar que ninguno puede Invocarse con una sola Energía. En 2/3 roba
 a Maela, nombra el robo de cada turno, juega la segunda Fuente e Invoca a Liora; un solo checkpoint
 explica que las Fuentes quedaron Agotadas y que Liora está Estabilizándose. En 3/3 roba Escudo de la
 Heredera, muestra Fuentes listas y Liora ya estabilizada, usa su Acción para añadir Energía a la
-Reserva y paga a Maela con esa Reserva más las dos Fuentes. Cierra con Guardia aérea y la defensa
+Reserva y canaliza hacia Maela esa Reserva más la Energía de las dos Fuentes. Cierra con Guardia aérea y la defensa
 terminada. La lección se detiene ahí, antes de terminar el turno: su cierre no debe prometer el
 despertar de la Hueste mientras no exista contenido posterior.
 
@@ -537,6 +537,16 @@ Reserva e Invocar a Maela— encadenados con un checkpoint `callout: "hidden"` e
 texto. Las explicaciones dicen por qué importa la regla, no sólo qué ocurrió. Sigue abierta a QA de
 copy y ritmo, pero volver a intercalar un cuadro de texto entre acciones encadenadas o superar esos
 límites es una regresión: `tests/guidedLesson.test.js` los verifica.
+
+La revisión 4 mantiene cada cuadro visible en un solo párrafo breve y traslada las definiciones a
+un glosario contextual authored por paso. Los términos indicados aparecen en dorado y subrayados;
+hover o foco de teclado muestra una explicación localizada sin desbloquear el tablero. El renderer
+sólo enriquece los términos que declara la lección, una vez por párrafo, y no infiere vocabulario a
+partir de nombres de cartas o del estado del juego.
+El copy pedagógico habla de **reunir, canalizar, liberar y consumir Energía**, no de pagarla. Este
+tramo tampoco formula una regla general sobre Energía que pasa de turno: los pasos tempranos de
+Preparación son la excepción y el comportamiento normal de Fuentes sin usar se enseñará en su
+contexto correspondiente.
 
 Un paso `observe` se entra en cuanto llega el receipt de la acción, así que sus preconditions se
 evalúan **antes** de que su propio beat resuelva. No puede afirmar estado que produce ese beat —la

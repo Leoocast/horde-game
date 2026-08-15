@@ -12,6 +12,7 @@ import {
   guidedAnchorRegistry,
   guidedConnectorPath,
   guidedDomTargetAllowed,
+  guidedGlossarySegments,
   guidedInteractionGate,
   guidedRectsEqual,
   guidedSessionStore,
@@ -27,6 +28,7 @@ import {
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { GuidedCardComparison } from "./GuidedCardComparison";
+import { GameTooltip } from "./GameTooltip";
 
 const subscribeSession = (listener: () => void) => guidedSessionStore.subscribe(listener);
 const readSession = () => guidedSessionStore.snapshot();
@@ -215,6 +217,9 @@ export function GuidedTutorialOverlay() {
     const isSystemControl = (target: EventTarget | null) => target instanceof Element && Boolean(
       target.closest("[data-guided-system-control='true']"),
     );
+    const isOverlayControl = (target: EventTarget | null) => target instanceof Element && Boolean(
+      target.closest("[data-guided-overlay-control='true']"),
+    );
     const isControl = (target: EventTarget | null) => target instanceof Element && Boolean(
       target.closest("[data-guided-overlay-control='true'], [data-guided-system-control='true']"),
     );
@@ -233,7 +238,7 @@ export function GuidedTutorialOverlay() {
     const handlePointerDown = (event: PointerEvent) => {
       if (targetAllowed(event.target)) {
         allowedPointers.add(event.pointerId);
-        dismissActionCallout();
+        if (!isOverlayControl(event.target)) dismissActionCallout();
         return;
       }
       block(event);
@@ -244,7 +249,7 @@ export function GuidedTutorialOverlay() {
     };
     const handleEvent = (event: Event) => {
       if (targetAllowed(event.target)) {
-        dismissActionCallout();
+        if (!isOverlayControl(event.target)) dismissActionCallout();
         return;
       }
       block(event);
@@ -264,7 +269,7 @@ export function GuidedTutorialOverlay() {
         return;
       }
       if (targetAllowed(event.target)) {
-        if (event.key === "Enter" || event.key === " ") dismissActionCallout();
+        if ((event.key === "Enter" || event.key === " ") && !isOverlayControl(event.target)) dismissActionCallout();
         return;
       }
       block(event);
@@ -310,7 +315,10 @@ export function GuidedTutorialOverlay() {
   const calloutPosition = placeGuidedCallout(viewport, calloutSize, missingAnchor ? [] : rects);
   const title = missingAnchor ? t("guided.anchorMissingTitle") : t(session.currentStep.copy.titleKey);
   const body = missingAnchor ? t("guided.anchorMissingBody") : t(session.currentStep.copy.bodyKey);
-  const bodyParagraphs = body.split(/\n{2,}/u).filter(Boolean);
+  const glossaryTerms = missingAnchor ? [] : (session.currentStep.copy.glossaryTerms ?? []);
+  const bodyParagraphs = body.split(/\n{2,}/u).filter(Boolean).map(
+    (paragraph) => guidedGlossarySegments(paragraph, glossaryTerms, t),
+  );
   const modeLabel = t(`guided.mode.${session.mode}` as const);
   const finalExplanation = session.mode === "explain" && !session.currentStep.nextStepId;
   const cardPreviewVisible = session.currentStep.highlights.some(
@@ -386,7 +394,29 @@ export function GuidedTutorialOverlay() {
         </div>
         <h2 id="guided-tutorial-title">{title}</h2>
         <div id="guided-tutorial-body" className="guided-tutorial-body">
-          {bodyParagraphs.map((paragraph, index) => <p key={`${session.currentStep?.id}:body:${index}`}>{paragraph}</p>)}
+          {bodyParagraphs.map((paragraph, paragraphIndex) => (
+            <p key={`${session.currentStep?.id}:body:${paragraphIndex}`}>
+              {paragraph.map((segment, segmentIndex) => segment.kind === "text"
+                ? <span key={`text:${segmentIndex}`}>{segment.text}</span>
+                : (
+                  <GameTooltip
+                    key={`${segment.termId}:${segmentIndex}`}
+                    content={segment.definition}
+                    className="guided-glossary-tooltip-host"
+                    tooltipClassName="guided-glossary-tooltip"
+                  >
+                    <button
+                      type="button"
+                      className="guided-glossary-term"
+                      data-guided-glossary-term="true"
+                      aria-label={`${segment.text}: ${segment.definition}`}
+                    >
+                      {segment.text}
+                    </button>
+                  </GameTooltip>
+                ))}
+            </p>
+          ))}
         </div>
         <div className="guided-tutorial-feedback" role="status" aria-live="polite">{feedback}</div>
         {session.mode === "explain" && !missingAnchor && (
@@ -470,6 +500,11 @@ function guidedFocusables(
     for (const anchor of resolved) {
       const focusable = anchor.element ? focusableWithin(anchor.element) : undefined;
       if (focusable && !elements.includes(focusable)) elements.push(focusable);
+    }
+  }
+  if (calloutRef.current) {
+    for (const glossaryTerm of calloutRef.current.querySelectorAll<HTMLElement>("[data-guided-glossary-term='true']")) {
+      if (!elements.includes(glossaryTerm)) elements.push(glossaryTerm);
     }
   }
   if (continueRef.current && !continueRef.current.disabled) elements.push(continueRef.current);
