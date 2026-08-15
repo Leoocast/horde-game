@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { useTranslation } from "../i18n/useTranslation";
 import { useAudioStore } from "../store/useAudioStore";
 import { futureCodeFromSeed } from "../utils/futureIdentity";
+import { shardSuction, shardTiming } from "./destinyShardSuction";
 import {
   DESTINY_HORIZON_RATIO,
   DESTINY_VORTEX_FRAGMENT_SHADER,
@@ -27,8 +28,48 @@ const REDUCED_COMPLETE_MS = 300;
 /** El lienzo cubre la pantalla: se limita la resolución antes que el detalle del shader. */
 const MAX_PIXEL_RATIO = 1.35;
 
+/* Recorrido de la escena para repartirla en piezas. Un elemento que ocupa más que `SHARD_MAX_AREA`
+   todavía es un contenedor y se abre; uno por debajo de `SHARD_MIN_AREA` es un icono suelto que no
+   aporta nada al colapso. El tope de piezas y de profundidad mantiene acotado el número de capas
+   que el compositor tiene que rasterizar. */
+const SHARD_MAX_AREA = 0.22;
+const SHARD_MIN_AREA = 0.0006;
+const SHARD_MAX_DEPTH = 7;
+const SHARD_LIMIT = 56;
+
 function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+type Shard = { element: HTMLElement; rect: DOMRect };
+
+/** Piezas visibles de la escena, sin conocer un solo nombre de clase del tablero. */
+function collectShards(root: Element, viewport: { width: number; height: number }): Shard[] {
+  const viewportArea = Math.max(1, viewport.width * viewport.height);
+  const shards: Shard[] = [];
+
+  const visit = (element: HTMLElement, depth: number): void => {
+    if (shards.length >= SHARD_LIMIT) return;
+    const rect = element.getBoundingClientRect();
+    const area = rect.width * rect.height;
+    if (area <= 0) return;
+    // Fuera de la pantalla no hay nada que tragarse.
+    if (rect.right <= 0 || rect.bottom <= 0 || rect.left >= viewport.width || rect.top >= viewport.height) return;
+
+    const share = area / viewportArea;
+    if (share > SHARD_MAX_AREA && depth < SHARD_MAX_DEPTH) {
+      for (const child of Array.from(element.children)) {
+        if (child instanceof HTMLElement) visit(child, depth + 1);
+      }
+      return;
+    }
+    if (share >= SHARD_MIN_AREA) shards.push({ element, rect });
+  };
+
+  for (const child of Array.from(root.children)) {
+    if (child instanceof HTMLElement) visit(child, 1);
+  }
+  return shards;
 }
 
 export function DestinyRewriteTransition({ kind, seed, onCovered, onComplete }: Props) {
@@ -63,6 +104,43 @@ export function DestinyRewriteTransition({ kind, seed, onCovered, onComplete }: 
       document.body.classList.remove("destiny-rewrite-active", "destiny-rewrite-absorbing", "destiny-rewrite-revealing");
     };
   }, [onComplete, onCovered, playSfx]);
+
+  /* La escena no cae como un bloque: cada pieza se va por su cuenta, se estira en el eje que apunta
+     al horizonte y llega tarde según lo lejos que estaba. Las animaciones se cancelan al pasar a
+     revelar, así que la escena que vuelve nunca hereda una pieza tragada. */
+  useEffect(() => {
+    if (phase !== "absorbing" || prefersReducedMotion()) return;
+    const scene = document.querySelector(".game-screen") ?? document.querySelector(".main-menu-shell");
+    if (!scene) return;
+
+    const viewport = { width: window.innerWidth, height: window.innerHeight };
+    const shards = collectShards(scene, viewport);
+    const animations = shards.map(({ element, rect }) => {
+      const { dx, dy, swirlX, swirlY, reach, angleDeg } = shardSuction(rect, viewport);
+      const { delayMs, durationMs } = shardTiming(reach, COVER_MS);
+      const radial = `rotate(${angleDeg.toFixed(2)}deg)`;
+      const unradial = `rotate(${(-angleDeg).toFixed(2)}deg)`;
+      // Los tres pasos comparten la misma lista de funciones para que el navegador interpole
+      // componente a componente; con listas distintas caería a interpolar matrices y el estiramiento
+      // se perdería.
+      const step = (moveX: number, moveY: number, along: number, across: number) =>
+        `translate(${moveX.toFixed(1)}px, ${moveY.toFixed(1)}px) ${radial} scale(${along}, ${across}) ${unradial}`;
+      element.style.willChange = "transform, opacity";
+      return element.animate(
+        [
+          { transform: step(0, 0, 1, 1), opacity: 1, offset: 0 },
+          { transform: step(dx * 0.42 + swirlX * 0.62, dy * 0.42 + swirlY * 0.62, 1.26, 0.78), opacity: 1, offset: 0.55 },
+          { transform: step(dx * 0.99 + swirlX * 0.1, dy * 0.99 + swirlY * 0.1, 0.24, 0.03), opacity: 0, offset: 1 },
+        ],
+        { duration: durationMs, delay: delayMs, easing: "cubic-bezier(0.46, 0.03, 0.74, 0.22)", fill: "forwards" },
+      );
+    });
+
+    return () => {
+      for (const animation of animations) animation.cancel();
+      for (const { element } of shards) element.style.willChange = "";
+    };
+  }, [phase]);
 
   // El agujero negro es un único plano a pantalla completa dibujado por el renderer compartido.
   useEffect(() => {

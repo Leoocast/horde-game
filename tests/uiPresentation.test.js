@@ -15,6 +15,7 @@ import {
   burnMaterialColors,
   burnRenderBatches,
 } from "../src/components/burnFireball";
+import { shardSuction, shardTiming } from "../src/components/destinyShardSuction";
 import { grownVfxSurface, sharedVfxSourceTop } from "../src/components/sharedVfxRenderer";
 import { frameLeafRootIndex, frameRootPathSpecs } from "../src/components/GrowthBuffAnimator";
 import { buildStorm, stormBoltTones } from "../src/components/StormBuffAnimator";
@@ -987,6 +988,29 @@ test("Kaelor's sky bolts converge on the upper-left marked point without base or
     assert.equal("ground" in storm, false);
     assert.equal("flecks" in storm, false);
   }
+});
+
+test("the rewrite suction pulls every piece to the vortex and lands them at the same instant", () => {
+  const viewport = { width: 1600, height: 900 };
+  const middle = shardSuction({ left: 780, top: 430, width: 40, height: 40 }, viewport);
+  const corner = shardSuction({ left: 0, top: 0, width: 40, height: 40 }, viewport);
+
+  // La pieza del centro ya está en el horizonte: no viaja y no espera.
+  assert.equal(Math.round(middle.dx), 0);
+  assert.equal(Math.round(middle.dy), 0);
+  assert.equal(middle.reach, 0);
+  // La esquina viaja hacia adentro y hacia abajo, y es la última en ser alcanzada.
+  assert.ok(corner.dx > 0 && corner.dy > 0);
+  assert.ok(corner.reach > 0.95 && corner.reach <= 1);
+  // El desvío es perpendicular al tirón: la pieza entra curvándose, no en línea recta.
+  assert.equal(Math.round(corner.dx * corner.swirlX + corner.dy * corner.swirlY), 0);
+
+  const first = shardTiming(middle.reach, 980);
+  const last = shardTiming(corner.reach, 980);
+  assert.equal(first.delayMs, 0);
+  assert.ok(last.delayMs > first.delayMs);
+  assert.equal(first.delayMs + first.durationMs, 980);
+  assert.equal(last.delayMs + last.durationMs, 980);
 });
 
 test("developer tools keep their development imports without a release URL escape hatch", () => {

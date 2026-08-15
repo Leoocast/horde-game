@@ -21361,12 +21361,20 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
 
 /* Full-screen collapse/reveal. The overlay stays at App level so it survives a Board reset. */
 body.destiny-rewrite-active { overflow: hidden; }
+/* Sólo transform y opacity: la escena se promociona a una capa, se rasteriza una vez y el resto lo
+   resuelve la GPU. Animar `filter: blur()` sobre el árbol completo obligaba a repintarlo cada frame
+   y por eso la caída se arrastraba. */
 body.destiny-rewrite-active .game-screen,
-body.destiny-rewrite-active .main-menu-shell { pointer-events: none; transform-origin: 50% 50%; }
+body.destiny-rewrite-active .main-menu-shell {
+  pointer-events: none;
+  transform-origin: 50% 50%;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
 body.destiny-rewrite-absorbing .game-screen,
-body.destiny-rewrite-absorbing .main-menu-shell { animation: destiny-scene-collapse 980ms cubic-bezier(0.7, 0, 0.72, 0.18) both; }
+body.destiny-rewrite-absorbing .main-menu-shell { animation: destiny-scene-collapse 980ms cubic-bezier(0.42, 0.02, 0.76, 0.2) both; }
 body.destiny-rewrite-revealing .game-screen,
-body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-return 820ms cubic-bezier(0.14, 0.78, 0.2, 1) both; }
+body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-return 860ms cubic-bezier(0.14, 0.78, 0.2, 1) both; }
 
 .destiny-vortex-overlay {
   position: fixed;
@@ -21426,15 +21434,17 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
   display: grid;
   gap: 8px;
   width: min(560px, 88vw);
-  padding-top: min(35vmin, 300px);
+  /* El disco llega a ~13vmin por encima y por debajo del centro: el texto vive claramente debajo,
+     fuera del brillo, o se pierde contra el material caliente. */
+  padding-top: min(58vmin, 500px);
   opacity: 0;
   text-align: center;
-  text-shadow: 0 2px 8px #000, 0 0 22px rgb(71 143 140 / 0.45);
+  text-shadow: 0 2px 10px #000, 0 0 30px rgb(0 0 0 / 0.85), 0 0 26px rgb(71 143 140 / 0.4);
   transform: translate(-50%, -50%);
   animation: destiny-caption-in 780ms 260ms ease-out both;
 }
 
-.destiny-vortex-caption small { color: #8fbcb3; font-size: 10px; font-weight: 900; letter-spacing: 0.27em; text-transform: uppercase; }
+.destiny-vortex-caption small { color: #a6d0c6; font-size: 11px; font-weight: 900; letter-spacing: 0.27em; text-transform: uppercase; }
 .destiny-vortex-caption strong { font-family: Georgia, "Times New Roman", serif; font-size: clamp(21px, 3vw, 35px); font-weight: 500; letter-spacing: 0.13em; text-transform: uppercase; }
 
 /* La liberación dura 1040 ms: el velo se retira antes para que la escena vuelva bajo las brasas y
@@ -21451,15 +21461,18 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
 @keyframes destiny-dialog-backdrop-out { from { opacity: 1; } to { opacity: 0; } }
 @keyframes destiny-dialog-in { from { opacity: 0; filter: blur(7px); transform: translateY(18px) scale(0.97); } to { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); } }
 @keyframes destiny-dialog-out { from { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); } to { opacity: 0; filter: blur(5px); transform: translateY(10px) scale(0.985); } }
+/* La escena entera casi no se mueve: quien cae al horizonte es cada pieza por separado, con su
+   propio retraso y su propio estiramiento (`destinyShardSuction.ts`). Aquí sólo se apaga el fondo
+   del tablero, que no es una pieza y se quedaría flotando entero detrás del vórtice. */
 @keyframes destiny-scene-collapse {
-  0% { opacity: 1; filter: blur(0) saturate(1); transform: scale(1) rotate(0); }
-  42% { opacity: 0.98; filter: blur(0) saturate(0.92); transform: scale(0.96) rotate(-0.7deg); }
-  100% { opacity: 0.05; filter: blur(13px) saturate(0.35); transform: scale(0.035) rotate(-15deg); }
+  0% { opacity: 1; transform: scale(1); }
+  58% { opacity: 0.9; transform: scale(0.97); }
+  100% { opacity: 0; transform: scale(0.86); }
 }
 @keyframes destiny-scene-return {
-  0% { opacity: 0.04; filter: blur(13px) saturate(0.4); transform: scale(0.04) rotate(13deg); }
-  68% { opacity: 1; filter: blur(0) saturate(1.05); transform: scale(1.025) rotate(0.35deg); }
-  100% { opacity: 1; filter: blur(0) saturate(1); transform: scale(1) rotate(0); }
+  0% { opacity: 0; transform: scale(0.06); }
+  42% { opacity: 1; }
+  100% { opacity: 1; transform: scale(1); }
 }
 @keyframes destiny-veil-cover { 0% { opacity: 0; transform: scale(1.2); } 45% { opacity: 0.55; } 100% { opacity: 1; transform: scale(1); } }
 @keyframes destiny-caption-in { from { opacity: 0; letter-spacing: 0.04em; } to { opacity: 1; letter-spacing: 0; } }

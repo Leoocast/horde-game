@@ -417,6 +417,16 @@ cae en espiral y la descarga de brasas de la liberación. Su reloj llega en dos 
 lienzo permanece oculto hasta copiar su primer frame válido; con movimiento reducido o sin contexto
 WebGL queda la silueta quieta `.destiny-vortex-still`.
 
+La escena no se traga como un bloque rígido y tampoco gira entera. `destinyShardSuction.ts` da la
+geometría pura y la transición recorre el DOM para repartir la escena en piezas: cada una cae hacia
+el centro por una curva propia, se estira en el eje que apunta al horizonte y arranca más tarde
+cuanto más lejos estaba, de modo que todas terminan en el mismo instante. El recorrido es genérico
+—reparte por área, no por nombres de clase del tablero— y las animaciones se cancelan al pasar a
+revelar. `destiny-scene-collapse` y `destiny-scene-return` sólo apagan y devuelven el fondo, y
+animan únicamente `transform` y `opacity` sobre una capa promocionada: volver a animar
+`filter: blur()` o `saturate()` sobre la pantalla completa es una regresión de rendimiento, porque
+obliga a repintar todo el árbol en cada frame.
+
 El historial de intentos y la futura biblioteca de Semillas siguen bosquejados en
 `docs/plans/seeds_of_destiny.md`; no están implementados. El seed literal `developer` queda
 expresamente fuera de esta narrativa: oculta el control de Futuro y conserva su reinicio técnico
