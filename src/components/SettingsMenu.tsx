@@ -1,9 +1,8 @@
-import { AlertTriangle, Copy, Crown, Home, RefreshCcw, RefreshCw, Settings, Skull, X } from "lucide-react";
+import { AlertTriangle, Crown, Home, RefreshCcw, Settings, Skull, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
-import { useToastStore } from "../store/useToastStore";
 import { AudioControls } from "./AudioControls";
 import { DisplayControls } from "./DisplayControls";
 import { GameLog } from "./GameLog";
@@ -20,19 +19,14 @@ type Props = {
 export function SettingsMenu({ onReturnToMenu, onRestartTutorial, sessionKind = "normal", setupTurns = 3 }: Props) {
   const t = useTranslation();
   const game = useGameStore((state) => state.game);
-  const seed = useGameStore((state) => state.seed);
-  const setSeed = useGameStore((state) => state.setSeed);
   const reset = useGameStore((state) => state.reset);
   const triggerEndGame = useGameStore((state) => state.triggerEndGame);
-  const pushToast = useToastStore((state) => state.pushToast);
   const isDeveloperMode = game.seed.trim().toLowerCase() === "developer";
 
   const [open, setOpen] = useState(false);
   const modalPresence = useAnimatedPresence(open, 220);
   const [showRestartConfirmation, setShowRestartConfirmation] = useState(false);
   const restartPresence = useAnimatedPresence(showRestartConfirmation, 190);
-  const [restartSeed, setRestartSeed] = useState("");
-  const effectiveSeed = seed.trim() || game.seed;
   const tutorial = sessionKind === "tutorial";
 
   useEffect(() => {
@@ -56,17 +50,7 @@ export function SettingsMenu({ onReturnToMenu, onRestartTutorial, sessionKind = 
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, showRestartConfirmation]);
 
-  async function copySeed() {
-    try {
-      await navigator.clipboard.writeText(effectiveSeed);
-      pushToast({ title: t("toast.seedCopied"), message: effectiveSeed, tone: "success" });
-    } catch {
-      pushToast({ title: t("toast.seedCopyFailed"), message: effectiveSeed, tone: "warning" });
-    }
-  }
-
   function openRestartConfirmation() {
-    setRestartSeed(effectiveSeed);
     setShowRestartConfirmation(true);
   }
 
@@ -77,9 +61,7 @@ export function SettingsMenu({ onReturnToMenu, onRestartTutorial, sessionKind = 
       setOpen(false);
       return;
     }
-    const confirmedSeed = restartSeed.trim() || game.seed;
-    setSeed(confirmedSeed);
-    reset(confirmedSeed, setupTurns);
+    reset(game.seed, setupTurns);
     setShowRestartConfirmation(false);
     setOpen(false);
   }
@@ -119,22 +101,13 @@ export function SettingsMenu({ onReturnToMenu, onRestartTutorial, sessionKind = 
                 <AudioControls />
                 <DisplayControls />
 
-                {!tutorial && <section className="old-panel-soft p-4">
-                  <div className="game-settings-section-title">{t("settings.battleSeed")}</div>
-                  <div className="mt-3 grid grid-cols-[1fr_auto_auto] gap-2">
-                    <input value={seed} onChange={(event) => setSeed(event.target.value)} className="old-input game-seed-input h-10 min-w-0 px-3 text-sm outline-none" aria-label={t("settings.battleSeed")} />
-                    <button className="icon-button h-10 w-10" type="button" onClick={copySeed} title={t("settings.copySeed")} aria-label={t("settings.copySeed")}><Copy size={16} /></button>
-                    <button className="icon-button h-10 w-10" type="button" onClick={openRestartConfirmation} title={t("settings.restartBattle")} aria-label={t("settings.restartBattle")}><RefreshCcw size={16} /></button>
-                  </div>
-                  <div className="game-settings-rng mt-3">{t("settings.rngState")} <span>{game.currentRandomState.toString(16)}</span></div>
-                </section>}
-
                 {!tutorial && <ZoneDrawer game={game} />}
 
                 {!tutorial && isDeveloperMode && (
                   <section className="old-panel-soft p-4">
                     <div className="game-settings-section-title">{t("settings.developerOptions")}</div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
+                      <button className="game-dialog-action col-span-2 flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase" onClick={openRestartConfirmation}><RefreshCcw size={14} /> {t("settings.restartBattle")}</button>
                       <button className="game-dialog-action flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase" onClick={() => triggerEndGame("host")}><Skull size={14} /> {t("settings.lose")}</button>
                       <button className="game-dialog-action game-dialog-action-primary flex h-10 items-center justify-center gap-2 text-xs font-bold uppercase" onClick={() => triggerEndGame("player")}><Crown size={14} /> {t("settings.win")}</button>
                     </div>
@@ -179,18 +152,11 @@ export function SettingsMenu({ onReturnToMenu, onRestartTutorial, sessionKind = 
             <div className="flex items-start gap-3">
               <div className="game-dialog-icon flex h-10 w-10 shrink-0 items-center justify-center"><AlertTriangle size={20} /></div>
               <div>
-                <div className="game-dialog-kicker">{t(tutorial ? "guided.settings.restartKicker" : "settings.rewriteChronicle")}</div>
+                <div className="game-dialog-kicker">{t(tutorial ? "guided.settings.restartKicker" : isDeveloperMode ? "settings.developerOptions" : "settings.rewriteChronicle")}</div>
                 <h2 id="restart-game-title" className="old-title mt-1 text-xl font-medium uppercase tracking-[0.08em]">{t(tutorial ? "guided.settings.restartTitle" : "settings.restartQuestion")}</h2>
                 <p className="mt-2 text-sm text-[#8d9a94]">{t(tutorial ? "guided.settings.restartBody" : "settings.currentProgressLost")}</p>
               </div>
             </div>
-            {!tutorial && <div className="mt-5 border border-[#687571]/35 bg-[#070d0f]/65 p-4">
-              <div className="game-settings-section-title">{t("settings.newSeed")}</div>
-              <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
-                <input value={restartSeed} onChange={(event) => setRestartSeed(event.target.value)} className="game-seed-input h-10 min-w-0 px-3 text-sm outline-none" />
-                <button className="icon-button h-10 w-10" type="button" onClick={() => setRestartSeed(generateRandomSeed())} title={t("settings.generateSeed")}><RefreshCw size={16} /></button>
-              </div>
-            </div>}
             <div className="mt-5 grid grid-cols-2 gap-3">
               <button className="game-dialog-action flex h-11 items-center justify-center text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={() => setShowRestartConfirmation(false)}>{t("common.cancel")}</button>
               <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={restartGame}><RefreshCcw size={16} /> {t("common.restart")}</button>
@@ -200,14 +166,4 @@ export function SettingsMenu({ onReturnToMenu, onRestartTutorial, sessionKind = 
       )}
     </>
   );
-}
-
-function generateRandomSeed(): string {
-  const cryptoRandom = new Uint32Array(2);
-  if (typeof crypto !== "undefined" && crypto.getRandomValues) crypto.getRandomValues(cryptoRandom);
-  else {
-    cryptoRandom[0] = Math.floor(Math.random() * 0xffffffff);
-    cryptoRandom[1] = Math.floor(Math.random() * 0xffffffff);
-  }
-  return `hostfall-${Date.now().toString(36)}-${cryptoRandom[0].toString(36)}${cryptoRandom[1].toString(36)}`;
 }

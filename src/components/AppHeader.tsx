@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { DestinyRewriteControl } from "./DestinyRewriteControl";
 import { MusicPlayerMenu } from "./MusicPlayerMenu";
 import { SettingsMenu } from "./SettingsMenu";
 
@@ -7,6 +8,9 @@ type Props = {
   showSettings?: boolean;
   onReturnToMenu?: () => void;
   onRestartTutorial?: () => void;
+  onRewriteFuture?: () => void;
+  onContemplateFuture?: () => void;
+  futureSeed?: string;
   sessionKind?: "normal" | "tutorial";
   setupTurns?: number;
   // The mulligan overlay (z-420) covers the whole screen. Lift the header above it so the music
@@ -14,11 +18,24 @@ type Props = {
   elevated?: boolean;
 };
 
-export function AppHeader({ left, showSettings = true, onReturnToMenu, onRestartTutorial, sessionKind = "normal", setupTurns, elevated = false }: Props) {
+export function AppHeader({ left, showSettings = true, onReturnToMenu, onRestartTutorial, onRewriteFuture, onContemplateFuture, futureSeed, sessionKind = "normal", setupTurns, elevated = false }: Props) {
+  const showDestinyControl = sessionKind === "normal"
+    && Boolean(futureSeed)
+    && futureSeed?.trim().toLowerCase() !== "developer"
+    && Boolean(onRewriteFuture)
+    && Boolean(onContemplateFuture);
+
   return (
     <header className={`game-command-bar relative ${sessionKind === "tutorial" ? "z-[20010]" : elevated ? "z-[440]" : "z-[130]"} grid h-[72px] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-0 text-[#f8dfa0]`}>
       <div className="game-command-left min-w-0 justify-self-start">{left}</div>
       <div className="game-command-actions flex items-center gap-2 justify-self-end">
+        {showDestinyControl && (
+          <DestinyRewriteControl
+            seed={futureSeed!}
+            onRewrite={onRewriteFuture!}
+            onContemplateAnother={onContemplateFuture!}
+          />
+        )}
         <MusicPlayerMenu />
         {showSettings && <SettingsMenu onReturnToMenu={onReturnToMenu} onRestartTutorial={onRestartTutorial} sessionKind={sessionKind} setupTurns={setupTurns} />}
       </div>

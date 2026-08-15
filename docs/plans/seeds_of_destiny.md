@@ -1,7 +1,8 @@
 # Semillas del Destino
 
 Nota de diseño para la narrativa del tutorial y el futuro historial de partidas de Hostfall.
-Este documento recoge una dirección conceptual; no describe una funcionalidad ya implementada.
+El control de reescritura y la identidad básica de cada Futuro ya están implementados; el historial
+y la biblioteca personal descritos más abajo siguen siendo dirección conceptual.
 
 ## Premisa
 
@@ -20,6 +21,27 @@ forma parte del mundo narrativo en lugar de ser solamente una acción del sistem
 La idea central se resume así:
 
 > Todo destino comienza como una posibilidad. Tu deber es decidir cuál se convertirá en historia.
+
+## Superficie implementada
+
+- La seed técnica se representa mediante un código cosmético estable **Futuro `NNN·NNN`**. El
+  código se deriva de la seed, no es reversible y no sustituye su identidad exacta; copiar la
+  identidad copia la seed completa.
+- La barra de partida muestra **Reescribir** antes de Música y Ajustes. No aparece en tutoriales ni
+  con la seed técnica `developer`.
+- **Reescribir este futuro** reinicia siempre la misma seed y conserva Crónica, Hueste, dificultad
+  y modo. No permite escribir ni generar otra seed dentro de esa acción.
+- **Contemplar otro futuro** vuelve a Preparación conservando la Crónica y la Hueste elegidas; esa
+  pantalla genera y muestra la identidad de un Futuro nuevo.
+- La seed y el reinicio normal salieron de Ajustes in-game. El reinicio de tutorial y el reinicio
+  técnico de Developer Mode conservan sus superficies restringidas.
+- Una transición global de vórtice absorbe la pantalla, realiza el reset o la navegación cuando el
+  centro ya la cubrió y revela el nuevo estado. Movimiento reducido usa un fundido breve.
+- Victoria y derrota muestran **Destino preservado** o **Futuro perdido**, la identidad del Futuro,
+  y las mismas acciones de reescritura o contemplación.
+
+Esta superficie todavía no persiste intentos ni convierte el código compacto en una clave única de
+historial. Esas responsabilidades pertenecen a la futura biblioteca de Semillas.
 
 ## Texto propuesto para el tutorial
 

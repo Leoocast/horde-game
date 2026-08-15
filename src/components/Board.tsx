@@ -52,6 +52,8 @@ type Props = {
   tutorialInterrupted?: boolean;
   tutorialErrorMessage?: string;
   onRestartTutorial?: () => void;
+  onRewriteFuture?: () => void;
+  onContemplateFuture?: () => void;
   onReturnToMenu: () => void;
 };
 
@@ -63,6 +65,8 @@ export function Board({
   tutorialInterrupted = false,
   tutorialErrorMessage,
   onRestartTutorial,
+  onRewriteFuture,
+  onContemplateFuture,
   onReturnToMenu,
 }: Props) {
   const t = useTranslation();
@@ -125,6 +129,9 @@ export function Board({
         elevated={!game.openingHandAccepted}
         sessionKind={sessionKind}
         onRestartTutorial={onRestartTutorial}
+        onRewriteFuture={onRewriteFuture}
+        onContemplateFuture={onContemplateFuture}
+        futureSeed={game.seed}
         onReturnToMenu={() => setShowHomeConfirmation(true)}
       />
       <DuelHud game={game} />
@@ -178,8 +185,12 @@ export function Board({
       <OpeningHandOverlay game={game} />
       <GuidedTutorialOverlay />
 
-      {sessionKind === "normal" && game.winner === "host" && <DefeatModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}
-      {sessionKind === "normal" && game.winner === "player" && <VictoryModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}
+      {sessionKind === "normal" && game.winner === "host" && onRewriteFuture && onContemplateFuture && (
+        <DefeatModal game={game} onRewriteFuture={onRewriteFuture} onContemplateFuture={onContemplateFuture} />
+      )}
+      {sessionKind === "normal" && game.winner === "player" && onRewriteFuture && onContemplateFuture && (
+        <VictoryModal game={game} onRewriteFuture={onRewriteFuture} onContemplateFuture={onContemplateFuture} />
+      )}
 
       {sessionKind === "tutorial" && tutorialInterrupted && (
         <div data-guided-system-control="true" className="game-home-backdrop fixed inset-0 z-[20040] flex items-center justify-center p-6 text-[#e4ddc2]" role="presentation">

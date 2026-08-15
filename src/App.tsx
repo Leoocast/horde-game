@@ -1,7 +1,8 @@
-import { Suspense, lazy, useEffect, useState, useSyncExternalStore } from "react";
+import { Suspense, lazy, useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { AudioClickListener } from "./components/AudioClickListener";
 import { Board } from "./components/Board";
 import { DeckInspector } from "./components/DeckInspector";
+import { DestinyRewriteTransition, type DestinyTransitionKind } from "./components/DestinyRewriteTransition";
 import { ENCOUNTER_IMPACT_MS, ENCOUNTER_TRANSITION_MS, EncounterTransition } from "./components/EncounterTransition";
 import { GameLoadingScreen } from "./components/GameLoadingScreen";
 import { StartMenu } from "./components/StartMenu";
@@ -64,6 +65,10 @@ export default function App() {
     chronicleDeckId: string;
     hostDeckId: string;
     gameMode: GameMode;
+  } | null>(null);
+  const [destinyTransition, setDestinyTransition] = useState<{
+    kind: DestinyTransitionKind;
+    seed: string;
   } | null>(null);
   const [desktopResume, setDesktopResume] = useState<DesktopResumeLoad>({ status: "none" });
   const [preferencesReady, setPreferencesReady] = useState(false);
@@ -224,6 +229,32 @@ export default function App() {
     guidedProductLifecycle.restart();
   }
 
+  const beginDestinyTransition = useCallback((kind: DestinyTransitionKind) => {
+    if (destinyTransition) return;
+    const gameStore = useGameStore.getState();
+    gameStore.stopGamePresentation();
+    setDestinyTransition({ kind, seed: gameStore.game.seed });
+  }, [destinyTransition]);
+
+  const resolveDestinyTransition = useCallback(() => {
+    if (!destinyTransition) return;
+    if (destinyTransition.kind === "rewrite") {
+      reset(destinyTransition.seed, setupTurns);
+      startBattleMusic(true);
+      return;
+    }
+
+    void deleteDesktopResume();
+    setDesktopResume({ status: "none" });
+    setPreserveMenuMusic(false);
+    setMenuReturnScreen("setup");
+    setScreen("start");
+  }, [destinyTransition, reset, setupTurns, startBattleMusic]);
+
+  const completeDestinyTransition = useCallback(() => {
+    setDestinyTransition(null);
+  }, []);
+
   function leaveGuidedLesson() {
     guidedProductLifecycle.stop();
     setPreserveMenuMusic(false);
@@ -240,6 +271,14 @@ export default function App() {
       chronicleDeckId={launchTransition.chronicleDeckId}
       hostDeckId={launchTransition.hostDeckId}
       gameMode={launchTransition.gameMode}
+    />
+  ) : null;
+  const destinyTransitionOverlay = destinyTransition ? (
+    <DestinyRewriteTransition
+      kind={destinyTransition.kind}
+      seed={destinyTransition.seed}
+      onCovered={resolveDestinyTransition}
+      onComplete={completeDestinyTransition}
     />
   ) : null;
 
@@ -393,6 +432,7 @@ export default function App() {
           }}
         />
         {transitionOverlay}
+        {destinyTransitionOverlay}
         {loadingLeaving && <GameLoadingScreen percent={100} label="ready" leaving />}
       </>
     );
@@ -410,6 +450,8 @@ export default function App() {
         tutorialInterrupted={screen === "tutorial" && (guidedLifecycle.status === "aborted" || guidedLifecycle.status === "failed")}
         tutorialErrorMessage={guidedLifecycle.errorMessage}
         onRestartTutorial={screen === "tutorial" ? restartGuidedLesson : undefined}
+        onRewriteFuture={screen === "game" ? () => beginDestinyTransition("rewrite") : undefined}
+        onContemplateFuture={screen === "game" ? () => beginDestinyTransition("contemplate") : undefined}
         onReturnToMenu={screen === "tutorial" ? leaveGuidedLesson : () => {
           void deleteDesktopResume();
           setDesktopResume({ status: "none" });
@@ -419,6 +461,7 @@ export default function App() {
         }}
       />
       {transitionOverlay}
+      {destinyTransitionOverlay}
     </>
   );
 }

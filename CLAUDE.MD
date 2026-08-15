@@ -395,13 +395,25 @@ El Playground incluye una pestaña dev-only **Guide**. Monta un fixture exacto d
 Board real y diagnostica el ciclo de pausa, la intención autorizada, receipts, tokens visuales y
 beats retenidos. No es el guion ni el copy de la Primera Semilla y no entra al bundle de release.
 
-## Dirección narrativa futura
+## Semillas del Destino
 
-Las seeds podrán presentarse dentro del mundo como **Semillas del Destino**: líneas temporales que
-el Cronista contempla, reescribe y finalmente preserva. El tutorial, el historial de intentos y la
-posible opción de menú asociada están bosquejados en `docs/plans/seeds_of_destiny.md`. Es una dirección de
-diseño pendiente, no una funcionalidad implementada. El seed `developer` queda expresamente fuera
-de esta narrativa.
+Las seeds normales se presentan dentro del mundo como **Semillas del Destino**: líneas temporales
+que el Cronista contempla, reescribe y finalmente preserva. Cada seed recibe una identidad
+cosmética determinista **Futuro `NNN·NNN`**; ese código compacto puede colisionar y nunca reemplaza
+la seed real. **Copiar identidad** copia la seed completa aunque la UI sólo muestre el Futuro.
+
+Durante una partida normal, la barra superior coloca **Reescribir** antes de Música y Ajustes. Su
+acción principal vuelve al origen de la misma seed, con los mismos decks, dificultad y modo;
+**Contemplar otro futuro** abandona el intento y abre la preparación con los decks actuales y una
+seed nueva. Ajustes in-game no vuelve a mostrar, editar ni regenerar la seed. Victoria y derrota
+reutilizan la misma identidad y las mismas dos salidas. El reset o cambio de pantalla ocurre cuando
+el vórtice global ya cubrió el tablero; la transición vive sobre `App` para sobrevivir al remount de
+`Board` y tiene fallback de movimiento reducido.
+
+El historial de intentos y la futura biblioteca de Semillas siguen bosquejados en
+`docs/plans/seeds_of_destiny.md`; no están implementados. El seed literal `developer` queda
+expresamente fuera de esta narrativa: oculta el control de Futuro y conserva su reinicio técnico
+dentro de las opciones de desarrollo.
 
 Antes de implementar el tutorial obligatorio, la claridad permanente de Preparación, robo, Acción de
 Fuente, Reserva y ataque al Archivo debe seguir el plan de diseño e implementación de

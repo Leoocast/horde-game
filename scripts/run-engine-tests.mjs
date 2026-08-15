@@ -27,6 +27,7 @@ try {
   await server.ssrLoadModule("/tests/guidedSession.test.js");
   await server.ssrLoadModule("/tests/guidedLifecycle.test.js");
   await server.ssrLoadModule("/tests/guidedOverlay.test.js");
+  await server.ssrLoadModule("/tests/destinyFuture.test.js");
   await server.ssrLoadModule("/tests/audioMix.test.js");
   await server.ssrLoadModule("/tests/vocabulary.test.js");
   await server.ssrLoadModule("/tests/uiPresentation.test.js");

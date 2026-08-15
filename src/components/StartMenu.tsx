@@ -10,6 +10,7 @@ import { useAudioStore } from "../store/useAudioStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { useToastStore } from "../store/useToastStore";
 import { useDeckCardDetails } from "../utils/deckCardImages";
+import { futureCodeFromSeed } from "../utils/futureIdentity";
 import { clearAppAssetCache, completeOnboarding, persistDeveloperMode, readStoredDeveloperMode, readStoredPlayerName, resetOnboarding } from "../utils/appPersistence";
 import { APP_VERSION } from "../version";
 import { AudioControls } from "./AudioControls";
@@ -612,6 +613,7 @@ type ExpeditionSetupProps = {
 function ExpeditionSetup(props: ExpeditionSetupProps) {
   const t = useTranslation();
   const [openDeckSide, setOpenDeckSide] = useState<"player" | "host" | null>(null);
+  const futureCode = futureCodeFromSeed(props.seed);
 
   const closeDeckDrawer = () => {
     const closingSide = openDeckSide;
@@ -645,6 +647,9 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
         <div>
           {props.chaos && <p className="chaos-header-kicker">{t("setup.chaosKicker")}</p>}
           <h1>{props.chaos ? t("setup.invokeChaos") : t("setup.prepare")}</h1>
+          {!props.chaos && !props.developerMode && (
+            <p className="expedition-future-identity"><Sparkles size={13} aria-hidden="true" /> {t("destiny.future", { code: futureCode })}</p>
+          )}
         </div>
       </header>
 
