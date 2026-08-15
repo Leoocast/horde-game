@@ -21469,9 +21469,11 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
   58% { opacity: 0.9; transform: scale(0.97); }
   100% { opacity: 0; transform: scale(0.86); }
 }
+/* La escena nueva no crece desde una miniatura —eso volvía a leerse como un bloque rígido—: llega
+   pasada de tamaño, empujada por la onda de choque, y se asienta bajo las brasas. */
 @keyframes destiny-scene-return {
-  0% { opacity: 0; transform: scale(0.06); }
-  42% { opacity: 1; }
+  0% { opacity: 0; transform: scale(1.07); }
+  46% { opacity: 1; }
   100% { opacity: 1; transform: scale(1); }
 }
 @keyframes destiny-veil-cover { 0% { opacity: 0; transform: scale(1.2); } 45% { opacity: 0.55; } 100% { opacity: 1; transform: scale(1); } }

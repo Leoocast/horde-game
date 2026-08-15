@@ -420,10 +420,15 @@ WebGL queda la silueta quieta `.destiny-vortex-still`.
 La escena no se traga como un bloque rígido y tampoco gira entera. `destinyShardSuction.ts` da la
 geometría pura y la transición recorre el DOM para repartir la escena en piezas: cada una cae hacia
 el centro por una curva propia, se estira en el eje que apunta al horizonte y arranca más tarde
-cuanto más lejos estaba, de modo que todas terminan en el mismo instante. El recorrido es genérico
+cuanto más lejos estaba, de modo que todas terminan en el mismo instante. Su avance sale de una
+sola función continua ya muestreada, y las animaciones se reproducen `linear`: repartir la caída en
+tramos con easing propio deja uno terminando lanzado y el siguiente arrancando parado, y esa
+costura se ve como un frenazo a mitad de la succión. El recorrido es genérico
 —reparte por área, no por nombres de clase del tablero— y las animaciones se cancelan al pasar a
 revelar. `destiny-scene-collapse` y `destiny-scene-return` sólo apagan y devuelven el fondo, y
-animan únicamente `transform` y `opacity` sobre una capa promocionada: volver a animar
+animan únicamente `transform` y `opacity` sobre una capa promocionada. La escena nueva llega pasada
+de tamaño y se asienta; hacerla crecer desde una miniatura la devuelve a leerse como un bloque
+rígido. Volver a animar
 `filter: blur()` o `saturate()` sobre la pantalla completa es una regresión de rendimiento, porque
 obliga a repintar todo el árbol en cada frame.
 

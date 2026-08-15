@@ -15,7 +15,7 @@ import {
   burnMaterialColors,
   burnRenderBatches,
 } from "../src/components/burnFireball";
-import { shardSuction, shardTiming } from "../src/components/destinyShardSuction";
+import { shardPath, shardSuction, shardTiming } from "../src/components/destinyShardSuction";
 import { grownVfxSurface, sharedVfxSourceTop } from "../src/components/sharedVfxRenderer";
 import { frameLeafRootIndex, frameRootPathSpecs } from "../src/components/GrowthBuffAnimator";
 import { buildStorm, stormBoltTones } from "../src/components/StormBuffAnimator";
@@ -1011,6 +1011,35 @@ test("the rewrite suction pulls every piece to the vortex and lands them at the 
   assert.ok(last.delayMs > first.delayMs);
   assert.equal(first.delayMs + first.durationMs, 980);
   assert.equal(last.delayMs + last.durationMs, 980);
+});
+
+test("the rewrite suction resists once and then accelerates without ever stalling", () => {
+  // Un tramo que termina lanzado seguido de otro que arranca parado se ve como un frenazo a mitad
+  // de la caída. La trayectoria tiene que salir de una sola función continua.
+  const suction = shardSuction({ left: 0, top: 0, width: 40, height: 40 }, { width: 1600, height: 900 });
+  const path = shardPath(suction);
+
+  assert.equal(path[0].offset, 0);
+  assert.equal(path[0].progress, 0);
+  assert.equal(path[path.length - 1].offset, 1);
+  assert.equal(path[path.length - 1].progress, 1);
+
+  // Primero se resiste: hay un tramo que retrocede antes del tirón.
+  assert.ok(path.some((step) => step.progress < 0));
+
+  // Y a partir de ahí no vuelve a frenar nunca: cada paso avanza más que el anterior.
+  for (let index = 1; index < path.length - 1; index++) {
+    const previous = path[index].progress - path[index - 1].progress;
+    const next = path[index + 1].progress - path[index].progress;
+    assert.ok(next >= previous - 1e-9, `la succión frena en el paso ${index}`);
+  }
+
+  // La pieza se estira hacia el horizonte y termina convertida en un hilo que ya no se ve.
+  const landing = path[path.length - 1];
+  assert.ok(landing.along > landing.across * 5);
+  assert.equal(landing.opacity, 0);
+  assert.equal(path[0].along, 1);
+  assert.equal(path[0].across, 1);
 });
 
 test("developer tools keep their development imports without a release URL escape hatch", () => {

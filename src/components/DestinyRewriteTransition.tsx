@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { useTranslation } from "../i18n/useTranslation";
 import { useAudioStore } from "../store/useAudioStore";
 import { futureCodeFromSeed } from "../utils/futureIdentity";
-import { shardSuction, shardTiming } from "./destinyShardSuction";
+import { shardPath, shardSuction, shardTiming } from "./destinyShardSuction";
 import {
   DESTINY_HORIZON_RATIO,
   DESTINY_VORTEX_FRAGMENT_SHADER,
@@ -94,12 +94,16 @@ export function DestinyRewriteTransition({ kind, seed, onCovered, onComplete }: 
       document.body.classList.add("destiny-rewrite-revealing");
       setPhase("revealing");
       onCovered();
-      playSfx("drawOne", { rate: 0.78 });
+      // El horizonte se cierra sobre la escena: ese golpe es el clímax y no puede ser mudo.
+      playSfx("stoneCrash", { rate: 0.62 });
     }, coverMs);
+    // El futuro nuevo llega después del golpe, no encima; con movimiento reducido, casi pegado.
+    const revealTimer = window.setTimeout(() => playSfx("drawOne", { rate: 0.78 }), coverMs + (reducedMotion ? 80 : 260));
     const completeTimer = window.setTimeout(onComplete, completeMs);
 
     return () => {
       window.clearTimeout(coverTimer);
+      window.clearTimeout(revealTimer);
       window.clearTimeout(completeTimer);
       document.body.classList.remove("destiny-rewrite-active", "destiny-rewrite-absorbing", "destiny-rewrite-revealing");
     };
@@ -116,23 +120,24 @@ export function DestinyRewriteTransition({ kind, seed, onCovered, onComplete }: 
     const viewport = { width: window.innerWidth, height: window.innerHeight };
     const shards = collectShards(scene, viewport);
     const animations = shards.map(({ element, rect }) => {
-      const { dx, dy, swirlX, swirlY, reach, angleDeg } = shardSuction(rect, viewport);
-      const { delayMs, durationMs } = shardTiming(reach, COVER_MS);
-      const radial = `rotate(${angleDeg.toFixed(2)}deg)`;
-      const unradial = `rotate(${(-angleDeg).toFixed(2)}deg)`;
-      // Los tres pasos comparten la misma lista de funciones para que el navegador interpole
-      // componente a componente; con listas distintas caería a interpolar matrices y el estiramiento
-      // se perdería.
-      const step = (moveX: number, moveY: number, along: number, across: number) =>
-        `translate(${moveX.toFixed(1)}px, ${moveY.toFixed(1)}px) ${radial} scale(${along}, ${across}) ${unradial}`;
+      const suction = shardSuction(rect, viewport);
+      const { delayMs, durationMs } = shardTiming(suction.reach, COVER_MS);
+      const radial = `rotate(${suction.angleDeg.toFixed(2)}deg)`;
+      const unradial = `rotate(${(-suction.angleDeg).toFixed(2)}deg)`;
       element.style.willChange = "transform, opacity";
+      /* La trayectoria ya viene muestreada de una sola función continua, así que el efecto se
+         reproduce `linear`: la aceleración está en las posiciones, no en la curva de tiempo.
+         Ponerle un easing propio a cada tramo hacía que uno terminara lanzado y el siguiente
+         arrancara parado, y esa costura se veía como un frenazo a mitad de la caída.
+         Todos los pasos comparten la misma lista de funciones de transform para que el navegador
+         interpole componente a componente en vez de caer a interpolar matrices. */
       return element.animate(
-        [
-          { transform: step(0, 0, 1, 1), opacity: 1, offset: 0 },
-          { transform: step(dx * 0.42 + swirlX * 0.62, dy * 0.42 + swirlY * 0.62, 1.26, 0.78), opacity: 1, offset: 0.55 },
-          { transform: step(dx * 0.99 + swirlX * 0.1, dy * 0.99 + swirlY * 0.1, 0.24, 0.03), opacity: 0, offset: 1 },
-        ],
-        { duration: durationMs, delay: delayMs, easing: "cubic-bezier(0.46, 0.03, 0.74, 0.22)", fill: "forwards" },
+        shardPath(suction).map((step) => ({
+          offset: step.offset,
+          opacity: step.opacity,
+          transform: `translate(${step.x.toFixed(1)}px, ${step.y.toFixed(1)}px) ${radial} scale(${step.along.toFixed(4)}, ${step.across.toFixed(4)}) ${unradial}`,
+        })),
+        { duration: durationMs, delay: delayMs, easing: "linear", fill: "forwards" },
       );
     });
 

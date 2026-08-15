@@ -156,9 +156,12 @@ void main() {
   float heat = 0.0;
   float ang = 0.0;
   float dens = diskDensity(q, heat, ang) * diskLife;
+  // Lo que el vórtice se traga lo devuelve como brillo: el disco se enciende conforme la escena cae.
+  float feed = smoothstep(0.28, 1.0, uCollapse) * (1.0 - smoothstep(0.0, 0.28, uBurst));
+
   // Doppler: el lado que viene hacia el espectador quema, el que se aleja casi desaparece.
   float doppler = 0.30 + 1.15 * pow(0.5 + 0.5 * cos(ang), 2.0);
-  float body = dens * doppler * (0.42 + 0.62 * heat);
+  float body = dens * doppler * (0.42 + 0.62 * heat) * (1.0 + 0.75 * feed);
   vec3 tint = diskTint(heat);
   // El plano corta la pantalla por el centro: abajo pasa por delante del horizonte, arriba por detrás.
   float front = smoothstep(-0.05, 0.05, q.y);
@@ -183,9 +186,9 @@ void main() {
     float ringWidth = 0.05 + 0.05 * (1.0 - grow);
     float ring = smoothstep(ringWidth, 0.0, abs(len - hz * 1.07));
     ring *= 0.72 + 0.46 * (0.5 + 0.5 * sin(uTime * 9.0 + atan(q.y, q.x) * 3.0));
-    addLight(col, alpha, mix(uCore, uDisk, 0.32), ring * 1.6 * alive);
+    addLight(col, alpha, mix(uCore, uDisk, 0.32), ring * (1.6 + 1.1 * feed) * alive);
     float bloom = exp(-(len - hz) * (len - hz) * 2.6) * smoothstep(hz * 0.9, hz * 1.2, len);
-    addLight(col, alpha, uDisk, bloom * 0.22 * alive);
+    addLight(col, alpha, uDisk, bloom * (0.22 + 0.3 * feed) * alive);
   }
 
   // 5. Materia arrastrada: entra en espiral y se estira al filo del horizonte.
@@ -217,7 +220,12 @@ void main() {
   addLight(col, alpha, tint, body * front);
   addLight(col, alpha, haloTint, halo * front * 0.9);
 
-  // 7. Liberación: destello, onda de choque y brasas que se dispersan y caen.
+  // 7. Chispa de apertura: el horizonte no aparece hecho, se abre desde un punto de luz.
+  float spark = exp(-uCollapse * 24.0) * exp(-len * len * 2.2);
+  col += uCore * spark * 2.4;
+  alpha = alpha + (1.0 - alpha) * clamp(spark * 1.4, 0.0, 1.0);
+
+  // 8. Liberación: destello, onda de choque y brasas que se dispersan y caen.
   if (uBurst > 0.0) {
     float flashCore = exp(-uBurst * 11.0) * exp(-len * len * 0.22);
     col += mix(uCore, uDisk, 0.28) * flashCore * 2.8;
@@ -251,7 +259,9 @@ void main() {
       vec2 m = vec2(dot(delta, away) / stretch, dot(delta, nm));
       float sz = (0.05 + s1 * 0.07) * (1.0 - 0.4 * k);
       float g = sz / (length(m) + sz * 0.8);
-      float e = pow(clamp(g, 0.0, 1.0), 3.0) * (1.0 - smoothstep(0.35, 1.0, k));
+      // Cada brasa tiene su propia vida: unas se apagan enseguida y otras siguen cayendo al final.
+      float span = mix(0.46, 1.0, hash11(fi * 5.53 + 2.9));
+      float e = pow(clamp(g, 0.0, 1.0), 3.0) * (1.0 - smoothstep(span * 0.4, span, k));
       addLight(col, alpha, mix(uCore, mix(uDisk, uRim, k), smoothstep(0.0, 0.5, k)), e * 1.5);
     }
   }
