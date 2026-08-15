@@ -520,17 +520,34 @@ revisión pedagógica no figure como completada. En development este gate obliga
 para que recargar no interrumpa el trabajo: la lección permanece disponible manualmente desde
 **Cómo jugar**. Los builds de producto conservan el gate.
 
-La revisión 2 de **La Primera Semilla** usa **El Pacto de Elarion** contra **El Alzamiento de los
+La revisión 3 de **La Primera Semilla** usa **El Pacto de Elarion** contra **El Alzamiento de los
 Sinsepulcro** y empieza al inicio de Preparación 1/3. Su Mano inicial exacta contiene dos Fuentes,
-Liora y Vaelor. En 1/3 juega una Fuente, presenta Energía y el límite de una Fuente por turno, y
-compara Liora y Vaelor en grande para señalar sus costes y mostrar que ninguno puede Invocarse con
-una sola Energía. En 2/3 roba a Maela, juega la segunda Fuente e Invoca a Liora; explica que las dos
-Fuentes quedaron Agotadas y que Liora está Estabilizándose. En 3/3 roba Escudo de la Heredera,
-muestra que las Fuentes vuelven a estar listas y que la Energía anterior no se acumuló, usa la
-Acción ya estabilizada de Liora para añadir una Energía a la Reserva y dejarla Agotada, y paga a
-Maela con esa Reserva más las dos Fuentes. Cierra explicando Skyguard y la defensa preparada, antes
-de terminar el último turno o despertar a la Hueste. Es un primer borrador jugable: no debe
-tratarse todavía como ritmo o copy pedagógico definitivo.
+Liora y Vaelor. En 1/3 juega una Fuente, enseña la Acción de Fuente y su límite por turno, y compara
+Liora y Vaelor en grande para mostrar que ninguno puede Invocarse con una sola Energía. En 2/3 roba
+a Maela, nombra el robo de cada turno, juega la segunda Fuente e Invoca a Liora; un solo checkpoint
+explica que las Fuentes quedaron Agotadas y que Liora está Estabilizándose. En 3/3 roba Escudo de la
+Heredera, muestra Fuentes listas y Liora ya estabilizada, usa su Acción para añadir Energía a la
+Reserva y paga a Maela con esa Reserva más las dos Fuentes. Cierra con Guardia aérea y la defensa
+terminada. La lección se detiene ahí, antes de terminar el turno: su cierre no debe prometer el
+despertar de la Hueste mientras no exista contenido posterior.
+
+El ritmo es parte del contrato de esta revisión: 15 pasos visibles, nunca más de dos explicaciones
+seguidas, y los pares de acciones que forman una sola idea —colocar Fuente e Invocar a Liora, crear
+Reserva e Invocar a Maela— encadenados con un checkpoint `callout: "hidden"` en medio, nunca con
+texto. Las explicaciones dicen por qué importa la regla, no sólo qué ocurrió. Sigue abierta a QA de
+copy y ritmo, pero volver a intercalar un cuadro de texto entre acciones encadenadas o superar esos
+límites es una regresión: `tests/guidedLesson.test.js` los verifica.
+
+Un paso `observe` se entra en cuanto llega el receipt de la acción, así que sus preconditions se
+evalúan **antes** de que su propio beat resuelva. No puede afirmar estado que produce ese beat —la
+Energía llega con `energy.flow`, no con el receipt—; eso pertenece al siguiente paso authored, que
+sólo se entra tras el settle. Un paso `explain` no tiene ese problema porque siempre espera.
+
+La Preparación tiene un solo nombre por idioma en toda la superficie visible: `phase.setup` y su
+banner, el botón `orb.extraTurn` y el copy de la lección deben coincidir. El inglés ya no mezcla
+*Setup*, *Preparation* y *Extra Turn*. La lección tampoco puede enseñar que la Energía sin gastar se
+pierde como regla general: durante la Preparación se pierde, pero en turno normal una Fuente sin usar
+se convierte en Reserva, y el texto debe distinguirlo.
 
 Las comparaciones grandes de cartas son una presentación genérica declarada por alias mediante
 `presentation.cardComparison`; el runtime resuelve las instancias predefinidas y enfatiza su coste

@@ -52,13 +52,33 @@ test("Preparation progress preserves the original total across normal play and r
   assert.deepEqual(setupProgress(2, 0), undefined);
   assert.deepEqual(setupProgress(0, 2), { completed: 1, current: 1, total: 2 });
   assert.equal(translate("es", "phase.setupStepBanner", { current: 1, total: 3 }), "Preparación 1/3");
-  assert.equal(translate("en", "phase.setupStepBanner", { current: 1, total: 3 }), "Setup 1/3");
+  assert.equal(translate("en", "phase.setupStepBanner", { current: 1, total: 3 }), "Preparation 1/3");
   assert.deepEqual(
     [1, 2, 3].map((current) => translate("es", "phase.setupStepShort", { current })),
     ["Prep. 1", "Prep. 2", "Prep. 3"],
   );
-  assert.equal(translate("es", "orb.extraTurn"), "Turno extra");
+  assert.equal(translate("es", "orb.extraTurn"), "Siguiente paso");
   assert.equal(translate("es", "orb.endTurn"), "Terminar turno");
+});
+
+// Preparation is taught by the tutorial and labelled by the permanent HUD, so both languages must
+// keep a single name for it. English previously mixed "Setup" and "Extra Turn" with the lesson copy.
+test("Preparation keeps one name per language across HUD, orb and guided copy", () => {
+  for (const language of ["en", "es"]) {
+    const setupName = translate(language, "phase.setup");
+    assert.ok(
+      translate(language, "phase.setupStepBanner", { current: 1, total: 3 }).startsWith(setupName),
+      `${language} setup banner must reuse "${setupName}".`,
+    );
+    assert.doesNotMatch(translate(language, "orb.extraTurn"), /extra/iu);
+    assert.match(
+      translate(language, "guided.firstSeed.preparationBody"),
+      new RegExp(setupName, "iu"),
+      `${language} guided copy must reuse "${setupName}".`,
+    );
+  }
+  assert.match(translate("en", "guided.firstSeed.continueFirstBody"), /Press Next Step\./u);
+  assert.match(translate("es", "guided.firstSeed.continueFirstBody"), /Pulsa Siguiente paso\./u);
 });
 
 test("phase banners use content-sized plaques with tone-matched accents", () => {

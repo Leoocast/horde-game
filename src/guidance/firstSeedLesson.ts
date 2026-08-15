@@ -12,11 +12,16 @@ const gravelessCard = (id: string) => `${GRAVELESS}/${id}`;
 /**
  * First Seed, opening section. It deliberately stops before the Host awakens so its novice-facing
  * Preparation pacing can be reviewed before combat teaching is appended.
+ *
+ * Pacing contract for this revision: a visible callout only appears when it teaches something the
+ * player cannot read off the board. Silent `callout: "hidden"` checkpoints hold the stable wait
+ * between actions, so two actions that form a single idea — pay, then spend — run back to back
+ * without a text box between them.
  */
 export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
   schemaVersion: GUIDED_LESSON_SCHEMA_VERSION,
   id: "first-seed",
-  revision: 2,
+  revision: 3,
   mode: "required",
   startStepId: "explain-objective",
   scenario: {
@@ -91,13 +96,6 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
       kind: "explain",
       copy: { titleKey: "guided.firstSeed.preparationTitle", bodyKey: "guided.firstSeed.preparationBody" },
       highlights: [{ kind: "surface", anchor: "setup.progress" }],
-      nextStepId: "review-opening-hand",
-    },
-    {
-      id: "review-opening-hand",
-      kind: "explain",
-      copy: { titleKey: "guided.firstSeed.openingHandTitle", bodyKey: "guided.firstSeed.openingHandBody" },
-      highlights: [{ kind: "surface", anchor: "player.hand" }],
       nextStepId: "play-first-source",
     },
     {
@@ -119,7 +117,7 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
       id: "observe-first-source",
       kind: "observe",
       callout: "hidden",
-      copy: { titleKey: "guided.firstSeed.sourceEnteringTitle", bodyKey: "guided.firstSeed.sourceEnteringBody" },
+      copy: { titleKey: "guided.firstSeed.checkpointTitle", bodyKey: "guided.firstSeed.checkpointBody" },
       highlights: [{ kind: "surface", anchor: "player.sources" }],
       expectedReceipt: { kind: "source.played", cardAlias: "first_source" },
       preconditions: [{ kind: "card.inZone", cardAlias: "first_source", side: "player", zone: "field" }],
@@ -158,7 +156,7 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
       id: "draw-maela",
       kind: "observe",
       callout: "hidden",
-      copy: { titleKey: "guided.firstSeed.drawMaelaTitle", bodyKey: "guided.firstSeed.drawMaelaBody" },
+      copy: { titleKey: "guided.firstSeed.checkpointTitle", bodyKey: "guided.firstSeed.checkpointBody" },
       highlights: [
         { kind: "surface", anchor: "player.archive", role: "origin" },
         { kind: "surface", anchor: "player.hand", role: "destination" },
@@ -189,27 +187,19 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
         { kind: "surface", anchor: "player.field", role: "destination" },
       ],
       allowedIntent: { kind: "card.play", cardAlias: "second_source" },
+      preconditions: [{ kind: "card.inZone", cardAlias: "second_source", side: "player", zone: "hand" }],
       nextStepId: "observe-second-source",
     },
     {
+      // Placing the Source and paying for Liora are one idea, so the checkpoint stays silent and
+      // the affordability lesson travels inside the Invocation step itself.
       id: "observe-second-source",
       kind: "observe",
       callout: "hidden",
-      copy: { titleKey: "guided.firstSeed.sourceEnteringTitle", bodyKey: "guided.firstSeed.sourceEnteringBody" },
+      copy: { titleKey: "guided.firstSeed.checkpointTitle", bodyKey: "guided.firstSeed.checkpointBody" },
       highlights: [{ kind: "surface", anchor: "player.sources" }],
       expectedReceipt: { kind: "source.played", cardAlias: "second_source" },
       preconditions: [{ kind: "card.inZone", cardAlias: "second_source", side: "player", zone: "field" }],
-      nextStepId: "explain-liora-affordable",
-    },
-    {
-      id: "explain-liora-affordable",
-      kind: "explain",
-      copy: { titleKey: "guided.firstSeed.lioraAffordableTitle", bodyKey: "guided.firstSeed.lioraAffordableBody" },
-      highlights: [
-        { kind: "surface", anchor: "player.sources" },
-        { kind: "card", alias: "liora" },
-      ],
-      preconditions: [{ kind: "setup.remaining", amount: 2 }],
       nextStepId: "play-liora",
     },
     {
@@ -221,35 +211,32 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
         { kind: "surface", anchor: "player.field", role: "destination" },
       ],
       allowedIntent: { kind: "card.play", cardAlias: "liora" },
+      preconditions: [
+        { kind: "setup.remaining", amount: 2 },
+        { kind: "card.inZone", cardAlias: "liora", side: "player", zone: "hand" },
+      ],
       nextStepId: "observe-liora-entry",
     },
     {
       id: "observe-liora-entry",
       kind: "observe",
       callout: "hidden",
-      copy: { titleKey: "guided.firstSeed.echoEnteringTitle", bodyKey: "guided.firstSeed.echoEnteringBody" },
+      copy: { titleKey: "guided.firstSeed.checkpointTitle", bodyKey: "guided.firstSeed.checkpointBody" },
       highlights: [{ kind: "surface", anchor: "player.field" }],
       expectedReceipt: { kind: "card.played", cardAlias: "liora" },
       preconditions: [{ kind: "card.inZone", cardAlias: "liora", side: "player", zone: "field" }],
-      nextStepId: "explain-energy-spent",
+      nextStepId: "explain-liora-invoked",
     },
     {
-      id: "explain-energy-spent",
+      // Both consequences of the Invocation — spent Sources and Stabilizing — are one checkpoint.
+      id: "explain-liora-invoked",
       kind: "explain",
-      copy: { titleKey: "guided.firstSeed.energySpentTitle", bodyKey: "guided.firstSeed.energySpentBody" },
+      copy: { titleKey: "guided.firstSeed.lioraInvokedTitle", bodyKey: "guided.firstSeed.lioraInvokedBody" },
       highlights: [
         { kind: "surface", anchor: "player.sources" },
-        { kind: "card", alias: "maela" },
-        { kind: "card", alias: "vaelor" },
+        { kind: "card", alias: "liora" },
       ],
       preconditions: [{ kind: "card.inZone", cardAlias: "liora", side: "player", zone: "field" }],
-      nextStepId: "explain-liora-stabilizing",
-    },
-    {
-      id: "explain-liora-stabilizing",
-      kind: "explain",
-      copy: { titleKey: "guided.firstSeed.lioraStabilizingTitle", bodyKey: "guided.firstSeed.lioraStabilizingBody" },
-      highlights: [{ kind: "card", alias: "liora" }],
       nextStepId: "continue-second-preparation",
     },
     {
@@ -265,33 +252,29 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
       id: "draw-heirs-shield",
       kind: "observe",
       callout: "hidden",
-      copy: { titleKey: "guided.firstSeed.drawShieldTitle", bodyKey: "guided.firstSeed.drawShieldBody" },
+      copy: { titleKey: "guided.firstSeed.checkpointTitle", bodyKey: "guided.firstSeed.checkpointBody" },
       highlights: [
         { kind: "surface", anchor: "player.archive", role: "origin" },
         { kind: "surface", anchor: "player.hand", role: "destination" },
       ],
       expectedReceipt: { kind: "player.drew", targetAliases: ["heirs_shield"], amount: 1, reason: "setup" },
-      nextStepId: "explain-energy-refreshed",
+      nextStepId: "explain-third-preparation",
     },
     {
-      id: "explain-energy-refreshed",
+      // The draw, the ready Sources and the end of Stabilizing are all the same observation, and
+      // this is where Reserve is named before the player is asked to create one.
+      id: "explain-third-preparation",
       kind: "explain",
-      copy: { titleKey: "guided.firstSeed.energyRefreshedTitle", bodyKey: "guided.firstSeed.energyRefreshedBody" },
+      copy: { titleKey: "guided.firstSeed.thirdPreparationTitle", bodyKey: "guided.firstSeed.thirdPreparationBody" },
       highlights: [
         { kind: "surface", anchor: "setup.progress" },
         { kind: "surface", anchor: "player.sources" },
+        { kind: "card", alias: "liora" },
       ],
       preconditions: [
         { kind: "setup.remaining", amount: 1 },
         { kind: "card.inZone", cardAlias: "heirs_shield", side: "player", zone: "hand" },
       ],
-      nextStepId: "explain-liora-ready",
-    },
-    {
-      id: "explain-liora-ready",
-      kind: "explain",
-      copy: { titleKey: "guided.firstSeed.lioraReadyTitle", bodyKey: "guided.firstSeed.lioraReadyBody" },
-      highlights: [{ kind: "card", alias: "liora" }],
       nextStepId: "activate-liora",
     },
     {
@@ -305,18 +288,22 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
         abilityId: "liora_keeper_of_the_grove_gain_energy",
       },
       preconditions: [{ kind: "energy.stored", amount: 0 }],
-      nextStepId: "explain-extra-energy",
+      nextStepId: "observe-liora-action",
     },
     {
-      id: "explain-extra-energy",
-      kind: "explain",
-      copy: { titleKey: "guided.firstSeed.extraEnergyTitle", bodyKey: "guided.firstSeed.extraEnergyBody" },
-      highlights: [
-        { kind: "surface", anchor: "player.reserve" },
-        { kind: "surface", anchor: "player.sources" },
-        { kind: "card", alias: "maela" },
-      ],
-      preconditions: [{ kind: "energy.stored", amount: 1 }],
+      // Making the Reserve and spending it are one idea, so this checkpoint only holds the transfer
+      // animation before the Invocation step states the arithmetic.
+      //
+      // It declares no preconditions on purpose. An observe step is entered the moment the action's
+      // receipt lands, so its preconditions are checked before its own beat has resolved: asserting
+      // the Reserve here would race the `energy.flow` animation. The state this checkpoint waits for
+      // is asserted by "play-maela", which is only entered once the presentation has settled.
+      id: "observe-liora-action",
+      kind: "observe",
+      callout: "hidden",
+      copy: { titleKey: "guided.firstSeed.checkpointTitle", bodyKey: "guided.firstSeed.checkpointBody" },
+      highlights: [{ kind: "surface", anchor: "player.reserve" }],
+      expectedReceipt: { kind: "ability.activated", cardAlias: "liora" },
       nextStepId: "play-maela",
     },
     {
@@ -328,38 +315,35 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
         { kind: "surface", anchor: "player.field", role: "destination" },
       ],
       allowedIntent: { kind: "card.play", cardAlias: "maela" },
-      preconditions: [{ kind: "energy.stored", amount: 1 }],
+      preconditions: [
+        { kind: "energy.stored", amount: 1 },
+        { kind: "card.inZone", cardAlias: "maela", side: "player", zone: "hand" },
+      ],
       nextStepId: "observe-maela-entry",
     },
     {
       id: "observe-maela-entry",
       kind: "observe",
       callout: "hidden",
-      copy: { titleKey: "guided.firstSeed.echoEnteringTitle", bodyKey: "guided.firstSeed.echoEnteringBody" },
+      copy: { titleKey: "guided.firstSeed.checkpointTitle", bodyKey: "guided.firstSeed.checkpointBody" },
       highlights: [{ kind: "surface", anchor: "player.field" }],
       expectedReceipt: { kind: "card.played", cardAlias: "maela" },
       preconditions: [{ kind: "card.inZone", cardAlias: "maela", side: "player", zone: "field" }],
-      nextStepId: "explain-maela-skyguard",
-    },
-    {
-      id: "explain-maela-skyguard",
-      kind: "explain",
-      copy: { titleKey: "guided.firstSeed.maelaSkyguardTitle", bodyKey: "guided.firstSeed.maelaSkyguardBody" },
-      highlights: [{ kind: "card", alias: "maela" }],
-      preconditions: [
-        { kind: "card.inZone", cardAlias: "maela", side: "player", zone: "field" },
-        { kind: "energy.stored", amount: 0 },
-      ],
       nextStepId: "preparation-ready",
     },
     {
+      // Skyguard and the closing summary share the last checkpoint: the trait is what makes the
+      // finished defense worth reading, not a separate rule to memorise.
       id: "preparation-ready",
       kind: "explain",
       copy: { titleKey: "guided.firstSeed.readyTitle", bodyKey: "guided.firstSeed.readyBody" },
       highlights: [
-        { kind: "surface", anchor: "setup.progress" },
-        { kind: "card", alias: "liora" },
         { kind: "card", alias: "maela" },
+        { kind: "card", alias: "liora" },
+      ],
+      preconditions: [
+        { kind: "card.inZone", cardAlias: "maela", side: "player", zone: "field" },
+        { kind: "energy.stored", amount: 0 },
       ],
     },
   ],

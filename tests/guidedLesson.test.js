@@ -26,7 +26,7 @@ const HOST_CARD = (id) => `${HOST_DECK}/${id}`;
 test("First Seed teaches its exact three-step Preparation sequence and stops after Maela", () => {
   assert.deepEqual(validateGuidedLesson(FIRST_SEED_LESSON, contentCatalog), []);
   assert.equal(BASIC_TUTORIAL_LESSON_ID, FIRST_SEED_LESSON.id);
-  assert.equal(guidedLessonRegistry.require(BASIC_TUTORIAL_LESSON_ID).revision, 2);
+  assert.equal(guidedLessonRegistry.require(BASIC_TUTORIAL_LESSON_ID).revision, 3);
   assert.equal(guidedLessonRegistry.require(BASIC_TUTORIAL_LESSON_ID).mode, "required");
   const built = buildGuidedScenario(FIRST_SEED_LESSON, contentCatalog);
   const id = (alias) => built.bindings[alias].instanceId;
@@ -72,10 +72,25 @@ test("First Seed teaches its exact three-step Preparation sequence and stops aft
   assert.equal(game.setupTurnsRemaining, 1);
 });
 
+const firstSeedChain = () => {
+  const byId = new Map(FIRST_SEED_LESSON.steps.map((step) => [step.id, step]));
+  const chain = [];
+  let current = FIRST_SEED_LESSON.startStepId;
+  while (current) {
+    const step = byId.get(current);
+    chain.push(step);
+    current = step.nextStepId;
+  }
+  assert.equal(chain.length, FIRST_SEED_LESSON.steps.length);
+  return chain;
+};
+
+const isSilentCheckpoint = (step) => step.kind === "observe" && step.callout === "hidden";
+
 test("First Seed plays each Source before explaining the Energy it generated", () => {
   const step = (id) => FIRST_SEED_LESSON.steps.find((candidate) => candidate.id === id);
   const firstAction = step("play-first-source");
-  assert.equal(translate("es", firstAction.copy.bodyKey), "Juega la Fuente iluminada en tu Campo.");
+  assert.match(translate("es", firstAction.copy.bodyKey), /Arrastra la Fuente iluminada a tu Campo\.$/u);
   assert.deepEqual(firstAction.highlights.at(-1), { kind: "surface", anchor: "player.field", role: "destination" });
   assert.equal(firstAction.nextStepId, "observe-first-source");
 
@@ -86,30 +101,75 @@ test("First Seed plays each Source before explaining the Energy it generated", (
 
   const explanation = step("explain-source-energy");
   assert.deepEqual(explanation.highlights, [{ kind: "surface", anchor: "player.sources" }]);
-  assert.match(translate("es", explanation.copy.bodyKey), /^Esta Fuente generó 1 de Energía\./u);
 
   const secondAction = step("play-second-source");
-  assert.equal(translate("es", secondAction.copy.bodyKey), "Juega la segunda Fuente iluminada en tu Campo.");
+  assert.match(translate("es", secondAction.copy.bodyKey), /Juega la Fuente iluminada en tu Campo\.$/u);
   assert.deepEqual(secondAction.highlights.at(-1), { kind: "surface", anchor: "player.field", role: "destination" });
-  assert.equal(secondAction.nextStepId, "observe-second-source");
   assert.deepEqual(step("observe-second-source").highlights, [{ kind: "surface", anchor: "player.sources" }]);
-  assert.equal(
-    step("explain-liora-affordable").highlights.some((highlight) => highlight.kind === "card" && /source/u.test(highlight.alias)),
-    false,
-  );
 
-  const lioraAction = step("play-liora");
-  assert.equal(lioraAction.nextStepId, "observe-liora-entry");
   assert.deepEqual(step("observe-liora-entry").highlights, [{ kind: "surface", anchor: "player.field" }]);
   assert.deepEqual(step("observe-liora-entry").expectedReceipt, { kind: "card.played", cardAlias: "liora" });
   assert.equal(
-    step("explain-energy-spent").highlights.some((highlight) => highlight.kind === "card" && /source/u.test(highlight.alias)),
+    step("explain-liora-invoked").highlights.some((highlight) => highlight.kind === "card" && /source/u.test(highlight.alias)),
     false,
   );
 
   assert.equal(step("play-maela").nextStepId, "observe-maela-entry");
   assert.deepEqual(step("observe-maela-entry").highlights, [{ kind: "surface", anchor: "player.field" }]);
   assert.deepEqual(step("observe-maela-entry").expectedReceipt, { kind: "card.played", cardAlias: "maela" });
+});
+
+// Two actions that form a single idea — pay, then spend — must stay back to back. Only a silent
+// checkpoint may sit between them, so the player is never asked to read before finishing the idea.
+test("First Seed chains paired actions through silent checkpoints", () => {
+  const byId = new Map(FIRST_SEED_LESSON.steps.map((step) => [step.id, step]));
+  for (const [action, checkpoint, next] of [
+    ["play-second-source", "observe-second-source", "play-liora"],
+    ["activate-liora", "observe-liora-action", "play-maela"],
+  ]) {
+    assert.equal(byId.get(action).kind, "act");
+    assert.equal(byId.get(action).nextStepId, checkpoint);
+    assert.equal(isSilentCheckpoint(byId.get(checkpoint)), true);
+    assert.equal(byId.get(checkpoint).nextStepId, next);
+    assert.equal(byId.get(next).kind, "act");
+  }
+
+  for (const silent of FIRST_SEED_LESSON.steps.filter(isSilentCheckpoint)) {
+    assert.deepEqual(silent.copy, {
+      titleKey: "guided.firstSeed.checkpointTitle",
+      bodyKey: "guided.firstSeed.checkpointBody",
+    });
+  }
+});
+
+// An observe step is entered as soon as the action's receipt lands, so its preconditions run before
+// its own beat resolves. Energy arrives with the beat, so asserting it there races the animation and
+// aborts the lesson. Such state belongs on the next authored step, entered after the settle.
+test("First Seed observe checkpoints never assert state their own beat produces", () => {
+  for (const step of FIRST_SEED_LESSON.steps) {
+    if (step.kind !== "observe") continue;
+    for (const condition of step.preconditions ?? []) {
+      assert.ok(
+        !condition.kind.startsWith("energy."),
+        `Observe step "${step.id}" asserts ${condition.kind} before its beat has resolved.`,
+      );
+    }
+  }
+});
+
+// Pacing guard against re-inflating the script: the lesson may never stack three callouts in a row.
+test("First Seed never stacks more than two callouts between actions", () => {
+  let consecutive = 0;
+  let longest = 0;
+  let visible = 0;
+  for (const step of firstSeedChain()) {
+    if (isSilentCheckpoint(step)) continue;
+    visible += 1;
+    consecutive = step.kind === "explain" ? consecutive + 1 : 0;
+    longest = Math.max(longest, consecutive);
+  }
+  assert.ok(longest <= 2, `First Seed shows ${longest} callouts in a row.`);
+  assert.ok(visible <= 15, `First Seed shows ${visible} visible steps.`);
 });
 
 test("guided Spanish labels preserve real accented characters", () => {
