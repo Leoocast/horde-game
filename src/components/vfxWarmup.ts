@@ -4,6 +4,10 @@ import {
   BURN_FIREBALL_VERTEX_SHADER,
   BURN_MAX_ROUTES,
 } from "./burnFireball";
+import {
+  DESTINY_VORTEX_FRAGMENT_SHADER,
+  DESTINY_VORTEX_VERTEX_SHADER,
+} from "./destinyVortexShader";
 import { warmSharedVfxFrame } from "./sharedVfxRenderer";
 
 type WarmupFrame = {
@@ -161,8 +165,37 @@ function createBurnFrame(): WarmupFrame {
   return { scene, camera: new THREE.Camera(), outputEncoding: THREE.LinearEncoding };
 }
 
+/** El agujero negro de las Semillas del Destino sólo aparece al reescribir, así que compilarlo
+ * durante la carga evita que ese primer fotograma pague la compilación en pantalla. */
+function createDestinyVortexFrame(): WarmupFrame {
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      uRes: { value: new THREE.Vector2(64, 64) },
+      uPixelRatio: { value: 1 },
+      uTime: { value: 0 },
+      uSpin: { value: 0 },
+      uCollapse: { value: 0 },
+      uBurst: { value: 0 },
+      uCenter: { value: new THREE.Vector2(32, 32) },
+      uRadius: { value: 8 },
+      uDisk: { value: new THREE.Vector3(1, 0.78, 0.34) },
+      uRim: { value: new THREE.Vector3(0.34, 0.82, 0.78) },
+      uCore: { value: new THREE.Vector3(1, 0.96, 0.86) },
+    },
+    vertexShader: DESTINY_VORTEX_VERTEX_SHADER,
+    fragmentShader: DESTINY_VORTEX_FRAGMENT_SHADER,
+    transparent: true,
+    premultipliedAlpha: true,
+    depthTest: false,
+    depthWrite: false,
+  });
+  const scene = new THREE.Scene();
+  scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
+  return { scene, camera: new THREE.Camera(), outputEncoding: THREE.LinearEncoding };
+}
+
 function createWarmupFrames(): WarmupFrame[] {
-  return [createBuiltinMaterialFrame(), createBurnFrame()];
+  return [createBuiltinMaterialFrame(), createBurnFrame(), createDestinyVortexFrame()];
 }
 
 /** Traslada al loading la creación del contexto, el framebuffer y los shaders usados en juego. */

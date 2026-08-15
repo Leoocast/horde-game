@@ -517,6 +517,7 @@ const SHARED_RENDERER_ANIMATORS = [
   "BloodSiphonAnimator",
   "BuffSurgeAnimator",
   "BurnAnimator",
+  "DestinyRewriteTransition",
   "DrainEssenceAnimator",
   "FinalBanquetAnimator",
   "GrowthBuffAnimator",

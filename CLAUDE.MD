@@ -129,7 +129,7 @@ Contratos desktop vigentes:
   `extraResources`, Card Studio/Playground no se empaquetan y los gates automáticos son
   `electron:verify` + `electron:smoke`.
 - La carga llama `prewarmGameVfx`: crea el único renderer WebGL, reserva el framebuffer y compila
-  Burn, Phong, Basic, Sprite y Line antes del primer efecto visible. Sus escenas mínimas quedan
+  Burn, el vórtice del Destino, Phong, Basic, Sprite y Line antes del primer efecto visible. Sus escenas mínimas quedan
   retenidas para conservar los programas GPU; no crear renderers nuevos en los animadores.
 - Fase 4 separa `profile/preferences-v1.json`, `profile/saves/resume-v1.json` y el local-only
   `local/window-state-v1.json`. El contrato, backups, recuperación, Cloud-worthy data y checkpoints
@@ -409,6 +409,13 @@ seed nueva. Ajustes in-game no vuelve a mostrar, editar ni regenerar la seed. Vi
 reutilizan la misma identidad y las mismas dos salidas. El reset o cambio de pantalla ocurre cuando
 el vórtice global ya cubrió el tablero; la transición vive sobre `App` para sobrevivir al remount de
 `Board` y tiene fallback de movimiento reducido.
+
+El vórtice es un agujero negro dibujado por el renderer WebGL compartido: `destinyVortexShader.ts`
+resuelve en un solo plano el horizonte, el disco de acreción, el anillo de fotones, la materia que
+cae en espiral y la descarga de brasas de la liberación. Su reloj llega en dos tiempos separados,
+`uCollapse` y `uBurst`, para que cubrir, reescribir y liberar sigan siendo momentos distintos. El
+lienzo permanece oculto hasta copiar su primer frame válido; con movimiento reducido o sin contexto
+WebGL queda la silueta quieta `.destiny-vortex-still`.
 
 El historial de intentos y la futura biblioteca de Semillas siguen bosquejados en
 `docs/plans/seeds_of_destiny.md`; no están implementados. El seed literal `developer` queda

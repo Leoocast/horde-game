@@ -52,6 +52,14 @@ Implementaciones utiles como referencia:
   `ClassicBurnAnimator.tsx` conserva el renderer DOM/CSS anterior como referencia legada, pero
   ninguna carta registrada lo selecciona. Detalles de forma y estela en
   `docs/reference/animation_contracts.md`.
+- `DestinyRewriteTransition.tsx`: el vortice de las Semillas del Destino es un agujero negro
+  dibujado por el mismo renderer compartido. Un unico plano a pantalla completa resuelve horizonte
+  opaco, disco de acrecion con giro kepleriano y brillo Doppler, arco lensado, anillo de fotones,
+  materia que cae en espiral estirandose al filo, y la descarga final de brasas con destello y onda
+  de choque. El GLSL vive aparte en `destinyVortexShader.ts` y recibe dos relojes separados,
+  `uCollapse` y `uBurst`, para no mezclar cubrir la escena con liberar el nuevo futuro; el giro se
+  acumula por delta time. No es un animador de carta: no consulta store ni engine, solo presenta la
+  transicion que `App` ya decidio.
 
 Para cualquier efecto nuevo:
 
