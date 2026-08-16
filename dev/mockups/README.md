@@ -14,6 +14,12 @@ Sirve esta carpeta en `http://127.0.0.1:4321`. También hay una entrada `mockups
 `.claude/launch.json`. Los archivos se pueden abrir directamente con doble clic, pero el servidor
 evita las restricciones de `file://`.
 
+Las maquetas que suben una imagen como textura WebGL **sólo funcionan servidas**: una imagen cargada
+desde `file://` tiene origen opaco y `texImage2D` la rechaza. Por eso `serve.mjs` expone además el
+alias de sólo lectura `/vendor/three.min.js`, que resuelve al Three.js de `node_modules`: la ruta
+relativa `../../../node_modules/...` sirve al abrir con doble clic, pero cae fuera de la raíz del
+servidor. Las maquetas WebGL prueban las dos rutas en ese orden.
+
 ## Estructura
 
 ```text

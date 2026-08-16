@@ -18,17 +18,30 @@ const TYPES = {
   ".js": "text/javascript; charset=utf-8",
   ".mjs": "text/javascript; charset=utf-8",
   ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
   ".woff2": "font/woff2",
   ".json": "application/json; charset=utf-8",
 };
+
+// Excepción explícita y de sólo lectura. Las maquetas WebGL comparten el Three.js
+// del repositorio en vez de vendorizar una copia dentro de dev/mockups; abiertas con
+// doble clic les basta la ruta relativa a node_modules, pero servidas por HTTP esa
+// ruta cae fuera de ROOT. Sólo se expone este archivo concreto, nunca el directorio.
+const ALIASES = new Map([
+  ["vendor/three.min.js", resolve(ROOT, "..", "..", "node_modules", "three", "build", "three.min.js")],
+]);
 
 createServer(async (req, res) => {
   const requested = decodeURIComponent((req.url ?? "/").split("?")[0]);
   const relative = normalize(requested === "/" ? "/index.html" : requested).replace(/^([/\\])+/, "");
 
   // normalize() ya colapsó los "..", pero el prefijo se verifica igual antes de leer.
-  const target = join(ROOT, relative);
-  if (!target.startsWith(ROOT)) {
+  const alias = ALIASES.get(relative.split("\\").join("/"));
+  const target = alias ?? join(ROOT, relative);
+  if (!alias && !target.startsWith(ROOT)) {
     res.writeHead(403).end("Fuera de dev/mockups");
     return;
   }

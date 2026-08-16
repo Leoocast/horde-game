@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hostfall — Futuro quebrado</title>
+    <title>Hostfall — Futuro quebrado II</title>
     <style>
       @font-face {
         font-family: "Cinzel";
@@ -55,9 +55,11 @@
         letter-spacing: 0.15em; text-transform: uppercase;
       }
       button:hover { border-color: rgb(214 192 122 / 0.72); color: var(--gold-bright); }
+      button[aria-pressed="true"] { border-color: rgb(214 192 122 / 0.62); color: var(--gold-bright); }
       button:focus-visible, input:focus-visible { outline: 2px solid rgb(234 210 133 / 0.9); outline-offset: 2px; }
       label { color: #788985; font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
       input { width: 210px; padding: 0 12px; color: var(--gold-bright); font-size: 13px; letter-spacing: 0.06em; }
+      .spacer { flex: 1; }
 
       .stage {
         position: relative; overflow: hidden; aspect-ratio: 16 / 9; isolation: isolate;
@@ -65,7 +67,7 @@
       }
       .frozen-screen {
         position: absolute; z-index: 0; inset: 0; background: var(--snapshot) center / 100% 100% no-repeat;
-        transform: scale(1.001); transform-origin: center; transition: opacity 360ms ease-out, filter 240ms ease-out;
+        transform: scale(1.001); transform-origin: center; transition: opacity 170ms ease-out, filter 170ms ease-out;
       }
       .stage.playing .frozen-screen { animation: freeze-frame 680ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
       .stage.burst .frozen-screen { opacity: 0; filter: none; }
@@ -81,39 +83,45 @@
       .stage.playing .time-lock { animation: time-lock 720ms ease-out both; }
       .stage.burst .time-lock { opacity: 0; transition: opacity 180ms ease-out; }
 
+      /* ---------- fondo cósmico ---------- */
       .cosmic-field {
         position: absolute; z-index: 2; inset: 0; overflow: hidden; opacity: 0; pointer-events: none;
-        background: #000207;
-        transition: opacity 360ms ease-out;
+        background: #010308;
+        transition: opacity 480ms ease-out;
       }
       .stage.burst .cosmic-field { opacity: 1; }
       .cosmic-field canvas { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; }
       .cosmic-field::after {
         position: absolute; z-index: 1; inset: 0; content: ""; pointer-events: none;
         background:
-          radial-gradient(ellipse at 52% 46%, rgb(0 2 6 / 0.92) 0 25%, rgb(0 3 7 / 0.74) 43%, transparent 68%),
-          radial-gradient(ellipse at center, transparent 41%, rgb(0 1 5 / 0.58) 100%);
+          radial-gradient(ellipse at 52% 46%, rgb(0 2 6 / 0.62) 0 15%, transparent 46%),
+          radial-gradient(ellipse at center, transparent 46%, rgb(0 1 4 / 0.5) 100%);
       }
-      .cosmic-field svg { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; }
-      .cosmic-field .degree-ring,
-      .cosmic-field .orbit,
-      .cosmic-field .arc { fill: none; vector-effect: non-scaling-stroke; }
-      .cosmic-field .degree-ring { stroke: rgb(119 187 187 / 0.11); stroke-width: 1; }
-      .cosmic-field .arc { stroke: rgb(211 172 92 / 0.1); stroke-width: 1; }
-      .cosmic-field .orbit {
-        stroke: rgb(115 192 197 / 0.09); stroke-width: 1; stroke-dasharray: 3 11;
-        animation: orbit-drift 24s linear infinite;
-      }
-      .cosmic-field .orbit.gold { stroke: rgb(212 170 83 / 0.1); animation-duration: 31s; animation-direction: reverse; }
-      .cosmic-field .tick { stroke: rgb(223 193 119 / 0.2); stroke-width: 1; vector-effect: non-scaling-stroke; }
-      .cosmic-field .dust { fill: rgb(193 229 226 / 0.28); }
-      .cosmic-field text {
-        fill: rgb(166 204 200 / 0.48); font: 500 10px/1 Consolas, "Courier New", monospace;
-        letter-spacing: 0.12em;
-      }
-      .cosmic-field .degree { fill: rgb(222 193 118 / 0.46); font-size: 9px; }
-      .cosmic-field .readout-strong { fill: rgb(233 201 122 / 0.62); }
 
+      .instruments { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; transition: opacity 300ms ease; }
+      .stage.bare .instruments { opacity: 0; }
+      .instruments .ring,
+      .instruments .orbit,
+      .instruments .arc { fill: none; vector-effect: non-scaling-stroke; }
+      .instruments .ring { stroke: rgb(119 187 187 / 0.08); stroke-width: 1; }
+      .instruments .arc { stroke: rgb(211 172 92 / 0.075); stroke-width: 1; }
+      .instruments .orbit {
+        stroke: rgb(115 192 197 / 0.065); stroke-width: 1; stroke-dasharray: 3 13;
+        animation: orbit-drift 34s linear infinite;
+      }
+      .instruments .orbit.gold { stroke: rgb(212 170 83 / 0.075); animation-duration: 47s; animation-direction: reverse; }
+      .instruments .spin-slow { animation: field-spin 300s linear infinite; transform-origin: 0 0; }
+      .instruments .spin-back { animation: field-spin 380s linear infinite reverse; transform-origin: 0 0; }
+      .instruments .tick { stroke: rgb(223 193 119 / 0.15); stroke-width: 1; vector-effect: non-scaling-stroke; }
+      .instruments .dust { fill: rgb(193 229 226 / 0.2); }
+      .instruments text {
+        fill: rgb(166 204 200 / 0.32); font: 500 9px/1 Consolas, "Courier New", monospace;
+        letter-spacing: 0.14em;
+      }
+      .instruments .degree { fill: rgb(222 193 118 / 0.26); font-size: 8px; }
+      .instruments .readout-strong { fill: rgb(233 201 122 / 0.46); }
+
+      /* ---------- vidrio ---------- */
       .fractures {
         position: absolute; z-index: 4; inset: 0; width: 100%; height: 100%; pointer-events: none;
         filter: drop-shadow(0 0 3px rgb(185 222 221 / 0.46));
@@ -135,10 +143,9 @@
       .stage.burst .impact { animation: impact-burst 640ms ease-out both; }
 
       .shard-layer {
-        position: absolute; z-index: 3; inset: 0; perspective: 780px; perspective-origin: 52% 46%;
+        position: absolute; z-index: 3; inset: 0; perspective: 1200px; perspective-origin: 52% 46%;
         pointer-events: none; transform-style: preserve-3d;
       }
-      .stage:not(.burst) .shard-layer { z-index: 0; }
       .glass-shard {
         position: absolute; opacity: 0; transform-style: preserve-3d; backface-visibility: visible;
         background-image:
@@ -151,9 +158,6 @@
           drop-shadow(0 0 8px rgb(223 174 74 / 0.28));
         will-change: transform, opacity;
       }
-      .stage:not(.burst) .glass-shard { background-image: var(--snapshot); background-blend-mode: normal; filter: none; }
-      .stage:not(.burst) .glass-shard::before,
-      .stage:not(.burst) .glass-shard::after { opacity: 0; }
       .glass-shard::before,
       .glass-shard::after {
         position: absolute; inset: 0; content: "";
@@ -178,8 +182,9 @@
           linear-gradient(180deg, rgb(3 8 9 / 0.12), rgb(0 3 4 / 0.46));
         opacity: 0.22; transition: opacity 700ms ease;
       }
-      .stage.burst .vignette { opacity: 0.72; }
+      .stage.burst .vignette { opacity: 0.64; }
 
+      /* ---------- desenlace ---------- */
       .outcome {
         position: absolute; z-index: 8; left: 50%; top: 50%; width: min(820px, 94%);
         display: grid; justify-items: center; gap: 8px; text-align: center; pointer-events: none;
@@ -187,7 +192,7 @@
       }
       .outcome::before {
         position: absolute; z-index: -1; inset: -34% -20%; content: "";
-        background: radial-gradient(ellipse, rgb(1 5 7 / 0.94) 0 31%, rgb(2 8 10 / 0.72) 52%, transparent 74%);
+        background: radial-gradient(ellipse, rgb(1 4 6 / 0.95) 0 31%, rgb(1 6 8 / 0.76) 52%, transparent 74%);
         filter: blur(12px);
       }
       .stage.revealed .outcome { animation: outcome-in 460ms ease-out both; }
@@ -229,7 +234,7 @@
         position: relative; display: grid; justify-items: center; gap: 2px; min-width: min(390px, 88%);
         margin-top: 11px; padding: 10px 24px 9px; opacity: 0;
         border-top: 1px solid rgb(172 119 84 / 0.52); border-bottom: 1px solid rgb(109 145 146 / 0.34);
-        background: linear-gradient(90deg, transparent, rgb(4 11 13 / 0.92) 17% 83%, transparent);
+        background: linear-gradient(90deg, transparent, rgb(3 9 11 / 0.92) 17% 83%, transparent);
       }
       .future-plate span {
         color: #c8d9d5; font: 800 11px/1.2 "Cinzel", var(--serif); letter-spacing: 0.26em; text-transform: uppercase;
@@ -254,6 +259,7 @@
       .notes ul { max-width: 74ch; margin: 0; padding-left: 20px; }
       .notes li { margin-bottom: 9px; }
       .notes b { color: var(--gold-bright); font-weight: 600; }
+      .notes code { color: var(--cold); font-size: 13px; }
 
       @keyframes freeze-frame {
         0% { filter: saturate(1) brightness(1); transform: scale(1.001); }
@@ -261,7 +267,8 @@
         100% { filter: saturate(1.04) contrast(1.08) brightness(0.9); transform: scale(1.003); }
       }
       @keyframes time-lock { 0% { opacity: 0; } 42% { opacity: 0.8; } 100% { opacity: 0.34; } }
-      @keyframes orbit-drift { to { stroke-dashoffset: -140; } }
+      @keyframes orbit-drift { to { stroke-dashoffset: -160; } }
+      @keyframes field-spin { to { transform: rotate(360deg); } }
       @keyframes glass-glint {
         0% { background-position: 125% 50%; opacity: 0.16; }
         44% { opacity: 0.52; }
@@ -286,7 +293,7 @@
         .stage.revealed .defeat-title::after, .stage.revealed .defeat-subtitle,
         .stage.revealed .future-plate { animation-delay: 0ms; animation-duration: 1ms; }
         .fractures, .impact, .shard-layer { display: none; }
-        .cosmic-field .orbit, .glass-shard::before { animation: none; }
+        .instruments .orbit, .instruments .spin-slow, .instruments .spin-back, .glass-shard::before { animation: none; }
       }
     </style>
   </head>
@@ -294,12 +301,14 @@
     <main>
       <header>
         <a class="back" href="../index.html">← Maquetas</a>
-        <div class="eyebrow">Semillas del Destino · desenlace quebrado</div>
-        <h1>Vidrio del Futuro</h1>
+        <div class="eyebrow">Semillas del Destino · desenlace quebrado · revisión II</div>
+        <h1>Vidrio del Futuro II</h1>
         <p>
-          El último estado del tablero queda <strong>detenido como una placa de memoria</strong>. La fractura
-          nace cerca del centro, convierte la captura en vidrio con profundidad y expulsa sus piezas antes
-          de revelar el desenlace de derrota.
+          Mismo vidrio y misma composición aprobados en la primera versión. Lo que cambia es el vacío que
+          queda detrás: la nebulosa <strong>fluye por deformación de dominio</strong> en vez de deslizarse en
+          bloque, tres capas de estrellas se mueven con paralaje propio y el impacto lanza un frente de choque
+          que atraviesa el cuadro. El conjunto se rebaja a <strong>un negro mucho más profundo</strong> y el
+          centelleo pasa a escalas de decenas de segundos, para que ninguna estrella parpadee.
         </p>
       </header>
 
@@ -307,14 +316,17 @@
         <button id="replay" type="button">Repetir</button>
         <label for="seed">Semilla</label>
         <input id="seed" type="text" value="748-203" spellcheck="false" />
+        <span class="spacer"></span>
+        <button id="toggleInstruments" type="button" aria-pressed="true">Instrumentos</button>
       </div>
 
       <div class="stage" id="stage" aria-live="polite">
         <div class="frozen-screen"></div>
         <div class="time-lock"></div>
+
         <div class="cosmic-field" aria-hidden="true">
           <canvas id="cosmicCanvas"></canvas>
-          <svg viewBox="0 0 1000 562" preserveAspectRatio="xMidYMid slice">
+          <svg class="instruments" viewBox="0 0 1000 562" preserveAspectRatio="xMidYMid slice">
             <g>
               <circle class="dust" cx="66" cy="87" r="1.3" />
               <circle class="dust" cx="142" cy="434" r="0.9" />
@@ -327,29 +339,25 @@
             </g>
 
             <g transform="translate(520 259)">
-              <circle class="degree-ring" r="226" pathLength="360" stroke-dasharray="1 14" />
-              <circle class="arc" r="211" pathLength="360" stroke-dasharray="31 18 6 37" />
-              <ellipse class="orbit" rx="340" ry="94" transform="rotate(-17)" />
-              <ellipse class="orbit gold" rx="302" ry="122" transform="rotate(29)" />
-              <ellipse class="orbit" rx="278" ry="69" transform="rotate(75)" style="animation-duration:18s" />
+              <g class="spin-slow">
+                <circle class="ring" r="252" pathLength="360" stroke-dasharray="1 16" />
+                <circle class="arc" r="300" pathLength="360" stroke-dasharray="37 21 5 43" />
+                <ellipse class="orbit" rx="360" ry="98" transform="rotate(-17)" />
+              </g>
+              <g class="spin-back">
+                <circle class="ring" r="300" pathLength="360" stroke-dasharray="2 27" />
+                <ellipse class="orbit gold" rx="318" ry="128" transform="rotate(29)" />
+                <ellipse class="orbit" rx="286" ry="70" transform="rotate(75)" style="animation-duration: 26s" />
+              </g>
 
-              <line class="tick" x1="0" y1="-239" x2="0" y2="-224" />
-              <line class="tick" x1="169" y1="-169" x2="158" y2="-158" />
-              <line class="tick" x1="239" y1="0" x2="224" y2="0" />
-              <line class="tick" x1="169" y1="169" x2="158" y2="158" />
-              <line class="tick" x1="0" y1="239" x2="0" y2="224" />
-              <line class="tick" x1="-169" y1="169" x2="-158" y2="158" />
-              <line class="tick" x1="-239" y1="0" x2="-224" y2="0" />
-              <line class="tick" x1="-169" y1="-169" x2="-158" y2="-158" />
-
-              <text class="degree" x="0" y="-233" text-anchor="middle">000° · N</text>
-              <text class="degree" x="182" y="-177">045°</text>
-              <text class="degree" x="248" y="4">090° · E</text>
-              <text class="degree" x="182" y="185">135°</text>
-              <text class="degree" x="0" y="249" text-anchor="middle">180° · S</text>
-              <text class="degree" x="-182" y="185" text-anchor="end">225°</text>
-              <text class="degree" x="-248" y="4" text-anchor="end">270° · O</text>
-              <text class="degree" x="-182" y="-177" text-anchor="end">315°</text>
+              <line class="tick" x1="0" y1="-322" x2="0" y2="-306" />
+              <line class="tick" x1="322" y1="0" x2="306" y2="0" />
+              <line class="tick" x1="0" y1="322" x2="0" y2="306" />
+              <line class="tick" x1="-322" y1="0" x2="-306" y2="0" />
+              <text class="degree" x="0" y="-330" text-anchor="middle">000° · N</text>
+              <text class="degree" x="332" y="4">090° · E</text>
+              <text class="degree" x="0" y="342" text-anchor="middle">180° · S</text>
+              <text class="degree" x="-332" y="4" text-anchor="end">270° · O</text>
             </g>
 
             <g>
@@ -358,11 +366,13 @@
               <text x="970" y="32" text-anchor="end">ASCENSIÓN INTERRUMPIDA</text>
               <text id="instrumentAzimuth" class="readout-strong" x="970" y="49" text-anchor="end">Ω 000°</text>
               <text x="30" y="528">PLANO ECLÍPTICO · COLAPSO</text>
-              <text id="instrumentFuture" class="readout-strong" x="970" y="528" text-anchor="end">FUTURO 000·000</text>
+              <text id="instrumentDrift" class="readout-strong" x="970" y="528" text-anchor="end">DERIVA 0.00</text>
             </g>
           </svg>
         </div>
+
         <div class="shard-layer" id="shards"></div>
+
         <svg class="fractures" viewBox="0 0 100 56.25" preserveAspectRatio="none" aria-hidden="true">
           <path pathLength="1" d="M52 26 L42 19 L31 11 L20 0" />
           <path pathLength="1" d="M42 19 L25 20 L0 17" />
@@ -377,6 +387,7 @@
           <path pathLength="1" d="M36 38 L17 37 L0 41" />
           <path pathLength="1" d="M52 26 L30 28 L15 25 L0 27" />
         </svg>
+
         <div class="impact"></div>
         <div class="vignette"></div>
 
@@ -402,20 +413,49 @@
 
       <section class="notes">
         <h2>Notas</h2>
-        <h3>Secuencia</h3>
+
+        <h3>Qué se conserva de la primera versión</h3>
         <ul>
-          <li><b>Detener:</b> la captura conserva su color pero pierde movimiento; un breve sello frío comunica que el intento terminó sin borrar el último estado del tablero.</li>
-          <li><b>Fracturar:</b> se recupera la primera malla concéntrica de triángulos, con pequeñas irregularidades deterministas según la semilla.</li>
-          <li><b>Expulsar:</b> una onda recorre los anillos desde el centro. Siete piezas centrales avanzan moderadamente hacia la cámara; las piezas que antes desaparecían retroceden y quedan suspendidas entre 90 y 210 px detrás del plano.</li>
-          <li><b>Revelar el abismo:</b> el centro no muestra una galaxia hermosa: es una ausencia casi negra. El shader conserva sólo estrellas moribundas, nubes que absorben la luz, filamentos fríos y rastros rojizos apenas visibles.</li>
-          <li><b>Nombrar:</b> «Futuro quebrado» aparece sólo cuando el centro queda despejado; la identidad completa permanece legible debajo.</li>
+          <li>El plan de fragmentos, el reparto de las placas y su asentamiento final son los mismos: diez
+            piezas grandes que se abren hacia ambos lados, dejan el centro despejado y conservan a color su
+            porción del tablero.</li>
+          <li>La composición del desenlace tampoco cambia: antetítulo, «Futuro quebrado» en dos líneas,
+            subtítulo y la placa de identidad con la semilla.</li>
+        </ul>
+
+        <h3>Movimiento del fondo</h3>
+        <ul>
+          <li><b>Nebulosa que fluye:</b> el campo de deformación se advecta con el tiempo y se refina en una
+            segunda pasada, así que las nubes se revuelven en lugar de deslizarse en bloque.</li>
+          <li><b>Paralaje real:</b> las tres capas de estrellas usan rotación y deriva propias; el cielo cercano
+            se mueve visiblemente más que el lejano.</li>
+          <li><b>Frente de choque:</b> en el impacto se emite un anillo que atraviesa el cuadro, dobla las
+            coordenadas a su paso y estira las estrellas en radial durante medio segundo.</li>
+          <li><b>Brasas:</b> motas doradas escasas suben a la deriva, muy tenues, para que el vacío nunca quede
+            del todo quieto una vez revelado el texto.</li>
+          <li><b>Respiración:</b> la nebulosa late en ciclos de casi un minuto y los dos anillos de instrumento
+            giran en sentidos contrarios en escalas de minutos.</li>
+        </ul>
+
+        <h3>Centelleo y oscuridad</h3>
+        <ul>
+          <li>El parpadeo rápido de las estrellas se corrigió por partida doble: la <b>frecuencia baja unas
+            cinco veces</b> (ciclos de 25 a 60 segundos, no de dos) y la <b>amplitud pasa de ±18 % a ±6 %</b>,
+            de modo que el brillo respira en vez de titilar. Las brasas hacen lo mismo.</li>
+          <li>El conjunto se rebajó bastante: base, nebulosa, venas y polvo pierden intensidad, el umbral de
+            nube sube para dejar más vacío, las estrellas bajan un tercio, el centro se apaga más y la gamma
+            final pasa de aclarar a oscurecer.</li>
+          <li>La viñeta del cuadro sube a 0.64 y el velo del centro se refuerza, así que el texto se apoya en
+            negro pleno.</li>
         </ul>
 
         <h3>Al llevarlo al juego</h3>
         <ul>
-          <li>La imagen temporal de esta maqueta se reemplaza por la captura real que ya produce <code>DefeatShatterAnimator</code>.</li>
-          <li>El plan de fragmentos debe seguir siendo determinista por semilla y dibujarse mediante el renderer WebGL compartido.</li>
-          <li>El texto es DOM estable y accesible; el vidrio es presentación y nunca decide el resultado de la partida.</li>
+          <li>La imagen de esta maqueta se reemplaza por la captura real de <code>DefeatShatterAnimator</code>;
+            aquí el shader y el vidrio son DOM/CSS sólo para iterar composición.</li>
+          <li>El plan de fragmentos sigue siendo determinista por semilla.</li>
+          <li>El texto sigue siendo DOM estable y accesible; el vidrio es presentación y nunca decide el
+            resultado de la partida.</li>
         </ul>
       </section>
     </main>
@@ -431,19 +471,27 @@
         var clock = document.getElementById("clock");
         var fill = document.getElementById("fill");
         var replay = document.getElementById("replay");
+        var toggleInstruments = document.getElementById("toggleInstruments");
         var cosmicCanvas = document.getElementById("cosmicCanvas");
         var instrumentTime = document.getElementById("instrumentTime");
         var instrumentAzimuth = document.getElementById("instrumentAzimuth");
-        var instrumentFuture = document.getElementById("instrumentFuture");
+        var instrumentDrift = document.getElementById("instrumentDrift");
 
         var BURST_AT = 1160;
-        var REVEAL_AT = 2460;
+        var REVEAL_AT = 2360;
         var TOTAL_MS = 4600;
         var IMPACT = { x: 0.52, y: 0.46 };
+
         var epoch = 0;
         var raf = 0;
         var timers = [];
 
+        // Reloj compartido entre la escena DOM y el shader.
+        var playback = { startedAt: performance.now(), signature: 0.5 };
+
+        /* ------------------------------------------------------------------ *
+         * Fondo cósmico
+         * ------------------------------------------------------------------ */
         function initCosmicField() {
           var gl = cosmicCanvas.getContext("webgl", {
             alpha: false,
@@ -460,10 +508,15 @@
             "  gl_Position = vec4(a_position, 0.0, 1.0);",
             "}"
           ].join("\n");
+
           var fragmentSource = [
             "precision highp float;",
             "uniform vec2 u_resolution;",
             "uniform float u_time;",
+            "uniform float u_seed;",
+            "uniform float u_shock;",   // 0 -> 1: radio del frente de choque
+            "uniform float u_burst;",   // envolvente decreciente del impulso
+            "",
             "float hash21(vec2 p) {",
             "  p = fract(p * vec2(123.34, 345.45));",
             "  p += dot(p, p + 34.345);",
@@ -472,6 +525,10 @@
             "vec2 hash22(vec2 p) {",
             "  float n = hash21(p);",
             "  return vec2(n, hash21(p + n + 19.19));",
+            "}",
+            "mat2 rot(float a) {",
+            "  float c = cos(a); float s = sin(a);",
+            "  return mat2(c, -s, s, c);",
             "}",
             "float valueNoise(vec2 p) {",
             "  vec2 i = floor(p);",
@@ -485,62 +542,115 @@
             "}",
             "float fbm(vec2 p) {",
             "  float value = 0.0;",
-            "  float amplitude = 0.54;",
+            "  float amplitude = 0.56;",
             "  mat2 turn = mat2(0.82, -0.57, 0.57, 0.82);",
-            "  for (int i = 0; i < 5; i++) {",
+            "  for (int i = 0; i < 4; i++) {",
             "    value += amplitude * valueNoise(p);",
-            "    p = turn * p * 2.03 + vec2(17.13, 9.71);",
-            "    amplitude *= 0.48;",
+            "    p = turn * p * 2.06 + vec2(17.13, 9.71);",
+            "    amplitude *= 0.49;",
             "  }",
             "  return value;",
             "}",
-            "float starLayer(vec2 p, float scale, float gate) {",
+            // Capa de estrellas. El centelleo es lento y de poca amplitud a propósito:
+            // a frecuencias altas el cielo parpadea y delata que es un shader.
+            "float starLayer(vec2 p, float scale, float gate, float speed) {",
             "  vec2 grid = p * scale;",
             "  vec2 id = floor(grid);",
             "  vec2 cell = fract(grid) - 0.5;",
-            "  float seed = hash21(id);",
+            "  float seed = hash21(id + u_seed * 13.7);",
             "  vec2 shift = (hash22(id + 7.31) - 0.5) * 0.7;",
-            "  float distanceToStar = length(cell - shift);",
-            "  float core = (1.0 - smoothstep(0.0, 0.038, distanceToStar)) * step(gate, seed);",
-            "  float halo = (1.0 - smoothstep(0.0, 0.13, distanceToStar)) * step(0.993, seed) * 0.28;",
-            "  float twinkle = 0.9 + 0.1 * sin(u_time * 0.22 + seed * 6.2831);",
+            "  float d = length(cell - shift);",
+            "  float core = (1.0 - smoothstep(0.0, 0.038, d)) * step(gate, seed);",
+            "  float halo = (1.0 - smoothstep(0.0, 0.13, d)) * step(0.9945, seed) * 0.26;",
+            "  float twinkle = 0.94 + 0.06 * sin(u_time * speed + seed * 6.2831);",
             "  return (core + halo) * twinkle;",
+            "}",
+            // Brasas escasas que ascienden a la deriva, con la misma regla de lentitud.
+            "float embers(vec2 p, float scale, float speed) {",
+            "  vec2 q = p * scale;",
+            "  q.y += u_time * speed;",
+            "  q.x += sin(u_time * 0.07 + q.y * 0.42) * 0.5;",
+            "  vec2 id = floor(q);",
+            "  vec2 cell = fract(q) - 0.5;",
+            "  float seed = hash21(id + 41.3 + u_seed * 5.1);",
+            "  vec2 shift = (hash22(id + 3.17) - 0.5) * 0.8;",
+            "  float d = length(cell - shift);",
+            "  float mote = (1.0 - smoothstep(0.0, 0.07, d)) * step(0.988, seed);",
+            "  float flicker = 0.72 + 0.28 * sin(u_time * 0.31 + seed * 44.0);",
+            "  return mote * flicker;",
             "}",
             "void main() {",
             "  vec2 uv = gl_FragCoord.xy / u_resolution.xy;",
             "  float aspect = u_resolution.x / u_resolution.y;",
-            "  vec2 p = (uv - 0.5) * vec2(aspect, 1.0);",
-            "  vec2 drift = vec2(u_time * 0.0022, -u_time * 0.0014);",
-            "  vec2 warp = vec2(fbm(p * 1.42 + drift + 3.7), fbm(p * 1.42 - drift + 11.9)) - 0.5;",
-            "  vec2 q = p + warp * 0.17;",
-            "  float broad = fbm(q * 1.72 + drift * 0.7);",
-            "  float folds = fbm(q * 3.86 - drift * 1.3 + 23.4);",
-            "  float edgeBias = smoothstep(0.1, 0.74, length(p - vec2(-0.11, 0.03)));",
-            "  float nebula = smoothstep(0.54, 0.88, broad + folds * 0.18) * mix(0.16, 0.82, edgeBias);",
-            "  float coldVein = smoothstep(0.68, 0.91, fbm(q * 4.8 + vec2(7.4, 2.1))) * nebula;",
-            "  float rustTrace = smoothstep(0.81, 0.96, fbm(q * 6.1 + vec2(31.2, 15.7))) * edgeBias;",
-            "  float swallowingCloud = smoothstep(0.3, 0.73, fbm(q * 2.46 + vec2(4.9, 26.1)));",
-            "  vec3 color = vec3(0.0008, 0.002, 0.006);",
-            "  color += vec3(0.003, 0.012, 0.029) * (0.12 + broad * 0.45);",
-            "  color += vec3(0.012, 0.055, 0.076) * nebula * 0.72;",
-            "  color += vec3(0.014, 0.12, 0.15) * coldVein * 0.3;",
-            "  color += vec3(0.12, 0.025, 0.014) * rustTrace * 0.18;",
-            "  color *= mix(0.28, 1.0, swallowingCloud);",
-            "  float whiteStars = starLayer(p + warp * 0.035, 72.0, 0.982);",
-            "  float blueStars = starLayer(p * 1.017 - warp * 0.025 + 5.3, 141.0, 0.997);",
-            "  float dyingStars = starLayer(p - warp * 0.02 + 13.7, 96.0, 0.998);",
-            "  color += vec3(0.44, 0.57, 0.64) * whiteStars * 0.48;",
-            "  color += vec3(0.11, 0.26, 0.34) * blueStars * 0.4;",
-            "  color += vec3(0.4, 0.22, 0.12) * dyingStars * 0.3;",
-            "  vec2 timeCenter = p - vec2(0.035, -0.04);",
-            "  float radius = length(timeCenter);",
-            "  float timeRipple = sin(radius * 78.0 - u_time * 0.08) * exp(-radius * 7.5);",
-            "  color += vec3(0.025, 0.085, 0.1) * max(0.0, timeRipple) * 0.025;",
-            "  float abyss = 1.0 - smoothstep(0.09, 0.49, radius + warp.x * 0.13);",
-            "  color *= mix(1.0, 0.2, abyss);",
-            "  float vignette = 1.0 - smoothstep(0.42, 0.98, length(p * vec2(0.76, 1.0)));",
-            "  color *= mix(0.43, 1.0, vignette);",
-            "  gl_FragColor = vec4(pow(color, vec3(0.94)), 1.0);",
+            "  vec2 raw = (uv - 0.5) * vec2(aspect, 1.0);",
+            "  vec2 focus = vec2(0.035, -0.04);",
+            "  vec2 fromFocus = raw - focus;",
+            "  float radius = length(fromFocus);",
+            "  vec2 radial = fromFocus / max(radius, 0.0001);",
+            "",
+            // Frente de choque: desplaza las coordenadas a su paso.
+            "  float front = u_shock * 1.45;",
+            "  float ring = exp(-pow((radius - front) * 9.0, 2.0)) * (1.0 - u_shock);",
+            "  vec2 p = raw + radial * ring * 0.055;",
+            "",
+            // Rotación general lentísima del campo.
+            "  p = rot(u_time * 0.0055 + u_seed * 0.7) * p;",
+            "",
+            // Nebulosa: el propio campo de deformación se advecta con el tiempo.
+            "  vec2 flow = vec2(u_time * 0.019, -u_time * 0.013);",
+            "  vec2 warp = vec2(",
+            "    fbm(p * 1.34 + vec2(0.0, u_time * 0.021) + u_seed * 9.0 + 3.7),",
+            "    fbm(p * 1.34 + vec2(u_time * 0.017, 0.0) + u_seed * 4.0 + 11.9)",
+            "  ) - 0.5;",
+            "  vec2 q = p + warp * 0.34 + flow * 0.4;",
+            "  q += 0.11 * (vec2(fbm(q * 2.35 - flow), fbm(q * 2.35 + flow + 6.1)) - 0.5);",
+            "",
+            "  float broad = fbm(q * 1.66);",
+            "  float folds = fbm(q * 3.72 + 23.4);",
+            "  float edgeBias = smoothstep(0.10, 0.74, length(p - vec2(-0.08, 0.02)));",
+            "  float breathe = 0.93 + 0.07 * sin(u_time * 0.105 + u_seed * 3.1);",
+            "  float nebula = smoothstep(0.55, 0.93, broad + folds * 0.24) * mix(0.2, 1.0, edgeBias) * breathe;",
+            "  float cyanVein = smoothstep(0.64, 0.94, folds) * nebula;",
+            "  float goldDust = smoothstep(0.76, 0.97, fbm(q * 5.9 + vec2(31.2, 15.7))) * edgeBias;",
+            "",
+            "  vec3 color = vec3(0.0018, 0.005, 0.016);",
+            "  color += vec3(0.004, 0.017, 0.047) * (0.18 + broad * 0.55);",
+            "  color += vec3(0.02, 0.19, 0.3) * nebula * 0.72;",
+            "  color += vec3(0.03, 0.36, 0.39) * cyanVein * 0.3;",
+            "  color += vec3(0.78, 0.42, 0.09) * goldDust * 0.2;",
+            "",
+            // Paralaje: cada capa con su rotación, su deriva y su centelleo.
+            "  vec2 near = rot(u_time * 0.0125) * p + vec2(u_time * 0.0042, -u_time * 0.0016);",
+            "  vec2 mid  = rot(u_time * 0.0072) * p * 1.017 + vec2(-u_time * 0.0021, u_time * 0.0009) + 5.3;",
+            "  vec2 far  = rot(u_time * 0.0031) * p + vec2(u_time * 0.0008, 0.0) + 13.7;",
+            // Estirado radial de las estrellas mientras dura el impulso.
+            "  float stretch = u_burst * 0.085;",
+            "  float whiteStars = 0.0;",
+            "  for (int i = 0; i < 3; i++) {",
+            "    float k = 1.0 - float(i) * stretch;",
+            "    whiteStars += starLayer(near * k, 74.0, 0.9695, 0.055);",
+            "  }",
+            "  whiteStars /= 3.0;",
+            "  float blueStars = starLayer(mid, 143.0, 0.9925, 0.038);",
+            "  float goldStars = starLayer(far, 97.0, 0.9955, 0.026);",
+            "  color += vec3(0.72, 0.9, 1.0) * whiteStars * (0.62 + u_burst * 0.8);",
+            "  color += vec3(0.32, 0.72, 1.0) * blueStars * 0.46;",
+            "  color += vec3(1.0, 0.66, 0.24) * goldStars * 0.44;",
+            "",
+            "  float ash = embers(p + warp * 0.05, 26.0, 0.05) + embers(p * 1.7 - warp * 0.04 + 8.2, 41.0, 0.028);",
+            "  color += vec3(1.0, 0.63, 0.24) * ash * 0.3;",
+            "",
+            // Luz del propio frente de choque.
+            "  color += vec3(0.28, 0.68, 0.78) * ring * (0.26 + u_burst * 0.44);",
+            "",
+            // Ondulación temporal muy tenue en el núcleo.
+            "  float timeRipple = sin(radius * 74.0 - u_time * 0.09) * exp(-radius * 7.0);",
+            "  color += vec3(0.08, 0.28, 0.31) * max(0.0, timeRipple) * 0.03;",
+            "  float calmCenter = 1.0 - smoothstep(0.11, 0.46, radius);",
+            "  color *= mix(1.0, 0.4, calmCenter);",
+            "  float vignette = 1.0 - smoothstep(0.38, 0.99, length(raw * vec2(0.76, 1.0)));",
+            "  color *= mix(0.46, 1.0, vignette);",
+            "  gl_FragColor = vec4(pow(color, vec3(1.06)), 1.0);",
             "}"
           ].join("\n");
 
@@ -571,14 +681,16 @@
             gl.enableVertexAttribArray(position);
             gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
 
-            var resolution = gl.getUniformLocation(program, "u_resolution");
-            var time = gl.getUniformLocation(program, "u_time");
-            var startedAt = performance.now();
+            var uResolution = gl.getUniformLocation(program, "u_resolution");
+            var uTime = gl.getUniformLocation(program, "u_time");
+            var uSeed = gl.getUniformLocation(program, "u_seed");
+            var uShock = gl.getUniformLocation(program, "u_shock");
+            var uBurst = gl.getUniformLocation(program, "u_burst");
             var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
             function renderCosmos(now) {
               var rect = cosmicCanvas.getBoundingClientRect();
-              var pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+              var pixelRatio = Math.min(window.devicePixelRatio || 1, 1.25);
               var width = Math.max(2, Math.round(rect.width * pixelRatio));
               var height = Math.max(2, Math.round(rect.height * pixelRatio));
               if (cosmicCanvas.width !== width || cosmicCanvas.height !== height) {
@@ -586,8 +698,17 @@
                 cosmicCanvas.height = height;
                 gl.viewport(0, 0, width, height);
               }
-              gl.uniform2f(resolution, width, height);
-              gl.uniform1f(time, reducedMotion ? 0 : (now - startedAt) / 1000);
+
+              var elapsed = now - playback.startedAt;
+              var sinceBurst = elapsed - BURST_AT;
+              var shock = sinceBurst <= 0 ? 0 : Math.min(1, sinceBurst / 1100);
+              var burst = sinceBurst <= 0 ? 0 : Math.exp(-sinceBurst / 420);
+
+              gl.uniform2f(uResolution, width, height);
+              gl.uniform1f(uTime, reducedMotion ? 6.0 : elapsed / 1000);
+              gl.uniform1f(uSeed, playback.signature * 10.0);
+              gl.uniform1f(uShock, reducedMotion ? 1 : shock);
+              gl.uniform1f(uBurst, reducedMotion ? 0 : burst);
               gl.drawArrays(gl.TRIANGLES, 0, 3);
               requestAnimationFrame(renderCosmos);
             }
@@ -597,6 +718,9 @@
           }
         }
 
+        /* ------------------------------------------------------------------ *
+         * Semilla e identidad
+         * ------------------------------------------------------------------ */
         function hashSeed(seed) {
           var h = 2166136261;
           for (var i = 0; i < seed.length; i++) {
@@ -617,14 +741,22 @@
           return fract(Math.sin((index + 1) * 91.733 + signature * 2731.917) * 43758.5453123);
         }
 
-        function boundaryPoints() {
-          var points = [];
-          var i;
-          for (i = 0; i < 5; i++) points.push({ x: i / 5, y: 0 });
-          for (i = 0; i < 3; i++) points.push({ x: 1, y: i / 3 });
-          for (i = 0; i < 5; i++) points.push({ x: 1 - i / 5, y: 1 });
-          for (i = 0; i < 3; i++) points.push({ x: 0, y: 1 - i / 3 });
-          return points;
+        /* ------------------------------------------------------------------ *
+         * Plan de fragmentos: núcleo quebrado y diez placas hasta el borde
+         * ------------------------------------------------------------------ */
+        function boundaryPoints(signature) {
+          return [
+            { x: 0, y: 0 },
+            { x: 0.27 + noise(signature, 401) * 0.1, y: 0 },
+            { x: 0.63 + noise(signature, 403) * 0.1, y: 0 },
+            { x: 1, y: 0 },
+            { x: 1, y: 0.42 + noise(signature, 409) * 0.16 },
+            { x: 1, y: 1 },
+            { x: 0.62 + noise(signature, 419) * 0.11, y: 1 },
+            { x: 0.24 + noise(signature, 421) * 0.12, y: 1 },
+            { x: 0, y: 1 },
+            { x: 0, y: 0.39 + noise(signature, 431) * 0.18 }
+          ];
         }
 
         function ringPoints(boundary, fraction, ringIndex, signature) {
@@ -633,8 +765,8 @@
             var dx = edge.x - IMPACT.x;
             var dy = edge.y - IMPACT.y;
             var length = Math.max(0.001, Math.hypot(dx, dy));
-            var radial = (noise(signature, ringIndex * 101 + index) - 0.5) * 0.055;
-            var tangent = (noise(signature, ringIndex * 173 + index + 47) - 0.5) * 0.085 * (1 - fraction);
+            var radial = (noise(signature, ringIndex * 101 + index) - 0.5) * 0.11;
+            var tangent = (noise(signature, ringIndex * 173 + index + 47) - 0.5) * 0.14 * (1 - fraction);
             var adjusted = fraction + radial;
             return {
               x: IMPACT.x + dx * adjusted + (-dy / length) * tangent,
@@ -643,57 +775,48 @@
           });
         }
 
-        function buildTriangles(signature) {
-          var boundary = boundaryPoints();
-          var rings = [0.2, 0.54, 1].map(function (fraction, index) {
-            return ringPoints(boundary, fraction, index, signature);
+        function corePoints(inner, signature) {
+          return inner.map(function (point, index) {
+            var dx = point.x - IMPACT.x;
+            var dy = point.y - IMPACT.y;
+            var length = Math.max(0.001, Math.hypot(dx, dy));
+            var radial = 0.012 + noise(signature, index * 227 + 71) * 0.034;
+            var tangent = (noise(signature, index * 233 + 79) - 0.5) * 0.036;
+            return {
+              x: IMPACT.x + (dx / length) * radial + (-dy / length) * tangent,
+              y: IMPACT.y + (dy / length) * radial + (dx / length) * tangent
+            };
           });
-          var triangles = [];
-          var i;
-
-          for (i = 0; i < rings[0].length; i++) {
-            triangles.push({ points: [IMPACT, rings[0][i], rings[0][(i + 1) % rings[0].length]], ring: 0 });
-          }
-          for (var ring = 1; ring < rings.length; ring++) {
-            var inner = rings[ring - 1];
-            var outer = rings[ring];
-            for (i = 0; i < outer.length; i++) {
-              var next = (i + 1) % outer.length;
-              if (noise(signature, ring * 211 + i) > 0.5) {
-                triangles.push({ points: [inner[i], outer[i], outer[next]], ring: ring });
-                triangles.push({ points: [inner[i], outer[next], inner[next]], ring: ring });
-              } else {
-                triangles.push({ points: [inner[i], outer[i], inner[next]], ring: ring });
-                triangles.push({ points: [inner[next], outer[i], outer[next]], ring: ring });
-              }
-            }
-          }
-          triangles.map(function (triangle, index) {
-            return { triangle: triangle, index: index, score: triangle.ring === 0 ? noise(signature, index * 307 + 91) : -1 };
-          }).sort(function (a, b) {
-            return b.score - a.score;
-          }).slice(0, 7).forEach(function (entry) {
-            entry.triangle.movesForward = true;
-          });
-          return triangles;
         }
 
-        function triangleCenter(points) {
-          return {
-            x: (points[0].x + points[1].x + points[2].x) / 3,
-            y: (points[0].y + points[1].y + points[2].y) / 3
-          };
+        function buildFragments(signature) {
+          var boundary = boundaryPoints(signature);
+          var inner = ringPoints(boundary, 0.34, 0, signature);
+          var core = corePoints(inner, signature);
+          var fragments = [];
+          for (var i = 0; i < boundary.length; i++) {
+            var next = (i + 1) % boundary.length;
+            fragments.push({ points: [core[i], boundary[i], boundary[next], core[next]] });
+          }
+          return fragments;
         }
 
-        function createShard(triangle, index, signature, width, height, reducedMotion) {
-          var points = triangle.points;
-          var minX = Math.min(points[0].x, points[1].x, points[2].x);
-          var maxX = Math.max(points[0].x, points[1].x, points[2].x);
-          var minY = Math.min(points[0].y, points[1].y, points[2].y);
-          var maxY = Math.max(points[0].y, points[1].y, points[2].y);
+        function fragmentCenter(points) {
+          var total = points.reduce(function (sum, point) {
+            return { x: sum.x + point.x, y: sum.y + point.y };
+          }, { x: 0, y: 0 });
+          return { x: total.x / points.length, y: total.y / points.length };
+        }
+
+        function createShard(fragment, index, signature, width, height, reducedMotion) {
+          var points = fragment.points;
+          var minX = Math.min.apply(null, points.map(function (point) { return point.x; }));
+          var maxX = Math.max.apply(null, points.map(function (point) { return point.x; }));
+          var minY = Math.min.apply(null, points.map(function (point) { return point.y; }));
+          var maxY = Math.max.apply(null, points.map(function (point) { return point.y; }));
           var boxW = Math.max(0.001, maxX - minX);
           var boxH = Math.max(0.001, maxY - minY);
-          var center = triangleCenter(points);
+          var center = fragmentCenter(points);
           var shard = document.createElement("span");
           var polygon = points.map(function (point) {
             return (((point.x - minX) / boxW) * 100).toFixed(3) + "% "
@@ -719,64 +842,55 @@
           var vx = cx - IMPACT.x * width;
           var vy = cy - IMPACT.y * height;
           var length = Math.max(1, Math.hypot(vx, vy));
-          var dirX = vx / length;
           var dirY = vy / length;
-          var retained = triangle.ring === 2 && noise(signature, index * 19 + 5) > 0.48;
-          var movesForward = triangle.movesForward === true;
-          var forceFactor = retained
-            ? 0.05 + noise(signature, index * 23 + 7) * 0.09
-            : movesForward
-              ? 0.23 + noise(signature, index * 29 + 11) * 0.22
-              : 0.28 + noise(signature, index * 29 + 11) * 0.35;
-          var force = Math.min(width, height) * forceFactor;
-          var tangent = (noise(signature, index * 31 + 13) - 0.5) * force * (movesForward ? 0.18 : 0.34);
-          var travelX = dirX * force - dirY * tangent;
-          var travelY = dirY * force + dirX * tangent + (retained ? 14 : 24 + noise(signature, index * 37 + 17) * 42);
-          var travelZ = retained
-            ? 24 + noise(signature, index * 41 + 19) * 70
-            : movesForward
-              ? 200 + noise(signature, index * 43 + 23) * 80
-              : noise(signature, index * 97 + 71) > 0.8
-                ? -110 - noise(signature, index * 41 + 19) * 90
-                : -35 + noise(signature, index * 43 + 23) * 105;
-          var spin = retained ? 18 : movesForward ? 42 : 54;
+          var side = center.x < IMPACT.x ? -1 : 1;
+          var horizontalForce = Math.min(width, height) * (0.18 + noise(signature, index * 29 + 11) * 0.09);
+          var travelX = side * horizontalForce;
+          var travelY = dirY * Math.min(width, height) * (0.035 + noise(signature, index * 31 + 13) * 0.055)
+            + (noise(signature, index * 37 + 17) - 0.5) * 22;
+          var hasDepth = noise(signature, index * 89 + 67) > 0.63;
+          var depthDirection = noise(signature, index * 97 + 71) > 0.46 ? 1 : -1;
+          var travelZ = hasDepth ? depthDirection * (54 + noise(signature, index * 43 + 23) * 78) : 0;
+          var spin = hasDepth ? 36 : 12;
           var rotateX = (noise(signature, index * 47 + 29) - 0.5) * spin;
           var rotateY = (noise(signature, index * 49 + 31) - 0.5) * spin;
-          var rotateZ = (noise(signature, index * 53 + 33) - 0.5) * spin * 0.75;
-          var delay = triangle.ring * 55 + noise(signature, index * 59 + 37) * 50;
-          var duration = (retained ? 1720 : movesForward ? 1640 : 1540) + noise(signature, index * 61 + 41) * 280;
-          var restingOpacity = retained ? 0.54 : 0.4 + noise(signature, index * 107 + 97) * 0.2;
-          var restingZ = retained ? travelZ * 1.01 : -90 - noise(signature, index * 113 + 101) * 120;
+          var rotateZ = (noise(signature, index * 53 + 33) - 0.5) * (hasDepth ? 17 : 10);
+          var delay = noise(signature, index * 59 + 37) * 65;
+          var duration = 1040 + noise(signature, index * 61 + 41) * 260;
+          var settledOpacity = 0.86 + noise(signature, index * 73 + 53) * 0.12;
 
           shard.animate([
-            { offset: 0, opacity: 1, transform: "translate3d(0,0,0) rotateX(0) rotateY(0) rotateZ(0)" },
-            { offset: 0.015, opacity: 1, transform: "translate3d(0,0,0) rotateX(0) rotateY(0) rotateZ(0)" },
+            { offset: 0, opacity: 0, transform: "translate3d(0,0,0) rotateX(0) rotateY(0) rotateZ(0) scale3d(1,1,1)" },
+            { offset: 0.015, opacity: 1, transform: "translate3d(0,0,0) rotateX(0) rotateY(0) rotateZ(0) scale3d(1,1,1)" },
             {
-              offset: 0.22,
+              offset: 0.62,
               opacity: 1,
-              transform: "translate3d(" + (travelX * 0.28).toFixed(1) + "px," + (travelY * 0.28).toFixed(1) + "px," + (travelZ * 0.24).toFixed(1) + "px) "
-                + "rotateX(" + (rotateX * 0.18).toFixed(1) + "deg) rotateY(" + (rotateY * 0.18).toFixed(1) + "deg) rotateZ(" + (rotateZ * 0.18).toFixed(1) + "deg)"
+              transform: "translate3d(" + (travelX * 1.08).toFixed(1) + "px," + (travelY * 1.08).toFixed(1) + "px," + (travelZ * 1.08).toFixed(1) + "px) "
+                + "rotateX(" + (rotateX * 1.08).toFixed(1) + "deg) rotateY(" + (rotateY * 1.08).toFixed(1) + "deg) rotateZ(" + (rotateZ * 1.08).toFixed(1) + "deg) scale3d(0.97,0.97,1)"
             },
             {
-              offset: 0.72,
-              opacity: retained ? 0.72 : 1,
-              transform: "translate3d(" + travelX.toFixed(1) + "px," + travelY.toFixed(1) + "px," + travelZ.toFixed(1) + "px) "
-                + "rotateX(" + rotateX.toFixed(1) + "deg) rotateY(" + rotateY.toFixed(1) + "deg) rotateZ(" + rotateZ.toFixed(1) + "deg)"
+              offset: 0.84,
+              opacity: settledOpacity,
+              transform: "translate3d(" + (travelX * 0.97).toFixed(1) + "px," + (travelY * 0.97).toFixed(1) + "px," + (travelZ * 0.97).toFixed(1) + "px) "
+                + "rotateX(" + (rotateX * 0.94).toFixed(1) + "deg) rotateY(" + (rotateY * 0.94).toFixed(1) + "deg) rotateZ(" + (rotateZ * 0.94).toFixed(1) + "deg) scale3d(0.98,0.98,1)"
             },
             {
               offset: 1,
-              opacity: restingOpacity,
-              transform: "translate3d(" + (travelX * (retained ? 1.02 : 1.12)).toFixed(1) + "px," + (travelY * (retained ? 1.02 : 1.1)).toFixed(1) + "px," + restingZ.toFixed(1) + "px) "
-                + "rotateX(" + (rotateX * (retained ? 1.02 : 1.08)).toFixed(1) + "deg) rotateY(" + (rotateY * (retained ? 1.02 : 1.08)).toFixed(1) + "deg) rotateZ(" + (rotateZ * (retained ? 1.02 : 1.08)).toFixed(1) + "deg)"
+              opacity: settledOpacity,
+              transform: "translate3d(" + travelX.toFixed(1) + "px," + travelY.toFixed(1) + "px," + travelZ.toFixed(1) + "px) "
+                + "rotateX(" + rotateX.toFixed(1) + "deg) rotateY(" + rotateY.toFixed(1) + "deg) rotateZ(" + rotateZ.toFixed(1) + "deg) scale3d(0.98,0.98,1)"
             }
           ], {
             duration: duration,
             delay: BURST_AT + delay,
-            easing: "cubic-bezier(0.16, 0.74, 0.28, 1)",
+            easing: "cubic-bezier(0.18, 0.78, 0.22, 1)",
             fill: "both"
           });
         }
 
+        /* ------------------------------------------------------------------ *
+         * Reproducción
+         * ------------------------------------------------------------------ */
         function clearPlayback() {
           cancelAnimationFrame(raf);
           timers.forEach(function (timer) { clearTimeout(timer); });
@@ -794,16 +908,16 @@
           var code = futureCode(seed);
           var rect = stage.getBoundingClientRect();
           var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          var bare = stage.classList.contains("bare");
 
           futureCodeNode.textContent = code;
           instrumentAzimuth.textContent = "Ω " + String(Math.round(signature * 359)).padStart(3, "0") + "°";
-          instrumentFuture.textContent = "FUTURO " + code;
-          stage.className = "stage";
+          stage.className = bare ? "stage bare" : "stage";
           void stage.offsetWidth;
           stage.classList.add("playing");
 
-          buildTriangles(signature).forEach(function (triangle, index) {
-            createShard(triangle, index, signature, rect.width, rect.height, reducedMotion);
+          buildFragments(signature).forEach(function (fragment, index) {
+            createShard(fragment, index, signature, rect.width, rect.height, reducedMotion);
           });
 
           if (reducedMotion) {
@@ -817,13 +931,17 @@
             }, REVEAL_AT));
           }
 
-          var startedAt = performance.now();
+          playback.startedAt = performance.now();
+          playback.signature = signature;
+
           function frame(now) {
             if (epoch !== playEpoch) return;
-            var elapsed = reducedMotion ? TOTAL_MS : Math.min(TOTAL_MS, now - startedAt);
+            var elapsed = reducedMotion ? TOTAL_MS : Math.min(TOTAL_MS, now - playback.startedAt);
             var progress = elapsed / TOTAL_MS;
-            clock.textContent = (elapsed / 1000).toFixed(2) + " s";
-            instrumentTime.textContent = "T+" + (elapsed / 1000).toFixed(2) + " s";
+            var seconds = elapsed / 1000;
+            clock.textContent = seconds.toFixed(2) + " s";
+            instrumentTime.textContent = "T+" + seconds.toFixed(2) + " s";
+            instrumentDrift.textContent = "DERIVA " + Math.max(0, seconds - BURST_AT / 1000).toFixed(2);
             fill.style.width = (progress * 100).toFixed(1) + "%";
             if (elapsed < TOTAL_MS) raf = requestAnimationFrame(frame);
           }
@@ -832,11 +950,17 @@
 
         replay.addEventListener("click", play);
         seedInput.addEventListener("change", play);
+        toggleInstruments.addEventListener("click", function () {
+          var bare = stage.classList.toggle("bare");
+          toggleInstruments.setAttribute("aria-pressed", bare ? "false" : "true");
+        });
+
         var resizeTimer = 0;
         window.addEventListener("resize", function () {
           clearTimeout(resizeTimer);
           resizeTimer = setTimeout(play, 120);
         });
+
         initCosmicField();
         play();
       })();

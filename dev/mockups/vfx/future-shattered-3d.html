@@ -1,0 +1,1103 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hostfall — Futuro quebrado 3D</title>
+    <style>
+      @font-face {
+        font-family: "Cinzel";
+        font-style: normal;
+        font-weight: 500 900;
+        font-display: block;
+        src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+      }
+
+      :root {
+        --stage: #030708;
+        --gold: #c7aa69;
+        --gold-bright: #ead59b;
+        --parchment: #ece4d0;
+        --cold: #b9d4d5;
+        --muted: #98a7a2;
+        --rule: rgb(146 133 88 / 0.24);
+        --serif: Georgia, "Times New Roman", serif;
+        --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; padding: 0 0 70px; color: var(--muted); font: 15px/1.6 var(--sans);
+        background: radial-gradient(ellipse at 50% -8%, rgb(45 55 52 / 0.22), transparent 55%), #050909;
+        -webkit-font-smoothing: antialiased;
+      }
+      main { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+      header { padding: 54px 0 30px; border-bottom: 1px solid var(--rule); }
+      .back { display: inline-block; margin-bottom: 8px; color: #788985; font-size: 12px; text-decoration: none; }
+      .back:hover { color: var(--gold-bright); }
+      .eyebrow { color: #9ab8b4; font-size: 10px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; }
+      h1 {
+        margin: 12px 0 0; color: var(--parchment); font: 600 clamp(30px, 4.4vw, 46px)/1.06 "Cinzel", var(--serif);
+        letter-spacing: 0.025em;
+      }
+      header p { max-width: 70ch; margin: 16px 0 0; }
+      header strong { color: var(--gold-bright); font-weight: 600; }
+
+      .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 30px 0 14px; }
+      button, input {
+        height: 42px; border: 1px solid rgb(146 133 88 / 0.38); border-radius: 2px;
+        background: linear-gradient(180deg, rgb(24 33 34 / 0.96), rgb(8 15 17 / 0.98));
+        color: var(--muted); font-family: var(--sans);
+      }
+      button {
+        padding: 0 20px; cursor: pointer; font-size: 11px; font-weight: 900;
+        letter-spacing: 0.15em; text-transform: uppercase;
+      }
+      button:hover { border-color: rgb(214 192 122 / 0.72); color: var(--gold-bright); }
+      button[aria-pressed="true"] { border-color: rgb(214 192 122 / 0.62); color: var(--gold-bright); }
+      button:focus-visible, input:focus-visible { outline: 2px solid rgb(234 210 133 / 0.9); outline-offset: 2px; }
+      label { color: #788985; font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+      input { width: 210px; padding: 0 12px; color: var(--gold-bright); font-size: 13px; letter-spacing: 0.06em; }
+      .spacer { flex: 1; }
+
+      .stage {
+        position: relative; overflow: hidden; aspect-ratio: 16 / 9; isolation: isolate;
+        border: 1px solid var(--rule); border-radius: 2px; background: #000206;
+      }
+      .stage canvas.glass { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; display: block; }
+
+      .notice {
+        position: absolute; z-index: 9; left: 50%; top: 50%; width: min(560px, 90%);
+        padding: 20px 24px; text-align: center; transform: translate(-50%, -50%);
+        border: 1px solid rgb(172 119 84 / 0.5); background: rgb(4 10 12 / 0.94);
+        color: #c9d6d2; font-size: 13px; line-height: 1.6; display: none;
+      }
+      .notice.on { display: block; }
+      .notice b { display: block; margin-bottom: 8px; color: var(--gold-bright); font: 800 11px/1 "Cinzel", var(--serif); letter-spacing: 0.24em; text-transform: uppercase; }
+      .notice code {
+        display: inline-block; margin-top: 8px; padding: 5px 9px; color: var(--gold-bright);
+        border: 1px solid rgb(146 133 88 / 0.32); background: rgb(0 0 0 / 0.5); font-size: 12px;
+      }
+
+      .instruments {
+        position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%;
+        opacity: 0; pointer-events: none; transition: opacity 520ms ease-out;
+      }
+      .stage.burst .instruments { opacity: 1; }
+      .stage.bare .instruments { opacity: 0; }
+      .instruments .degree-ring,
+      .instruments .orbit,
+      .instruments .arc { fill: none; vector-effect: non-scaling-stroke; }
+      .instruments .degree-ring { stroke: rgb(119 187 187 / 0.11); stroke-width: 1; }
+      .instruments .arc { stroke: rgb(211 172 92 / 0.1); stroke-width: 1; }
+      .instruments .orbit {
+        stroke: rgb(115 192 197 / 0.09); stroke-width: 1; stroke-dasharray: 3 11;
+        animation: orbit-drift 24s linear infinite;
+      }
+      .instruments .orbit.gold { stroke: rgb(212 170 83 / 0.1); animation-duration: 31s; animation-direction: reverse; }
+      .instruments .tick { stroke: rgb(223 193 119 / 0.2); stroke-width: 1; vector-effect: non-scaling-stroke; }
+      .instruments .dust { fill: rgb(193 229 226 / 0.28); }
+      .instruments text {
+        fill: rgb(166 204 200 / 0.48); font: 500 10px/1 Consolas, "Courier New", monospace;
+        letter-spacing: 0.12em;
+      }
+      .instruments .degree { fill: rgb(222 193 118 / 0.46); font-size: 9px; }
+      .instruments .readout-strong { fill: rgb(233 201 122 / 0.62); }
+
+      .impact {
+        position: absolute; z-index: 3; left: 52%; top: 46%; width: 8px; height: 8px;
+        border-radius: 50%; opacity: 0; transform: translate(-50%, -50%); pointer-events: none;
+        background: #f9f5e9;
+      }
+      .stage.burst .impact { animation: impact-burst 640ms ease-out both; }
+
+      .vignette {
+        position: absolute; z-index: 4; inset: 0; pointer-events: none;
+        background:
+          radial-gradient(ellipse at center, transparent 12%, rgb(1 5 6 / 0.16) 46%, rgb(0 2 3 / 0.78) 100%),
+          linear-gradient(180deg, rgb(3 8 9 / 0.12), rgb(0 3 4 / 0.46));
+        opacity: 0.22; transition: opacity 700ms ease;
+      }
+      .stage.burst .vignette { opacity: 0.72; }
+
+      .outcome {
+        position: absolute; z-index: 8; left: 50%; top: 50%; width: min(820px, 94%);
+        display: grid; justify-items: center; gap: 8px; text-align: center; pointer-events: none;
+        opacity: 0; transform: translate(-50%, -48%); isolation: isolate;
+      }
+      .outcome::before {
+        position: absolute; z-index: -1; inset: -34% -20%; content: "";
+        background: radial-gradient(ellipse, rgb(1 5 7 / 0.94) 0 31%, rgb(2 8 10 / 0.72) 52%, transparent 74%);
+        filter: blur(12px);
+      }
+      .stage.revealed .outcome { animation: outcome-in 460ms ease-out both; }
+      .defeat-kicker {
+        position: relative; color: #d5a67e; font: 800 12px/1 "Cinzel", var(--serif);
+        letter-spacing: 0.34em; text-transform: uppercase; text-shadow: 0 0 12px rgb(154 71 42 / 0.48);
+        opacity: 0;
+      }
+      .defeat-kicker::before, .defeat-kicker::after {
+        position: absolute; top: 50%; width: 56px; height: 1px; content: "";
+        background: linear-gradient(90deg, transparent, rgb(189 122 83 / 0.72));
+      }
+      .defeat-kicker::before { right: calc(100% + 16px); }
+      .defeat-kicker::after { left: calc(100% + 12px); transform: rotate(180deg); }
+      .stage.revealed .defeat-kicker { animation: copy-rise 620ms 100ms ease-out both; }
+
+      .defeat-title {
+        position: relative; display: grid; margin: 0; color: #e9e6dc;
+        font: 700 clamp(38px, 7vw, 78px)/0.9 "Cinzel", var(--serif);
+        letter-spacing: 0.065em; text-transform: uppercase;
+        text-shadow: 0 3px 8px #000, 0 0 18px rgb(151 190 192 / 0.24);
+      }
+      .defeat-title .line { display: block; opacity: 0; clip-path: inset(0 50%); transform: translateY(12px); }
+      .defeat-title .line:last-child { margin-top: 0.08em; color: #c7ced0; }
+      .stage.revealed .defeat-title .line:first-child { animation: title-reveal 920ms 150ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+      .stage.revealed .defeat-title .line:last-child { animation: title-reveal 980ms 270ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+      .defeat-title::after {
+        position: absolute; left: 50%; top: 52%; width: 0; height: 1px; content: ""; opacity: 0;
+        background: #e9f3ef; box-shadow: 0 0 11px 3px rgb(169 214 214 / 0.66);
+        transform: translate(-50%, -50%) rotate(-5deg);
+      }
+      .stage.revealed .defeat-title::after { animation: title-cut 760ms 230ms ease-out both; }
+      .defeat-subtitle {
+        margin-top: 7px; color: rgb(172 187 184 / 0.82); font: 600 clamp(8px, 1.1vw, 11px)/1.4 "Cinzel", var(--serif);
+        letter-spacing: 0.25em; text-transform: uppercase; opacity: 0;
+      }
+      .stage.revealed .defeat-subtitle { animation: copy-rise 660ms 700ms ease-out both; }
+      .future-plate {
+        position: relative; display: grid; justify-items: center; gap: 2px; min-width: min(390px, 88%);
+        margin-top: 11px; padding: 10px 24px 9px; opacity: 0;
+        border-top: 1px solid rgb(172 119 84 / 0.52); border-bottom: 1px solid rgb(109 145 146 / 0.34);
+        background: linear-gradient(90deg, transparent, rgb(4 11 13 / 0.92) 17% 83%, transparent);
+      }
+      .future-plate span {
+        color: #c8d9d5; font: 800 11px/1.2 "Cinzel", var(--serif); letter-spacing: 0.26em; text-transform: uppercase;
+      }
+      .future-plate b {
+        color: #e5c89e; font: 800 clamp(18px, 2.25vw, 25px)/1.2 "Cinzel", var(--serif);
+        letter-spacing: 0.13em; font-variant-numeric: tabular-nums; text-shadow: 0 0 12px rgb(159 100 62 / 0.36);
+      }
+      .future-plate small {
+        color: rgb(150 168 165 / 0.74); font: 700 8px/1.2 "Cinzel", var(--serif); letter-spacing: 0.18em; text-transform: uppercase;
+      }
+      .stage.revealed .future-plate { animation: plate-rise 680ms 860ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+      .scrub { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
+      .track { position: relative; height: 3px; flex: 1; background: rgb(146 133 88 / 0.18); }
+      .fill { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, #607f80, #b9815d); }
+      .clock { color: #788985; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
+
+      .notes { margin-top: 46px; border-top: 1px solid var(--rule); padding-top: 26px; }
+      .notes h2 { margin: 0 0 12px; color: var(--parchment); font: 600 22px/1.2 "Cinzel", var(--serif); }
+      .notes h3 { margin: 22px 0 5px; color: var(--gold-bright); font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+      .notes ul { max-width: 74ch; margin: 0; padding-left: 20px; }
+      .notes li { margin-bottom: 9px; }
+      .notes b { color: var(--gold-bright); font-weight: 600; }
+      .notes code { color: var(--cold); font-size: 13px; }
+
+      @keyframes orbit-drift { to { stroke-dashoffset: -140; } }
+      @keyframes impact-burst {
+        0% { opacity: 1; transform: translate(-50%, -50%) scale(0.2); box-shadow: 0 0 0 0 rgb(219 236 231 / 0.9); }
+        38% { opacity: 1; }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(3); box-shadow: 0 0 58px 34px rgb(151 199 200 / 0.28); }
+      }
+      @keyframes outcome-in { from { opacity: 0; transform: translate(-50%, -46%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+      @keyframes title-reveal { from { opacity: 0; clip-path: inset(0 50%); transform: translateY(12px); } to { opacity: 1; clip-path: inset(0); transform: translateY(0); } }
+      @keyframes title-cut { 0% { opacity: 0; width: 0; } 35% { opacity: 0.9; } 100% { opacity: 0; width: 92%; } }
+      @keyframes copy-rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes plate-rise { from { opacity: 0; transform: translateY(11px) scaleX(0.76); } to { opacity: 1; transform: translateY(0) scaleX(1); } }
+
+      @media (prefers-reduced-motion: reduce) {
+        .stage.revealed .outcome, .stage.revealed .defeat-kicker, .stage.revealed .defeat-title .line,
+        .stage.revealed .defeat-title::after, .stage.revealed .defeat-subtitle,
+        .stage.revealed .future-plate { animation-delay: 0ms; animation-duration: 1ms; }
+        .impact { display: none; }
+        .instruments .orbit { animation: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <a class="back" href="../index.html">← Maquetas</a>
+        <div class="eyebrow">Semillas del Destino · desenlace quebrado · vidrio real</div>
+        <h1>Vidrio del Futuro 3D</h1>
+        <p>
+          La misma secuencia, pero el vidrio deja de ser un recorte plano de CSS y pasa a ser
+          <strong>geometría con espesor</strong> dentro de un solo renderer WebGL. Cada trozo es un prisma
+          con caras, cantos biselados y UV globales sobre la captura; la luz, la refracción y el brillo
+          dependen de su orientación real cuando gira, y la profundidad la decide el z-buffer en vez del
+          orden del DOM.
+        </p>
+      </header>
+
+      <div class="controls">
+        <button id="replay" type="button">Repetir</button>
+        <label for="seed">Semilla</label>
+        <input id="seed" type="text" value="748-203" spellcheck="false" />
+        <span class="spacer"></span>
+        <button id="toggleSlow" type="button" aria-pressed="false">Cámara lenta</button>
+        <button id="toggleInstruments" type="button" aria-pressed="true">Instrumentos</button>
+      </div>
+
+      <div class="stage" id="stage" aria-live="polite">
+        <canvas class="glass" id="glassCanvas"></canvas>
+
+        <svg class="instruments" viewBox="0 0 1000 562" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <g>
+            <circle class="dust" cx="66" cy="87" r="1.3" />
+            <circle class="dust" cx="142" cy="434" r="0.9" />
+            <circle class="dust" cx="251" cy="61" r="1.1" />
+            <circle class="dust" cx="794" cy="75" r="1.4" />
+            <circle class="dust" cx="927" cy="179" r="0.8" />
+            <circle class="dust" cx="866" cy="468" r="1.3" />
+            <circle class="dust" cx="643" cy="520" r="0.8" />
+            <circle class="dust" cx="951" cy="342" r="1.1" />
+          </g>
+
+          <g transform="translate(520 259)">
+            <circle class="degree-ring" r="226" pathLength="360" stroke-dasharray="1 14" />
+            <circle class="arc" r="211" pathLength="360" stroke-dasharray="31 18 6 37" />
+            <ellipse class="orbit" rx="340" ry="94" transform="rotate(-17)" />
+            <ellipse class="orbit gold" rx="302" ry="122" transform="rotate(29)" />
+            <ellipse class="orbit" rx="278" ry="69" transform="rotate(75)" style="animation-duration: 18s" />
+
+            <line class="tick" x1="0" y1="-239" x2="0" y2="-224" />
+            <line class="tick" x1="169" y1="-169" x2="158" y2="-158" />
+            <line class="tick" x1="239" y1="0" x2="224" y2="0" />
+            <line class="tick" x1="169" y1="169" x2="158" y2="158" />
+            <line class="tick" x1="0" y1="239" x2="0" y2="224" />
+            <line class="tick" x1="-169" y1="169" x2="-158" y2="158" />
+            <line class="tick" x1="-239" y1="0" x2="-224" y2="0" />
+            <line class="tick" x1="-169" y1="-169" x2="-158" y2="-158" />
+
+            <text class="degree" x="0" y="-233" text-anchor="middle">000° · N</text>
+            <text class="degree" x="182" y="-177">045°</text>
+            <text class="degree" x="248" y="4">090° · E</text>
+            <text class="degree" x="182" y="185">135°</text>
+            <text class="degree" x="0" y="249" text-anchor="middle">180° · S</text>
+            <text class="degree" x="-182" y="185" text-anchor="end">225°</text>
+            <text class="degree" x="-248" y="4" text-anchor="end">270° · O</text>
+            <text class="degree" x="-182" y="-177" text-anchor="end">315°</text>
+          </g>
+
+          <g>
+            <text x="30" y="32">RUPTURA TEMPORAL</text>
+            <text id="instrumentTime" class="readout-strong" x="30" y="49">T+0.00 s</text>
+            <text x="970" y="32" text-anchor="end">ASCENSIÓN INTERRUMPIDA</text>
+            <text id="instrumentAzimuth" class="readout-strong" x="970" y="49" text-anchor="end">Ω 000°</text>
+            <text x="30" y="528">PLANO ECLÍPTICO · COLAPSO</text>
+            <text id="instrumentFuture" class="readout-strong" x="970" y="528" text-anchor="end">FUTURO 000·000</text>
+          </g>
+        </svg>
+
+        <div class="impact"></div>
+        <div class="vignette"></div>
+
+        <div class="outcome" id="outcome">
+          <span class="defeat-kicker">Derrota</span>
+          <strong class="defeat-title">
+            <span class="line">Futuro</span>
+            <span class="line">Quebrado</span>
+          </strong>
+          <span class="defeat-subtitle">El Capítulo se pierde entre los fragmentos</span>
+          <span class="future-plate">
+            <span>Futuro</span>
+            <b id="futureCode">000·000</b>
+            <small>El Cronista ha caído</small>
+          </span>
+        </div>
+
+        <div class="notice" id="notice"></div>
+      </div>
+
+      <div class="scrub">
+        <span class="clock" id="clock">0.00 s</span>
+        <span class="track"><span class="fill" id="fill"></span></span>
+      </div>
+
+      <section class="notes">
+        <h2>Notas</h2>
+
+        <h3>Por qué 3D de verdad</h3>
+        <ul>
+          <li><b>Espesor.</b> Cada triángulo del plan es un prisma: cara frontal, cara trasera y tres muros
+            laterales con su propia normal. El canto existe, así que atrapa luz y se ve el grosor del vidrio
+            cuando el trozo gira de canto. Un <code>clip-path</code> nunca puede hacer eso.</li>
+          <li><b>Luz real.</b> El brillo no es un degradado que barre la superficie: es un especular calculado
+            contra la normal del trozo en espacio de vista. Al girar, destella cuando le toca y se apaga
+            cuando no. Lo mismo el Fresnel del borde, que se enciende en el escorzo.</li>
+          <li><b>Refracción.</b> La cara frontal muestrea la captura desplazada según su propia normal, con una
+            dispersión cromática mínima entre rojo y azul: el tablero se dobla detrás del cristal en vez de
+            viajar pegado a él.</li>
+          <li><b>Profundidad correcta.</b> La ordenación la decide el z-buffer. En CSS 3D el orden lo impone el
+            DOM dentro del contexto <code>preserve-3d</code>, y los planos que se cruzan se resuelven mal.</li>
+          <li><b>Una sola llamada de dibujo.</b> Los 140 prismas viven en un <code>BufferGeometry</code> y la
+            animación entera ocurre en el vertex shader a partir de atributos por trozo. No hay 140 nodos DOM
+            con tres <code>drop-shadow</code> cada uno.</li>
+        </ul>
+
+        <h3>Secuencia</h3>
+        <ul>
+          <li><b>Detener:</b> el tablero intacto ya es la malla, con los prismas a ras. Un uniforme enfría y
+            desatura la imagen sin tocar el DOM.</li>
+          <li><b>Cuartear:</b> antes del estallido los trozos se separan una fracción de milímetro y la luz
+            se cuela por las juntas. La grieta se propaga en radial desde el impacto, así que el cuarteado
+            recorre la placa en vez de aparecer entero de golpe.</li>
+          <li><b>Estallar:</b> impulso que decae más deriva constante —una sola función continua, sin costura—
+            hacia fuera y hacia la cámara, con giro de velocidad angular constante sobre un eje propio. Los
+            trozos cercanos pasan de largo junto al espectador.</li>
+          <li><b>Deriva de cámara:</b> la cámara avanza y se desplaza muy poco después del estallido. Basta
+            para que los restos suspendidos den paralaje y el vacío se lea como espacio, no como fondo.</li>
+          <li><b>Revelar y nombrar:</b> el abismo queda detrás y el texto sigue siendo DOM estable y accesible.</li>
+        </ul>
+
+        <h3>Al llevarlo al juego</h3>
+        <ul>
+          <li>Esta maqueta se acerca ya al contrato real: <code>DefeatShatterAnimator</code> teselado por
+            semilla, UV globales sobre la captura y <code>defeatGlassShader.ts</code> con Fresnel azul
+            grisáceo/dorado y cantos biselados dorados.</li>
+          <li>En el juego debe reutilizar el renderer WebGL compartido, no crear uno nuevo, y conservar la
+            fractura SVG quieta para movimiento reducido o falta de WebGL.</li>
+          <li>Aquí la captura es la imagen de referencia; en el juego llega de <code>capturePage()</code> en
+            Electron, con <code>html-to-image</code> como respaldo web.</li>
+        </ul>
+
+        <h3>Cómo verla</h3>
+        <ul>
+          <li>Esta maqueta <b>necesita el servidor de maquetas</b>, no vale abrirla con doble clic: WebGL no
+            puede subir como textura una imagen cargada desde <code>file://</code>. Si la abres suelta verás
+            el aviso y el vidrio funcionando con una placa de relleno.</li>
+        </ul>
+      </section>
+    </main>
+
+    <script>
+      // Three.js vive en node_modules. Abierta con doble clic vale la ruta relativa;
+      // servida por HTTP esa ruta cae fuera de la raíz del servidor y responde el alias.
+      (function () {
+        "use strict";
+        var SOURCES = ["../../../node_modules/three/build/three.min.js", "/vendor/three.min.js"];
+        function attempt(index) {
+          if (index >= SOURCES.length) {
+            window.dispatchEvent(new Event("three-ready"));
+            return;
+          }
+          var script = document.createElement("script");
+          script.src = SOURCES[index];
+          script.onload = function () { window.dispatchEvent(new Event("three-ready")); };
+          script.onerror = function () { attempt(index + 1); };
+          document.head.appendChild(script);
+        }
+        attempt(0);
+      })();
+    </script>
+    <script>
+      window.addEventListener("three-ready", function () {
+        "use strict";
+
+        var stage = document.getElementById("stage");
+        var canvas = document.getElementById("glassCanvas");
+        var notice = document.getElementById("notice");
+        var seedInput = document.getElementById("seed");
+        var futureCodeNode = document.getElementById("futureCode");
+        var clock = document.getElementById("clock");
+        var fill = document.getElementById("fill");
+        var replay = document.getElementById("replay");
+        var toggleSlow = document.getElementById("toggleSlow");
+        var toggleInstruments = document.getElementById("toggleInstruments");
+        var instrumentTime = document.getElementById("instrumentTime");
+        var instrumentAzimuth = document.getElementById("instrumentAzimuth");
+        var instrumentFuture = document.getElementById("instrumentFuture");
+
+        var FREEZE_MS = 700;
+        var CRACK_AT = 600;
+        var CRACK_MS = 540;
+        var BURST_AT = 1160;
+        var REVEAL_AT = 2320;
+        var TOTAL_MS = 5400;
+        var IMPACT = { x: 0.52, y: 0.46 };
+        var FOV = 42;
+
+        var epoch = 0;
+        var timers = [];
+        var timeScale = 1;
+
+        function showNotice(title, body, command) {
+          notice.innerHTML = "";
+          var strong = document.createElement("b");
+          strong.textContent = title;
+          notice.appendChild(strong);
+          notice.appendChild(document.createTextNode(body));
+          if (command) {
+            notice.appendChild(document.createElement("br"));
+            var code = document.createElement("code");
+            code.textContent = command;
+            notice.appendChild(code);
+          }
+          notice.classList.add("on");
+        }
+
+        if (typeof window.THREE === "undefined") {
+          showNotice(
+            "Falta Three.js",
+            "No se pudo cargar node_modules/three/build/three.min.js desde esta ruta.",
+            null
+          );
+          return;
+        }
+
+        /* ------------------------------------------------------------------ *
+         * Semilla e identidad
+         * ------------------------------------------------------------------ */
+        function hashSeed(seed) {
+          var h = 2166136261;
+          for (var i = 0; i < seed.length; i++) {
+            h ^= seed.charCodeAt(i);
+            h = Math.imul(h, 16777619);
+          }
+          return (h >>> 0) || 1;
+        }
+
+        function futureCode(seed) {
+          var value = (hashSeed(seed) % 999999) + 1;
+          var digits = String(value).padStart(6, "0");
+          return digits.slice(0, 3) + "·" + digits.slice(3);
+        }
+
+        function fract(value) { return value - Math.floor(value); }
+        function noise(signature, index) {
+          return fract(Math.sin((index + 1) * 91.733 + signature * 2731.917) * 43758.5453123);
+        }
+
+        /* ------------------------------------------------------------------ *
+         * Plan de teselado: coronas concéntricas alrededor del impacto
+         * ------------------------------------------------------------------ */
+        var RINGS = [0.16, 0.4, 0.68, 1];
+
+        function boundaryPoints() {
+          var points = [];
+          var i;
+          for (i = 0; i < 6; i++) points.push({ x: i / 6, y: 0 });
+          for (i = 0; i < 4; i++) points.push({ x: 1, y: i / 4 });
+          for (i = 0; i < 6; i++) points.push({ x: 1 - i / 6, y: 1 });
+          for (i = 0; i < 4; i++) points.push({ x: 0, y: 1 - i / 4 });
+          return points;
+        }
+
+        function ringPoints(boundary, fraction, ringIndex, signature) {
+          if (fraction === 1) return boundary;
+          return boundary.map(function (edge, index) {
+            var dx = edge.x - IMPACT.x;
+            var dy = edge.y - IMPACT.y;
+            var length = Math.max(0.001, Math.hypot(dx, dy));
+            var radial = (noise(signature, ringIndex * 101 + index) - 0.5) * 0.055;
+            var tangent = (noise(signature, ringIndex * 173 + index + 47) - 0.5) * 0.085 * (1 - fraction);
+            var adjusted = fraction + radial;
+            return {
+              x: IMPACT.x + dx * adjusted + (-dy / length) * tangent,
+              y: IMPACT.y + dy * adjusted + (dx / length) * tangent
+            };
+          });
+        }
+
+        function buildTriangles(signature) {
+          var boundary = boundaryPoints();
+          var rings = RINGS.map(function (fraction, index) {
+            return ringPoints(boundary, fraction, index, signature);
+          });
+          var triangles = [];
+          var count = boundary.length;
+          var i;
+
+          for (i = 0; i < count; i++) {
+            triangles.push({ points: [IMPACT, rings[0][i], rings[0][(i + 1) % count]], ring: 0 });
+          }
+          for (var ring = 1; ring < rings.length; ring++) {
+            var inner = rings[ring - 1];
+            var outer = rings[ring];
+            for (i = 0; i < count; i++) {
+              var next = (i + 1) % count;
+              if (noise(signature, ring * 211 + i) > 0.5) {
+                triangles.push({ points: [inner[i], outer[i], outer[next]], ring: ring });
+                triangles.push({ points: [inner[i], outer[next], inner[next]], ring: ring });
+              } else {
+                triangles.push({ points: [inner[i], outer[i], inner[next]], ring: ring });
+                triangles.push({ points: [inner[next], outer[i], outer[next]], ring: ring });
+              }
+            }
+          }
+          return triangles;
+        }
+
+        /* ------------------------------------------------------------------ *
+         * Prismas: cada triángulo se extruye en espesor real
+         * ------------------------------------------------------------------ */
+        function buildGeometry(signature, aspect) {
+          var triangles = buildTriangles(signature);
+          var lastRing = RINGS.length - 1;
+
+          var positions = [];
+          var centroids = [];
+          var uvs = [];
+          var normals = [];
+          var axes = [];
+          var motions = [];
+          var infos = [];
+
+          function toWorld(point) {
+            return { x: (point.x - 0.5) * aspect, y: (0.5 - point.y) };
+          }
+
+          triangles.forEach(function (triangle, index) {
+            var p = triangle.points.map(toWorld);
+            var uv = triangle.points;
+            var cx = (p[0].x + p[1].x + p[2].x) / 3;
+            var cy = (p[0].y + p[1].y + p[2].y) / 3;
+            var half = 0.0022 + noise(signature, index * 13 + 3) * 0.0026;
+
+            // Impulso: hacia fuera del impacto y hacia la cámara.
+            var ix = (IMPACT.x - 0.5) * aspect;
+            var iy = 0.5 - IMPACT.y;
+            var dx = cx - ix;
+            var dy = cy - iy;
+            var span = Math.max(0.0001, Math.hypot(dx, dy));
+            var retained = triangle.ring === lastRing && noise(signature, index * 19 + 5) > 0.52 ? 1 : 0;
+
+            var outSpeed = retained
+              ? 0.03 + noise(signature, index * 23 + 7) * 0.06
+              : 0.32 + noise(signature, index * 29 + 11) * 0.46;
+            var zSpeed = retained
+              ? 0.02 + noise(signature, index * 41 + 19) * 0.07
+              : 0.42 + noise(signature, index * 43 + 23) * 1.05;
+            var spin = (retained ? 0.5 : 2.6) + noise(signature, index * 47 + 29) * (retained ? 0.7 : 5.4);
+            if (noise(signature, index * 53 + 33) > 0.5) spin = -spin;
+            var delay = noise(signature, index * 59 + 37) * 0.11;
+
+            // Eje de giro propio, normalizado.
+            var ax = noise(signature, index * 61 + 41) - 0.5;
+            var ay = noise(signature, index * 67 + 43) - 0.5;
+            var az = (noise(signature, index * 71 + 47) - 0.5) * 0.5;
+            var axisLength = Math.max(0.0001, Math.hypot(ax, ay, az));
+            ax /= axisLength; ay /= axisLength; az /= axisLength;
+
+            var shardSeed = noise(signature, index * 73 + 53);
+
+            function push(x, y, z, nx, ny, nz, u, v, kind) {
+              positions.push(x - cx, y - cy, z);
+              centroids.push(cx, cy, 0);
+              uvs.push(u, v);
+              normals.push(nx, ny, nz);
+              axes.push(ax, ay, az);
+              motions.push(outSpeed, zSpeed, spin, delay);
+              infos.push(shardSeed, kind, retained, span);
+            }
+
+            // Caras frontal y trasera.
+            for (var i = 0; i < 3; i++) {
+              push(p[i].x, p[i].y, half, 0, 0, 1, uv[i].x, uv[i].y, 0);
+            }
+            for (var j = 2; j >= 0; j--) {
+              push(p[j].x, p[j].y, -half, 0, 0, -1, uv[j].x, uv[j].y, 1);
+            }
+
+            // Muros laterales: un quad por arista, con normal hacia fuera del centroide.
+            for (var e = 0; e < 3; e++) {
+              var a = p[e];
+              var b = p[(e + 1) % 3];
+              var ua = uv[e];
+              var ub = uv[(e + 1) % 3];
+              var ex = b.x - a.x;
+              var ey = b.y - a.y;
+              var edgeLength = Math.max(0.0001, Math.hypot(ex, ey));
+              var nx = ey / edgeLength;
+              var ny = -ex / edgeLength;
+              var midX = (a.x + b.x) / 2 - cx;
+              var midY = (a.y + b.y) / 2 - cy;
+              if (nx * midX + ny * midY < 0) { nx = -nx; ny = -ny; }
+
+              push(a.x, a.y, half, nx, ny, 0, ua.x, ua.y, 2);
+              push(b.x, b.y, half, nx, ny, 0, ub.x, ub.y, 2);
+              push(b.x, b.y, -half, nx, ny, 0, ub.x, ub.y, 2);
+
+              push(a.x, a.y, half, nx, ny, 0, ua.x, ua.y, 2);
+              push(b.x, b.y, -half, nx, ny, 0, ub.x, ub.y, 2);
+              push(a.x, a.y, -half, nx, ny, 0, ua.x, ua.y, 2);
+            }
+          });
+
+          var geometry = new THREE.BufferGeometry();
+          geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+          geometry.setAttribute("aCentroid", new THREE.Float32BufferAttribute(centroids, 3));
+          geometry.setAttribute("aUv", new THREE.Float32BufferAttribute(uvs, 2));
+          geometry.setAttribute("aNrm", new THREE.Float32BufferAttribute(normals, 3));
+          geometry.setAttribute("aAxis", new THREE.Float32BufferAttribute(axes, 3));
+          geometry.setAttribute("aMotion", new THREE.Float32BufferAttribute(motions, 4));
+          geometry.setAttribute("aInfo", new THREE.Float32BufferAttribute(infos, 4));
+          return geometry;
+        }
+
+        /* ------------------------------------------------------------------ *
+         * Shaders
+         * ------------------------------------------------------------------ */
+        var glassVertex = [
+          "attribute vec3 aCentroid;",
+          "attribute vec2 aUv;",
+          "attribute vec3 aNrm;",
+          "attribute vec3 aAxis;",
+          "attribute vec4 aMotion;",   // salida, avance hacia cámara, giro, retardo
+          "attribute vec4 aInfo;",     // semilla, cara, retenido, distancia al impacto
+          "uniform float uT;",         // segundos desde el estallido (negativo antes)
+          "uniform float uCrack;",
+          "uniform vec2 uImpact;",
+          "varying vec2 vUv;",
+          "varying vec3 vNormalView;",
+          "varying vec3 vViewPos;",
+          "varying float vKind;",
+          "varying float vSeed;",
+          "varying float vFade;",
+          "",
+          "mat3 rotAxis(vec3 a, float angle) {",
+          "  float c = cos(angle); float s = sin(angle); float o = 1.0 - c;",
+          "  return mat3(",
+          "    c + a.x * a.x * o,        a.y * a.x * o + a.z * s,  a.z * a.x * o - a.y * s,",
+          "    a.x * a.y * o - a.z * s,  c + a.y * a.y * o,        a.z * a.y * o + a.x * s,",
+          "    a.x * a.z * o + a.y * s,  a.y * a.z * o - a.x * s,  c + a.z * a.z * o",
+          "  );",
+          "}",
+          "",
+          "void main() {",
+          "  vec2 toEdge = aCentroid.xy - uImpact;",
+          "  vec3 dir = normalize(vec3(toEdge, 0.0001));",
+          "",
+          // El cuarteado recorre la placa en radial antes del estallido.
+          "  float wave = clamp(uCrack * 1.9 - aInfo.w * 1.6, 0.0, 1.0);",
+          "  wave = wave * wave * (3.0 - 2.0 * wave);",
+          "  vec3 crack = dir * wave * 0.005 + vec3(0.0, 0.0, (aInfo.x - 0.5) * wave * 0.008);",
+          "",
+          "  float t = max(0.0, uT - aMotion.w);",
+          "  float kick = 1.0 - exp(-t / 0.26);",
+          "  vec3 launch = dir * aMotion.x + vec3(0.0, -0.1, aMotion.y);",
+          // Impulso que decae más deriva constante: una sola función continua.
+          "  vec3 offset = launch * kick + launch * 0.2 * t;",
+          "  float angle = aMotion.z * (kick * 0.55 + t * 0.42);",
+          "  mat3 spin = rotAxis(aAxis, angle);",
+          "",
+          "  vec3 local = mix(position, spin * position, step(0.0001, t));",
+          "  vec3 world = aCentroid + crack + offset + local;",
+          "  vec3 nrm = mix(aNrm, spin * aNrm, step(0.0001, t));",
+          "",
+          "  float fade = 1.0;",
+          "  if (aInfo.z > 0.5) {",
+          "    fade = mix(1.0, 0.5, smoothstep(0.7, 2.6, t));",
+          "  } else {",
+          "    fade = 1.0 - smoothstep(1.2, 2.7, t);",
+          "  }",
+          "",
+          "  vec4 mv = modelViewMatrix * vec4(world, 1.0);",
+          "  vViewPos = mv.xyz;",
+          "  vNormalView = normalize(normalMatrix * nrm);",
+          "  vUv = aUv;",
+          "  vKind = aInfo.y;",
+          "  vSeed = aInfo.x;",
+          "  vFade = fade;",
+          "  gl_Position = projectionMatrix * mv;",
+          "}"
+        ].join("\n");
+
+        var glassFragment = [
+          "precision highp float;",
+          "uniform sampler2D uBoard;",
+          "uniform float uFreeze;",
+          "uniform float uT;",
+          "varying vec2 vUv;",
+          "varying vec3 vNormalView;",
+          "varying vec3 vViewPos;",
+          "varying float vKind;",
+          "varying float vSeed;",
+          "varying float vFade;",
+          "",
+          "void main() {",
+          "  if (vFade < 0.02) discard;",
+          "  vec3 N = normalize(vNormalView);",
+          "  vec3 V = normalize(-vViewPos);",
+          "",
+          // Refracción: la cara dobla la captura según su propia normal.
+          "  vec2 bend = N.xy * 0.045;",
+          "  vec3 base;",
+          "  base.r = texture2D(uBoard, vUv + bend * 1.18).r;",
+          "  base.g = texture2D(uBoard, vUv + bend).g;",
+          "  base.b = texture2D(uBoard, vUv + bend * 0.82).b;",
+          "",
+          // Sello frío del momento de detener.
+          "  float luma = dot(base, vec3(0.299, 0.587, 0.114));",
+          "  base = mix(base, mix(vec3(luma), vec3(luma) * vec3(0.82, 0.98, 1.0), 0.6), uFreeze * 0.34);",
+          "  base *= mix(1.0, 0.88, uFreeze);",
+          "",
+          "  float ndv = clamp(dot(N, V), 0.0, 1.0);",
+          "  float fresnel = pow(1.0 - ndv, 3.0);",
+          "  vec3 cold = vec3(0.42, 0.62, 0.70);",
+          "  vec3 warm = vec3(0.95, 0.74, 0.34);",
+          "  vec3 rim = mix(cold, warm, smoothstep(0.42, 0.86, vSeed));",
+          "",
+          "  vec3 keyLight = normalize(vec3(-0.42, 0.68, 0.6));",
+          "  vec3 halfVec = normalize(keyLight + V);",
+          "  float spec = pow(max(dot(N, halfVec), 0.0), 52.0);",
+          "  float sheen = pow(max(dot(N, normalize(vec3(0.6, -0.3, 0.74))), 0.0), 18.0) * 0.22;",
+          "",
+          "  vec3 color = base * (0.84 + 0.28 * ndv);",
+          "  color += rim * fresnel * 0.8;",
+          "  color += vec3(1.0, 0.97, 0.9) * spec * 0.95;",
+          "  color += cold * sheen;",
+          "",
+          "  if (vKind > 1.5) {",
+          // Canto biselado: dorado propio, no un trozo de tablero estirado.
+          "    color = mix(color * 0.3, warm, 0.62) + spec * 0.7 + fresnel * 0.3;",
+          "  } else if (vKind > 0.5) {",
+          "    color *= 0.42;",
+          "  }",
+          "",
+          "  gl_FragColor = vec4(color, vFade);",
+          "}"
+        ].join("\n");
+
+        // Fondo: el abismo de la primera versión, sin galaxia hermosa.
+        var abyssFragment = [
+          "precision highp float;",
+          "uniform vec2 u_resolution;",
+          "uniform float u_time;",
+          "float hash21(vec2 p) {",
+          "  p = fract(p * vec2(123.34, 345.45));",
+          "  p += dot(p, p + 34.345);",
+          "  return fract(p.x * p.y);",
+          "}",
+          "vec2 hash22(vec2 p) {",
+          "  float n = hash21(p);",
+          "  return vec2(n, hash21(p + n + 19.19));",
+          "}",
+          "float valueNoise(vec2 p) {",
+          "  vec2 i = floor(p);",
+          "  vec2 f = fract(p);",
+          "  f = f * f * (3.0 - 2.0 * f);",
+          "  float a = hash21(i);",
+          "  float b = hash21(i + vec2(1.0, 0.0));",
+          "  float c = hash21(i + vec2(0.0, 1.0));",
+          "  float d = hash21(i + vec2(1.0, 1.0));",
+          "  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);",
+          "}",
+          "float fbm(vec2 p) {",
+          "  float value = 0.0;",
+          "  float amplitude = 0.54;",
+          "  mat2 turn = mat2(0.82, -0.57, 0.57, 0.82);",
+          "  for (int i = 0; i < 5; i++) {",
+          "    value += amplitude * valueNoise(p);",
+          "    p = turn * p * 2.03 + vec2(17.13, 9.71);",
+          "    amplitude *= 0.48;",
+          "  }",
+          "  return value;",
+          "}",
+          "float starLayer(vec2 p, float scale, float gate) {",
+          "  vec2 grid = p * scale;",
+          "  vec2 id = floor(grid);",
+          "  vec2 cell = fract(grid) - 0.5;",
+          "  float seed = hash21(id);",
+          "  vec2 shift = (hash22(id + 7.31) - 0.5) * 0.7;",
+          "  float d = length(cell - shift);",
+          "  float core = (1.0 - smoothstep(0.0, 0.038, d)) * step(gate, seed);",
+          "  float halo = (1.0 - smoothstep(0.0, 0.13, d)) * step(0.993, seed) * 0.28;",
+          "  float twinkle = 0.93 + 0.07 * sin(u_time * 0.08 + seed * 6.2831);",
+          "  return (core + halo) * twinkle;",
+          "}",
+          "void main() {",
+          "  vec2 uv = gl_FragCoord.xy / u_resolution.xy;",
+          "  float aspect = u_resolution.x / u_resolution.y;",
+          "  vec2 p = (uv - 0.5) * vec2(aspect, 1.0);",
+          "  vec2 drift = vec2(u_time * 0.0022, -u_time * 0.0014);",
+          "  vec2 warp = vec2(fbm(p * 1.42 + drift + 3.7), fbm(p * 1.42 - drift + 11.9)) - 0.5;",
+          "  vec2 q = p + warp * 0.17;",
+          "  float broad = fbm(q * 1.72 + drift * 0.7);",
+          "  float folds = fbm(q * 3.86 - drift * 1.3 + 23.4);",
+          "  float edgeBias = smoothstep(0.1, 0.74, length(p - vec2(-0.11, 0.03)));",
+          "  float nebula = smoothstep(0.54, 0.88, broad + folds * 0.18) * mix(0.16, 0.82, edgeBias);",
+          "  float coldVein = smoothstep(0.68, 0.91, fbm(q * 4.8 + vec2(7.4, 2.1))) * nebula;",
+          "  float rustTrace = smoothstep(0.81, 0.96, fbm(q * 6.1 + vec2(31.2, 15.7))) * edgeBias;",
+          "  float swallowingCloud = smoothstep(0.3, 0.73, fbm(q * 2.46 + vec2(4.9, 26.1)));",
+          "  vec3 color = vec3(0.0008, 0.002, 0.006);",
+          "  color += vec3(0.003, 0.012, 0.029) * (0.12 + broad * 0.45);",
+          "  color += vec3(0.012, 0.055, 0.076) * nebula * 0.72;",
+          "  color += vec3(0.014, 0.12, 0.15) * coldVein * 0.3;",
+          "  color += vec3(0.12, 0.025, 0.014) * rustTrace * 0.18;",
+          "  color *= mix(0.28, 1.0, swallowingCloud);",
+          "  float whiteStars = starLayer(p + warp * 0.035, 72.0, 0.982);",
+          "  float blueStars = starLayer(p * 1.017 - warp * 0.025 + 5.3, 141.0, 0.997);",
+          "  float dyingStars = starLayer(p - warp * 0.02 + 13.7, 96.0, 0.998);",
+          "  color += vec3(0.44, 0.57, 0.64) * whiteStars * 0.48;",
+          "  color += vec3(0.11, 0.26, 0.34) * blueStars * 0.4;",
+          "  color += vec3(0.4, 0.22, 0.12) * dyingStars * 0.3;",
+          "  vec2 timeCenter = p - vec2(0.035, -0.04);",
+          "  float radius = length(timeCenter);",
+          "  float timeRipple = sin(radius * 78.0 - u_time * 0.08) * exp(-radius * 7.5);",
+          "  color += vec3(0.025, 0.085, 0.1) * max(0.0, timeRipple) * 0.025;",
+          "  float abyss = 1.0 - smoothstep(0.09, 0.49, radius + warp.x * 0.13);",
+          "  color *= mix(1.0, 0.2, abyss);",
+          "  float vignette = 1.0 - smoothstep(0.42, 0.98, length(p * vec2(0.76, 1.0)));",
+          "  color *= mix(0.43, 1.0, vignette);",
+          "  gl_FragColor = vec4(pow(color, vec3(0.94)), 1.0);",
+          "}"
+        ].join("\n");
+
+        /* ------------------------------------------------------------------ *
+         * Escena
+         * ------------------------------------------------------------------ */
+        var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+        renderer.autoClear = false;
+
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.02, 60);
+        var cameraRest = 0.5 / Math.tan((FOV * Math.PI) / 360);
+
+        var bgScene = new THREE.Scene();
+        var bgCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        var bgMaterial = new THREE.ShaderMaterial({
+          uniforms: {
+            u_resolution: { value: new THREE.Vector2(2, 2) },
+            u_time: { value: 0 }
+          },
+          vertexShader: "void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }",
+          fragmentShader: abyssFragment,
+          depthTest: false,
+          depthWrite: false
+        });
+        bgScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bgMaterial));
+
+        var boardTexture = null;
+        var glassMaterial = new THREE.ShaderMaterial({
+          uniforms: {
+            uBoard: { value: null },
+            uT: { value: -1 },
+            uCrack: { value: 0 },
+            uFreeze: { value: 0 },
+            uImpact: { value: new THREE.Vector2(0, 0) }
+          },
+          vertexShader: glassVertex,
+          fragmentShader: glassFragment,
+          transparent: true,
+          depthTest: true,
+          depthWrite: true,
+          side: THREE.DoubleSide
+        });
+
+        var glassMesh = null;
+
+        function placeholderTexture() {
+          var pad = document.createElement("canvas");
+          pad.width = 512;
+          pad.height = 288;
+          var ctx = pad.getContext("2d");
+          var sky = ctx.createLinearGradient(0, 0, 0, 288);
+          sky.addColorStop(0, "#14201f");
+          sky.addColorStop(1, "#070d0f");
+          ctx.fillStyle = sky;
+          ctx.fillRect(0, 0, 512, 288);
+          ctx.strokeStyle = "rgba(199,170,105,0.34)";
+          for (var i = 0; i < 9; i++) {
+            ctx.strokeRect(24 + i * 52, 60, 40, 62);
+            ctx.strokeRect(24 + i * 52, 168, 40, 62);
+          }
+          ctx.fillStyle = "rgba(185,129,93,0.5)";
+          ctx.fillRect(0, 140, 512, 2);
+          var texture = new THREE.CanvasTexture(pad);
+          texture.minFilter = THREE.LinearFilter;
+          texture.magFilter = THREE.LinearFilter;
+          texture.generateMipmaps = false;
+          texture.wrapS = THREE.ClampToEdgeWrapping;
+          texture.wrapT = THREE.ClampToEdgeWrapping;
+          // El plan de teselado usa v = 0 en el borde superior, así que la textura
+          // no puede subirse volteada: sin esto la captura entra del revés.
+          texture.flipY = false;
+          return texture;
+        }
+
+        // WebGL rechaza subir una imagen de origen opaco. Se comprueba antes de
+        // construir la escena para poder avisar en vez de quedarse en negro.
+        function imageIsUsable(image) {
+          try {
+            var probe = document.createElement("canvas");
+            probe.width = 2;
+            probe.height = 2;
+            var ctx = probe.getContext("2d");
+            ctx.drawImage(image, 0, 0, 2, 2);
+            ctx.getImageData(0, 0, 1, 1);
+            return true;
+          } catch (error) {
+            return false;
+          }
+        }
+
+        function loadBoard(done) {
+          var image = new Image();
+          image.onload = function () {
+            if (!imageIsUsable(image)) {
+              showNotice(
+                "Abre la maqueta desde el servidor",
+                "WebGL no puede usar como textura una imagen cargada desde file://. El vidrio se muestra "
+                  + "con una placa de relleno. Para ver la captura real, sirve la carpeta y abre "
+                  + "http://127.0.0.1:4321/vfx/future-shattered-3d.html",
+                "node dev/mockups/serve.mjs"
+              );
+              done(placeholderTexture());
+              return;
+            }
+            var texture = new THREE.Texture(image);
+            texture.minFilter = THREE.LinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            texture.generateMipmaps = false;
+            texture.wrapS = THREE.ClampToEdgeWrapping;
+            texture.wrapT = THREE.ClampToEdgeWrapping;
+            // El plan de teselado usa v = 0 en el borde superior, así que la textura
+            // no puede subirse volteada: sin esto la captura entra del revés.
+            texture.flipY = false;
+            texture.needsUpdate = true;
+            done(texture);
+          };
+          image.onerror = function () {
+            showNotice(
+              "Falta la captura de referencia",
+              "No se pudo cargar assets/defeat-board-reference.png. El vidrio se muestra con una placa de relleno.",
+              null
+            );
+            done(placeholderTexture());
+          };
+          image.src = "assets/defeat-board-reference.png";
+        }
+
+        function stageSize() {
+          var rect = stage.getBoundingClientRect();
+          return {
+            width: Math.max(2, Math.round(rect.width)),
+            height: Math.max(2, Math.round(rect.height))
+          };
+        }
+
+        function rebuild(signature) {
+          var size = stageSize();
+          var aspect = size.width / size.height;
+
+          renderer.setSize(size.width, size.height, false);
+          camera.aspect = aspect;
+          camera.position.set(0, 0, cameraRest);
+          camera.lookAt(0, 0, 0);
+          camera.updateProjectionMatrix();
+          bgMaterial.uniforms.u_resolution.value.set(
+            size.width * renderer.getPixelRatio(),
+            size.height * renderer.getPixelRatio()
+          );
+          glassMaterial.uniforms.uImpact.value.set((IMPACT.x - 0.5) * aspect, 0.5 - IMPACT.y);
+
+          if (glassMesh) {
+            scene.remove(glassMesh);
+            glassMesh.geometry.dispose();
+          }
+          glassMesh = new THREE.Mesh(buildGeometry(signature, aspect), glassMaterial);
+          glassMesh.frustumCulled = false;
+          scene.add(glassMesh);
+        }
+
+        /* ------------------------------------------------------------------ *
+         * Reproducción
+         * ------------------------------------------------------------------ */
+        var startedAt = performance.now();
+        var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        function play() {
+          epoch += 1;
+          var playEpoch = epoch;
+          timers.forEach(function (timer) { clearTimeout(timer); });
+          timers = [];
+
+          var seed = seedInput.value || "748-203";
+          var signature = hashSeed(seed + ":defeat-glass") / 4294967296;
+          var code = futureCode(seed);
+          var bare = stage.classList.contains("bare");
+
+          futureCodeNode.textContent = code;
+          instrumentAzimuth.textContent = "Ω " + String(Math.round(signature * 359)).padStart(3, "0") + "°";
+          instrumentFuture.textContent = "FUTURO " + code;
+          stage.className = bare ? "stage bare" : "stage";
+
+          rebuild(signature);
+          startedAt = performance.now();
+
+          if (reducedMotion) {
+            stage.classList.add("burst", "revealed");
+          } else {
+            timers.push(setTimeout(function () {
+              if (epoch === playEpoch) stage.classList.add("burst");
+            }, BURST_AT / timeScale));
+            timers.push(setTimeout(function () {
+              if (epoch === playEpoch) stage.classList.add("revealed");
+            }, REVEAL_AT / timeScale));
+          }
+        }
+
+        function frame(now) {
+          requestAnimationFrame(frame);
+          if (!glassMesh) return;
+
+          var elapsed = (now - startedAt) * timeScale;
+          var shown = Math.min(TOTAL_MS, elapsed);
+
+          glassMaterial.uniforms.uFreeze.value = Math.min(1, elapsed / FREEZE_MS);
+          glassMaterial.uniforms.uCrack.value = Math.max(0, Math.min(1, (elapsed - CRACK_AT) / CRACK_MS));
+          glassMaterial.uniforms.uT.value = reducedMotion ? 3 : (elapsed - BURST_AT) / 1000;
+          bgMaterial.uniforms.u_time.value = elapsed / 1000;
+
+          // Deriva de cámara: sólo después del estallido, y muy poca.
+          var after = Math.max(0, (elapsed - BURST_AT) / 1000);
+          var settle = 1 - Math.exp(-after / 1.6);
+          camera.position.z = cameraRest - 0.075 * settle;
+          camera.position.x = 0.022 * settle;
+          camera.position.y = 0.012 * settle;
+          camera.lookAt(0, 0, 0);
+
+          clock.textContent = (shown / 1000).toFixed(2) + " s";
+          instrumentTime.textContent = "T+" + (shown / 1000).toFixed(2) + " s";
+          fill.style.width = ((shown / TOTAL_MS) * 100).toFixed(1) + "%";
+
+          renderer.clear();
+          renderer.render(bgScene, bgCamera);
+          renderer.clearDepth();
+          renderer.render(scene, camera);
+        }
+
+        replay.addEventListener("click", play);
+        seedInput.addEventListener("change", play);
+        toggleSlow.addEventListener("click", function () {
+          var slow = timeScale === 1;
+          timeScale = slow ? 0.32 : 1;
+          toggleSlow.setAttribute("aria-pressed", slow ? "true" : "false");
+          play();
+        });
+        toggleInstruments.addEventListener("click", function () {
+          var bare = stage.classList.toggle("bare");
+          toggleInstruments.setAttribute("aria-pressed", bare ? "false" : "true");
+        });
+
+        var resizeTimer = 0;
+        window.addEventListener("resize", function () {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(play, 140);
+        });
+
+        loadBoard(function (texture) {
+          boardTexture = texture;
+          glassMaterial.uniforms.uBoard.value = boardTexture;
+          play();
+          requestAnimationFrame(frame);
+        });
+      });
+    </script>
+  </body>
+</html>
