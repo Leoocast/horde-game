@@ -339,6 +339,13 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   consecutivos, incluidas varias Varkas apiladas, no deben forzar su pérdida ni recrearlo entre
   beats. Su canvas 2D de destino debe permanecer oculto mientras no exista un Burn activo y durante
   cada handoff hasta que el nuevo efecto haya copiado su primer frame WebGL válido.
+- La derrota normal rompe la pantalla con `DefeatShatterAnimator.tsx`: la teselación pura y estable
+  por seed vive en `defeatShatterGeometry.ts`, las piezas interiores salen con profundidad y parte
+  del borde queda suspendida mientras aparece **Futuro perdido**. Antes del impacto rasteriza el
+  tablero sin el overlay final y mapea cada trozo exacto mediante UV globales y una cara
+  translúcida; las tapas/dorsos son azul grisáceo, los laterales biselados dorados y una capa Phong
+  aditiva da los reflejos de ambas luces. Reutiliza el renderer WebGL compartido y conserva una
+  fractura SVG quieta para movimiento reducido o falta de WebGL.
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado
   aunque los impactos visuales se escalonen.
 

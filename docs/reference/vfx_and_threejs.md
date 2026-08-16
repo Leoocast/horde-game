@@ -60,6 +60,16 @@ Implementaciones utiles como referencia:
   `uCollapse` y `uBurst`, para no mezclar cubrir la escena con liberar el nuevo futuro; el giro se
   acumula por delta time. No es un animador de carta: no consulta store ni engine, solo presenta la
   transicion que `App` ya decidio.
+- `DefeatShatterAnimator.tsx`: al perder una partida normal tesela la pantalla en vidrio radial,
+  expulsa los fragmentos interiores con profundidad y conserva piezas exteriores suspendidas
+  detras del resultado **Futuro perdido**. La geometria y el reparto estable por seed viven en
+  `defeatShatterGeometry.ts`; antes del primer impacto `html-to-image` rasteriza el `.game-screen`
+  sin el overlay final y cada cara recibe las UV globales de su trozo exacto con opacidad reducida.
+  Las tapas y dorsos son vidrio azul grisaceo translucido; los laterales biselados conservan oro
+  mas denso y una segunda cara Phong aditiva recoge los reflejos frios y dorados. El animador copia
+  mediante `renderSharedVfxFrame` y deja una fractura SVG quieta para movimiento reducido o falta de
+  WebGL. Si la captura falla, el material fisico sigue presentando la rotura sin bloquear el
+  resultado.
 
 Para cualquier efecto nuevo:
 

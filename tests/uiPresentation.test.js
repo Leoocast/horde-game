@@ -16,6 +16,7 @@ import {
   burnRenderBatches,
 } from "../src/components/burnFireball";
 import { shardPath, shardSuction, shardTiming } from "../src/components/destinyShardSuction";
+import { buildDefeatShatterPlan } from "../src/components/defeatShatterGeometry";
 import { grownVfxSurface, sharedVfxSourceTop } from "../src/components/sharedVfxRenderer";
 import { frameLeafRootIndex, frameRootPathSpecs } from "../src/components/GrowthBuffAnimator";
 import { buildStorm, stormBoltTones } from "../src/components/StormBuffAnimator";
@@ -1040,6 +1041,52 @@ test("the rewrite suction resists once and then accelerates without ever stallin
   assert.equal(landing.opacity, 0);
   assert.equal(path[0].along, 1);
   assert.equal(path[0].across, 1);
+});
+
+test("defeat glass tiles the viewport deterministically and leaves broken edge shards behind", () => {
+  const plan = buildDefeatShatterPlan(16 / 9, 0.314159);
+  const repeated = buildDefeatShatterPlan(16 / 9, 0.314159);
+  const anotherFuture = buildDefeatShatterPlan(16 / 9, 0.731);
+
+  assert.deepEqual(plan, repeated);
+  assert.notDeepEqual(plan.shards, anotherFuture.shards);
+  assert.equal(plan.shards.length, 80);
+  assert.ok(plan.shards.some((shard) => shard.retained));
+  assert.ok(plan.shards.some((shard) => !shard.retained));
+
+  const points = plan.shards.flatMap((shard) => shard.points);
+  const hasCorner = (x, y) => points.some((point) => point.x === x && point.y === y);
+  assert.equal(hasCorner(-plan.halfWidth, plan.halfHeight), true);
+  assert.equal(hasCorner(plan.halfWidth, plan.halfHeight), true);
+  assert.equal(hasCorner(plan.halfWidth, -plan.halfHeight), true);
+  assert.equal(hasCorner(-plan.halfWidth, -plan.halfHeight), true);
+
+  const retained = plan.shards.filter((shard) => shard.retained);
+  const escaped = plan.shards.filter((shard) => !shard.retained);
+  assert.ok(plan.shards.every((shard) => shard.depth >= 0.075));
+  const maxRetainedTravel = Math.max(...retained.map((shard) => Math.hypot(shard.travel.x, shard.travel.y)));
+  const minEscapedTravel = Math.min(...escaped.map((shard) => Math.hypot(shard.travel.x, shard.travel.y)));
+  assert.ok(maxRetainedTravel < minEscapedTravel);
+});
+
+test("the defeat shatter reuses the shared WebGL renderer and provides reduced-motion glass", () => {
+  const animator = readFileSync(new URL("../src/components/DefeatShatterAnimator.tsx", import.meta.url), "utf8");
+  const modal = readFileSync(new URL("../src/components/DefeatModal.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(animator, /renderSharedVfxFrame/u);
+  assert.match(animator, /await import\("html-to-image"\)/u);
+  assert.match(animator, /new THREE\.CanvasTexture\(snapshot\)/u);
+  assert.match(animator, /function mappedFaceGeometry/u);
+  assert.match(animator, /const BODY_TONES = \[0x8d7537, 0xb19852, 0x66562f\]/u);
+  assert.match(animator, /opacity:\s*screenTexture \? 0\.54 : 0\.3/u);
+  assert.match(animator, /const goldSideMaterials = BODY_TONES\.map[\s\S]*?opacity:\s*0\.76/u);
+  assert.match(animator, /blending:\s*THREE\.AdditiveBlending/u);
+  assert.doesNotMatch(animator, /new THREE\.WebGLRenderer|forceContextLoss/u);
+  assert.match(animator, /prefers-reduced-motion:\s*reduce/u);
+  assert.match(modal, /<DefeatShatterAnimator seed=\{game\.seed\} onSequenceStart=\{startSequence\}/u);
+  assert.match(modal, /t\("destiny\.futureLost"\)/u);
+  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.defeat-shatter-canvas,[\s\S]*?display:\s*none;/u);
 });
 
 test("developer tools keep their development imports without a release URL escape hatch", () => {

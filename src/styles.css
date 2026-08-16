@@ -21510,3 +21510,306 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
 
 @keyframes destiny-scene-fade-out { from { opacity: 1; } to { opacity: 0; } }
 @keyframes destiny-scene-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* Defeat: the battlefield is rasterized once and mapped over the Three.js shards. As each shard
+   leaves, it carries its exact piece of the former screen and exposes the darkness underneath. */
+.game-result-overlay.game-result-defeat {
+  --result-accent: #aa9455;
+  --result-accent-bright: #ddca84;
+  --result-accent-soft: rgb(86 112 116 / 0.28);
+  display: block;
+  padding: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  animation: none;
+}
+
+.defeat-result-darkness {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 47%, rgb(49 61 62 / 0.28), rgb(3 7 8 / 0.84) 52%, rgb(0 2 3 / 0.98) 100%),
+    linear-gradient(180deg, rgb(18 25 26 / 0.34), rgb(1 4 5 / 0.94));
+  opacity: 0;
+}
+
+.game-result-defeat.is-sequence-running .defeat-result-darkness {
+  animation: defeat-darkness-in 760ms 70ms cubic-bezier(0.2, 0.68, 0.24, 1) both;
+}
+
+.defeat-shatter {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.defeat-shatter-canvas,
+.defeat-shatter-fractures,
+.defeat-shatter-impact,
+.defeat-shatter-vignette {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.defeat-shatter-canvas {
+  z-index: 2;
+  opacity: 0;
+  transform: translateZ(0);
+}
+
+.game-result-defeat.is-sequence-running .defeat-shatter-canvas.is-ready {
+  opacity: 1;
+  animation: defeat-glass-jolt 430ms 90ms cubic-bezier(0.22, 0.72, 0.3, 1) both;
+}
+
+.defeat-shatter-fractures {
+  z-index: 3;
+  overflow: visible;
+  fill: none;
+  stroke: rgb(224 201 125 / 0.84);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 0.12;
+  filter: drop-shadow(0 0 2px rgb(238 221 162 / 0.92)) drop-shadow(0 0 9px rgb(82 119 124 / 0.58));
+  mix-blend-mode: screen;
+}
+
+.defeat-shatter-fractures path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+.game-result-defeat.is-sequence-running .defeat-shatter-fractures path {
+  animation: defeat-fracture-life 1550ms cubic-bezier(0.16, 0.76, 0.18, 1) both;
+}
+
+.defeat-shatter-fractures path:nth-child(2n) { animation-delay: 55ms; }
+.defeat-shatter-fractures path:nth-child(3n) { animation-delay: 95ms; }
+
+.defeat-shatter-impact {
+  z-index: 4;
+  background:
+    radial-gradient(circle at 50.15% 48.9%, rgb(255 248 215 / 0.96) 0 0.28%, rgb(225 194 103 / 0.62) 0.8%, transparent 5%),
+    radial-gradient(circle at 50.15% 48.9%, rgb(91 135 139 / 0.42), transparent 18%);
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+
+.game-result-defeat.is-sequence-running .defeat-shatter-impact {
+  animation: defeat-impact-flash 640ms 70ms ease-out both;
+}
+
+.defeat-shatter-vignette {
+  z-index: 5;
+  background:
+    radial-gradient(circle at 50% 48%, transparent 0 28%, rgb(18 28 29 / 0.2) 58%, rgb(0 3 4 / 0.84) 100%),
+    repeating-conic-gradient(from 8deg at 50% 49%, transparent 0 11deg, rgb(185 160 87 / 0.026) 12deg 13deg);
+  opacity: 0;
+}
+
+.game-result-defeat.is-sequence-running .defeat-shatter-vignette {
+  animation: defeat-vignette-in 1450ms 420ms ease-out both;
+}
+
+.defeat-shatter.is-fallback .defeat-shatter-canvas { display: none; }
+.defeat-shatter.is-fallback .defeat-shatter-fractures { opacity: 0.48; }
+
+.defeat-result-revelation {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(24px, 4vh, 42px);
+  padding: 32px;
+  color: #e6ddc9;
+  animation: defeat-revelation-in 720ms cubic-bezier(0.16, 0.82, 0.22, 1) both;
+}
+
+.defeat-result-heading {
+  display: grid;
+  justify-items: center;
+  width: min(980px, 92vw);
+  text-align: center;
+  text-shadow: 0 3px 14px #000, 0 0 30px rgb(75 111 114 / 0.34);
+}
+
+.defeat-result-kicker {
+  display: grid;
+  width: min(410px, 78vw);
+  grid-template-columns: 1fr auto auto 1fr;
+  align-items: center;
+  gap: 12px;
+  color: #cbb673;
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  animation: defeat-kicker-in 560ms 80ms ease-out both;
+}
+
+.defeat-result-kicker span {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(185 160 87 / 0.68));
+}
+
+.defeat-result-kicker span:last-child {
+  background: linear-gradient(90deg, rgb(185 160 87 / 0.68), transparent);
+}
+
+.defeat-result-kicker svg { filter: drop-shadow(0 0 9px rgb(91 126 129 / 0.62)); }
+
+.defeat-result-heading h1 {
+  margin: 12px 0 0;
+  color: #e4d6c3;
+  font-family: "Cinzel Decorative", Georgia, "Times New Roman", serif;
+  font-size: clamp(3.2rem, 8.4vw, 7rem);
+  font-weight: 400;
+  letter-spacing: clamp(0.08em, 1.2vw, 0.18em);
+  line-height: 0.98;
+  text-transform: uppercase;
+  animation: defeat-title-in 720ms 80ms cubic-bezier(0.16, 0.82, 0.22, 1) both;
+}
+
+.defeat-result-heading p {
+  margin: 16px 0 0;
+  color: #918c81;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(12px, 1.35vw, 15px);
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  animation: defeat-subtitle-in 620ms 250ms ease-out both;
+}
+
+.game-screen .game-result-defeat .defeat-result-panel {
+  width: min(470px, calc(100vw - 32px));
+  padding: 22px 24px 24px;
+  border-color: rgb(155 138 79 / 0.52) !important;
+  border-top-color: rgb(216 193 119 / 0.62) !important;
+  background:
+    linear-gradient(90deg, transparent, rgb(84 115 118 / 0.1), transparent),
+    linear-gradient(150deg, rgb(20 29 30 / 0.97), rgb(5 10 11 / 0.99)) !important;
+  box-shadow:
+    inset 0 1px 0 rgb(255 229 210 / 0.07),
+    inset 0 -24px 42px rgb(0 0 0 / 0.2),
+    0 28px 90px rgb(0 0 0 / 0.7) !important;
+  animation: defeat-panel-rise 620ms 280ms cubic-bezier(0.16, 0.82, 0.22, 1) both;
+}
+
+.game-result-defeat .game-result-panel-mark {
+  border-color: rgb(196 172 94 / 0.62);
+  background: #101716;
+  box-shadow: 0 0 18px rgb(80 116 120 / 0.38);
+}
+
+.game-result-defeat .game-result-future {
+  border-color: rgb(163 143 79 / 0.42);
+  background: rgb(7 13 14 / 0.68);
+}
+
+.game-result-defeat .game-result-future strong { color: #91a5a5; }
+
+@keyframes defeat-darkness-in {
+  0% { opacity: 0; }
+  24% { opacity: 0.8; }
+  100% { opacity: 1; }
+}
+
+@keyframes defeat-impact-flash {
+  0% { opacity: 0; transform: scale(0.45); }
+  12% { opacity: 1; transform: scale(1); }
+  34% { opacity: 0.76; }
+  100% { opacity: 0; transform: scale(1.22); }
+}
+
+@keyframes defeat-fracture-life {
+  0%, 4% { opacity: 0; stroke-dashoffset: 1; }
+  15% { opacity: 1; }
+  32% { stroke-dashoffset: 0; }
+  66% { opacity: 0.52; }
+  100% { opacity: 0.12; stroke-dashoffset: 0; }
+}
+
+@keyframes defeat-glass-jolt {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  28% { transform: translate3d(-4px, 2px, 0) scale(1.006); }
+  48% { transform: translate3d(3px, -2px, 0) scale(1.003); }
+  72% { transform: translate3d(-1px, 1px, 0) scale(1.001); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes defeat-vignette-in {
+  from { opacity: 0; transform: scale(1.08); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes defeat-revelation-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes defeat-kicker-in {
+  from { opacity: 0; transform: scaleX(0.54); }
+  to { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes defeat-title-in {
+  from { opacity: 0; filter: blur(5px); letter-spacing: 0.28em; transform: translateY(12px); }
+  to { opacity: 1; filter: blur(0); transform: translateY(0); }
+}
+
+@keyframes defeat-subtitle-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes defeat-panel-rise {
+  from { opacity: 0; transform: translateY(20px) scale(0.982); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-height: 720px) {
+  .defeat-result-revelation { gap: 18px; padding-block: 18px; }
+  .defeat-result-heading h1 { font-size: clamp(2.8rem, 8vw, 5.5rem); }
+  .defeat-result-heading p { margin-top: 10px; }
+  .game-screen .game-result-defeat .defeat-result-panel { padding-block: 18px; }
+}
+
+@media (max-width: 520px) {
+  .defeat-result-revelation { padding: 20px 16px; }
+  .defeat-result-heading h1 { font-size: clamp(2.65rem, 13vw, 4.4rem); }
+  .defeat-result-kicker { width: min(340px, 88vw); letter-spacing: 0.24em; }
+  .game-result-defeat .game-result-actions { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .defeat-result-darkness,
+  .defeat-shatter-fractures path,
+  .defeat-shatter-impact,
+  .defeat-shatter-vignette,
+  .defeat-result-revelation,
+  .defeat-result-kicker,
+  .defeat-result-heading h1,
+  .defeat-result-heading p,
+  .game-screen .game-result-defeat .defeat-result-panel {
+    animation: none !important;
+  }
+  .defeat-result-darkness,
+  .defeat-shatter-vignette,
+  .defeat-result-revelation,
+  .defeat-result-kicker,
+  .defeat-result-heading h1,
+  .defeat-result-heading p,
+  .game-screen .game-result-defeat .defeat-result-panel { opacity: 1; }
+  .defeat-shatter-canvas,
+  .defeat-shatter-impact { display: none; }
+  .defeat-shatter-fractures path { opacity: 0.22; stroke-dashoffset: 0; }
+}
