@@ -339,16 +339,32 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   consecutivos, incluidas varias Varkas apiladas, no deben forzar su pérdida ni recrearlo entre
   beats. Su canvas 2D de destino debe permanecer oculto mientras no exista un Burn activo y durante
   cada handoff hasta que el nuevo efecto haya copiado su primer frame WebGL válido.
-- La derrota normal rompe la pantalla con `DefeatShatterAnimator.tsx`: la teselación pura y estable
-  por seed vive en `defeatShatterGeometry.ts`, las piezas interiores salen con profundidad y parte
-  del borde queda suspendida mientras aparece **Futuro perdido**. Antes del impacto Electron toma
-  una captura real con `webContents.capturePage()`; la web conserva `html-to-image` como respaldo.
-  La captura debe validarse antes de crear la escena y no existe textura plana de reserva. Después
-  mapea cada trozo exacto mediante UV globales. La captura queda
-  ensamblada y opaca durante el temblor y la propagación radial de grietas; al impacto se oculta el
-  tablero real, los trozos explotan y `defeatGlassShader.ts` los vuelve vidrio transparente con
-  Fresnel azul grisáceo/dorado y cantos biselados dorados. Reutiliza el renderer WebGL compartido y
-  conserva una fractura SVG quieta para movimiento reducido o falta de WebGL.
+- La derrota normal rompe la pantalla con `DefeatShatterAnimator.tsx` y su referencia canónica es la
+  maqueta `dev/mockups/vfx/future-shattered-3d.html`. Cada triángulo del plan estable por seed de
+  `defeatShatterGeometry.ts` es un **prisma extruido** —cara frontal, trasera y tres muros—, y toda
+  la animación vive en el vertex shader de `defeatGlassShader.ts` a partir de sus atributos por
+  trozo: una malla y una llamada de dibujo. Antes del impacto Electron toma una captura real con
+  `webContents.capturePage()`; la web conserva `html-to-image` como respaldo. La captura debe
+  validarse antes de crear la escena y no existe textura plana de reserva. Después mapea cada trozo
+  exacto mediante UV globales.
+- El reloj de la derrota es el de la maqueta: enfriar la captura a 700 ms, cuartear desde 620 ms,
+  onda expansiva e impulso a 1560 ms y nombrar el desenlace a 2900 ms. La lámina entera tiene
+  espesor cero —los muros vecinos coinciden y en escorzo asomarían como aristas doradas en
+  z-fighting— y sólo gana grosor al separarse. Las magnitudes del diseño se dieron sobre un plano de
+  alto 1 y llegan al shader escaladas por `uScale`; no reajustarlas convierte la tensión del
+  cuarteado en un salto visible.
+- Detrás del vidrio no hay un oscurecimiento de CSS sino el **abismo**: `createDefeatAbyssMaterial`
+  dibuja nebulosa fría, estrellas moribundas y un vacío central en la misma escena, antes que el
+  vidrio y sin escribir profundidad. El golpe tampoco monta destello DOM ni temblor de pantalla: lo
+  cuenta la onda WebGL aditiva. En el DOM sólo quedan las quebraduras SVG, la viñeta y el texto.
+  Las tres capas comparten escena porque `renderSharedVfxFrame` dibuja una escena con una cámara, y
+  el fotograma se pide en `LinearEncoding`: la conversión sRGB lava el abismo y enfría mal el
+  Fresnel. Reutiliza el renderer WebGL compartido y conserva una fractura SVG quieta para
+  movimiento reducido o falta de WebGL.
+- El desenlace es el bloque de la maqueta: etiqueta **Derrota** con reglas laterales, título en dos
+  líneas que se abren desde el centro con su corte de luz, subtítulo y placa de **Futuro**. Copiar
+  identidad vive en el canto de la placa y las dos salidas siguen siendo **Contemplar otro futuro**
+  y **Reescribir**; no vuelve a envolverse en un panel de resultado genérico.
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado
   aunque los impactos visuales se escalonen.
 

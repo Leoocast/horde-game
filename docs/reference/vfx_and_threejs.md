@@ -60,21 +60,30 @@ Implementaciones utiles como referencia:
   `uCollapse` y `uBurst`, para no mezclar cubrir la escena con liberar el nuevo futuro; el giro se
   acumula por delta time. No es un animador de carta: no consulta store ni engine, solo presenta la
   transicion que `App` ya decidio.
-- `DefeatShatterAnimator.tsx`: al perder una partida normal tesela la pantalla en vidrio radial,
-  expulsa los fragmentos interiores con profundidad y conserva piezas exteriores suspendidas
-  detras del resultado **Futuro perdido**. La geometria y el reparto estable por seed viven en
-  `defeatShatterGeometry.ts`; antes del primer impacto Electron captura el viewport real con
+- `DefeatShatterAnimator.tsx`: al perder una partida normal rompe la pantalla en vidrio con espesor
+  real. Su referencia canonica es `dev/mockups/vfx/future-shattered-3d.html`. La teselacion estable
+  por seed vive en `defeatShatterGeometry.ts` y cada triangulo sale como prisma extruido —cara
+  frontal, trasera y tres muros con normal propia— dentro de un unico `BufferGeometry`: toda la
+  animacion ocurre en el vertex shader a partir de atributos por trozo, no hay una malla por
+  fragmento. Antes del primer impacto Electron captura el viewport real con
   `webContents.capturePage()` y la version web usa `html-to-image` sobre `.game-screen` sin el
   overlay final. La captura se valida y el estallido no se construye si resulta uniforme o falla:
   no existe una textura de color que pueda fingir el tablero. Cada cara recibe las UV globales de
-  su trozo exacto. Primero las caras
-  permanecen opacas y ensambladas para reemplazar visualmente al tablero mientras este tiembla y
-  las aristas se encienden desde el impacto hacia afuera. En el impacto se oscurece el tablero real,
-  las piezas salen en profundidad y `defeatGlassShader.ts` transforma la captura en vidrio de alfa
-  bajo con Fresnel, bandas azul grisaceas y reflejos dorados; solo los cantos biselados conservan oro
-  mas denso. El animador copia mediante `renderSharedVfxFrame` y deja una fractura SVG quieta para
-  movimiento reducido o falta de WebGL. Si la captura falla, el material fisico sigue presentando
-  la rotura sin bloquear el resultado.
+  su trozo exacto.
+- La escena de la derrota son tres capas en una sola escena, porque `renderSharedVfxFrame` dibuja
+  una escena con una camara: el **abismo** de `createDefeatAbyssMaterial` al fondo, opaco y sin z;
+  el vidrio; y la onda expansiva aditiva por encima. Mientras la lamina esta entera su espesor es
+  cero —los muros vecinos coinciden en el espacio y asomarian como aristas en z-fighting— y solo
+  gana grosor al separarse cada trozo. `defeatGlassShader.ts` resuelve refraccion con dispersion
+  cromatica, Fresnel azul grisaceo/dorado y especular contra la normal real de cada trozo; solo los
+  cantos biselados conservan oro mas denso. El area hace de masa: la esquirla sale disparada y
+  voltea rapido mientras la placa grande apenas se mueve, y los pocos restos que se quedan se
+  eligen uno por sector angular para no apelotonarse.
+- El fotograma se pide en `LinearEncoding`: con la conversion sRGB del renderer compartido el
+  abismo se lava y el Fresnel deja de leerse frio. No hay destello DOM, oscurecimiento propio ni
+  temblor de pantalla; el golpe lo cuenta la onda. Queda una fractura SVG quieta para movimiento
+  reducido o falta de WebGL, y en ese caso la capa de respaldo aporta su propio fondo para que
+  nunca asome el tablero vivo por debajo.
 
 Para cualquier efecto nuevo:
 

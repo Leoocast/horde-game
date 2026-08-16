@@ -155,6 +155,21 @@ test("devlost starts at 15 Life without enabling the Developer Mode setup", () =
   assert.equal(game.setupTurnsRemaining, 3);
 });
 
+test("devwin starts with only two Host cards and otherwise uses the normal setup", () => {
+  const game = createInitialGame(playerDeck, hostDeck, "devwin", 3);
+  const hostCardCount = game.host.archive.length
+    + game.host.field.length
+    + game.host.memory.length
+    + game.host.oblivion.length;
+
+  assert.equal(hostCardCount, 2);
+  assert.equal(game.host.archive.length, 2);
+  assert.equal(game.player.life, 50);
+  assert.equal(game.player.hand.length, 7);
+  assert.equal(game.player.field.length, 0);
+  assert.equal(game.setupTurnsRemaining, 3);
+});
+
 test("every expanded card copy has a unique instance id", () => {
   const cards = [...expandDeck(playerDeck, "player"), ...expandDeck(hostDeck, "host")];
   const ids = cards.map((card) => card.instanceId);

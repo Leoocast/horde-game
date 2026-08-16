@@ -16465,11 +16465,6 @@
   animation-delay: 1100ms;
 }
 
-.game-screen .game-result-defeat .game-result-panel {
-  animation-duration: 460ms;
-  animation-delay: 0ms;
-}
-
 /* One-shot warning shown before the first Host turn that resolves in Surge. */
 .surge-transition {
   --result-accent: #a93f2d;
@@ -21599,8 +21594,10 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
 @keyframes destiny-scene-fade-out { from { opacity: 1; } to { opacity: 0; } }
 @keyframes destiny-scene-fade-in { from { opacity: 0; } to { opacity: 1; } }
 
-/* Defeat: the battlefield is rasterized once and mapped over the Three.js shards. As each shard
-   leaves, it carries its exact piece of the former screen and exposes the darkness underneath. */
+
+/* Derrota: la pantalla se captura una vez y se mapea sobre los prismas de vidrio. Cada trozo se
+   lleva su recorte exacto de lo que fue el tablero y deja ver el abismo que había detrás. El
+   abismo, el vidrio y la onda son WebGL; aquí sólo viven las quebraduras, la viñeta y el texto. */
 .game-result-overlay.game-result-defeat {
   --result-accent: #aa9455;
   --result-accent-bright: #ddca84;
@@ -21613,20 +21610,6 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
   animation: none;
 }
 
-.defeat-result-darkness {
-  position: absolute;
-  z-index: 0;
-  inset: 0;
-  background:
-    radial-gradient(circle at 50% 47%, rgb(49 61 62 / 0.28), rgb(3 7 8 / 0.84) 52%, rgb(0 2 3 / 0.98) 100%),
-    linear-gradient(180deg, rgb(18 25 26 / 0.34), rgb(1 4 5 / 0.94));
-  opacity: 0;
-}
-
-.game-result-defeat.is-sequence-running .defeat-result-darkness {
-  animation: defeat-darkness-in 360ms 840ms cubic-bezier(0.2, 0.68, 0.24, 1) both;
-}
-
 .defeat-shatter {
   position: absolute;
   z-index: 1;
@@ -21637,278 +21620,314 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
 
 .defeat-shatter-canvas,
 .defeat-shatter-fractures,
-.defeat-shatter-impact,
 .defeat-shatter-vignette {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  pointer-events: none;
 }
 
 .defeat-shatter-canvas {
-  z-index: 2;
+  z-index: 1;
   opacity: 0;
   transform: translateZ(0);
 }
 
-.game-result-defeat.is-sequence-running .defeat-shatter-canvas.is-ready {
-  opacity: 1;
-  animation: defeat-screen-tremor 920ms cubic-bezier(0.36, 0.04, 0.2, 1) both;
-}
+.game-result-defeat.is-sequence-running .defeat-shatter-canvas.is-ready { opacity: 1; }
 
-.game-result-defeat.is-sequence-running .defeat-shatter-fractures {
-  animation: defeat-screen-tremor 920ms cubic-bezier(0.36, 0.04, 0.2, 1) both;
-}
-
+/* Las quebraduras crecen desde el impacto: los muros del prisma quedan casi de canto vistos de
+   frente, así que no sirven para enseñar la raja. El vidrio sí se tensa por debajo. */
 .defeat-shatter-fractures {
   z-index: 3;
   overflow: visible;
-  fill: none;
-  stroke: rgb(224 201 125 / 0.84);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 0.12;
-  filter: drop-shadow(0 0 2px rgb(238 221 162 / 0.92)) drop-shadow(0 0 9px rgb(82 119 124 / 0.58));
-  mix-blend-mode: screen;
+  filter: drop-shadow(0 0 3px rgb(185 222 221 / 0.46));
 }
 
 .defeat-shatter-fractures path {
+  fill: none;
+  stroke: rgb(225 237 229 / 0.78);
+  stroke-width: 0.12;
+  vector-effect: non-scaling-stroke;
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
+  opacity: 0;
 }
 
 .game-result-defeat.is-sequence-running .defeat-shatter-fractures path {
-  animation: defeat-fracture-life 1420ms 80ms cubic-bezier(0.16, 0.76, 0.18, 1) both;
+  animation: defeat-crack-grow 520ms 620ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
-.defeat-shatter-fractures path:nth-child(2n) { animation-delay: 125ms; }
-.defeat-shatter-fractures path:nth-child(3n) { animation-delay: 175ms; }
+.game-result-defeat.is-sequence-running .defeat-shatter-fractures path:nth-child(2n) { animation-delay: 740ms; }
+.game-result-defeat.is-sequence-running .defeat-shatter-fractures path:nth-child(3n) { animation-delay: 860ms; }
 
-.defeat-shatter-impact {
-  z-index: 4;
-  background:
-    radial-gradient(circle at 51.75% 51.5%, rgb(255 248 215 / 0.96) 0 0.28%, rgb(225 194 103 / 0.62) 0.8%, transparent 5%),
-    radial-gradient(circle at 51.75% 51.5%, rgb(91 135 139 / 0.42), transparent 18%);
-  opacity: 0;
-  mix-blend-mode: screen;
-}
-
-.game-result-defeat.is-sequence-running .defeat-shatter-impact {
-  animation: defeat-impact-flash 620ms 820ms ease-out both;
+/* Se van con el golpe: a partir de ahí la raja ya no es una línea, son trozos separándose. */
+.game-result-defeat.is-sequence-running .defeat-shatter-fractures {
+  animation: defeat-cracks-away 280ms 1560ms ease-out both;
 }
 
 .defeat-shatter-vignette {
-  z-index: 5;
+  z-index: 4;
   background:
-    radial-gradient(circle at 50% 48%, transparent 0 28%, rgb(18 28 29 / 0.2) 58%, rgb(0 3 4 / 0.84) 100%),
-    repeating-conic-gradient(from 8deg at 50% 49%, transparent 0 11deg, rgb(185 160 87 / 0.026) 12deg 13deg);
-  opacity: 0;
+    radial-gradient(ellipse at center, transparent 12%, rgb(1 5 6 / 0.16) 46%, rgb(0 2 3 / 0.78) 100%),
+    linear-gradient(180deg, rgb(3 8 9 / 0.12), rgb(0 3 4 / 0.46));
+  opacity: 0.22;
 }
 
 .game-result-defeat.is-sequence-running .defeat-shatter-vignette {
-  animation: defeat-vignette-in 980ms 1030ms ease-out both;
+  animation: defeat-vignette-close 700ms 1560ms ease both;
+}
+
+/* Sin WebGL o sin captura no hay vidrio: queda la fractura quieta sobre el vacío, nunca el
+   tablero vivo asomando por debajo. */
+.defeat-shatter.is-fallback {
+  background:
+    radial-gradient(circle at 52% 46%, rgb(21 33 34 / 0.9), rgb(2 6 7 / 0.97) 54%, rgb(0 2 3 / 1) 100%),
+    #010506;
 }
 
 .defeat-shatter.is-fallback .defeat-shatter-canvas { display: none; }
-.defeat-shatter.is-fallback .defeat-shatter-fractures { opacity: 0.48; }
+.defeat-shatter.is-fallback .defeat-shatter-fractures path { opacity: 0.48; stroke-dashoffset: 0; }
 
-.defeat-result-revelation {
+.defeat-outcome {
   position: absolute;
-  z-index: 3;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(24px, 4vh, 42px);
-  padding: 32px;
-  color: #e6ddc9;
-  animation: defeat-revelation-in 720ms cubic-bezier(0.16, 0.82, 0.22, 1) both;
-}
-
-.defeat-result-heading {
+  z-index: 8;
+  left: 50%;
+  top: 50%;
   display: grid;
+  width: min(820px, 94%);
   justify-items: center;
-  width: min(980px, 92vw);
+  gap: 8px;
+  isolation: isolate;
+  opacity: 0;
   text-align: center;
-  text-shadow: 0 3px 14px #000, 0 0 30px rgb(75 111 114 / 0.34);
+  pointer-events: none;
+  transform: translate(-50%, -48%);
+  animation: defeat-outcome-in 460ms ease-out both;
 }
 
-.defeat-result-kicker {
-  display: grid;
-  width: min(410px, 78vw);
-  grid-template-columns: 1fr auto auto 1fr;
-  align-items: center;
-  gap: 12px;
-  color: #cbb673;
-  font-family: "Trebuchet MS", Verdana, sans-serif;
-  font-size: 10px;
+.defeat-outcome::before {
+  position: absolute;
+  z-index: -1;
+  inset: -34% -20%;
+  content: "";
+  background: radial-gradient(ellipse, rgb(1 5 7 / 0.94) 0 31%, rgb(2 8 10 / 0.72) 52%, transparent 74%);
+  filter: blur(12px);
+}
+
+.defeat-outcome button { pointer-events: auto; }
+
+/* Derrota sube y respira: separada del título deja de leerse como su primera línea y pasa a ser
+   lo que es, una etiqueta por encima del desenlace. */
+.defeat-kicker {
+  position: relative;
+  margin-bottom: 18px;
+  color: #d5a67e;
+  font: 800 12px/1 "Cinzel", Georgia, "Times New Roman", serif;
   letter-spacing: 0.34em;
   text-transform: uppercase;
-  animation: defeat-kicker-in 560ms 80ms ease-out both;
+  text-shadow: 0 0 12px rgb(154 71 42 / 0.48);
+  opacity: 0;
+  animation: defeat-copy-rise 620ms 100ms ease-out both;
 }
 
-.defeat-result-kicker span {
+.defeat-kicker::before,
+.defeat-kicker::after {
+  position: absolute;
+  top: 50%;
+  width: 56px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgb(185 160 87 / 0.68));
+  content: "";
+  background: linear-gradient(90deg, transparent, rgb(189 122 83 / 0.72));
 }
 
-.defeat-result-kicker span:last-child {
-  background: linear-gradient(90deg, rgb(185 160 87 / 0.68), transparent);
-}
+.defeat-kicker::before { right: calc(100% + 16px); }
+.defeat-kicker::after { left: calc(100% + 12px); transform: rotate(180deg); }
 
-.defeat-result-kicker svg { filter: drop-shadow(0 0 9px rgb(91 126 129 / 0.62)); }
-
-.defeat-result-heading h1 {
-  margin: 12px 0 0;
-  color: #e4d6c3;
-  font-family: "Cinzel Decorative", Georgia, "Times New Roman", serif;
-  font-size: clamp(3.2rem, 8.4vw, 7rem);
-  font-weight: 400;
-  letter-spacing: clamp(0.08em, 1.2vw, 0.18em);
-  line-height: 0.98;
+.defeat-title {
+  position: relative;
+  display: grid;
+  margin: 0;
+  color: #e9e6dc;
+  font: 700 clamp(38px, 7vw, 78px)/0.9 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.065em;
   text-transform: uppercase;
-  animation: defeat-title-in 720ms 80ms cubic-bezier(0.16, 0.82, 0.22, 1) both;
+  text-shadow: 0 3px 8px #000, 0 0 18px rgb(151 190 192 / 0.24);
 }
 
-.defeat-result-heading p {
-  margin: 16px 0 0;
-  color: #918c81;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(12px, 1.35vw, 15px);
-  letter-spacing: 0.19em;
+.defeat-title .line {
+  display: block;
+  opacity: 0;
+  clip-path: inset(0 50%);
+  transform: translateY(12px);
+}
+
+.defeat-title .line:last-child { margin-top: 0.08em; color: #c7ced0; }
+.defeat-title .line:first-child { animation: defeat-title-reveal 920ms 150ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.defeat-title .line:last-child { animation: defeat-title-reveal 980ms 270ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+.defeat-title::after {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 0;
+  height: 1px;
+  content: "";
+  background: #e9f3ef;
+  box-shadow: 0 0 11px 3px rgb(169 214 214 / 0.66);
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(-5deg);
+  animation: defeat-title-cut 760ms 230ms ease-out both;
+}
+
+.defeat-subtitle {
+  margin-top: 7px;
+  color: rgb(172 187 184 / 0.82);
+  font: 600 clamp(8px, 1.1vw, 11px)/1.4 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.25em;
   text-transform: uppercase;
-  animation: defeat-subtitle-in 620ms 250ms ease-out both;
+  opacity: 0;
+  animation: defeat-copy-rise 660ms 700ms ease-out both;
 }
 
-.game-screen .game-result-defeat .defeat-result-panel {
+.defeat-future-plate {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: min(390px, 88%);
+  margin-top: 11px;
+  padding: 10px 24px 9px;
+  border-top: 1px solid rgb(172 119 84 / 0.52);
+  border-bottom: 1px solid rgb(109 145 146 / 0.34);
+  background: linear-gradient(90deg, transparent, rgb(4 11 13 / 0.92) 17% 83%, transparent);
+  opacity: 0;
+  animation: defeat-plate-rise 680ms 860ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.defeat-future-plate span {
+  color: #c8d9d5;
+  font: 800 11px/1.2 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+
+.defeat-future-plate b {
+  color: #e5c89e;
+  font: 800 clamp(18px, 2.25vw, 25px)/1.2 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.13em;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 12px rgb(159 100 62 / 0.36);
+}
+
+/* Copiar identidad vive en el canto de la placa: la placa se lee igual y el gesto sigue a mano. */
+.defeat-future-plate button {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid rgb(158 151 110 / 0.26);
+  background: rgb(4 11 13 / 0.7);
+  color: #9da28c;
+  transform: translateY(-50%);
+}
+
+.defeat-future-plate button:hover,
+.defeat-future-plate button:focus-visible {
+  border-color: rgb(214 192 122 / 0.7);
+  color: var(--result-accent-bright);
+  outline: none;
+}
+
+.defeat-outcome-actions {
+  display: grid;
   width: min(470px, calc(100vw - 32px));
-  padding: 22px 24px 24px;
-  border-color: rgb(155 138 79 / 0.52) !important;
-  border-top-color: rgb(216 193 119 / 0.62) !important;
-  background:
-    linear-gradient(90deg, transparent, rgb(84 115 118 / 0.1), transparent),
-    linear-gradient(150deg, rgb(20 29 30 / 0.97), rgb(5 10 11 / 0.99)) !important;
-  box-shadow:
-    inset 0 1px 0 rgb(255 229 210 / 0.07),
-    inset 0 -24px 42px rgb(0 0 0 / 0.2),
-    0 28px 90px rgb(0 0 0 / 0.7) !important;
-  animation: defeat-panel-rise 620ms 280ms cubic-bezier(0.16, 0.82, 0.22, 1) both;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 22px;
+  opacity: 0;
+  animation: defeat-copy-rise 620ms 1080ms ease-out both;
 }
 
-.game-result-defeat .game-result-panel-mark {
-  border-color: rgb(196 172 94 / 0.62);
-  background: #101716;
-  box-shadow: 0 0 18px rgb(80 116 120 / 0.38);
+@keyframes defeat-crack-grow {
+  0% { opacity: 0; stroke-dashoffset: 1; }
+  18% { opacity: 1; }
+  100% { opacity: 0.9; stroke-dashoffset: 0; }
 }
 
-.game-result-defeat .game-result-future {
-  border-color: rgb(163 143 79 / 0.42);
-  background: rgb(7 13 14 / 0.68);
+@keyframes defeat-cracks-away {
+  from { opacity: 1; }
+  to { opacity: 0; transform: scale(1.04); }
 }
 
-.game-result-defeat .game-result-future strong { color: #91a5a5; }
-
-@keyframes defeat-darkness-in {
-  0% { opacity: 0; }
-  38% { opacity: 0.9; }
-  100% { opacity: 1; }
+@keyframes defeat-vignette-close {
+  from { opacity: 0.22; }
+  to { opacity: 0.72; }
 }
 
-@keyframes defeat-impact-flash {
-  0% { opacity: 0; transform: scale(0.45); }
-  12% { opacity: 1; transform: scale(1); }
-  34% { opacity: 0.76; }
-  100% { opacity: 0; transform: scale(1.22); }
+@keyframes defeat-outcome-in {
+  from { opacity: 0; transform: translate(-50%, -46%); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
 }
 
-@keyframes defeat-fracture-life {
-  0%, 4% { opacity: 0; stroke-dashoffset: 1; }
-  18% { opacity: 0.82; }
-  56% { opacity: 1; stroke-dashoffset: 0; }
-  68% { opacity: 0.9; stroke-dashoffset: 0; }
-  100% { opacity: 0.08; stroke-dashoffset: 0; }
+@keyframes defeat-title-reveal {
+  from { opacity: 0; clip-path: inset(0 50%); transform: translateY(12px); }
+  to { opacity: 1; clip-path: inset(0); transform: translateY(0); }
 }
 
-@keyframes defeat-screen-tremor {
-  0%, 7% { transform: translate3d(0, 0, 0) scale(1.008); filter: brightness(1); }
-  13% { transform: translate3d(-1px, 1px, 0) scale(1.008); }
-  20% { transform: translate3d(1px, -1px, 0) scale(1.008); }
-  29% { transform: translate3d(-2px, 1px, 0) scale(1.008); }
-  38% { transform: translate3d(2px, -1px, 0) scale(1.008); }
-  49% { transform: translate3d(-3px, 2px, 0) scale(1.009); }
-  59% { transform: translate3d(3px, -2px, 0) scale(1.009); }
-  69% { transform: translate3d(-5px, 2px, 0) scale(1.01); }
-  78% { transform: translate3d(4px, -3px, 0) scale(1.01); filter: brightness(1.08); }
-  87% { transform: translate3d(-6px, 3px, 0) scale(1.011); }
-  94% { transform: translate3d(5px, -2px, 0) scale(1.01); filter: brightness(1.18); }
-  100% { transform: translate3d(0, 0, 0) scale(1); filter: brightness(1); }
+@keyframes defeat-title-cut {
+  0% { opacity: 0; width: 0; }
+  35% { opacity: 0.9; }
+  100% { opacity: 0; width: 92%; }
 }
 
-@keyframes defeat-vignette-in {
-  from { opacity: 0; transform: scale(1.08); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes defeat-revelation-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes defeat-kicker-in {
-  from { opacity: 0; transform: scaleX(0.54); }
-  to { opacity: 1; transform: scaleX(1); }
-}
-
-@keyframes defeat-title-in {
-  from { opacity: 0; filter: blur(5px); letter-spacing: 0.28em; transform: translateY(12px); }
-  to { opacity: 1; filter: blur(0); transform: translateY(0); }
-}
-
-@keyframes defeat-subtitle-in {
-  from { opacity: 0; transform: translateY(8px); }
+@keyframes defeat-copy-rise {
+  from { opacity: 0; transform: translateY(7px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes defeat-panel-rise {
-  from { opacity: 0; transform: translateY(20px) scale(0.982); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+@keyframes defeat-plate-rise {
+  from { opacity: 0; transform: translateY(11px) scaleX(0.76); }
+  to { opacity: 1; transform: translateY(0) scaleX(1); }
 }
 
 @media (max-height: 720px) {
-  .defeat-result-revelation { gap: 18px; padding-block: 18px; }
-  .defeat-result-heading h1 { font-size: clamp(2.8rem, 8vw, 5.5rem); }
-  .defeat-result-heading p { margin-top: 10px; }
-  .game-screen .game-result-defeat .defeat-result-panel { padding-block: 18px; }
+  .defeat-outcome { gap: 4px; }
+  .defeat-kicker { margin-bottom: 12px; }
+  .defeat-outcome-actions { margin-top: 16px; }
 }
 
 @media (max-width: 520px) {
-  .defeat-result-revelation { padding: 20px 16px; }
-  .defeat-result-heading h1 { font-size: clamp(2.65rem, 13vw, 4.4rem); }
-  .defeat-result-kicker { width: min(340px, 88vw); letter-spacing: 0.24em; }
-  .game-result-defeat .game-result-actions { grid-template-columns: 1fr; }
+  .defeat-outcome { width: calc(100% - 32px); }
+  .defeat-kicker { letter-spacing: 0.24em; }
+  .defeat-kicker::before, .defeat-kicker::after { width: 32px; }
+  .defeat-future-plate { min-width: 100%; }
+  .defeat-outcome-actions { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .defeat-result-darkness,
+  .defeat-shatter-fractures,
   .defeat-shatter-fractures path,
-  .defeat-shatter-impact,
   .defeat-shatter-vignette,
-  .defeat-result-revelation,
-  .defeat-result-kicker,
-  .defeat-result-heading h1,
-  .defeat-result-heading p,
-  .game-screen .game-result-defeat .defeat-result-panel {
-    animation: none !important;
-  }
-  .defeat-result-darkness,
-  .defeat-shatter-vignette,
-  .defeat-result-revelation,
-  .defeat-result-kicker,
-  .defeat-result-heading h1,
-  .defeat-result-heading p,
-  .game-screen .game-result-defeat .defeat-result-panel { opacity: 1; }
-  .defeat-shatter-canvas,
-  .defeat-shatter-impact { display: none; }
+  .defeat-outcome,
+  .defeat-kicker,
+  .defeat-title .line,
+  .defeat-title::after,
+  .defeat-subtitle,
+  .defeat-future-plate,
+  .defeat-outcome-actions { animation: none !important; }
+  .defeat-outcome,
+  .defeat-kicker,
+  .defeat-subtitle,
+  .defeat-future-plate,
+  .defeat-outcome-actions { opacity: 1; }
+  .defeat-outcome { transform: translate(-50%, -50%); }
+  .defeat-title .line { opacity: 1; clip-path: inset(0); transform: none; }
+  .defeat-title::after { display: none; }
+  .defeat-shatter-vignette { opacity: 0.72; }
+  .defeat-shatter-canvas { display: none; }
   .defeat-shatter-fractures path { opacity: 0.22; stroke-dashoffset: 0; }
 }

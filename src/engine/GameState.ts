@@ -6,9 +6,11 @@ import { buildChaosMutations, prepareChaosDeck } from "./ChaosMode";
 
 const DEVELOPER_SEED = "developer";
 const DEVLOST_SEED = "devlost";
+const DEVWIN_SEED = "devwin";
 const STANDARD_STARTING_LIFE = 50;
 const CHAOS_STARTING_LIFE = 35;
 const DEVLOST_STARTING_LIFE = 15;
+const DEVWIN_HOST_ARCHIVE_SIZE = 2;
 export const DEFAULT_PLAYER_DECK_LAND_COUNT = 9;
 const DEVELOPER_OPENING_HAND = ["the_judgment_of_elarion", "the_judgment_of_elarion"];
 const DEVELOPER_RANDOM_OPENING_CARDS = 5;
@@ -44,7 +46,7 @@ export function createInitialGame(
   const playerArchive = applyDeveloperOpeningHand(seed, shuffledPlayer.items);
   const shuffledHost = shuffleWithState(hostCards, randomState);
   randomState = shuffledHost.randomState;
-  const hostArchive = applyDeveloperHostOpeningArchive(seed, shuffledHost.items);
+  const hostArchive = applyDevwinHostArchive(seed, applyDeveloperHostOpeningArchive(seed, shuffledHost.items));
 
   const game: GameState = {
     seed,
@@ -168,6 +170,12 @@ function applyDeveloperHostOpeningArchive(seed: string, archive: CardInstance[])
     [ordered[index], ordered[replacementIndex]] = [ordered[replacementIndex], ordered[index]];
   }
   return ordered;
+}
+
+function applyDevwinHostArchive(seed: string, archive: CardInstance[]): CardInstance[] {
+  return seed.trim().toLowerCase() === DEVWIN_SEED
+    ? archive.slice(0, DEVWIN_HOST_ARCHIVE_SIZE)
+    : archive;
 }
 
 function placeOnBattlefield(game: GameState, entries: readonly { definitionId: string; amount: number }[]): void {

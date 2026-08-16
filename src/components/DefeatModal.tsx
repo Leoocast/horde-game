@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Copy, Orbit, RefreshCcw, Sparkles, Skull } from "lucide-react";
+import { Copy, RefreshCcw, Sparkles } from "lucide-react";
 import type { GameState } from "../engine/GameTypes";
 import { useToastStore } from "../store/useToastStore";
 import { useTranslation } from "../i18n/useTranslation";
@@ -12,6 +12,9 @@ type Props = {
   onContemplateFuture: () => void;
 };
 
+/** El desenlace se nombra cuando el abismo ya quedó al descubierto, no antes. */
+const REVEAL_AT_MS = 2900;
+
 export function DefeatModal({ game, onRewriteFuture, onContemplateFuture }: Props) {
   const t = useTranslation();
   const pushToast = useToastStore((state) => state.pushToast);
@@ -23,7 +26,7 @@ export function DefeatModal({ game, onRewriteFuture, onContemplateFuture }: Prop
   useEffect(() => {
     if (!sequenceStarted) return;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const timer = window.setTimeout(() => setRevealed(true), reducedMotion ? 60 : 1900);
+    const timer = window.setTimeout(() => setRevealed(true), reducedMotion ? 60 : REVEAL_AT_MS);
     return () => window.clearTimeout(timer);
   }, [sequenceStarted]);
 
@@ -38,53 +41,54 @@ export function DefeatModal({ game, onRewriteFuture, onContemplateFuture }: Prop
 
   return (
     <div className={`game-result-overlay game-result-defeat fixed inset-0 z-[140] ${sequenceStarted ? "is-sequence-running" : ""}`}>
-      <div className="defeat-result-darkness" />
       <DefeatShatterAnimator seed={game.seed} onSequenceStart={startSequence} />
 
       {revealed && (
-        <div className="defeat-result-revelation">
-          <header className="defeat-result-heading">
-            <div className="defeat-result-kicker" aria-hidden="true">
-              <span />
-              <Skull size={22} strokeWidth={1.45} />
-              <strong>{t("result.defeat")}</strong>
-              <span />
-            </div>
-            <h1 id="defeat-result-title">{t("destiny.futureLost")}</h1>
-            <p id="defeat-result-description">{t("result.expeditionDark")}</p>
-          </header>
+        <div
+          className="defeat-outcome"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="defeat-result-title"
+          aria-describedby="defeat-result-description"
+        >
+          <span className="defeat-kicker">{t("result.defeat")}</span>
+          <strong className="defeat-title" id="defeat-result-title">
+            <span className="line">{t("destiny.futureLostLineOne")}</span>
+            <span className="line">{t("destiny.futureLostLineTwo")}</span>
+          </strong>
+          <span className="defeat-subtitle" id="defeat-result-description">
+            {t("result.chapterLostAmongShards")}
+          </span>
 
-          <section
-            className="game-result-panel defeat-result-panel old-panel w-full max-w-md p-6 text-center"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="defeat-result-title"
-            aria-describedby="defeat-result-description"
-          >
-            <span className="game-result-panel-mark" />
-            <div className="game-result-future">
-              <span className="game-result-future-glyph" aria-hidden="true"><Orbit size={25} strokeWidth={1.35} /></span>
-              <span><small>{t("destiny.future", { code: futureCode })}</small><strong>{t("result.chroniclerDefeated")}</strong></span>
-              <button type="button" onClick={copySeed} title={t("destiny.copyIdentity")} aria-label={t("destiny.copyIdentity")}><Copy size={16} /></button>
-            </div>
+          <span className="defeat-future-plate">
+            <span>{t("destiny.futureWord")}</span>
+            <b>{futureCode}</b>
+            <button
+              type="button"
+              onClick={copySeed}
+              title={t("destiny.copyIdentity")}
+              aria-label={t("destiny.copyIdentity")}
+            >
+              <Copy size={14} />
+            </button>
+          </span>
 
-            <div className="game-result-actions mt-5 grid grid-cols-2 gap-3">
-              <button
-                className="game-result-action game-result-action-secondary flex h-12 w-full items-center justify-center gap-2"
-                onClick={onContemplateFuture}
-              >
-                <Sparkles size={17} />
-                {t("destiny.contemplateAnother")}
-              </button>
-              <button
-                className="game-result-action game-result-action-primary flex h-12 w-full items-center justify-center gap-2"
-                onClick={onRewriteFuture}
-              >
-                <RefreshCcw size={18} />
-                {t("destiny.rewriteThis")}
-              </button>
-            </div>
-          </section>
+          <div className="defeat-outcome-actions">
+            <button
+              className="game-result-action game-result-action-secondary flex h-12 items-center justify-center gap-2"
+              onClick={onContemplateFuture}
+            >
+              <Sparkles size={17} />
+              {t("destiny.contemplateAnother")}
+            </button>
+            <button
+              className="game-result-action game-result-action-primary flex h-12 items-center justify-center gap-2"
+              onClick={onRewriteFuture}
+            >
+              <RefreshCcw size={18} />
+              {t("destiny.rewriteThis")}
+            </button>
+          </div>
         </div>
       )}
     </div>

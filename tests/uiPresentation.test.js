@@ -1049,25 +1049,39 @@ test("defeat glass tiles the viewport deterministically and leaves broken edge s
   const anotherFuture = buildDefeatShatterPlan(16 / 9, 0.731);
 
   assert.deepEqual(plan, repeated);
-  assert.notDeepEqual(plan.shards, anotherFuture.shards);
-  assert.equal(plan.shards.length, 80);
-  assert.ok(plan.shards.some((shard) => shard.retained));
-  assert.ok(plan.shards.some((shard) => !shard.retained));
+  assert.notDeepEqual(plan.positions, anotherFuture.positions);
 
-  const points = plan.shards.flatMap((shard) => shard.points);
-  const hasCorner = (x, y) => points.some((point) => point.x === x && point.y === y);
-  assert.equal(hasCorner(-plan.halfWidth, plan.halfHeight), true);
-  assert.equal(hasCorner(plan.halfWidth, plan.halfHeight), true);
-  assert.equal(hasCorner(plan.halfWidth, -plan.halfHeight), true);
-  assert.equal(hasCorner(-plan.halfWidth, -plan.halfHeight), true);
+  // Cada triángulo es un prisma: 3 cara frontal + 3 trasera + 18 de los tres muros.
+  const VERTICES_PER_SHARD = 24;
+  assert.equal(plan.vertexCount % VERTICES_PER_SHARD, 0);
+  const shardCount = plan.vertexCount / VERTICES_PER_SHARD;
+  // 20 puntos de borde: 20 triángulos en el abanico central y 2 por celda en las
+  // tres coronas restantes.
+  assert.equal(shardCount, 140);
 
-  const retained = plan.shards.filter((shard) => shard.retained);
-  const escaped = plan.shards.filter((shard) => !shard.retained);
-  assert.ok(plan.shards.every((shard) => shard.depth >= 0.075));
-  assert.ok(plan.shards.every((shard) => shard.crackDelayMs + 190 < shard.delayMs));
-  const maxRetainedTravel = Math.max(...retained.map((shard) => Math.hypot(shard.travel.x, shard.travel.y)));
-  const minEscapedTravel = Math.min(...escaped.map((shard) => Math.hypot(shard.travel.x, shard.travel.y)));
-  assert.ok(maxRetainedTravel < minEscapedTravel);
+  // Todos los atributos describen los mismos vértices.
+  assert.equal(plan.centroids.length, plan.vertexCount * 3);
+  assert.equal(plan.uvs.length, plan.vertexCount * 2);
+  assert.equal(plan.motions.length, plan.vertexCount * 4);
+  assert.equal(plan.dynamics.length, plan.vertexCount * 3);
+  assert.equal(plan.infos.length, plan.vertexCount * 4);
+
+  // Las tres clases de cara existen: frontal, trasera y muro.
+  const kinds = new Set();
+  for (let i = 1; i < plan.infos.length; i += 4) kinds.add(plan.infos[i]);
+  assert.deepEqual([...kinds].sort(), [0, 1, 2]);
+
+  // Quedan restos y se va la mayoría, y los que se quedan viajan menos.
+  const retained = [];
+  const escaped = [];
+  for (let shard = 0; shard < shardCount; shard += 1) {
+    const vertex = shard * VERTICES_PER_SHARD;
+    const speed = Math.hypot(plan.motions[vertex * 4], plan.motions[vertex * 4 + 1]);
+    (plan.infos[vertex * 4 + 2] > 0.5 ? retained : escaped).push(speed);
+  }
+  assert.ok(retained.length > 0);
+  assert.ok(escaped.length > retained.length);
+  assert.ok(Math.max(...retained) < Math.min(...escaped));
 });
 
 test("the defeat shatter reuses the shared WebGL renderer and provides reduced-motion glass", () => {
@@ -1088,15 +1102,19 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(animator, /settleBefore\(captureBattlefield\(width, height\), 2600\)/u);
   assert.match(animator, /if \(!snapshot\) \{[\s\S]*?setFallback\(true\)[\s\S]*?return;/u);
   assert.doesNotMatch(animator, /new THREE\.DataTexture/u);
-  assert.match(animator, /function mappedFaceGeometry/u);
-  assert.match(animator, /const BODY_TONES = \[0x8d7537, 0xb19852, 0x66562f\]/u);
-  assert.match(animator, /const BURST_MS = 860/u);
   assert.match(animator, /createDefeatGlassMaterial/u);
-  assert.match(animator, /material\.uniforms\.uGlass\.value = burst/u);
-  assert.match(glassShader, /float glassAlpha = 0\.105 \+ fresnel \* 0\.24/u);
-  assert.match(glassShader, /float alpha = mix\(1\.0, glassAlpha, uGlass\)/u);
-  assert.match(glassShader, /gl_FragColor = vec4\(colour \* alpha, alpha\)/u);
-  assert.match(glassShader, /premultipliedAlpha:\s*true/u);
+  // Una sola malla con atributos por trozo: ni una geometría por fragmento ni luces
+  // de escena. El brillo depende de la orientación real, no de un Phong iluminado.
+  assert.match(animator, /new THREE\.BufferAttribute\(plan\.motions, 4\)/u);
+  assert.match(animator, /new THREE\.BufferAttribute\(plan\.dynamics, 3\)/u);
+  assert.doesNotMatch(animator, /ExtrudeGeometry|MeshPhongMaterial|PointLight|DirectionalLight/u);
+  assert.match(animator, /const BURST_MS = SHOCK_AT_MS/u);
+  assert.match(animator, /material\.uniforms\.uShock\.value/u);
+  // Prismas con espesor, Fresnel y canto biselado.
+  assert.match(glassShader, /float expand = clamp\(max\(wave \* 0\.25, flying\)/u);
+  assert.match(glassShader, /float fresnel = pow\(1\.0 - ndv, 3\.0\)/u);
+  assert.match(glassShader, /N \*= sign\(dot\(N, V\)/u);
+  assert.match(glassShader, /if \(vKind > 1\.5\)/u);
   assert.match(desktopBridge, /captureViewport\(\): Promise<string \| undefined>/u);
   assert.match(desktopBridge, /typeof captureViewport === "function"/u);
   assert.match(preload, /hostfall:capture-viewport/u);
@@ -1104,11 +1122,26 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.doesNotMatch(animator, /new THREE\.WebGLRenderer|forceContextLoss/u);
   assert.match(animator, /prefers-reduced-motion:\s*reduce/u);
   assert.match(modal, /<DefeatShatterAnimator seed=\{game\.seed\} onSequenceStart=\{startSequence\}/u);
-  assert.match(modal, /reducedMotion \? 60 : 1900/u);
-  assert.match(modal, /t\("destiny\.futureLost"\)/u);
-  assert.match(styles, /animation:\s*defeat-screen-tremor 920ms/u);
-  assert.match(styles, /animation:\s*defeat-darkness-in 360ms 840ms/u);
-  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.defeat-shatter-canvas,[\s\S]*?display:\s*none;/u);
+  assert.match(modal, /reducedMotion \? 60 : REVEAL_AT_MS/u);
+  assert.match(modal, /const REVEAL_AT_MS = 2900/u);
+  assert.match(modal, /t\("destiny\.futureLostLineOne"\)/u);
+  assert.match(modal, /t\("destiny\.futureLostLineTwo"\)/u);
+  // El abismo va detrás del vidrio en la misma escena, y en lineal: la conversión sRGB
+  // del renderer compartido lo lava y el Fresnel deja de leerse frío.
+  assert.match(animator, /createDefeatAbyssMaterial/u);
+  assert.match(animator, /abyssMesh\.renderOrder = -10/u);
+  assert.match(animator, /outputEncoding: THREE\.LinearEncoding/u);
+  // Las magnitudes del cuarteado se dieron sobre un plano de alto 1: escalar sin
+  // reajustarlas convierte la tensión en un salto visible.
+  assert.match(glassShader, /dir \* wave \* 0\.004 \* uScale/u);
+  // Sin rastro del montaje anterior: ni destello DOM, ni oscurecimiento propio, ni
+  // temblor de pantalla. El golpe lo cuenta la onda WebGL.
+  assert.doesNotMatch(animator, /defeat-shatter-impact/u);
+  assert.doesNotMatch(styles, /defeat-screen-tremor|defeat-result-darkness|defeat-shatter-impact/u);
+  assert.match(styles, /animation:\s*defeat-crack-grow 520ms 620ms/u);
+  assert.match(styles, /animation:\s*defeat-cracks-away 280ms 1560ms/u);
+  assert.match(styles, /animation:\s*defeat-vignette-close 700ms 1560ms/u);
+  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.defeat-shatter-canvas \{ display:\s*none; \}/u);
 });
 
 test("developer tools keep their development imports without a release URL escape hatch", () => {
