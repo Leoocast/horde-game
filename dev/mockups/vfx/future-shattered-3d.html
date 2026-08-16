@@ -66,6 +66,7 @@
       }
       .stage canvas.glass { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; display: block; }
 
+
       .notice {
         position: absolute; z-index: 9; left: 50%; top: 50%; width: min(560px, 90%);
         padding: 20px 24px; text-align: center; transform: translate(-50%, -50%);
@@ -140,8 +141,10 @@
         filter: blur(12px);
       }
       .stage.revealed .outcome { animation: outcome-in 460ms ease-out both; }
+      /* «Derrota» sube y respira: separada del título deja de leerse como su primera
+         línea y pasa a ser lo que es, una etiqueta por encima del desenlace. */
       .defeat-kicker {
-        position: relative; color: #d5a67e; font: 800 12px/1 "Cinzel", var(--serif);
+        position: relative; margin-bottom: 18px; color: #d5a67e; font: 800 12px/1 "Cinzel", var(--serif);
         letter-spacing: 0.34em; text-transform: uppercase; text-shadow: 0 0 12px rgb(154 71 42 / 0.48);
         opacity: 0;
       }
@@ -243,6 +246,7 @@
         <label for="seed">Semilla</label>
         <input id="seed" type="text" value="748-203" spellcheck="false" />
         <span class="spacer"></span>
+        <button id="toggleGlass" type="button" aria-pressed="false">Romper el vidrio</button>
         <button id="toggleSlow" type="button" aria-pressed="false">Cámara lenta</button>
         <button id="toggleInstruments" type="button" aria-pressed="true">Instrumentos</button>
       </div>
@@ -319,13 +323,12 @@
           <span class="defeat-kicker">Derrota</span>
           <strong class="defeat-title">
             <span class="line">Futuro</span>
-            <span class="line">Quebrado</span>
+            <span class="line">Perdido</span>
           </strong>
           <span class="defeat-subtitle">El Capítulo se pierde entre los fragmentos</span>
           <span class="future-plate">
             <span>Futuro</span>
             <b id="futureCode">000·000</b>
-            <small>El Cronista ha caído</small>
           </span>
         </div>
 
@@ -442,6 +445,7 @@
         var clock = document.getElementById("clock");
         var fill = document.getElementById("fill");
         var replay = document.getElementById("replay");
+        var toggleGlass = document.getElementById("toggleGlass");
         var toggleSlow = document.getElementById("toggleSlow");
         var toggleInstruments = document.getElementById("toggleInstruments");
         var instrumentTime = document.getElementById("instrumentTime");
@@ -464,6 +468,7 @@
         var epoch = 0;
         var timers = [];
         var timeScale = 1;
+        var glassMode = false;
 
         function showNotice(title, body, command) {
           notice.innerHTML = "";
@@ -865,6 +870,8 @@
         var glassFragment = [
           "precision highp float;",
           "uniform sampler2D uBoard;",
+          "uniform sampler2D uReticle;",
+          "uniform float uGlass;",
           "uniform float uFreeze;",
           "uniform float uT;",
           "uniform float uShock;",
@@ -937,6 +944,12 @@
           "",
           "  color += vec3(0.86, 0.94, 1.0) * shockBand * 0.3;",
           "",
+          // Modo Vidrio: el trozo se lleva el campo Y el retículo grabado encima, así
+          // que al salir no deja nada detrás. El aparato y lo que medía se van juntos.
+          "  vec4 mark = texture2D(uReticle, vUv + bend * 0.35);",
+          "  vec3 etched = mix(warm, vec3(0.86, 0.94, 0.98), 0.4) + spec * 0.6;",
+          "  color = mix(color, etched, mark.a * uGlass * 0.9);",
+          "",
           "  gl_FragColor = vec4(color, vFade);",
           "}"
         ].join("\n");
@@ -984,6 +997,7 @@
           "precision highp float;",
           "uniform vec2 u_resolution;",
           "uniform float u_time;",
+          "uniform float u_red;",
           "float hash21(vec2 p) {",
           "  p = fract(p * vec2(123.34, 345.45));",
           "  p += dot(p, p + 34.345);",
@@ -1060,6 +1074,16 @@
           "  color *= mix(1.0, 0.2, abyss);",
           "  float vignette = 1.0 - smoothstep(0.42, 0.98, length(p * vec2(0.76, 1.0)));",
           "  color *= mix(0.43, 1.0, vignette);",
+          // El vacío deja de ser sólo negro y arde. No basta con multiplicar la paleta:
+          // el abismo es casi cero, así que 2.6 x casi-nada sigue siendo casi nada.
+          // El rojo necesita suelo propio, y un rescoldo más caliente hacia el centro.
+          "  float heat = 1.0 - smoothstep(0.05, 0.92, length(p * vec2(0.82, 1.0)));",
+          "  vec3 ember = vec3(",
+          "    color.r * 2.4 + 0.072 + heat * 0.10,",
+          "    color.g * 0.38 + 0.011 + heat * 0.016,",
+          "    color.b * 0.30 + 0.009",
+          "  );",
+          "  color = mix(color, ember, u_red);",
           "  gl_FragColor = vec4(pow(color, vec3(0.94)), 1.0);",
           "}"
         ].join("\n");
@@ -1080,7 +1104,8 @@
         var bgMaterial = new THREE.ShaderMaterial({
           uniforms: {
             u_resolution: { value: new THREE.Vector2(2, 2) },
-            u_time: { value: 0 }
+            u_time: { value: 0 },
+            u_red: { value: 0 }
           },
           vertexShader: "void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }",
           fragmentShader: abyssFragment,
@@ -1112,6 +1137,8 @@
         var glassMaterial = new THREE.ShaderMaterial({
           uniforms: {
             uBoard: { value: null },
+            uReticle: { value: null },
+            uGlass: { value: 0 },
             uT: { value: -1 },
             uCrack: { value: 0 },
             uFreeze: { value: 0 },
@@ -1129,6 +1156,70 @@
         });
 
         var glassMesh = null;
+
+        // El retículo del instrumento, dibujado por nosotros. Al romper esto en vez de
+        // una captura desaparecen las tres rutas frágiles del animador real:
+        // capturePage(), html-to-image y la heurística de "¿tiene detalle visual?".
+        function reticleTexture() {
+          var pad = document.createElement("canvas");
+          pad.width = 1024;
+          pad.height = 576;
+          var ctx = pad.getContext("2d");
+          var kx = 1024 / 1000;
+          var ky = 576 / 562;
+
+          ctx.clearRect(0, 0, 1024, 576);
+          ctx.lineWidth = 1.4;
+
+          // Celdas cuadradas, alineadas al marco.
+          ctx.strokeStyle = "rgba(150, 198, 190, 0.30)";
+          ctx.beginPath();
+          for (var x = 26; x < 1000; x += 78) {
+            ctx.moveTo(x * kx, 0);
+            ctx.lineTo(x * kx, 576);
+          }
+          for (var y = 20; y < 562; y += 78) {
+            ctx.moveTo(0, y * ky);
+            ctx.lineTo(1024, y * ky);
+          }
+          ctx.stroke();
+
+          ctx.strokeStyle = "rgba(199, 170, 105, 0.72)";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(26 * kx, 20 * ky, 948 * kx, 522 * ky);
+
+          // El disco de grados.
+          ctx.save();
+          ctx.translate(500 * kx, 281 * ky);
+          ctx.strokeStyle = "rgba(199, 170, 105, 0.6)";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.arc(0, 0, 196 * ky, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(199, 170, 105, 0.42)";
+          ctx.beginPath();
+          ctx.arc(0, 0, 183 * ky, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(214, 192, 122, 0.85)";
+          ctx.lineWidth = 2.2;
+          for (var i = 0; i < 8; i++) {
+            var a = (i * Math.PI) / 4;
+            ctx.beginPath();
+            ctx.moveTo(Math.sin(a) * 208 * ky, -Math.cos(a) * 208 * ky);
+            ctx.lineTo(Math.sin(a) * 195 * ky, -Math.cos(a) * 195 * ky);
+            ctx.stroke();
+          }
+          ctx.restore();
+
+          var texture = new THREE.CanvasTexture(pad);
+          texture.minFilter = THREE.LinearFilter;
+          texture.magFilter = THREE.LinearFilter;
+          texture.generateMipmaps = false;
+          texture.wrapS = THREE.ClampToEdgeWrapping;
+          texture.wrapT = THREE.ClampToEdgeWrapping;
+          texture.flipY = false;
+          return texture;
+        }
 
         function placeholderTexture() {
           var pad = document.createElement("canvas");
@@ -1267,7 +1358,7 @@
           futureCodeNode.textContent = code;
           instrumentAzimuth.textContent = "Ω " + String(Math.round(signature * 359)).padStart(3, "0") + "°";
           instrumentFuture.textContent = "FUTURO " + code;
-          stage.className = bare ? "stage bare" : "stage";
+          stage.className = (bare ? "stage bare" : "stage") + (glassMode ? " glass" : "");
           void stage.offsetWidth;
           stage.classList.add("playing");
 
@@ -1297,6 +1388,9 @@
           glassMaterial.uniforms.uCrack.value = Math.max(0, Math.min(1, (elapsed - CRACK_AT) / CRACK_MS));
           glassMaterial.uniforms.uT.value = reducedMotion ? 3 : (elapsed - BURST_AT) / 1000;
           bgMaterial.uniforms.u_time.value = elapsed / 1000;
+          // El rojo entra con la ruptura, no desde el principio.
+          var redRamp = Math.max(0, Math.min(1, (elapsed - SHOCK_AT) / 1400));
+          bgMaterial.uniforms.u_red.value = glassMode ? redRamp : 0;
 
           var shock = (elapsed - SHOCK_AT) / SHOCK_MS;
           var shockLive = !reducedMotion && shock >= 0 && shock <= 1;
@@ -1325,6 +1419,12 @@
 
         replay.addEventListener("click", play);
         seedInput.addEventListener("change", play);
+        toggleGlass.addEventListener("click", function () {
+          glassMode = !glassMode;
+          toggleGlass.setAttribute("aria-pressed", glassMode ? "true" : "false");
+          glassMaterial.uniforms.uGlass.value = glassMode ? 1 : 0;
+          play();
+        });
         toggleSlow.addEventListener("click", function () {
           var slow = timeScale === 1;
           timeScale = slow ? 0.32 : 1;
@@ -1345,6 +1445,7 @@
         loadBoard(function (texture) {
           boardTexture = texture;
           glassMaterial.uniforms.uBoard.value = boardTexture;
+          glassMaterial.uniforms.uReticle.value = reticleTexture();
           play();
           requestAnimationFrame(frame);
         });
