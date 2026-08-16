@@ -414,8 +414,10 @@ El vórtice es un agujero negro dibujado por el renderer WebGL compartido: `dest
 resuelve en un solo plano el horizonte, el disco de acreción, el anillo de fotones, la materia que
 cae en espiral y la descarga de brasas de la liberación. Su reloj llega en dos tiempos separados,
 `uCollapse` y `uBurst`, para que cubrir, reescribir y liberar sigan siendo momentos distintos. El
-lienzo permanece oculto hasta copiar su primer frame válido; con movimiento reducido o sin contexto
-WebGL queda la silueta quieta `.destiny-vortex-still`.
+lienzo permanece oculto hasta copiar su primer frame válido. `uSeed` recibe una firma normalizada de
+la seed: materia, brasas y quiralidad se repiten al reescribir el mismo Futuro y cambian entre
+Futuros. Con movimiento reducido o sin un canvas utilizable queda la silueta quieta
+`.destiny-vortex-still`.
 
 La escena no se traga como un bloque rígido y tampoco gira entera. `destinyShardSuction.ts` da la
 geometría pura y la transición recorre el DOM para repartir la escena en piezas: cada una cae hacia

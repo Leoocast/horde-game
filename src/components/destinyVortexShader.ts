@@ -33,6 +33,7 @@ uniform vec2 uRes;          // viewport en px CSS
 uniform float uPixelRatio;
 uniform float uTime;        // reloj continuo en segundos, sólo para el titileo
 uniform float uSpin;        // giro acumulado por delta time; acelera al colapsar
+uniform float uSeed;        // firma 0..1: el mismo Futuro conserva materia y quiralidad
 uniform float uCollapse;    // 0..1 mientras el vórtice se traga la escena
 uniform float uBurst;       // 0..1 mientras libera el nuevo futuro
 uniform vec2 uCenter;       // centro del agujero en px CSS
@@ -111,8 +112,10 @@ float diskDensity(vec2 q, out float heat, out float ang) {
   ang = atan(d.y, d.x);
   heat = 0.0;
   if (rd < DISK_IN - 0.35 || rd > DISK_OUT) return 0.0;
-  float u = ang + uSpin * 2.4 / pow(max(rd, 0.6), 1.5);
-  float n = fbm3(vec3(cos(u) * 2.4, sin(u) * 2.4, rd * 1.35 - uSpin * 0.3));
+  float chirality = step(0.5, uSeed) * 2.0 - 1.0;
+  float seedPhase = uSeed * 6.2831;
+  float u = ang + seedPhase + chirality * uSpin * 2.4 / pow(max(rd, 0.6), 1.5);
+  float n = fbm3(vec3(cos(u) * 2.4, sin(u) * 2.4, rd * 1.35 - chirality * uSpin * 0.3 + uSeed * 4.7));
   float band = smoothstep(DISK_IN - 0.3, DISK_IN + 0.34, rd)
              * (1.0 - smoothstep(DISK_OUT - 1.7, DISK_OUT, rd));
   heat = clamp(1.18 - (rd - DISK_IN) / (DISK_OUT - DISK_IN), 0.0, 1.0);
@@ -124,7 +127,8 @@ float haloDensity(vec2 q, float len) {
   float band = smoothstep(0.34, 0.0, abs(len - HALO_R));
   if (band <= 0.002) return 0.0;
   float a = atan(q.y, q.x);
-  float n = fbm3(vec3(cos(a) * 3.0, sin(a) * 3.0, uSpin * 0.85));
+  float chirality = step(0.5, uSeed) * 2.0 - 1.0;
+  float n = fbm3(vec3(cos(a + uSeed * 6.2831) * 3.0, sin(a + uSeed * 6.2831) * 3.0, chirality * uSpin * 0.85 + uSeed * 3.9));
   // El arco es fuerte arriba y abajo, donde la luz rodea el horizonte, y se apaga en los costados.
   float vertical = 0.18 + 0.82 * abs(q.y) / max(len, 0.001);
   return band * vertical * smoothstep(0.26, 0.78, n + 0.18);
@@ -185,7 +189,7 @@ void main() {
   if (hz > 0.01) {
     float ringWidth = 0.05 + 0.05 * (1.0 - grow);
     float ring = smoothstep(ringWidth, 0.0, abs(len - hz * 1.07));
-    ring *= 0.72 + 0.46 * (0.5 + 0.5 * sin(uTime * 9.0 + atan(q.y, q.x) * 3.0));
+    ring *= 0.72 + 0.46 * (0.5 + 0.5 * sin(uTime * 9.0 + atan(q.y, q.x) * 3.0 + uSeed * 19.0));
     addLight(col, alpha, mix(uCore, uDisk, 0.32), ring * (1.6 + 1.1 * feed) * alive);
     float bloom = exp(-(len - hz) * (len - hz) * 2.6) * smoothstep(hz * 0.9, hz * 1.2, len);
     addLight(col, alpha, uDisk, bloom * (0.22 + 0.3 * feed) * alive);
@@ -194,9 +198,10 @@ void main() {
   // 5. Materia arrastrada: entra en espiral y se estira al filo del horizonte.
   for (int i = 0; i < INFALL; i++) {
     float fi = float(i);
-    float s1 = hash11(fi * 1.7 + 3.1);
-    float s2 = hash11(fi * 2.3 + 11.7);
-    float s3 = hash11(fi * 3.9 + 5.3);
+    float seedOffset = uSeed * 97.31;
+    float s1 = hash11(fi * 1.7 + 3.1 + seedOffset);
+    float s2 = hash11(fi * 2.3 + 11.7 + seedOffset);
+    float s3 = hash11(fi * 3.9 + 5.3 + seedOffset);
     float k = fract(uCollapse * (0.95 + s2 * 1.3) + s1);
     float ease = pow(k, 0.62);
     float rr = mix(7.4, max(hz, 0.06) * 1.06, ease);
@@ -238,9 +243,10 @@ void main() {
 
     for (int i = 0; i < EMBERS; i++) {
       float fi = float(i);
-      float s1 = hash11(fi * 1.31 + 0.7);
-      float s2 = hash11(fi * 2.71 + 4.3);
-      float s3 = hash11(fi * 4.17 + 9.1);
+      float seedOffset = uSeed * 113.17;
+      float s1 = hash11(fi * 1.31 + 0.7 + seedOffset);
+      float s2 = hash11(fi * 2.71 + 4.3 + seedOffset);
+      float s3 = hash11(fi * 4.17 + 9.1 + seedOffset);
       float delay = s3 * 0.16;
       float k = (uBurst - delay) / max(1.0 - delay, 0.001);
       if (k <= 0.0) continue;
@@ -260,7 +266,7 @@ void main() {
       float sz = (0.05 + s1 * 0.07) * (1.0 - 0.4 * k);
       float g = sz / (length(m) + sz * 0.8);
       // Cada brasa tiene su propia vida: unas se apagan enseguida y otras siguen cayendo al final.
-      float span = mix(0.46, 1.0, hash11(fi * 5.53 + 2.9));
+      float span = mix(0.46, 1.0, hash11(fi * 5.53 + 2.9 + seedOffset));
       float e = pow(clamp(g, 0.0, 1.0), 3.0) * (1.0 - smoothstep(span * 0.4, span, k));
       addLight(col, alpha, mix(uCore, mix(uDisk, uRim, k), smoothstep(0.0, 0.5, k)), e * 1.5);
     }

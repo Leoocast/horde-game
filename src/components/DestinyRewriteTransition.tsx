@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { useTranslation } from "../i18n/useTranslation";
 import { useAudioStore } from "../store/useAudioStore";
-import { futureCodeFromSeed } from "../utils/futureIdentity";
+import { futureCodeFromSeed, futureVisualSignature } from "../utils/futureIdentity";
 import { shardPath, shardSuction, shardTiming } from "./destinyShardSuction";
 import {
   DESTINY_HORIZON_RATIO,
@@ -41,7 +41,7 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-type Shard = { element: HTMLElement; rect: DOMRect };
+type Shard = { element: HTMLElement; rect: DOMRect; previousWillChange: string };
 
 /** Piezas visibles de la escena, sin conocer un solo nombre de clase del tablero. */
 function collectShards(root: Element, viewport: { width: number; height: number }): Shard[] {
@@ -63,7 +63,9 @@ function collectShards(root: Element, viewport: { width: number; height: number 
       }
       return;
     }
-    if (share >= SHARD_MIN_AREA) shards.push({ element, rect });
+    if (share >= SHARD_MIN_AREA) {
+      shards.push({ element, rect, previousWillChange: element.style.willChange });
+    }
   };
 
   for (const child of Array.from(root.children)) {
@@ -143,7 +145,9 @@ export function DestinyRewriteTransition({ kind, seed, onCovered, onComplete }: 
 
     return () => {
       for (const animation of animations) animation.cancel();
-      for (const { element } of shards) element.style.willChange = "";
+      for (const { element, previousWillChange } of shards) {
+        element.style.willChange = previousWillChange;
+      }
     };
   }, [phase]);
 
@@ -161,6 +165,7 @@ export function DestinyRewriteTransition({ kind, seed, onCovered, onComplete }: 
       uPixelRatio: { value: pixelRatio },
       uTime: { value: 0 },
       uSpin: { value: 0 },
+      uSeed: { value: futureVisualSignature(seed) },
       uCollapse: { value: 0 },
       uBurst: { value: 0 },
       uCenter: { value: new THREE.Vector2(0, 0) },
@@ -200,6 +205,7 @@ export function DestinyRewriteTransition({ kind, seed, onCovered, onComplete }: 
     let spin = 0;
     let frame = 0;
     let firstFramePresented = false;
+    let failedFrames = 0;
     const tick = (now: number) => {
       const elapsed = now - start;
       // El giro se acumula por delta time: acelera al colapsar sin saltar cuando cambia el ritmo.
@@ -224,10 +230,16 @@ export function DestinyRewriteTransition({ kind, seed, onCovered, onComplete }: 
       });
       if (drawn && !firstFramePresented) {
         firstFramePresented = true;
+        setStill(false);
         // El lienzo sólo se revela cuando ya tiene una imagen válida del shader.
         canvas.style.opacity = "1";
       }
-      if (!drawn && !firstFramePresented && sharedVfxUnavailable()) setStill(true);
+      if (!drawn && !firstFramePresented) {
+        failedFrames += 1;
+        // `false` también cubre un canvas sin contexto 2D, no sólo WebGL ausente. Dos intentos
+        // evitan mostrar el respaldo por un fallo transitorio del primer fotograma.
+        if (failedFrames >= 2 || sharedVfxUnavailable()) setStill(true);
+      }
       if (elapsed <= COMPLETE_MS) frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
@@ -240,7 +252,7 @@ export function DestinyRewriteTransition({ kind, seed, onCovered, onComplete }: 
       geometry.dispose();
       material.dispose();
     };
-  }, []);
+  }, [seed]);
 
   return (
     <div

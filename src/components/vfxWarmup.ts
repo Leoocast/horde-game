@@ -174,6 +174,7 @@ function createDestinyVortexFrame(): WarmupFrame {
       uPixelRatio: { value: 1 },
       uTime: { value: 0 },
       uSpin: { value: 0 },
+      uSeed: { value: 0.37 },
       uCollapse: { value: 0 },
       uBurst: { value: 0 },
       uCenter: { value: new THREE.Vector2(32, 32) },
