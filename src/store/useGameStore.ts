@@ -137,6 +137,12 @@ export type GameStore = {
   playerAutoTriggerCount: number;
   surgeTransitionActive: boolean;
   surgeTransitionShown: boolean;
+  /**
+   * Ángulo acumulado del disco de grados del fondo, en grados. Es presentación pura:
+   * no entra en `GameState`, no se persiste y no decide nada. Mide cómo se mueve el
+   * futuro impacto a impacto, no al cerrar la batalla.
+   */
+  destinyDial: number;
   hostCombatVisualDamage?: Record<string, number>;
   hostCombatDeadCardIds: string[];
   specialDeadCardIds: string[];
@@ -273,6 +279,8 @@ const COMBAT_VOLLEY_ANIMATION_MS = 1220;
 const COMBAT_VOLLEY_PROJECTILE_GAP_MS = 90;
 const COMBAT_VOLLEY_MAX_PROJECTILES = 6;
 const PLAYER_ATTACK_ANIMATION_MS = 500;
+/** Grados que el disco del fondo gira por cada suceso que decanta el futuro. */
+const DESTINY_DIAL_STEP = 7;
 const HOST_MILL_ANIMATION_MS = 720;
 const PLAYER_ATTACK_MILL_START_MS = 90;
 const PLAYER_ATTACK_MILL_GAP_MS = 35;
@@ -625,6 +633,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   playerAutoTriggerCount: 0,
   surgeTransitionActive: false,
   surgeTransitionShown: false,
+  destinyDial: 0,
   hostCombatVisualDamage: undefined,
   hostCombatDeadCardIds: [],
   specialDeadCardIds: [],
@@ -1693,6 +1702,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ) {
           useAudioStore.getState().playSfx(fireballHitSfx);
         }
+        // Cada atacante mueve el disco en su propio impacto, no al cerrar la batalla.
+        useGameStore.setState((state) => {
+          const striker = state.game.player.field.find((card) => card.instanceId === attackerId);
+          const struck = striker ? getPowerEndurance(state.game, striker).power > 0 : false;
+          return struck ? { destinyDial: state.destinyDial + DESTINY_DIAL_STEP } : {};
+        });
         useGameStore.setState((state) => {
           const afterLifesteal = resolvePlayerAttackerDrain(state.game, attackerId);
           const lifeGain = afterLifesteal.player.life - state.game.player.life;
@@ -2294,8 +2309,17 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
       if (gainedLife) useAudioStore.getState().playSfx("buff");
       notifyDiscardEffects(previous, next);
       if (gameEnded) return { ...createCleanUiState(), game: next };
+      // El disco lee el saldo de la pelea, no el daño. Si mueren los dos o no muere
+      // nadie, el futuro no se ha decantado y no se mueve. El daño directo al
+      // Cronista sí cuenta: ahí pierde él sin contrapartida.
+      const hostFell = Boolean(event.attackerDies);
+      const playerFell = Boolean(event.blockerId && event.blockerDies);
+      let dialTurn = 0;
+      if (hostFell !== playerFell) dialTurn = hostFell ? DESTINY_DIAL_STEP : -DESTINY_DIAL_STEP;
+      if (event.playerDamage > 0) dialTurn -= DESTINY_DIAL_STEP;
       return {
         game: next,
+        ...(dialTurn === 0 ? {} : { destinyDial: state.destinyDial + dialTurn }),
         hostCombatVisualDamage: nextVisualDamage(event),
         hostCombatDeadCardIds: nextDeadCardIds(event),
         ...(gainedLife ? startLifeBuffBeat() : {}),
