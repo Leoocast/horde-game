@@ -170,15 +170,32 @@ export function TemporalBackdrop({
         preserveAspectRatio="xMidYMid slice"
       >
         <defs>
+          {/* Celdas cuadradas. El viewBox se escala uniforme con `slice`, así que 78x78
+              en unidades del viewBox son cuadrados perfectos en pantalla. */}
           <pattern
             id="temporalBackdropCells"
             width="78"
-            height="62.5"
+            height="78"
             patternUnits="userSpaceOnUse"
             patternTransform="translate(26 20)"
           >
-            <path className="cell" d="M78 0H0V62.5" />
+            <path className="cell" d="M78 0H0V78" />
           </pattern>
+
+          {/* Vidrio: un reflejo diagonal muy tenue y un oscurecido hacia los cantos.
+              Son las dos señales que hacen leer una superficie física delante del
+              fondo en vez de unas líneas dibujadas sobre él. */}
+          <linearGradient id="temporalBackdropSheen" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#ffffff" stopOpacity="0" />
+            <stop offset="0.32" stopColor="#dbeef6" stopOpacity="0.028" />
+            <stop offset="0.45" stopColor="#ffffff" stopOpacity="0.05" />
+            <stop offset="0.6" stopColor="#dbeef6" stopOpacity="0.016" />
+            <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
+          </linearGradient>
+          <radialGradient id="temporalBackdropGlassEdge" cx="0.5" cy="0.5" r="0.74">
+            <stop offset="0.52" stopColor="#020a0c" stopOpacity="0" />
+            <stop offset="1" stopColor="#020a0c" stopOpacity="0.42" />
+          </radialGradient>
           {/* Blanco deja ver, negro oculta: el centro se vacía de celdas y reaparecen
               difuminadas hacia fuera, para que la rejilla no cruce por detrás de las
               cartas. Sólo enmascara las celdas, no el marco ni los grados. */}
