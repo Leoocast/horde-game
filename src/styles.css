@@ -209,6 +209,13 @@
     stroke-width: 0.9;
   }
 
+  .temporal-backdrop-grid .glass-lip {
+    fill: none;
+    stroke: rgb(226 240 246 / 0.11);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
   /* Los grados, en el oro del HUD para que pertenezcan al mismo aparato. */
   .temporal-backdrop-grid .dial-ring,
   .temporal-backdrop-grid .dial-arc {

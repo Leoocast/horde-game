@@ -215,7 +215,11 @@ export function TemporalBackdrop({
           fill="url(#temporalBackdropCells)"
           mask="url(#temporalBackdropCellMask)"
         />
+        <rect x="26" y="20" width="948" height="522" fill="url(#temporalBackdropGlassEdge)" />
+        <rect x="26" y="20" width="948" height="522" fill="url(#temporalBackdropSheen)" />
         <rect className="frame" x="26" y="20" width="948" height="522" />
+        {/* El canto que capta la luz, arriba e izquierda: da grosor al cristal. */}
+        <path className="glass-lip" d="M27 541 V21 H973" />
 
         {/* Los grados: la parte central del instrumento. */}
         <g className="dial" transform="translate(500 281)">
@@ -240,8 +244,8 @@ export function TemporalBackdrop({
         <g className="edge-tick">
           <path d="M260 20 V32 M494 20 V32 M728 20 V32" />
           <path d="M260 542 V530 M494 542 V530 M728 542 V530" />
-          <path d="M26 145 H38 M26 270 H38 M26 395 H38" />
-          <path d="M974 145 H962 M974 270 H962 M974 395 H962" />
+          <path d="M26 176 H38 M26 332 H38 M26 488 H38" />
+          <path d="M974 176 H962 M974 332 H962 M974 488 H962" />
         </g>
 
       </svg>
