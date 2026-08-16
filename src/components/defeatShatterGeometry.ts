@@ -13,6 +13,7 @@ export type DefeatShatterShard = {
   points: [DefeatShatterPoint, DefeatShatterPoint, DefeatShatterPoint];
   center: DefeatShatterPoint;
   depth: number;
+  crackDelayMs: number;
   delayMs: number;
   durationMs: number;
   retained: boolean;
@@ -134,10 +135,11 @@ function makeShard(
     points,
     center,
     depth: 0.075 + seededNoise(signature, shardIndex * 41 + 19) * 0.085,
-    delayMs: 150 + distanceRatio * 155 + seededNoise(signature, shardIndex * 43 + 23) * 55,
-    durationMs: (retained ? 720 : 820) + seededNoise(signature, shardIndex * 47 + 29) * 440,
+    crackDelayMs: 90 + distanceRatio * 470 + seededNoise(signature, shardIndex * 43 + 23) * 90,
+    delayMs: 880 + distanceRatio * 75 + seededNoise(signature, shardIndex * 47 + 29) * 70,
+    durationMs: (retained ? 720 : 820) + seededNoise(signature, shardIndex * 49 + 31) * 440,
     retained,
-    tone: Math.min(2, Math.floor(seededNoise(signature, shardIndex * 53 + 31) * 3)),
+    tone: Math.min(2, Math.floor(seededNoise(signature, shardIndex * 53 + 33) * 3)),
     travel: {
       x: directionX * force,
       y: directionY * force * 0.82,

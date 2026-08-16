@@ -21536,7 +21536,7 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
 }
 
 .game-result-defeat.is-sequence-running .defeat-result-darkness {
-  animation: defeat-darkness-in 760ms 70ms cubic-bezier(0.2, 0.68, 0.24, 1) both;
+  animation: defeat-darkness-in 360ms 840ms cubic-bezier(0.2, 0.68, 0.24, 1) both;
 }
 
 .defeat-shatter {
@@ -21565,7 +21565,11 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
 
 .game-result-defeat.is-sequence-running .defeat-shatter-canvas.is-ready {
   opacity: 1;
-  animation: defeat-glass-jolt 430ms 90ms cubic-bezier(0.22, 0.72, 0.3, 1) both;
+  animation: defeat-screen-tremor 920ms cubic-bezier(0.36, 0.04, 0.2, 1) both;
+}
+
+.game-result-defeat.is-sequence-running .defeat-shatter-fractures {
+  animation: defeat-screen-tremor 920ms cubic-bezier(0.36, 0.04, 0.2, 1) both;
 }
 
 .defeat-shatter-fractures {
@@ -21586,23 +21590,23 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
 }
 
 .game-result-defeat.is-sequence-running .defeat-shatter-fractures path {
-  animation: defeat-fracture-life 1550ms cubic-bezier(0.16, 0.76, 0.18, 1) both;
+  animation: defeat-fracture-life 1420ms 80ms cubic-bezier(0.16, 0.76, 0.18, 1) both;
 }
 
-.defeat-shatter-fractures path:nth-child(2n) { animation-delay: 55ms; }
-.defeat-shatter-fractures path:nth-child(3n) { animation-delay: 95ms; }
+.defeat-shatter-fractures path:nth-child(2n) { animation-delay: 125ms; }
+.defeat-shatter-fractures path:nth-child(3n) { animation-delay: 175ms; }
 
 .defeat-shatter-impact {
   z-index: 4;
   background:
-    radial-gradient(circle at 50.15% 48.9%, rgb(255 248 215 / 0.96) 0 0.28%, rgb(225 194 103 / 0.62) 0.8%, transparent 5%),
-    radial-gradient(circle at 50.15% 48.9%, rgb(91 135 139 / 0.42), transparent 18%);
+    radial-gradient(circle at 51.75% 51.5%, rgb(255 248 215 / 0.96) 0 0.28%, rgb(225 194 103 / 0.62) 0.8%, transparent 5%),
+    radial-gradient(circle at 51.75% 51.5%, rgb(91 135 139 / 0.42), transparent 18%);
   opacity: 0;
   mix-blend-mode: screen;
 }
 
 .game-result-defeat.is-sequence-running .defeat-shatter-impact {
-  animation: defeat-impact-flash 640ms 70ms ease-out both;
+  animation: defeat-impact-flash 620ms 820ms ease-out both;
 }
 
 .defeat-shatter-vignette {
@@ -21614,7 +21618,7 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
 }
 
 .game-result-defeat.is-sequence-running .defeat-shatter-vignette {
-  animation: defeat-vignette-in 1450ms 420ms ease-out both;
+  animation: defeat-vignette-in 980ms 1030ms ease-out both;
 }
 
 .defeat-shatter.is-fallback .defeat-shatter-canvas { display: none; }
@@ -21719,7 +21723,7 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
 
 @keyframes defeat-darkness-in {
   0% { opacity: 0; }
-  24% { opacity: 0.8; }
+  38% { opacity: 0.9; }
   100% { opacity: 1; }
 }
 
@@ -21732,18 +21736,25 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
 
 @keyframes defeat-fracture-life {
   0%, 4% { opacity: 0; stroke-dashoffset: 1; }
-  15% { opacity: 1; }
-  32% { stroke-dashoffset: 0; }
-  66% { opacity: 0.52; }
-  100% { opacity: 0.12; stroke-dashoffset: 0; }
+  18% { opacity: 0.82; }
+  56% { opacity: 1; stroke-dashoffset: 0; }
+  68% { opacity: 0.9; stroke-dashoffset: 0; }
+  100% { opacity: 0.08; stroke-dashoffset: 0; }
 }
 
-@keyframes defeat-glass-jolt {
-  0% { transform: translate3d(0, 0, 0) scale(1); }
-  28% { transform: translate3d(-4px, 2px, 0) scale(1.006); }
-  48% { transform: translate3d(3px, -2px, 0) scale(1.003); }
-  72% { transform: translate3d(-1px, 1px, 0) scale(1.001); }
-  100% { transform: translate3d(0, 0, 0) scale(1); }
+@keyframes defeat-screen-tremor {
+  0%, 7% { transform: translate3d(0, 0, 0) scale(1.008); filter: brightness(1); }
+  13% { transform: translate3d(-1px, 1px, 0) scale(1.008); }
+  20% { transform: translate3d(1px, -1px, 0) scale(1.008); }
+  29% { transform: translate3d(-2px, 1px, 0) scale(1.008); }
+  38% { transform: translate3d(2px, -1px, 0) scale(1.008); }
+  49% { transform: translate3d(-3px, 2px, 0) scale(1.009); }
+  59% { transform: translate3d(3px, -2px, 0) scale(1.009); }
+  69% { transform: translate3d(-5px, 2px, 0) scale(1.01); }
+  78% { transform: translate3d(4px, -3px, 0) scale(1.01); filter: brightness(1.08); }
+  87% { transform: translate3d(-6px, 3px, 0) scale(1.011); }
+  94% { transform: translate3d(5px, -2px, 0) scale(1.01); filter: brightness(1.18); }
+  100% { transform: translate3d(0, 0, 0) scale(1); filter: brightness(1); }
 }
 
 @keyframes defeat-vignette-in {

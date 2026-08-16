@@ -315,6 +315,12 @@ function registerIpcHandlers(): void {
     return Object.freeze({ version: app.getVersion(), platform: process.platform });
   });
 
+  ipcMain.handle("hostfall:capture-viewport", async (event) => {
+    assertTrustedRenderer(event);
+    const capture = await event.sender.capturePage();
+    return capture.isEmpty() ? undefined : capture.toDataURL();
+  });
+
   ipcMain.handle("hostfall:get-window-state", (event) => {
     assertTrustedRenderer(event);
     return currentWindowState(BrowserWindow.fromWebContents(event.sender) ?? mainWindow);

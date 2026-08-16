@@ -17,6 +17,7 @@ function subscribe<T>(channel: string, callback: (value: T) => void): () => void
 
 const desktopBridge = Object.freeze({
   getBootstrap: () => ipcRenderer.invoke("hostfall:get-bootstrap") as Promise<Readonly<{ version: string; platform: string }>>,
+  captureViewport: () => ipcRenderer.invoke("hostfall:capture-viewport") as Promise<string | undefined>,
   getWindowState: () => ipcRenderer.invoke("hostfall:get-window-state") as Promise<DesktopWindowState>,
   setFullscreen: (enabled: boolean) => ipcRenderer.invoke("hostfall:set-fullscreen", enabled) as Promise<DesktopWindowState>,
   onWindowStateChanged: (callback: (state: DesktopWindowState) => void) => subscribe("hostfall:window-state", callback),

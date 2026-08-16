@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import { captureDesktopViewport } from "../platform/desktopBridge";
 import { useAudioStore } from "../store/useAudioStore";
 import { futureVisualSignature } from "../utils/futureIdentity";
 import {
@@ -8,6 +9,7 @@ import {
   type DefeatShatterPoint,
   type DefeatShatterShard,
 } from "./defeatShatterGeometry";
+import { createDefeatGlassMaterial, type DefeatGlassMaterial } from "./defeatGlassShader";
 import { renderSharedVfxFrame } from "./sharedVfxRenderer";
 
 type Props = {
@@ -18,18 +20,23 @@ type Props = {
 type RenderedShard = {
   group: THREE.Group;
   plan: DefeatShatterShard;
+  edgeMaterial: THREE.LineBasicMaterial;
 };
 
 type ShatterScene = {
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   shards: RenderedShard[];
-  edgeMaterials: THREE.LineBasicMaterial[];
+  faceMaterials: DefeatGlassMaterial[];
+  glassBodyMaterials: THREE.MeshPhongMaterial[];
+  goldSideMaterials: THREE.MeshPhongMaterial[];
   impactLight: THREE.PointLight;
   dispose: () => void;
 };
 
-const SHATTER_HOLD_MS = 2300;
+const BURST_MS = 860;
+const GLASS_TRANSITION_MS = 260;
+const SHATTER_HOLD_MS = 3000;
 const BODY_TONES = [0x8d7537, 0xb19852, 0x66562f] as const;
 const SCREEN_TINTS = [0xc5d1d0, 0xd2d3c6, 0xa9bec1] as const;
 const EDGE_TONES = [0xe2c66f, 0xbba05a, 0xf0dc91] as const;
@@ -85,12 +92,87 @@ function mappedFaceGeometry(
   return geometry;
 }
 
+function nextPaint(): Promise<void> {
+  return new Promise((resolve) => window.requestAnimationFrame(() => resolve()));
+}
+
+function settleBefore<T>(task: Promise<T>, timeoutMs: number): Promise<T | undefined> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (value?: T) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timer);
+      resolve(value);
+    };
+    const timer = window.setTimeout(() => finish(), timeoutMs);
+    task.then((value) => finish(value)).catch(() => finish());
+  });
+}
+
+async function dataUrlToCanvas(
+  dataUrl: string,
+  width: number,
+  height: number,
+): Promise<HTMLCanvasElement | undefined> {
+  const image = new Image();
+  image.decoding = "async";
+  const loadedTask = new Promise<boolean>((resolve) => {
+    image.onload = () => resolve(true);
+    image.onerror = () => resolve(false);
+  });
+  image.src = dataUrl;
+  if (!await settleBefore(loadedTask, 900)) return undefined;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  if (!context) return undefined;
+  context.drawImage(image, 0, 0, width, height);
+  return canvas;
+}
+
+/** Rechaza lienzos uniformes: nunca sustituimos la pantalla por un color de reserva. */
+function snapshotHasVisualDetail(canvas: HTMLCanvasElement): boolean {
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context || canvas.width < 2 || canvas.height < 2) return false;
+  const bins = new Set<string>();
+  let minLuma = 255;
+  let maxLuma = 0;
+  let opaqueSamples = 0;
+  const columns = 11;
+  const rows = 7;
+  for (let row = 1; row <= rows; row += 1) {
+    for (let column = 1; column <= columns; column += 1) {
+      const x = Math.min(canvas.width - 1, Math.round((column / (columns + 1)) * canvas.width));
+      const y = Math.min(canvas.height - 1, Math.round((row / (rows + 1)) * canvas.height));
+      const [red, green, blue, alpha] = context.getImageData(x, y, 1, 1).data;
+      if (alpha > 220) opaqueSamples += 1;
+      const luma = red * 0.2126 + green * 0.7152 + blue * 0.0722;
+      minLuma = Math.min(minLuma, luma);
+      maxLuma = Math.max(maxLuma, luma);
+      bins.add(`${red >> 4}:${green >> 4}:${blue >> 4}`);
+    }
+  }
+  return opaqueSamples >= columns * rows * 0.9 && (maxLuma - minLuma > 18 || bins.size >= 8);
+}
+
 async function captureBattlefield(width: number, height: number): Promise<HTMLCanvasElement | undefined> {
   const gameScreen = document.querySelector<HTMLElement>(".game-screen");
   if (!gameScreen) return undefined;
+
+  // useEffect corre después del commit; esperar otro paint garantiza que Vida 0 ya esté compuesta.
+  await settleBefore(nextPaint(), 80);
+  const desktopDataUrl = await settleBefore(captureDesktopViewport(), 900);
+  if (desktopDataUrl) {
+    const desktopCanvas = await dataUrlToCanvas(desktopDataUrl, width, height);
+    if (desktopCanvas && snapshotHasVisualDetail(desktopCanvas)) return desktopCanvas;
+  }
+
   try {
     const { toCanvas } = await import("html-to-image");
-    return await toCanvas(gameScreen, {
+    const webCanvas = await settleBefore(toCanvas(gameScreen, {
       width,
       height,
       canvasWidth: width,
@@ -98,10 +180,17 @@ async function captureBattlefield(width: number, height: number): Promise<HTMLCa
       pixelRatio: 1,
       skipAutoScale: true,
       cacheBust: false,
-      preferredFontFormat: "woff2",
+      skipFonts: true,
       backgroundColor: "#07100f",
-      filter: (node) => !node.classList?.contains("game-result-overlay"),
-    });
+      onImageErrorHandler: () => undefined,
+      filter: (node) => (
+        !node.classList?.contains("game-result-overlay")
+        && !(node instanceof HTMLCanvasElement)
+        && !(node instanceof HTMLVideoElement)
+        && !(node instanceof HTMLIFrameElement)
+      ),
+    }), 1800);
+    return webCanvas && snapshotHasVisualDetail(webCanvas) ? webCanvas : undefined;
   } catch {
     return undefined;
   }
@@ -111,13 +200,15 @@ function createShatterScene(
   width: number,
   height: number,
   signature: number,
-  snapshot?: HTMLCanvasElement,
+  snapshot: HTMLCanvasElement,
 ): ShatterScene {
   const aspect = width / Math.max(1, height);
   const plan = buildDefeatShatterPlan(aspect, signature);
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(51.9, aspect, 0.1, 30);
-  camera.position.set(0, 0, 8);
+  const cameraZ = 8;
+  const exactViewportFov = THREE.MathUtils.radToDeg(2 * Math.atan(plan.halfHeight / cameraZ));
+  const camera = new THREE.PerspectiveCamera(exactViewportFov, aspect, 0.1, 30);
+  camera.position.set(0, 0, cameraZ);
   camera.lookAt(0, 0, 0);
 
   scene.add(new THREE.AmbientLight(0x8fa5a6, 0.82));
@@ -131,14 +222,12 @@ function createShatterScene(
   impactLight.position.set(plan.impact.x, plan.impact.y, 4.2);
   scene.add(impactLight);
 
-  const screenTexture = snapshot ? new THREE.CanvasTexture(snapshot) : undefined;
-  if (screenTexture) {
-    screenTexture.encoding = THREE.sRGBEncoding;
-    screenTexture.minFilter = THREE.LinearFilter;
-    screenTexture.magFilter = THREE.LinearFilter;
-    screenTexture.generateMipmaps = false;
-    screenTexture.needsUpdate = true;
-  }
+  const screenTexture = new THREE.CanvasTexture(snapshot);
+  screenTexture.encoding = THREE.sRGBEncoding;
+  screenTexture.minFilter = THREE.LinearFilter;
+  screenTexture.magFilter = THREE.LinearFilter;
+  screenTexture.generateMipmaps = false;
+  screenTexture.needsUpdate = true;
 
   const glassBodyMaterials = SCREEN_TINTS.map((color) => new THREE.MeshPhongMaterial({
     color,
@@ -146,7 +235,7 @@ function createShatterScene(
     specular: 0xe8f3ef,
     shininess: 142,
     transparent: true,
-    opacity: 0.12,
+    opacity: 0,
     depthWrite: false,
     side: THREE.DoubleSide,
   }));
@@ -156,52 +245,16 @@ function createShatterScene(
     specular: 0xffe7a0,
     shininess: 154,
     transparent: true,
-    opacity: 0.76,
+    opacity: 0,
     depthWrite: false,
     side: THREE.DoubleSide,
   }));
-  const screenMaterials = SCREEN_TINTS.map((color) => new THREE.MeshBasicMaterial({
-    color: screenTexture ? 0xffffff : color,
-    map: screenTexture,
-    transparent: true,
-    opacity: screenTexture ? 0.54 : 0.3,
-    depthWrite: false,
-    side: THREE.FrontSide,
-    polygonOffset: true,
-    polygonOffsetFactor: -2,
-    polygonOffsetUnits: -2,
-  }));
-  const sheenMaterials = SCREEN_TINTS.map((color) => new THREE.MeshPhongMaterial({
+  const faceMaterials = SCREEN_TINTS.map((color, index) => createDefeatGlassMaterial(
+    screenTexture,
     color,
-    emissive: 0x071011,
-    specular: 0xf1d681,
-    shininess: 168,
-    transparent: true,
-    opacity: screenTexture ? 0.34 : 0.46,
-    depthWrite: false,
-    side: THREE.FrontSide,
-    blending: THREE.AdditiveBlending,
-    polygonOffset: true,
-    polygonOffsetFactor: -4,
-    polygonOffsetUnits: -4,
-  }));
-  const backMaterials = SCREEN_TINTS.map((color) => new THREE.MeshPhongMaterial({
-    color,
-    emissive: 0x071011,
-    specular: 0xd7bf71,
-    shininess: 136,
-    transparent: true,
-    opacity: 0.38,
-    depthWrite: false,
-    side: THREE.BackSide,
-  }));
-  const edgeMaterials = EDGE_TONES.map((color) => new THREE.LineBasicMaterial({
-    color,
-    transparent: true,
-    opacity: 0,
-    depthTest: true,
-    depthWrite: false,
-  }));
+    EDGE_TONES[index],
+  ));
+  const edgeMaterials: THREE.LineBasicMaterial[] = [];
   const geometries: THREE.BufferGeometry[] = [];
   const shards = plan.shards.map((shard) => {
     const bodyGeometry = new THREE.ExtrudeGeometry(shardShape(shard), {
@@ -217,55 +270,67 @@ function createShatterScene(
     const edgeGeometry = new THREE.EdgesGeometry(bodyGeometry, 12);
     geometries.push(bodyGeometry, faceGeometry, edgeGeometry);
 
+    const edgeMaterial = new THREE.LineBasicMaterial({
+      color: EDGE_TONES[shard.tone],
+      transparent: true,
+      opacity: 0,
+      depthTest: true,
+      depthWrite: false,
+    });
+    edgeMaterials.push(edgeMaterial);
+
     const body = new THREE.Mesh(bodyGeometry, [
       glassBodyMaterials[shard.tone],
       goldSideMaterials[shard.tone],
     ]);
-    body.renderOrder = 0;
-    const screen = new THREE.Mesh(faceGeometry, screenMaterials[shard.tone]);
+    body.renderOrder = 1;
+    const screen = new THREE.Mesh(faceGeometry, faceMaterials[shard.tone]);
     screen.renderOrder = 2;
-    const sheen = new THREE.Mesh(faceGeometry, sheenMaterials[shard.tone]);
-    sheen.renderOrder = 3;
-    const back = new THREE.Mesh(faceGeometry, backMaterials[shard.tone]);
-    back.position.z = -shard.depth - 0.012;
-    back.renderOrder = 1;
-    const edges = new THREE.LineSegments(edgeGeometry, edgeMaterials[shard.tone]);
-    edges.renderOrder = 4;
+    const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
+    edges.renderOrder = 3;
     const group = new THREE.Group();
     group.position.set(shard.center.x, shard.center.y, 0);
-    group.add(body, back, screen, sheen, edges);
+    group.add(body, screen, edges);
     scene.add(group);
-    return { group, plan: shard };
+    return { group, plan: shard, edgeMaterial };
   });
 
   return {
     scene,
     camera,
     shards,
-    edgeMaterials,
+    faceMaterials,
+    glassBodyMaterials,
+    goldSideMaterials,
     impactLight,
     dispose: () => {
       for (const geometry of geometries) geometry.dispose();
       for (const material of glassBodyMaterials) material.dispose();
       for (const material of goldSideMaterials) material.dispose();
-      for (const material of screenMaterials) material.dispose();
-      for (const material of sheenMaterials) material.dispose();
-      for (const material of backMaterials) material.dispose();
+      for (const material of faceMaterials) material.dispose();
       for (const material of edgeMaterials) material.dispose();
-      screenTexture?.dispose();
+      screenTexture.dispose();
       scene.clear();
     },
   };
 }
 
 function updateShatterScene(rendered: ShatterScene, elapsedMs: number): void {
-  const crack = clamp01(elapsedMs / 145);
-  const settled = clamp01((elapsedMs - 720) / 920);
-  const edgeOpacity = crack * (0.96 - settled * 0.2);
-  for (const material of rendered.edgeMaterials) material.opacity = edgeOpacity;
-  rendered.impactLight.intensity = 1.1 + Math.max(0, 1 - elapsedMs / 620) * 7.4;
+  const burst = easeOutCubic(clamp01((elapsedMs - BURST_MS) / GLASS_TRANSITION_MS));
+  const settled = clamp01((elapsedMs - 1500) / 900);
+  for (const material of rendered.faceMaterials) {
+    material.uniforms.uTime.value = elapsedMs / 1000;
+    material.uniforms.uGlass.value = burst;
+  }
+  for (const material of rendered.glassBodyMaterials) material.opacity = burst * 0.045;
+  for (const material of rendered.goldSideMaterials) material.opacity = burst * 0.58;
+
+  const impactPulse = Math.max(0, 1 - Math.abs(elapsedMs - BURST_MS) / 260);
+  rendered.impactLight.intensity = 0.35 + impactPulse * 8.3;
 
   for (const shard of rendered.shards) {
+    const crack = easeOutCubic(clamp01((elapsedMs - shard.plan.crackDelayMs) / 190));
+    shard.edgeMaterial.opacity = crack * (0.9 - burst * 0.2 - settled * 0.16);
     const progress = clamp01((elapsedMs - shard.plan.delayMs) / shard.plan.durationMs);
     const travel = easeOutCubic(progress);
     const gravity = progress * progress * shard.plan.drop;
@@ -316,37 +381,48 @@ export function DefeatShatterAnimator({ seed, onSequenceStart }: Props) {
     let cancelled = false;
 
     const begin = async () => {
-      const snapshot = await captureBattlefield(width, height);
-      if (cancelled) return;
-      rendered = createShatterScene(width, height, futureVisualSignature(seed), snapshot);
-      let firstFrame = true;
-      const startedAt = performance.now();
-      onSequenceStart();
-      impactTimer = window.setTimeout(() => playSfx("stoneCrash", { rate: 0.62 }), 120);
-
-      const draw = (now: number) => {
-        if (cancelled || !rendered) return;
-        const elapsedMs = Math.min(SHATTER_HOLD_MS, now - startedAt);
-        updateShatterScene(rendered, elapsedMs);
-        const drew = renderSharedVfxFrame(canvas, {
-          scene: rendered.scene,
-          camera: rendered.camera,
-          width,
-          height,
-          pixelRatio,
-        });
-        if (!drew) {
+      try {
+        const snapshot = await settleBefore(captureBattlefield(width, height), 2600);
+        if (cancelled) return;
+        if (!snapshot) {
           setFallback(true);
+          onSequenceStart();
           return;
         }
-        if (firstFrame) {
-          firstFrame = false;
-          canvas.classList.add("is-ready");
-        }
-        if (elapsedMs < SHATTER_HOLD_MS) animationFrame = window.requestAnimationFrame(draw);
-      };
+        rendered = createShatterScene(width, height, futureVisualSignature(seed), snapshot);
+        let firstFrame = true;
+        const startedAt = performance.now();
+        onSequenceStart();
+        impactTimer = window.setTimeout(() => playSfx("stoneCrash", { rate: 0.62 }), BURST_MS);
 
-      animationFrame = window.requestAnimationFrame(draw);
+        const draw = (now: number) => {
+          if (cancelled || !rendered) return;
+          const elapsedMs = Math.min(SHATTER_HOLD_MS, now - startedAt);
+          updateShatterScene(rendered, elapsedMs);
+          const drew = renderSharedVfxFrame(canvas, {
+            scene: rendered.scene,
+            camera: rendered.camera,
+            width,
+            height,
+            pixelRatio,
+          });
+          if (!drew) {
+            setFallback(true);
+            return;
+          }
+          if (firstFrame) {
+            firstFrame = false;
+            canvas.classList.add("is-ready");
+          }
+          if (elapsedMs < SHATTER_HOLD_MS) animationFrame = window.requestAnimationFrame(draw);
+        };
+
+        animationFrame = window.requestAnimationFrame(draw);
+      } catch {
+        if (cancelled) return;
+        setFallback(true);
+        onSequenceStart();
+      }
     };
 
     void begin();

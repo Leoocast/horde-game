@@ -23,7 +23,7 @@ export function DefeatModal({ game, onRewriteFuture, onContemplateFuture }: Prop
   useEffect(() => {
     if (!sequenceStarted) return;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const timer = window.setTimeout(() => setRevealed(true), reducedMotion ? 60 : 1420);
+    const timer = window.setTimeout(() => setRevealed(true), reducedMotion ? 60 : 1900);
     return () => window.clearTimeout(timer);
   }, [sequenceStarted]);
 

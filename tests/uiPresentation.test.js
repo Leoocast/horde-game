@@ -1064,6 +1064,7 @@ test("defeat glass tiles the viewport deterministically and leaves broken edge s
   const retained = plan.shards.filter((shard) => shard.retained);
   const escaped = plan.shards.filter((shard) => !shard.retained);
   assert.ok(plan.shards.every((shard) => shard.depth >= 0.075));
+  assert.ok(plan.shards.every((shard) => shard.crackDelayMs + 190 < shard.delayMs));
   const maxRetainedTravel = Math.max(...retained.map((shard) => Math.hypot(shard.travel.x, shard.travel.y)));
   const minEscapedTravel = Math.min(...escaped.map((shard) => Math.hypot(shard.travel.x, shard.travel.y)));
   assert.ok(maxRetainedTravel < minEscapedTravel);
@@ -1071,21 +1072,42 @@ test("defeat glass tiles the viewport deterministically and leaves broken edge s
 
 test("the defeat shatter reuses the shared WebGL renderer and provides reduced-motion glass", () => {
   const animator = readFileSync(new URL("../src/components/DefeatShatterAnimator.tsx", import.meta.url), "utf8");
+  const glassShader = readFileSync(new URL("../src/components/defeatGlassShader.ts", import.meta.url), "utf8");
+  const desktopBridge = readFileSync(new URL("../src/platform/desktopBridge.ts", import.meta.url), "utf8");
+  const preload = readFileSync(new URL("../electron/preload.ts", import.meta.url), "utf8");
+  const electronMain = readFileSync(new URL("../electron/main.ts", import.meta.url), "utf8");
   const modal = readFileSync(new URL("../src/components/DefeatModal.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.match(animator, /renderSharedVfxFrame/u);
   assert.match(animator, /await import\("html-to-image"\)/u);
   assert.match(animator, /new THREE\.CanvasTexture\(snapshot\)/u);
+  assert.match(animator, /captureDesktopViewport\(\)/u);
+  assert.match(animator, /snapshotHasVisualDetail/u);
+  assert.match(animator, /function settleBefore<T>/u);
+  assert.match(animator, /settleBefore\(captureBattlefield\(width, height\), 2600\)/u);
+  assert.match(animator, /if \(!snapshot\) \{[\s\S]*?setFallback\(true\)[\s\S]*?return;/u);
+  assert.doesNotMatch(animator, /new THREE\.DataTexture/u);
   assert.match(animator, /function mappedFaceGeometry/u);
   assert.match(animator, /const BODY_TONES = \[0x8d7537, 0xb19852, 0x66562f\]/u);
-  assert.match(animator, /opacity:\s*screenTexture \? 0\.54 : 0\.3/u);
-  assert.match(animator, /const goldSideMaterials = BODY_TONES\.map[\s\S]*?opacity:\s*0\.76/u);
-  assert.match(animator, /blending:\s*THREE\.AdditiveBlending/u);
+  assert.match(animator, /const BURST_MS = 860/u);
+  assert.match(animator, /createDefeatGlassMaterial/u);
+  assert.match(animator, /material\.uniforms\.uGlass\.value = burst/u);
+  assert.match(glassShader, /float glassAlpha = 0\.105 \+ fresnel \* 0\.24/u);
+  assert.match(glassShader, /float alpha = mix\(1\.0, glassAlpha, uGlass\)/u);
+  assert.match(glassShader, /gl_FragColor = vec4\(colour \* alpha, alpha\)/u);
+  assert.match(glassShader, /premultipliedAlpha:\s*true/u);
+  assert.match(desktopBridge, /captureViewport\(\): Promise<string \| undefined>/u);
+  assert.match(desktopBridge, /typeof captureViewport === "function"/u);
+  assert.match(preload, /hostfall:capture-viewport/u);
+  assert.match(electronMain, /event\.sender\.capturePage\(\)/u);
   assert.doesNotMatch(animator, /new THREE\.WebGLRenderer|forceContextLoss/u);
   assert.match(animator, /prefers-reduced-motion:\s*reduce/u);
   assert.match(modal, /<DefeatShatterAnimator seed=\{game\.seed\} onSequenceStart=\{startSequence\}/u);
+  assert.match(modal, /reducedMotion \? 60 : 1900/u);
   assert.match(modal, /t\("destiny\.futureLost"\)/u);
+  assert.match(styles, /animation:\s*defeat-screen-tremor 920ms/u);
+  assert.match(styles, /animation:\s*defeat-darkness-in 360ms 840ms/u);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.defeat-shatter-canvas,[\s\S]*?display:\s*none;/u);
 });
 

@@ -341,11 +341,14 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   cada handoff hasta que el nuevo efecto haya copiado su primer frame WebGL válido.
 - La derrota normal rompe la pantalla con `DefeatShatterAnimator.tsx`: la teselación pura y estable
   por seed vive en `defeatShatterGeometry.ts`, las piezas interiores salen con profundidad y parte
-  del borde queda suspendida mientras aparece **Futuro perdido**. Antes del impacto rasteriza el
-  tablero sin el overlay final y mapea cada trozo exacto mediante UV globales y una cara
-  translúcida; las tapas/dorsos son azul grisáceo, los laterales biselados dorados y una capa Phong
-  aditiva da los reflejos de ambas luces. Reutiliza el renderer WebGL compartido y conserva una
-  fractura SVG quieta para movimiento reducido o falta de WebGL.
+  del borde queda suspendida mientras aparece **Futuro perdido**. Antes del impacto Electron toma
+  una captura real con `webContents.capturePage()`; la web conserva `html-to-image` como respaldo.
+  La captura debe validarse antes de crear la escena y no existe textura plana de reserva. Después
+  mapea cada trozo exacto mediante UV globales. La captura queda
+  ensamblada y opaca durante el temblor y la propagación radial de grietas; al impacto se oculta el
+  tablero real, los trozos explotan y `defeatGlassShader.ts` los vuelve vidrio transparente con
+  Fresnel azul grisáceo/dorado y cantos biselados dorados. Reutiliza el renderer WebGL compartido y
+  conserva una fractura SVG quieta para movimiento reducido o falta de WebGL.
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado
   aunque los impactos visuales se escalonen.
 

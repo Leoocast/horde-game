@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Hostfall — Constelación cardinal</title>
     <style>
+      @font-face {
+        font-family: "Cinzel";
+        font-style: normal;
+        font-weight: 500 900;
+        font-display: block;
+        src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+      }
       :root {
         --stage: #050d0e;
         --gold: #c7aa69;
@@ -102,18 +109,101 @@
       @keyframes orbit-drift { to { stroke-dashoffset: -140; } }
 
       .verdict {
-        position: absolute; z-index: 3; left: 50%; bottom: 8%;
-        display: grid; justify-items: center; gap: 6px; width: min(560px, 86%);
-        opacity: 0; text-align: center; transform: translateX(-50%);
-        text-shadow: 0 2px 12px #000, 0 0 30px rgb(0 0 0 / 0.9);
+        position: absolute; z-index: 3; left: 50%; top: 50%; isolation: isolate;
+        display: grid; justify-items: center; gap: 8px; width: min(820px, 94%);
+        opacity: 0; text-align: center; transform: translate(-50%, -48%);
       }
-      .verdict.on { animation: verdict-in 900ms ease-out both; }
-      .verdict small { color: var(--teal-dim); font-size: 10px; font-weight: 900; letter-spacing: 0.28em; text-transform: uppercase; }
-      .verdict strong {
-        color: var(--parchment); font-family: var(--serif);
-        font-size: clamp(22px, 3.4vw, 40px); font-weight: 500; letter-spacing: 0.11em; text-transform: uppercase;
+      .verdict::before {
+        position: absolute; z-index: -1; inset: -30% -18%; content: ""; opacity: 0;
+        background: radial-gradient(ellipse at center, rgb(1 6 7 / 0.9) 0 30%, rgb(2 9 10 / 0.66) 48%, transparent 73%);
+        filter: blur(10px);
       }
-      @keyframes verdict-in { from { opacity: 0; letter-spacing: 0.02em; } to { opacity: 1; } }
+      .verdict.on { animation: verdict-in 420ms ease-out both; }
+      .verdict.on::before { animation: verdict-backdrop 900ms ease-out both; }
+
+      .victory-kicker {
+        position: relative; color: #f5dda4; font-family: "Cinzel", var(--serif); font-size: 12px; font-weight: 800;
+        letter-spacing: 0.32em; text-transform: uppercase; opacity: 0;
+        text-shadow: 0 0 12px rgb(224 190 98 / 0.46);
+      }
+      .victory-kicker::before,
+      .victory-kicker::after {
+        position: absolute; top: 50%; width: 54px; height: 1px; content: "";
+        background: linear-gradient(90deg, transparent, rgb(224 197 122 / 0.68));
+      }
+      .victory-kicker::before { right: calc(100% + 16px); }
+      .victory-kicker::after { left: calc(100% + 12px); transform: rotate(180deg); }
+      .verdict.on .victory-kicker { animation: copy-rise 620ms 120ms ease-out both; }
+
+      .victory-title {
+        position: relative; display: grid; margin: 0; color: var(--parchment);
+        font-family: "Cinzel", var(--serif); font-size: clamp(38px, 7vw, 78px); font-weight: 700;
+        letter-spacing: 0.075em; line-height: 0.9; text-transform: uppercase;
+        text-shadow: 0 3px 7px #000, 0 0 16px rgb(239 215 151 / 0.28);
+      }
+      .victory-title .line {
+        display: block; opacity: 0; color: #f6ecd5;
+        clip-path: inset(0 50% 0 50%); transform: translateY(12px);
+      }
+      .victory-title .line:last-child { margin-top: 0.08em; }
+      .verdict.on .victory-title .line:first-child { animation: title-forge 1.05s 170ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+      .verdict.on .victory-title .line:last-child { animation: title-forge 1.12s 300ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+      .victory-title::after {
+        position: absolute; left: 50%; top: 52%; width: 12px; height: 2px; content: "";
+        opacity: 0; transform: translate(-50%, -50%);
+        background: #fff8de; box-shadow: 0 0 12px 4px rgb(255 239 184 / 0.9), 0 0 44px 16px rgb(197 165 85 / 0.5);
+      }
+      .verdict.on .victory-title::after { animation: title-flare 880ms 230ms ease-out both; }
+
+      .victory-subtitle {
+        margin-top: 7px; color: rgb(174 190 181 / 0.78); font-family: "Cinzel", var(--serif);
+        font-size: clamp(8px, 1.1vw, 11px); font-weight: 600; letter-spacing: 0.28em;
+        text-transform: uppercase; opacity: 0;
+      }
+      .verdict.on .victory-subtitle { animation: copy-rise 700ms 760ms ease-out both; }
+
+      .future-seal {
+        position: relative; display: grid; justify-items: center; gap: 2px;
+        min-width: min(380px, 86%); margin-top: 10px; padding: 10px 24px 9px;
+        border-top: 1px solid rgb(199 170 105 / 0.48); border-bottom: 1px solid rgb(199 170 105 / 0.32);
+        background: linear-gradient(90deg, transparent, rgb(4 14 15 / 0.88) 18% 82%, transparent);
+        opacity: 0; transform: translateY(10px);
+      }
+      .future-seal::before,
+      .future-seal::after {
+        position: absolute; top: -3px; width: 5px; height: 5px; content: "";
+        border: 1px solid rgb(224 201 132 / 0.72); transform: rotate(45deg);
+      }
+      .future-seal::before { left: 16%; }
+      .future-seal::after { right: 16%; }
+      .future-seal span {
+        color: #d8e9e3; font-family: "Cinzel", var(--serif); font-size: 11px; font-weight: 800;
+        letter-spacing: 0.26em; text-transform: uppercase; text-shadow: 0 1px 8px #000;
+      }
+      .future-seal b {
+        color: #fff0c4; font-family: "Cinzel", var(--serif); font-size: clamp(18px, 2.25vw, 25px);
+        font-weight: 800; letter-spacing: 0.13em; font-variant-numeric: tabular-nums;
+        text-shadow: 0 0 12px rgb(220 185 94 / 0.42);
+      }
+      .verdict.on .future-seal { animation: seal-rise 720ms 940ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+      @keyframes verdict-in {
+        from { opacity: 0; transform: translate(-50%, -46%) scale(0.98); }
+        to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      }
+      @keyframes verdict-backdrop { from { opacity: 0; transform: scale(0.72); } to { opacity: 1; transform: scale(1); } }
+      @keyframes title-forge {
+        0% { opacity: 0; clip-path: inset(0 50% 0 50%); transform: translateY(12px); }
+        38% { opacity: 1; }
+        100% { opacity: 1; clip-path: inset(0 0 0 0); transform: translateY(0); }
+      }
+      @keyframes title-flare {
+        0% { opacity: 0; width: 12px; }
+        32% { opacity: 1; }
+        100% { opacity: 0; width: 92%; }
+      }
+      @keyframes copy-rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes seal-rise { from { opacity: 0; transform: translateY(10px) scaleX(0.72); } to { opacity: 1; transform: translateY(0) scaleX(1); } }
 
       .fallback { position: absolute; inset: 0; z-index: 4; display: none; place-items: center; padding: 30px; text-align: center; }
       .stage.no-webgl .fallback { display: grid; }
@@ -135,6 +225,12 @@
       code { color: #9ec9c2; font-size: 13px; }
       @media (prefers-reduced-motion: reduce) {
         .verdict.on { animation-duration: 1ms; }
+        .verdict.on::before,
+        .verdict.on .victory-kicker,
+        .verdict.on .victory-title .line,
+        .verdict.on .victory-title::after,
+        .verdict.on .victory-subtitle,
+        .verdict.on .future-seal { animation-delay: 0ms; animation-duration: 1ms; }
         .celestial-grid .orbit { animation: none; }
       }
     </style>
@@ -208,7 +304,18 @@
           </g>
         </svg>
         <canvas id="gl"></canvas>
-        <div class="verdict" id="verdict"><small></small><strong>Destino preservado</strong></div>
+        <div class="verdict" id="verdict">
+          <span class="victory-kicker">Victoria</span>
+          <strong class="victory-title">
+            <span class="line">Futuro</span>
+            <span class="line">Preservado</span>
+          </strong>
+          <span class="victory-subtitle">El Capítulo perdura en la Crónica</span>
+          <span class="future-seal">
+            <span>Futuro</span>
+            <b id="verdictFuture">000·000</b>
+          </span>
+        </div>
         <div class="fallback">
           Este navegador no dio contexto WebGL, así que la escena no puede dibujarse.
         </div>
@@ -238,7 +345,7 @@
         <h3>Si se lleva al juego</h3>
         <ul>
           <li>Es una escena y un plano, así que entra por <code>renderSharedVfxFrame</code> sin abrir otro contexto WebGL, igual que Burn y el vórtice. Aquí uso WebGL crudo sólo porque esta carpeta no carga Three.js.</li>
-          <li>Va <b>debajo</b> del panel de resultado, como capa de ambiente. El sello y el banner siguen encima.</li>
+          <li>La constelación queda <b>debajo</b> del resultado. El título de victoria entra en Cinzel desde el centro y la identidad completa del Futuro permanece legible en una placa independiente.</li>
           <li>Falta audio: con lo que ya existe, <code>buff</code> subiendo de tono con cada nodo que se fija.</li>
         </ul>
       </section>
@@ -254,6 +361,7 @@
         var clock = document.getElementById("clock");
         var fill = document.getElementById("fill");
         var seedInput = document.getElementById("seed");
+        var verdictFuture = document.getElementById("verdictFuture");
         var instrumentTime = document.getElementById("instrumentTime");
         var instrumentAzimuth = document.getElementById("instrumentAzimuth");
         var instrumentFuture = document.getElementById("instrumentFuture");
@@ -554,7 +662,7 @@
           layout();
           buildConstellation();
           verdict.className = "verdict";
-          verdict.querySelector("small").textContent = "Futuro " + code;
+          verdictFuture.textContent = code;
           instrumentAzimuth.textContent = "Ω " + String(Math.round(signature * 359)).padStart(3, "0") + "°";
           instrumentFuture.textContent = "FUTURO " + code;
           start = performance.now();

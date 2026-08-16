@@ -63,13 +63,18 @@ Implementaciones utiles como referencia:
 - `DefeatShatterAnimator.tsx`: al perder una partida normal tesela la pantalla en vidrio radial,
   expulsa los fragmentos interiores con profundidad y conserva piezas exteriores suspendidas
   detras del resultado **Futuro perdido**. La geometria y el reparto estable por seed viven en
-  `defeatShatterGeometry.ts`; antes del primer impacto `html-to-image` rasteriza el `.game-screen`
-  sin el overlay final y cada cara recibe las UV globales de su trozo exacto con opacidad reducida.
-  Las tapas y dorsos son vidrio azul grisaceo translucido; los laterales biselados conservan oro
-  mas denso y una segunda cara Phong aditiva recoge los reflejos frios y dorados. El animador copia
-  mediante `renderSharedVfxFrame` y deja una fractura SVG quieta para movimiento reducido o falta de
-  WebGL. Si la captura falla, el material fisico sigue presentando la rotura sin bloquear el
-  resultado.
+  `defeatShatterGeometry.ts`; antes del primer impacto Electron captura el viewport real con
+  `webContents.capturePage()` y la version web usa `html-to-image` sobre `.game-screen` sin el
+  overlay final. La captura se valida y el estallido no se construye si resulta uniforme o falla:
+  no existe una textura de color que pueda fingir el tablero. Cada cara recibe las UV globales de
+  su trozo exacto. Primero las caras
+  permanecen opacas y ensambladas para reemplazar visualmente al tablero mientras este tiembla y
+  las aristas se encienden desde el impacto hacia afuera. En el impacto se oscurece el tablero real,
+  las piezas salen en profundidad y `defeatGlassShader.ts` transforma la captura en vidrio de alfa
+  bajo con Fresnel, bandas azul grisaceas y reflejos dorados; solo los cantos biselados conservan oro
+  mas denso. El animador copia mediante `renderSharedVfxFrame` y deja una fractura SVG quieta para
+  movimiento reducido o falta de WebGL. Si la captura falla, el material fisico sigue presentando
+  la rotura sin bloquear el resultado.
 
 Para cualquier efecto nuevo:
 
