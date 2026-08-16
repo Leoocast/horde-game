@@ -204,15 +204,33 @@
     stroke-width: 1.1;
   }
 
-  .temporal-backdrop-grid .crosshair {
-    fill: none;
-    stroke: rgb(214 192 122 / 0.36);
-    stroke-width: 1.1;
-  }
-
   .temporal-backdrop-grid .edge-tick {
     stroke: rgb(180 205 198 / 0.26);
     stroke-width: 0.9;
+  }
+
+  /* Los grados, en el oro del HUD para que pertenezcan al mismo aparato. */
+  .temporal-backdrop-grid .dial-ring,
+  .temporal-backdrop-grid .dial-arc {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+    stroke-width: 1;
+  }
+
+  .temporal-backdrop-grid .dial-ring { stroke: rgb(199 170 105 / 0.16); }
+  .temporal-backdrop-grid .dial-arc { stroke: rgb(199 170 105 / 0.12); }
+
+  .temporal-backdrop-grid .dial-tick {
+    fill: none;
+    stroke: rgb(214 192 122 / 0.24);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .temporal-backdrop-grid .dial-label {
+    fill: rgb(210 188 125 / 0.3);
+    font: 500 9px/1 Consolas, "Courier New", monospace;
+    letter-spacing: 0.12em;
   }
 
   .menu-fireflies {
@@ -12946,10 +12964,12 @@
   width: 100%;
 }
 
+/* El tinte de cada bando arranca y termina en transparente. Empezando a valor pleno
+   en el borde del contenedor dejaba una división visible justo bajo el header. */
 .game-screen .battlefield-board-grid {
   width: 100%;
   background:
-    linear-gradient(180deg, rgb(83 33 24 / 0.055), transparent 34%, transparent 66%, rgb(31 80 83 / 0.05)),
+    linear-gradient(180deg, transparent, rgb(83 33 24 / 0.05) 16%, transparent 40%, transparent 60%, rgb(31 80 83 / 0.045) 84%, transparent),
     linear-gradient(90deg, rgb(5 10 12 / 0.2), transparent 12%, transparent 88%, rgb(5 10 12 / 0.2));
 }
 
@@ -13052,8 +13072,10 @@
   background:
     radial-gradient(ellipse 48% 100% at 50% 100%, rgb(31 112 112 / 0.20), transparent 70%),
     linear-gradient(to top, rgb(1 9 10 / 0.80), rgb(4 20 20 / 0.42) 26%, rgb(6 30 29 / 0.18) 52%, rgb(8 43 40 / 0.05) 76%, transparent);
-  -webkit-backdrop-filter: blur(2px) saturate(1.06);
-  backdrop-filter: blur(2px) saturate(1.06);
+  /* Nada de `backdrop-filter` aquí. Se aplica uniforme dentro de la caja y se corta en
+     seco en su borde, así que por muy suave que sea el degradado siempre queda una
+     línea nítida donde el fondo pasa de enfocado a borroso. Con estrellas detrás, esa
+     división se ve; contra la foto estática de antes no se notaba. */
 }
 
 .game-dialog {

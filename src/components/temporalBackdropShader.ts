@@ -151,12 +151,12 @@ void main() {
   vec2 near = rot(uTime * 0.012) * p + vec2(uTime * 0.0040, -uTime * 0.0015);
   vec2 mid = rot(uTime * 0.007) * p * 1.02 + 5.3;
   vec2 far = rot(uTime * 0.003) * p + 13.7;
-  // Las puertas son por celda, así que la cuenta real depende de la escala: con las
-  // densidades anteriores salían unas 950 estrellas y le comían el sitio a las motas.
-  // Estas dejan del orden de 230, que basta para leer campo estelar.
-  color += vec3(0.72, 0.90, 1.0) * starLayer(near, 74.0, 0.9937, 0.055) * 0.42;
-  color += vec3(0.32, 0.72, 1.0) * starLayer(mid, 142.0, 0.9983, 0.038) * 0.30;
-  color += vec3(1.0, 0.66, 0.24) * starLayer(far, 97.0, 0.9980, 0.026) * 0.30;
+  // Las puertas son por celda, así que la cuenta real depende de la escala. Y el tono
+  // se lleva al oro del HUD (#c7aa69 / #ead59b): en azul las estrellas parecían de otro
+  // juego que el marco dorado de las cartas.
+  color += vec3(0.92, 0.86, 0.68) * starLayer(near, 74.0, 0.9958, 0.055) * 0.40;
+  color += vec3(0.78, 0.70, 0.46) * starLayer(mid, 142.0, 0.9989, 0.038) * 0.28;
+  color += vec3(1.00, 0.72, 0.34) * starLayer(far, 97.0, 0.9987, 0.026) * 0.28;
 
   float glow = fireflies(p + warp * 0.05, 9.0, 0.10, 0.0)
              + fireflies(p * 1.7 - warp * 0.04 + 8.2, 15.0, 0.07, 21.3) * 0.7;

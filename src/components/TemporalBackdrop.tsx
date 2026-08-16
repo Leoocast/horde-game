@@ -179,15 +179,43 @@ export function TemporalBackdrop({
           >
             <path className="cell" d="M78 0H0V62.5" />
           </pattern>
+          {/* Blanco deja ver, negro oculta: el centro se vacía de celdas y reaparecen
+              difuminadas hacia fuera, para que la rejilla no cruce por detrás de las
+              cartas. Sólo enmascara las celdas, no el marco ni los grados. */}
+          <radialGradient id="temporalBackdropFade" cx="0.5" cy="0.5" r="0.62">
+            <stop offset="0" stopColor="#0b0b0b" />
+            <stop offset="0.34" stopColor="#2a2a2a" />
+            <stop offset="0.72" stopColor="#c8c8c8" />
+            <stop offset="1" stopColor="#ffffff" />
+          </radialGradient>
+          <mask id="temporalBackdropCellMask">
+            <rect width="1000" height="562" fill="url(#temporalBackdropFade)" />
+          </mask>
         </defs>
-        <rect width="1000" height="562" fill="url(#temporalBackdropCells)" />
+        <rect
+          width="1000"
+          height="562"
+          fill="url(#temporalBackdropCells)"
+          mask="url(#temporalBackdropCellMask)"
+        />
         <rect className="frame" x="26" y="20" width="948" height="522" />
 
-        <g className="crosshair">
-          <path d="M26 96 H74 M50 72 V120" />
-          <path d="M974 96 H926 M950 72 V120" />
-          <path d="M26 466 H74 M50 442 V490" />
-          <path d="M974 466 H926 M950 442 V490" />
+        {/* Los grados: la parte central del instrumento. */}
+        <g className="dial" transform="translate(500 281)">
+          <circle className="dial-ring" r="196" pathLength={360} strokeDasharray="1 14" />
+          <circle className="dial-arc" r="183" pathLength={360} strokeDasharray="34 18 5 33" />
+
+          <path className="dial-tick" d="M0 -208 V-195 M147 -147 L138 -138 M208 0 H195 M147 147 L138 138" />
+          <path className="dial-tick" d="M0 208 V195 M-147 147 L-138 138 M-208 0 H-195 M-147 -147 L-138 -138" />
+
+          <text className="dial-label" x="0" y="-215" textAnchor="middle">000° · N</text>
+          <text className="dial-label" x="160" y="-155">045°</text>
+          <text className="dial-label" x="217" y="4">090° · E</text>
+          <text className="dial-label" x="160" y="163">135°</text>
+          <text className="dial-label" x="0" y="228" textAnchor="middle">180° · S</text>
+          <text className="dial-label" x="-160" y="163" textAnchor="end">225°</text>
+          <text className="dial-label" x="-217" y="4" textAnchor="end">270° · O</text>
+          <text className="dial-label" x="-160" y="-155" textAnchor="end">315°</text>
         </g>
 
         {/* Las marcas caen sobre líneas reales de la rejilla. Si no coinciden, el
