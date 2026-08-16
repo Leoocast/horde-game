@@ -104,6 +104,7 @@ import {
   scheduleGuidedCheckpointEvaluation,
 } from "../guidance";
 import { playerDrawForecast } from "../engine/TurnManager";
+import { DESTINY_DIAL_STEP, destinyDialDeathDelta } from "./destinyDial";
 
 export type GameStore = {
   game: GameState;
@@ -279,8 +280,6 @@ const COMBAT_VOLLEY_ANIMATION_MS = 1220;
 const COMBAT_VOLLEY_PROJECTILE_GAP_MS = 90;
 const COMBAT_VOLLEY_MAX_PROJECTILES = 6;
 const PLAYER_ATTACK_ANIMATION_MS = 500;
-/** Grados que el disco del fondo gira por cada suceso que decanta el futuro. */
-const DESTINY_DIAL_STEP = 7;
 const HOST_MILL_ANIMATION_MS = 720;
 const PLAYER_ATTACK_MILL_START_MS = 90;
 const PLAYER_ATTACK_MILL_GAP_MS = 35;
@@ -673,6 +672,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ...createCleanUiState(),
         game: next,
         gameSessionId: state.gameSessionId + 1,
+        destinyDial: 0,
         seed,
         playerDeckId,
         hostDeckId,
@@ -687,6 +687,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ...createCleanUiState(),
         game,
         gameSessionId: state.gameSessionId + 1,
+        destinyDial: 0,
         seed: game.seed,
         playerDeckId: deckIds.playerDeckId,
         hostDeckId: deckIds.hostDeckId,
@@ -2029,6 +2030,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 }));
 
+// Read card losses from committed zone transitions, not from individual combat or effect paths.
+// This remains presentation-only: it observes rules results and never changes them.
+useGameStore.subscribe((state, previousState) => {
+  if (
+    state.game === previousState.game ||
+    state.gameSessionId !== previousState.gameSessionId
+  ) return;
+  const delta = destinyDialDeathDelta(previousState.game, state.game);
+  if (delta === 0) return;
+  useGameStore.setState((current) => {
+    if (
+      current.game !== state.game ||
+      current.gameSessionId !== state.gameSessionId
+    ) return {};
+    return { destinyDial: current.destinyDial + delta };
+  });
+});
+
 // Observe committed domain transitions, including those produced by Host/player beat schedulers.
 // This is intentionally receipt-only: it never authorizes or changes a rule resolution.
 useGameStore.subscribe((state, previousState) => {
@@ -2308,15 +2327,16 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
       const gainedLife = next.player.life > previous.player.life;
       if (gainedLife) useAudioStore.getState().playSfx("buff");
       notifyDiscardEffects(previous, next);
-      if (gameEnded) return { ...createCleanUiState(), game: next };
-      // El disco lee el saldo de la pelea, no el daño. Si mueren los dos o no muere
-      // nadie, el futuro no se ha decantado y no se mueve. El daño directo al
-      // Cronista sí cuenta: ahí pierde él sin contrapartida.
-      const hostFell = Boolean(event.attackerDies);
-      const playerFell = Boolean(event.blockerId && event.blockerDies);
-      let dialTurn = 0;
-      if (hostFell !== playerFell) dialTurn = hostFell ? DESTINY_DIAL_STEP : -DESTINY_DIAL_STEP;
-      if (event.playerDamage > 0) dialTurn -= DESTINY_DIAL_STEP;
+      // Field losses are observed centrally for combat and every effect path. Direct
+      // damage still tips the Future here because no card changes zones for that hit.
+      const dialTurn = event.playerDamage > 0 ? -DESTINY_DIAL_STEP : 0;
+      if (gameEnded) {
+        return {
+          ...createCleanUiState(),
+          game: next,
+          ...(dialTurn === 0 ? {} : { destinyDial: state.destinyDial + dialTurn }),
+        };
+      }
       return {
         game: next,
         ...(dialTurn === 0 ? {} : { destinyDial: state.destinyDial + dialTurn }),

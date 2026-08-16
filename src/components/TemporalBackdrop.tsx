@@ -4,6 +4,21 @@ import {
   TEMPORAL_BACKDROP_FRAGMENT,
   TEMPORAL_BACKDROP_VERTEX,
 } from "./temporalBackdropShader";
+import {
+  temporalDialTransform,
+  uprightTemporalDialLabelTransform,
+} from "./temporalDialPresentation";
+
+const DIAL_LABELS = [
+  { x: 0, y: -215, text: "000° · N", textAnchor: "middle" },
+  { x: 160, y: -155, text: "045°" },
+  { x: 217, y: 4, text: "090° · E" },
+  { x: 160, y: 163, text: "135°" },
+  { x: 0, y: 228, text: "180° · S", textAnchor: "middle" },
+  { x: -160, y: 163, text: "225°", textAnchor: "end" },
+  { x: -217, y: 4, text: "270° · O", textAnchor: "end" },
+  { x: -160, y: -155, text: "315°", textAnchor: "end" },
+] as const;
 
 /**
  * Fondo espacio/temporal permanente.
@@ -35,16 +50,28 @@ export function TemporalBackdrop({
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const dialRef = useRef<SVGGElement | null>(null);
+  const dialLabelRefs = useRef<Array<SVGTextElement | null>>([]);
   const targetRef = useRef({ climax, defeat, dial });
 
   // El bucle lee los valores por referencia para no reiniciarse en cada cambio.
   targetRef.current = { climax, defeat, dial };
 
+  const positionDial = (degrees: number) => {
+    dialRef.current?.setAttribute("transform", temporalDialTransform(degrees));
+    dialLabelRefs.current.forEach((label, index) => {
+      if (!label) return;
+      label.setAttribute(
+        "transform",
+        uprightTemporalDialLabelTransform(degrees, DIAL_LABELS[index]),
+      );
+    });
+  };
+
   // Con movimiento reducido no hay bucle, así que el disco salta a su sitio.
   useEffect(() => {
     if (!dialRef.current) return;
     if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    dialRef.current.setAttribute("transform", `translate(500 281) rotate(${dial})`);
+    positionDial(dial);
   }, [dial]);
 
   useEffect(() => {
@@ -131,9 +158,7 @@ export function TemporalBackdrop({
       // movió y no vuelve. Se escribe el atributo en vez de usar CSS porque el origen
       // de rotación del grupo ya es su propio centro y así no depende de `fill-box`.
       dialMix += (targetRef.current.dial - dialMix) * 0.035;
-      if (dialRef.current) {
-        dialRef.current.setAttribute("transform", `translate(500 281) rotate(${dialMix.toFixed(2)})`);
-      }
+      positionDial(dialMix);
 
       gl.viewport(0, 0, width, height);
       gl.uniform2f(uRes, width, height);
@@ -252,21 +277,26 @@ export function TemporalBackdrop({
         <path className="glass-lip" d="M27 541 V21 H973" />
 
         {/* Los grados: la parte central del instrumento. */}
-        <g ref={dialRef} className="dial" transform="translate(500 281)">
+        <g ref={dialRef} className="dial" transform={temporalDialTransform(0)}>
           <circle className="dial-ring" r="196" pathLength={360} strokeDasharray="1 14" />
           <circle className="dial-arc" r="183" pathLength={360} strokeDasharray="34 18 5 33" />
 
           <path className="dial-tick" d="M0 -208 V-195 M147 -147 L138 -138 M208 0 H195 M147 147 L138 138" />
           <path className="dial-tick" d="M0 208 V195 M-147 147 L-138 138 M-208 0 H-195 M-147 -147 L-138 -138" />
 
-          <text className="dial-label" x="0" y="-215" textAnchor="middle">000° · N</text>
-          <text className="dial-label" x="160" y="-155">045°</text>
-          <text className="dial-label" x="217" y="4">090° · E</text>
-          <text className="dial-label" x="160" y="163">135°</text>
-          <text className="dial-label" x="0" y="228" textAnchor="middle">180° · S</text>
-          <text className="dial-label" x="-160" y="163" textAnchor="end">225°</text>
-          <text className="dial-label" x="-217" y="4" textAnchor="end">270° · O</text>
-          <text className="dial-label" x="-160" y="-155" textAnchor="end">315°</text>
+          {DIAL_LABELS.map((label, index) => (
+            <text
+              key={label.text}
+              ref={(element) => { dialLabelRefs.current[index] = element; }}
+              className="dial-label"
+              x={label.x}
+              y={label.y}
+              textAnchor={"textAnchor" in label ? label.textAnchor : undefined}
+              transform={uprightTemporalDialLabelTransform(0, label)}
+            >
+              {label.text}
+            </text>
+          ))}
         </g>
 
         {/* Las marcas caen sobre líneas reales de la rejilla. Si no coinciden, el
