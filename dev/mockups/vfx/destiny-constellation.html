@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hostfall — Constelación cardinal</title>
+    <style>
+      :root {
+        --stage: #050d0e;
+        --gold: #c7aa69;
+        --gold-bright: #e6d59e;
+        --parchment: #e8dec0;
+        --teal-dim: #8db1a9;
+        --muted: #9ba69f;
+        --muted-dim: #7d8f88;
+        --rule: rgb(146 133 88 / 0.22);
+        --serif: Georgia, "Times New Roman", serif;
+        --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 0 0 70px;
+        background: radial-gradient(ellipse at 50% -8%, rgb(31 62 60 / 0.2), transparent 55%), var(--stage);
+        color: var(--muted);
+        font-family: var(--sans);
+        font-size: 15px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      main { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+
+      header { padding: 54px 0 30px; border-bottom: 1px solid var(--rule); }
+      .eyebrow { color: var(--teal-dim); font-size: 10px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; }
+      h1 {
+        margin: 12px 0 0; color: var(--parchment); font-family: var(--serif);
+        font-size: clamp(30px, 4.4vw, 46px); font-weight: 500; letter-spacing: 0.02em; line-height: 1.06;
+      }
+      header p { max-width: 66ch; margin: 16px 0 0; }
+      header strong { color: var(--gold-bright); font-weight: 600; }
+      .back { display: inline-block; margin-bottom: 8px; color: var(--muted-dim); font-size: 12px; text-decoration: none; }
+      .back:hover { color: var(--gold-bright); }
+
+      .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 30px 0 14px; }
+      button, input {
+        height: 42px; border: 1px solid rgb(146 133 88 / 0.36); border-radius: 2px;
+        background: linear-gradient(180deg, rgb(24 33 34 / 0.96), rgb(8 15 17 / 0.98));
+        color: var(--muted); font-family: var(--sans);
+      }
+      button {
+        padding: 0 20px; cursor: pointer;
+        font-size: 11px; font-weight: 900; letter-spacing: 0.15em; text-transform: uppercase;
+        transition: border-color 160ms ease, color 160ms ease;
+      }
+      button:hover { border-color: rgb(214 192 122 / 0.7); color: var(--gold-bright); }
+      button:focus-visible, input:focus-visible { outline: 2px solid rgb(234 210 133 / 0.9); outline-offset: 2px; }
+      input { width: 210px; padding: 0 12px; color: var(--gold-bright); font-size: 13px; letter-spacing: 0.06em; }
+      label { color: var(--muted-dim); font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+
+      .stage {
+        position: relative; overflow: hidden; aspect-ratio: 16 / 9;
+        border: 1px solid var(--rule); border-radius: 2px; background: #030708;
+      }
+      .stage .board {
+        position: absolute; inset: 0;
+        background:
+          radial-gradient(ellipse 44% 20% at 50% 24%, rgb(116 49 32 / 0.2), transparent 72%),
+          radial-gradient(ellipse 44% 20% at 50% 74%, rgb(41 108 111 / 0.2), transparent 72%),
+          linear-gradient(180deg, rgb(9 18 17), rgb(3 8 9));
+      }
+      .stage .board::after {
+        position: absolute; inset: 0; content: "";
+        background:
+          repeating-linear-gradient(90deg, transparent 0 78px, rgb(255 255 255 / 0.012) 78px 79px),
+          repeating-linear-gradient(0deg, transparent 0 62px, rgb(255 255 255 / 0.012) 62px 63px);
+      }
+      canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+      .verdict {
+        position: absolute; z-index: 3; left: 50%; bottom: 8%;
+        display: grid; justify-items: center; gap: 6px; width: min(560px, 86%);
+        opacity: 0; text-align: center; transform: translateX(-50%);
+        text-shadow: 0 2px 12px #000, 0 0 30px rgb(0 0 0 / 0.9);
+      }
+      .verdict.on { animation: verdict-in 900ms ease-out both; }
+      .verdict small { color: var(--teal-dim); font-size: 10px; font-weight: 900; letter-spacing: 0.28em; text-transform: uppercase; }
+      .verdict strong {
+        color: var(--parchment); font-family: var(--serif);
+        font-size: clamp(22px, 3.4vw, 40px); font-weight: 500; letter-spacing: 0.11em; text-transform: uppercase;
+      }
+      @keyframes verdict-in { from { opacity: 0; letter-spacing: 0.02em; } to { opacity: 1; } }
+
+      .fallback { position: absolute; inset: 0; z-index: 4; display: none; place-items: center; padding: 30px; text-align: center; }
+      .stage.no-webgl .fallback { display: grid; }
+
+      .scrub { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
+      .track { position: relative; height: 3px; flex: 1; background: rgb(146 133 88 / 0.18); }
+      .fill { position: absolute; top: 0; bottom: 0; left: 0; width: 0; background: linear-gradient(90deg, rgb(146 133 88 / 0.5), var(--gold)); }
+      .clock { color: var(--muted-dim); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
+
+      .notes { margin-top: 46px; border-top: 1px solid var(--rule); padding-top: 26px; }
+      .notes h2 { margin: 0 0 12px; color: var(--parchment); font-family: var(--serif); font-size: 22px; font-weight: 500; }
+      .notes h3 {
+        margin: 22px 0 5px; color: var(--gold-bright); font-size: 10px; font-weight: 800;
+        letter-spacing: 0.2em; text-transform: uppercase;
+      }
+      .notes ul { max-width: 72ch; margin: 0; padding-left: 20px; }
+      .notes li { margin-bottom: 9px; }
+      .notes b { color: var(--gold-bright); font-weight: 600; }
+      code { color: #9ec9c2; font-size: 13px; }
+      @media (prefers-reduced-motion: reduce) { .verdict.on { animation-duration: 1ms; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <a class="back" href="../index.html">← Maquetas</a>
+        <div class="eyebrow">Semillas del Destino · desenlace preservado</div>
+        <h1>Constelación cardinal</h1>
+        <p>
+          Motas de luz suben desde abajo y convergen una a una. Cada llegada <strong>fija un nodo</strong>,
+          y entre nodos ya fijos se tiende un hilo dorado hasta cerrar una rosa cardinal: cuatro puntas
+          largas en Norte, Este, Sur y Oeste, cuatro cortas en las diagonales. Al cerrarse, florece.
+        </p>
+      </header>
+
+      <div class="controls">
+        <button id="replay" type="button">Repetir</button>
+        <label for="seed">Semilla</label>
+        <input id="seed" type="text" value="748-203" spellcheck="false" />
+      </div>
+
+      <div class="stage" id="stage">
+        <div class="board"></div>
+        <canvas id="gl"></canvas>
+        <div class="verdict" id="verdict"><small></small><strong>Destino preservado</strong></div>
+        <div class="fallback">
+          Este navegador no dio contexto WebGL, así que la escena no puede dibujarse.
+        </div>
+      </div>
+
+      <div class="scrub">
+        <span class="clock" id="clock">0.00 s</span>
+        <span class="track"><span class="fill" id="fill"></span></span>
+      </div>
+
+      <section class="notes">
+        <h2>Notas</h2>
+
+        <h3>Por qué se construye a la vista</h3>
+        <ul>
+          <li>Ver la figura completarse nodo a nodo es lo que da sensación de logro. Un fogonazo no lo consigue: llega y se va sin que hayas visto nada armarse.</li>
+          <li>El trazo sigue el contorno de la estrella desde el Norte en sentido horario, así que la forma se adivina antes de cerrarse.</li>
+          <li>Los cuatro radios al centro se tienden al final, como el florecimiento.</li>
+        </ul>
+
+        <h3>La estrella es cardinal de verdad</h3>
+        <ul>
+          <li>Las cuatro puntas largas caen exactamente en <b>N, E, S y O</b>. La firma de la semilla orienta el color, la dispersión de las motas y el brillo — <b>nunca la rotación</b>, porque una estrella cardinal girada deja de ser cardinal.</li>
+          <li>Cambiando la semilla arriba se ve: la figura es idéntica, lo que cambia es de dónde vienen las motas y el fraseo. El mismo Futuro dibuja siempre la misma constelación.</li>
+        </ul>
+
+        <h3>Si se lleva al juego</h3>
+        <ul>
+          <li>Es una escena y un plano, así que entra por <code>renderSharedVfxFrame</code> sin abrir otro contexto WebGL, igual que Burn y el vórtice. Aquí uso WebGL crudo sólo porque esta carpeta no carga Three.js.</li>
+          <li>Va <b>debajo</b> del panel de resultado, como capa de ambiente. El sello y el banner siguen encima.</li>
+          <li>Falta audio: con lo que ya existe, <code>buff</code> subiendo de tono con cada nodo que se fija.</li>
+        </ul>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        "use strict";
+
+        var canvas = document.getElementById("gl");
+        var stage = document.getElementById("stage");
+        var verdict = document.getElementById("verdict");
+        var clock = document.getElementById("clock");
+        var fill = document.getElementById("fill");
+        var seedInput = document.getElementById("seed");
+
+        var gl = canvas.getContext("webgl", { alpha: true, premultipliedAlpha: true, antialias: true });
+        if (!gl) { stage.classList.add("no-webgl"); return; }
+
+        // 8 puntas + 8 valles del contorno, más el centro.
+        var TIPS = 8;
+        var NODES = 17;
+        var EDGES = 20;
+        var TOTAL_MS = 4400;
+
+        // Mismas funciones que src/utils/futureIdentity.ts, para que la semilla case con el juego.
+        function hashSeed(seed) {
+          var h = 2166136261;
+          for (var i = 0; i < seed.length; i++) {
+            h ^= seed.charCodeAt(i);
+            h = Math.imul(h, 16777619);
+          }
+          return (h >>> 0) || 1;
+        }
+        function futureVisualSignature(seed) { return hashSeed(seed + ":destiny-vortex") / 4294967296; }
+        function futureCode(seed) {
+          var v = (hashSeed(seed) % 999999) + 1;
+          var d = String(v).padStart(6, "0");
+          return d.slice(0, 3) + "·" + d.slice(3);
+        }
+
+        var VERT = "attribute vec2 aPos; void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }";
+
+        var FRAG = [
+          "precision highp float;",
+          "#define NODES " + NODES,
+          "#define EDGES " + EDGES,
+          "uniform vec2 uRes; uniform float uPR; uniform float uTime; uniform float uT;",
+          "uniform vec2 uCenter; uniform float uUnit; uniform float uBloom; uniform float uSeed;",
+          // xy = posición px, z = instante en que queda fijo, w = semilla propia
+          "uniform vec4 uNode[NODES];",
+          // xy/zw = extremos px
+          "uniform vec4 uEdge[EDGES];",
+          "uniform float uEdgeT[EDGES];",
+
+          "float h11(float n){ return fract(sin(n*78.233)*43758.5453123); }",
+          "float h13(vec3 p){ p = fract(p*0.3183099 + vec3(0.71,0.113,0.419)); p *= 17.0;",
+          "  return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }",
+          "float vn(vec3 x){ vec3 i=floor(x); vec3 f=fract(x); f=f*f*(3.0-2.0*f);",
+          "  return mix(mix(mix(h13(i),h13(i+vec3(1,0,0)),f.x),mix(h13(i+vec3(0,1,0)),h13(i+vec3(1,1,0)),f.x),f.y),",
+          "             mix(mix(h13(i+vec3(0,0,1)),h13(i+vec3(1,0,1)),f.x),mix(h13(i+vec3(0,1,1)),h13(i+vec3(1,1,1)),f.x),f.y),f.z); }",
+          "float fbm(vec3 p){ float s=0.0,a=0.55; for(int i=0;i<3;i++){ s+=a*vn(p); p*=2.13; a*=0.5; } return s; }",
+          "float segSD(vec2 p, vec2 a, vec2 b){ vec2 pa=p-a, ba=b-a;",
+          "  float h=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0); return length(pa-ba*h); }",
+          "void add(inout vec3 col, inout float al, vec3 c, float amt){",
+          "  if(amt<=0.0015) return; col += c*amt; al = al + (1.0-al)*clamp(amt,0.0,1.0); }",
+
+          "const vec3 COLD = vec3(0.42,0.86,0.82);",
+          "const vec3 WARM = vec3(1.0,0.82,0.42);",
+          "const vec3 CORE = vec3(1.0,0.97,0.88);",
+
+          "void main(){",
+          "  vec2 p = vec2(gl_FragCoord.x/uPR, uRes.y - gl_FragCoord.y/uPR);",
+          "  vec3 col = vec3(0.0); float al = 0.0;",
+
+          // 1. la luz del tablero empieza a subir
+          "  float lift = smoothstep(0.0,0.5,uT);",
+          "  float veil = fbm(vec3(p.x*0.004, p.y*0.003 - uTime*0.14, 4.0 + uSeed*3.0));",
+          "  add(col, al, COLD, smoothstep(0.45,0.85,veil) * lift * (1.0 - p.y/uRes.y) * 0.16);",
+
+          // 2. motas que suben y convergen: cuatro por nodo
+          "  for (int i = 0; i < NODES; i++) {",
+          "    vec4 nd = uNode[i];",
+          "    float lock = nd.z;",
+          "    for (int j = 0; j < 4; j++) {",
+          "      float sd = nd.w + float(j)*13.7;",
+          "      float born = max(0.0, lock - 0.30 - h11(sd)*0.16);",
+          "      float k = (uT - born) / max(lock - born, 0.001);",
+          "      if (k <= 0.0 || k >= 1.08) continue;",
+          "      float e = clamp(k,0.0,1.0);",
+          "      float ease = e*e*(3.0-2.0*e);",
+          "      vec2 from = vec2(uCenter.x + (h11(sd*2.1)-0.5)*uRes.x*0.92, uRes.y*1.04);",
+          "      vec2 ctrl = mix(from, nd.xy, 0.5) + vec2((h11(sd*3.3)-0.5)*uUnit*3.4, -uUnit*2.2);",
+          "      float iv = 1.0-ease;",
+          "      vec2 pos = iv*iv*from + 2.0*iv*ease*ctrl + ease*ease*nd.xy;",
+          "      vec2 delta = p - pos;",
+          "      float sz = uUnit*(0.055 + h11(sd*5.9)*0.05)*(1.0-0.35*ease);",
+          "      if (dot(delta,delta) > sz*sz*90.0) continue;",
+          "      vec2 dir = normalize(nd.xy - from + vec2(1e-5));",
+          "      vec2 nm = vec2(-dir.y, dir.x);",
+          "      float stretch = 1.0 + 5.0*(1.0-ease);",
+          "      vec2 m = vec2(dot(delta,dir)/stretch, dot(delta,nm));",
+          "      float g = sz/(length(m) + sz*0.85);",
+          "      float amt = pow(clamp(g,0.0,1.0),3.0) * smoothstep(0.0,0.12,e) * (1.0-smoothstep(0.94,1.06,k));",
+          "      add(col, al, mix(COLD, WARM, ease*ease), amt*1.5);",
+          "    }",
+          "  }",
+
+          // 3. hilos entre nodos ya fijos
+          "  for (int e = 0; e < EDGES; e++) {",
+          "    float t0 = uEdgeT[e];",
+          "    if (uT < t0) continue;",
+          "    vec4 seg = uEdge[e];",
+          "    float draw = clamp((uT - t0)/0.14, 0.0, 1.0);",
+          "    vec2 b = mix(seg.xy, seg.zw, draw);",
+          "    float d = segSD(p, seg.xy, b);",
+          "    add(col, al, mix(WARM, CORE, 0.25), smoothstep(uUnit*0.022,0.0,d)*0.9);",
+          "    add(col, al, WARM, exp(-d/(uUnit*0.16))*0.16);",
+          "    if (draw < 1.0) add(col, al, CORE, exp(-length(p-b)/(uUnit*0.09))*0.8);",
+          "  }",
+
+          // 4. nodos fijados
+          "  for (int i = 0; i < NODES; i++) {",
+          "    vec4 nd = uNode[i];",
+          "    if (uT < nd.z) continue;",
+          "    float age = uT - nd.z;",
+          "    float d = length(p - nd.xy);",
+          "    float pop = exp(-age*11.0);",
+          "    float breathe = 0.86 + 0.14*sin(uTime*2.1 + nd.w*6.0);",
+          "    add(col, al, CORE, exp(-d/(uUnit*0.055))*(0.85 + 2.4*pop)*breathe);",
+          "    add(col, al, WARM, exp(-d/(uUnit*0.2))*(0.22 + 1.1*pop));",
+          "    if (pop > 0.01) {",
+          "      vec2 r = p - nd.xy;",
+          "      float star = exp(-abs(r.x)/(uUnit*0.5))*exp(-abs(r.y)/(uUnit*0.02))",
+          "                 + exp(-abs(r.y)/(uUnit*0.5))*exp(-abs(r.x)/(uUnit*0.02));",
+          "      add(col, al, CORE, star*pop*0.9);",
+          "    }",
+          "  }",
+
+          // 5. la figura cierra y florece
+          "  if (uBloom > 0.0) {",
+          "    float b = uBloom;",
+          "    float r = length(p - uCenter)/uUnit;",
+          "    float wave = 1.6 + 9.0*pow(b,0.55);",
+          "    add(col, al, WARM, smoothstep(0.9,0.0,abs(r-wave))*(1.0-smoothstep(0.1,0.9,b))*0.55);",
+          "    add(col, al, CORE, exp(-b*9.0)*exp(-r*r*0.05)*1.2);",
+          "    float mote = fbm(vec3(p.x*0.02, p.y*0.02 + uTime*0.5, 8.0));",
+          "    add(col, al, WARM, smoothstep(0.72,0.95,mote)*b*(1.0-smoothstep(0.6,1.0,b))*0.5);",
+          "  }",
+
+          "  gl_FragColor = vec4(col, clamp(al,0.0,1.0));",
+          "}"
+        ].join("\n");
+
+        function compile(type, src) {
+          var sh = gl.createShader(type);
+          gl.shaderSource(sh, src);
+          gl.compileShader(sh);
+          if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) { console.error(gl.getShaderInfoLog(sh)); return null; }
+          return sh;
+        }
+        var vs = compile(gl.VERTEX_SHADER, VERT);
+        var fs = compile(gl.FRAGMENT_SHADER, FRAG);
+        if (!vs || !fs) { stage.classList.add("no-webgl"); return; }
+        var prog = gl.createProgram();
+        gl.attachShader(prog, vs);
+        gl.attachShader(prog, fs);
+        gl.bindAttribLocation(prog, 0, "aPos");
+        gl.linkProgram(prog);
+        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { console.error(gl.getProgramInfoLog(prog)); stage.classList.add("no-webgl"); return; }
+
+        var quad = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+        gl.disable(gl.DEPTH_TEST);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+        var U = {};
+        ["uRes","uPR","uTime","uT","uCenter","uUnit","uBloom","uSeed","uNode","uEdge","uEdgeT"].forEach(function (n) {
+          U[n] = gl.getUniformLocation(prog, n);
+        });
+
+        var nodeBuf = new Float32Array(NODES * 4);
+        var edgeBuf = new Float32Array(EDGES * 4);
+        var edgeTBuf = new Float32Array(EDGES);
+        var W = 1, H = 1, unit = 1, PR = 1, signature = 0.3187;
+
+        function layout() {
+          var rect = stage.getBoundingClientRect();
+          PR = Math.min(window.devicePixelRatio || 1, 1.3);
+          W = Math.max(1, Math.round(rect.width));
+          H = Math.max(1, Math.round(rect.height));
+          canvas.width = Math.round(W * PR);
+          canvas.height = Math.round(H * PR);
+          unit = Math.min(W, H) * 0.16;
+          gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+
+        /* Rosa cardinal. El contorno alterna punta y valle; las puntas pares caen en N, E, S y O.
+           La orientación es fija a propósito: la semilla cambia color, motas y fraseo, nunca el giro,
+           porque una estrella cardinal girada deja de apuntar a ninguna parte. */
+        function buildConstellation() {
+          var cx = W * 0.5, cy = H * 0.44;
+          var tipLong = unit * 2.05;
+          var tipShort = unit * 0.86;
+          var valley = unit * 0.34;
+          var pts = [];
+
+          for (var k = 0; k < TIPS; k++) {
+            var tipAngle = (k * 360) / TIPS - 90;
+            var tipR = k % 2 === 0 ? tipLong : tipShort;
+            var valAngle = tipAngle + 360 / (TIPS * 2);
+            pts.push(polar(cx, cy, tipAngle, tipR));
+            pts.push(polar(cx, cy, valAngle, valley));
+          }
+          pts.push([cx, cy]); // el centro, nodo 16
+
+          // El centro se fija primero: es el origen de la luz. Después se traza el contorno.
+          nodeBuf[16 * 4] = cx; nodeBuf[16 * 4 + 1] = cy;
+          nodeBuf[16 * 4 + 2] = 0.12; nodeBuf[16 * 4 + 3] = signature * 10;
+          for (var i = 0; i < 16; i++) {
+            nodeBuf[i * 4] = pts[i][0];
+            nodeBuf[i * 4 + 1] = pts[i][1];
+            nodeBuf[i * 4 + 2] = 0.20 + (i / 16) * 0.50;
+            nodeBuf[i * 4 + 3] = signature * 10 + i * 3.7;
+          }
+
+          var e = 0;
+          for (var j = 0; j < 16; j++) {
+            var a = pts[j], b = pts[(j + 1) % 16];
+            edgeBuf[e * 4] = a[0]; edgeBuf[e * 4 + 1] = a[1];
+            edgeBuf[e * 4 + 2] = b[0]; edgeBuf[e * 4 + 3] = b[1];
+            // El hilo espera a que estén fijos SUS DOS extremos. Tomar sólo el destino hacía que el
+            // hilo de cierre (15 → 0) apareciera al principio, cuando su origen aún no existía.
+            edgeTBuf[e] = Math.max(nodeBuf[j * 4 + 2], nodeBuf[((j + 1) % 16) * 4 + 2]);
+            e++;
+          }
+          // los cuatro radios cardinales cierran la figura al final
+          [0, 4, 8, 12].forEach(function (tip) {
+            edgeBuf[e * 4] = cx; edgeBuf[e * 4 + 1] = cy;
+            edgeBuf[e * 4 + 2] = pts[tip][0]; edgeBuf[e * 4 + 3] = pts[tip][1];
+            edgeTBuf[e] = 0.74 + (e - 16) * 0.03;
+            e++;
+          });
+        }
+
+        function polar(cx, cy, degrees, radius) {
+          var a = (degrees * Math.PI) / 180;
+          return [cx + Math.cos(a) * radius, cy + Math.sin(a) * radius];
+        }
+
+        var start = 0, raf = 0;
+
+        function play() {
+          cancelAnimationFrame(raf);
+          var seed = seedInput.value || "748-203";
+          signature = futureVisualSignature(seed);
+          layout();
+          buildConstellation();
+          verdict.className = "verdict";
+          verdict.querySelector("small").textContent = "Futuro " + futureCode(seed);
+          start = performance.now();
+          raf = requestAnimationFrame(frame);
+        }
+
+        function frame(now) {
+          var elapsed = now - start;
+          var t = Math.min(elapsed / TOTAL_MS, 1);
+
+          gl.clearColor(0, 0, 0, 0);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+          gl.useProgram(prog);
+          gl.uniform2f(U.uRes, W, H);
+          gl.uniform1f(U.uPR, PR);
+          gl.uniform1f(U.uTime, now / 1000);
+          gl.uniform1f(U.uT, t);
+          gl.uniform2f(U.uCenter, W * 0.5, H * 0.44);
+          gl.uniform1f(U.uUnit, unit);
+          gl.uniform1f(U.uSeed, signature);
+          gl.uniform1f(U.uBloom, Math.min(1, Math.max(0, (t - 0.78) / 0.22)));
+          gl.uniform4fv(U.uNode, nodeBuf);
+          gl.uniform4fv(U.uEdge, edgeBuf);
+          gl.uniform1fv(U.uEdgeT, edgeTBuf);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+          if (t >= 0.80 && !verdict.classList.contains("on")) verdict.classList.add("on");
+          clock.textContent = (elapsed / 1000).toFixed(2) + " s";
+          fill.style.width = (t * 100).toFixed(1) + "%";
+
+          // La figura se queda encendida: no se desvanece al terminar.
+          raf = requestAnimationFrame(frame);
+        }
+
+        document.getElementById("replay").addEventListener("click", play);
+        seedInput.addEventListener("change", play);
+        window.addEventListener("resize", function () { layout(); buildConstellation(); });
+        play();
+      })();
+    </script>
+  </body>
+</html>
