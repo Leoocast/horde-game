@@ -1,5 +1,5 @@
 import { AlertTriangle, Home, RotateCcw } from "lucide-react";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
@@ -105,6 +105,24 @@ export function Board({
   // El fondo reacciona al mismo umbral que lleva la música a clímax, sin estado propio.
   const climaxReached = game.player.life <= 10 || surgeReached;
 
+  // El disco de grados mide cómo se mueve el futuro: gira a la derecha cuando la
+  // Hueste pierde Archivo —su barra de vida— y a la izquierda cuando el Cronista
+  // pierde Vida. Es acumulativo: el futuro que ya se movió no vuelve.
+  const hostArchiveCount = game.host.archive.length;
+  const dialSourceRef = useRef({ life: game.player.life, archive: hostArchiveCount });
+  const [dialAngle, setDialAngle] = useState(0);
+
+  useEffect(() => {
+    const previous = dialSourceRef.current;
+    const hostLost = Math.max(0, previous.archive - hostArchiveCount);
+    const playerLost = Math.max(0, previous.life - game.player.life);
+    dialSourceRef.current = { life: game.player.life, archive: hostArchiveCount };
+    if (hostLost === 0 && playerLost === 0) return;
+    // Con tope por evento: una descarga grande mueve la aguja, no la dispara.
+    const turn = Math.min(45, hostLost * 5) - Math.min(45, playerLost * 5);
+    setDialAngle((angle) => angle + turn);
+  }, [game.player.life, hostArchiveCount]);
+
   useEffect(() => {
     if (climaxReached) setMusicVariant("climax");
   }, [climaxReached, setMusicVariant]);
@@ -125,7 +143,7 @@ export function Board({
 
   return (
     <main className={`duel-table game-screen h-screen overflow-hidden ${encounterEntering ? "is-encounter-entering" : ""}`}>
-      <TemporalBackdrop grid climax={climaxReached ? 1 : 0} />
+      <TemporalBackdrop grid climax={climaxReached ? 1 : 0} dial={dialAngle} />
       <AppHeader
         left={game.openingHandAccepted ? <TurnPhaseHud game={game} setupTurns={setupTurns} /> : undefined}
         setupTurns={setupTurns}

@@ -19,17 +19,30 @@ import {
 export function TemporalBackdrop({
   climax = 0,
   grid = false,
+  dial = 0,
 }: {
   /** Mismo umbral que lleva la música a clímax. */
   climax?: number;
   /** Retículo del instrumento. Sólo en el tablero: el menú va a cielo limpio. */
   grid?: boolean;
+  /** Ángulo acumulado del disco de grados, en grados. El aparato mide cómo se mueve
+   *  el futuro: a la derecha cuando la Hueste pierde, a la izquierda cuando pierde
+   *  el Cronista. */
+  dial?: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const targetRef = useRef({ climax });
+  const dialRef = useRef<SVGGElement | null>(null);
+  const targetRef = useRef({ climax, dial });
 
   // El bucle lee los valores por referencia para no reiniciarse en cada cambio.
-  targetRef.current = { climax };
+  targetRef.current = { climax, dial };
+
+  // Con movimiento reducido no hay bucle, así que el disco salta a su sitio.
+  useEffect(() => {
+    if (!dialRef.current) return;
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    dialRef.current.setAttribute("transform", `translate(500 281) rotate(${dial})`);
+  }, [dial]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -91,6 +104,7 @@ export function TemporalBackdrop({
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const startedAt = performance.now();
     let climaxMix = targetRef.current.climax;
+    let dialMix = targetRef.current.dial;
     let frame = 0;
     let disposed = false;
 
@@ -105,6 +119,14 @@ export function TemporalBackdrop({
 
       // El cambio de estado se interpola: un salto seco se ve.
       climaxMix += (targetRef.current.climax - climaxMix) * 0.04;
+
+      // El disco gira despacio hasta su nuevo ángulo y se queda ahí: el futuro se
+      // movió y no vuelve. Se escribe el atributo en vez de usar CSS porque el origen
+      // de rotación del grupo ya es su propio centro y así no depende de `fill-box`.
+      dialMix += (targetRef.current.dial - dialMix) * 0.035;
+      if (dialRef.current) {
+        dialRef.current.setAttribute("transform", `translate(500 281) rotate(${dialMix.toFixed(2)})`);
+      }
 
       gl.viewport(0, 0, width, height);
       gl.uniform2f(uRes, width, height);
@@ -222,7 +244,7 @@ export function TemporalBackdrop({
         <path className="glass-lip" d="M27 541 V21 H973" />
 
         {/* Los grados: la parte central del instrumento. */}
-        <g className="dial" transform="translate(500 281)">
+        <g ref={dialRef} className="dial" transform="translate(500 281)">
           <circle className="dial-ring" r="196" pathLength={360} strokeDasharray="1 14" />
           <circle className="dial-arc" r="183" pathLength={360} strokeDasharray="34 18 5 33" />
 
