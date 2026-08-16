@@ -104,12 +104,21 @@
       .instruments .degree { fill: rgb(222 193 118 / 0.46); font-size: 9px; }
       .instruments .readout-strong { fill: rgb(233 201 122 / 0.62); }
 
-      .impact {
-        position: absolute; z-index: 3; left: 52%; top: 46%; width: 8px; height: 8px;
-        border-radius: 50%; opacity: 0; transform: translate(-50%, -50%); pointer-events: none;
-        background: #f9f5e9;
+      /* Las quebraduras se dibujan como líneas que crecen desde el impacto, igual
+         que en la primera versión: los muros del prisma quedan casi de canto y no
+         sirven para verlas. */
+      .fractures {
+        position: absolute; z-index: 3; inset: 0; width: 100%; height: 100%; pointer-events: none;
+        filter: drop-shadow(0 0 3px rgb(185 222 221 / 0.46));
       }
-      .stage.burst .impact { animation: impact-burst 640ms ease-out both; }
+      .fractures path {
+        fill: none; stroke: rgb(225 237 229 / 0.78); stroke-width: 0.12; vector-effect: non-scaling-stroke;
+        stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0;
+      }
+      .stage.playing .fractures path { animation: crack-grow 520ms 620ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+      .stage.playing .fractures path:nth-child(2n) { animation-delay: 740ms; }
+      .stage.playing .fractures path:nth-child(3n) { animation-delay: 860ms; }
+      .stage.burst .fractures { animation: cracks-away 280ms ease-out both; }
 
       .vignette {
         position: absolute; z-index: 4; inset: 0; pointer-events: none;
@@ -197,11 +206,8 @@
       .notes code { color: var(--cold); font-size: 13px; }
 
       @keyframes orbit-drift { to { stroke-dashoffset: -140; } }
-      @keyframes impact-burst {
-        0% { opacity: 1; transform: translate(-50%, -50%) scale(0.2); box-shadow: 0 0 0 0 rgb(219 236 231 / 0.9); }
-        38% { opacity: 1; }
-        100% { opacity: 0; transform: translate(-50%, -50%) scale(3); box-shadow: 0 0 58px 34px rgb(151 199 200 / 0.28); }
-      }
+      @keyframes crack-grow { 0% { opacity: 0; stroke-dashoffset: 1; } 18% { opacity: 1; } 100% { opacity: 0.9; stroke-dashoffset: 0; } }
+      @keyframes cracks-away { from { opacity: 1; } to { opacity: 0; transform: scale(1.04); } }
       @keyframes outcome-in { from { opacity: 0; transform: translate(-50%, -46%); } to { opacity: 1; transform: translate(-50%, -50%); } }
       @keyframes title-reveal { from { opacity: 0; clip-path: inset(0 50%); transform: translateY(12px); } to { opacity: 1; clip-path: inset(0); transform: translateY(0); } }
       @keyframes title-cut { 0% { opacity: 0; width: 0; } 35% { opacity: 0.9; } 100% { opacity: 0; width: 92%; } }
@@ -212,7 +218,7 @@
         .stage.revealed .outcome, .stage.revealed .defeat-kicker, .stage.revealed .defeat-title .line,
         .stage.revealed .defeat-title::after, .stage.revealed .defeat-subtitle,
         .stage.revealed .future-plate { animation-delay: 0ms; animation-duration: 1ms; }
-        .impact { display: none; }
+        .fractures { display: none; }
         .instruments .orbit { animation: none; }
       }
     </style>
@@ -292,7 +298,21 @@
           </g>
         </svg>
 
-        <div class="impact"></div>
+        <svg class="fractures" viewBox="0 0 100 56.25" preserveAspectRatio="none" aria-hidden="true">
+          <path pathLength="1" d="M52 26 L42 19 L31 11 L20 0" />
+          <path pathLength="1" d="M42 19 L25 20 L0 17" />
+          <path pathLength="1" d="M31 11 L34 0" />
+          <path pathLength="1" d="M52 26 L58 16 L65 8 L68 0" />
+          <path pathLength="1" d="M58 16 L77 11 L100 10" />
+          <path pathLength="1" d="M52 26 L70 25 L84 22 L100 24" />
+          <path pathLength="1" d="M70 25 L81 34 L100 39" />
+          <path pathLength="1" d="M52 26 L63 38 L69 47 L72 56.25" />
+          <path pathLength="1" d="M63 38 L50 45 L48 56.25" />
+          <path pathLength="1" d="M52 26 L36 38 L25 47 L18 56.25" />
+          <path pathLength="1" d="M36 38 L17 37 L0 41" />
+          <path pathLength="1" d="M52 26 L30 28 L15 25 L0 27" />
+        </svg>
+
         <div class="vignette"></div>
 
         <div class="outcome" id="outcome">
@@ -336,18 +356,35 @@
           <li><b>Una sola llamada de dibujo.</b> Los 140 prismas viven en un <code>BufferGeometry</code> y la
             animación entera ocurre en el vertex shader a partir de atributos por trozo. No hay 140 nodos DOM
             con tres <code>drop-shadow</code> cada uno.</li>
+          <li><b>Espesor cero mientras la placa está entera.</b> Los prismas vecinos comparten arista, así que
+            sus muros coinciden en el espacio: en escorzo asomarían como un enrejado de aristas doradas en
+            z-fighting sobre el tablero intacto. El grosor se gana al separarse, que además es lo correcto —
+            antes de romperse el vidrio es una lámina continua.</li>
+          <li><b>Reparto por sectores.</b> Los trozos que se quedan se eligen uno por sector angular alrededor
+            del impacto. Sorteados por índice se apelotonan y el cuadro queda descompensado.</li>
         </ul>
 
         <h3>Secuencia</h3>
         <ul>
           <li><b>Detener:</b> el tablero intacto ya es la malla, con los prismas a ras. Un uniforme enfría y
             desatura la imagen sin tocar el DOM.</li>
-          <li><b>Cuartear:</b> antes del estallido los trozos se separan una fracción de milímetro y la luz
-            se cuela por las juntas. La grieta se propaga en radial desde el impacto, así que el cuarteado
-            recorre la placa en vez de aparecer entero de golpe.</li>
+          <li><b>Cuartear:</b> las quebraduras se dibujan como líneas que crecen desde el impacto. Los muros
+            del prisma quedan casi de canto vistos de frente, así que no sirven para enseñar la raja; el
+            vidrio sí se tensa, cada pieza se inclina un pelo y deja de devolver la luz como una lámina.</li>
+          <li><b>Fuerza expansiva:</b> un frente que cruza el cuadro y dobla la captura a su paso —desplaza la
+            muestra de textura, no pinta un destello encima—. El vidrio suelta con el golpe, no al ritmo del
+            frente: encadenar cada trozo al avance del anillo convierte el estallido en un barrido geométrico,
+            porque el retardo pasa a ser función pura de la distancia y todo lo que está al mismo radio salta
+            a la vez.</li>
           <li><b>Estallar:</b> impulso que decae más deriva constante —una sola función continua, sin costura—
-            hacia fuera y hacia la cámara, con giro de velocidad angular constante sobre un eje propio. Los
-            trozos cercanos pasan de largo junto al espectador.</li>
+            con giro de velocidad angular constante. La mayoría abandona el cuadro y sólo se quedan unos pocos
+            restos, uno por sector angular, derivando despacio alrededor del vacío.</li>
+          <li><b>Que no parezca mecánico.</b> Todos sueltan con el golpe, cada uno con su propio margen. Lo
+            que rompe la regularidad es que el lanzamiento se desvía de su radio —los rayos exactamente
+            radiales delatan la construcción—, que la constante del impulso cambia en cada trozo, y que el
+            volteo usa dos ejes: con uno solo giran como monedas. Lo que más vende es que el <b>área hace de
+            masa</b>, así que la esquirla sale disparada y voltea rápido mientras la placa grande apenas se
+            mueve.</li>
           <li><b>Deriva de cámara:</b> la cámara avanza y se desplaza muy poco después del estallido. Basta
             para que los restos suspendidos den paralaje y el vacío se lea como espacio, no como fondo.</li>
           <li><b>Revelar y nombrar:</b> el abismo queda detrás y el texto sigue siendo DOM estable y accesible.</li>
@@ -412,11 +449,15 @@
         var instrumentFuture = document.getElementById("instrumentFuture");
 
         var FREEZE_MS = 700;
-        var CRACK_AT = 600;
-        var CRACK_MS = 540;
-        var BURST_AT = 1160;
-        var REVEAL_AT = 2320;
-        var TOTAL_MS = 5400;
+        var CRACK_AT = 620;
+        var CRACK_MS = 900;
+        // La onda cruza la placa ya cuarteada y cada trozo suelta a su paso, así que
+        // el estallido arranca con ella y el retardo por pieza hace el resto.
+        var SHOCK_AT = 1560;
+        var SHOCK_MS = 940;
+        var BURST_AT = SHOCK_AT;
+        var REVEAL_AT = 2900;
+        var TOTAL_MS = 6000;
         var IMPACT = { x: 0.52, y: 0.46 };
         var FOV = 42;
 
@@ -534,8 +575,77 @@
         /* ------------------------------------------------------------------ *
          * Prismas: cada triángulo se extruye en espesor real
          * ------------------------------------------------------------------ */
+        // Área en unidades de mundo. Es lo que hace de masa: una esquirla pequeña
+        // sale disparada y voltea rápido, una placa grande apenas se mueve.
+        function triangleArea(points, aspect) {
+          var ux = (points[1].x - points[0].x) * aspect;
+          var uy = points[0].y - points[1].y;
+          var vx = (points[2].x - points[0].x) * aspect;
+          var vy = points[0].y - points[2].y;
+          return Math.abs(ux * vy - vx * uy) / 2;
+        }
+
+        function triangleCentroid(points) {
+          return {
+            x: (points[0].x + points[1].x + points[2].x) / 3,
+            y: (points[0].y + points[1].y + points[2].y) / 3
+          };
+        }
+
+        // Los trozos que se quedan se eligen por sector angular, no al azar: si se
+        // sortean por índice se apelotonan en una zona y el cuadro queda descompensado.
+        // Dos coronas, para que el borde quede como vidrio roto con fondo y no como
+        // un aro de piezas sueltas.
+        function pickRetained(triangles, signature, aspect) {
+          var lastRing = RINGS.length - 1;
+          var plan = [
+            { ring: lastRing, sectors: 12 },
+            { ring: lastRing - 1, sectors: 7 }
+          ];
+          var retained = {};
+
+          plan.forEach(function (step, planIndex) {
+            var best = [];
+            var i;
+            for (i = 0; i < step.sectors; i++) best.push(null);
+
+            triangles.forEach(function (triangle, index) {
+              if (triangle.ring !== step.ring) return;
+              var c = triangleCentroid(triangle.points);
+              var angle = Math.atan2(c.y - IMPACT.y, (c.x - IMPACT.x) * aspect);
+              var sector = Math.floor(((angle + Math.PI) / (2 * Math.PI)) * step.sectors) % step.sectors;
+              var score = noise(signature, index * 19 + 5 + planIndex * 401);
+              if (!best[sector] || score > best[sector].score) {
+                best[sector] = { index: index, score: score };
+              }
+            });
+
+            best.forEach(function (entry) {
+              if (entry) retained[entry.index] = true;
+            });
+          });
+
+          return retained;
+        }
+
         function buildGeometry(signature, aspect) {
           var triangles = buildTriangles(signature);
+          var retainedSet = pickRetained(triangles, signature, aspect);
+
+          // El frente de grieta necesita la distancia normalizada, si no las esquinas
+          // nunca llegan a cuartearse del todo.
+          var impactWorldX = (IMPACT.x - 0.5) * aspect;
+          var impactWorldY = 0.5 - IMPACT.y;
+          var maxSpan = 0.0001;
+          var areaTotal = 0;
+          triangles.forEach(function (triangle) {
+            var c = triangleCentroid(triangle.points);
+            var span = Math.hypot((c.x - 0.5) * aspect - impactWorldX, (0.5 - c.y) - impactWorldY);
+            if (span > maxSpan) maxSpan = span;
+            areaTotal += triangleArea(triangle.points, aspect);
+          });
+          var meanArea = Math.max(1e-6, areaTotal / Math.max(1, triangles.length));
+
           var lastRing = RINGS.length - 1;
 
           var positions = [];
@@ -544,6 +654,7 @@
           var normals = [];
           var axes = [];
           var motions = [];
+          var dynamics = [];
           var infos = [];
 
           function toWorld(point) {
@@ -558,22 +669,46 @@
             var half = 0.0022 + noise(signature, index * 13 + 3) * 0.0026;
 
             // Impulso: hacia fuera del impacto y hacia la cámara.
-            var ix = (IMPACT.x - 0.5) * aspect;
-            var iy = 0.5 - IMPACT.y;
-            var dx = cx - ix;
-            var dy = cy - iy;
-            var span = Math.max(0.0001, Math.hypot(dx, dy));
-            var retained = triangle.ring === lastRing && noise(signature, index * 19 + 5) > 0.52 ? 1 : 0;
+            var dx = cx - impactWorldX;
+            var dy = cy - impactWorldY;
+            var span = Math.min(1, Math.hypot(dx, dy) / maxSpan);
+            var retained = retainedSet[index] ? 1 : 0;
+
+            // La mayoría abandona el cuadro; sólo se quedan los pocos elegidos por
+            // sector, que derivan despacio repartidos alrededor del vacío.
+            var ringT = triangle.ring / lastRing;
+
+            // Masa: el trozo pequeño sale más rápido y voltea más que la placa grande.
+            var area = Math.max(1e-6, triangleArea(triangle.points, aspect));
+            var mass = Math.max(0.62, Math.min(1.85, Math.pow(meanArea / area, 0.34)));
 
             var outSpeed = retained
-              ? 0.03 + noise(signature, index * 23 + 7) * 0.06
-              : 0.32 + noise(signature, index * 29 + 11) * 0.46;
+              ? 0.03 + noise(signature, index * 23 + 7) * 0.055
+              : (0.3 + noise(signature, index * 29 + 11) * 0.46) * (1.15 - 0.3 * ringT) * mass;
             var zSpeed = retained
-              ? 0.02 + noise(signature, index * 41 + 19) * 0.07
-              : 0.42 + noise(signature, index * 43 + 23) * 1.05;
-            var spin = (retained ? 0.5 : 2.6) + noise(signature, index * 47 + 29) * (retained ? 0.7 : 5.4);
+              ? 0.02 + noise(signature, index * 41 + 19) * 0.055
+              : (0.4 + noise(signature, index * 43 + 23) * 0.92) * mass;
+
+            // Nada de rayos perfectamente radiales: cada trozo se desvía de su radio.
+            var length = Math.max(0.0001, Math.hypot(dx, dy));
+            var dirX = dx / length;
+            var dirY = dy / length;
+            var sideways = (noise(signature, index * 31 + 13) - 0.5) * (retained ? 0.5 : 0.85);
+            var launchX = (dirX - dirY * sideways) * outSpeed;
+            var launchY = (dirY + dirX * sideways) * outSpeed;
+
+            var spin = retained
+              ? 0.3 + noise(signature, index * 47 + 29) * 0.6
+              : (1.9 + noise(signature, index * 47 + 29) * 4.2) * mass;
             if (noise(signature, index * 53 + 33) > 0.5) spin = -spin;
-            var delay = noise(signature, index * 59 + 37) * 0.11;
+            // Volteo, no giro de moneda: un segundo eje mucho más lento.
+            var tumble = (noise(signature, index * 83 + 63) - 0.5) * (retained ? 0.5 : 2.1);
+            // Cada trozo encaja el golpe a su manera.
+            var tau = 0.17 + noise(signature, index * 89 + 67) * 0.2;
+
+            // Sueltan todos a la vez, sólo con su propio margen. Encadenar la suelta
+            // al avance del frente convertía el estallido en un barrido geométrico.
+            var delay = noise(signature, index * 97 + 71) * 0.09;
 
             // Eje de giro propio, normalizado.
             var ax = noise(signature, index * 61 + 41) - 0.5;
@@ -590,7 +725,8 @@
               uvs.push(u, v);
               normals.push(nx, ny, nz);
               axes.push(ax, ay, az);
-              motions.push(outSpeed, zSpeed, spin, delay);
+              motions.push(launchX, launchY, zSpeed, delay);
+              dynamics.push(spin, tau, tumble);
               infos.push(shardSeed, kind, retained, span);
             }
 
@@ -634,6 +770,7 @@
           geometry.setAttribute("aNrm", new THREE.Float32BufferAttribute(normals, 3));
           geometry.setAttribute("aAxis", new THREE.Float32BufferAttribute(axes, 3));
           geometry.setAttribute("aMotion", new THREE.Float32BufferAttribute(motions, 4));
+          geometry.setAttribute("aDyn", new THREE.Float32BufferAttribute(dynamics, 3));
           geometry.setAttribute("aInfo", new THREE.Float32BufferAttribute(infos, 4));
           return geometry;
         }
@@ -646,8 +783,9 @@
           "attribute vec2 aUv;",
           "attribute vec3 aNrm;",
           "attribute vec3 aAxis;",
-          "attribute vec4 aMotion;",   // salida, avance hacia cámara, giro, retardo
-          "attribute vec4 aInfo;",     // semilla, cara, retenido, distancia al impacto
+          "attribute vec4 aMotion;",   // vector de lanzamiento y retardo
+          "attribute vec3 aDyn;",      // giro, constante del golpe, volteo
+          "attribute vec4 aInfo;",     // semilla, cara, retenido, distancia normalizada
           "uniform float uT;",         // segundos desde el estallido (negativo antes)
           "uniform float uCrack;",
           "uniform vec2 uImpact;",
@@ -657,6 +795,7 @@
           "varying float vKind;",
           "varying float vSeed;",
           "varying float vFade;",
+          "varying float vExpand;",
           "",
           "mat3 rotAxis(vec3 a, float angle) {",
           "  float c = cos(angle); float s = sin(angle); float o = 1.0 - c;",
@@ -671,28 +810,44 @@
           "  vec2 toEdge = aCentroid.xy - uImpact;",
           "  vec3 dir = normalize(vec3(toEdge, 0.0001));",
           "",
-          // El cuarteado recorre la placa en radial antes del estallido.
-          "  float wave = clamp(uCrack * 1.9 - aInfo.w * 1.6, 0.0, 1.0);",
+          // El cuarteado recorre la placa en radial antes del estallido. La distancia
+          // llega normalizada, así que con uCrack = 1 la grieta sí alcanza las esquinas.
+          "  float wave = clamp(uCrack * 2.0 - aInfo.w, 0.0, 1.0);",
           "  wave = wave * wave * (3.0 - 2.0 * wave);",
-          "  vec3 crack = dir * wave * 0.005 + vec3(0.0, 0.0, (aInfo.x - 0.5) * wave * 0.008);",
+          "  vec3 crack = dir * wave * 0.004 + vec3(0.0, 0.0, (aInfo.x - 0.5) * wave * 0.006);",
+          // Tensión: cada pieza se inclina un pelo, así el vidrio cuarteado deja de
+          // devolver la luz como una sola lámina.
+          "  mat3 stress = rotAxis(aAxis, wave * 0.016);",
           "",
           "  float t = max(0.0, uT - aMotion.w);",
-          "  float kick = 1.0 - exp(-t / 0.26);",
-          "  vec3 launch = dir * aMotion.x + vec3(0.0, -0.1, aMotion.y);",
+          // Cada trozo encaja el golpe con su propia constante, no todos igual.
+          "  float kick = 1.0 - exp(-t / aDyn.y);",
+          // El vector de lanzamiento ya llega desviado de su radio: los rayos
+          // perfectamente radiales son lo que hace que la explosión parezca un barrido.
+          "  vec3 launch = aMotion.xyz;",
           // Impulso que decae más deriva constante: una sola función continua.
           "  vec3 offset = launch * kick + launch * 0.2 * t;",
-          "  float angle = aMotion.z * (kick * 0.55 + t * 0.42);",
-          "  mat3 spin = rotAxis(aAxis, angle);",
+          // Dos ejes: uno rápido y otro lento. Con uno solo giran como monedas.
+          "  vec3 axis2 = normalize(cross(aAxis, vec3(0.0, 0.0, 1.0)) + vec3(0.001, 0.0, 0.0));",
+          "  float angle = aDyn.x * (kick * 0.55 + t * 0.42);",
+          "  mat3 spin = rotAxis(aAxis, angle) * rotAxis(axis2, aDyn.z * t);",
           "",
-          "  vec3 local = mix(position, spin * position, step(0.0001, t));",
+          "  float flying = step(0.0001, t);",
+          // Los prismas vecinos comparten arista, así que sus muros coinciden en el
+          // espacio y en escorzo asomarían como aristas doradas en z-fighting. Mientras
+          // la placa está entera el espesor es cero: es una lámina continua, y sólo
+          // gana grosor cuando la pieza se separa de verdad.
+          "  float expand = clamp(max(wave * 0.25, flying), 0.0, 1.0);",
+          "  vec3 solid = vec3(position.xy, position.z * expand);",
+          "  vec3 local = mix(stress * solid, spin * solid, flying);",
           "  vec3 world = aCentroid + crack + offset + local;",
-          "  vec3 nrm = mix(aNrm, spin * aNrm, step(0.0001, t));",
+          "  vec3 nrm = mix(stress * aNrm, spin * aNrm, flying);",
           "",
           "  float fade = 1.0;",
           "  if (aInfo.z > 0.5) {",
-          "    fade = mix(1.0, 0.5, smoothstep(0.7, 2.6, t));",
+          "    fade = mix(1.0, 0.78, smoothstep(0.6, 2.6, t));",
           "  } else {",
-          "    fade = 1.0 - smoothstep(1.2, 2.7, t);",
+          "    fade = 1.0 - smoothstep(1.0, 2.4, t);",
           "  }",
           "",
           "  vec4 mv = modelViewMatrix * vec4(world, 1.0);",
@@ -702,6 +857,7 @@
           "  vKind = aInfo.y;",
           "  vSeed = aInfo.x;",
           "  vFade = fade;",
+          "  vExpand = expand;",
           "  gl_Position = projectionMatrix * mv;",
           "}"
         ].join("\n");
@@ -711,20 +867,41 @@
           "uniform sampler2D uBoard;",
           "uniform float uFreeze;",
           "uniform float uT;",
+          "uniform float uShock;",
+          "uniform vec2 uImpactUv;",
+          "uniform float uAspect;",
           "varying vec2 vUv;",
           "varying vec3 vNormalView;",
           "varying vec3 vViewPos;",
           "varying float vKind;",
           "varying float vSeed;",
           "varying float vFade;",
+          "varying float vExpand;",
           "",
           "void main() {",
           "  if (vFade < 0.02) discard;",
-          "  vec3 N = normalize(vNormalView);",
+          // Mientras la placa es una lámina continua sólo existe la cara frontal: la
+          // trasera quedaría coplanar con ella y se repartirían el z-buffer a parches.
+          "  if (vKind > 0.5 && vExpand < 0.02) discard;",
           "  vec3 V = normalize(-vViewPos);",
+          // La normal se orienta hacia el observador comparándola con la vista, no con
+          // gl_FrontFacing: el enrollado del teselado no es fiable y una normal que
+          // apunta al lado contrario da ndv = 0, o sea Fresnel al máximo y la cara
+          // entera plana del color del borde.
+          "  vec3 N = normalize(vNormalView);",
+          "  N *= sign(dot(N, V) + 0.0001);",
           "",
           // Refracción: la cara dobla la captura según su propia normal.
           "  vec2 bend = N.xy * 0.045;",
+          "",
+          // La onda expansiva empuja la muestra hacia fuera a su paso: el tablero
+          // se dobla de verdad bajo el frente en vez de recibir un destello encima.
+          "  vec2 toImpact = (vUv - uImpactUv) * vec2(uAspect, 1.0);",
+          "  float shockR = length(toImpact);",
+          "  float shockFront = uShock * 1.3;",
+          "  float shockBand = exp(-pow((shockR - shockFront) / 0.038, 2.0)) * step(0.0, uShock);",
+          "  bend += normalize(toImpact + 0.0001) * shockBand * 0.042;",
+          "",
           "  vec3 base;",
           "  base.r = texture2D(uBoard, vUv + bend * 1.18).r;",
           "  base.g = texture2D(uBoard, vUv + bend).g;",
@@ -758,7 +935,47 @@
           "    color *= 0.42;",
           "  }",
           "",
+          "  color += vec3(0.86, 0.94, 1.0) * shockBand * 0.3;",
+          "",
           "  gl_FragColor = vec4(color, vFade);",
+          "}"
+        ].join("\n");
+
+        // Frente de fuerza expansiva. Se dibuja en aditivo por encima del vidrio, así
+        // que sigue leyéndose mientras los trozos ya están saliendo del cuadro.
+        var shockFragment = [
+          "precision highp float;",
+          "uniform vec2 uRes;",
+          "uniform vec2 uImpactP;",
+          "uniform float uShock;",
+          "void main() {",
+          "  vec2 uv = gl_FragCoord.xy / uRes;",
+          "  float aspect = uRes.x / uRes.y;",
+          "  vec2 p = (uv - 0.5) * vec2(aspect, 1.0);",
+          "  vec2 d = p - uImpactP;",
+          "  float r = length(d);",
+          "  float angle = atan(d.y, d.x);",
+          "",
+          "  float front = uShock * 1.3;",
+          // Un frente delgado, no un disco: si el halo engorda, tapa el vidrio.
+          "  float thickness = mix(0.006, 0.030, uShock);",
+          "  float band = exp(-pow((r - front) / thickness, 2.0));",
+          "  float trail = exp(-pow((r - front * 0.9) / (thickness * 2.2), 2.0));",
+          "  float lip = exp(-pow((r - front * 1.05) / (thickness * 1.3), 2.0));",
+          "  float fade = pow(1.0 - uShock, 1.9);",
+          "",
+          // Radios irregulares: un anillo perfecto se lee como una animación de CSS.
+          "  float spokes = 0.6 + 0.4 * sin(angle * 34.0 + uShock * 5.0)",
+          "               + 0.22 * sin(angle * 11.0 - uShock * 2.0);",
+          "  vec3 color = vec3(1.0, 0.95, 0.86) * band * 0.95 * mix(0.7, 1.25, clamp(spokes, 0.0, 1.0));",
+          "  color += vec3(0.3, 0.74, 0.88) * trail * 0.22;",
+          "  color += vec3(0.95, 0.72, 0.34) * lip * 0.2;",
+          "",
+          // Fogonazo del primer instante, centrado en el impacto.
+          "  float flash = exp(-uShock * 14.0) * (1.0 - smoothstep(0.0, 0.3, r));",
+          "  color += vec3(1.0, 0.97, 0.92) * flash * 1.2;",
+          "",
+          "  gl_FragColor = vec4(color * fade, 1.0);",
           "}"
         ].join("\n");
 
@@ -872,6 +1089,25 @@
         });
         bgScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bgMaterial));
 
+        var fxScene = new THREE.Scene();
+        var shockMaterial = new THREE.ShaderMaterial({
+          uniforms: {
+            uRes: { value: new THREE.Vector2(2, 2) },
+            uImpactP: { value: new THREE.Vector2(0, 0) },
+            uShock: { value: -1 }
+          },
+          vertexShader: "void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }",
+          fragmentShader: shockFragment,
+          transparent: true,
+          depthTest: false,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending
+        });
+        var shockMesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), shockMaterial);
+        shockMesh.frustumCulled = false;
+        shockMesh.visible = false;
+        fxScene.add(shockMesh);
+
         var boardTexture = null;
         var glassMaterial = new THREE.ShaderMaterial({
           uniforms: {
@@ -879,7 +1115,10 @@
             uT: { value: -1 },
             uCrack: { value: 0 },
             uFreeze: { value: 0 },
-            uImpact: { value: new THREE.Vector2(0, 0) }
+            uShock: { value: -1 },
+            uImpact: { value: new THREE.Vector2(0, 0) },
+            uImpactUv: { value: new THREE.Vector2(IMPACT.x, IMPACT.y) },
+            uAspect: { value: 16 / 9 }
           },
           vertexShader: glassVertex,
           fragmentShader: glassFragment,
@@ -995,6 +1234,9 @@
             size.height * renderer.getPixelRatio()
           );
           glassMaterial.uniforms.uImpact.value.set((IMPACT.x - 0.5) * aspect, 0.5 - IMPACT.y);
+          glassMaterial.uniforms.uAspect.value = aspect;
+          shockMaterial.uniforms.uRes.value.copy(bgMaterial.uniforms.u_resolution.value);
+          shockMaterial.uniforms.uImpactP.value.set((IMPACT.x - 0.5) * aspect, 0.5 - IMPACT.y);
 
           if (glassMesh) {
             scene.remove(glassMesh);
@@ -1026,6 +1268,8 @@
           instrumentAzimuth.textContent = "Ω " + String(Math.round(signature * 359)).padStart(3, "0") + "°";
           instrumentFuture.textContent = "FUTURO " + code;
           stage.className = bare ? "stage bare" : "stage";
+          void stage.offsetWidth;
+          stage.classList.add("playing");
 
           rebuild(signature);
           startedAt = performance.now();
@@ -1054,6 +1298,12 @@
           glassMaterial.uniforms.uT.value = reducedMotion ? 3 : (elapsed - BURST_AT) / 1000;
           bgMaterial.uniforms.u_time.value = elapsed / 1000;
 
+          var shock = (elapsed - SHOCK_AT) / SHOCK_MS;
+          var shockLive = !reducedMotion && shock >= 0 && shock <= 1;
+          glassMaterial.uniforms.uShock.value = shockLive ? shock : -1;
+          shockMaterial.uniforms.uShock.value = shockLive ? shock : -1;
+          shockMesh.visible = shockLive;
+
           // Deriva de cámara: sólo después del estallido, y muy poca.
           var after = Math.max(0, (elapsed - BURST_AT) / 1000);
           var settle = 1 - Math.exp(-after / 1.6);
@@ -1070,6 +1320,7 @@
           renderer.render(bgScene, bgCamera);
           renderer.clearDepth();
           renderer.render(scene, camera);
+          if (shockLive) renderer.render(fxScene, bgCamera);
         }
 
         replay.addEventListener("click", play);
