@@ -146,6 +146,15 @@ test("Developer Mode uses the selected player deck's own Energy cards", () => {
   );
 });
 
+test("devlost starts at 15 Life without enabling the Developer Mode setup", () => {
+  const game = createInitialGame(playerDeck, hostDeck, "devlost", 3);
+
+  assert.equal(game.player.life, 15);
+  assert.equal(game.player.hand.length, 7);
+  assert.equal(game.player.field.length, 0);
+  assert.equal(game.setupTurnsRemaining, 3);
+});
+
 test("every expanded card copy has a unique instance id", () => {
   const cards = [...expandDeck(playerDeck, "player"), ...expandDeck(hostDeck, "host")];
   const ids = cards.map((card) => card.instanceId);

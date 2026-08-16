@@ -1,0 +1,1248 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hostfall — Umbral de la Crónica</title>
+    <style>
+      @font-face {
+        font-family: "Cinzel";
+        font-style: normal;
+        font-weight: 500 900;
+        font-display: block;
+        src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+      }
+
+      @font-face {
+        font-family: "Lora";
+        font-style: normal;
+        font-weight: 400 700;
+        font-display: block;
+        src: url("../assets/fonts/lora-normal-latin.woff2") format("woff2");
+      }
+
+      :root {
+        --ink: #05090a;
+        --parchment: #e8dec0;
+        --gold: #c4a65f;
+        --gold-bright: #f0d998;
+        --verdant: #74aa81;
+        --verdant-bright: #c7e6b0;
+        --grave: #a2563f;
+        --grave-bright: #e0a17b;
+        --cold: #7ba6a5;
+        --muted: #91a09a;
+        --muted-dim: #6f817c;
+        --rule: rgb(162 145 89 / 0.23);
+        --serif: "Lora", Georgia, serif;
+        --display: "Cinzel", Georgia, serif;
+        --sans: "Segoe UI", system-ui, sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        padding: 0 0 72px;
+        background:
+          radial-gradient(ellipse at 50% -12%, rgb(37 75 69 / 0.2), transparent 52%),
+          #04090a;
+        color: var(--muted);
+        font: 15px/1.6 var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      main { width: min(1180px, 100%); margin: 0 auto; padding: 0 28px; }
+
+      header { border-bottom: 1px solid var(--rule); padding: 52px 0 29px; }
+      .back { display: inline-block; margin-bottom: 8px; color: var(--muted-dim); font-size: 12px; text-decoration: none; }
+      .back:hover { color: var(--gold-bright); }
+      .eyebrow { color: #8eb6ad; font-size: 10px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; }
+      h1 {
+        margin: 11px 0 0;
+        color: var(--parchment);
+        font: 500 clamp(31px, 4.4vw, 48px)/1.06 var(--serif);
+        letter-spacing: 0.015em;
+      }
+      header p { max-width: 72ch; margin: 15px 0 0; }
+      header strong { color: var(--gold-bright); font-weight: 600; }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin: 30px 0 14px;
+      }
+
+      button,
+      input {
+        height: 42px;
+        border: 1px solid rgb(159 143 91 / 0.38);
+        border-radius: 2px;
+        background: linear-gradient(180deg, rgb(25 34 35 / 0.96), rgb(8 14 16 / 0.98));
+        color: var(--muted);
+        font-family: var(--sans);
+      }
+
+      button {
+        padding: 0 20px;
+        cursor: pointer;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+      }
+      button:hover:not(:disabled) { border-color: rgb(225 199 119 / 0.72); color: var(--gold-bright); }
+      button:disabled { cursor: default; opacity: 0.4; }
+      button:focus-visible,
+      input:focus-visible { outline: 2px solid rgb(236 211 132 / 0.9); outline-offset: 2px; }
+      button[aria-pressed="true"] { border-color: rgb(225 199 119 / 0.62); color: var(--gold-bright); }
+      label { color: var(--muted-dim); font-size: 9px; font-weight: 900; letter-spacing: 0.22em; text-transform: uppercase; }
+      input { width: 152px; padding: 0 12px; color: var(--gold-bright); font-size: 12px; letter-spacing: 0.08em; }
+      .control-spacer { flex: 1; }
+      .phase-readout { min-width: 190px; color: #aebbb5; font: 600 11px/1.2 var(--display); letter-spacing: 0.14em; text-align: right; text-transform: uppercase; }
+
+      .stage {
+        --mx: 0;
+        --my: 0;
+        --d-selection: 1540ms;
+        --d-seal: 2260ms;
+        --delay-seal: 470ms;
+        --d-arrival: 1060ms;
+        --delay-arrival: 2430ms;
+        --d-combatant: 820ms;
+        --delay-combatant: 2740ms;
+        --d-impact: 920ms;
+        --delay-impact: 3060ms;
+        position: relative;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        border: 1px solid rgb(158 142 90 / 0.3);
+        border-radius: 2px;
+        background: #020607;
+        box-shadow: 0 32px 80px rgb(0 0 0 / 0.32);
+        isolation: isolate;
+      }
+
+      .stage::before,
+      .stage::after {
+        position: absolute;
+        z-index: 40;
+        inset: 0;
+        content: "";
+        pointer-events: none;
+      }
+
+      .stage::before {
+        background:
+          linear-gradient(90deg, rgb(0 0 0 / 0.7), transparent 11% 89%, rgb(0 0 0 / 0.7)),
+          radial-gradient(ellipse at center, transparent 40%, rgb(0 3 4 / 0.76) 100%);
+        opacity: 0.68;
+      }
+
+      .stage::after {
+        z-index: 41;
+        background:
+          repeating-linear-gradient(0deg, transparent 0 3px, rgb(226 215 171 / 0.012) 3px 4px),
+          linear-gradient(110deg, transparent 42%, rgb(255 246 204 / 0.035) 50%, transparent 58%);
+        mix-blend-mode: screen;
+      }
+
+      .scene { position: absolute; inset: 0; }
+
+      .selection-scene {
+        z-index: 4;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        background:
+          radial-gradient(ellipse 38% 52% at 16% 50%, rgb(40 109 71 / 0.18), transparent 72%),
+          radial-gradient(ellipse 38% 52% at 84% 50%, rgb(126 49 37 / 0.2), transparent 72%),
+          linear-gradient(112deg, rgb(7 17 15), rgb(3 7 8) 48%, rgb(17 9 9));
+        transform: translate3d(calc(var(--mx) * -4px), calc(var(--my) * -3px), 0) scale(1.01);
+      }
+
+      .selection-scene::before {
+        position: absolute;
+        inset: 0;
+        background:
+          repeating-linear-gradient(90deg, transparent 0 74px, rgb(214 194 126 / 0.025) 74px 75px),
+          repeating-linear-gradient(0deg, transparent 0 60px, rgb(214 194 126 / 0.02) 60px 61px),
+          radial-gradient(circle at center, transparent 0 14%, rgb(0 0 0 / 0.24) 44%, transparent 74%);
+        content: "";
+        mask-image: linear-gradient(90deg, transparent, black 12% 88%, transparent);
+        pointer-events: none;
+      }
+
+      .selection-topbar {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        min-height: 64px;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        border-bottom: 1px solid rgb(176 157 96 / 0.19);
+        padding: 10px 28px;
+        background: linear-gradient(180deg, rgb(4 9 10 / 0.96), rgb(5 11 12 / 0.72));
+      }
+
+      .selection-back,
+      .future-code,
+      .selection-kicker { font-size: 8px; font-weight: 900; letter-spacing: 0.24em; text-transform: uppercase; }
+      .selection-back { color: #72837e; }
+      .selection-title { text-align: center; }
+      .selection-title strong { display: block; color: #ddd2b1; font: 500 clamp(17px, 2.3vw, 25px)/1 var(--display); letter-spacing: 0.1em; text-transform: uppercase; }
+      .selection-kicker { display: block; margin-bottom: 4px; color: #8d7b4c; }
+      .future-code { justify-self: end; color: #90aaa2; }
+      .future-code b { color: #d9c88d; font-weight: 900; }
+
+      .selection-body {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        min-height: 0;
+        grid-template-columns: minmax(0, 1fr) 78px minmax(0, 1fr);
+        align-items: center;
+        gap: 17px;
+        padding: clamp(18px, 4vh, 34px) clamp(24px, 4vw, 58px);
+      }
+
+      .choice-panel {
+        --side: var(--verdant);
+        --side-bright: var(--verdant-bright);
+        --side-soft: rgb(64 134 80 / 0.22);
+        position: relative;
+        display: grid;
+        min-width: 0;
+        min-height: min(308px, 39vw);
+        grid-template-columns: minmax(108px, 0.72fr) minmax(140px, 1.28fr);
+        align-items: center;
+        gap: clamp(14px, 2.2vw, 30px);
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--side) 55%, #586360);
+        background:
+          radial-gradient(circle at 12% 16%, var(--side-soft), transparent 48%),
+          linear-gradient(135deg, rgb(20 30 29 / 0.88), rgb(4 9 10 / 0.92));
+        padding: clamp(18px, 2.6vw, 30px);
+        box-shadow: inset 0 1px rgb(239 230 194 / 0.05), 0 20px 40px rgb(0 0 0 / 0.32), 0 0 28px var(--side-soft);
+      }
+
+      .choice-panel.host {
+        --side: var(--grave);
+        --side-bright: var(--grave-bright);
+        --side-soft: rgb(142 62 42 / 0.23);
+        grid-template-columns: minmax(140px, 1.28fr) minmax(108px, 0.72fr);
+        background:
+          radial-gradient(circle at 88% 16%, var(--side-soft), transparent 48%),
+          linear-gradient(225deg, rgb(27 21 20 / 0.9), rgb(5 9 10 / 0.94));
+      }
+
+      .choice-panel::before,
+      .choice-panel::after {
+        position: absolute;
+        content: "";
+        pointer-events: none;
+      }
+
+      .choice-panel::before {
+        top: 0;
+        right: 10%;
+        left: 10%;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--side-bright), transparent);
+        box-shadow: 0 0 15px var(--side);
+      }
+
+      .choice-panel::after { inset: 5px; border: 1px solid color-mix(in srgb, var(--side) 17%, transparent); }
+
+      .identity-card {
+        position: relative;
+        z-index: 1;
+        width: min(100%, 166px);
+        aspect-ratio: 0.718;
+        justify-self: center;
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--side-bright) 64%, #79725d);
+        border-radius: 5px;
+        background:
+          radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--side) 48%, transparent), transparent 32%),
+          linear-gradient(155deg, #17221d, #07100f 52%, #030707);
+        box-shadow: 8px 13px 25px rgb(0 0 0 / 0.58), 0 0 28px var(--side-soft);
+        transform: rotate(-2.5deg);
+      }
+
+      .host .identity-card { order: 2; transform: rotate(2.5deg); }
+      .identity-card::before {
+        position: absolute;
+        inset: 7px;
+        border: 1px solid color-mix(in srgb, var(--side-bright) 38%, transparent);
+        border-radius: 50% 50% 4px 4px;
+        content: "";
+      }
+      .identity-card::after {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(116deg, transparent 34%, rgb(255 245 208 / 0.18) 47%, transparent 58%),
+          linear-gradient(180deg, transparent 48%, rgb(0 4 4 / 0.86));
+        content: "";
+        transform: translateX(-118%);
+        animation: card-sheen 7s 1.2s ease-in-out infinite;
+      }
+
+      .identity-card svg { position: absolute; inset: 12% 10% 14%; width: 80%; height: 74%; color: var(--side-bright); filter: drop-shadow(0 0 12px var(--side)); opacity: 0.86; }
+      .identity-card-label { position: absolute; z-index: 2; right: 9px; bottom: 8px; left: 9px; color: #ece0bd; font: 700 clamp(8px, 0.9vw, 11px)/1.25 var(--display); letter-spacing: 0.05em; text-align: center; text-transform: uppercase; }
+
+      .choice-copy { position: relative; z-index: 2; min-width: 0; }
+      .host .choice-copy { order: 1; text-align: right; }
+      .choice-copy small { color: color-mix(in srgb, var(--side-bright) 58%, #869590); font-size: 8px; font-weight: 900; letter-spacing: 0.24em; text-transform: uppercase; }
+      .choice-copy h2 { margin: 6px 0 8px; color: var(--side-bright); font: 500 clamp(18px, 2.2vw, 31px)/1.05 var(--serif); text-shadow: 0 2px 12px #000, 0 0 20px var(--side-soft); }
+      .choice-copy p { max-width: 28ch; margin: 0; color: #899993; font: 400 clamp(10px, 1.18vw, 14px)/1.45 var(--serif); }
+      .host .choice-copy p { margin-left: auto; }
+      .choice-tag { display: inline-block; margin-top: 15px; border-top: 1px solid color-mix(in srgb, var(--side) 35%, transparent); padding-top: 8px; color: #9fa9a3; font-size: 8px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; }
+
+      .choice-versus { position: relative; display: grid; align-content: center; justify-items: center; gap: 7px; color: #c9b77d; }
+      .choice-versus::before {
+        position: absolute;
+        width: 84px;
+        height: 84px;
+        border: 1px solid rgb(205 184 117 / 0.2);
+        border-radius: 50%;
+        background: radial-gradient(circle, rgb(195 168 86 / 0.15), transparent 68%);
+        content: "";
+        animation: versus-breathe 3.8s ease-in-out infinite;
+      }
+      .choice-versus span { width: 1px; height: 34px; background: linear-gradient(transparent, rgb(181 158 88 / 0.5)); }
+      .choice-versus span:last-child { background: linear-gradient(rgb(181 158 88 / 0.5), transparent); }
+      .choice-versus svg { position: relative; z-index: 1; width: 25px; filter: drop-shadow(0 0 8px rgb(206 179 94 / 0.42)); }
+      .choice-versus b { position: relative; z-index: 1; font: 700 10px/1 var(--display); letter-spacing: 0.16em; }
+
+      .selection-footer {
+        position: relative;
+        z-index: 3;
+        display: flex;
+        min-height: 64px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        border-top: 1px solid rgb(172 153 91 / 0.2);
+        padding: 10px 27px;
+        background: linear-gradient(180deg, rgb(5 11 12 / 0.76), rgb(3 7 8 / 0.98));
+      }
+      .selection-summary { display: flex; align-items: center; gap: 10px; color: #7e8e89; font-size: 8px; font-weight: 900; letter-spacing: 0.18em; text-transform: uppercase; }
+      .selection-summary strong { color: #c1b891; font: 600 10px/1 var(--display); letter-spacing: 0.09em; }
+      .selection-summary i { color: #8b7743; font-style: normal; }
+
+      .begin-button {
+        position: relative;
+        min-width: 238px;
+        height: 43px;
+        overflow: hidden;
+        border-color: rgb(217 190 106 / 0.62);
+        background: linear-gradient(180deg, rgb(78 65 31 / 0.68), rgb(22 24 17 / 0.92));
+        color: #f0dfaa;
+        box-shadow: inset 0 0 0 1px rgb(255 236 167 / 0.08), 0 0 22px rgb(190 158 66 / 0.13);
+      }
+      .begin-button::before {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(104deg, transparent 36%, rgb(255 241 191 / 0.23) 49%, transparent 62%);
+        content: "";
+        transform: translateX(-120%);
+        animation: begin-sheen 3.8s 1s ease-in-out infinite;
+      }
+      .begin-button span { position: relative; z-index: 1; }
+      .begin-button:hover { background: linear-gradient(180deg, rgb(105 86 37 / 0.72), rgb(29 30 18 / 0.94)); box-shadow: inset 0 0 0 1px rgb(255 236 167 / 0.13), 0 0 30px rgb(203 170 76 / 0.22); }
+
+      #travelCanvas { position: absolute; z-index: 15; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+      .threshold-seal {
+        position: absolute;
+        z-index: 18;
+        top: 50%;
+        left: 50%;
+        width: clamp(150px, 24vw, 250px);
+        aspect-ratio: 1;
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(-50%, -50%) scale(0.18) rotate(-28deg);
+      }
+      .threshold-seal::before,
+      .threshold-seal::after {
+        position: absolute;
+        inset: 8%;
+        border: 1px solid rgb(235 210 132 / 0.58);
+        border-radius: 50%;
+        content: "";
+        box-shadow: 0 0 14px rgb(216 185 92 / 0.24), inset 0 0 20px rgb(194 159 64 / 0.12);
+      }
+      .threshold-seal::after { inset: 22%; border-style: dashed; border-color: rgb(167 213 183 / 0.55); }
+      .threshold-seal svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 8px rgb(229 200 111 / 0.52)); }
+      .threshold-seal .seal-orbit { transform-origin: center; animation: seal-orbit 9s linear infinite; }
+      .threshold-seal .seal-orbit.reverse { animation-direction: reverse; animation-duration: 13s; }
+      .threshold-seal .seal-mark { transform-origin: center; animation: seal-mark 2.2s ease-in-out infinite; }
+
+      .arrival-scene {
+        z-index: 2;
+        overflow: hidden;
+        opacity: 0;
+        background: #030708;
+        transform: scale(1.38);
+        transform-origin: 50% 50%;
+      }
+
+      .arrival-board {
+        position: absolute;
+        inset: -5%;
+        background:
+          linear-gradient(90deg, rgb(2 9 7 / 0.66), transparent 42%, rgb(16 5 5 / 0.58)),
+          linear-gradient(180deg, rgb(2 7 8 / 0.2), rgb(1 4 5 / 0.74)),
+          url("assets/defeat-board-reference.png") center / cover no-repeat;
+        filter: brightness(0.36) saturate(0.62) contrast(1.1);
+        transform: translate3d(calc(var(--mx) * 5px), calc(var(--my) * 4px), 0) scale(1.05);
+      }
+      .arrival-board::after {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 44% 80% at 18% 52%, rgb(51 132 80 / 0.25), transparent 70%),
+          radial-gradient(ellipse 44% 80% at 82% 52%, rgb(155 62 39 / 0.29), transparent 70%),
+          radial-gradient(circle at 50% 51%, transparent 0 12%, rgb(0 3 4 / 0.48) 58%, rgb(0 2 3 / 0.9));
+        content: "";
+      }
+
+      .arena-lines {
+        position: absolute;
+        inset: 0;
+        opacity: 0.56;
+        background:
+          linear-gradient(90deg, transparent 49.9%, rgb(229 208 137 / 0.28) 50%, transparent 50.1%),
+          linear-gradient(12deg, transparent 49.85%, rgb(125 165 151 / 0.14) 50%, transparent 50.15%),
+          linear-gradient(-12deg, transparent 49.85%, rgb(166 91 66 / 0.14) 50%, transparent 50.15%);
+        mask-image: radial-gradient(ellipse at center, black, transparent 76%);
+      }
+
+      .arrival-kicker {
+        position: absolute;
+        z-index: 4;
+        top: 6.5%;
+        left: 50%;
+        color: #a9b7af;
+        font: 700 clamp(8px, 1vw, 11px)/1 var(--display);
+        letter-spacing: 0.32em;
+        text-shadow: 0 2px 8px #000;
+        text-transform: uppercase;
+        transform: translateX(-50%);
+        white-space: nowrap;
+      }
+      .arrival-kicker::before,
+      .arrival-kicker::after { position: absolute; top: 50%; width: 70px; height: 1px; background: linear-gradient(90deg, transparent, rgb(207 186 118 / 0.5)); content: ""; }
+      .arrival-kicker::before { right: calc(100% + 17px); }
+      .arrival-kicker::after { left: calc(100% + 13px); transform: rotate(180deg); }
+
+      .arrival-combatant {
+        --side: var(--verdant);
+        --side-bright: var(--verdant-bright);
+        --side-soft: rgb(65 141 82 / 0.28);
+        position: absolute;
+        z-index: 4;
+        top: 17%;
+        bottom: 14%;
+        left: 5%;
+        display: grid;
+        width: 42%;
+        grid-template-columns: minmax(118px, 0.62fr) minmax(150px, 1.38fr);
+        align-items: center;
+        gap: clamp(14px, 2vw, 28px);
+        opacity: 0;
+        transform: translate3d(-28%, 0, 0);
+      }
+      .arrival-combatant.host {
+        --side: var(--grave);
+        --side-bright: var(--grave-bright);
+        --side-soft: rgb(151 62 40 / 0.29);
+        right: 5%;
+        left: auto;
+        grid-template-columns: minmax(150px, 1.38fr) minmax(118px, 0.62fr);
+        transform: translate3d(28%, 0, 0);
+      }
+
+      .arrival-card {
+        position: relative;
+        width: min(100%, 175px);
+        aspect-ratio: 0.718;
+        justify-self: center;
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--side-bright) 72%, #8a7d55);
+        border-radius: 6px;
+        background:
+          radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--side) 52%, transparent), transparent 32%),
+          linear-gradient(160deg, color-mix(in srgb, var(--side) 15%, #101816), #030707 66%);
+        box-shadow: 10px 18px 34px rgb(0 0 0 / 0.66), 0 0 46px var(--side-soft);
+        transform: perspective(700px) rotateY(8deg) rotate(-3deg);
+      }
+      .host .arrival-card { order: 2; transform: perspective(700px) rotateY(-8deg) rotate(3deg); }
+      .arrival-card::before { position: absolute; inset: 7px; border: 1px solid color-mix(in srgb, var(--side-bright) 38%, transparent); border-radius: 50% 50% 3px 3px; content: ""; }
+      .arrival-card::after { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 48%, rgb(0 2 3 / 0.9)); content: ""; }
+      .arrival-card svg { position: absolute; inset: 10% 8% 14%; width: 84%; height: 76%; color: var(--side-bright); filter: drop-shadow(0 0 18px var(--side)); opacity: 0.9; }
+
+      .arrival-copy { min-width: 0; text-shadow: 0 3px 14px #000; }
+      .host .arrival-copy { order: 1; text-align: right; }
+      .arrival-copy small { color: color-mix(in srgb, var(--side-bright) 56%, #9aa7a0); font-size: 8px; font-weight: 900; letter-spacing: 0.3em; text-transform: uppercase; }
+      .arrival-copy h2 { margin: 8px 0 9px; color: var(--side-bright); font: 600 clamp(19px, 2.6vw, 39px)/1.02 var(--serif); text-transform: uppercase; text-wrap: balance; }
+      .arrival-copy p { margin: 0; color: #abb4ad; font: 500 clamp(9px, 1.15vw, 14px)/1.35 var(--display); letter-spacing: 0.1em; text-transform: uppercase; }
+
+      .arrival-versus {
+        position: absolute;
+        z-index: 7;
+        top: 50%;
+        left: 50%;
+        display: grid;
+        width: clamp(100px, 13vw, 150px);
+        aspect-ratio: 1;
+        place-items: center;
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.3) rotate(-12deg);
+      }
+      .arrival-versus::before,
+      .arrival-versus::after { position: absolute; border-radius: 50%; content: ""; }
+      .arrival-versus::before { inset: 2%; border: 1px solid rgb(234 215 151 / 0.56); box-shadow: 0 0 32px rgb(229 202 124 / 0.34), inset 0 0 30px rgb(207 175 84 / 0.13); }
+      .arrival-versus::after { inset: 17%; border: 1px dashed rgb(154 187 163 / 0.46); }
+      .arrival-versus b { color: #f4e7bf; font: 700 clamp(25px, 4.2vw, 52px)/1 var(--display); letter-spacing: 0.05em; text-shadow: 0 2px 4px #000, 0 0 18px rgb(238 213 137 / 0.62); }
+
+      .impact-cross,
+      .impact-cross::before,
+      .impact-cross::after { position: absolute; z-index: 6; top: 50%; left: 50%; content: ""; pointer-events: none; }
+      .impact-cross { width: 1px; height: 1px; opacity: 0; }
+      .impact-cross::before { width: 140vmax; height: 2px; background: linear-gradient(90deg, transparent, #8cb68d 37%, #fff4c7 50%, #ce7658 63%, transparent); box-shadow: 0 0 18px #e7ce91, 0 0 54px rgb(216 183 95 / 0.55); transform: translate(-50%, -50%); }
+      .impact-cross::after { width: 2px; height: 130vmax; background: linear-gradient(180deg, transparent, #efe0aa 44%, #fff9d9 50%, #efe0aa 56%, transparent); box-shadow: 0 0 22px #e7ce91; transform: translate(-50%, -50%) rotate(13deg); }
+
+      .chapter-plate {
+        position: absolute;
+        z-index: 6;
+        right: 19%;
+        bottom: 5.5%;
+        left: 19%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        opacity: 0;
+        border-top: 1px solid rgb(201 178 107 / 0.36);
+        border-bottom: 1px solid rgb(201 178 107 / 0.23);
+        padding: 8px 18px;
+        background: linear-gradient(90deg, transparent, rgb(3 9 10 / 0.86) 16% 84%, transparent);
+        color: #b7c0b8;
+        font: 700 clamp(7px, 0.9vw, 10px)/1 var(--display);
+        letter-spacing: 0.23em;
+        text-transform: uppercase;
+      }
+      .chapter-plate i { color: #9a8148; font-style: normal; }
+      .chapter-plate b { color: #ebd79d; font-weight: 800; }
+
+      .stage-flash {
+        position: absolute;
+        z-index: 30;
+        inset: 0;
+        opacity: 0;
+        background:
+          radial-gradient(circle at 50% 50%, #fffbe5 0 2%, rgb(240 219 152 / 0.88) 5%, rgb(123 171 146 / 0.34) 16%, transparent 38%),
+          #edf1d6;
+        mix-blend-mode: screen;
+        pointer-events: none;
+      }
+
+      .stage.is-playing .selection-scene {
+        animation: selection-plunge var(--d-selection) cubic-bezier(0.72, 0, 0.3, 1) both;
+      }
+      .stage.is-playing .choice-panel.player { animation: panel-left-plunge var(--d-selection) cubic-bezier(0.72, 0, 0.3, 1) both; }
+      .stage.is-playing .choice-panel.host { animation: panel-right-plunge var(--d-selection) cubic-bezier(0.72, 0, 0.3, 1) both; }
+      .stage.is-playing .threshold-seal { animation: threshold-open var(--d-seal) var(--delay-seal) cubic-bezier(0.22, 0.8, 0.2, 1) both; }
+      .stage.is-playing .arrival-scene { animation: arena-arrival var(--d-arrival) var(--delay-arrival) cubic-bezier(0.2, 0.82, 0.2, 1) both; }
+      .stage.is-playing .arrival-combatant.player { animation: combatant-left-in var(--d-combatant) var(--delay-combatant) cubic-bezier(0.14, 0.9, 0.2, 1.08) both; }
+      .stage.is-playing .arrival-combatant.host { animation: combatant-right-in var(--d-combatant) var(--delay-combatant) cubic-bezier(0.14, 0.9, 0.2, 1.08) both; }
+      .stage.is-playing .arrival-versus { animation: versus-impact var(--d-impact) var(--delay-impact) cubic-bezier(0.12, 0.9, 0.2, 1.18) both; }
+      .stage.is-playing .impact-cross { animation: impact-cross var(--d-impact) var(--delay-impact) ease-out both; }
+      .stage.is-playing .chapter-plate { animation: chapter-plate-in 720ms var(--delay-impact) ease-out both; animation-delay: calc(var(--delay-impact) + 380ms); }
+      .stage.is-playing .stage-flash { animation: threshold-flash 760ms var(--delay-arrival) ease-out both; }
+
+      .stage.is-arrived .selection-scene,
+      .stage.is-arrived .threshold-seal { display: none; }
+      .stage.is-arrived .arrival-scene { opacity: 1; transform: scale(1); }
+      .stage.is-arrived .arrival-combatant { opacity: 1; transform: translate3d(0, 0, 0); }
+      .stage.is-arrived .arrival-versus { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+      .stage.is-arrived .chapter-plate { opacity: 1; }
+
+      .scrub { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
+      .track { position: relative; height: 3px; flex: 1; background: rgb(146 133 88 / 0.18); }
+      .fill { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, #6eaa7d, #d4bd78 52%, #b65c43); box-shadow: 0 0 10px rgb(207 178 92 / 0.35); }
+      .clock { min-width: 48px; color: var(--muted-dim); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
+
+      .notes { margin-top: 46px; border-top: 1px solid var(--rule); padding-top: 26px; }
+      .notes h2 { margin: 0 0 12px; color: var(--parchment); font: 500 23px/1.2 var(--serif); }
+      .notes h3 { margin: 22px 0 5px; color: var(--gold-bright); font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+      .notes ul { max-width: 76ch; margin: 0; padding-left: 20px; }
+      .notes li { margin-bottom: 9px; }
+      .notes b { color: var(--gold-bright); font-weight: 600; }
+      .notes code { color: #9ec9c2; font-size: 13px; }
+
+      @keyframes selection-plunge {
+        0%, 10% { opacity: 1; transform: translate3d(calc(var(--mx) * -4px), calc(var(--my) * -3px), 0) scale(1.01); }
+        28% { opacity: 1; transform: translate3d(0, 0, 0) scale(1.035); }
+        70% { opacity: 0.94; transform: translate3d(0, 0, 0) scale(1.64); }
+        100% { opacity: 0; transform: translate3d(0, 0, 0) scale(4.2); }
+      }
+      @keyframes panel-left-plunge { 0%, 24% { transform: translateX(0) rotate(0); } 100% { transform: translateX(-34%) rotate(-5deg); } }
+      @keyframes panel-right-plunge { 0%, 24% { transform: translateX(0) rotate(0); } 100% { transform: translateX(34%) rotate(5deg); } }
+      @keyframes threshold-open {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.13) rotate(-34deg); }
+        16% { opacity: 0.9; }
+        48% { opacity: 1; transform: translate(-50%, -50%) scale(0.9) rotate(8deg); }
+        72% { opacity: 1; transform: translate(-50%, -50%) scale(1.24) rotate(18deg); }
+        87% { opacity: 0.88; transform: translate(-50%, -50%) scale(2.15) rotate(26deg); }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(5.8) rotate(35deg); }
+      }
+      @keyframes arena-arrival {
+        0% { opacity: 0; transform: scale(1.42); }
+        18% { opacity: 1; }
+        66% { opacity: 1; transform: scale(1.055); }
+        100% { opacity: 1; transform: scale(1); }
+      }
+      @keyframes combatant-left-in { 0% { opacity: 0; transform: translate3d(-30%, 1%, 0); } 62% { opacity: 1; transform: translate3d(2.5%, 0, 0); } 100% { opacity: 1; transform: translate3d(0, 0, 0); } }
+      @keyframes combatant-right-in { 0% { opacity: 0; transform: translate3d(30%, 1%, 0); } 62% { opacity: 1; transform: translate3d(-2.5%, 0, 0); } 100% { opacity: 1; transform: translate3d(0, 0, 0); } }
+      @keyframes versus-impact { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.25) rotate(-16deg); } 34% { opacity: 1; transform: translate(-50%, -50%) scale(1.28) rotate(3deg); } 62% { transform: translate(-50%, -50%) scale(0.92) rotate(-1deg); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); } }
+      @keyframes impact-cross { 0% { opacity: 0; transform: scaleX(0.04); } 18% { opacity: 1; transform: scaleX(1); } 100% { opacity: 0; transform: scaleX(1.18); } }
+      @keyframes chapter-plate-in { from { opacity: 0; transform: translateY(9px) scaleX(0.72); } to { opacity: 1; transform: translateY(0) scaleX(1); } }
+      @keyframes threshold-flash { 0%, 18% { opacity: 0; } 28% { opacity: 0.96; } 43% { opacity: 0.12; } 100% { opacity: 0; } }
+      @keyframes seal-orbit { to { transform: rotate(360deg); } }
+      @keyframes seal-mark { 50% { transform: scale(1.055); } }
+      @keyframes card-sheen { 0%, 68% { transform: translateX(-118%); } 83%, 100% { transform: translateX(118%); } }
+      @keyframes begin-sheen { 0%, 62% { transform: translateX(-120%); } 83%, 100% { transform: translateX(120%); } }
+      @keyframes versus-breathe { 50% { border-color: rgb(229 205 132 / 0.44); box-shadow: 0 0 26px rgb(202 170 83 / 0.2); transform: scale(1.08); } }
+
+      @media (max-width: 760px) {
+        main { padding: 0 14px; }
+        .stage { aspect-ratio: 4 / 3; }
+        .selection-body { grid-template-columns: 1fr 36px 1fr; gap: 7px; padding: 14px; }
+        .choice-panel,
+        .choice-panel.host { min-height: 0; grid-template-columns: 1fr; padding: 12px; }
+        .choice-copy { display: none; }
+        .host .identity-card { order: initial; }
+        .selection-summary { display: none; }
+        .selection-footer { justify-content: center; }
+        .arrival-copy p { display: none; }
+        .arrival-combatant { left: 2%; width: 45%; grid-template-columns: 0.85fr 1.15fr; gap: 8px; }
+        .arrival-combatant.host { right: 2%; grid-template-columns: 1.15fr 0.85fr; }
+        .chapter-plate { right: 10%; left: 10%; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .identity-card::after,
+        .begin-button::before,
+        .choice-versus::before,
+        .threshold-seal .seal-orbit,
+        .threshold-seal .seal-mark { animation: none; }
+        .stage.is-playing .selection-scene,
+        .stage.is-playing .choice-panel,
+        .stage.is-playing .threshold-seal,
+        .stage.is-playing .arrival-scene,
+        .stage.is-playing .arrival-combatant,
+        .stage.is-playing .arrival-versus,
+        .stage.is-playing .impact-cross,
+        .stage.is-playing .chapter-plate,
+        .stage.is-playing .stage-flash { animation-duration: 1ms; animation-delay: 0ms; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <a class="back" href="../index.html">← Maquetas</a>
+        <div class="eyebrow">Inicio de Crónica · transición de encuentro</div>
+        <h1>Umbral de la Crónica</h1>
+        <p>
+          <strong>Begin Chronicle</strong> deja de cortar entre dos pantallas: la Preparación se desarma en profundidad,
+          las identidades estiran sus colores por el Futuro y la cámara atraviesa el sello para caer dentro del escenario VS.
+        </p>
+      </header>
+
+      <div class="controls">
+        <button id="replay" type="button" disabled>Repetir</button>
+        <button id="slow" type="button" aria-pressed="false">Cámara lenta</button>
+        <label for="seed">Semilla</label>
+        <input id="seed" type="text" value="748-203" spellcheck="false" />
+        <span class="control-spacer"></span>
+        <span class="phase-readout" id="phaseReadout">Preparación dispuesta</span>
+      </div>
+
+      <div class="stage" id="stage">
+        <section class="scene arrival-scene" aria-label="Escenario VS">
+          <div class="arrival-board"></div>
+          <div class="arena-lines"></div>
+          <div class="arrival-kicker">Capítulo I · El Futuro elegido</div>
+
+          <article class="arrival-combatant player">
+            <div class="arrival-card" aria-hidden="true">
+              <svg viewBox="0 0 140 210" fill="none">
+                <path d="M70 22C44 50 35 83 38 122c3 32 15 52 32 69 17-17 29-37 32-69 3-39-6-72-32-100Z" fill="currentColor" opacity=".12"/>
+                <path d="M70 27v151M70 70 43 52M70 93 101 68M70 118 36 102M70 139l36-28M70 158l-23 18" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                <path d="M45 51c-17-7-25 4-23 20 15 2 25-4 23-20Zm55 16c19-6 27 7 22 23-16 0-25-7-22-23ZM37 101c-18-4-25 9-19 25 15-2 23-10 19-25Zm68 9c18-4 25 9 19 25-15-2-23-10-19-25ZM47 174c-12 6-14 17-7 27 12-4 17-13 7-27Z" fill="currentColor" opacity=".72"/>
+                <circle cx="70" cy="58" r="7" fill="#f2df9f"/>
+              </svg>
+            </div>
+            <div class="arrival-copy">
+              <small>Crónica</small>
+              <h2>El Pacto de Elarion</h2>
+              <p>La memoria echa raíces</p>
+            </div>
+          </article>
+
+          <article class="arrival-combatant host">
+            <div class="arrival-card" aria-hidden="true">
+              <svg viewBox="0 0 140 210" fill="none">
+                <path d="M70 25c-34 0-51 27-49 63 1 23 12 37 26 47v33l23 20 23-20v-33c14-10 25-24 26-47 2-36-15-63-49-63Z" fill="currentColor" opacity=".13"/>
+                <path d="M70 27c-30 0-45 25-43 58 1 25 14 38 30 47v23l13 13 13-13v-23c16-9 29-22 30-47 2-33-13-58-43-58Z" stroke="currentColor" stroke-width="3"/>
+                <path d="m38 79 22-11 8 24-20 14-14-11Zm64 0L80 68l-8 24 20 14 14-11Z" fill="currentColor" opacity=".72"/>
+                <path d="M55 121h30M58 134h24M64 146h12M42 49 28 32M98 49l14-17M70 47V22" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="49" cy="86" r="5" fill="#f1bb83"/><circle cx="91" cy="86" r="5" fill="#f1bb83"/>
+              </svg>
+            </div>
+            <div class="arrival-copy">
+              <small>Hueste</small>
+              <h2>El Alzamiento de los Sinsepulcro</h2>
+              <p>La tumba recuerda tu nombre</p>
+            </div>
+          </article>
+
+          <div class="impact-cross"></div>
+          <div class="arrival-versus"><b>VS</b></div>
+          <div class="chapter-plate"><span>Futuro <b id="futureCode">975·034</b></span><i>◆</i><span>Veterano</span><i>◆</i><span>Preparación 1 / 3</span></div>
+        </section>
+
+        <section class="scene selection-scene" aria-label="Preparar Crónica">
+          <div class="selection-topbar">
+            <span class="selection-back">← Menú principal</span>
+            <div class="selection-title"><span class="selection-kicker">Expedición</span><strong>Preparar Crónica</strong></div>
+            <span class="future-code">Futuro <b id="selectionFuture">975·034</b></span>
+          </div>
+
+          <div class="selection-body">
+            <article class="choice-panel player">
+              <div class="identity-card" aria-hidden="true">
+                <svg viewBox="0 0 140 210" fill="none">
+                  <path d="M70 22C44 50 35 83 38 122c3 32 15 52 32 69 17-17 29-37 32-69 3-39-6-72-32-100Z" fill="currentColor" opacity=".12"/>
+                  <path d="M70 27v151M70 70 43 52M70 93 101 68M70 118 36 102M70 139l36-28M70 158l-23 18" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                  <path d="M45 51c-17-7-25 4-23 20 15 2 25-4 23-20Zm55 16c19-6 27 7 22 23-16 0-25-7-22-23ZM37 101c-18-4-25 9-19 25 15-2 23-10 19-25Zm68 9c18-4 25 9 19 25-15-2-23-10-19-25ZM47 174c-12 6-14 17-7 27 12-4 17-13 7-27Z" fill="currentColor" opacity=".72"/>
+                  <circle cx="70" cy="58" r="7" fill="#f2df9f"/>
+                </svg>
+                <span class="identity-card-label">Aelyra, heredera de Elarion</span>
+              </div>
+              <div class="choice-copy"><small>Tu Crónica</small><h2>El Pacto de Elarion</h2><p>Haz crecer tu Campo y convierte la memoria del bosque en Fuerza.</p><span class="choice-tag">Crecimiento · Energía · Legado</span></div>
+            </article>
+
+            <div class="choice-versus" aria-hidden="true">
+              <span></span>
+              <svg viewBox="0 0 32 32" fill="none"><path d="m7 5 19 21M25 5 6 26M5 7l4-3 2 5-3 3m19-5-4-3-2 5 3 3M4 25l3 3 5-5m16 2-3 3-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <b>VS</b>
+              <span></span>
+            </div>
+
+            <article class="choice-panel host">
+              <div class="identity-card" aria-hidden="true">
+                <svg viewBox="0 0 140 210" fill="none">
+                  <path d="M70 25c-34 0-51 27-49 63 1 23 12 37 26 47v33l23 20 23-20v-33c14-10 25-24 26-47 2-36-15-63-49-63Z" fill="currentColor" opacity=".13"/>
+                  <path d="M70 27c-30 0-45 25-43 58 1 25 14 38 30 47v23l13 13 13-13v-23c16-9 29-22 30-47 2-33-13-58-43-58Z" stroke="currentColor" stroke-width="3"/>
+                  <path d="m38 79 22-11 8 24-20 14-14-11Zm64 0L80 68l-8 24 20 14 14-11Z" fill="currentColor" opacity=".72"/>
+                  <path d="M55 121h30M58 134h24M64 146h12M42 49 28 32M98 49l14-17M70 47V22" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                  <circle cx="49" cy="86" r="5" fill="#f1bb83"/><circle cx="91" cy="86" r="5" fill="#f1bb83"/>
+                </svg>
+                <span class="identity-card-label">Nerezh, matriarca sinsepulcro</span>
+              </div>
+              <div class="choice-copy"><small>La Hueste</small><h2>El Alzamiento de los Sinsepulcro</h2><p>Una marea de cuerpos recompone aquello que la Crónica olvidó.</p><span class="choice-tag">Desgaste · Memoria · Oleadas</span></div>
+            </article>
+          </div>
+
+          <div class="selection-footer">
+            <div class="selection-summary"><span>Crónica</span><strong>Elarion</strong><i>◆</i><span>Hueste</span><strong>Sinsepulcro</strong><i>◆</i><span>Dificultad</span><strong>Veterano</strong></div>
+            <button class="begin-button" id="begin" type="button"><span>Begin Chronicle&nbsp;&nbsp; ▶</span></button>
+          </div>
+        </section>
+
+        <canvas id="travelCanvas" aria-hidden="true"></canvas>
+
+        <div class="threshold-seal" aria-hidden="true">
+          <svg viewBox="0 0 240 240" fill="none">
+            <g class="seal-orbit" stroke="#d9bd73" stroke-width="1">
+              <circle cx="120" cy="120" r="108" stroke-dasharray="2 9" opacity=".72"/>
+              <path d="M120 5v18M120 217v18M5 120h18M217 120h18M38 38l13 13M189 189l13 13M202 38l-13 13M51 189l-13 13"/>
+            </g>
+            <g class="seal-orbit reverse" stroke="#8fc1ac" stroke-width="1" opacity=".72">
+              <ellipse cx="120" cy="120" rx="105" ry="48" transform="rotate(24 120 120)"/>
+              <ellipse cx="120" cy="120" rx="105" ry="48" transform="rotate(112 120 120)"/>
+            </g>
+            <g class="seal-mark" stroke="#f0d998" stroke-linejoin="round">
+              <path d="m120 30 16 68 74 22-74 22-16 68-16-68-74-22 74-22 16-68Z" fill="#d7b863" fill-opacity=".08" stroke-width="2"/>
+              <path d="m120 61 9 48 50 11-50 11-9 48-9-48-50-11 50-11 9-48Z" stroke-width="1.4"/>
+              <circle cx="120" cy="120" r="12" fill="#fff1bd" fill-opacity=".18" stroke-width="2"/>
+            </g>
+          </svg>
+        </div>
+        <div class="stage-flash"></div>
+      </div>
+
+      <div class="scrub"><span class="clock" id="clock">0.00 s</span><span class="track"><span class="fill" id="fill"></span></span></div>
+
+      <section class="notes">
+        <h2>Notas</h2>
+        <h3>La mejora sobre “velocidad de la luz”</h3>
+        <ul>
+          <li>La aceleración sigue siendo frontal, pero las estrellas son <b>fragmentos de tinta, runas, ceniza y trazos de destino</b>. No parece un salto espacial prestado de ciencia ficción.</li>
+          <li>Los dos bandos conservan su identidad durante el viaje: Elarion estira verde y oro desde la izquierda; los Sinsepulcro arrastran óxido y azul mortuorio desde la derecha.</li>
+          <li>El sello no tapa un cambio de pantalla. El escenario VS ya está detrás y llega <b>pasado de tamaño</b>; la cámara lo cruza y luego se asienta, para que el movimiento se perciba continuo.</li>
+        </ul>
+        <h3>Ritmo propuesto</h3>
+        <ul>
+          <li><b>Fijar, 0.00–0.55 s:</b> el botón responde, los paneles tensan sus colores y el centro se convierte en destino.</li>
+          <li><b>Atravesar, 0.55–2.45 s:</b> la Preparación pasa junto a cámara; partículas con profundidad real forman el túnel y el sello crece hasta ocupar el cuadro.</li>
+          <li><b>Impactar, 2.45–3.35 s:</b> un fotograma luminoso une ambos lados, el escenario aparece sobredimensionado y los combatientes chocan en el VS.</li>
+          <li><b>Asentar, 3.35–4.15 s:</b> desaparece el movimiento residual y queda una composición estable lista para entregar control al juego.</li>
+        </ul>
+        <h3>Si se lleva al juego</h3>
+        <ul>
+          <li>El canvas de esta maqueta es 2D y aislado. En runtime, partículas y sello deberían dibujarse mediante <code>renderSharedVfxFrame</code>; la selección y el escenario sólo animan <code>transform</code> y <code>opacity</code>.</li>
+          <li>El cambio real de pantalla ocurre cuando el sello cubre el viewport. La transición presenta una decisión ya tomada; no modifica decks, seed ni dificultad.</li>
+          <li>El modo de movimiento reducido salta directamente al escenario VS sin túnel, flash ni aceleración.</li>
+        </ul>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        "use strict";
+
+        var stage = document.getElementById("stage");
+        var canvas = document.getElementById("travelCanvas");
+        var context = canvas.getContext("2d", { alpha: true });
+        var begin = document.getElementById("begin");
+        var replay = document.getElementById("replay");
+        var slow = document.getElementById("slow");
+        var seedInput = document.getElementById("seed");
+        var phaseReadout = document.getElementById("phaseReadout");
+        var clock = document.getElementById("clock");
+        var fill = document.getElementById("fill");
+        var selectionFuture = document.getElementById("selectionFuture");
+        var futureCode = document.getElementById("futureCode");
+        var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+        var BASE_TOTAL = 4150;
+        var timeScale = 1;
+        var state = "idle";
+        var startTime = 0;
+        var raf = 0;
+        var width = 0;
+        var height = 0;
+        var dpr = 1;
+        var stars = [];
+        var fragments = [];
+        var motes = [];
+        var signature = 0;
+
+        function hashSeed(value) {
+          var hash = 2166136261;
+          for (var index = 0; index < value.length; index += 1) {
+            hash ^= value.charCodeAt(index);
+            hash = Math.imul(hash, 16777619);
+          }
+          return hash >>> 0;
+        }
+
+        function randomAt(index) {
+          var value = Math.sin((signature + index * 104729) * 0.0000137) * 43758.5453123;
+          return value - Math.floor(value);
+        }
+
+        function futureIdentity(seed) {
+          var value = hashSeed(seed + ":destiny-vortex") % 1000000;
+          return String(Math.floor(value / 1000)).padStart(3, "0") + "·" + String(value % 1000).padStart(3, "0");
+        }
+
+        function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+        function smooth(min, max, value) {
+          var t = clamp((value - min) / (max - min), 0, 1);
+          return t * t * (3 - 2 * t);
+        }
+        function easeOut(value) { return 1 - Math.pow(1 - clamp(value, 0, 1), 3); }
+
+        function rebuildParticles() {
+          signature = hashSeed(seedInput.value.trim() || "748-203");
+          stars = [];
+          fragments = [];
+          motes = [];
+
+          for (var index = 0; index < 250; index += 1) {
+            var angle = randomAt(index * 7 + 1) * Math.PI * 2;
+            var radius = 0.12 + Math.pow(randomAt(index * 7 + 2), 0.58) * 1.34;
+            stars.push({
+              x: Math.cos(angle) * radius,
+              y: Math.sin(angle) * radius * 0.64,
+              z: 0.08 + randomAt(index * 7 + 3) * 0.94,
+              speed: 0.72 + randomAt(index * 7 + 4) * 1.35,
+              size: 0.42 + randomAt(index * 7 + 5) * 1.5,
+              side: Math.cos(angle) < 0 ? 0 : 1,
+              glint: randomAt(index * 7 + 6)
+            });
+          }
+
+          for (var shard = 0; shard < 34; shard += 1) {
+            var shardAngle = randomAt(3000 + shard * 8) * Math.PI * 2;
+            var shardRadius = 0.28 + randomAt(3001 + shard * 8) * 1.08;
+            fragments.push({
+              x: Math.cos(shardAngle) * shardRadius,
+              y: Math.sin(shardAngle) * shardRadius * 0.62,
+              z: 0.13 + randomAt(3002 + shard * 8) * 0.92,
+              speed: 0.52 + randomAt(3003 + shard * 8) * 0.9,
+              size: 3 + randomAt(3004 + shard * 8) * 7,
+              rotation: randomAt(3005 + shard * 8) * Math.PI,
+              spin: (randomAt(3006 + shard * 8) - 0.5) * 2.4,
+              side: Math.cos(shardAngle) < 0 ? 0 : 1
+            });
+          }
+
+          for (var mote = 0; mote < 70; mote += 1) {
+            motes.push({
+              angle: randomAt(5000 + mote * 5) * Math.PI * 2,
+              radius: randomAt(5001 + mote * 5),
+              phase: randomAt(5002 + mote * 5) * Math.PI * 2,
+              size: 0.5 + randomAt(5003 + mote * 5) * 1.8,
+              side: randomAt(5004 + mote * 5) < 0.5 ? 0 : 1
+            });
+          }
+
+          var code = futureIdentity(seedInput.value.trim() || "748-203");
+          selectionFuture.textContent = code;
+          futureCode.textContent = code;
+        }
+
+        function resize() {
+          var rect = stage.getBoundingClientRect();
+          width = rect.width;
+          height = rect.height;
+          dpr = Math.min(window.devicePixelRatio || 1, 2);
+          canvas.width = Math.max(1, Math.round(width * dpr));
+          canvas.height = Math.max(1, Math.round(height * dpr));
+          context.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        function setTimings() {
+          var values = {
+            "--d-selection": 1540,
+            "--d-seal": 2260,
+            "--delay-seal": 470,
+            "--d-arrival": 1060,
+            "--delay-arrival": 2430,
+            "--d-combatant": 820,
+            "--delay-combatant": 2740,
+            "--d-impact": 920,
+            "--delay-impact": 3060
+          };
+          Object.keys(values).forEach(function (name) {
+            stage.style.setProperty(name, Math.round(values[name] * timeScale) + "ms");
+          });
+        }
+
+        function phaseAt(time) {
+          if (time < 480) return "El destino se fija";
+          if (time < 1180) return "La Crónica se abre";
+          if (time < 2470) return "Atravesando el umbral";
+          if (time < 3180) return "El escenario responde";
+          if (time < BASE_TOTAL) return "El Capítulo comienza";
+          return "Encuentro dispuesto";
+        }
+
+        function drawThreads(time, alpha) {
+          var centerX = width * 0.5;
+          var centerY = height * 0.5;
+          var gather = easeOut((time - 260) / 980);
+          var spread = width * (0.42 - gather * 0.33);
+          context.save();
+          context.globalCompositeOperation = "lighter";
+          context.lineCap = "round";
+
+          for (var side = 0; side < 2; side += 1) {
+            var direction = side === 0 ? -1 : 1;
+            var color = side === 0 ? "112, 190, 127" : "207, 101, 69";
+            for (var line = 0; line < 7; line += 1) {
+              var offset = (line - 3) * height * 0.045;
+              var wave = Math.sin(time * 0.004 + line * 1.7 + side) * height * 0.025;
+              context.beginPath();
+              context.moveTo(centerX + direction * (spread + width * 0.2), centerY + offset * 1.9);
+              context.bezierCurveTo(
+                centerX + direction * spread,
+                centerY + offset + wave,
+                centerX + direction * width * 0.08,
+                centerY - offset * 0.35,
+                centerX,
+                centerY
+              );
+              context.strokeStyle = "rgba(" + color + "," + (alpha * (0.06 + line * 0.012)) + ")";
+              context.lineWidth = 0.7 + (line % 3) * 0.45;
+              context.shadowColor = "rgba(" + color + ",.72)";
+              context.shadowBlur = 8;
+              context.stroke();
+            }
+          }
+          context.restore();
+        }
+
+        function drawStarTunnel(time, flight) {
+          if (flight <= 0.001) return;
+          var centerX = width * (0.5 + Math.sin(time * 0.0012) * 0.008 * flight);
+          var centerY = height * (0.5 + Math.cos(time * 0.0015) * 0.006 * flight);
+          var travel = Math.pow(Math.max(0, time - 360) / 1000, 1.32) * 0.62;
+          var focus = Math.min(width, height) * 0.42;
+          context.save();
+          context.globalCompositeOperation = "lighter";
+          context.lineCap = "round";
+
+          stars.forEach(function (star) {
+            var z = star.z - travel * star.speed;
+            z = ((z % 1) + 1) % 1;
+            z = 0.045 + z * 0.96;
+            var previousZ = Math.min(1.02, z + (0.018 + flight * 0.065) * star.speed);
+            var x = centerX + (star.x / z) * focus;
+            var y = centerY + (star.y / z) * focus;
+            var px = centerX + (star.x / previousZ) * focus;
+            var py = centerY + (star.y / previousZ) * focus;
+            if (x < -90 || x > width + 90 || y < -90 || y > height + 90) return;
+            var near = 1 - z;
+            var color = star.side === 0 ? (star.glint > 0.78 ? "226, 211, 147" : "112, 193, 139") : (star.glint > 0.78 ? "222, 185, 123" : "207, 100, 72");
+            context.beginPath();
+            context.moveTo(px, py);
+            context.lineTo(x, y);
+            context.strokeStyle = "rgba(" + color + "," + (flight * (0.12 + near * 0.68)) + ")";
+            context.lineWidth = star.size * (0.35 + near * 1.35);
+            context.shadowColor = "rgba(" + color + ",.72)";
+            context.shadowBlur = 4 + near * 10;
+            context.stroke();
+          });
+          context.restore();
+        }
+
+        function drawFragments(time, flight) {
+          if (flight <= 0.01) return;
+          var centerX = width * 0.5;
+          var centerY = height * 0.5;
+          var travel = Math.pow(Math.max(0, time - 520) / 1000, 1.25) * 0.52;
+          var focus = Math.min(width, height) * 0.38;
+          context.save();
+          context.globalCompositeOperation = "lighter";
+          fragments.forEach(function (fragment) {
+            var z = fragment.z - travel * fragment.speed;
+            z = ((z % 1) + 1) % 1;
+            z = 0.075 + z * 0.94;
+            var x = centerX + (fragment.x / z) * focus;
+            var y = centerY + (fragment.y / z) * focus;
+            if (x < -120 || x > width + 120 || y < -120 || y > height + 120) return;
+            var near = 1 - z;
+            var size = fragment.size * (0.5 + near * 2.8);
+            var rotation = fragment.rotation + time * 0.001 * fragment.spin;
+            var color = fragment.side === 0 ? "157, 206, 150" : "211, 133, 91";
+            context.save();
+            context.translate(x, y);
+            context.rotate(rotation);
+            context.beginPath();
+            context.moveTo(-size * 0.7, -size * 0.28);
+            context.lineTo(size, -size * 0.15);
+            context.lineTo(size * 0.46, size * 0.34);
+            context.lineTo(-size * 0.35, size * 0.2);
+            context.closePath();
+            context.fillStyle = "rgba(" + color + "," + (flight * (0.035 + near * 0.13)) + ")";
+            context.strokeStyle = "rgba(232,214,157," + (flight * (0.08 + near * 0.24)) + ")";
+            context.lineWidth = Math.max(0.6, near * 1.25);
+            context.shadowColor = "rgba(" + color + ",.5)";
+            context.shadowBlur = near * 8;
+            context.fill();
+            context.stroke();
+            context.restore();
+          });
+          context.restore();
+        }
+
+        function drawMotes(time, alpha) {
+          if (alpha <= 0.001) return;
+          var centerX = width * 0.5;
+          var centerY = height * 0.5;
+          var radiusMax = Math.min(width, height) * 0.48;
+          context.save();
+          context.globalCompositeOperation = "lighter";
+          motes.forEach(function (mote) {
+            var orbit = mote.angle + time * (mote.side === 0 ? -0.00042 : 0.00048) + Math.sin(time * 0.001 + mote.phase) * 0.08;
+            var radius = radiusMax * (0.18 + mote.radius * 0.82);
+            var x = centerX + Math.cos(orbit) * radius;
+            var y = centerY + Math.sin(orbit) * radius * 0.57;
+            var color = mote.side === 0 ? "128,207,150" : "218,121,83";
+            context.beginPath();
+            context.arc(x, y, mote.size, 0, Math.PI * 2);
+            context.fillStyle = "rgba(" + color + "," + alpha * (0.18 + 0.42 * Math.sin(mote.phase + time * 0.004) ** 2) + ")";
+            context.shadowColor = "rgba(" + color + ",.7)";
+            context.shadowBlur = 8;
+            context.fill();
+          });
+          context.restore();
+        }
+
+        function drawThreshold(time) {
+          var open = smooth(1640, 2290, time);
+          var vanish = 1 - smooth(2460, 2860, time);
+          var alpha = open * vanish;
+          if (alpha <= 0.001) return;
+          var centerX = width * 0.5;
+          var centerY = height * 0.5;
+          var base = Math.min(width, height);
+          var radius = base * (0.055 + easeOut(open) * 0.34);
+          context.save();
+          context.globalCompositeOperation = "lighter";
+          for (var ring = 0; ring < 4; ring += 1) {
+            context.beginPath();
+            context.ellipse(centerX, centerY, radius * (1 + ring * 0.16), radius * (0.55 + ring * 0.07), time * 0.00022 * (ring % 2 ? -1 : 1), 0, Math.PI * 2);
+            context.strokeStyle = ring % 2 ? "rgba(124,195,153," + alpha * (0.26 - ring * 0.035) + ")" : "rgba(226,194,109," + alpha * (0.34 - ring * 0.045) + ")";
+            context.lineWidth = ring === 0 ? 1.4 : 0.8;
+            context.shadowColor = ring % 2 ? "#7dc39a" : "#dfbd6c";
+            context.shadowBlur = 10;
+            context.stroke();
+          }
+          context.restore();
+        }
+
+        function drawImpact(time) {
+          var progress = clamp((time - 2820) / 720, 0, 1);
+          if (progress <= 0 || progress >= 1) return;
+          var centerX = width * 0.5;
+          var centerY = height * 0.5;
+          var radius = easeOut(progress) * Math.min(width, height) * 0.75;
+          context.save();
+          context.globalCompositeOperation = "lighter";
+          context.beginPath();
+          context.ellipse(centerX, centerY, radius, radius * 0.48, 0, 0, Math.PI * 2);
+          context.strokeStyle = "rgba(247,226,166," + (1 - progress) * 0.62 + ")";
+          context.lineWidth = 1 + (1 - progress) * 4;
+          context.shadowColor = "#efd492";
+          context.shadowBlur = 18;
+          context.stroke();
+          context.restore();
+        }
+
+        function draw(time) {
+          context.clearRect(0, 0, width, height);
+          if (state === "idle" || state === "done") return;
+          var flightIn = smooth(320, 970, time);
+          var flightOut = 1 - smooth(2520, 3090, time);
+          var flight = flightIn * flightOut;
+          var threadAlpha = smooth(130, 600, time) * (1 - smooth(1760, 2440, time));
+          var moteAlpha = smooth(450, 1120, time) * (1 - smooth(2680, 3180, time));
+          drawThreads(time, threadAlpha);
+          drawStarTunnel(time, flight);
+          drawFragments(time, flight);
+          drawMotes(time, moteAlpha);
+          drawThreshold(time);
+          drawImpact(time);
+        }
+
+        function reset() {
+          cancelAnimationFrame(raf);
+          state = "idle";
+          stage.classList.remove("is-playing", "is-arrived");
+          begin.disabled = false;
+          begin.querySelector("span").innerHTML = "Begin Chronicle&nbsp;&nbsp; ▶";
+          replay.disabled = true;
+          slow.disabled = false;
+          seedInput.disabled = false;
+          phaseReadout.textContent = "Preparación dispuesta";
+          clock.textContent = "0.00 s";
+          fill.style.width = "0%";
+          context.clearRect(0, 0, width, height);
+          rebuildParticles();
+        }
+
+        function play() {
+          if (state === "playing") return;
+          rebuildParticles();
+          setTimings();
+          state = "playing";
+          begin.disabled = true;
+          slow.disabled = true;
+          seedInput.disabled = true;
+          replay.disabled = true;
+          stage.classList.remove("is-playing", "is-arrived");
+          void stage.offsetWidth;
+          stage.classList.add("is-playing");
+          startTime = performance.now();
+
+          if (reducedMotion.matches) {
+            state = "done";
+            stage.classList.add("is-arrived");
+            phaseReadout.textContent = "Encuentro dispuesto";
+            clock.textContent = (BASE_TOTAL / 1000).toFixed(2) + " s";
+            fill.style.width = "100%";
+            replay.disabled = false;
+            seedInput.disabled = false;
+            return;
+          }
+          raf = requestAnimationFrame(frame);
+        }
+
+        function frame(now) {
+          var raw = now - startTime;
+          var time = raw / timeScale;
+          var progress = clamp(time / BASE_TOTAL, 0, 1);
+          draw(time);
+          phaseReadout.textContent = phaseAt(time);
+          clock.textContent = (time / 1000).toFixed(2) + " s";
+          fill.style.width = (progress * 100).toFixed(2) + "%";
+
+          if (time >= BASE_TOTAL) {
+            state = "done";
+            stage.classList.add("is-arrived");
+            context.clearRect(0, 0, width, height);
+            begin.querySelector("span").textContent = "Crónica iniciada";
+            replay.disabled = false;
+            slow.disabled = false;
+            seedInput.disabled = false;
+            return;
+          }
+          raf = requestAnimationFrame(frame);
+        }
+
+        begin.addEventListener("click", play);
+        replay.addEventListener("click", function () {
+          reset();
+          requestAnimationFrame(play);
+        });
+        slow.addEventListener("click", function () {
+          timeScale = timeScale === 1 ? 1.85 : 1;
+          slow.setAttribute("aria-pressed", String(timeScale !== 1));
+          slow.textContent = timeScale === 1 ? "Cámara lenta" : "Velocidad normal";
+          setTimings();
+        });
+        seedInput.addEventListener("change", rebuildParticles);
+        seedInput.addEventListener("keydown", function (event) { if (event.key === "Enter") rebuildParticles(); });
+        stage.addEventListener("pointermove", function (event) {
+          var rect = stage.getBoundingClientRect();
+          stage.style.setProperty("--mx", ((event.clientX - rect.left) / rect.width - 0.5).toFixed(3));
+          stage.style.setProperty("--my", ((event.clientY - rect.top) / rect.height - 0.5).toFixed(3));
+        });
+        stage.addEventListener("pointerleave", function () {
+          stage.style.setProperty("--mx", "0");
+          stage.style.setProperty("--my", "0");
+        });
+        window.addEventListener("resize", resize);
+
+        resize();
+        rebuildParticles();
+        setTimings();
+      })();
+    </script>
+  </body>
+</html>

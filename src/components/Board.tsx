@@ -129,7 +129,12 @@ export function Board({
 
   return (
     <main className={`duel-table game-screen h-screen overflow-hidden ${encounterEntering ? "is-encounter-entering" : ""}`}>
-      <TemporalBackdrop grid climax={climaxReached ? 1 : 0} dial={destinyDial} />
+      <TemporalBackdrop
+        grid
+        climax={climaxReached ? 1 : 0}
+        defeat={game.winner === "host" ? 1 : 0}
+        dial={destinyDial}
+      />
       <AppHeader
         left={game.openingHandAccepted ? <TurnPhaseHud game={game} setupTurns={setupTurns} /> : undefined}
         setupTurns={setupTurns}

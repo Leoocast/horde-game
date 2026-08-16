@@ -18,11 +18,14 @@ import {
  */
 export function TemporalBackdrop({
   climax = 0,
+  defeat = 0,
   grid = false,
   dial = 0,
 }: {
   /** Mismo umbral que lleva la música a clímax. */
   climax?: number;
+  /** Derrota: el espacio se enrojece. Es un estado aparte del clímax, no su extremo. */
+  defeat?: number;
   /** Retículo del instrumento. Sólo en el tablero: el menú va a cielo limpio. */
   grid?: boolean;
   /** Ángulo acumulado del disco de grados, en grados. El aparato mide cómo se mueve
@@ -32,10 +35,10 @@ export function TemporalBackdrop({
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const dialRef = useRef<SVGGElement | null>(null);
-  const targetRef = useRef({ climax, dial });
+  const targetRef = useRef({ climax, defeat, dial });
 
   // El bucle lee los valores por referencia para no reiniciarse en cada cambio.
-  targetRef.current = { climax, dial };
+  targetRef.current = { climax, defeat, dial };
 
   // Con movimiento reducido no hay bucle, así que el disco salta a su sitio.
   useEffect(() => {
@@ -100,10 +103,12 @@ export function TemporalBackdrop({
     const uRes = gl.getUniformLocation(program, "uRes");
     const uTime = gl.getUniformLocation(program, "uTime");
     const uClimax = gl.getUniformLocation(program, "uClimax");
+    const uDefeat = gl.getUniformLocation(program, "uDefeat");
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const startedAt = performance.now();
     let climaxMix = targetRef.current.climax;
+    let defeatMix = targetRef.current.defeat;
     let dialMix = targetRef.current.dial;
     let frame = 0;
     let disposed = false;
@@ -119,6 +124,8 @@ export function TemporalBackdrop({
 
       // El cambio de estado se interpola: un salto seco se ve.
       climaxMix += (targetRef.current.climax - climaxMix) * 0.04;
+      // Más lento que el clímax: la derrota se asienta, no salta.
+      defeatMix += (targetRef.current.defeat - defeatMix) * 0.022;
 
       // El disco gira despacio hasta su nuevo ángulo y se queda ahí: el futuro se
       // movió y no vuelve. Se escribe el atributo en vez de usar CSS porque el origen
@@ -132,6 +139,7 @@ export function TemporalBackdrop({
       gl.uniform2f(uRes, width, height);
       gl.uniform1f(uTime, reducedMotion ? 8 : (now - startedAt) / 1000);
       gl.uniform1f(uClimax, climaxMix);
+      gl.uniform1f(uDefeat, defeatMix);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     };
 
