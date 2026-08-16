@@ -17,6 +17,7 @@ import { AudioControls } from "./AudioControls";
 import { DeckKeyCard, DecksView } from "./DecksView";
 import { DisplayControls } from "./DisplayControls";
 import { LanguageSelector } from "./LanguageSelector";
+import { TemporalBackdrop } from "./TemporalBackdrop";
 import { ToastStack } from "./ToastStack";
 
 type Props = {
@@ -225,7 +226,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
 
   return (
     <main className={`main-menu-shell h-screen overflow-hidden text-[#f6e6b8] ${menuScreen === "setup" || menuScreen === "chaos" ? "expedition-active" : ""} ${menuScreen === "chaos" ? "chaos-active" : ""}`}>
-      <MenuFireflies />
+      <TemporalBackdrop />
       {menuScreen !== "setup" && menuScreen !== "chaos" ? (
         <div className="main-menu-stage">
         {menuScreen === "home" && (
@@ -526,33 +527,6 @@ function ChroniclerNameModal({ value, onChange, onClose, onSave, closing, requir
   );
 }
 
-function MenuFireflies() {
-  return (
-    <div className="menu-fireflies" aria-hidden="true">
-      {Array.from({ length: 34 }, (_, index) => <span key={index} style={fireflyStyle(index)} />)}
-    </div>
-  );
-}
-
-function fireflyStyle(index: number): React.CSSProperties {
-  const random = (salt: number) => {
-    const value = Math.sin((index + 1) * (12.9898 + salt * 17.13)) * 43758.5453;
-    return value - Math.floor(value);
-  };
-  const driftX = -45 + random(6) * 90;
-  const driftY = -60 + random(7) * 80;
-  return {
-    "--firefly-left": `${3 + random(1) * 94}%`,
-    "--firefly-top": `${5 + random(2) * 88}%`,
-    "--firefly-size": `${1.5 + random(3) * 3}px`,
-    "--firefly-duration": `${7 + random(4) * 8}s`,
-    "--firefly-delay": `${-random(5) * 13}s`,
-    "--firefly-mid-x": `${driftX * 0.55}px`,
-    "--firefly-mid-y": `${driftY * 0.72}px`,
-    "--firefly-drift-x": `${driftX}px`,
-    "--firefly-drift-y": `${driftY}px`,
-  } as React.CSSProperties;
-}
 
 /** Ambient motes that rise inside the setup screen; the menu fireflies stay behind its blur. */
 function SetupEmbers() {

@@ -333,11 +333,17 @@
           "  vec2 id = floor(grid);",
           "  vec2 cell = fract(grid) - 0.5;",
           "  float seed = hash21(id);",
+          "  if (seed < gate) return 0.0;",
           "  vec2 shift = (hash22(id + 7.31) - 0.5) * 0.7;",
           "  float d = length(cell - shift);",
-          "  float core = (1.0 - smoothstep(0.0, 0.038, d)) * step(gate, seed);",
-          "  float halo = (1.0 - smoothstep(0.0, 0.13, d)) * step(0.994, seed) * 0.26;",
-          "  return (core + halo) * (0.93 + 0.07 * sin(uTime * speed + seed * 6.2831));",
+          // Una estrella más pequeña que un píxel no se puede muestrear: aparece y
+          // desaparece según dónde caiga el centro del píxel mientras la capa deriva.
+          // El radio se fija en píxeles y se traduce a unidades de celda.
+          "  float cellPx = max(1.0, uRes.y / scale);",
+          "  float radius = max(0.045, 1.35 / cellPx);",
+          "  float core = exp(-pow(d / radius, 2.0) * 1.6);",
+          "  float halo = exp(-pow(d / (radius * 3.2), 2.0)) * step(0.994, seed) * 0.22;",
+          "  return (core + halo) * (0.94 + 0.06 * sin(uTime * speed + seed * 6.2831));",
           "}",
           // La zona donde viven las cartas se apaga aparte del atenuado general.
           "float cardZone(vec2 p) {",
@@ -468,23 +474,37 @@
         var VARIANT_C = [
           // Motas que vagan en curvas propias y respiran. No parpadean en su sitio:
           // cada celda tiene su deriva, su ritmo y su fase.
-          "float fireflies(vec2 p, float scale, float speed, float off) {",
-          "  vec2 g = p * scale;",
-          "  vec2 id = floor(g);",
-          "  vec2 cell = fract(g) - 0.5;",
+          "float firefly(vec2 rel, vec2 id, float speed, float off) {",
           "  float seed = hash21(id + off);",
           "  if (seed < 0.93) return 0.0;",
           "  float k = 0.5 + seed;",
-          "  vec2 wander = 0.34 * vec2(",
+          "  vec2 wander = 0.30 * vec2(",
           "    sin(uTime * speed * k + seed * 31.0),",
           "    cos(uTime * speed * (k * 0.82) + seed * 17.0)",
           "  );",
-          "  vec2 offset = (hash22(id + 5.13) - 0.5) * 0.46 + wander;",
-          "  float d = length(cell - offset);",
+          "  vec2 offset = (hash22(id + 5.13) - 0.5) * 0.40 + wander;",
+          "  float d = length(rel - offset);",
           "  float core = exp(-d * d * 320.0);",
           "  float halo = exp(-d * d * 30.0) * 0.22;",
           "  float breath = 0.30 + 0.70 * pow(0.5 + 0.5 * sin(uTime * (0.28 + seed * 0.4) + seed * 44.0), 2.2);",
           "  return (core + halo) * breath;",
+          "}",
+          // El resplandor de una mota es más ancho que su celda, y la deriva puede
+          // sacarla de ella. Mirando sólo la celda propia, todo lo que desborda al
+          // vecino no se dibuja: el halo se corta en recto y se ven cuadrados. Hay
+          // que recorrer el vecindario 3x3 para que cada mota aporte a los lados.
+          "float fireflies(vec2 p, float scale, float speed, float off) {",
+          "  vec2 g = p * scale;",
+          "  vec2 id = floor(g);",
+          "  vec2 cell = fract(g) - 0.5;",
+          "  float sum = 0.0;",
+          "  for (int j = -1; j <= 1; j++) {",
+          "    for (int i = -1; i <= 1; i++) {",
+          "      vec2 nb = vec2(float(i), float(j));",
+          "      sum += firefly(cell - nb, id + nb, speed, off);",
+          "    }",
+          "  }",
+          "  return sum;",
           "}",
           "void main() {",
           "  vec2 uv = gl_FragCoord.xy / uRes;",
