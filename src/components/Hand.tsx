@@ -381,7 +381,7 @@ export function Hand({ game }: { game: GameState }) {
   return (
     <>
       {energyRecycleHint && <EnergyRecycleDragHint hint={energyRecycleHint} recycleLabel={t("hand.recycle")} hintLabel={t("hand.recycleHint")} />}
-      <div className="hand-atmosphere-shell pointer-events-none fixed inset-x-0 bottom-0 z-[70] h-40 overflow-hidden">
+      <div className="hand-atmosphere-shell pointer-events-none fixed inset-x-0 bottom-0 z-[70] h-64 overflow-hidden">
         <div className="hand-atmosphere absolute inset-0" />
       </div>
       <section className={[

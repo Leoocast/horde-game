@@ -17,19 +17,19 @@ import {
  * Si no hay WebGL, el lienzo se oculta y queda el fondo CSS de la pantalla.
  */
 export function TemporalBackdrop({
-  board = 0,
   climax = 0,
+  grid = false,
 }: {
-  /** 0 menú, 1 tablero. Se interpola, así que sirve de transición entre pantallas. */
-  board?: number;
   /** Mismo umbral que lleva la música a clímax. */
   climax?: number;
+  /** Retículo del instrumento. Sólo en el tablero: el menú va a cielo limpio. */
+  grid?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const targetRef = useRef({ board, climax });
+  const targetRef = useRef({ climax });
 
   // El bucle lee los valores por referencia para no reiniciarse en cada cambio.
-  targetRef.current = { board, climax };
+  targetRef.current = { climax };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -86,12 +86,10 @@ export function TemporalBackdrop({
 
     const uRes = gl.getUniformLocation(program, "uRes");
     const uTime = gl.getUniformLocation(program, "uTime");
-    const uBoard = gl.getUniformLocation(program, "uBoard");
     const uClimax = gl.getUniformLocation(program, "uClimax");
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const startedAt = performance.now();
-    let boardMix = targetRef.current.board;
     let climaxMix = targetRef.current.climax;
     let frame = 0;
     let disposed = false;
@@ -105,14 +103,12 @@ export function TemporalBackdrop({
         canvas.height = height;
       }
 
-      // Los cambios de pantalla y de estado se interpolan: un salto seco se ve.
-      boardMix += (targetRef.current.board - boardMix) * 0.06;
+      // El cambio de estado se interpola: un salto seco se ve.
       climaxMix += (targetRef.current.climax - climaxMix) * 0.04;
 
       gl.viewport(0, 0, width, height);
       gl.uniform2f(uRes, width, height);
       gl.uniform1f(uTime, reducedMotion ? 8 : (now - startedAt) / 1000);
-      gl.uniform1f(uBoard, boardMix);
       gl.uniform1f(uClimax, climaxMix);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     };
@@ -161,5 +157,50 @@ export function TemporalBackdrop({
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="temporal-backdrop" aria-hidden="true" />;
+  return (
+    <div className="temporal-backdrop" aria-hidden="true">
+      <canvas ref={canvasRef} className="temporal-backdrop-sky" />
+      {/* El retículo se queda fijo mientras el cosmos deriva detrás: ese contraste es
+          lo que hace leer que hay un cristal y un aparato entre el jugador y el fondo.
+          Celdas grandes y rectangulares; apretarlas lo convierte en papel milimetrado. */}
+      {grid && (
+      <svg
+        className="temporal-backdrop-grid"
+        viewBox="0 0 1000 562"
+        preserveAspectRatio="xMidYMid slice"
+      >
+        <defs>
+          <pattern
+            id="temporalBackdropCells"
+            width="78"
+            height="62.5"
+            patternUnits="userSpaceOnUse"
+            patternTransform="translate(26 20)"
+          >
+            <path className="cell" d="M78 0H0V62.5" />
+          </pattern>
+        </defs>
+        <rect width="1000" height="562" fill="url(#temporalBackdropCells)" />
+        <rect className="frame" x="26" y="20" width="948" height="522" />
+
+        <g className="crosshair">
+          <path d="M26 96 H74 M50 72 V120" />
+          <path d="M974 96 H926 M950 72 V120" />
+          <path d="M26 466 H74 M50 442 V490" />
+          <path d="M974 466 H926 M950 442 V490" />
+        </g>
+
+        {/* Las marcas caen sobre líneas reales de la rejilla. Si no coinciden, el
+            retículo deja de parecer un mismo aparato. */}
+        <g className="edge-tick">
+          <path d="M260 20 V32 M494 20 V32 M728 20 V32" />
+          <path d="M260 542 V530 M494 542 V530 M728 542 V530" />
+          <path d="M26 145 H38 M26 270 H38 M26 395 H38" />
+          <path d="M974 145 H962 M974 270 H962 M974 395 H962" />
+        </g>
+
+      </svg>
+      )}
+    </div>
+  );
 }

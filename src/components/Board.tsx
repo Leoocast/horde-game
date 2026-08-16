@@ -1,5 +1,5 @@
 import { AlertTriangle, Home, RotateCcw } from "lucide-react";
-import { useEffect, useLayoutEffect, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
@@ -25,6 +25,7 @@ import { EnergyRecycleAnimator } from "./EnergyRecycleAnimator";
 import { TributeOfTheFourSorrowsSelectionOverlay } from "./TributeOfTheFourSorrowsSelectionOverlay";
 import { SpellFightAnimator } from "./SpellFightAnimator";
 import { SpellTargetingOverlay } from "./SpellTargetingOverlay";
+import { TemporalBackdrop } from "./TemporalBackdrop";
 import { ToastStack } from "./ToastStack";
 import { TurnPhaseHud } from "./TurnPhaseHud";
 import { DefeatModal } from "./DefeatModal";
@@ -101,10 +102,12 @@ export function Board({
   const homeConfirmationPresence = useAnimatedPresence(showHomeConfirmation, 210);
   const surgeReached = surgeTransitionShown || hostInSurge(game);
   const hiddenDefenseLinkIds = useHiddenDefenseLinkIds(game);
+  // El fondo reacciona al mismo umbral que lleva la música a clímax, sin estado propio.
+  const climaxReached = game.player.life <= 10 || surgeReached;
 
   useEffect(() => {
-    if (game.player.life <= 10 || surgeReached) setMusicVariant("climax");
-  }, [game.player.life, setMusicVariant, surgeReached]);
+    if (climaxReached) setMusicVariant("climax");
+  }, [climaxReached, setMusicVariant]);
 
   useEffect(() => {
     if (game.winner === "player") playCollection("winTheme");
@@ -122,7 +125,7 @@ export function Board({
 
   return (
     <main className={`duel-table game-screen h-screen overflow-hidden ${encounterEntering ? "is-encounter-entering" : ""}`}>
-      <GameFireflies chaos={game.gameMode === "chaos"} />
+      <TemporalBackdrop grid climax={climaxReached ? 1 : 0} />
       <AppHeader
         left={game.openingHandAccepted ? <TurnPhaseHud game={game} setupTurns={setupTurns} /> : undefined}
         setupTurns={setupTurns}
@@ -252,22 +255,3 @@ export function Board({
   );
 }
 
-function GameFireflies({ chaos }: { chaos: boolean }) {
-  return (
-    <div className={["game-ambient-fireflies", chaos ? "is-chaos" : ""].join(" ")} aria-hidden="true">
-      {Array.from({ length: 10 }, (_, index) => {
-        const left = 6 + ((index * 37 + 11) % 87);
-        const top = 8 + ((index * 53 + 17) % 69);
-        const style = {
-          left: `${left}%`,
-          top: `${top}%`,
-          "--battlefly-delay": `${-(index * 1.37)}s`,
-          "--battlefly-duration": `${7.5 + (index % 4) * 1.45}s`,
-          "--battlefly-x": `${index % 2 === 0 ? 22 + index * 2 : -18 - index * 2}px`,
-          "--battlefly-y": `${index % 3 === 0 ? -34 : 24 + index}px`,
-        } as CSSProperties;
-        return <span key={index} style={style} />;
-      })}
-    </div>
-  );
-}

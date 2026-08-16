@@ -5,9 +5,9 @@
  * desliza en bloque—, tres capas de estrellas con paralaje propio y motas que vagan
  * en curvas y respiran. La maqueta de decisión es `dev/mockups/vfx/temporal-backgrounds.html`.
  *
- * `uBoard` interpola entre la presentación de menú y la del tablero: además de bajar
- * el brillo general, apaga la zona donde viven las cartas y deja el movimiento en la
- * periferia. `uClimax` reacciona al mismo umbral que ya cambia la música a clímax.
+ * Menú y tablero comparten exactamente la misma presentación: el tablero no atenúa el
+ * fondo, porque el oscurecido que necesitan las cartas ya lo aportan los degradados de
+ * la propia pantalla. `uClimax` reacciona al mismo umbral que lleva la música a clímax.
  */
 
 export const TEMPORAL_BACKDROP_VERTEX = `
@@ -22,7 +22,6 @@ precision highp float;
 
 uniform vec2 uRes;
 uniform float uTime;
-uniform float uBoard;
 uniform float uClimax;
 
 float hash21(vec2 p) {
@@ -118,11 +117,6 @@ float fireflies(vec2 p, float scale, float speed, float off) {
   return sum;
 }
 
-// La zona donde viven las cartas se apaga aparte del atenuado general del tablero.
-float cardZone(vec2 p) {
-  return 1.0 - smoothstep(0.26, 0.72, length(p * vec2(0.60, 1.30)));
-}
-
 void main() {
   vec2 uv = gl_FragCoord.xy / uRes;
   float aspect = uRes.x / uRes.y;
@@ -168,10 +162,10 @@ void main() {
              + fireflies(p * 1.7 - warp * 0.04 + 8.2, 15.0, 0.07, 21.3) * 0.7;
   color += mix(vec3(1.0, 0.80, 0.36), vec3(0.55, 0.95, 0.78), 0.35) * glow * 0.95;
 
-  color *= mix(1.0, 0.46, uBoard);
-  color *= mix(1.0, mix(1.0, 0.26, cardZone(p)), uBoard);
+  // El tablero ya no atenúa nada: el fondo se ve igual que en el menú. El oscurecido
+  // que hacía falta para las cartas lo aporta la propia pantalla con sus degradados.
   float vig = 1.0 - smoothstep(0.40, 1.0, length(p * vec2(0.76, 1.0)));
-  color *= mix(0.46, 1.0, vig);
+  color *= mix(0.62, 1.0, vig);
   gl_FragColor = vec4(pow(max(color, 0.0), vec3(0.92)), 1.0);
 }
 `;

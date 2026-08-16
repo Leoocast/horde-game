@@ -67,6 +67,48 @@
       }
       .stage canvas { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; display: block; }
 
+      /* ---------------- instrumento ----------------
+         Va fija en pantalla mientras el cosmos deriva detrás: ese contraste es lo que
+         hace leer que hay un cristal y un aparato entre el jugador y el fondo. */
+      .grid-layer {
+        position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%;
+        pointer-events: none; opacity: 0; transition: opacity 320ms ease;
+      }
+      .grid-layer.on { opacity: 1; }
+      .stage.board .grid-layer { opacity: 0; }
+      .stage.board .grid-layer.on { opacity: 0.55; }
+
+      /* Celdas grandes y rectangulares, casi al límite de lo perceptible. Apretarlas
+         o subirles el contraste las convierte en papel milimetrado; espaciadas y
+         tenues se leen como el retículo de un aparato. */
+      .lattice .cell { stroke: rgb(150 198 190 / 0.055); stroke-width: 1; fill: none; }
+      .lattice .frame { stroke: rgb(199 170 105 / 0.24); stroke-width: 1.1; fill: none; }
+      .lattice .crosshair { stroke: rgb(214 192 122 / 0.42); stroke-width: 1.1; fill: none; }
+      .lattice .edge-tick { stroke: rgb(180 205 198 / 0.30); stroke-width: 0.9; }
+      .lattice text {
+        fill: rgb(166 204 200 / 0.34); font: 500 8px/1 Consolas, "Courier New", monospace;
+        letter-spacing: 0.14em;
+      }
+
+      .instrument .degree-ring,
+      .instrument .orbit,
+      .instrument .arc { fill: none; vector-effect: non-scaling-stroke; }
+      .instrument .degree-ring { stroke: rgb(111 181 176 / 0.14); stroke-width: 1; }
+      .instrument .arc { stroke: rgb(199 170 105 / 0.12); stroke-width: 1; }
+      .instrument .orbit {
+        stroke: rgb(111 181 176 / 0.10); stroke-width: 1; stroke-dasharray: 3 12;
+        animation: orbit-drift 42s linear infinite;
+      }
+      .instrument .tick { stroke: rgb(214 192 122 / 0.2); stroke-width: 1; vector-effect: non-scaling-stroke; }
+      .instrument text {
+        fill: rgb(166 204 200 / 0.40); font: 500 9px/1 Consolas, "Courier New", monospace;
+        letter-spacing: 0.12em;
+      }
+      .instrument .degree { fill: rgb(210 188 125 / 0.42); font-size: 9px; }
+      .instrument .readout-strong { fill: rgb(210 188 125 / 0.5); }
+
+      @keyframes orbit-drift { to { stroke-dashoffset: -160; } }
+
       /* ---------------- maqueta del menú ---------------- */
       .layer { position: absolute; z-index: 2; inset: 0; pointer-events: none; opacity: 0; transition: opacity 260ms ease; }
       .layer.on { opacity: 1; }
@@ -169,9 +211,94 @@
         <span class="group-label" style="margin-left: 18px">Estado</span>
         <button type="button" id="climax" aria-pressed="false">Clímax</button>
       </div>
+      <div class="controls">
+        <span class="group-label">Rejilla</span>
+        <button type="button" data-grid="0" aria-pressed="false">Sin rejilla</button>
+        <button type="button" data-grid="1" aria-pressed="false">Cartografía</button>
+        <button type="button" data-grid="2" aria-pressed="false">Instrumento</button>
+        <button type="button" data-grid="3" aria-pressed="true">Ambas</button>
+      </div>
 
       <div class="stage" id="stage">
         <canvas id="sky"></canvas>
+
+        <!-- Cartografía: el papel milimetrado del aparato. Es lo que más lee como
+             "máquina", porque es lo único perfectamente recto de toda la escena. -->
+        <svg class="grid-layer lattice" id="lattice" viewBox="0 0 1000 562" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <!-- 78 x 62.5, el mismo paso rectangular de la constelación. Alineado al
+                 marco para que las líneas nazcan de él y no caigan donde sea. -->
+            <pattern id="cells" width="78" height="62.5" patternUnits="userSpaceOnUse"
+              patternTransform="translate(26 20)">
+              <path class="cell" d="M78 0H0V62.5" />
+            </pattern>
+          </defs>
+          <rect width="1000" height="562" fill="url(#cells)" />
+          <rect class="frame" x="26" y="20" width="948" height="522" />
+
+          <g class="crosshair">
+            <path d="M26 96 H74 M50 72 V120" />
+            <path d="M974 96 H926 M950 72 V120" />
+            <path d="M26 466 H74 M50 442 V490" />
+            <path d="M974 466 H926 M950 442 V490" />
+          </g>
+
+          <!-- Las marcas caen sobre líneas reales de la rejilla, cada tres celdas.
+               Si no coinciden, el retículo deja de parecer un mismo aparato. -->
+          <g class="edge-tick">
+            <path d="M260 20 V32 M494 20 V32 M728 20 V32" />
+            <path d="M260 542 V530 M494 542 V530 M728 542 V530" />
+            <path d="M26 145 H38 M26 270 H38 M26 395 H38" />
+            <path d="M974 145 H962 M974 270 H962 M974 395 H962" />
+          </g>
+
+          <g>
+            <text x="260" y="45" text-anchor="middle">-20</text>
+            <text x="494" y="45" text-anchor="middle">000</text>
+            <text x="728" y="45" text-anchor="middle">+20</text>
+            <text x="44" y="148">II</text>
+            <text x="44" y="273">0</text>
+            <text x="44" y="398">I</text>
+          </g>
+        </svg>
+
+        <!-- Instrumento: el astrolabio de la constelación de victoria, sin encender. -->
+        <svg class="grid-layer instrument" id="instrument" viewBox="0 0 1000 562" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <g transform="translate(500 247)">
+            <circle class="degree-ring" r="226" pathLength="360" stroke-dasharray="1 14" />
+            <circle class="arc" r="212" pathLength="360" stroke-dasharray="34 18 5 33" />
+            <ellipse class="orbit" rx="332" ry="92" transform="rotate(-13)" />
+            <ellipse class="orbit" rx="298" ry="118" transform="rotate(31)" style="animation-duration: 56s" />
+            <ellipse class="orbit" rx="272" ry="67" transform="rotate(72)" style="animation-duration: 34s" />
+
+            <line class="tick" x1="0" y1="-239" x2="0" y2="-224" />
+            <line class="tick" x1="169" y1="-169" x2="158" y2="-158" />
+            <line class="tick" x1="239" y1="0" x2="224" y2="0" />
+            <line class="tick" x1="169" y1="169" x2="158" y2="158" />
+            <line class="tick" x1="0" y1="239" x2="0" y2="224" />
+            <line class="tick" x1="-169" y1="169" x2="-158" y2="158" />
+            <line class="tick" x1="-239" y1="0" x2="-224" y2="0" />
+            <line class="tick" x1="-169" y1="-169" x2="-158" y2="-158" />
+
+            <text class="degree" x="0" y="-233" text-anchor="middle">000° · N</text>
+            <text class="degree" x="182" y="-177">045°</text>
+            <text class="degree" x="248" y="4">090° · E</text>
+            <text class="degree" x="182" y="185">135°</text>
+            <text class="degree" x="0" y="249" text-anchor="middle">180° · S</text>
+            <text class="degree" x="-182" y="185" text-anchor="end">225°</text>
+            <text class="degree" x="-248" y="4" text-anchor="end">270° · O</text>
+            <text class="degree" x="-182" y="-177" text-anchor="end">315°</text>
+          </g>
+
+          <g>
+            <text x="30" y="32">VECTOR TEMPORAL</text>
+            <text id="readoutTime" class="readout-strong" x="30" y="49">T+0.00 s</text>
+            <text x="970" y="32" text-anchor="end">ASCENSIÓN 18h 42m</text>
+            <text id="readoutAzimuth" class="readout-strong" x="970" y="49" text-anchor="end">Ω 000°</text>
+            <text x="30" y="528">PLANO ECLÍPTICO</text>
+            <text id="readoutDrift" class="readout-strong" x="970" y="528" text-anchor="end">DERIVA 0.00</text>
+          </g>
+        </svg>
 
         <div class="layer on" id="menuLayer">
           <div class="menu-panel">
@@ -229,6 +356,31 @@
             curvas y respiran, no que parpadean en su sitio. La más viva y la más arriesgada sobre las cartas.</li>
         </ul>
 
+        <h3>La rejilla del instrumento</h3>
+        <ul>
+          <li>Es lo que convierte el fondo en algo <b>diegético</b>: dejas de mirar el espacio y pasas a
+            mirarlo <b>a través de un aparato</b>. Y funciona por una razón concreta —la rejilla se queda
+            <b>fija en pantalla</b> mientras el cosmos deriva detrás—: ese contraste es el que hace leer que
+            hay un cristal y una máquina entre el jugador y el fondo.</li>
+          <li><b>Cartografía</b> es el retículo: marco, miras en las cuatro esquinas y marcas numeradas en
+            los bordes. Es la que más lee como máquina, porque es <b>lo único perfectamente recto</b> de toda
+            la escena.</li>
+          <li>El tamaño de celda es la diferencia entre aparato y papel milimetrado, y el margen es estrecho.
+            La referencia de la constelación usa <code>79 × 63 px</code> al <b>1,2 % de blanco</b>; con celdas
+            de 25 px y líneas al 10 % —el triple de líneas y ocho veces más contraste— deja de leerse como un
+            retículo y pasa a ser una cuadrícula de cuaderno. Aquí el paso es <code>78 × 62.5</code> en
+            unidades del <code>viewBox</code>, unos 83 × 66 px en pantalla, sin subrejilla fina.</li>
+          <li>Las celdas son <b>rectangulares, no cuadradas</b>, y el patrón está alineado al marco para que
+            las líneas nazcan de él. Las marcas de los bordes caen sobre líneas reales de la rejilla: si no
+            coinciden, el retículo deja de parecer un mismo aparato.</li>
+          <li><b>Instrumento</b> es el astrolabio del panel de victoria —anillo de grados, arcos, órbitas y
+            etiquetas cardinales— pero <b>sin encender</b>. Ahí está el pago: la victoria enciende ese mismo
+            aparato hasta convertirlo en la rosa cardinal.</li>
+          <li>Las lecturas de las esquinas se actualizan en vivo. Un instrumento con las cifras congeladas se
+            lee como una calcomanía pegada encima, no como algo que está midiendo.</li>
+          <li>En contexto Tablero la rejilla baja al <b>55 %</b>: ahí compite con las cartas, no con el vacío.</li>
+        </ul>
+
         <h3>El problema real del fondo del tablero</h3>
         <ul>
           <li>Hoy <code>.duel-table</code> pinta <code>background.jpg</code> bajo un <b>lavado negro al 70 %</b>.
@@ -271,9 +423,16 @@
         var caption = document.getElementById("caption");
         var climaxButton = document.getElementById("climax");
 
+        var lattice = document.getElementById("lattice");
+        var instrument = document.getElementById("instrument");
+        var readoutTime = document.getElementById("readoutTime");
+        var readoutAzimuth = document.getElementById("readoutAzimuth");
+        var readoutDrift = document.getElementById("readoutDrift");
+
         var variant = 0;
         var context = 0;   // 0 menú, 1 tablero
         var climax = 0;
+        var grid = 3;      // 0 ninguna, 1 cartografía, 2 instrumento, 3 ambas
 
         var CAPTIONS = [
           "<b>A · Plano grabado</b> — la línea temporal vista de canto. La rosa cardinal espera grabada bajo las cartas.",
@@ -635,6 +794,13 @@
           gl.uniform1f(active.uBoard, boardMix);
           gl.uniform1f(active.uClimax, climaxMix);
           gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+          // Un instrumento con cifras congeladas se lee como una calcomanía.
+          var seconds = (now - startedAt) / 1000;
+          readoutTime.textContent = "T+" + seconds.toFixed(2) + " s";
+          readoutAzimuth.textContent = "Ω " + String(Math.floor(seconds * 3) % 360).padStart(3, "0") + "°";
+          readoutDrift.textContent = "DERIVA " + (Math.sin(seconds * 0.11) * 0.42 + 0.5).toFixed(2);
+
           requestAnimationFrame(frame);
         }
 
@@ -648,8 +814,13 @@
         function apply() {
           syncGroup("data-variant", variant);
           syncGroup("data-context", context);
+          syncGroup("data-grid", grid);
           menuLayer.classList.toggle("on", context === 0);
           boardLayer.classList.toggle("on", context === 1);
+          // En tablero la rejilla baja al 55 %: compite con las cartas, no con el vacío.
+          stage.classList.toggle("board", context === 1);
+          lattice.classList.toggle("on", grid === 1 || grid === 3);
+          instrument.classList.toggle("on", grid === 2 || grid === 3);
           caption.innerHTML = CAPTIONS[variant];
         }
 
@@ -661,6 +832,9 @@
             apply();
           } else if (node.hasAttribute("data-context")) {
             context = Number(node.getAttribute("data-context"));
+            apply();
+          } else if (node.hasAttribute("data-grid")) {
+            grid = Number(node.getAttribute("data-grid"));
             apply();
           } else if (node === climaxButton) {
             climax = climax ? 0 : 1;
