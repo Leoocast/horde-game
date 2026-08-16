@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hostfall — Fondos temporales</title>
+    <style>
+      @font-face {
+        font-family: "Cinzel";
+        font-style: normal;
+        font-weight: 500 900;
+        font-display: block;
+        src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+      }
+
+      :root {
+        --gold: #c7aa69;
+        --gold-bright: #e6d59e;
+        --parchment: #e8dec0;
+        --teal-dim: #8db1a9;
+        --muted: #9ba69f;
+        --rule: rgb(146 133 88 / 0.22);
+        --serif: Georgia, "Times New Roman", serif;
+        --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; padding: 0 0 70px; color: var(--muted); font: 15px/1.6 var(--sans);
+        background: radial-gradient(ellipse at 50% -8%, rgb(45 55 52 / 0.22), transparent 55%), #050909;
+        -webkit-font-smoothing: antialiased;
+      }
+      main { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+      header { padding: 54px 0 30px; border-bottom: 1px solid var(--rule); }
+      .back { display: inline-block; margin-bottom: 8px; color: #788985; font-size: 12px; text-decoration: none; }
+      .back:hover { color: var(--gold-bright); }
+      .eyebrow { color: #9ab8b4; font-size: 10px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; }
+      h1 {
+        margin: 12px 0 0; color: var(--parchment); font: 600 clamp(30px, 4.4vw, 46px)/1.06 "Cinzel", var(--serif);
+        letter-spacing: 0.025em;
+      }
+      header p { max-width: 72ch; margin: 16px 0 0; }
+      header strong { color: var(--gold-bright); font-weight: 600; }
+
+      .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 30px 0 6px; }
+      .controls + .controls { margin-top: 0; }
+      button {
+        height: 42px; padding: 0 18px; cursor: pointer;
+        border: 1px solid rgb(146 133 88 / 0.38); border-radius: 2px;
+        background: linear-gradient(180deg, rgb(24 33 34 / 0.96), rgb(8 15 17 / 0.98));
+        color: var(--muted); font: 900 11px/1 var(--sans); letter-spacing: 0.15em; text-transform: uppercase;
+      }
+      button:hover { border-color: rgb(214 192 122 / 0.72); color: var(--gold-bright); }
+      button[aria-pressed="true"] {
+        border-color: rgb(214 192 122 / 0.78); color: var(--gold-bright);
+        background: linear-gradient(180deg, rgb(38 48 45 / 0.96), rgb(15 23 24 / 0.98));
+      }
+      button:focus-visible { outline: 2px solid rgb(234 210 133 / 0.9); outline-offset: 2px; }
+      .group-label {
+        min-width: 92px; color: #788985; font-size: 10px; font-weight: 800;
+        letter-spacing: 0.2em; text-transform: uppercase;
+      }
+
+      .stage {
+        position: relative; overflow: hidden; aspect-ratio: 16 / 9; isolation: isolate; margin-top: 16px;
+        border: 1px solid var(--rule); border-radius: 2px; background: #02060a;
+      }
+      .stage canvas { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; display: block; }
+
+      /* ---------------- maqueta del menú ---------------- */
+      .layer { position: absolute; z-index: 2; inset: 0; pointer-events: none; opacity: 0; transition: opacity 260ms ease; }
+      .layer.on { opacity: 1; }
+
+      .menu-panel {
+        position: absolute; left: 0; top: 0; bottom: 0; width: 38%;
+        padding: 7% 0 0 6%;
+        background: linear-gradient(90deg, rgb(4 7 9 / 0.97) 0%, rgb(9 14 17 / 0.9) 46%, rgb(7 10 12 / 0) 100%);
+      }
+      .menu-mark {
+        color: var(--parchment); font: 700 clamp(20px, 3.1vw, 38px)/1 "Cinzel", var(--serif);
+        letter-spacing: 0.16em; text-transform: uppercase; text-shadow: 0 2px 10px #000;
+      }
+      .menu-sub {
+        margin-top: 9px; color: rgb(160 182 179 / 0.6); font: 700 8px/1 "Cinzel", var(--serif);
+        letter-spacing: 0.3em; text-transform: uppercase;
+      }
+      .menu-items { margin-top: 11%; display: grid; gap: clamp(7px, 1.5vh, 15px); }
+      .menu-items span {
+        color: rgb(220 205 165 / 0.72); font: 700 clamp(9px, 1.15vw, 13px)/1 "Cinzel", var(--serif);
+        letter-spacing: 0.22em; text-transform: uppercase;
+      }
+      .menu-items span:first-child { color: var(--gold-bright); }
+      .menu-items span:first-child::before {
+        display: inline-block; width: 16px; content: "—"; margin-right: 8px; color: rgb(199 170 105 / 0.7);
+      }
+
+      /* ---------------- maqueta del tablero ---------------- */
+      .row { position: absolute; left: 0; right: 0; display: flex; justify-content: center; gap: 1.1%; }
+      .row.host { top: 12%; }
+      .row.field { top: 46%; }
+      .row.hand { bottom: -3%; gap: 0.4%; }
+      .card {
+        width: 9.4%; aspect-ratio: 3 / 4; border-radius: 3px;
+        border: 1px solid rgb(199 170 105 / 0.42);
+        background: linear-gradient(180deg, rgb(26 34 33 / 0.94), rgb(10 16 18 / 0.96));
+        box-shadow: 0 6px 16px rgb(0 0 0 / 0.55), inset 0 1px 0 rgb(232 222 192 / 0.08);
+      }
+      .row.host .card { border-color: rgb(150 106 84 / 0.46); }
+      .row.hand .card { width: 10.4%; transform-origin: bottom center; }
+      .row.hand .card:nth-child(1) { transform: rotate(-7deg) translateY(9px); }
+      .row.hand .card:nth-child(2) { transform: rotate(-3.5deg) translateY(2px); }
+      .row.hand .card:nth-child(4) { transform: rotate(3.5deg) translateY(2px); }
+      .row.hand .card:nth-child(5) { transform: rotate(7deg) translateY(9px); }
+      .hud {
+        position: absolute; padding: 7px 12px; border: 1px solid rgb(146 133 88 / 0.3);
+        background: rgb(5 10 12 / 0.86); color: rgb(220 205 165 / 0.66);
+        font: 800 9px/1 "Cinzel", var(--serif); letter-spacing: 0.2em; text-transform: uppercase;
+      }
+      .hud.tl { left: 2%; top: 4%; }
+      .hud.tr { right: 2%; top: 4%; }
+      .hud.br { right: 2%; bottom: 6%; color: var(--gold-bright); font-size: 13px; }
+
+      .vignette {
+        position: absolute; z-index: 3; inset: 0; pointer-events: none;
+        background:
+          radial-gradient(ellipse at center, transparent 22%, rgb(1 5 6 / 0.14) 54%, rgb(0 2 3 / 0.62) 100%),
+          linear-gradient(180deg, rgb(3 8 9 / 0.14), transparent 24% 74%, rgb(0 3 4 / 0.4));
+      }
+
+      .caption {
+        display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 12px;
+        color: #788985; font-size: 12px;
+      }
+      .caption b { color: var(--gold-bright); font-weight: 600; }
+
+      .notes { margin-top: 46px; border-top: 1px solid var(--rule); padding-top: 26px; }
+      .notes h2 { margin: 0 0 12px; color: var(--parchment); font: 600 22px/1.2 "Cinzel", var(--serif); }
+      .notes h3 { margin: 24px 0 5px; color: var(--gold-bright); font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+      .notes ul { max-width: 74ch; margin: 0; padding-left: 20px; }
+      .notes li { margin-bottom: 9px; }
+      .notes b { color: var(--gold-bright); font-weight: 600; }
+      .notes code { color: var(--teal-dim); font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <a class="back" href="../index.html">← Maquetas</a>
+        <div class="eyebrow">Semillas del Destino · fondos compartidos</div>
+        <h1>Fondos temporales</h1>
+        <p>
+          Tres variantes, cada una en sus dos contextos: el <strong>menú</strong>, compartido entre pantallas,
+          y el <strong>tablero</strong>, donde van las cartas. La idea que las une es que los dos desenlaces no
+          presenten un sitio nuevo, sino que <strong>resuelvan el sitio que llevas mirando toda la partida</strong>:
+          la victoria enciende el instrumento y la derrota rompe el plano.
+        </p>
+      </header>
+
+      <div class="controls">
+        <span class="group-label">Variante</span>
+        <button type="button" data-variant="0" aria-pressed="true">A · Plano grabado</button>
+        <button type="button" data-variant="1" aria-pressed="false">B · Cielo profundo</button>
+        <button type="button" data-variant="2" aria-pressed="false">C · Nebulosa y luciérnagas</button>
+      </div>
+      <div class="controls">
+        <span class="group-label">Contexto</span>
+        <button type="button" data-context="0" aria-pressed="true">Menú</button>
+        <button type="button" data-context="1" aria-pressed="false">Tablero</button>
+        <span class="group-label" style="margin-left: 18px">Estado</span>
+        <button type="button" id="climax" aria-pressed="false">Clímax</button>
+      </div>
+
+      <div class="stage" id="stage">
+        <canvas id="sky"></canvas>
+
+        <div class="layer on" id="menuLayer">
+          <div class="menu-panel">
+            <div class="menu-mark">Hostfall</div>
+            <div class="menu-sub">Crónica del Cronista</div>
+            <div class="menu-items">
+              <span>Contemplar un futuro</span>
+              <span>Continuar</span>
+              <span>Cómo jugar</span>
+              <span>Ajustes</span>
+              <span>Salir</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="layer" id="boardLayer">
+          <div class="hud tl">Turno del Cronista · Principal</div>
+          <div class="hud tr">Archivo de la Hueste · 43</div>
+          <div class="row host">
+            <div class="card"></div><div class="card"></div><div class="card"></div>
+            <div class="card"></div><div class="card"></div>
+          </div>
+          <div class="row field">
+            <div class="card"></div><div class="card"></div><div class="card"></div>
+            <div class="card"></div>
+          </div>
+          <div class="row hand">
+            <div class="card"></div><div class="card"></div><div class="card"></div>
+            <div class="card"></div><div class="card"></div>
+          </div>
+          <div class="hud br">973</div>
+        </div>
+
+        <div class="vignette"></div>
+      </div>
+
+      <div class="caption" id="caption"></div>
+
+      <section class="notes">
+        <h2>Notas</h2>
+
+        <h3>Qué hace cada variante</h3>
+        <ul>
+          <li><b>A · Plano grabado.</b> No es un cielo: es una superficie vista de canto, la línea temporal
+            sobre la que se posan las cartas. La veta del tiempo corre en estrías finas hacia el observador y
+            la <b>rosa cardinal está grabada</b>, enorme y descentrada, en relieve apagado. Es la única que
+            paga los dos desenlaces: al ganar se enciende ese grabado, al perder se rompe ese plano. En menú
+            se ve el mismo plano desde más lejos, con los aros del instrumento y el vórtice en reposo al
+            fondo.</li>
+          <li><b>B · Cielo profundo.</b> El mismo cosmos de los desenlaces, atenuado. Máxima continuidad con
+            el panel de derrota, pero los finales pierden el efecto de revelación: si ya estabas en el cielo,
+            llegar al cielo no cuenta nada.</li>
+          <li><b>C · Nebulosa y luciérnagas.</b> Nubes que se revuelven de verdad —el campo de deformación se
+            advecta con el tiempo—, tres capas de estrellas con paralaje propio y motas que <b>vagan</b> en
+            curvas y respiran, no que parpadean en su sitio. La más viva y la más arriesgada sobre las cartas.</li>
+        </ul>
+
+        <h3>El problema real del fondo del tablero</h3>
+        <ul>
+          <li>Hoy <code>.duel-table</code> pinta <code>background.jpg</code> bajo un <b>lavado negro al 70 %</b>.
+            Es decir: el arte que hay ya está prácticamente anulado para que las cartas se lean. Un fondo nuevo
+            diseñado para llamar la atención acabaría igual de tapado.</li>
+          <li>Por eso en contexto Tablero las tres variantes no se limitan a bajar el brillo: apagan además la
+            <b>zona donde viven las cartas</b> y dejan el movimiento en la periferia. Júzgalas con la maqueta de
+            cartas puesta, que es la prueba que importa.</li>
+        </ul>
+
+        <h3>Clímax</h3>
+        <ul>
+          <li>Ya existe un umbral de Vida del Cronista que cambia la música al tema de clímax. El botón
+            <b>Clímax</b> enseña cómo puede reaccionar el fondo en ese mismo umbral —la paleta se enfría hacia
+            el óxido y el movimiento acelera— sin tocar ninguna regla ni añadir estado nuevo.</li>
+        </ul>
+
+        <h3>Si se lleva al juego</h3>
+        <ul>
+          <li>Es una escena y un plano, así que entra por el renderer WebGL compartido y queda precompilado en
+            <code>prewarmGameVfx</code>. No debe abrir un contexto propio.</li>
+          <li>Un shader a pantalla completa animado permanentemente bajo el tablero tiene coste real. Si pesa,
+            la salida es hornear el plano a imagen y dejar en shader sólo la capa lenta.</li>
+          <li>Nada de animar <code>filter: blur()</code> ni <code>saturate()</code> a pantalla completa: está
+            documentado como regresión de rendimiento.</li>
+          <li>Aquí uso WebGL crudo para que la maqueta se abra con doble clic; son shaders de pantalla completa
+            y no necesitan texturas.</li>
+        </ul>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        "use strict";
+
+        var canvas = document.getElementById("sky");
+        var stage = document.getElementById("stage");
+        var menuLayer = document.getElementById("menuLayer");
+        var boardLayer = document.getElementById("boardLayer");
+        var caption = document.getElementById("caption");
+        var climaxButton = document.getElementById("climax");
+
+        var variant = 0;
+        var context = 0;   // 0 menú, 1 tablero
+        var climax = 0;
+
+        var CAPTIONS = [
+          "<b>A · Plano grabado</b> — la línea temporal vista de canto. La rosa cardinal espera grabada bajo las cartas.",
+          "<b>B · Cielo profundo</b> — el cosmos de los desenlaces, atenuado. Continuidad máxima, revelación mínima.",
+          "<b>C · Nebulosa y luciérnagas</b> — nubes que se revuelven, estrellas con paralaje y motas que vagan."
+        ];
+
+        var gl = canvas.getContext("webgl", {
+          alpha: false, antialias: false, depth: false, premultipliedAlpha: false
+        });
+        if (!gl) return;
+
+        /* ------------------------------------------------------------------ *
+         * Prelude común
+         * ------------------------------------------------------------------ */
+        var PRELUDE = [
+          "precision highp float;",
+          "uniform vec2 uRes;",
+          "uniform float uTime;",
+          "uniform float uBoard;",    // 0 menú, 1 tablero
+          "uniform float uClimax;",   // 0..1
+          "",
+          "float hash21(vec2 p) {",
+          "  p = fract(p * vec2(123.34, 345.45));",
+          "  p += dot(p, p + 34.345);",
+          "  return fract(p.x * p.y);",
+          "}",
+          "vec2 hash22(vec2 p) {",
+          "  float n = hash21(p);",
+          "  return vec2(n, hash21(p + n + 19.19));",
+          "}",
+          "float vnoise(vec2 p) {",
+          "  vec2 i = floor(p);",
+          "  vec2 f = fract(p);",
+          "  f = f * f * (3.0 - 2.0 * f);",
+          "  float a = hash21(i);",
+          "  float b = hash21(i + vec2(1.0, 0.0));",
+          "  float c = hash21(i + vec2(0.0, 1.0));",
+          "  float d = hash21(i + vec2(1.0, 1.0));",
+          "  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);",
+          "}",
+          "float fbm(vec2 p) {",
+          "  float value = 0.0;",
+          "  float amplitude = 0.55;",
+          "  mat2 turn = mat2(0.82, -0.57, 0.57, 0.82);",
+          "  for (int i = 0; i < 4; i++) {",
+          "    value += amplitude * vnoise(p);",
+          "    p = turn * p * 2.05 + vec2(17.13, 9.71);",
+          "    amplitude *= 0.49;",
+          "  }",
+          "  return value;",
+          "}",
+          "mat2 rot(float a) { float c = cos(a); float s = sin(a); return mat2(c, -s, s, c); }",
+          // Estrellas con centelleo lento: a alta frecuencia el cielo parpadea y canta.
+          "float starLayer(vec2 p, float scale, float gate, float speed) {",
+          "  vec2 grid = p * scale;",
+          "  vec2 id = floor(grid);",
+          "  vec2 cell = fract(grid) - 0.5;",
+          "  float seed = hash21(id);",
+          "  vec2 shift = (hash22(id + 7.31) - 0.5) * 0.7;",
+          "  float d = length(cell - shift);",
+          "  float core = (1.0 - smoothstep(0.0, 0.038, d)) * step(gate, seed);",
+          "  float halo = (1.0 - smoothstep(0.0, 0.13, d)) * step(0.994, seed) * 0.26;",
+          "  return (core + halo) * (0.93 + 0.07 * sin(uTime * speed + seed * 6.2831));",
+          "}",
+          // La zona donde viven las cartas se apaga aparte del atenuado general.
+          "float cardZone(vec2 p) {",
+          "  return 1.0 - smoothstep(0.26, 0.72, length(p * vec2(0.60, 1.30)));",
+          "}",
+          ""
+        ].join("\n");
+
+        /* ------------------------------------------------------------------ *
+         * A · Plano grabado
+         * ------------------------------------------------------------------ */
+        var VARIANT_A = [
+          // Rosa cardinal: cuatro puntas largas en N/E/S/O y cuatro diagonales.
+          "float roseField(vec2 q) {",
+          "  float r = length(q);",
+          "  float a = atan(q.y, q.x);",
+          "  float card = pow(abs(cos(a * 2.0)), 5.0);",
+          "  float diag = pow(abs(cos(a * 2.0 - 1.5707963)), 11.0) * 0.60;",
+          "  float reach = 0.62 * max(card, diag) + 0.035;",
+          "  float body = 1.0 - smoothstep(reach * 0.12, reach, r);",
+          "  float ring = exp(-pow((r - 0.34) * 17.0, 2.0)) * 0.45;",
+          "  float heart = exp(-pow(r * 8.0, 2.0)) * 0.7;",
+          "  return clamp(body + ring + heart, 0.0, 1.6);",
+          "}",
+          "void main() {",
+          "  vec2 uv = gl_FragCoord.xy / uRes;",
+          "  float aspect = uRes.x / uRes.y;",
+          "  vec2 p = (uv - 0.5) * vec2(aspect, 1.0);",
+          "",
+          "  float horizon = mix(0.60, 0.44, uBoard);",
+          "  float above = smoothstep(horizon - 0.012, horizon + 0.012, p.y);",
+          "  float depth = 1.0 / max(0.055, horizon - p.y);",
+          // Dos juegos de coordenadas: uno fijo al plano y otro que deriva. El grabado
+          // pertenece al plano, así que si viaja con la veta se aleja y desaparece.
+          "  vec2 planeStatic = vec2(p.x * depth * 1.05, depth);",
+          "  vec2 plane = planeStatic;",
+          "  plane.y -= uTime * mix(0.085, 0.040, uBoard) * (1.0 + uClimax * 1.3);",
+          "",
+          // La veta del tiempo: estrías finas rotas por ruido para que no sean una rejilla.
+          "  float grain = pow(0.5 + 0.5 * sin(plane.y * 23.0), 3.0);",
+          "  grain *= 0.30 + 0.70 * fbm(vec2(plane.x * 0.55, plane.y * 0.30));",
+          "  float veins = pow(0.5 + 0.5 * sin(plane.x * 3.1 + fbm(plane * 0.4) * 5.0), 6.0) * 0.5;",
+          "",
+          "  vec2 q = (planeStatic - vec2(0.34, 2.25)) * mix(0.88, 1.15, uBoard);",
+          "  float f0 = roseField(q);",
+          "  float bevel = (f0 - roseField(q + vec2(0.018, 0.014))) * 5.0;",
+          "",
+          "  vec3 deep = mix(vec3(0.016, 0.034, 0.040), vec3(0.044, 0.024, 0.020), uClimax);",
+          "  vec3 warm = mix(vec3(0.62, 0.50, 0.27), vec3(0.70, 0.35, 0.18), uClimax);",
+          "  vec3 color = deep;",
+          "  color += vec3(0.075, 0.115, 0.110) * grain * 1.05;",
+          "  color += vec3(0.040, 0.068, 0.066) * veins * 0.8;",
+          // Relieve apagado, no una flor dorada: el grabado sugiere, no protagoniza.
+          "  color += warm * max(0.0, bevel) * 0.16;",
+          "  color -= vec3(0.055, 0.050, 0.036) * max(0.0, -bevel) * 0.22;",
+          "  color += vec3(0.26, 0.38, 0.36) * f0 * 0.025;",
+          "",
+          // Bruma que come el plano hacia el horizonte.
+          "  float haze = smoothstep(horizon - 0.62, horizon - 0.02, p.y);",
+          "  color = mix(color, deep * 2.1, haze * 0.6);",
+          "",
+          // Cielo por encima del horizonte, con el instrumento sólo en el menú.
+          "  vec3 sky = deep * 0.8;",
+          "  sky += vec3(0.42, 0.55, 0.60) * starLayer(p * 1.4 + 3.1, 62.0, 0.984, 0.06) * 0.62;",
+          "  vec2 rp = (p - vec2(0.30, 0.30)) * vec2(1.0, 1.22);",
+          "  float rr = length(rp);",
+          "  float instrument = exp(-pow((rr - 0.26) * 62.0, 2.0)) * 1.0;",
+          "  instrument += exp(-pow((rr - 0.345) * 78.0, 2.0)) * 0.7",
+          "              * step(0.45, fract(atan(rp.y, rp.x) * 3.4 + uTime * 0.01));",
+          "  sky += vec3(0.30, 0.44, 0.44) * instrument * (1.0 - uBoard);",
+          "  float vortex = exp(-pow(length(p - vec2(-0.58, 0.28)) * 5.2, 2.0));",
+          "  sky += warm * vortex * 0.26 * (1.0 - uBoard);",
+          "  color = mix(color, sky, above);",
+          "",
+          "  color *= mix(1.0, 0.58, uBoard);",
+          "  color *= mix(1.0, mix(1.0, 0.34, cardZone(p)), uBoard);",
+          "  float vig = 1.0 - smoothstep(0.40, 1.02, length(p * vec2(0.76, 1.0)));",
+          "  color *= mix(0.62, 1.0, vig);",
+          "  gl_FragColor = vec4(pow(max(color, 0.0), vec3(0.90)), 1.0);",
+          "}"
+        ].join("\n");
+
+        /* ------------------------------------------------------------------ *
+         * B · Cielo profundo
+         * ------------------------------------------------------------------ */
+        var VARIANT_B = [
+          "void main() {",
+          "  vec2 uv = gl_FragCoord.xy / uRes;",
+          "  float aspect = uRes.x / uRes.y;",
+          "  vec2 p = (uv - 0.5) * vec2(aspect, 1.0);",
+          "  p = rot(uTime * 0.004) * p;",
+          "",
+          "  vec2 drift = vec2(uTime * 0.0026, -uTime * 0.0016) * (1.0 + uClimax);",
+          "  vec2 warp = vec2(fbm(p * 1.42 + drift + 3.7), fbm(p * 1.42 - drift + 11.9)) - 0.5;",
+          "  vec2 q = p + warp * 0.19;",
+          "  float broad = fbm(q * 1.70 + drift * 0.7);",
+          "  float folds = fbm(q * 3.84 - drift * 1.3 + 23.4);",
+          "  float edgeBias = smoothstep(0.10, 0.76, length(p - vec2(-0.10, 0.03)));",
+          "  float nebula = smoothstep(0.52, 0.89, broad + folds * 0.19) * mix(0.18, 0.86, edgeBias);",
+          "  float vein = smoothstep(0.66, 0.92, folds) * nebula;",
+          "  float swallowing = smoothstep(0.30, 0.74, fbm(q * 2.44 + vec2(4.9, 26.1)));",
+          "",
+          "  vec3 color = vec3(0.0010, 0.0026, 0.0072);",
+          "  color += vec3(0.004, 0.014, 0.032) * (0.14 + broad * 0.48);",
+          "  color += mix(vec3(0.014, 0.062, 0.084), vec3(0.070, 0.030, 0.024), uClimax) * nebula * 0.78;",
+          "  color += vec3(0.016, 0.13, 0.16) * vein * 0.32;",
+          "  color += vec3(0.13, 0.028, 0.016) * smoothstep(0.80, 0.96, fbm(q * 6.1 + 31.2)) * (0.18 + uClimax * 0.5);",
+          "  color *= mix(0.30, 1.0, swallowing);",
+          "",
+          "  color += vec3(0.46, 0.59, 0.66) * starLayer(p + warp * 0.035, 72.0, 0.980, 0.055) * 0.50;",
+          "  color += vec3(0.12, 0.28, 0.36) * starLayer(p * 1.02 - warp * 0.025 + 5.3, 139.0, 0.9955, 0.038) * 0.42;",
+          "  color += vec3(0.42, 0.24, 0.13) * starLayer(p - warp * 0.02 + 13.7, 96.0, 0.9975, 0.026) * 0.34;",
+          "",
+          "  float r = length(p - vec2(0.03, -0.04));",
+          "  color *= mix(1.0, 0.34, 1.0 - smoothstep(0.10, 0.52, r + warp.x * 0.12));",
+          "",
+          "  color *= mix(1.0, 0.52, uBoard);",
+          "  color *= mix(1.0, mix(1.0, 0.28, cardZone(p)), uBoard);",
+          "  float vig = 1.0 - smoothstep(0.40, 1.0, length(p * vec2(0.76, 1.0)));",
+          "  color *= mix(0.44, 1.0, vig);",
+          "  gl_FragColor = vec4(pow(max(color, 0.0), vec3(0.94)), 1.0);",
+          "}"
+        ].join("\n");
+
+        /* ------------------------------------------------------------------ *
+         * C · Nebulosa y luciérnagas
+         * ------------------------------------------------------------------ */
+        var VARIANT_C = [
+          // Motas que vagan en curvas propias y respiran. No parpadean en su sitio:
+          // cada celda tiene su deriva, su ritmo y su fase.
+          "float fireflies(vec2 p, float scale, float speed, float off) {",
+          "  vec2 g = p * scale;",
+          "  vec2 id = floor(g);",
+          "  vec2 cell = fract(g) - 0.5;",
+          "  float seed = hash21(id + off);",
+          "  if (seed < 0.93) return 0.0;",
+          "  float k = 0.5 + seed;",
+          "  vec2 wander = 0.34 * vec2(",
+          "    sin(uTime * speed * k + seed * 31.0),",
+          "    cos(uTime * speed * (k * 0.82) + seed * 17.0)",
+          "  );",
+          "  vec2 offset = (hash22(id + 5.13) - 0.5) * 0.46 + wander;",
+          "  float d = length(cell - offset);",
+          "  float core = exp(-d * d * 320.0);",
+          "  float halo = exp(-d * d * 30.0) * 0.22;",
+          "  float breath = 0.30 + 0.70 * pow(0.5 + 0.5 * sin(uTime * (0.28 + seed * 0.4) + seed * 44.0), 2.2);",
+          "  return (core + halo) * breath;",
+          "}",
+          "void main() {",
+          "  vec2 uv = gl_FragCoord.xy / uRes;",
+          "  float aspect = uRes.x / uRes.y;",
+          "  vec2 p = (uv - 0.5) * vec2(aspect, 1.0);",
+          "  p = rot(uTime * 0.0055) * p;",
+          "",
+          // El campo de deformación se advecta: las nubes se revuelven, no se deslizan.
+          "  vec2 flow = vec2(uTime * 0.020, -uTime * 0.014) * (1.0 + uClimax * 0.8);",
+          "  vec2 warp = vec2(",
+          "    fbm(p * 1.32 + vec2(0.0, uTime * 0.022) + 3.7),",
+          "    fbm(p * 1.32 + vec2(uTime * 0.018, 0.0) + 11.9)",
+          "  ) - 0.5;",
+          "  vec2 q = p + warp * 0.36 + flow * 0.4;",
+          "  q += 0.12 * (vec2(fbm(q * 2.3 - flow), fbm(q * 2.3 + flow + 6.1)) - 0.5);",
+          "",
+          "  float broad = fbm(q * 1.62);",
+          "  float folds = fbm(q * 3.70 + 23.4);",
+          "  float edgeBias = smoothstep(0.10, 0.74, length(p - vec2(-0.08, 0.02)));",
+          "  float breathe = 0.92 + 0.08 * sin(uTime * 0.10);",
+          "  float nebula = smoothstep(0.49, 0.87, broad + folds * 0.23) * mix(0.24, 1.0, edgeBias) * breathe;",
+          "  float vein = smoothstep(0.60, 0.90, folds) * nebula;",
+          "  float dust = smoothstep(0.70, 0.95, fbm(q * 5.8 + vec2(31.2, 15.7))) * edgeBias;",
+          "",
+          "  vec3 teal = mix(vec3(0.026, 0.20, 0.24), vec3(0.16, 0.09, 0.09), uClimax);",
+          "  vec3 gold = mix(vec3(0.72, 0.50, 0.18), vec3(0.78, 0.31, 0.14), uClimax);",
+          "  vec3 color = vec3(0.0024, 0.0062, 0.017);",
+          "  color += vec3(0.006, 0.024, 0.058) * (0.22 + broad * 0.62);",
+          "  color += teal * nebula * 0.92;",
+          "  color += vec3(0.036, 0.34, 0.36) * vein * 0.38;",
+          "  color += gold * dust * 0.26;",
+          "",
+          "  vec2 near = rot(uTime * 0.012) * p + vec2(uTime * 0.0040, -uTime * 0.0015);",
+          "  vec2 mid = rot(uTime * 0.007) * p * 1.02 + 5.3;",
+          "  vec2 far = rot(uTime * 0.003) * p + 13.7;",
+          "  color += vec3(0.72, 0.90, 1.0) * starLayer(near, 74.0, 0.970, 0.055) * 0.60;",
+          "  color += vec3(0.32, 0.72, 1.0) * starLayer(mid, 142.0, 0.992, 0.038) * 0.44;",
+          "  color += vec3(1.0, 0.66, 0.24) * starLayer(far, 97.0, 0.995, 0.026) * 0.42;",
+          "",
+          "  float glow = fireflies(p + warp * 0.05, 9.0, 0.10, 0.0)",
+          "             + fireflies(p * 1.7 - warp * 0.04 + 8.2, 15.0, 0.07, 21.3) * 0.7;",
+          "  color += mix(vec3(1.0, 0.80, 0.36), vec3(0.55, 0.95, 0.78), 0.35) * glow * 0.85;",
+          "",
+          "  color *= mix(1.0, 0.46, uBoard);",
+          "  color *= mix(1.0, mix(1.0, 0.26, cardZone(p)), uBoard);",
+          "  float vig = 1.0 - smoothstep(0.40, 1.0, length(p * vec2(0.76, 1.0)));",
+          "  color *= mix(0.46, 1.0, vig);",
+          "  gl_FragColor = vec4(pow(max(color, 0.0), vec3(0.92)), 1.0);",
+          "}"
+        ].join("\n");
+
+        /* ------------------------------------------------------------------ *
+         * Programas
+         * ------------------------------------------------------------------ */
+        var VERTEX = "attribute vec2 a_position; void main() { gl_Position = vec4(a_position, 0.0, 1.0); }";
+
+        function compile(type, source) {
+          var shader = gl.createShader(type);
+          gl.shaderSource(shader, source);
+          gl.compileShader(shader);
+          if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            throw new Error(gl.getShaderInfoLog(shader) || "shader");
+          }
+          return shader;
+        }
+
+        function build(fragmentBody) {
+          var program = gl.createProgram();
+          gl.attachShader(program, compile(gl.VERTEX_SHADER, VERTEX));
+          gl.attachShader(program, compile(gl.FRAGMENT_SHADER, PRELUDE + fragmentBody));
+          gl.linkProgram(program);
+          if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            throw new Error(gl.getProgramInfoLog(program) || "link");
+          }
+          return {
+            program: program,
+            uRes: gl.getUniformLocation(program, "uRes"),
+            uTime: gl.getUniformLocation(program, "uTime"),
+            uBoard: gl.getUniformLocation(program, "uBoard"),
+            uClimax: gl.getUniformLocation(program, "uClimax"),
+            position: gl.getAttribLocation(program, "a_position")
+          };
+        }
+
+        var programs;
+        try {
+          programs = [build(VARIANT_A), build(VARIANT_B), build(VARIANT_C)];
+        } catch (error) {
+          canvas.style.display = "none";
+          return;
+        }
+
+        var buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+
+        var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var startedAt = performance.now();
+        var boardMix = 0;
+        var climaxMix = 0;
+
+        function frame(now) {
+          var active = programs[variant];
+          var rect = canvas.getBoundingClientRect();
+          var ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+          var width = Math.max(2, Math.round(rect.width * ratio));
+          var height = Math.max(2, Math.round(rect.height * ratio));
+          if (canvas.width !== width || canvas.height !== height) {
+            canvas.width = width;
+            canvas.height = height;
+          }
+
+          // Los cambios de contexto y estado se interpolan: un salto seco
+          // impide comparar y además delata el conmutador.
+          boardMix += (context - boardMix) * 0.09;
+          climaxMix += (climax - climaxMix) * 0.06;
+
+          gl.viewport(0, 0, width, height);
+          gl.useProgram(active.program);
+          gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+          gl.enableVertexAttribArray(active.position);
+          gl.vertexAttribPointer(active.position, 2, gl.FLOAT, false, 0, 0);
+          gl.uniform2f(active.uRes, width, height);
+          gl.uniform1f(active.uTime, reducedMotion ? 8 : (now - startedAt) / 1000);
+          gl.uniform1f(active.uBoard, boardMix);
+          gl.uniform1f(active.uClimax, climaxMix);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+          requestAnimationFrame(frame);
+        }
+
+        function syncGroup(attribute, value) {
+          var nodes = document.querySelectorAll("[" + attribute + "]");
+          for (var i = 0; i < nodes.length; i++) {
+            nodes[i].setAttribute("aria-pressed", Number(nodes[i].getAttribute(attribute)) === value ? "true" : "false");
+          }
+        }
+
+        function apply() {
+          syncGroup("data-variant", variant);
+          syncGroup("data-context", context);
+          menuLayer.classList.toggle("on", context === 0);
+          boardLayer.classList.toggle("on", context === 1);
+          caption.innerHTML = CAPTIONS[variant];
+        }
+
+        document.addEventListener("click", function (event) {
+          var node = event.target.closest ? event.target.closest("button") : null;
+          if (!node) return;
+          if (node.hasAttribute("data-variant")) {
+            variant = Number(node.getAttribute("data-variant"));
+            apply();
+          } else if (node.hasAttribute("data-context")) {
+            context = Number(node.getAttribute("data-context"));
+            apply();
+          } else if (node === climaxButton) {
+            climax = climax ? 0 : 1;
+            climaxButton.setAttribute("aria-pressed", climax ? "true" : "false");
+          }
+        });
+
+        apply();
+        requestAnimationFrame(frame);
+      })();
+    </script>
+  </body>
+</html>
