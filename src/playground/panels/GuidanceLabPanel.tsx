@@ -1,11 +1,20 @@
-import { useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   guidedBeatBarrier,
   guidedPresentationActivity,
   guidedPresentationBlockers,
   guidedSessionStore,
 } from "../../guidance";
+import { gameplaySignalStream } from "../../guidance/gameplaySignals";
+import {
+  contextualConceptRegistry,
+  contextualTutorialRuntime,
+} from "../../guidance/contextualProductRuntime";
 import { useGameStore } from "../../store/useGameStore";
+import {
+  CONTEXTUAL_GUIDANCE_LAB_CONCEPTS,
+  CONTEXTUAL_GUIDANCE_LAB_SCOPE,
+} from "../contextualGuidanceLab";
 
 const subscribeSession = (listener: () => void) => guidedSessionStore.subscribe(listener);
 const readSession = () => guidedSessionStore.snapshot();
@@ -13,14 +22,67 @@ const subscribeActivity = (listener: () => void) => guidedPresentationActivity.s
 const readActivity = () => guidedPresentationActivity.snapshot();
 const subscribeBarrier = (listener: () => void) => guidedBeatBarrier.subscribe(listener);
 const readBarrier = () => guidedBeatBarrier.snapshot();
+const subscribeContextual = (listener: () => void) => contextualTutorialRuntime.subscribe(listener);
+const readContextual = () => contextualTutorialRuntime.snapshot();
 
 export function GuidanceLabPanel({ onStart, onStop }: { onStart: () => void; onStop: () => void }) {
   const gameStore = useGameStore();
   const session = useSyncExternalStore(subscribeSession, readSession, readSession);
   const activity = useSyncExternalStore(subscribeActivity, readActivity, readActivity);
   const barrier = useSyncExternalStore(subscribeBarrier, readBarrier, readBarrier);
+  const contextual = useSyncExternalStore(subscribeContextual, readContextual, readContextual);
+  const [preventiveArmed, setPreventiveArmed] = useState(false);
   const blockers = guidedPresentationBlockers(gameStore, activity);
   const allowedIntent = session.currentStep?.kind === "act" ? session.currentStep.allowedIntent : undefined;
+
+  useEffect(() => {
+    contextualConceptRegistry.setScope(
+      CONTEXTUAL_GUIDANCE_LAB_SCOPE,
+      preventiveArmed ? CONTEXTUAL_GUIDANCE_LAB_CONCEPTS : CONTEXTUAL_GUIDANCE_LAB_CONCEPTS.slice(0, 2),
+    );
+    return () => contextualConceptRegistry.clearScope(CONTEXTUAL_GUIDANCE_LAB_SCOPE);
+  }, [preventiveArmed]);
+
+  useEffect(() => () => {
+    contextualTutorialRuntime.rollbackProvisional();
+    contextualTutorialRuntime.setProgressMode("immediate");
+  }, []);
+
+  const resetContextualFixture = () => {
+    onStop();
+    contextualTutorialRuntime.rollbackProvisional();
+    contextualTutorialRuntime.beginSession(gameplaySignalStream.snapshot().sessionId, "provisional");
+  };
+
+  const emitReserve = () => {
+    resetContextualFixture();
+    gameplaySignalStream.publish({ kind: "player.reserveReleased", amount: 3 });
+  };
+
+  const emitStabilizing = () => {
+    const cardId = gameStore.game.player.field[0]?.instanceId ?? gameStore.game.player.hand[0]?.instanceId;
+    if (!cardId) return;
+    resetContextualFixture();
+    gameplaySignalStream.publish({
+      kind: "action.denied",
+      intent: { kind: "combat.toggleAttacker", cardId, selected: true },
+      code: "STABILIZING",
+      reason: "Synthetic Guidance Lab rejection.",
+    });
+  };
+
+  const emitSimultaneous = () => {
+    const cardId = gameStore.game.player.field[0]?.instanceId ?? gameStore.game.player.hand[0]?.instanceId;
+    if (!cardId) return;
+    resetContextualFixture();
+    gameplaySignalStream.publish({ kind: "player.reserveReleased", amount: 3 });
+    gameplaySignalStream.publish({
+      kind: "action.denied",
+      intent: { kind: "combat.toggleAttacker", cardId, selected: true },
+      code: "STABILIZING",
+      reason: "Synthetic Guidance Lab rejection.",
+    });
+  };
 
   return (
     <div className="playground-panel">
@@ -91,6 +153,39 @@ export function GuidanceLabPanel({ onStart, onStop }: { onStart: () => void; onS
           {session.errorMessage && <div className="playground-empty">{session.errorMessage}</div>}
         </section>
       )}
+
+      <section className="playground-group">
+        <header className="playground-group-head">
+          <span className="playground-group-title">Contextual runtime</span>
+          <span className="playground-group-badge">{contextual.status}</span>
+        </header>
+        <p className="playground-empty">
+          Synthetic semantic signals exercise priority, dedupe and the non-blocking callout on the real Board.
+        </p>
+        <dl className="playground-guidance-readout">
+          <div><dt>Active</dt><dd>{contextual.active?.conceptId ?? "—"}</dd></div>
+          <div><dt>Queue</dt><dd>{contextual.queue.join(", ") || "—"}</dd></div>
+          <div><dt>Ledger</dt><dd>{contextual.provisionalConcepts.join(", ") || "—"}</dd></div>
+        </dl>
+        <div className="playground-button-row">
+          <button className="playground-button" type="button" onClick={emitReserve}>Emit Reserve</button>
+          <button className="playground-button" type="button" onClick={emitStabilizing}>Emit rejection</button>
+          <button className="playground-button is-primary" type="button" onClick={emitSimultaneous}>Emit both</button>
+        </div>
+        <div className="playground-button-row">
+          <button
+            className={`playground-button ${preventiveArmed ? "is-primary" : ""}`}
+            type="button"
+            onClick={() => {
+              resetContextualFixture();
+              setPreventiveArmed((armed) => !armed);
+            }}
+          >
+            {preventiveArmed ? "Preventive armed" : "Arm preventive"}
+          </button>
+          <button className="playground-button" type="button" onClick={resetContextualFixture}>Reset context</button>
+        </div>
+      </section>
     </div>
   );
 }

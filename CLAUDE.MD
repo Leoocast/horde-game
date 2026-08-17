@@ -578,10 +578,11 @@ guiada actual como tutorial específico **Preparación** y crear un tutorial pri
 de Elarion contra los Sinsepulcro con seed preparada y ayudas contextuales. **Aprender a jugar** será
 el tutorial obligatorio y **Preparación** será opcional; ambos podrán repetirse desde **Cómo jugar**.
 El rediseño de producto todavía no está entregado; hasta que se complete el recorrido, el producto
-sigue ejecutando la revisión 4 requerida de `first-seed`. La Fase 1 técnica sí quedó implementada el
-2026-08-17: existe un stream semántico pasivo por sesión que observa también partidas normales, y el
-motor tipa los rechazos necesarios para límite de Fuentes, Acción de Fuente usada,
-Estabilizándose, Agotado, Volar/Guardia aérea, Furtivo, defensor ya asignado y fase incorrecta. El
+sigue ejecutando la revisión 4 requerida de `first-seed`. Las Fases 1 y 2 técnicas quedaron
+implementadas el 2026-08-17: existe un stream semántico pasivo por sesión que observa también
+partidas normales, y el motor tipa los rechazos necesarios para límite de Fuentes, Acción de Fuente
+usada, Estabilizándose, Agotado, Volar/Guardia aérea, Furtivo, defensor ya asignado y fase
+incorrecta. El
 prólogo queda diseñado desde el cold open hasta una derrota predeterminada: la primera Oleada usa
 ramas equivalentes de Ladrones, Titán y Soldado; el turno posterior enseña Mano vacía y Devolver
 Fuente; y el cierre authored calcula el mejor resultado defensivo antes de Invocar un Titán y los
@@ -606,8 +607,16 @@ runtime/progreso por concepto, director efímero de **Aprender a jugar** y catá
 builder exacto, anchors, barrera de presentación y overlay estricto se reutilizan. Los receipts
 guiados ahora alimentan el stream mediante un adaptador y las transiciones comprometidas proyectan
 turno, robo, Reserva, Fuentes preparadas, revelados, Oleada, orden de ataque, Vida y resultado sin
-leer el log. El overlay estricto todavía no representa una ayuda contextual. Las ayudas observadas no bloquean, las preventivas interceptan sólo la acción
-relevante y las imprescindibles reutilizan la guía actual. El plan se ejecuta fase por fase con
+leer el log. `ContextualTutorialRuntime` evalúa un registro de conceptos, ordena por prioridad,
+deduplica por partida y revalida el contexto antes de presentar. Su callout reutiliza anchors,
+geometría y glosario sin instalar el escudo global; las ayudas informativas y reactivas no bloquean,
+las preventivas interceptan sólo la acción relevante y nunca compiten con una sesión guiada
+estricta. El progreso `hostfall-guided-progress` v2 migra v1, conserva finalizaciones de lecciones y
+añade conceptos, recorridos y la preferencia global de repetición. En partidas normales el concepto
+se confirma al cerrar la ayuda; el modo provisional permite commit atómico o rollback total para el
+futuro prólogo. El registro release sigue vacío: el Playground instala fixtures sintéticos en un
+scope de desarrollo y el contenido real se authora en fases posteriores. Las ayudas imprescindibles
+reutilizan la guía actual. El plan se ejecuta fase por fase con
 aprobación explícita. Para una fase posterior siguen pendientes la Mano/mulligan, seed, dificultad y
 Preparación de la partida real; el comportamiento de primera apertura y perfiles existentes; y la
 persistencia exacta si la aplicación se cierra durante el vórtice.

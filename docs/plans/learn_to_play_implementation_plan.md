@@ -1,7 +1,7 @@
 # Auditoría y plan por fases — Aprender a jugar y ayudas contextuales
 
-Estado: **auditoría técnica completada; Fase 1 de observabilidad implementada y verificada; primer
-corte fijado hasta la derrota y la aparición de su CTA; handoff y partida posterior aplazados**.
+Estado: **auditoría técnica completada; Fases 1 y 2 implementadas y verificadas; primer corte fijado
+hasta la derrota y la aparición de su CTA; handoff y partida posterior aplazados**.
 
 Última actualización: **2026-08-17**.
 
@@ -457,6 +457,9 @@ Estado: **completada el 2026-08-17**.
 vez.
 
 ### Fase 2 — Runtime contextual y progreso
+
+**Estado: completada el 2026-08-17.** El runtime y el callout son infraestructura genérica; el
+registro de producto permanece vacío hasta authorar los conceptos del prólogo en fases posteriores.
 
 - Crear registro de conceptos, evaluador, cola, prioridad, deduplicación y revalidación.
 - Implementar políticas informativa, preventiva y reactiva; la política guiada sigue usando el

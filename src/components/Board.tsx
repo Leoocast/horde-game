@@ -44,6 +44,7 @@ import { FinalBanquetAnimator } from "./FinalBanquetAnimator";
 import { RootsTouchedSkyAnimator } from "./RootsTouchedSkyAnimator";
 import { EnergyFlowAnimator } from "./EnergyFlowAnimator";
 import { GuidedTutorialOverlay } from "./GuidedTutorialOverlay";
+import { ContextualTutorialCallout } from "./ContextualTutorialCallout";
 import { useHiddenDefenseLinkIds } from "./useDefenseLinkVisibility";
 import { IS_DEV } from "../utils/devMode";
 import { guidedPresentationActivity } from "../guidance";
@@ -459,6 +460,7 @@ export function Board({
           a ocupar los bordes. La espera es independiente del final completo del shader. */}
       {!overtureHandPending && <OpeningHandOverlay game={game} />}
       <GuidedTutorialOverlay />
+      <ContextualTutorialCallout />
 
       {sessionKind === "normal" && defeatReady && onRewriteFuture && onContemplateFuture && (
         <DefeatModal

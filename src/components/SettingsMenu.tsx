@@ -1,8 +1,9 @@
 import { AlertTriangle, Crown, Home, RefreshCcw, Settings, Skull, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
+import { guidedProgressStore } from "../guidance/progress";
 import { AudioControls } from "./AudioControls";
 import { DisplayControls } from "./DisplayControls";
 import { GameLog } from "./GameLog";
@@ -28,6 +29,11 @@ export function SettingsMenu({ onReturnToMenu, onRestartTutorial, sessionKind = 
   const [showRestartConfirmation, setShowRestartConfirmation] = useState(false);
   const restartPresence = useAnimatedPresence(showRestartConfirmation, 190);
   const tutorial = sessionKind === "tutorial";
+  const guidanceProgress = useSyncExternalStore(
+    (listener) => guidedProgressStore.subscribe(listener),
+    () => guidedProgressStore.snapshot(),
+    () => guidedProgressStore.snapshot(),
+  );
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -100,6 +106,21 @@ export function SettingsMenu({ onReturnToMenu, onRestartTutorial, sessionKind = 
                 <LanguageSelector variant="panel" />
                 <AudioControls />
                 <DisplayControls />
+
+                <section className="old-panel-soft p-4">
+                  <div className="game-settings-section-title">{t("guided.contextual.settingsTitle")}</div>
+                  <label className="contextual-help-preference mt-3">
+                    <input
+                      type="checkbox"
+                      checked={guidanceProgress.preferences.hideSeenContextualHelp}
+                      onChange={(event) => guidedProgressStore.setHideSeenContextualHelp(event.currentTarget.checked)}
+                    />
+                    <span>
+                      <strong>{t("guided.contextual.hideSeenLabel")}</strong>
+                      <small>{t("guided.contextual.hideSeenBody")}</small>
+                    </span>
+                  </label>
+                </section>
 
                 {!tutorial && <ZoneDrawer game={game} />}
 

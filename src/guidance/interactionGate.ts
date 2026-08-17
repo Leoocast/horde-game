@@ -7,6 +7,7 @@ import type {
   GuidedReceiptSpec,
 } from "./contracts";
 import { gameplaySignalStream } from "./gameplaySignals";
+import { contextualIntentGate } from "./contextualIntentGate";
 
 /** Public GameStore methods that represent a deliberate, rule-affecting player choice. */
 export const GUIDED_GAMEPLAY_ENTRY_POINTS = [
@@ -289,14 +290,21 @@ export const guidedInteractionGate = new GuidedInteractionGate();
 
 export function gameplayIntentAllowed(intent: GameplayIntent): boolean {
   const origin = guidedInteractionGate.systemActionActive() ? "system" : "player";
-  const authorization = guidedInteractionGate.authorize(intent);
+  const guidedAuthorization = guidedInteractionGate.authorize(intent);
+  const contextualAuthorization = guidedAuthorization.allowed && origin === "player"
+    ? contextualIntentGate.authorize(intent)
+    : { allowed: true as const };
   gameplaySignalStream.publish({
     kind: "intent.attempted",
     intent,
     origin,
-    authorization: authorization.allowed ? "allowed" : "guided-blocked",
+    authorization: !guidedAuthorization.allowed
+      ? "guided-blocked"
+      : !contextualAuthorization.allowed
+      ? "contextual-blocked"
+      : "allowed",
   });
-  return authorization.allowed;
+  return guidedAuthorization.allowed && contextualAuthorization.allowed;
 }
 
 export function publishGameplayReceipt(

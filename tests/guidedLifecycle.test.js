@@ -19,12 +19,12 @@ test("guided progress persists completion only and never an active session", () 
   assert.equal(store.markCompleted("first-seed", 1, "2026-08-12T00:00:00.000Z"), false);
 
   const snapshot = store.snapshot();
-  assert.deepEqual(Object.keys(snapshot), ["kind", "formatVersion", "completions"]);
+  assert.deepEqual(Object.keys(snapshot), ["kind", "formatVersion", "completions", "journeys", "concepts", "preferences"]);
   assert.deepEqual(Object.keys(snapshot.completions[0]), ["lessonId", "completedRevision", "completedAt"]);
   assert.equal("stepId" in snapshot, false);
   assert.equal("game" in snapshot, false);
   assert.deepEqual(parseGuidedProgress(JSON.parse(JSON.stringify(snapshot))), snapshot);
-  assert.equal(parseGuidedProgress({ ...snapshot, formatVersion: 2 }), undefined);
+  assert.equal(parseGuidedProgress({ ...snapshot, formatVersion: 3 }), undefined);
 });
 
 test("required entry is revision-aware while optional lessons never gate Play", () => {
