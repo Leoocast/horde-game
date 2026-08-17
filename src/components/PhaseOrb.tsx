@@ -1,4 +1,5 @@
 import { Check, FastForward, Shield, Swords, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { canAttack, hasTrait } from "../engine/Traits";
 import { useAudioStore } from "../store/useAudioStore";
@@ -9,7 +10,7 @@ import { setupPrimaryAction } from "./setupPresentation";
 import { runGuidedSystemAction } from "../guidance/interactionGate";
 import { guidedAnchorRegistry, guidedSurfaceAnchorKey } from "../guidance/anchorRegistry";
 
-export function PhaseOrb({ game }: { game: GameState }) {
+export function PhaseOrb({ game, hostStartDelayMs = 0 }: { game: GameState; hostStartDelayMs?: number }) {
   const t = useTranslation();
   const playSfx = useAudioStore((state) => state.playSfx);
   const advancePhase = useGameStore((state) => state.advancePhase);
@@ -35,6 +36,8 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const pendingTriggeredEffectCount = useGameStore((state) => state.pendingTriggeredEffectCount);
   const hostAutoTriggerCount = useGameStore((state) => state.hostAutoTriggerCount);
   const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
+  const [hostStartPending, setHostStartPending] = useState(false);
+  const hostStartTimerRef = useRef<number | undefined>(undefined);
   const targetingActive = useGameStore((state) => Boolean(state.counterTargeting || state.spellTargeting || state.tributeOfTheFourSorrowsSelection));
   const attackAnimating = hostAttackAnimating || playerAttackAnimating || hostMillAnimating || playerDiscardAnimating || burnAnimating || lifePaymentAnimating || bloodPactAnimating || drainEssenceAnimating || energyFlowAnimating || resolvingHostCombat;
   const defendBlockedReason = getDefendBlockedReason(game, t);
@@ -45,23 +48,41 @@ export function PhaseOrb({ game }: { game: GameState }) {
     playerAutoTriggerCount,
     t,
   );
-  const orbDisabled = Boolean(game.winner) || attackAnimating || Boolean(actionBlockedReason);
+  const orbDisabled = Boolean(game.winner) || attackAnimating || hostStartPending || Boolean(actionBlockedReason);
   const hasAssignedBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
   const showCancelDefense = game.activeSide === "host" && game.combat.hostAttackers.length > 0 && hasAssignedBlocks;
   const showCancelAttack = game.activeSide === "player" && game.phase === "combat" && game.combat.playerAttackers.length > 0;
   const showAttackAll = game.activeSide === "player" && game.phase === "combat" && hasAvailableAttackers(game);
+  useEffect(() => () => window.clearTimeout(hostStartTimerRef.current), []);
+
+  const beginHostAfterAuthoredPause = () => {
+    const begin = () => {
+      setHostStartPending(false);
+      const latest = useGameStore.getState().game;
+      if (latest.activeSide === "host" && latest.phase === "host") {
+        runGuidedSystemAction(() => useGameStore.getState().runHostMain());
+      }
+    };
+    if (hostStartDelayMs <= 0) {
+      begin();
+      return;
+    }
+    setHostStartPending(true);
+    window.clearTimeout(hostStartTimerRef.current);
+    hostStartTimerRef.current = window.setTimeout(begin, hostStartDelayMs);
+  };
   const finishPlayerTurnAndRunHost = () => {
     endPlayerTurn({ runHostAfter: true });
     const latest = useGameStore.getState().game;
     if (latest.activeSide === "host" && latest.phase === "host") {
-      runGuidedSystemAction(() => useGameStore.getState().runHostMain());
+      beginHostAfterAuthoredPause();
     }
   };
   const finishSetupAndRunHost = () => {
     endPlayerTurn({ runHostAfter: true });
     const latest = useGameStore.getState().game;
     if (latest.activeSide === "host" && latest.phase === "host") {
-      runGuidedSystemAction(() => useGameStore.getState().runHostMain());
+      beginHostAfterAuthoredPause();
     }
   };
 

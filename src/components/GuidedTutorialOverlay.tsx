@@ -11,6 +11,7 @@ import { createPortal } from "react-dom";
 import {
   guidedAnchorRegistry,
   guidedConnectorPath,
+  guidedDirectionalCueBounds,
   guidedDomTargetAllowed,
   guidedGlossarySegments,
   guidedInteractionGate,
@@ -82,6 +83,7 @@ export function GuidedTutorialOverlay() {
   const comparisonExpected = session.currentStep?.presentation?.kind === "cardComparison"
     ? session.currentStep.presentation.cardAliases.length
     : 0;
+  const presentation = session.currentStep?.presentation;
   const missingAnchor = unboundHighlight
     || comparisonCards.length < comparisonExpected
     || resolved.some((anchor) => !anchor.element)
@@ -90,6 +92,8 @@ export function GuidedTutorialOverlay() {
     && session.currentStep.allowedIntent.kind === "phase.continueSetup";
   const showCallout = session.currentStep?.callout !== "hidden"
     && dismissedActionCalloutStepId !== session.currentStep?.id;
+  const showSilentSpotlight = presentation?.kind === "spotlight";
+  const isLearnToPlay = session.lessonId?.startsWith("learn-to-play.") ?? false;
 
   useEffect(() => {
     setDismissedActionCalloutStepId(undefined);
@@ -311,7 +315,7 @@ export function GuidedTutorialOverlay() {
 
   if (!active || !session.currentStep || !session.mode || typeof document === "undefined") return null;
 
-  const connectorPath = guidedConnectorPath(rects);
+  const connectorPath = presentation?.kind === "directionalCue" ? undefined : guidedConnectorPath(rects);
   const calloutPosition = placeGuidedCallout(viewport, calloutSize, missingAnchor ? [] : rects);
   const title = missingAnchor ? t("guided.anchorMissingTitle") : t(session.currentStep.copy.titleKey);
   const body = missingAnchor ? t("guided.anchorMissingBody") : t(session.currentStep.copy.bodyKey);
@@ -324,6 +328,10 @@ export function GuidedTutorialOverlay() {
   const cardPreviewVisible = session.currentStep.highlights.some(
     (highlight) => highlight.kind === "surface" && highlight.anchor === "card.preview",
   );
+  const directionalTarget = presentation?.kind === "directionalCue"
+    ? rects.find((rect) => rect.role === "origin") ?? rects[0]
+    : undefined;
+  const directionalBounds = directionalTarget ? guidedDirectionalCueBounds(directionalTarget) : undefined;
 
   return createPortal(
     <div
@@ -332,6 +340,7 @@ export function GuidedTutorialOverlay() {
         "guided-tutorial-overlay",
         feedback ? "has-rejection" : "",
         comparisonCards.length > 0 ? "has-card-comparison" : "",
+        isLearnToPlay ? "is-learn-to-play" : "",
       ].join(" ")}
       data-mode={session.mode}
       data-step-id={session.currentStep.id}
@@ -358,21 +367,44 @@ export function GuidedTutorialOverlay() {
             )}
           </svg>
 
-          {!missingAnchor && rects.map((rect) => (
-            <span
-              key={`${rect.key}:${rect.role}:${feedbackPulse}`}
-              className={["guided-tutorial-ring", feedback ? "is-rejected" : ""].join(" ")}
-              data-anchor-key={rect.key}
-              data-anchor-role={rect.role}
-              style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
-              aria-hidden="true"
-            />
-          ))}
         </>
       )}
 
+      {(showCallout || showSilentSpotlight) && !missingAnchor && presentation?.kind !== "directionalCue" && rects.map((rect) => (
+        <span
+          key={`${rect.key}:${rect.role}:${feedbackPulse}`}
+          className={["guided-tutorial-ring", feedback ? "is-rejected" : ""].join(" ")}
+          data-anchor-key={rect.key}
+          data-anchor-role={rect.role}
+          data-tone={showSilentSpotlight ? presentation.tone : undefined}
+          style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
+          aria-hidden="true"
+        />
+      ))}
+
+      {presentation?.kind === "directionalCue" && directionalBounds && !missingAnchor && (
+        <span
+          className="guided-tutorial-directional-cue"
+          data-tone={presentation.tone}
+          data-direction={presentation.direction}
+          style={directionalBounds}
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 48 140" preserveAspectRatio="none">
+            <path className="guided-tutorial-directional-shaft" d="M24 132 L24 22" />
+            <path className="guided-tutorial-directional-head" d="M10 38 L24 18 L38 38" />
+          </svg>
+        </span>
+      )}
+
       {showCallout && !missingAnchor && comparisonCards.length > 0 && (
-        <GuidedCardComparison cards={comparisonCards} />
+        <GuidedCardComparison
+          cards={comparisonCards}
+          game={game}
+          emphasis={presentation?.kind === "cardComparison"
+            ? presentation.emphasis
+            : "energyCost"}
+        />
       )}
 
       {showCallout && (
@@ -388,10 +420,12 @@ export function GuidedTutorialOverlay() {
         data-guided-overlay-control="true"
       >
         <span className="guided-tutorial-callout-mark" aria-hidden="true" />
-        <div className="guided-tutorial-step">
-          <span>{modeLabel}</span>
-          {session.currentStepIndex && session.stepCount && <b>{session.currentStepIndex} / {session.stepCount}</b>}
-        </div>
+        {!isLearnToPlay && (
+          <div className="guided-tutorial-step">
+            <span>{modeLabel}</span>
+            {session.currentStepIndex && session.stepCount && <b>{session.currentStepIndex} / {session.stepCount}</b>}
+          </div>
+        )}
         <h2 id="guided-tutorial-title">{title}</h2>
         <div id="guided-tutorial-body" className="guided-tutorial-body">
           {bodyParagraphs.map((paragraph, paragraphIndex) => (

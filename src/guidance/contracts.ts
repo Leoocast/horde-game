@@ -160,6 +160,10 @@ export type GuidedIntentSpec = Readonly<{
   cardAlias?: GuidedCardAlias;
   targetAlias?: GuidedCardAlias;
   targetAliases?: readonly GuidedCardAlias[];
+  /** Authored set of legal targets when the player may choose among known alternatives. */
+  targetAliasOptions?: readonly GuidedCardAlias[];
+  /** Exact number of selected targets required when targetAliasOptions is used. */
+  targetCount?: number;
   assignments?: readonly GuidedBlockAssignment[];
   abilityId?: string;
   selected?: boolean;
@@ -258,19 +262,37 @@ export type GuidedGlossaryTermId = (typeof GUIDED_GLOSSARY_TERM_IDS)[number];
 export const GUIDED_CALLOUT_VISIBILITIES = ["visible", "hidden"] as const;
 export type GuidedCalloutVisibility = (typeof GUIDED_CALLOUT_VISIBILITIES)[number];
 
+export const GUIDED_CALLOUT_PLACEMENTS = ["auto", "top", "right", "bottom", "left", "center"] as const;
+export type GuidedCalloutPlacement = (typeof GUIDED_CALLOUT_PLACEMENTS)[number];
+
 /** Optional authored teaching aid. It renders resolved card copies without changing game state. */
 export type GuidedCardComparison = Readonly<{
   kind: "cardComparison";
   cardAliases: readonly GuidedCardAlias[];
-  emphasis: "energyCost";
+  emphasis: "energyCost" | "combatStats";
 }>;
+
+/** Animated arrow over the first authored origin; it teaches direction without prescribing text. */
+export type GuidedDirectionalCue = Readonly<{
+  kind: "directionalCue";
+  direction: "up";
+  tone: "source" | "attack";
+}>;
+
+/** Pulses an authored surface without adding a callout or dimming the board. */
+export type GuidedSpotlightCue = Readonly<{
+  kind: "spotlight";
+  tone: "gold";
+}>;
+
+export type GuidedStepPresentation = GuidedCardComparison | GuidedDirectionalCue | GuidedSpotlightCue;
 
 type GuidedStepBase = Readonly<{
   id: string;
   copy: GuidedStepCopy;
   highlights: readonly GuidedHighlightRef[];
   callout?: GuidedCalloutVisibility;
-  presentation?: GuidedCardComparison;
+  presentation?: GuidedStepPresentation;
   preconditions?: readonly GuidedPrecondition[];
   nextStepId?: string;
 }>;
@@ -304,13 +326,16 @@ export type GuidedSessionDefinition = Pick<
   "id" | "revision" | "startStepId" | "steps"
 >;
 
-export type GuidedLessonDefinition = Readonly<{
-  schemaVersion: typeof GUIDED_LESSON_SCHEMA_VERSION;
+export type GuidedScenarioDefinition = Readonly<{
   id: string;
   revision: number;
-  mode: GuidedLessonMode;
-  startStepId: string;
   scenario: GuidedScenarioRecipe;
   cards: Readonly<Record<GuidedCardAlias, GuidedCardSpec>>;
+}>;
+
+export type GuidedLessonDefinition = GuidedScenarioDefinition & Readonly<{
+  schemaVersion: typeof GUIDED_LESSON_SCHEMA_VERSION;
+  mode: GuidedLessonMode;
+  startStepId: string;
   steps: readonly GuidedStep[];
 }>;

@@ -1,4 +1,4 @@
-import type { GuidedHighlightRole } from "./contracts";
+import type { GuidedCalloutPlacement, GuidedHighlightRole } from "./contracts";
 
 export type GuidedRect = Readonly<{
   key: string;
@@ -48,6 +48,7 @@ export function placeGuidedCallout(
   viewport: GuidedSize,
   callout: GuidedSize,
   targets: readonly GuidedRect[],
+  preferredPlacement: GuidedCalloutPlacement = "auto",
 ): GuidedPoint {
   const safeWidth = Math.min(callout.width, Math.max(0, viewport.width - VIEWPORT_MARGIN * 2));
   const safeHeight = Math.min(callout.height, Math.max(0, viewport.height - VIEWPORT_MARGIN * 2));
@@ -59,22 +60,41 @@ export function placeGuidedCallout(
   }
 
   const bounds = unionRect(targets);
-  const candidates: GuidedPoint[] = [
-    { left: bounds.left + (bounds.width - safeWidth) / 2, top: bounds.top - safeHeight - TARGET_GAP },
-    { left: bounds.left + bounds.width + TARGET_GAP, top: bounds.top + (bounds.height - safeHeight) / 2 },
-    { left: bounds.left + (bounds.width - safeWidth) / 2, top: bounds.top + bounds.height + TARGET_GAP },
-    { left: bounds.left - safeWidth - TARGET_GAP, top: bounds.top + (bounds.height - safeHeight) / 2 },
+  if (preferredPlacement === "center") {
+    return Object.freeze({
+      left: Math.max(VIEWPORT_MARGIN, (viewport.width - safeWidth) / 2),
+      top: Math.max(VIEWPORT_MARGIN, (viewport.height - safeHeight) / 2),
+    });
+  }
+  const candidates: Array<Readonly<{ placement: Exclude<GuidedCalloutPlacement, "auto" | "center">; point: GuidedPoint }>> = [
+    { placement: "top", point: { left: bounds.left + (bounds.width - safeWidth) / 2, top: bounds.top - safeHeight - TARGET_GAP } },
+    { placement: "right", point: { left: bounds.left + bounds.width + TARGET_GAP, top: bounds.top + (bounds.height - safeHeight) / 2 } },
+    { placement: "bottom", point: { left: bounds.left + (bounds.width - safeWidth) / 2, top: bounds.top + bounds.height + TARGET_GAP } },
+    { placement: "left", point: { left: bounds.left - safeWidth - TARGET_GAP, top: bounds.top + (bounds.height - safeHeight) / 2 } },
   ];
 
-  const placed = candidates.map((candidate, preference) => {
-    const clamped = clampPoint(candidate, viewport, { width: safeWidth, height: safeHeight });
+  const placed = candidates.map((candidate, index) => {
+    const clamped = clampPoint(candidate.point, viewport, { width: safeWidth, height: safeHeight });
     const calloutRect: GuidedRect = { key: "callout", role: "focus", ...clamped, width: safeWidth, height: safeHeight };
     const overlap = targets.reduce((total, target) => total + intersectionArea(calloutRect, target), 0);
-    const displacement = Math.abs(clamped.left - candidate.left) + Math.abs(clamped.top - candidate.top);
+    const displacement = Math.abs(clamped.left - candidate.point.left) + Math.abs(clamped.top - candidate.point.top);
+    const preference = preferredPlacement === "auto" ? index : candidate.placement === preferredPlacement ? 0 : index + 20;
     return { point: clamped, score: overlap * 100 + displacement + preference };
   });
   placed.sort((left, right) => left.score - right.score);
   return Object.freeze(placed[0].point);
+}
+
+/** Places an upward cue over a card while keeping its motion contained inside the card silhouette. */
+export function guidedDirectionalCueBounds(target: GuidedRect): GuidedBounds {
+  const width = Math.max(34, Math.min(52, target.width * 0.3));
+  const height = Math.max(76, target.height * 0.72);
+  return Object.freeze({
+    left: target.left + (target.width - width) / 2,
+    top: target.top + target.height * 0.12,
+    width,
+    height,
+  });
 }
 
 export function guidedConnectorPath(targets: readonly GuidedRect[]): string | undefined {

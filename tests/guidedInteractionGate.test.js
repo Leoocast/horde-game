@@ -104,6 +104,39 @@ test("kind, context, card, target, ability and exact selections are matched sema
   assert.equal(gate.authorize({ kind: "combat.toggleAttacker", cardId: "card-friendly", selected: true }).allowed, true);
 });
 
+test("authored target options allow one controlled choice without accepting other targets", () => {
+  const gate = new GuidedInteractionGate();
+  const bindings = {
+    aelyra: "card-aelyra",
+    maela: "card-maela",
+    outsider: "card-outsider",
+  };
+  const allowedIntent = {
+    kind: "target.confirm",
+    context: "trigger",
+    targetAliasOptions: ["aelyra", "maela"],
+    targetCount: 1,
+  };
+
+  gate.activate(policy({ bindings, allowedIntent }));
+  assert.equal(gate.authorize({ kind: "target.confirm", context: "trigger", targetIds: ["card-aelyra"] }).allowed, true);
+
+  gate.activate(policy({ stepId: "choose-maela", bindings, allowedIntent }));
+  assert.equal(gate.authorize({ kind: "target.confirm", context: "trigger", targetIds: ["card-maela"] }).allowed, true);
+
+  gate.activate(policy({ stepId: "reject-outsider", bindings, allowedIntent }));
+  assert.equal(
+    gate.authorize({ kind: "target.confirm", context: "trigger", targetIds: ["card-outsider"] }).rejection.reason,
+    "selection-mismatch",
+  );
+
+  gate.activate(policy({ stepId: "reject-too-many", bindings, allowedIntent }));
+  assert.equal(
+    gate.authorize({ kind: "target.confirm", context: "trigger", targetIds: ["card-aelyra", "card-maela"] }).rejection.reason,
+    "selection-mismatch",
+  );
+});
+
 test("accepted receipts are scoped by session/step, consume one Act action and keep a monotonic cursor", () => {
   const gate = new GuidedInteractionGate();
   gate.activate(policy({

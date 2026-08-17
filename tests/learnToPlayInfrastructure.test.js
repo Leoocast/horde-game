@@ -19,6 +19,8 @@ import {
 import { GuidedInteractionGate } from "../src/guidance/interactionGate";
 import { GuidedInterventionOrchestrator } from "../src/guidance/interventionOrchestrator";
 import { GuidedJourneyLifecycle } from "../src/guidance/journeyLifecycle";
+import { JourneyIntentGate } from "../src/guidance/journeyIntentGate";
+import { PRODUCT_CONTEXTUAL_CONCEPTS } from "../src/guidance/contextualProductConcepts";
 import { emptyGuidedProgress, nextRequiredGuidedLesson } from "../src/guidance/progress";
 import { GuidedSessionStore } from "../src/guidance/sessionStore";
 
@@ -41,6 +43,8 @@ test("board session policies isolate persistence, outcomes, and guided controls"
   assert.equal(LEARN_TO_PLAY_BOARD_SESSION.autosave, false);
   assert.equal(LEARN_TO_PLAY_BOARD_SESSION.showPhaseBanner, true);
   assert.equal(LEARN_TO_PLAY_BOARD_SESSION.showStandardOutcome, false);
+  assert.equal(LEARN_TO_PLAY_BOARD_SESSION.hostStartDelayMs, 550);
+  assert.equal(NORMAL_BOARD_SESSION.hostStartDelayMs, 0);
   assert.equal(LEARN_TO_PLAY_BOARD_SESSION.leaveCopy, "journey");
 });
 
@@ -132,6 +136,59 @@ test("a strict intervention attaches to the current board without rebuilding it"
   );
 });
 
+test("journey limits are ephemeral and product concepts cover every prologue explanation", () => {
+  const gate = new JourneyIntentGate();
+  gate.activate({
+    journeyId: LEARN_TO_PLAY_JOURNEY_ID,
+    authorize: (intent) => intent.kind === "phase.endTurn"
+      ? { allowed: false, guidanceId: "fixture", relatedCardIds: ["vaelor"] }
+      : { allowed: true },
+  });
+  assert.deepEqual(gate.authorize({ kind: "phase.endTurn" }), {
+    allowed: false,
+    guidanceId: "fixture",
+    relatedCardIds: ["vaelor"],
+  });
+  assert.equal(gate.authorize({ kind: "phase.chooseAttackers" }).allowed, true);
+  gate.deactivate(LEARN_TO_PLAY_JOURNEY_ID);
+  assert.equal(gate.authorize({ kind: "phase.endTurn" }).allowed, true);
+
+  assert.deepEqual(PRODUCT_CONTEXTUAL_CONCEPTS.map((concept) => concept.id), [
+    "host-defense-order",
+    "assign-defenders",
+    "flying-defense-restriction",
+    "chronicler-life",
+    "reserve-and-ready",
+    "stabilizing-restriction",
+    "attack-the-host-archive",
+    "attack-exhausts-echo",
+    "host-surge",
+    "learn-to-play-vaelor-required",
+    "learn-to-play-harvester-inspection-required",
+  ]);
+});
+
+test("the opening attack explanation is contextual and the defense prompt prefers the left side", () => {
+  const attack = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "attack-the-host-archive");
+  const defense = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "assign-defenders");
+  const order = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "host-defense-order");
+  assert.equal(attack.policy, "preventive");
+  assert.deepEqual(
+    attack.prevent({ kind: "combat.confirmArchiveAttack", targetIds: ["maela"] }, {}),
+    {
+      highlights: [
+        { kind: "surface", anchor: "player.field", role: "origin" },
+        { kind: "surface", anchor: "host.archive", role: "destination" },
+      ],
+    },
+  );
+  assert.deepEqual(defense.evaluate({ kind: "host.attackersDeclared" }, {}), {
+    highlights: [{ kind: "surface", anchor: "player.field" }],
+    placement: "left",
+  });
+  assert.deepEqual(order.signalKinds, []);
+});
+
 test("App exposes both launchers, disables Continue, and keys autosave from policy", async () => {
   const [app, menu, board] = await Promise.all([
     readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
@@ -139,7 +196,7 @@ test("App exposes both launchers, disables Continue, and keys autosave from poli
     readFile(new URL("../src/components/Board.tsx", import.meta.url), "utf8"),
   ]);
   assert.match(app, /HOW_TO_PLAY_CATALOG\.map/u);
-  assert.match(app, /onLaunch: IS_DEV \? launchLearnToPlayJourney : undefined/u);
+  assert.match(app, /onLaunch: launchLearnToPlayJourney/u);
   assert.match(app, /howToPlayEntries=\{howToPlayEntries\}/u);
   assert.match(app, /continueDisabled/u);
   assert.match(app, /if \(!boardSessionPolicy\.autosave \|\| screen !== "game"\) return;/u);

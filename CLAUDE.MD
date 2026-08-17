@@ -577,8 +577,9 @@ guiada actual como tutorial específico **Preparación** y crear un tutorial pri
 **Aprender a jugar**: un prólogo determinista semi-guiado, seguido más adelante por una partida real
 de Elarion contra los Sinsepulcro con seed preparada y ayudas contextuales. **Aprender a jugar** será
 el tutorial obligatorio y **Preparación** será opcional; ambos podrán repetirse desde **Cómo jugar**.
-El recorrido authored todavía no está entregado y no se activará como gate de primera apertura
-hasta completar su handoff. Las Fases 1, 2 y 3 técnicas quedaron implementadas el 2026-08-17:
+El recorrido authored todavía no está completo y no se activará como gate de primera apertura
+hasta completar su handoff. Las Fases técnicas 1 a 3 y la implementación de la Fase 4 hasta el
+comienzo real de la primera Oleada quedaron entregadas el 2026-08-17:
 existe un stream semántico pasivo por sesión que observa también
 partidas normales, y el motor tipa los rechazos necesarios para límite de Fuentes, Acción de Fuente
 usada, Estabilizándose, Agotado, Volar/Guardia aérea, Furtivo, defensor ya asignado y fase
@@ -614,15 +615,25 @@ las preventivas interceptan sólo la acción relevante y nunca compiten con una 
 estricta. El progreso `hostfall-guided-progress` v2 migra v1, conserva finalizaciones de lecciones y
 añade conceptos, recorridos y la preferencia global de repetición. En partidas normales el concepto
 se confirma al cerrar la ayuda; el modo provisional permite commit atómico o rollback total para el
-futuro prólogo. El registro release sigue vacío: el Playground instala fixtures sintéticos en un
-scope de desarrollo y el contenido real se authora en fases posteriores. Las ayudas imprescindibles
-reutilizan la guía actual. El plan se ejecuta fase por fase con
+futuro prólogo. El registro de producto contiene ya los conceptos contextuales del primer tramo:
+defensa y orden de izquierda a derecha, Volar/Guardia aérea, Vida, Reserva y Fuentes preparadas,
+Estabilizándose, ataque al Archivo, agotamiento del atacante y Oleada. Las ayudas no vistas pueden
+aparecer en una partida normal compatible y se confirman globalmente; los fixtures sintéticos del
+Playground siguen aislados en development. Las acciones estructurales imprescindibles reutilizan la
+guía actual. El plan se ejecuta fase por fase con
 aprobación explícita. **Cómo jugar** ya consume un catálogo y presenta **Aprender a jugar** antes de
 **Preparación**; `first-seed` conserva su ID pero ahora es opcional. El recorrido tiene lifecycle
 efímero independiente, rollback de conceptos provisionales, reinicio total, autosave apagado,
-políticas explícitas de tablero e intervenciones estrictas adjuntas al `GameState` vivo. En
-development puede abrirse su tablero shell; en producto permanece como Próximamente hasta authorar
-el prólogo. **Continuar** está deshabilitado globalmente. Para una fase posterior siguen pendientes
+políticas explícitas de tablero e intervenciones estrictas adjuntas al `GameState` vivo. Su launcher
+está activo desde **Cómo jugar** y carga el snapshot avanzado exacto: Vida 31, Maela y tres Fuentes,
+Río/Aelyra/Vaelor en Mano, Flor como próximo robo, Retorno/Acechador/Engendro/Cosechadora en ese
+orden y la segunda copia de Acechador como siguiente revelado. La guía exige la cuarta Fuente y
+Aelyra con objetivo libre; el director deja defensa libre, exige Vaelor, hace obligatoria una única
+inspección de la Cosechadora y permite Flor antes, después o nunca. Las pruebas enumeran todas las
+defensas legales y esas ramas, que convergen en Cosechadora 7/9, y certifican cero o un descarte
+opcional antes de la primera Oleada. La implementación termina por ahora en `host.surgeStarted`;
+post-Oleada, muerte y CTA pertenecen a las Fases 5 y 6. **Continuar** está deshabilitado globalmente.
+Para una fase posterior siguen pendientes
 la Mano/mulligan, seed, dificultad y
 Preparación de la partida real; el comportamiento de primera apertura y perfiles existentes; y la
 persistencia exacta si la aplicación se cierra durante el vórtice.

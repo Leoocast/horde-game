@@ -10,7 +10,9 @@ export type GameplaySignalDraft =
       kind: "intent.attempted";
       intent: GameplayIntent;
       origin: GameplaySignalOrigin;
-      authorization: "allowed" | "guided-blocked" | "contextual-blocked";
+      authorization: "allowed" | "guided-blocked" | "journey-blocked" | "contextual-blocked";
+      guidanceId?: string;
+      relatedCardIds?: readonly string[];
     }>
   | Readonly<{
       kind: "action.committed";

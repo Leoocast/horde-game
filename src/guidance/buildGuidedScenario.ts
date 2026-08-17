@@ -6,10 +6,10 @@ import { hashSeed } from "../engine/RNG";
 import type {
   GuidedCardAlias,
   GuidedCardSpec,
-  GuidedLessonDefinition,
+  GuidedScenarioDefinition,
   GuidedScenarioZones,
 } from "./contracts";
-import { assertGuidedLessonValid } from "./validation";
+import { assertGuidedScenarioValid } from "./validation";
 
 type GuidedZoneKey = keyof GuidedScenarioZones;
 
@@ -58,10 +58,10 @@ const ZONE_META: Readonly<Record<GuidedZoneKey, Readonly<{ side: Side; runtimeZo
  * build and no shuffle determines zone order. The recipe seed only initializes future RNG effects.
  */
 export function buildGuidedScenario(
-  definition: GuidedLessonDefinition,
+  definition: GuidedScenarioDefinition,
   catalog: ContentCatalog,
 ): BuiltGuidedScenario {
-  assertGuidedLessonValid(definition, catalog);
+  assertGuidedScenarioValid(definition, catalog);
   const recipe = definition.scenario;
   const playerDeck = catalog.requireDeck(recipe.playerDeckKey, "player").deck;
   const hostDeck = catalog.requireDeck(recipe.hostDeckKey, "host").deck;
@@ -203,4 +203,3 @@ function zoneArray(game: GameState, side: Side, zone: ZoneName): CardInstance[] 
   if (zone === "memory") return game.host.memory;
   return game.host.oblivion;
 }
-

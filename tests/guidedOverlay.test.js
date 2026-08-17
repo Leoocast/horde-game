@@ -6,6 +6,7 @@ import {
   GuidedAnchorRegistry,
   guidedCardAnchorKey,
   guidedConnectorPath,
+  guidedDirectionalCueBounds,
   guidedDomTargetAllowed,
   guidedSurfaceAnchorKey,
   guidedUnionBounds,
@@ -63,6 +64,26 @@ test("callout placement remains on screen and avoids a normal spotlight", () => 
   assert.ok(placed.left + 300 <= 884);
   assert.ok(placed.top + 170 <= 634);
   assert.equal(overlapArea({ ...placed, width: 300, height: 170 }, target), 0);
+});
+
+test("authored placement keeps defense help left of the player field", () => {
+  const target = { key: "surface:player.field", role: "focus", left: 500, top: 390, width: 320, height: 170 };
+  const placed = placeGuidedCallout(
+    { width: 1200, height: 760 },
+    { width: 360, height: 180 },
+    [target],
+    "left",
+  );
+  assert.ok(placed.left + 360 < target.left);
+});
+
+test("directional cues rise inside their authored card", () => {
+  const target = { key: "card:maela", role: "origin", left: 440, top: 320, width: 150, height: 210 };
+  const cue = guidedDirectionalCueBounds(target);
+  assert.ok(cue.left >= target.left);
+  assert.ok(cue.left + cue.width <= target.left + target.width);
+  assert.ok(cue.top >= target.top);
+  assert.ok(cue.top + cue.height <= target.top + target.height);
 });
 
 test("origin and destination highlights produce a directional connector", () => {
@@ -132,10 +153,11 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(overlay, /tooltipClassName="guided-glossary-tooltip"/u);
   assert.match(overlay, /highlight\.anchor === "card\.preview"/u);
   assert.match(overlay, /data-card-preview-visible=/u);
-  assert.match(overlay, /<GuidedCardComparison cards=\{comparisonCards\}/u);
+  assert.match(overlay, /<GuidedCardComparison\s+cards=\{comparisonCards\}/u);
   assert.match(comparison, /guided-card-comparison-cost-accessible/u);
+  assert.match(comparison, /<CardStatsBadge stats=\{combatStats\}/u);
   assert.doesNotMatch(comparison, /<figcaption/u);
-  assert.match(comparison, /import \{ CardCostBadge \} from "\.\/Card";/u);
+  assert.match(comparison, /import \{ CardCostBadge, CardStatsBadge \} from "\.\/Card";/u);
   assert.match(comparison, /<CardCostBadge card=\{card\} \/>/u);
   assert.doesNotMatch(comparison, /<Zap|guided-card-comparison-cost"/u);
   assert.match(battlefield, /"battlefield:player:sources-visual"/u);
@@ -144,6 +166,9 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.doesNotMatch(overlay, /closest\("#guided-tutorial-overlay/u);
   assert.match(overlay, /showCallout && \(/u);
   assert.match(overlay, /\{showCallout && \(\s*<>\s*<svg className="guided-tutorial-mask"/su);
+  assert.match(overlay, /showSilentSpotlight/u);
+  assert.match(overlay, /guided-tutorial-directional-cue/u);
+  assert.match(overlay, /!isLearnToPlay &&/u);
   assert.match(overlay, /\{showCallout && !missingAnchor && comparisonCards\.length > 0 && \(/u);
   assert.match(overlay, /allowedIntent\.kind === "phase\.continueSetup"/u);
   assert.match(overlay, /setDismissedActionCalloutStepId\(session\.currentStep\.id\)/u);
@@ -153,6 +178,9 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(styles, /\.guided-card-comparison\s*\{[^}]*top:\s*58%;[^}]*left:\s*50%;[^}]*transform:\s*translate\(-50%, -50%\);/su);
   assert.match(styles, /\.guided-card-comparison-item\s*\{[^}]*width:\s*clamp\(240px, 24\.8vw, 360px\);/su);
   assert.match(styles, /\.guided-card-comparison-frame > \.card-cost-badge\s*\{/u);
+  assert.match(styles, /\.guided-card-comparison\.is-combatStats \.card-stat-attack\s*\{/u);
+  assert.match(styles, /\.guided-card-comparison\.is-combatStats \.card-stat-life\s*\{/u);
+  assert.match(styles, /\.guided-tutorial-directional-cue\[data-tone="attack"\]/u);
   assert.doesNotMatch(styles, /\.guided-card-comparison-frame::after\s*\{/u);
   assert.match(styles, /\.guided-tutorial-overlay\.has-card-comparison \.guided-tutorial-callout\s*\{[^}]*width:\s*min\(580px, calc\(100vw - 48px\)\);/su);
   const costFocus = styles.match(/@keyframes guided-card-cost-focus\s*\{([\s\S]*?)\n\}/u)?.[1] ?? "";

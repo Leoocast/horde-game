@@ -1,6 +1,11 @@
 import type { GameState } from "../engine/GameTypes";
 import type { TranslationKey } from "../i18n/translations";
-import type { GuidedGlossaryTermId, GuidedHighlightRole, GuidedSurfaceAnchor } from "./contracts";
+import type {
+  GuidedCalloutPlacement,
+  GuidedGlossaryTermId,
+  GuidedHighlightRole,
+  GuidedSurfaceAnchor,
+} from "./contracts";
 import type { GameplaySignal, GameplaySignalDraft } from "./gameplaySignals";
 import type { GameplayIntent } from "./interactionGate";
 
@@ -29,6 +34,7 @@ export type ContextualRuntimeContext = Readonly<{
 
 export type ContextualConceptMatch = Readonly<{
   highlights?: readonly ContextualHighlightRef[];
+  placement?: GuidedCalloutPlacement;
   /** Optional authored discriminator retained for diagnostics; concepts still dedupe by ID. */
   occurrenceKey?: string;
 }>;
@@ -61,5 +67,6 @@ export type ContextualConceptPresentation = Readonly<{
   policy: ContextualInterventionPolicy;
   copy: ContextualConceptCopy;
   highlights: readonly ContextualHighlightRef[];
+  placement?: GuidedCalloutPlacement;
   triggerCursor: number;
 }>;

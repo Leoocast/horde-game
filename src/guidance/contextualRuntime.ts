@@ -270,6 +270,7 @@ function presentationFrom(item: ContextualQueuedConcept): ContextualConceptPrese
     policy: item.definition.policy,
     copy: item.definition.copy,
     highlights: Object.freeze([...(item.match.highlights ?? [])]),
+    placement: item.match.placement,
     triggerCursor: item.triggerCursor,
   });
 }

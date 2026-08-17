@@ -418,7 +418,7 @@ export function Board({
         setupTurns={setupTurns}
         suspended={encounterEntering || overtureActive || !game.openingHandAccepted || !sessionPolicy.showPhaseBanner}
       />
-      {game.openingHandAccepted && <PhaseOrb game={game} />}
+      {game.openingHandAccepted && <PhaseOrb game={game} hostStartDelayMs={sessionPolicy.hostStartDelayMs} />}
       <CombatArrows game={game} hiddenDefenseLinkIds={hiddenDefenseLinkIds} />
       <CounterTargetingOverlay game={game} />
       <TributeOfTheFourSorrowsSelectionOverlay game={game} />

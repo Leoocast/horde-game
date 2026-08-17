@@ -7,6 +7,7 @@ export type BoardSessionPolicy = Readonly<{
   restrictedSettings: boolean;
   guidedSystemControls: boolean;
   showGuidedInterruption: boolean;
+  hostStartDelayMs: number;
   leaveCopy: "game" | "lesson" | "journey";
 }>;
 
@@ -19,6 +20,7 @@ export const NORMAL_BOARD_SESSION: BoardSessionPolicy = Object.freeze({
   restrictedSettings: false,
   guidedSystemControls: false,
   showGuidedInterruption: false,
+  hostStartDelayMs: 0,
   leaveCopy: "game",
 });
 
@@ -31,6 +33,7 @@ export const GUIDED_LESSON_BOARD_SESSION: BoardSessionPolicy = Object.freeze({
   restrictedSettings: true,
   guidedSystemControls: true,
   showGuidedInterruption: true,
+  hostStartDelayMs: 0,
   leaveCopy: "lesson",
 });
 
@@ -43,5 +46,6 @@ export const LEARN_TO_PLAY_BOARD_SESSION: BoardSessionPolicy = Object.freeze({
   restrictedSettings: true,
   guidedSystemControls: true,
   showGuidedInterruption: false,
+  hostStartDelayMs: 550,
   leaveCopy: "journey",
 });

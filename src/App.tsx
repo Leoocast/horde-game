@@ -444,9 +444,7 @@ export default function App() {
       }
       return {
         ...entry,
-        // The authored advanced battle arrives in the next phase. Development can exercise the
-        // lifecycle shell now; product builds present the catalog entry without a false promise.
-        onLaunch: IS_DEV ? launchLearnToPlayJourney : undefined,
+        onLaunch: launchLearnToPlayJourney,
       };
     });
     return (

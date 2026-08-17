@@ -1,18 +1,15 @@
 import { contentCatalog } from "../content/bootstrap";
-import { createInitialGame } from "../engine/GameState";
 import { useGameStore } from "../store/useGameStore";
+import { buildGuidedScenario } from "./buildGuidedScenario";
 import { contextualTutorialRuntime } from "./contextualProductRuntime";
 import { gameplaySignalStream } from "./gameplaySignals";
 import { LEARN_TO_PLAY_JOURNEY_ID } from "./howToPlayCatalog";
 import { GuidedInterventionOrchestrator } from "./interventionOrchestrator";
 import { GuidedJourneyLifecycle, type GuidedJourneyDefinition } from "./journeyLifecycle";
+import { LearnToPlayPrologueDirector } from "./learnToPlayDirector";
+import { LEARN_TO_PLAY_PROLOGUE_SCENARIO } from "./learnToPlayPrologue";
 import { guidedSessionStore } from "./runtime";
 
-const ELARION = "hostfall.core/pact_of_elarion";
-const GRAVELESS = "hostfall.core/uprising_of_the_graveless";
-const SHELL_SEED = "learn-to-play-shell-v1";
-
-/** Phase 3 shell only. Phase 4 replaces its initial board with the authored advanced snapshot. */
 export const LEARN_TO_PLAY_JOURNEY: GuidedJourneyDefinition = Object.freeze({
   id: LEARN_TO_PLAY_JOURNEY_ID,
   revision: 1,
@@ -27,23 +24,35 @@ export const learnToPlayInterventions = new GuidedInterventionOrchestrator(
   }),
 );
 
+export const learnToPlayDirector = new LearnToPlayPrologueDirector(
+  Object.freeze({ readStore: () => useGameStore.getState() }),
+  learnToPlayInterventions,
+);
+
+useGameStore.subscribe(() => learnToPlayDirector.refresh());
+
 export const learnToPlayJourneyLifecycle = new GuidedJourneyLifecycle(
   LEARN_TO_PLAY_JOURNEY,
   Object.freeze({
     loadInitialBoard() {
-      const playerDeck = contentCatalog.requireDeck(ELARION, "player").deck;
-      const hostDeck = contentCatalog.requireDeck(GRAVELESS, "host").deck;
-      const game = createInitialGame(playerDeck, hostDeck, SHELL_SEED, 0, "normal", "standard");
-      useGameStore.getState().loadScenario(game, {
-        playerDeckId: playerDeck.id,
-        hostDeckId: hostDeck.id,
+      const built = buildGuidedScenario(LEARN_TO_PLAY_PROLOGUE_SCENARIO, contentCatalog);
+      useGameStore.getState().loadScenario(built.game, {
+        playerDeckId: built.playerDeckKey,
+        hostDeckId: built.hostDeckKey,
       });
-      return gameplaySignalStream.snapshot().sessionId;
+      const gameSessionId = gameplaySignalStream.snapshot().sessionId;
+      learnToPlayDirector.start(
+        Object.freeze(Object.fromEntries(
+          Object.entries(built.bindings).map(([alias, binding]) => [alias, binding.instanceId]),
+        )),
+        gameSessionId,
+      );
+      return gameSessionId;
     },
     stopPresentation() {
       useGameStore.getState().stopGamePresentation();
     },
   }),
   contextualTutorialRuntime,
-  learnToPlayInterventions,
+  learnToPlayDirector,
 );

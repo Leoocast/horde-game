@@ -458,8 +458,8 @@ vez.
 
 ### Fase 2 — Runtime contextual y progreso
 
-**Estado: completada el 2026-08-17.** El runtime y el callout son infraestructura genérica; el
-registro de producto permanece vacío hasta authorar los conceptos del prólogo en fases posteriores.
+**Estado: completada el 2026-08-17.** El runtime y el callout nacieron como infraestructura
+genérica; el registro de producto permaneció vacío hasta la autoría del prólogo en la Fase 4.
 
 - Crear registro de conceptos, evaluador, cola, prioridad, deduplicación y revalidación.
 - Implementar políticas informativa, preventiva y reactiva; la política guiada sigue usando el
@@ -473,10 +473,9 @@ abandono y accesibilidad básica.
 
 ### Fase 3 — Catálogo de Cómo jugar y shell del recorrido
 
-**Estado: completada el 2026-08-17.** El launcher de **Aprender a jugar** sólo está activo en
-development hasta que la Fase 4 sustituya su tablero shell por el snapshot avanzado authored; en
-producto la tarjeta ya existe y comunica que está pendiente. No se activó ningún gate de primera
-apertura.
+**Estado: completada el 2026-08-17.** La Fase 4 ya sustituyó el tablero shell por el snapshot
+avanzado authored y activó el launcher de **Aprender a jugar** desde **Cómo jugar**. No se activó
+ningún gate de primera apertura.
 
 - Mantener `first-seed` y presentar su tarjeta como **Preparación**.
 - Registrar `learn-to-play` con identidad independiente y launcher propio.
@@ -494,6 +493,8 @@ El gate release aún no se activa sobre contenido incompleto.
 
 ### Fase 4 — Prólogo hasta el comienzo de la Oleada
 
+**Estado: implementada el 2026-08-17; pendiente de QA manual de ritmo y presentación.**
+
 - Authorar y validar el snapshot avanzado con `hostTurnNumber` correcto.
 - Implementar cuarta Fuente/Aelyra como intervención guiada y conservar el objetivo libre.
 - Integrar defensa libre, orden de ataque y ayudas reactivas.
@@ -501,8 +502,25 @@ El gate release aún no se activa sobre contenido incompleto.
 - Enseñar ataque sólo si existe un atacante legal; si no, dejar los conceptos no vistos.
 - Añadir contador de Oleada y explicación cuando el Surge haya comenzado realmente.
 
-**Cierre:** pruebas de todas las defensas y ramas Flor/Vaelor aprobadas más QA del ritmo hasta el
-Surge.
+La implementación vigente carga un escenario declarativo independiente de una lección lineal,
+conserva la sesión del recorrido por encima de intervenciones estrictas adjuntas y aplica límites
+estructurales sólo mientras `learn-to-play` está activo. La cuarta Fuente y Aelyra usan la guía
+estricta; defensa, Vida, Reserva, Volar/Guardia aérea, Estabilizándose, ataque al Archivo, agotamiento
+del atacante y Oleada usan el runtime contextual global. Vaelor es obligatorio para converger y la
+inspección de la Cosechadora no puede saltarse por cerrar turno durante otra ayuda.
+
+La receta deja la Vida en 31, la Cosechadora con dos contadores y el próximo revelado en el segundo
+Acechador. Retorno consume los dos Soldados de equivalencia al morir; después quedan las dos ramas
+robustas de la primera Oleada, con o sin el descarte opcional previo. El director se detiene en la
+señal real `host.surgeStarted`: no simula la Oleada ni entra todavía al contenido de la Fase 5.
+
+Las pruebas automáticas enumeran ambos objetivos legales de Aelyra, todas las asignaciones legales
+de Maela/Aelyra y los órdenes `omitir Flor`, `Flor → Vaelor` y `Vaelor → Flor`. Todas las ramas
+certifican Reserva 3, Flor robada, Cosechadora final 7/9 y el segmento robusto del Archivo; también
+se prueban cero o un descarte antes de la primera Oleada.
+
+**Cierre automático alcanzado:** tipos y suite completa aprobados. Falta el QA manual del usuario
+para cerrar ritmo, copy y presentación hasta la Oleada.
 
 ### Fase 5 — Post-Oleada y cierre adaptativo
 

@@ -8,6 +8,7 @@ import type {
 } from "./contracts";
 import { gameplaySignalStream } from "./gameplaySignals";
 import { contextualIntentGate } from "./contextualIntentGate";
+import { journeyIntentGate } from "./journeyIntentGate";
 
 /** Public GameStore methods that represent a deliberate, rule-affecting player choice. */
 export const GUIDED_GAMEPLAY_ENTRY_POINTS = [
@@ -291,7 +292,10 @@ export const guidedInteractionGate = new GuidedInteractionGate();
 export function gameplayIntentAllowed(intent: GameplayIntent): boolean {
   const origin = guidedInteractionGate.systemActionActive() ? "system" : "player";
   const guidedAuthorization = guidedInteractionGate.authorize(intent);
-  const contextualAuthorization = guidedAuthorization.allowed && origin === "player"
+  const journeyAuthorization = guidedAuthorization.allowed && origin === "player"
+    ? journeyIntentGate.authorize(intent)
+    : { allowed: true as const };
+  const contextualAuthorization = guidedAuthorization.allowed && journeyAuthorization.allowed && origin === "player"
     ? contextualIntentGate.authorize(intent)
     : { allowed: true as const };
   gameplaySignalStream.publish({
@@ -300,11 +304,19 @@ export function gameplayIntentAllowed(intent: GameplayIntent): boolean {
     origin,
     authorization: !guidedAuthorization.allowed
       ? "guided-blocked"
+      : !journeyAuthorization.allowed
+      ? "journey-blocked"
       : !contextualAuthorization.allowed
       ? "contextual-blocked"
       : "allowed",
+    ...(!journeyAuthorization.allowed
+      ? {
+          guidanceId: journeyAuthorization.guidanceId,
+          relatedCardIds: journeyAuthorization.relatedCardIds,
+        }
+      : {}),
   });
-  return guidedAuthorization.allowed && contextualAuthorization.allowed;
+  return guidedAuthorization.allowed && journeyAuthorization.allowed && contextualAuthorization.allowed;
 }
 
 export function publishGameplayReceipt(
@@ -383,6 +395,22 @@ function mismatchReason(
     const expectedIds = resolveBindings(expected.targetAliases, bindings);
     if (!expectedIds) return "binding-missing";
     if (!hasTargets(actual) || !sameOrdered(actual.targetIds, expectedIds)) return "selection-mismatch";
+  } else if (expected.targetAliasOptions !== undefined) {
+    const allowedIds = resolveBindings(expected.targetAliasOptions, bindings);
+    if (!allowedIds) return "binding-missing";
+    const selectedIds = hasTarget(actual)
+      ? [actual.targetId]
+      : hasTargets(actual)
+        ? actual.targetIds
+        : [];
+    const expectedCount = expected.targetCount ?? 1;
+    if (
+      selectedIds.length !== expectedCount
+      || new Set(selectedIds).size !== selectedIds.length
+      || selectedIds.some((targetId) => !allowedIds.includes(targetId))
+    ) {
+      return "selection-mismatch";
+    }
   } else if (hasTargets(actual) && actual.targetIds.length > 0) {
     // Fully-authored lessons cannot smuggle unlisted targets through a broad card/action match.
     return "selection-mismatch";
@@ -407,6 +435,9 @@ function freezePolicy(policy: GuidedInteractionPolicy): GuidedInteractionPolicy 
           ...policy.allowedIntent,
           targetAliases: policy.allowedIntent.targetAliases
             ? Object.freeze([...policy.allowedIntent.targetAliases])
+            : undefined,
+          targetAliasOptions: policy.allowedIntent.targetAliasOptions
+            ? Object.freeze([...policy.allowedIntent.targetAliasOptions])
             : undefined,
           assignments: policy.allowedIntent.assignments
             ? Object.freeze(policy.allowedIntent.assignments.map((assignment) => Object.freeze({ ...assignment })))

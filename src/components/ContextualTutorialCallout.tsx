@@ -107,7 +107,7 @@ export function ContextualTutorialCallout() {
   if (!active || guided.status === "running" || typeof document === "undefined") return null;
 
   const missingAnchor = resolved.length !== rects.length;
-  const position = placeGuidedCallout(viewport, calloutSize, missingAnchor ? [] : rects);
+  const position = placeGuidedCallout(viewport, calloutSize, missingAnchor ? [] : rects, active.placement);
   const connector = missingAnchor ? undefined : guidedConnectorPath(rects);
   const titleId = `contextual-tutorial-title-${active.conceptId}`;
   const bodyId = `contextual-tutorial-body-${active.conceptId}`;

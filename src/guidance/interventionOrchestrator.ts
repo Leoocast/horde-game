@@ -58,6 +58,9 @@ export function assertInterventionValid(
     steps.set(step.id, step);
     if (!isTranslationKey(step.copy.titleKey) || !isTranslationKey(step.copy.bodyKey)) problems.push(`unknown copy in ${step.id}`);
     for (const highlight of step.highlights ?? []) if (highlight.kind === "card") referencedAliases.add(highlight.alias);
+    if (step.presentation?.kind === "cardComparison") {
+      for (const alias of step.presentation.cardAliases) referencedAliases.add(alias);
+    }
     for (const condition of step.preconditions ?? []) if (condition.kind === "card.inZone") referencedAliases.add(condition.cardAlias);
     collectMatcherAliases(step.kind === "act" ? step.allowedIntent : step.kind === "observe" ? step.expectedReceipt : undefined, referencedAliases);
     if (step.nextStepId && !definition.steps.some((candidate) => candidate.id === step.nextStepId)) problems.push(`missing next step ${step.nextStepId}`);
@@ -77,6 +80,7 @@ function collectMatcherAliases(matcher: unknown, aliases: Set<string>): void {
   const value = matcher as Record<string, unknown>;
   for (const key of ["cardAlias", "targetAlias"] as const) if (typeof value[key] === "string") aliases.add(value[key]);
   if (Array.isArray(value.targetAliases)) for (const alias of value.targetAliases) if (typeof alias === "string") aliases.add(alias);
+  if (Array.isArray(value.targetAliasOptions)) for (const alias of value.targetAliasOptions) if (typeof alias === "string") aliases.add(alias);
   if (Array.isArray(value.assignments)) for (const assignment of value.assignments) {
     if (!assignment || typeof assignment !== "object") continue;
     const record = assignment as Record<string, unknown>;

@@ -227,6 +227,13 @@ export class GuidedSessionStore {
   #enterObservationAfterAction(receipt: GuidedGameplayReceipt): void {
     const nextStepId = this.#currentStep?.nextStepId;
     const next = nextStepId ? this.#requireStep(nextStepId) : undefined;
+    // Some strict interactions are one semantic choice split across UI commitments: play a card,
+    // choose the target, then confirm it. Moving directly into the next authored Act keeps that
+    // mandatory subinteraction usable while the card's triggered overlay is pending.
+    if (next?.kind === "act") {
+      this.#enterAuthoredStep(next);
+      return;
+    }
     if (next?.kind === "observe") {
       if (!this.#preconditionsAllow(next)) return;
       this.#currentStep = next;

@@ -117,6 +117,45 @@ test("a receipt does not finish Observe until presentation settles, regardless o
   assert.equal(session.snapshot().currentStep.id, "settled");
 });
 
+test("one strict interaction can continue directly into its next authored commitment", () => {
+  const gate = new GuidedInteractionGate();
+  const barrier = new GuidedBeatBarrier((callback) => callback());
+  const session = new GuidedSessionStore(gate, barrier);
+  session.start({
+    definition: {
+      id: "multi-commit-fixture",
+      revision: 1,
+      startStepId: "play",
+      steps: [
+        {
+          id: "play",
+          kind: "act",
+          copy: { titleKey: "mulligan.title", bodyKey: "mulligan.accept" },
+          highlights: [],
+          allowedIntent: { kind: "card.play", cardAlias: "source" },
+          nextStepId: "choose-target",
+        },
+        {
+          id: "choose-target",
+          kind: "act",
+          copy: { titleKey: "mulligan.title", bodyKey: "mulligan.accept" },
+          highlights: [],
+          allowedIntent: { kind: "target.choose", context: "trigger" },
+        },
+      ],
+    },
+    bindings: { source: "source-instance" },
+    sessionId: "multi-commit",
+  });
+
+  assert.equal(gate.authorize({ kind: "card.play", cardId: "source-instance" }).allowed, true);
+  gate.publish({ kind: "card.played", cardId: "source-instance" });
+  assert.equal(session.snapshot().currentStep.id, "choose-target");
+  assert.equal(session.snapshot().mode, "act");
+  assert.equal(gate.authorize({ kind: "target.choose", context: "trigger", targetId: "any-legal-target" }).allowed, true);
+  assert.equal(gate.authorize({ kind: "phase.endTurn" }).allowed, false);
+});
+
 test("reset aborts the session and invalidates a retained continuation", () => {
   const scheduled = [];
   const gate = new GuidedInteractionGate();

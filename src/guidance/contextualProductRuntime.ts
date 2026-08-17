@@ -6,9 +6,9 @@ import { gameplaySignalStream } from "./gameplaySignals";
 import { guidedPresentationBlockers } from "./presentationSettled";
 import { guidedProgressStore } from "./progress";
 import { guidedPresentationActivity, guidedSessionStore } from "./runtime";
+import { PRODUCT_CONTEXTUAL_CONCEPTS } from "./contextualProductConcepts";
 
-/** Product content remains empty until the prologue concepts are authored in later phases. */
-export const contextualConceptRegistry = new ContextualConceptRegistry();
+export const contextualConceptRegistry = new ContextualConceptRegistry(PRODUCT_CONTEXTUAL_CONCEPTS);
 
 export const contextualTutorialRuntime = new ContextualTutorialRuntime(
   contextualConceptRegistry,

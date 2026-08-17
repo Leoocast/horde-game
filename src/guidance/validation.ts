@@ -19,6 +19,7 @@ import {
   type GuidedCardSpec,
   type GuidedIntentSpec,
   type GuidedLessonDefinition,
+  type GuidedScenarioDefinition,
   type GuidedScenarioZones,
   type GuidedStep,
 } from "./contracts";
@@ -60,7 +61,7 @@ export function validateGuidedLesson(
   definition: GuidedLessonDefinition,
   catalog: ContentCatalog,
 ): string[] {
-  const problems: string[] = [];
+  const problems = validateGuidedScenario(definition, catalog);
   const lesson = definition as GuidedLessonDefinition & Record<string, unknown>;
 
   if (definition.schemaVersion !== GUIDED_LESSON_SCHEMA_VERSION) {
@@ -68,23 +69,34 @@ export function validateGuidedLesson(
       `Guided lesson "${String(definition.id)}" uses schema ${String(definition.schemaVersion)}; expected ${GUIDED_LESSON_SCHEMA_VERSION}.`,
     );
   }
-  if (!ID_PATTERN.test(String(definition.id ?? ""))) problems.push("Guided lesson id is not a stable content id.");
-  if (!isPositiveInteger(definition.revision)) problems.push(`Guided lesson "${definition.id}" requires a positive integer revision.`);
   if (definition.mode !== "required" && definition.mode !== "optional") {
     problems.push(`Guided lesson "${definition.id}" has unknown mode "${String(definition.mode)}".`);
   }
-  if (containsFunction(lesson)) problems.push(`Guided lesson "${definition.id}" must be declarative and cannot contain functions.`);
+  if (containsFunction(lesson.steps)) problems.push(`Guided lesson "${definition.id}" must be declarative and cannot contain functions.`);
+  const cards = definition.cards && typeof definition.cards === "object" ? definition.cards : {};
+  validateSteps(definition, cards, problems);
 
+  return problems;
+}
+
+export function validateGuidedScenario(
+  definition: GuidedScenarioDefinition,
+  catalog: ContentCatalog,
+): string[] {
+  const problems: string[] = [];
+  const authored = definition as GuidedScenarioDefinition & Record<string, unknown>;
+  if (!ID_PATTERN.test(String(definition.id ?? ""))) problems.push("Guided scenario id is not a stable content id.");
+  if (!isPositiveInteger(definition.revision)) problems.push(`Guided scenario "${definition.id}" requires a positive integer revision.`);
+  if (containsFunction(authored.scenario) || containsFunction(authored.cards)) {
+    problems.push(`Guided scenario "${definition.id}" must be declarative and cannot contain functions.`);
+  }
   const playerDeck = exactDeck(catalog, definition.scenario?.playerDeckKey, "player", problems);
   const hostDeck = exactDeck(catalog, definition.scenario?.hostDeckKey, "host", problems);
   validateScenarioScalars(definition, problems);
-
   const cards = definition.cards && typeof definition.cards === "object" ? definition.cards : {};
   const cardRecords = validateCards(cards, catalog, problems);
   const aliasZones = validateZones(definition, cards, cardRecords, playerDeck, hostDeck, problems);
   validateCombat(definition, aliasZones, problems);
-  validateSteps(definition, cards, problems);
-
   return problems;
 }
 
@@ -95,6 +107,16 @@ export function assertGuidedLessonValid(
   const problems = validateGuidedLesson(definition, catalog);
   if (problems.length > 0) {
     throw new Error(`Invalid guided lesson "${definition.id}":\n- ${problems.join("\n- ")}`);
+  }
+}
+
+export function assertGuidedScenarioValid(
+  definition: GuidedScenarioDefinition,
+  catalog: ContentCatalog,
+): void {
+  const problems = validateGuidedScenario(definition, catalog);
+  if (problems.length > 0) {
+    throw new Error(`Invalid guided scenario "${definition.id}":\n- ${problems.join("\n- ")}`);
   }
 }
 
@@ -120,7 +142,7 @@ function exactDeck(
   return deck;
 }
 
-function validateScenarioScalars(definition: GuidedLessonDefinition, problems: string[]): void {
+function validateScenarioScalars(definition: GuidedScenarioDefinition, problems: string[]): void {
   const scenario = definition.scenario;
   if (!scenario || typeof scenario !== "object") {
     problems.push(`Guided lesson "${definition.id}" has no scenario recipe.`);
@@ -205,7 +227,7 @@ function validateCardState(alias: string, spec: GuidedCardSpec, problems: string
 }
 
 function validateZones(
-  definition: GuidedLessonDefinition,
+  definition: GuidedScenarioDefinition,
   cards: Readonly<Record<GuidedCardAlias, GuidedCardSpec>>,
   records: ReadonlyMap<GuidedCardAlias, ContentDefinitionRecord>,
   playerDeck: ContentDeckRecord | undefined,
@@ -284,7 +306,7 @@ function validateZones(
 }
 
 function validateCombat(
-  definition: GuidedLessonDefinition,
+  definition: GuidedScenarioDefinition,
   aliasZones: ReadonlyMap<GuidedCardAlias, ZoneKey>,
   problems: string[],
 ): void {
@@ -404,11 +426,24 @@ function validateStepPresentation(
 ): void {
   const presentation = step.presentation;
   if (presentation === undefined) return;
+  if (presentation.kind === "directionalCue") {
+    if (presentation.direction !== "up" || !["source", "attack"].includes(presentation.tone)) {
+      problems.push(`Step "${step.id}" has an invalid directional cue.`);
+    }
+    if (!step.highlights.some((highlight) => highlight.role === "origin")) {
+      problems.push(`Step "${step.id}" directional cue requires an origin highlight.`);
+    }
+    return;
+  }
+  if (presentation.kind === "spotlight") {
+    if (presentation.tone !== "gold") problems.push(`Step "${step.id}" has an invalid spotlight tone.`);
+    return;
+  }
   if (presentation.kind !== "cardComparison") {
     problems.push(`Step "${step.id}" has an unknown presentation kind.`);
     return;
   }
-  if (presentation.emphasis !== "energyCost") {
+  if (presentation.emphasis !== "energyCost" && presentation.emphasis !== "combatStats") {
     problems.push(`Step "${step.id}" has an unknown card-comparison emphasis.`);
   }
   if (!Array.isArray(presentation.cardAliases) || presentation.cardAliases.length < 2 || presentation.cardAliases.length > 3) {
@@ -420,6 +455,9 @@ function validateStepPresentation(
     validateAliasRef(step.id, alias, cards, problems);
     if (seen.has(alias)) problems.push(`Step "${step.id}" card comparison repeats alias "${alias}".`);
     seen.add(alias);
+  }
+  if (presentation.emphasis === "combatStats" && presentation.cardAliases.length !== 2) {
+    problems.push(`Step "${step.id}" combat-stat comparison requires exactly two aliases.`);
   }
 }
 
@@ -471,6 +509,7 @@ function validateMatcherAliases(
     cardAlias?: string;
     targetAlias?: string;
     targetAliases?: readonly string[];
+    targetAliasOptions?: readonly string[];
     assignments?: readonly { blockerAlias: string; attackerAlias: string }[];
   } | undefined,
   cards: Readonly<Record<GuidedCardAlias, GuidedCardSpec>>,
@@ -483,6 +522,12 @@ function validateMatcherAliases(
     problems.push(`Step "${stepId}" targetAliases must be an array.`);
   }
   for (const alias of Array.isArray(matcher.targetAliases) ? matcher.targetAliases : []) {
+    validateAliasRef(stepId, alias, cards, problems);
+  }
+  if (matcher.targetAliasOptions !== undefined && !Array.isArray(matcher.targetAliasOptions)) {
+    problems.push(`Step "${stepId}" targetAliasOptions must be an array.`);
+  }
+  for (const alias of Array.isArray(matcher.targetAliasOptions) ? matcher.targetAliasOptions : []) {
     validateAliasRef(stepId, alias, cards, problems);
   }
   if (matcher.assignments !== undefined && !Array.isArray(matcher.assignments)) {
@@ -526,11 +571,12 @@ function validateIntentShape(
   if (intent.kind.startsWith("discard.") && intent.context !== "hand-limit") {
     problems.push(`Step "${stepId}" discard intent must use context "hand-limit".`);
   }
-  if (intent.kind === "target.choose" && !intent.targetAlias) {
-    problems.push(`Step "${stepId}" intent "target.choose" requires targetAlias.`);
+  const hasTargetOptions = Array.isArray(intent.targetAliasOptions) && intent.targetAliasOptions.length > 0;
+  if (intent.kind === "target.choose" && !intent.targetAlias && !hasTargetOptions) {
+    problems.push(`Step "${stepId}" intent "target.choose" requires targetAlias or targetAliasOptions.`);
   }
-  if (intent.kind === "target.confirm" && !Array.isArray(intent.targetAliases)) {
-    problems.push(`Step "${stepId}" intent "target.confirm" requires exact targetAliases.`);
+  if (intent.kind === "target.confirm" && !Array.isArray(intent.targetAliases) && !hasTargetOptions) {
+    problems.push(`Step "${stepId}" intent "target.confirm" requires exact targetAliases or targetAliasOptions.`);
   }
   if (intent.kind === "combat.assignBlocker" && !intent.targetAlias) {
     problems.push(`Step "${stepId}" intent "combat.assignBlocker" requires targetAlias.`);
@@ -550,6 +596,28 @@ function validateIntentShape(
     if (uniqueTargets.size !== intent.targetAliases.length) {
       problems.push(`Step "${stepId}" intent "${intent.kind}" repeats a target alias.`);
     }
+  }
+  if (intent.targetAliasOptions !== undefined) {
+    if (!Array.isArray(intent.targetAliasOptions) || intent.targetAliasOptions.length === 0) {
+      problems.push(`Step "${stepId}" intent "${intent.kind}" targetAliasOptions must not be empty.`);
+    } else {
+      const uniqueOptions = new Set(intent.targetAliasOptions);
+      if (uniqueOptions.size !== intent.targetAliasOptions.length) {
+        problems.push(`Step "${stepId}" intent "${intent.kind}" repeats a target option alias.`);
+      }
+      if (
+        !Number.isInteger(intent.targetCount)
+        || (intent.targetCount ?? 0) < 1
+        || (intent.targetCount ?? 0) > uniqueOptions.size
+      ) {
+        problems.push(`Step "${stepId}" intent "${intent.kind}" targetCount must select a valid number of targetAliasOptions.`);
+      }
+    }
+    if (intent.targetAlias !== undefined || intent.targetAliases !== undefined) {
+      problems.push(`Step "${stepId}" intent "${intent.kind}" cannot combine exact targets with targetAliasOptions.`);
+    }
+  } else if (intent.targetCount !== undefined) {
+    problems.push(`Step "${stepId}" intent "${intent.kind}" targetCount requires targetAliasOptions.`);
   }
   if (intent.assignments) {
     const blockers = new Set<string>();
