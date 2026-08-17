@@ -6,8 +6,8 @@ import {
 /**
  * El signo del Futuro: una escena y un plano, como Burn, el vórtice y la constelación.
  *
- * Todo el brillo vive en el corazón y en las ocho puntas; el contorno queda tenue y las
- * facetas apenas se leen, igual que en la constelación de la Victoria. Las motas llegan con
+ * Todo el brillo vive en el corazón y en las ocho puntas; el contorno y los grabados interiores
+ * apenas se leen, igual que en la constelación de la Victoria. Las motas llegan con
  * el color del bando que acaba de chocar en el encuentro —verdín a la izquierda, hierro
  * caliente a la derecha— y sólo se vuelven oro al quedar fijas.
  *
@@ -82,7 +82,6 @@ void main() {
   float r = length(q);
   vec3 col = vec3(0.0);
   float al = 0.0;
-  float unit = uUnit * uScale;
   float pres = uPresence;
 
   // 1. Motas que entran desde los cuatro bordes y se fijan en las puntas.
@@ -94,7 +93,7 @@ void main() {
       vec3 origin = nd.x < 0.0 ? VERD : EMBER;
       if (i == NODES - 1) origin = mix(VERD, EMBER, 0.5);
       float lock = nd.z;
-      for (int j = 0; j < 5; j++) {
+      for (int j = 0; j < 3; j++) {
         float sd = nd.w + float(j) * 13.7;
         float born = max(0.0, lock - 0.40 - h11(sd) * 0.20);
         float k = (uT - born) / max(lock - born, 0.001);
@@ -114,7 +113,7 @@ void main() {
         float iv = 1.0 - ease;
         vec2 pos = iv * iv * from + 2.0 * iv * ease * ctrl + ease * ease * target;
         vec2 delta = p - pos;
-        float sz = uUnit * (0.055 + h11(sd * 5.9) * 0.05) * (1.0 - 0.35 * ease);
+        float sz = uUnit * (0.038 + h11(sd * 5.9) * 0.032) * (1.0 - 0.35 * ease);
         vec2 dir = normalize(target - from + vec2(1e-5));
         vec2 nm = vec2(-dir.y, dir.x);
         float along = dot(delta, dir);
@@ -122,32 +121,29 @@ void main() {
         float behind = max(-along, 0.0) / (sz * (2.8 + 5.2 * (1.0 - ease)));
         float across = abs(dot(delta, nm)) / (sz * 0.96);
         float field = sqrt((ahead + behind) * (ahead + behind) + across * across);
-        float glow = exp(-field * 2.35) + exp(-field * 0.92) * 0.20;
+        float glow = exp(-field * 2.65) + exp(-field * 1.08) * 0.12;
         float amt = glow * smoothstep(0.0, 0.12, e) * (1.0 - smoothstep(0.94, 1.06, k));
-        add(col, al, mix(origin, GOLD, ease * ease), amt * 0.95 * uMotes);
+        add(col, al, mix(origin, GOLD, ease * ease), amt * 0.62 * uMotes);
       }
     }
   }
 
-  // 2. Facetas apenas visibles: dan cuerpo sin convertir el signo en una red de líneas.
+  // 2. Grabados interiores separados del corazón. Antes cada punta era un triángulo con
+  //    alfa; sus ocho áreas se sumaban en el centro y dibujaban una segunda estrella.
+  //    Estas incisiones no tienen área y ni siquiera llegan al corazón.
   for (int i = 0; i < NODES; i++) {
     if (i == NODES - 1 || mod(float(i), 2.0) > 0.5) continue;
     vec4 nd = uNode[i];
     if (uT < nd.z) continue;
     vec2 axis = nd.xy * uScale;
-    float reach = length(axis);
-    vec2 dir = axis / max(reach, 0.001);
-    vec2 side = vec2(-dir.y, dir.x);
-    float along = dot(q, dir);
-    float across = abs(dot(q, side));
-    float along01 = clamp(along / max(reach, 0.001), 0.0, 1.0);
-    float halfWidth = unit * mix(0.54, 0.07, pow(along01, 0.72));
-    float facet = smoothstep(halfWidth + 1.4, halfWidth - 1.4, across)
-      * smoothstep(-1.5, 2.0, along)
-      * smoothstep(-1.5, 2.0, reach - along);
+    vec2 innerA = uCenter + axis * 0.24;
+    vec2 innerB = uCenter + axis * 0.68;
+    float draw = clamp((uT - nd.z) / 0.18, 0.0, 1.0);
+    float creaseD = segSD(p, innerA, mix(innerA, innerB, draw));
+    float crease = smoothstep(0.90, 0.18, creaseD);
     float reveal = smoothstep(nd.z, nd.z + 0.13, uT);
     vec3 tone = mix(mix(VERD, EMBER, step(0.0, nd.x)), GOLD, 0.62);
-    add(col, al, tone, facet * reveal * pres * (0.032 + uCharge * 0.040));
+    add(col, al, tone, crease * reveal * pres * (0.026 + uCharge * 0.016));
   }
 
   // 3. Contorno tenue, sin halo: la luz pertenece a las puntas y al corazón.
@@ -159,9 +155,9 @@ void main() {
     vec2 b = uCenter + seg.zw * uScale;
     float draw = clamp((uT - t0) / 0.14, 0.0, 1.0);
     float d = segSD(p, a, mix(a, b, draw));
-    float hw = uUnit * 0.030;
-    float ink = smoothstep(hw, hw * 0.24, d);
-    float settle = 0.22 + 0.12 * (1.0 - exp(-(uT - t0) * 12.0)) + uCharge * 0.22;
+    float hw = max(0.75, uUnit * 0.0085);
+    float ink = smoothstep(hw, 0.22, d);
+    float settle = 0.11 + 0.06 * (1.0 - exp(-(uT - t0) * 12.0)) + uCharge * 0.08;
     add(col, al, mix(GOLD, CORE, 0.28), ink * settle * pres);
   }
 
@@ -175,15 +171,12 @@ void main() {
     vec2 at = uCenter + nd.xy * uScale;
     float d = length(p - at);
     float pop = exp(-age * 11.0);
-    float breathe = 0.86 + 0.14 * sin(uTime * 2.1 + nd.w * 6.0);
-    float charge = 1.0 + uCharge * 0.55;
+    float breathe = 0.94 + 0.06 * sin(uTime * 1.7 + nd.w * 6.0);
+    float charge = 1.0 + uCharge * 0.25;
     if (centerNode) {
-      add(col, al, CORE, exp(-d / (uUnit * 0.10)) * (0.62 + 1.7 * pop) * breathe * charge * pres);
-      add(col, al, GOLD, exp(-d / (uUnit * 0.34)) * (0.16 + 0.7 * pop) * charge * pres);
-      vec2 rr = p - at;
-      float star = exp(-abs(rr.x) / (uUnit * 0.40)) * exp(-abs(rr.y) / (uUnit * 0.030))
-        + exp(-abs(rr.y) / (uUnit * 0.40)) * exp(-abs(rr.x) / (uUnit * 0.030));
-      add(col, al, CORE, star * (0.16 + pop * 0.46 + uCharge * 0.22) * pres);
+      // Un punto de origen, no otra rosa dentro de la rosa.
+      add(col, al, CORE, exp(-d / (uUnit * 0.055)) * (0.30 + 1.05 * pop) * breathe * charge * pres);
+      add(col, al, GOLD, exp(-d / (uUnit * 0.18)) * (0.055 + 0.22 * pop + uCharge * 0.04) * pres);
     } else if (tipNode) {
       float cardinal = 1.0 - step(0.5, mod(float(i), 4.0));
       float coreSize = mix(0.060, 0.075, cardinal);
@@ -191,19 +184,17 @@ void main() {
       // El asiento: la punta se clava en su marca y devuelve un golpe breve.
       float seatPop = exp(-max(uSeat - 0.55 - h11(nd.w) * 0.18, 0.0) * 9.0)
         * step(0.55 + h11(nd.w) * 0.18, uSeat);
-      add(col, al, CORE, exp(-d / (uUnit * coreSize)) * (0.46 + 1.5 * pop + 1.1 * seatPop) * breathe * charge * pres);
-      add(col, al, mix(GOLD, faction, 0.40), exp(-d / (uUnit * mix(0.17, 0.21, cardinal))) * (0.13 + 0.60 * pop + 0.5 * seatPop) * charge * pres);
+      add(col, al, CORE, exp(-d / (uUnit * coreSize)) * (0.28 + 0.90 * pop + 0.48 * seatPop) * breathe * charge * pres);
+      add(col, al, mix(GOLD, faction, 0.40), exp(-d / (uUnit * mix(0.14, 0.17, cardinal))) * (0.065 + 0.25 * pop + 0.16 * seatPop) * charge * pres);
       vec2 radial = normalize(nd.xy + vec2(1e-5));
       vec2 tangent = vec2(-radial.y, radial.x);
       vec2 rr = p - at;
       float flare = exp(-abs(dot(rr, radial)) / (uUnit * mix(0.34, 0.46, cardinal)))
         * exp(-abs(dot(rr, tangent)) / (uUnit * mix(0.032, 0.042, cardinal)));
-      float cross = exp(-abs(dot(rr, tangent)) / (uUnit * mix(0.16, 0.21, cardinal)))
-        * exp(-abs(dot(rr, radial)) / (uUnit * 0.022));
-      add(col, al, mix(CORE, GOLD, 0.30), (flare * 0.34 + cross * 0.16) * (0.52 + pop * 0.55 + uCharge * 0.30 + seatPop * 0.7) * pres);
+      add(col, al, mix(CORE, GOLD, 0.30), flare * (0.08 + pop * 0.12 + uCharge * 0.06 + seatPop * 0.16) * pres);
     } else {
-      add(col, al, CORE, exp(-d / (uUnit * 0.044)) * (0.22 + 0.52 * pop) * breathe * pres);
-      add(col, al, GOLD, exp(-d / (uUnit * 0.12)) * (0.045 + 0.19 * pop) * pres);
+      add(col, al, CORE, exp(-d / (uUnit * 0.038)) * (0.12 + 0.30 * pop) * breathe * pres);
+      add(col, al, GOLD, exp(-d / (uUnit * 0.10)) * (0.026 + 0.09 * pop) * pres);
     }
   }
 

@@ -1,5 +1,5 @@
 import { AlertTriangle, Home, RotateCcw } from "lucide-react";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useGameStore, type GameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
@@ -343,6 +343,16 @@ export function Board({
     if (!game.openingHandAccepted || encounterEntering) return;
     playSfx("skipNextBattle");
   }, [encounterEntering, game.openingHandAccepted, playSfx]);
+
+  /* El panel de Energía se renderiza mediante portal bajo document.body, fuera de <main>.
+     Reflejamos la fase antes del paint para que no aparezca un fotograma antes que el HUD. */
+  useLayoutEffect(() => {
+    document.body.classList.toggle("board-overture-active", overtureActive);
+    document.body.classList.toggle("board-overture-settling", overtureSettling);
+    return () => {
+      document.body.classList.remove("board-overture-active", "board-overture-settling");
+    };
+  }, [overtureActive, overtureSettling]);
 
   return (
     <main

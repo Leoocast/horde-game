@@ -157,6 +157,7 @@ test("la luz del aro completa una sola vuelta y nunca rebobina hacia el Norte", 
 test("la obertura queda armada antes de revelar el tablero y la Mano sólo se monta al final", () => {
   const app = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
   const board = readFileSync(new URL("../src/components/Board.tsx", import.meta.url), "utf8");
+  const battlefield = readFileSync(new URL("../src/components/Battlefield.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
   const startSequence = app.slice(
     app.indexOf("onStart={(options) => {"),
@@ -175,8 +176,25 @@ test("la obertura queda armada antes de revelar el tablero y la Mano sólo se mo
   );
   assert.doesNotMatch(app, /useLayoutEffect/u);
   assert.match(board, /\{!overtureActive && !overtureSettling && <OpeningHandOverlay game=\{game\} \/>\}/u);
+  assert.match(board, /document\.body\.classList\.toggle\("board-overture-active", overtureActive\)/u);
+  assert.match(board, /document\.body\.classList\.toggle\("board-overture-settling", overtureSettling\)/u);
+  assert.match(battlefield, /"game-hud-energy"/u);
   assert.match(styles, /is-encounter-entering:not\(\.is-overture\) \.game-battlefield-stage/u);
   assert.match(styles, /is-overture\.is-encounter-entering \.game-battlefield-stage[\s\S]*animation: none/u);
+  assert.match(styles, /body\.board-overture-active \.game-hud-energy/u);
+  assert.match(styles, /body\.board-overture-settling \.game-hud-energy[\s\S]*encounter-board-ui-bottom/u);
+});
+
+test("el signo no pinta facetas triangulares ni otra estrella en el corazón", () => {
+  const shader = readFileSync(new URL("../src/components/chronicleSigilShader.ts", import.meta.url), "utf8");
+  const mockup = readFileSync(new URL("../dev/mockups/vfx/board-overture.html", import.meta.url), "utf8");
+
+  for (const source of [shader, mockup]) {
+    assert.doesNotMatch(source, /float facet|float halfWidth|float star =/u);
+    assert.match(source, /innerA = uCenter \+ axis\s*\*\s*0\.24/u);
+    assert.match(source, /innerB = uCenter \+ axis\s*\*\s*0\.68/u);
+  }
+  assert.match(shader, /Un punto de origen, no otra rosa dentro de la rosa/u);
 });
 
 test("Reescribir usa un token único y la Mano no reinicia su entrada en StrictMode", () => {
@@ -184,6 +202,10 @@ test("Reescribir usa un token único y la Mano no reinicia su entrada en StrictM
   const overture = readFileSync(new URL("../src/components/ChronicleSigilOverture.tsx", import.meta.url), "utf8");
   const transition = readFileSync(new URL("../src/components/DestinyRewriteTransition.tsx", import.meta.url), "utf8");
   const openingHand = readFileSync(new URL("../src/components/OpeningHandOverlay.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  const mockup = readFileSync(new URL("../dev/mockups/vfx/board-overture.html", import.meta.url), "utf8");
+  const overlayStyle = styles.match(/\.opening-hand-overlay\s*\{([\s\S]*?)\}/u)?.[1] ?? "";
+  const mockupMulliganStyle = mockup.match(/\.mulligan-scene\s*\{([\s\S]*?)\}/u)?.[1] ?? "";
 
   assert.match(app, /resolvedDestinyIdRef\.current === transitionId/u);
   assert.match(app, /destinyTransitionRef\.current\?\.id !== transitionId/u);
@@ -193,6 +215,10 @@ test("Reescribir usa un token único y la Mano no reinicia su entrada en StrictM
   assert.match(overture, /completeCommittedRef\.current/u);
   assert.doesNotMatch(openingHand, /framer-motion|<motion\./u);
   assert.match(openingHand, /committedMulliganRevisionRef\.current === game\.mulligansTaken/u);
+  assert.ok(overlayStyle);
+  assert.ok(mockupMulliganStyle);
+  assert.doesNotMatch(overlayStyle, /background\s*:/u);
+  assert.doesNotMatch(mockupMulliganStyle, /background\s*:/u);
 });
 
 test("el mismo Futuro dibuja siempre el mismo signo y Futuros distintos lo frasean distinto", () => {

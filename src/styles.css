@@ -2332,7 +2332,8 @@
   .game-screen.is-overture .game-hud-host,
   .game-screen.is-overture .game-hud-player,
   .game-screen.is-overture .hand-atmosphere-shell,
-  .game-screen.is-overture .player-hand-region {
+  .game-screen.is-overture .player-hand-region,
+  body.board-overture-active .game-hud-energy {
     opacity: 0;
     pointer-events: none;
   }
@@ -2360,6 +2361,11 @@
   .game-screen.is-overture-settling .hand-atmosphere-shell,
   .game-screen.is-overture-settling .player-hand-region {
     animation: encounter-board-ui-bottom 680ms 200ms cubic-bezier(0.2, 0.82, 0.2, 1) both;
+  }
+
+  /* Energía vive en un portal; entra con el HUD, no con el Campo. */
+  body.board-overture-settling .game-hud-energy {
+    animation: encounter-board-ui-bottom 680ms 220ms cubic-bezier(0.2, 0.82, 0.2, 1) both;
   }
 
   .game-screen.is-encounter-entering:not(.is-overture) .game-battlefield-stage {
@@ -2432,7 +2438,8 @@
     .game-screen.is-encounter-entering,
     .game-screen.is-encounter-entering *,
     .game-screen.is-overture-settling,
-    .game-screen.is-overture-settling * {
+    .game-screen.is-overture-settling *,
+    body.board-overture-settling .game-hud-energy {
       animation-duration: 1ms !important;
       animation-delay: 0ms !important;
     }
@@ -17606,9 +17613,6 @@
 .opening-hand-overlay {
   padding: clamp(12px, 2.5vh, 28px) 12px;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 50% 44%, rgb(92 74 41 / 0.14), transparent 58%),
-    rgb(5 5 4 / 0.3);
   color: #eadfbf;
 }
 

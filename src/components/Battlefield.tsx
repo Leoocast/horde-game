@@ -681,6 +681,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
         className={[
           "player-mana-core",
           "player-mana-corner",
+          "game-hud-energy",
           game.activeSide === "player" ? "is-player-turn" : "",
           tributeOfTheFourSorrowsSourceSelectionActive ? "is-targeting" : "",
         ].join(" ")}
