@@ -3,6 +3,7 @@ export * from "./anchorRegistry";
 export * from "./beatBarrier";
 export * from "./contracts";
 export * from "./firstSeedLesson";
+export * from "./gameplaySignals";
 export * from "./glossary";
 export * from "./GuidedLessonRegistry";
 export * from "./interactionGate";

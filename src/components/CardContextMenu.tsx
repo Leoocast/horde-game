@@ -92,10 +92,14 @@ export function CardContextMenu() {
   }
 
   function activateEffect() {
-    if (!card || !firstAbility || !canActivate) return;
+    if (!card || !firstAbility) return;
     const cardId = card.instanceId;
     const abilityId = firstAbility.id;
     closeMenu();
+    if (!canActivate) {
+      activateAbility(cardId, abilityId);
+      return;
+    }
     window.setTimeout(() => {
       useAudioStore.getState().playSfx("activateEffect");
       triggerEffectActivationPulse(cardId);
@@ -123,7 +127,12 @@ export function CardContextMenu() {
           {t("card.info")}
         </button>
         {hasActivatedEffect && (
-          <button data-audio-click="off" className="context-menu-item" disabled={!canActivate} onClick={activateEffect}>
+          <button
+            data-audio-click="off"
+            className="context-menu-item"
+            aria-disabled={!canActivate ? "true" : undefined}
+            onClick={activateEffect}
+          >
             <Sparkles size={15} />
             {activateLabel}
           </button>

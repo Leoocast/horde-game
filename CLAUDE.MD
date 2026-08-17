@@ -577,8 +577,11 @@ guiada actual como tutorial específico **Preparación** y crear un tutorial pri
 **Aprender a jugar**: un prólogo determinista semi-guiado, seguido más adelante por una partida real
 de Elarion contra los Sinsepulcro con seed preparada y ayudas contextuales. **Aprender a jugar** será
 el tutorial obligatorio y **Preparación** será opcional; ambos podrán repetirse desde **Cómo jugar**.
-Este rediseño todavía no está implementado; hasta que se entregue completo el producto sigue
-ejecutando la revisión 4 requerida de `first-seed`. El
+El rediseño de producto todavía no está entregado; hasta que se complete el recorrido, el producto
+sigue ejecutando la revisión 4 requerida de `first-seed`. La Fase 1 técnica sí quedó implementada el
+2026-08-17: existe un stream semántico pasivo por sesión que observa también partidas normales, y el
+motor tipa los rechazos necesarios para límite de Fuentes, Acción de Fuente usada,
+Estabilizándose, Agotado, Volar/Guardia aérea, Furtivo, defensor ya asignado y fase incorrecta. El
 prólogo queda diseñado desde el cold open hasta una derrota predeterminada: la primera Oleada usa
 ramas equivalentes de Ladrones, Titán y Soldado; el turno posterior enseña Mano vacía y Devolver
 Fuente; y el cierre authored calcula el mejor resultado defensivo antes de Invocar un Titán y los
@@ -600,9 +603,10 @@ La auditoría y el plan técnico de esa extensión viven en
 `docs/plans/learn_to_play_implementation_plan.md`. La decisión arquitectónica vigente es conservar
 el schema guiado v1 para **Preparación** y separar: observaciones semánticas siempre activas,
 runtime/progreso por concepto, director efímero de **Aprender a jugar** y catálogo de producto. El
-builder exacto, anchors, barrera de presentación y overlay estricto se reutilizan; los receipts
-actuales no bastan porque desaparecen sin una policy guiada, y el overlay estricto no representa una
-ayuda contextual. Las ayudas observadas no bloquean, las preventivas interceptan sólo la acción
+builder exacto, anchors, barrera de presentación y overlay estricto se reutilizan. Los receipts
+guiados ahora alimentan el stream mediante un adaptador y las transiciones comprometidas proyectan
+turno, robo, Reserva, Fuentes preparadas, revelados, Oleada, orden de ataque, Vida y resultado sin
+leer el log. El overlay estricto todavía no representa una ayuda contextual. Las ayudas observadas no bloquean, las preventivas interceptan sólo la acción
 relevante y las imprescindibles reutilizan la guía actual. El plan se ejecuta fase por fase con
 aprobación explícita. Para una fase posterior siguen pendientes la Mano/mulligan, seed, dificultad y
 Preparación de la partida real; el comportamiento de primera apertura y perfiles existentes; y la

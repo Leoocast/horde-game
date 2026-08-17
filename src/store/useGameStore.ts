@@ -96,18 +96,23 @@ import { resolveBurnRenderer, type BurnRenderer, type BurnTrajectory } from "./b
 import {
   gameplayIntentAllowed,
   guidedInteractionGate,
+  publishGameplayDenial,
   publishGameplayReceipt,
   runGuidedSystemAction,
   type GameplayBlockAssignment,
   type GameplayIntent,
 } from "../guidance/interactionGate";
 import {
+  gameplaySignalStream,
+  gameplaySignalsForTransition,
+  playerDrawReasonForTransition,
+} from "../guidance/gameplaySignals";
+import {
   guidedPresentationActivity,
   guidedSessionStore,
   isGuidedPresentationSettled,
   scheduleGuidedCheckpointEvaluation,
 } from "../guidance";
-import { playerDrawForecast } from "../engine/TurnManager";
 import { DESTINY_DIAL_STEP, destinyDialDeathDelta } from "./destinyDial";
 
 export type GameStore = {
@@ -671,6 +676,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hostDeckId: DEFAULT_HOST_DECK_ID,
   reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hostDeckId = get().hostDeckId, difficulty = get().game.difficulty, gameMode = get().game.gameMode) => {
     cancelScheduledPresentation();
+    gameplaySignalStream.beginSession(`game:${get().gameSessionId + 1}`);
     set((state) => {
       persistSeed(seed);
       useAudioStore.getState().setMusicVariant("battle");
@@ -689,6 +695,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   loadScenario: (game, deckIds) => {
     cancelScheduledPresentation();
+    gameplaySignalStream.beginSession(`game:${get().gameSessionId + 1}`);
     set((state) => {
       useAudioStore.getState().setMusicVariant("battle");
       return {
@@ -1118,8 +1125,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (transition) publishGuidedTransitionReceipts(...transition);
   },
   playLand: (id) => {
-    if (!gameplayIntentAllowed({ kind: "card.play", cardId: id })) return;
+    const intent = { kind: "card.play", cardId: id } as const;
+    if (!gameplayIntentAllowed(intent)) return;
     let succeeded = false;
+    let failure: GameState["lastActionResult"];
     set((state) => {
       if (combatResolutionInProgress(state)) return {};
       if (state.pendingTriggeredEffectCount > 0) {
@@ -1135,6 +1144,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const next = playLand(game, id);
       const playSucceeded = next.lastActionResult?.ok === true;
       succeeded = playSucceeded;
+      if (!playSucceeded) failure = next.lastActionResult;
       if (playSucceeded) useAudioStore.getState().playSfx("playLand");
       else if (card) showActionToast(next.lastActionResult?.reason);
       if (playSucceeded) scheduleLandPlaySummoningSafetyClear();
@@ -1158,6 +1168,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       publishGameplayReceipt({ kind: "card.played", cardId: id });
       publishGameplayReceipt({ kind: "source.played", cardId: id });
     }
+    else if (failure) publishGameplayDenial(intent, failure);
   },
   startEnergyRecycle: (id, origin) => {
     if (!gameplayIntentAllowed({ kind: "source.recycle", cardId: id })) return;
@@ -1193,6 +1204,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   completeEnergyRecycleAnimation: () => {
     let recycledCardId: string | undefined;
+    let failedCardId: string | undefined;
+    let failure: GameState["lastActionResult"];
     set((state) => {
       const active = state.energyRecycleAnimation;
       if (!active) return {};
@@ -1202,7 +1215,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
         useAudioStore.getState().playSfx("drawOne");
         recycledCardId = active.card.instanceId;
       }
-      else showActionToast(next.lastActionResult?.reason);
+      else {
+        failedCardId = active.card.instanceId;
+        failure = next.lastActionResult;
+        showActionToast(next.lastActionResult?.reason);
+      }
       return {
         game: next,
         energyRecycleAnimation: undefined,
@@ -1212,14 +1229,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
       };
     });
     if (recycledCardId) publishGameplayReceipt({ kind: "source.recycled", cardId: recycledCardId });
+    else if (failedCardId && failure) {
+      publishGameplayDenial({ kind: "source.recycle", cardId: failedCardId }, failure);
+    }
   },
   castCard: (id, options) => {
     const targetIds = orderedCastTargetIds(get().game, id, options?.targets);
-    if (!gameplayIntentAllowed({ kind: "card.play", cardId: id, ...(targetIds.length > 0 ? { targetIds } : {}) })) return;
+    const intent: GameplayIntent = { kind: "card.play", cardId: id, ...(targetIds.length > 0 ? { targetIds } : {}) };
+    if (!gameplayIntentAllowed(intent)) return;
     let afterCommit: (() => void) | undefined;
     let startedBloodPactAnimationId: string | undefined;
     let startedLifePaymentAnimationId: string | undefined;
     let succeeded = false;
+    let failure: GameState["lastActionResult"];
     set((state) => {
       if (combatResolutionInProgress(state)) return {};
       if (state.pendingTriggeredEffectCount > 0) {
@@ -1234,6 +1256,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         : undefined;
       const result = buildCastCardPatch(state, id, options, animationOrigin);
       succeeded = result.patch.game?.lastActionResult?.ok === true;
+      if (!succeeded) failure = result.patch.game?.lastActionResult;
       const bloodPactAnimation = result.patch.bloodPactAnimation;
       if (bloodPactAnimation) {
         bloodPactAfterCommit = result.afterCommit;
@@ -1248,6 +1271,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
     afterCommit?.();
     if (succeeded) publishGameplayReceipt({ kind: "card.played", cardId: id, targetIds });
+    else if (failure) publishGameplayDenial(intent, failure);
     if (startedBloodPactAnimationId) scheduleBloodPactAnimationSafetyClear(startedBloodPactAnimationId);
     if (startedLifePaymentAnimationId) scheduleLifePaymentAnimationSafetyClear(startedLifePaymentAnimationId);
   },
@@ -1467,16 +1491,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   activateAbility: (id, abilityId, options) => {
     const targetIds = flattenTargetIds(options?.targets);
-    if (!gameplayIntentAllowed({
+    const intent: GameplayIntent = {
       kind: "ability.activate",
       cardId: id,
       abilityId,
       ...(targetIds.length > 0 ? { targetIds } : {}),
-    })) return;
+    };
+    if (!gameplayIntentAllowed(intent)) return;
     let shouldSchedulePlayerTriggers = false;
     let startedLifePaymentAnimationId: string | undefined;
     let startedEnergyFlowAnimationId: string | undefined;
     let succeeded = false;
+    let failure: GameState["lastActionResult"];
     set((state) => {
       if (combatResolutionInProgress(state)) return {};
       const source = state.game.player.field.find((card) => card.instanceId === id);
@@ -1485,6 +1511,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         deferReactiveTriggers: true,
       });
       succeeded = next.lastActionResult?.ok === true;
+      if (!succeeded) failure = next.lastActionResult;
       const paidLife = next.lastActionResult?.ok === true
         ? Math.max(0, next.player.lifePaidThisTurn - state.game.player.lifePaidThisTurn)
         : 0;
@@ -1559,18 +1586,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
       scheduleQueuedPlayerTriggers();
     }
     if (succeeded) publishGameplayReceipt({ kind: "ability.activated", cardId: id, abilityId, targetIds });
+    else if (failure) publishGameplayDenial(intent, failure);
   },
   toggleAttacker: (id) => {
     const intendedSelected = !get().game.combat.playerAttackers.includes(id);
-    if (!gameplayIntentAllowed({ kind: "combat.toggleAttacker", cardId: id, selected: intendedSelected })) return;
+    const intent = { kind: "combat.toggleAttacker", cardId: id, selected: intendedSelected } as const;
+    if (!gameplayIntentAllowed(intent)) return;
     let selectionChanged = false;
     let selected = false;
+    let failure: GameState["lastActionResult"];
     set(({ game }) => {
       const wasAttacking = game.combat.playerAttackers.includes(id);
       const next = togglePlayerAttacker(game, id);
       const isAttacking = next.combat.playerAttackers.includes(id);
       selectionChanged = wasAttacking !== isAttacking;
       selected = isAttacking;
+      if (next.lastActionResult?.ok === false) {
+        failure = next.lastActionResult;
+        showActionToast(next.lastActionResult.reason);
+      }
       if (!wasAttacking && isAttacking) {
         useAudioStore.getState().playSfx(AUDIO_FEATURE_FLAGS.selectAttacker ? "selectAttacker" : "playLand");
       } else if (wasAttacking && !isAttacking) {
@@ -1579,6 +1613,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return { game: next };
     });
     if (selectionChanged) publishGameplayReceipt({ kind: "attacker.selected", cardId: id, reason: selected ? "selected" : "deselected" });
+    else if (failure) publishGameplayDenial(intent, failure);
   },
   attackAll: () => {
     const targetIds = selectableAttackers(get().game);
@@ -1921,14 +1956,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   declareBlocker: (blockerId, attackerId) => {
     const intendedSelected = !(get().game.combat.blockers[attackerId] ?? []).includes(blockerId);
-    if (!gameplayIntentAllowed({
+    const intent = {
       kind: "combat.assignBlocker",
       cardId: blockerId,
       targetId: attackerId,
       selected: intendedSelected,
-    })) return;
+    } as const;
+    if (!gameplayIntentAllowed(intent)) return;
     let selectionChanged = false;
     let selected = false;
+    let failure: GameState["lastActionResult"];
     set(({ game }) => {
       const wasBlocking = Object.values(game.combat.blockers).some((ids) => ids.includes(blockerId));
       const wasBlockingTarget = game.combat.blockers[attackerId]?.includes(blockerId) ?? false;
@@ -1937,7 +1974,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectionChanged = wasBlockingTarget !== isBlockingTarget;
       selected = isBlockingTarget;
       if (!wasBlocking && isBlockingTarget) useAudioStore.getState().playSfx("playLand");
-      else if (next.lastActionResult?.ok === false) showActionToast(next.lastActionResult.reason);
+      else if (next.lastActionResult?.ok === false) {
+        failure = next.lastActionResult;
+        showActionToast(next.lastActionResult.reason);
+      }
       return { game: next, blockDrag: undefined };
     });
     if (selectionChanged) {
@@ -1947,6 +1987,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         targetId: attackerId,
       });
     }
+    else if (failure) publishGameplayDenial(intent, failure);
   },
   cancelBlocks: () => {
     const assignments = combatAssignments(get().game);
@@ -2064,6 +2105,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(createCleanUiState());
   },
 }));
+
+// Project every committed GameState transition into the passive semantic stream. Unlike guided
+// receipts, this remains active in normal matches and has no authority over the rules.
+useGameStore.subscribe((state, previousState) => {
+  if (
+    state.game === previousState.game
+    || state.gameSessionId !== previousState.gameSessionId
+  ) return;
+  const lifeLossSourceId = state.hostAttackAnimation?.attackerId
+    ?? previousState.hostAttackAnimation?.attackerId;
+  for (const signal of gameplaySignalsForTransition(previousState.game, state.game, { lifeLossSourceId })) {
+    gameplaySignalStream.publish(signal);
+  }
+});
 
 // Read card losses from committed zone transitions, not from individual combat or effect paths.
 // This remains presentation-only: it observes rules results and never changes them.
@@ -2183,17 +2238,17 @@ function publishGuidedTransitionReceipts(previous: GameState, next: GameState): 
   if (publishedGuidedTransitionStates.has(next)) return;
   publishedGuidedTransitionStates.add(next);
   if (!previous.openingHandAccepted && next.openingHandAccepted) {
-    publishGameplayReceipt({ kind: "opening.accepted" });
+    publishGameplayReceipt({ kind: "opening.accepted" }, { observe: false });
   }
   if (previous.activeSide !== next.activeSide || previous.phase !== next.phase) {
-    publishGameplayReceipt({ kind: "phase.changed", reason: `${next.activeSide}:${next.phase}` });
+    publishGameplayReceipt({ kind: "phase.changed", reason: `${next.activeSide}:${next.phase}` }, { observe: false });
   }
   if (next.setupTurnsRemaining < previous.setupTurnsRemaining) {
     publishGameplayReceipt({
       kind: "setup.stepEnded",
       amount: next.setupTurnsRemaining,
       reason: next.setupTurnsRemaining === 0 ? "complete" : "continue",
-    });
+    }, { observe: false });
   }
 
   const nextHandIds = new Set(next.player.hand.map((card) => card.instanceId));
@@ -2206,7 +2261,7 @@ function publishGuidedTransitionReceipts(previous: GameState, next: GameState): 
       targetIds: drawnCardIds,
       amount: drawnCardIds.length,
       reason: playerDrawReason(previous, next),
-    });
+    }, { observe: false });
   }
 
   const nextPlayerMemoryIds = new Set(next.player.memory.map((card) => card.instanceId));
@@ -2219,12 +2274,12 @@ function publishGuidedTransitionReceipts(previous: GameState, next: GameState): 
       targetIds: discardedPlayerCardIds,
       amount: discardedPlayerCardIds.length,
       reason: "effect",
-    });
+    }, { observe: false });
   }
 
   const releasedReserve = Math.max(0, next.player.energyPool.stored - previous.player.energyPool.stored);
   if (releasedReserve > 0 && previous.player.pendingStoredEnergy > next.player.pendingStoredEnergy) {
-    publishGameplayReceipt({ kind: "reserve.released", amount: releasedReserve });
+    publishGameplayReceipt({ kind: "reserve.released", amount: releasedReserve }, { observe: false });
   }
 
   const nextHostMemoryIds = new Set(next.host.memory.map((card) => card.instanceId));
@@ -2238,22 +2293,12 @@ function publishGuidedTransitionReceipts(previous: GameState, next: GameState): 
       kind: "hostArchive.discarded",
       targetIds: discardedHostCardIds,
       amount: discardedHostCardIds.length,
-    });
+    }, { observe: false });
   }
 }
 
 function playerDrawReason(previous: GameState, next: GameState): string {
-  const recycledSource = previous.player.hand.some((card) =>
-    card.kinds.includes("SOURCE") && next.player.archive.some((candidate) => candidate.instanceId === card.instanceId),
-  );
-  if (recycledSource && !previous.player.energyActionUsedThisTurn && next.player.energyActionUsedThisTurn) {
-    return "source-recycle";
-  }
-  if (next.turnNumber > previous.turnNumber || (previous.phase !== "draw" && next.phase === "draw")) {
-    const timing = next.turnNumber > previous.turnNumber && previous.activeSide === "player" ? "next" : "immediate";
-    return playerDrawForecast(previous, { timing }).reason;
-  }
-  return "effect";
+  return playerDrawReasonForTransition(previous, next);
 }
 
 /** Libera solamente el beat de combate ya terminado. La limpieza global pertenece a Board y se

@@ -1,7 +1,7 @@
 # Auditoría y plan por fases — Aprender a jugar y ayudas contextuales
 
-Estado: **auditoría técnica completada; implementación no iniciada; primer corte fijado hasta la
-derrota y la aparición de su CTA; handoff y partida posterior aplazados**.
+Estado: **auditoría técnica completada; Fase 1 de observabilidad implementada y verificada; primer
+corte fijado hasta la derrota y la aparición de su CTA; handoff y partida posterior aplazados**.
 
 Última actualización: **2026-08-17**.
 
@@ -441,6 +441,8 @@ Sin cambios de código.
 explícita y no bloquean su implementación.
 
 ### Fase 1 — Observabilidad semántica sin cambiar la experiencia
+
+Estado: **completada el 2026-08-17**.
 
 - Crear el stream siempre activo y su cursor por sesión.
 - Hacer que los receipts guiados actuales se alimenten de él o convivan mediante un adaptador

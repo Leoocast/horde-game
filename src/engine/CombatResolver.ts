@@ -1,6 +1,6 @@
-import type { GameState } from "./GameTypes";
+import type { ActionFailureCode, GameState } from "./GameTypes";
 import type { CardInstance } from "./GameTypes";
-import { blockRestrictionReason, canAttack, canBlockAttacker, getPoisonAmount, hasTrait } from "./Traits";
+import { attackRestriction, blockRestriction, canAttack, getPoisonAmount, hasTrait } from "./Traits";
 import { destroyPermanent, discardHostArchiveToMemory, enqueueSurvivedDamageEvent, losePlayerLife } from "./EffectResolver";
 import { getPowerEndurance } from "./StaticEffects";
 import { drainEventQueue } from "./EventQueue";
@@ -20,26 +20,35 @@ export type HostAttackEvent = {
 export function togglePlayerAttacker(game: GameState, id: string): GameState {
   const next = structuredClone(game) as GameState;
   const card = next.player.field.find((item) => item.instanceId === id);
-  if (!card) return log(next, "That creature cannot attack.");
+  if (next.winner || next.activeSide !== "player" || next.phase !== "combat") {
+    return failAction(next, "Attackers can only be chosen during your Combat phase.", "WRONG_PHASE");
+  }
+  if (!card) return failAction(next, "That creature cannot attack.");
   const selected = next.combat.playerAttackers.includes(id);
   if (selected) {
     next.combat.playerAttackers = next.combat.playerAttackers.filter((item) => item !== id);
     if (!hasTrait(next, card, "ALERT")) card.exhausted = false;
+    next.lastActionResult = { ok: true };
     return log(next, `${card.name} stops attacking.`);
   }
-  if (!canAttack(next, card)) return log(next, "That creature cannot attack.");
+  const restriction = attackRestriction(next, card);
+  if (restriction) return failAction(next, restriction.reason, restriction.code);
   next.combat.playerAttackers = [...next.combat.playerAttackers, id];
   if (!hasTrait(next, card, "ALERT")) card.exhausted = true;
+  next.lastActionResult = { ok: true };
   return log(next, `${card.name} ${selected ? "stops attacking" : "attacks the Host"}.`);
 }
 
 export function declareBlocker(game: GameState, blockerId: string, attackerId: string): GameState {
   const next = structuredClone(game) as GameState;
+  if (next.winner || next.activeSide !== "host" || next.phase !== "combat" || !next.combat.hostAttackers.includes(attackerId)) {
+    return failAction(next, "Defenders can only be assigned during Host combat.", "WRONG_PHASE");
+  }
   const blocker = next.player.field.find((card) => card.instanceId === blockerId);
   const attacker = next.host.field.find((card) => card.instanceId === attackerId);
   if (!blocker || !attacker) return failAction(next, "Illegal block.");
-  const restriction = blockRestrictionReason(next, blocker, attacker);
-  if (restriction) return failAction(next, restriction);
+  const restriction = blockRestriction(next, blocker, attacker);
+  if (restriction) return failAction(next, restriction.reason, restriction.code);
   const current = next.combat.blockers[attackerId] ?? [];
   if (current.includes(blockerId)) {
     next.combat.blockers[attackerId] = current.filter((id) => id !== blockerId);
@@ -49,15 +58,15 @@ export function declareBlocker(game: GameState, blockerId: string, attackerId: s
   const alreadyBlocking = Object.entries(next.combat.blockers).find(([otherAttackerId, blockerIds]) => otherAttackerId !== attackerId && blockerIds.includes(blockerId));
   if (alreadyBlocking) {
     const blockedAttacker = next.host.field.find((card) => card.instanceId === alreadyBlocking[0]);
-    return failAction(next, `${blocker.name} is already blocking ${blockedAttacker?.name ?? "another attacker"}.`);
+    return failAction(next, `${blocker.name} is already blocking ${blockedAttacker?.name ?? "another attacker"}.`, "ALREADY_BLOCKING");
   }
   next.combat.blockers[attackerId] = [...current, blockerId];
   next.lastActionResult = { ok: true };
   return log(next, `${blocker.name} blocks ${attacker.name}.`);
 }
 
-function failAction(game: GameState, reason: string): GameState {
-  game.lastActionResult = { ok: false, reason };
+function failAction(game: GameState, reason: string, code?: ActionFailureCode): GameState {
+  game.lastActionResult = { ok: false, reason, ...(code ? { code } : {}) };
   return log(game, reason);
 }
 

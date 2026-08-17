@@ -6021,7 +6021,7 @@
       filter 150ms ease;
   }
 
-  .context-menu-item:hover:not(:disabled) {
+  .context-menu-item:hover:not(:disabled):not([aria-disabled="true"]) {
     border-color: rgb(214 163 76 / 0.72);
     background:
       linear-gradient(180deg, rgb(133 68 24 / 0.78), rgb(48 25 13 / 0.92));
@@ -6029,7 +6029,8 @@
     filter: brightness(1.08);
   }
 
-  .context-menu-item:disabled {
+  .context-menu-item:disabled,
+  .context-menu-item[aria-disabled="true"] {
     cursor: not-allowed;
     color: rgb(180 155 113 / 0.5);
     filter: saturate(0.6);

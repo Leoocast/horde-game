@@ -325,6 +325,12 @@ export function Hand({ game }: { game: GameState }) {
       return;
     }
     if (releasedInPlayZone && !playable) {
+      // Sources rejected by a known rule still cross the engine/store boundary. Contextual help
+      // needs the typed reason (especially the four-Source limit) instead of an inert disabled UI.
+      if (card.kinds.includes("SOURCE")) {
+        playLand(card.instanceId);
+        return;
+      }
       pushToast({
         title: t("error.cannotPlay"),
         message: getUnplayableReason(game, card, unresolvedTriggerCount, t),
@@ -571,6 +577,10 @@ export function Hand({ game }: { game: GameState }) {
                         }
                         if (playable) {
                           playCard(card);
+                          return;
+                        }
+                        if (card.kinds.includes("SOURCE")) {
+                          playLand(card.instanceId);
                           return;
                         }
                         pushToast({

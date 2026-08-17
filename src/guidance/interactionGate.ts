@@ -6,6 +6,7 @@ import type {
   GuidedReceiptKind,
   GuidedReceiptSpec,
 } from "./contracts";
+import { gameplaySignalStream } from "./gameplaySignals";
 
 /** Public GameStore methods that represent a deliberate, rule-affecting player choice. */
 export const GUIDED_GAMEPLAY_ENTRY_POINTS = [
@@ -256,6 +257,10 @@ export class GuidedInteractionGate {
     }
   }
 
+  systemActionActive(): boolean {
+    return this.#systemActionDepth > 0;
+  }
+
   /** Test/process reset. Production session exits should use deactivate so cursors stay monotonic. */
   reset(): void {
     this.#policy = undefined;
@@ -283,11 +288,36 @@ export class GuidedInteractionGate {
 export const guidedInteractionGate = new GuidedInteractionGate();
 
 export function gameplayIntentAllowed(intent: GameplayIntent): boolean {
-  return guidedInteractionGate.authorize(intent).allowed;
+  const origin = guidedInteractionGate.systemActionActive() ? "system" : "player";
+  const authorization = guidedInteractionGate.authorize(intent);
+  gameplaySignalStream.publish({
+    kind: "intent.attempted",
+    intent,
+    origin,
+    authorization: authorization.allowed ? "allowed" : "guided-blocked",
+  });
+  return authorization.allowed;
 }
 
-export function publishGameplayReceipt(data: GameplayReceiptData): GuidedGameplayReceipt | undefined {
+export function publishGameplayReceipt(
+  data: GameplayReceiptData,
+  options: Readonly<{ observe?: boolean }> = {},
+): GuidedGameplayReceipt | undefined {
+  if (options.observe !== false) gameplaySignalStream.publish({ kind: "action.committed", receipt: data });
   return guidedInteractionGate.publish(data);
+}
+
+export function publishGameplayDenial(
+  intent: GameplayIntent,
+  failure: Readonly<{ reason?: string; code?: import("../engine/GameTypes").ActionFailureCode }>,
+): void {
+  if (!failure.reason) return;
+  gameplaySignalStream.publish({
+    kind: "action.denied",
+    intent,
+    reason: failure.reason,
+    code: failure.code,
+  });
 }
 
 export function runGuidedSystemAction<T>(action: () => T): T {
