@@ -146,25 +146,22 @@ void main() {
     }
   }
 
-  // 3. Facetas apenas visibles: dan cuerpo sin convertir la estrella en una red de líneas.
+  // 3. Grabados interiores separados del corazón, los mismos que el signo del Futuro. Antes
+  //    cada punta era una cuña con alfa que se ensanchaba hacia el centro: sus ocho áreas se
+  //    sumaban ahí y dibujaban una segunda estrella dentro de la rosa, que se comía el
+  //    protagonismo del corazón y de las puntas. Estas incisiones no tienen área y no llegan
+  //    al corazón. Volver a rellenar el interior es una regresión.
   for (int i = 0; i < NODES; i++) {
     if (i == HEART || mod(float(i), 2.0) > 0.5) continue;
     vec4 nd = uNode[i];
     if (uT < nd.z) continue;
     vec2 axis = nd.xy;
-    float reach = length(axis);
-    vec2 dir = axis / max(reach, 0.001);
-    vec2 side = vec2(-dir.y, dir.x);
-    vec2 q = p - uCenter;
-    float along = dot(q, dir);
-    float across = abs(dot(q, side));
-    float along01 = clamp(along / max(reach, 0.001), 0.0, 1.0);
-    float halfWidth = uUnit * mix(0.54, 0.07, pow(along01, 0.72));
-    float facet = smoothstep(halfWidth + 1.4, halfWidth - 1.4, across)
-      * smoothstep(-1.5, 2.0, along)
-      * smoothstep(-1.5, 2.0, reach - along);
+    vec2 innerA = uCenter + axis * 0.24;
+    vec2 innerB = uCenter + axis * 0.68;
+    float creaseD = segSD(p, innerA, innerB);
+    float crease = smoothstep(0.90, 0.18, creaseD);
     float reveal = smoothstep(nd.z, nd.z + 0.13, uT);
-    add(col, al, mix(COLD, WARM, 0.38), facet * reveal * 0.042);
+    add(col, al, mix(COLD, WARM, 0.38), crease * reveal * 0.14);
   }
 
   // 4. Contorno tenue, sin halo: la luz pertenece a las puntas y al corazón.

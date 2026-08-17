@@ -333,7 +333,7 @@
         <ul>
           <li>Las luces nacen fuera del encuadre, repartidas entre sus cuatro lados, y convergen sobre el centro y las ocho puntas. La semilla conserva exactamente el mismo reparto al repetir.</li>
           <li>El contorno se revela desde el Norte en sentido horario, pero queda tenue y sin halo para que no compita con los puntos de luz.</li>
-          <li>Las facetas interiores dan cuerpo sin llenar el centro de radios. Al cerrarse, una sola onda circular atraviesa el astrolabio del fondo.</li>
+          <li>Los grabados interiores no tienen área. Con cuñas rellenas, las ocho se sumaban cerca del centro y dibujaban una <b>segunda estrella</b> dentro de la rosa que le quitaba el protagonismo al corazón y a las puntas. Al cerrarse, una sola onda circular atraviesa el astrolabio del fondo.</li>
         </ul>
 
         <h3>La estrella es cardinal de verdad</h3>
@@ -472,24 +472,19 @@
           "    }",
           "  }",
 
-          // 3. facetas apenas visibles: dan cuerpo sin convertir la estrella en una red de lineas
+          // 3. grabados interiores, sin area: las cuñas se ensanchaban hacia el centro y sus ocho
+          //    areas se sumaban ahi, dibujando otra estrella dentro de la rosa
           "  for (int i = 0; i < NODES; i++) {",
           "    if (i == 16 || mod(float(i), 2.0) > 0.5) continue;",
           "    vec4 nd = uNode[i];",
           "    if (uT < nd.z) continue;",
           "    vec2 axis = nd.xy - uCenter;",
-          "    float reach = length(axis);",
-          "    vec2 dir = axis / max(reach, 0.001);",
-          "    vec2 side = vec2(-dir.y, dir.x);",
-          "    vec2 q = p - uCenter;",
-          "    float along = dot(q, dir);",
-          "    float across = abs(dot(q, side));",
-          "    float along01 = clamp(along / max(reach, 0.001), 0.0, 1.0);",
-          "    float halfWidth = uUnit*mix(0.54, 0.07, pow(along01, 0.72));",
-          "    float facet = smoothstep(halfWidth + 1.4, halfWidth - 1.4, across)",
-          "                * smoothstep(-1.5, 2.0, along) * smoothstep(-1.5, 2.0, reach - along);",
+          "    vec2 innerA = uCenter + axis*0.24;",
+          "    vec2 innerB = uCenter + axis*0.68;",
+          "    float creaseD = segSD(p, innerA, innerB);",
+          "    float crease = smoothstep(0.90, 0.18, creaseD);",
           "    float reveal = smoothstep(nd.z, nd.z + 0.13, uT);",
-          "    add(col, al, mix(COLD, WARM, 0.38), facet*reveal*0.042);",
+          "    add(col, al, mix(COLD, WARM, 0.38), crease*reveal*0.14);",
           "  }",
 
           // 4. contorno tenue, sin halo; la luz pertenece a las puntas y al centro

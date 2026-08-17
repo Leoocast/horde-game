@@ -18,6 +18,7 @@ import {
   chronicleSigilPlan,
   temporalDialRingRadius,
 } from "../src/components/chronicleSigilGeometry";
+import { northUprightDialDegrees } from "../src/components/temporalDialPresentation";
 import { futureVisualSignature } from "../src/utils/futureIdentity";
 
 function radius(node) {
@@ -119,6 +120,23 @@ test("el mismo Futuro reparte igual sus motas y otro Futuro las frasea distinto"
   assert.notEqual(a.nodes[0].seed, other.nodes[0].seed);
 });
 
+test("el instrumento vuelve a su Norte por el camino más corto", () => {
+  // La rosa es cardinal y fija: si el disco no vuelve a 000°·N sus puntas caen al lado de las
+  // marcas en vez de encima.
+  assert.equal(northUprightDialDegrees(0), 0);
+  assert.equal(northUprightDialDegrees(7), 0);
+  assert.equal(northUprightDialDegrees(-12.5), 0);
+  // Camino más corto, no cero absoluto: cuatro vueltas de vuelta se leerían como un reinicio.
+  assert.equal(northUprightDialDegrees(374), 360);
+  assert.equal(northUprightDialDegrees(-1100), -1080);
+  assert.equal(northUprightDialDegrees(900), 1080);
+  for (const degrees of [0, 7, -12.5, 374, -1100, 900, 4321]) {
+    const upright = northUprightDialDegrees(degrees);
+    assert.equal(Math.abs(upright % 360), 0, "el Norte del disco debe quedar arriba");
+    assert.ok(Math.abs(upright - degrees) <= 180, "no puede dar una vuelta de más");
+  }
+});
+
 test("la victoria retira el tablero pero conserva el espacio y el instrumento", () => {
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
   const board = readFileSync(new URL("../src/components/Board.tsx", import.meta.url), "utf8");
@@ -156,4 +174,33 @@ test("la victoria retira el tablero pero conserva el espacio y el instrumento", 
   // El desenlace ya no vuelve al estandarte ni al panel genéricos del resultado.
   assert.doesNotMatch(modal, /game-result-banner|game-result-panel|DestinyOutcomeSeal/u);
   assert.match(modal, /VictoryConstellationAnimator/u);
+
+  // El disco se recoloca sólo para presentar: el ángulo acumulado del store no se toca.
+  assert.match(board, /northUprightDialDegrees\(destinyDial\)/u);
+  assert.match(board, /dial=\{presentedDestinyDial\}/u);
+
+  // La construcción es muda: ni un cue por punta.
+  assert.doesNotMatch(animator, /playSfx|useAudioStore/u);
+});
+
+test("la rosa no vuelve a rellenarse por dentro ni dibuja una segunda estrella", () => {
+  const shader = readFileSync(
+    new URL("../src/components/destinyConstellationShader.ts", import.meta.url),
+    "utf8",
+  );
+  const mockup = readFileSync(
+    new URL("../dev/mockups/vfx/destiny-constellation.html", import.meta.url),
+    "utf8",
+  );
+
+  // Las cuñas con alfa se ensanchaban hacia el centro y sus ocho áreas se sumaban ahí, dibujando
+  // otra estrella dentro de la rosa que le comía el protagonismo al corazón y a las puntas. El
+  // signo del Futuro ya había pasado por esto: se usan sus mismas incisiones, que no tienen área.
+  // La maqueta es la referencia canónica, así que el guard cubre las dos: si sólo se arreglara el
+  // juego, el relleno volvería en cuanto alguien retomara la maqueta.
+  for (const source of [shader, mockup]) {
+    assert.doesNotMatch(source, /float facet|float halfWidth/u);
+    assert.match(source, /innerA = uCenter \+ ?axis ?\* ?0\.24/u);
+    assert.match(source, /innerB = uCenter \+ ?axis ?\* ?0\.68/u);
+  }
 });

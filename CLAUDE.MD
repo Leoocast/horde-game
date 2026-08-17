@@ -416,6 +416,17 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   enciende exactamente encima del instrumento que ya está en el tablero. Darle un tamaño propio la
   convierte en otra estrella pegada sobre la pantalla. La semilla cambia el reparto y el fraseo de
   las motas, nunca el giro. Lo único que añade la victoria es el reloj de construcción.
+- Como la rosa es cardinal y fija, el disco vuelve a **000°·N arriba** mientras las motas todavía
+  viajan: `northUprightDialDegrees` da el múltiplo de 360 más cercano, de modo que el recorrido es
+  el mínimo y no se lee como un aparato reiniciándose. Es sólo presentación —`Board` pasa el ángulo
+  recolocado a `TemporalBackdrop`— y no toca el ángulo acumulado del store ni la revisión, así que
+  la barrera del desenlace no se reabre.
+- El interior de la rosa se dibuja con las **incisiones sin área** del signo (`axis * 0.24` a
+  `axis * 0.68`), no con cuñas rellenas. Las cuñas se ensanchaban hacia el centro y sus ocho áreas
+  se sumaban ahí, dibujando una segunda estrella dentro de la rosa que le quitaba el protagonismo
+  al corazón y a las puntas. Volver a rellenar el interior es una regresión, y el guard cubre
+  también la maqueta.
+- La construcción es muda: no lleva un cue por punta. La acompaña el tema de victoria.
 - No hay captura, ni placa, ni tinte: `body.is-victory-clearing` retira el HUD y las cartas con el
   espejo de su propia entrada —arriba hacia arriba, abajo hacia abajo, el Campo creciendo un
   punto— y conserva `TemporalBackdrop` completo, incluido el retículo, más `.game-screen-ambience`.

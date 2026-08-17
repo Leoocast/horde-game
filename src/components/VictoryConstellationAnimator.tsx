@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
-import { useAudioStore } from "../store/useAudioStore";
 import { futureVisualSignature } from "../utils/futureIdentity";
 import {
   DESTINY_CONSTELLATION_EDGES,
@@ -40,9 +39,6 @@ type Props = {
 const CLEARING_BODY_CLASS = "is-victory-clearing";
 /** El canvas se copia de WebGL a 2D: más de 60 entregas por segundo sólo duplican trabajo. */
 const FRAME_INTERVAL_MS = 1000 / 60;
-/** Las cuatro puntas cardinales suenan al fijarse, cada una un paso más aguda. */
-const CARDINAL_NODES = [0, 4, 8, 12] as const;
-const CARDINAL_RATES = [0.72, 0.82, 0.94, 1.08] as const;
 
 function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -70,7 +66,6 @@ function stillStarPoints(signature: number): string {
 export function VictoryConstellationAnimator({ seed, onSequenceStart, onVerdict }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fallback, setFallback] = useState(false);
-  const playSfx = useAudioStore((state) => state.playSfx);
   const signature = futureVisualSignature(seed);
   // Los callbacks entran por ref para que un renderizado del padre no reinicie el reloj.
   const sequenceStartRef = useRef(onSequenceStart);
@@ -135,7 +130,6 @@ export function VictoryConstellationAnimator({ seed, onSequenceStart, onVerdict 
     let width = 1;
     let height = 1;
     let pixelRatio = 1;
-    let lockTimes: number[] = [];
 
     /* El instrumento manda sobre el tamaño de la figura, no al revés: el plan se construye a
        partir del radio del aro para que la punta larga caiga exactamente sobre él. */
@@ -156,7 +150,6 @@ export function VictoryConstellationAnimator({ seed, onSequenceStart, onVerdict 
         uniforms.uEdge.value[index].set(edge.ax, edge.ay, edge.bx, edge.by);
         uniforms.uEdgeT.value[index] = edge.lockAt;
       });
-      lockTimes = plan.nodes.map((node) => node.lockAt);
     };
     resize();
     window.addEventListener("resize", resize);
@@ -188,7 +181,6 @@ export function VictoryConstellationAnimator({ seed, onSequenceStart, onVerdict 
     let startedAt = 0;
     let firstFramePresented = false;
     let lastRenderedAt = Number.NEGATIVE_INFINITY;
-    let nextCardinal = 0;
 
     const tick = (now: number) => {
       // En paneles de 120/144 Hz la copia WebGL→2D no necesita repetirse en cada refresco.
@@ -223,15 +215,7 @@ export function VictoryConstellationAnimator({ seed, onSequenceStart, onVerdict 
         announceSequence();
       }
 
-      // Una punta cardinal que se clava suena, y cada una un paso más aguda que la anterior.
-      while (
-        nextCardinal < CARDINAL_NODES.length
-        && t >= (lockTimes[CARDINAL_NODES[nextCardinal]] ?? 1)
-      ) {
-        playSfx("buff", { rate: CARDINAL_RATES[nextCardinal] });
-        nextCardinal += 1;
-      }
-
+      // La construcción es muda: la acompaña el tema de victoria, no un cue por punta.
       if (t >= DESTINY_CONSTELLATION_VERDICT_AT) announceVerdict();
       // La figura se queda encendida: no se desvanece al terminar.
       frame = window.requestAnimationFrame(tick);
@@ -250,7 +234,7 @@ export function VictoryConstellationAnimator({ seed, onSequenceStart, onVerdict 
       geometry.dispose();
       material.dispose();
     };
-  }, [playSfx, seed, signature]);
+  }, [seed, signature]);
 
   return (
     <div className={`victory-constellation ${fallback ? "is-fallback" : ""}`} aria-hidden="true">

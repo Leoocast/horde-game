@@ -27,6 +27,7 @@ import { TributeOfTheFourSorrowsSelectionOverlay } from "./TributeOfTheFourSorro
 import { SpellFightAnimator } from "./SpellFightAnimator";
 import { SpellTargetingOverlay } from "./SpellTargetingOverlay";
 import { TemporalBackdrop } from "./TemporalBackdrop";
+import { northUprightDialDegrees } from "./temporalDialPresentation";
 import { ToastStack } from "./ToastStack";
 import { TurnPhaseHud } from "./TurnPhaseHud";
 import { DefeatModal } from "./DefeatModal";
@@ -268,6 +269,12 @@ export function Board({
   // La victoria no captura nada: en cuanto la presentación se asienta, el tablero puede retirarse.
   const victoryReady = outcomeOutroReady && game.winner === "player";
   const outcomePresentationPending = Boolean(game.winner) && !defeatReady && !victoryReady;
+  /* Al preservarse el Futuro el instrumento vuelve a su Norte mientras las motas todavía viajan:
+     la constelación es cardinal y sus puntas tienen que clavarse sobre las marcas, no al lado.
+     Es sólo presentación, así que el ángulo acumulado del store no se toca. */
+  const presentedDestinyDial = victoryReady
+    ? northUprightDialDegrees(destinyDial)
+    : destinyDial;
   const presentationInputBlocked = (
     (!game.winner && storePresentationActive)
     || outcomePresentationPending
@@ -380,7 +387,7 @@ export function Board({
         grid
         dialHidden={overtureDialPending}
         climax={climaxReached ? 1 : 0}
-        dial={destinyDial}
+        dial={presentedDestinyDial}
         dialRevision={destinyDialRevision}
         settleDialImmediately={forcedOutcomeDrain}
         onDialSettled={setSettledDestinyDialRevision}
