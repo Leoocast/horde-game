@@ -1,10 +1,11 @@
 import { AlertTriangle, Home, RotateCcw } from "lucide-react";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useGameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
 import { hostInSurge } from "../engine/StaticEffects";
 import { useTranslation } from "../i18n/useTranslation";
+import { captureDesktopViewport } from "../platform/desktopBridge";
 import { AppHeader } from "./AppHeader";
 import { Battlefield } from "./Battlefield";
 import { CardPreview } from "./CardPreview";
@@ -58,6 +59,50 @@ type Props = {
   onReturnToMenu: () => void;
 };
 
+/** Espera a que la limpieza del combate y Vida 0 lleguen al compositor desktop. */
+function waitForDefeatCapturePaint(): Promise<void> {
+  return new Promise((resolve) => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => resolve());
+    });
+  });
+}
+
+/**
+ * Copia píxeles ya pintados. No clona cartas ni vuelve a resolver sus URLs, de modo que repetir
+ * una derrota no puede convertir sus imágenes en recursos rotos.
+ */
+async function capturePaintedDefeatFrame(): Promise<HTMLImageElement | null> {
+  try {
+    const dataUrl = await captureDesktopViewport();
+    if (!dataUrl) return null;
+    const image = new Image();
+    image.decoding = "async";
+    image.src = dataUrl;
+    await image.decode();
+    return image.naturalWidth > 0 && image.naturalHeight > 0 ? image : null;
+  } catch {
+    return null;
+  }
+}
+
+function settleDefeatCapture(
+  task: Promise<HTMLImageElement | null>,
+  timeoutMs = 1800,
+): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (snapshot: HTMLImageElement | null) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timer);
+      resolve(snapshot);
+    };
+    const timer = window.setTimeout(() => finish(null), timeoutMs);
+    task.then(finish).catch(() => finish(null));
+  });
+}
+
 export function Board({
   playerName,
   setupTurns,
@@ -99,6 +144,9 @@ export function Board({
   const playCollection = useAudioStore((state) => state.playCollection);
   const playSfx = useAudioStore((state) => state.playSfx);
   const [showHomeConfirmation, setShowHomeConfirmation] = useState(false);
+  // undefined = preparando el frame final; null = la captura nativa no está disponible.
+  const [defeatSnapshot, setDefeatSnapshot] = useState<HTMLImageElement | null | undefined>(undefined);
+  const defeatCaptureTaskRef = useRef<Promise<HTMLImageElement | null> | null>(null);
   const homeConfirmationPresence = useAnimatedPresence(showHomeConfirmation, 210);
   const surgeReached = surgeTransitionShown || hostInSurge(game);
   const hiddenDefenseLinkIds = useHiddenDefenseLinkIds(game);
@@ -108,7 +156,50 @@ export function Board({
   // El disco de grados mide cómo se mueve el futuro. Lo acumula el store impacto a
   // impacto, que es quien conoce cada golpe y cada baja; aquí sólo se lee.
   const destinyDial = useGameStore((state) => state.destinyDial);
-  const defeatReady = game.winner === "host" && !resolvingHostCombat;
+  const defeatOutcomeReady = game.winner === "host" && !resolvingHostCombat;
+  const defeatReady = defeatOutcomeReady && defeatSnapshot !== undefined;
+  const gameplayPresentationActive = (
+    hostAutoTriggerCount > 0
+    || playerAutoTriggerCount > 0
+    || burnAnimationActive
+    || lifePaymentAnimationActive
+    || bloodPactAnimationActive
+    || drainEssenceAnimationActive
+    || finalBanquetAnimationActive
+    || rootsTouchedSkyAnimationActive
+    || energyFlowAnimationActive
+    || poisonConsumeAnimationActive
+    || resolvingHostCombat
+  );
+  const defeatPresentationPending = game.winner === "host"
+    && (resolvingHostCombat || defeatSnapshot === undefined);
+  const presentationInputBlocked = (
+    (!game.winner && gameplayPresentationActive)
+    || defeatPresentationPending
+  );
+
+  useEffect(() => {
+    if (!defeatOutcomeReady) {
+      defeatCaptureTaskRef.current = null;
+      setDefeatSnapshot(undefined);
+      return;
+    }
+
+    let active = true;
+    const prepareSnapshot = async () => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
+      await waitForDefeatCapturePaint();
+      return settleDefeatCapture(capturePaintedDefeatFrame());
+    };
+    const task = defeatCaptureTaskRef.current ?? prepareSnapshot();
+    defeatCaptureTaskRef.current = task;
+    void task.then((snapshot) => {
+      if (active) setDefeatSnapshot(snapshot);
+    });
+    return () => {
+      active = false;
+    };
+  }, [defeatOutcomeReady]);
 
   useEffect(() => {
     if (climaxReached) setMusicVariant("climax");
@@ -116,12 +207,12 @@ export function Board({
 
   useEffect(() => {
     if (game.winner === "player") playCollection("winTheme");
-    else if (defeatReady) playCollection("lossTheme");
-  }, [defeatReady, game.winner, playCollection]);
+    else if (defeatOutcomeReady) playCollection("lossTheme");
+  }, [defeatOutcomeReady, game.winner, playCollection]);
 
   useLayoutEffect(() => {
-    if (defeatReady) stopGamePresentation();
-  }, [defeatReady, stopGamePresentation]);
+    if (defeatOutcomeReady) stopGamePresentation();
+  }, [defeatOutcomeReady, stopGamePresentation]);
 
   useEffect(() => {
     if (!game.openingHandAccepted || encounterEntering) return;
@@ -135,7 +226,7 @@ export function Board({
         climax={climaxReached ? 1 : 0}
         dial={destinyDial}
       />
-      {/* Capa de fondo, no de tablero: la derrota la deja fuera de la captura y no se rompe. */}
+      {/* El fondo permanece vivo bajo la placa capturada y aparece entre los trozos. */}
       <div className="game-screen-ambience" aria-hidden="true" />
       <AppHeader
         left={game.openingHandAccepted ? <TurnPhaseHud game={game} setupTurns={setupTurns} /> : undefined}
@@ -177,7 +268,9 @@ export function Board({
       <FinalBanquetAnimator />
       <RootsTouchedSkyAnimator />
       <EnergyFlowAnimator />
-      {!game.winner && (hostAutoTriggerCount > 0 || playerAutoTriggerCount > 0 || burnAnimationActive || lifePaymentAnimationActive || bloodPactAnimationActive || drainEssenceAnimationActive || finalBanquetAnimationActive || rootsTouchedSkyAnimationActive || energyFlowAnimationActive || poisonConsumeAnimationActive || resolvingHostCombat) && !tributeOfTheFourSorrowsSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
+      {presentationInputBlocked && !tributeOfTheFourSorrowsSelectionActive && (
+        <div data-audio-click="off" className="fixed inset-0 z-[189]" />
+      )}
       {(activeEffectCardId || closingEffectCardId) && (
         <div data-audio-click="off" className={["effect-focus-backdrop", closingEffectCardId ? "effect-focus-backdrop-closing" : ""].join(" ")} onClick={() => selectActiveEffectCard(undefined)} />
       )}
@@ -200,7 +293,12 @@ export function Board({
       <GuidedTutorialOverlay />
 
       {sessionKind === "normal" && defeatReady && onRewriteFuture && onContemplateFuture && (
-        <DefeatModal game={game} onRewriteFuture={onRewriteFuture} onContemplateFuture={onContemplateFuture} />
+        <DefeatModal
+          game={game}
+          snapshotImage={defeatSnapshot ?? undefined}
+          onRewriteFuture={onRewriteFuture}
+          onContemplateFuture={onContemplateFuture}
+        />
       )}
       {sessionKind === "normal" && game.winner === "player" && onRewriteFuture && onContemplateFuture && (
         <VictoryModal game={game} onRewriteFuture={onRewriteFuture} onContemplateFuture={onContemplateFuture} />

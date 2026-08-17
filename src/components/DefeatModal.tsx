@@ -8,19 +8,19 @@ import { DefeatShatterAnimator } from "./DefeatShatterAnimator";
 
 type Props = {
   game: GameState;
+  snapshotImage?: HTMLImageElement;
   onRewriteFuture: () => void;
   onContemplateFuture: () => void;
 };
 
-export function DefeatModal({ game, onRewriteFuture, onContemplateFuture }: Props) {
+export function DefeatModal({ game, snapshotImage, onRewriteFuture, onContemplateFuture }: Props) {
   const t = useTranslation();
   const pushToast = useToastStore((state) => state.pushToast);
   const futureCode = futureCodeFromSeed(game.seed);
   const [sequenceStarted, setSequenceStarted] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const startSequence = useCallback(() => setSequenceStarted(true), []);
-  // El desenlace se nombra cuando el vidrio ya reventó, no en un reloj propio: el golpe
-  // puede esperar a que termine de fotografiarse el tablero, y el texto va con él.
+  // El desenlace se nombra cuando el vidrio ya reventó, no en un reloj propio.
   const revealOutcome = useCallback(() => setRevealed(true), []);
 
   async function copySeed() {
@@ -34,7 +34,7 @@ export function DefeatModal({ game, onRewriteFuture, onContemplateFuture }: Prop
 
   return (
     <div className={`game-result-overlay game-result-defeat fixed inset-0 z-[140] ${sequenceStarted ? "is-sequence-running" : ""}`}>
-      <DefeatShatterAnimator seed={game.seed} onSequenceStart={startSequence} onBurst={revealOutcome} />
+      <DefeatShatterAnimator seed={game.seed} snapshotImage={snapshotImage} onSequenceStart={startSequence} onBurst={revealOutcome} />
 
       {/* El bloque se centra con una capa a pantalla completa, no con un `translate` propio:
           la succión del vórtice anima `transform` sobre cada pieza de la escena y borraría

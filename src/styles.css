@@ -21596,10 +21596,10 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
 @keyframes destiny-scene-fade-in { from { opacity: 0; } to { opacity: 1; } }
 
 
-/* Derrota: la pantalla se captura una vez y se mapea sobre los prismas de vidrio. Cada trozo se
-   lleva su recorte exacto de lo que fue el tablero y deja ver el espacio que había detrás, que es
-   el mismo fondo permanente del juego. El vidrio y la onda son WebGL; aquí sólo viven el hielo,
-   las quebraduras, la viñeta y el texto. */
+/* Derrota: Electron captura una vez la composición ya pintada y la mapea sobre los prismas. El
+   DOM vivo se retira, pero TemporalBackdrop sigue renderizando debajo y aparece por los huecos
+   que abren los trozos. El vidrio y la onda son WebGL; aquí viven las quebraduras, la viñeta y
+   el texto. */
 .game-result-overlay.game-result-defeat {
   --result-accent: #aa9455;
   --result-accent-bright: #ddca84;
@@ -21636,11 +21636,11 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
   transform: translateZ(0);
 }
 
-.game-result-defeat.is-sequence-running .defeat-shatter-canvas.is-ready { opacity: 1; }
+.game-result-defeat .defeat-shatter-canvas.is-ready { opacity: 1; }
 
-/* La placa ya contiene el tablero, así que lo vivo se retira y detrás sólo queda el fondo: el
-   espacio y sus degradados, que no entran en la captura ni se rompen. El retículo, en cambio,
-   pertenece al cristal: se va con él y no sobrevive al estallido.
+/* La placa contiene el último frame completo, así que el DOM vivo se retira y detrás queda el
+   espacio todavía animado. La geometría transparente del canvas lo revela entre los trozos.
+   El retículo pertenece al cristal: se va con él y no sobrevive al estallido.
    La regla de `body` alcanza los portales —la Reserva, los tooltips y el registro cuelgan de ahí,
    fuera de `.game-screen`— sin tener que enumerar sus clases una por una. */
 body.is-defeat-plated > *:not(#root),
@@ -21665,15 +21665,14 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 }
 
 .game-result-defeat.is-sequence-running .defeat-shatter-fractures path {
-  animation: defeat-crack-grow 520ms 620ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: defeat-crack-grow 520ms 0ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
-.game-result-defeat.is-sequence-running .defeat-shatter-fractures path:nth-child(2n) { animation-delay: 740ms; }
-.game-result-defeat.is-sequence-running .defeat-shatter-fractures path:nth-child(3n) { animation-delay: 860ms; }
+.game-result-defeat.is-sequence-running .defeat-shatter-fractures path:nth-child(2n) { animation-delay: 120ms; }
+.game-result-defeat.is-sequence-running .defeat-shatter-fractures path:nth-child(3n) { animation-delay: 240ms; }
 
 /* Se van con el golpe: a partir de ahí la raja ya no es una línea, son trozos separándose. El
-   golpe no está en un reloj de CSS porque puede esperar a que termine de fotografiarse el
-   tablero; lo anuncia el animador cuando de verdad revienta. */
+   golpe no está en un reloj de CSS: lo anuncia el mismo animador WebGL que mueve los prismas. */
 .game-result-defeat .defeat-shatter.is-bursting .defeat-shatter-fractures {
   animation: defeat-cracks-away 280ms ease-out both;
 }
@@ -21692,8 +21691,8 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
   animation: defeat-vignette-close 700ms ease both;
 }
 
-/* Sin WebGL o sin captura no hay vidrio: queda la fractura quieta sobre el espacio, con el tablero
-   vivo ya retirado por debajo. El oscurecimiento deja respirar el fondo en vez de taparlo. */
+/* Con movimiento reducido o sin WebGL queda la fractura quieta sobre el espacio. El
+   oscurecimiento deja respirar el fondo en vez de taparlo. */
 .defeat-shatter.is-fallback {
   background: transparent;
 }

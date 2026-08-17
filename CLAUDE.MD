@@ -344,46 +344,42 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
 - La derrota normal rompe la pantalla con `DefeatShatterAnimator.tsx` y su referencia canónica es la
   maqueta `dev/mockups/vfx/future-shattered-3d.html`. Cada triángulo del plan estable por seed de
   `defeatShatterGeometry.ts` es un **prisma extruido** —cara frontal, trasera y tres muros—, y toda
-  la animación vive en el vertex shader de `defeatGlassShader.ts` a partir de sus atributos por
-  trozo: una malla y una llamada de dibujo. Lo que se rompe es el tablero: cartas, campo, HUD y el
-  instrumento de grados con su retículo. El fondo no participa. Por eso la captura es siempre
-  `html-to-image` sobre `body`, que deja alfa; `webContents.capturePage()` devuelve píxeles opacos
-  y metería el espacio dentro del vidrio, así que la derrota no lo usa aunque el bridge exista. La
-  captura descarta todo lo que es fondo —lienzos WebGL, `.game-screen-ambience` y el color de la
-  propia pantalla—; se valida y una lámina uniforme se rechaza, porque no existe textura plana de
-  reserva. Después mapea cada trozo exacto mediante UV globales. Los degradados de ambiente viven en
-  un elemento real y no en un pseudo justamente para poder quedarse fuera: cualquier película oscura
-  a pantalla completa que entre en la placa se va volando con los trozos, y entonces el fondo parece
-  aclararse después de la explosión en vez de quedarse quieto.
-- La secuencia arranca con la Vida a 0, nunca cuando termina la captura. La escena existe desde el
-  primer fotograma con la lámina limpia —un texel transparente, jamás un color que finja el
-  tablero—, así que el cuarteado corre de inmediato con el tablero vivo todavía visible a través
-  del vidrio. La captura sólo lo imprime cuando llega, y con ella el tablero vivo se retira. Lo
-  único que puede esperar es el golpe, porque imprimir sobre trozos que ya vuelan sería un salto:
-  revienta al llegar la placa más un margen de asiento, nunca antes de 1560 ms y como muy tarde a
-  los 4200 ms, y pasado ese tope revienta con vidrio limpio y la captura se descarta. Ese margen no
-  es decorativo: terminar de fotografiar el DOM, subir la textura y retirar el tablero vivo son tres
-  costes que no pueden caer encima del estallido, y por eso además el relevo del tablero ocurre un
-  fotograma después de subir la textura. Fotografiar el DOM cuesta lo que cuesta
-  y el diseño no puede depender de que sea rápido. La captura se toma sobre `body` porque la
-  Reserva y los tooltips cuelgan de ahí por portal.
+  la animación vive en el vertex shader de `defeatGlassShader.ts`: una malla y una llamada de dibujo.
+  Cada cara recibe mediante UV globales el recorte exacto del último frame visible.
+- Cuando el atacante letal termina su animación y `resolvingHostCombat` vuelve a `false`, `Board`
+  espera a que Vida 0 y la limpieza del combate lleguen al compositor. Antes de montar el overlay
+  pide una sola captura nativa mediante `webContents.capturePage()`, limitada en el proceso main a
+  2560×1440 y decodificada de forma asíncrona. Es una captura de los píxeles ya pintados: no clona
+  el DOM, no recalcula estilos y no vuelve a resolver URLs de cartas, fuentes ni portales. La placa
+  es deliberadamente opaca e incluye la composición completa de ese instante; la transparencia la
+  abren después los huecos entre los prismas. En web o si falla el bridge se usa vidrio limpio, sin
+  serializador DOM ni color opaco de reserva.
+- El overlay sólo se monta cuando esa preparación termina. Antes de arrancar el reloj visible, el
+  animador hace un render oculto que crea/reutiliza el contexto, sube la textura fullscreen y
+  completa la primera copia WebGL→2D. Así ningún coste de captura, decodificación o primera subida
+  cae dentro del cuarteado. Tras pintar la placa, el frame siguiente aplica
+  `body.is-defeat-plated`: retira el tablero vivo, pero conserva `TemporalBackdrop` y
+  `.game-screen-ambience` renderizando debajo. Los trozos llevan el espacio congelado del instante
+  capturado y los huecos revelan inmediatamente el espacio vivo; no hay handoff a negro. Si no hay
+  captura nativa, el tablero permanece visible hasta el golpe.
 - Nada cambia de color antes de que el vidrio se rompa. No hay sello frío sobre la captura, ni capa
   de hielo en el DOM, ni viñeta encendida de salida: la pantalla se ve igual que un instante antes
   y lo primero que ocurre es el cuarteado. Reintroducir un tinte previo es una regresión.
-- El reloj de la derrota es el de la maqueta salvo por eso: cuartear desde 620 ms, onda expansiva e
-  impulso en el golpe y nombrar el desenlace 1340 ms después de ese golpe. El desenlace se cuelga
+- El reloj de la derrota conserva el ritmo de la maqueta salvo por el anclaje al combate: el
+  cuarteado empieza en el primer frame visible tras terminar el atacante, la onda y el impulso
+  llegan en el golpe, y el desenlace se nombra 1340 ms después. El desenlace se cuelga
   del golpe real mediante `onBurst`, no de un reloj propio del modal. La lámina entera tiene
   espesor cero —los muros vecinos coinciden y en escorzo asomarían como aristas doradas en
   z-fighting— y sólo gana grosor al separarse. Las magnitudes del diseño se dieron sobre un plano de
   alto 1 y llegan al shader escaladas por `uScale`; no reajustarlas convierte la tensión del
   cuarteado en un salto visible.
-- Lo que se rompe es el tablero y lo que queda detrás es el **espacio exterior del propio juego**,
-  no un fondo aparte. La escena de la derrota no dibuja fondo: su lienzo queda transparente y lo que
-  asoma por cada hueco es el `TemporalBackdrop` vivo, sin teñir. El espacio ya no se enrojece al
-  perder: ese intento quedó retirado y no debe reintroducirse. Con el tablero impreso o estallado,
-  `body.is-defeat-plated` retira el tablero vivo y el retículo del cristal —ese
-  retículo pertenece al vidrio que se está rompiendo y viaja dentro de la captura—, y sólo el cielo
-  permanece. No existe un abismo procedural ni un oscurecimiento de CSS detrás del vidrio. El golpe
+- Lo que se rompe es el último frame visible y lo que queda detrás es el **espacio exterior del
+  propio juego**, no un fondo aparte. La escena de la derrota no dibuja fondo: su lienzo queda
+  transparente fuera de los prismas y lo que asoma por cada hueco es el `TemporalBackdrop` vivo,
+  sin teñir. El espacio ya no se enrojece al perder: ese intento quedó retirado y no debe
+  reintroducirse. `body.is-defeat-plated` retira el tablero vivo y el retículo; sólo el cielo y la
+  capa de ambiente permanecen animados debajo. No existe un abismo procedural ni un oscurecimiento
+  de CSS detrás del vidrio. El golpe
   tampoco monta destello DOM ni temblor de pantalla: lo cuenta la onda WebGL aditiva. En el DOM sólo
   quedan el hielo, las quebraduras SVG, la viñeta y el texto. Vidrio y onda comparten escena porque
   `renderSharedVfxFrame` dibuja una escena con una cámara, y el fotograma se pide en

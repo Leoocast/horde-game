@@ -1095,41 +1095,44 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   const glassShader = readFileSync(new URL("../src/components/defeatGlassShader.ts", import.meta.url), "utf8");
   const modal = readFileSync(new URL("../src/components/DefeatModal.tsx", import.meta.url), "utf8");
   const board = readFileSync(new URL("../src/components/Board.tsx", import.meta.url), "utf8");
+  const desktopMain = readFileSync(new URL("../electron/main.ts", import.meta.url), "utf8");
   const backdrop = readFileSync(new URL("../src/components/TemporalBackdrop.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.match(animator, /renderSharedVfxFrame/u);
-  assert.match(animator, /const htmlToImageRuntime = import\("html-to-image"\)/u);
-  // Se fotografía `body`: la Reserva y los tooltips cuelgan de ahí por portal y sólo con el
-  // tablero desaparecerían al montarse la placa.
-  assert.match(animator, /toCanvas\(document\.body, \{/u);
-  assert.match(animator, /style: \{ backgroundColor: "transparent" \}/u);
-  assert.match(animator, /screenTexture\.image = board;/u);
-  // La placa nunca puede llevar el fondo dentro: `capturePage` devuelve píxeles opacos, así que
-  // el espacio saldría volando con los trozos. La captura es siempre `html-to-image`, con alfa.
-  assert.doesNotMatch(animator, /captureDesktopViewport/u);
-  assert.match(animator, /snapshotHasVisualDetail/u);
-  assert.match(animator, /function settleBefore<T>/u);
-  assert.match(animator, /const snapshotWidth = Math\.min\(width, pixelWidth\)/u);
-  assert.match(animator, /const snapshotHeight = Math\.min\(height, pixelHeight\)/u);
-  assert.match(animator, /captureBattlefield\(width, height, snapshotWidth, snapshotHeight\)/u);
-  // La secuencia arranca con la Vida a 0: la escena existe desde el primer fotograma, el vidrio
-  // nace limpio y la captura sólo lo imprime cuando llega.
-  assert.match(animator, /const rendered = createShatterScene\(width, height, pixelRatio, futureVisualSignature\(seed\)\);\s*onSequenceStart\(\);/u);
+  assert.match(board, /captureDesktopViewport\(\)/u);
+  // The native capture happens after combat settles and before the overlay mounts. Electron
+  // copies painted pixels, so the defeat path never clones the DOM or reloads card URLs.
+  assert.match(board, /await waitForDefeatCapturePaint\(\)/u);
+  assert.match(board, /image\.decoding = "async"/u);
+  assert.match(board, /await image\.decode\(\)/u);
+  assert.match(board, /const defeatOutcomeReady = game\.winner === "host" && !resolvingHostCombat/u);
+  assert.match(board, /const defeatReady = defeatOutcomeReady && defeatSnapshot !== undefined/u);
+  assert.match(board, /const defeatPresentationPending = game\.winner === "host"\s*&& \(resolvingHostCombat \|\| defeatSnapshot === undefined\)/u);
+  assert.match(board, /presentationInputBlocked && !tributeOfTheFourSorrowsSelectionActive/u);
+  assert.match(board, /snapshotImage=\{defeatSnapshot \?\? undefined\}/u);
+  assert.match(board, /settleDefeatCapture\(capturePaintedDefeatFrame\(\)\)/u);
+  assert.match(desktopMain, /const DEFEAT_CAPTURE_MAX_WIDTH = 2560/u);
+  assert.match(desktopMain, /const DEFEAT_CAPTURE_MAX_HEIGHT = 1440/u);
+  assert.match(desktopMain, /capture\.resize\(\{/u);
+  assert.doesNotMatch(animator, /html-to-image|toCanvas\(document\.body|snapshotHasVisualDetail/u);
+  assert.doesNotMatch(board, /html-to-image|toCanvas\(document\.body/u);
+  // The native plate contains the exact final compositor frame, including portal content.
+  assert.match(animator, /snapshotImage\?: HTMLImageElement/u);
+  assert.match(animator, /screenTexture\.image = snapshotImage/u);
+  // The opaque screenshot colors the shards; transparency comes from the gaps in their geometry.
+  // Capture, decode, and upload settle before the visible sequence clock begins.
   assert.match(animator, /function createClearGlassTexture\(\)/u);
-  assert.match(animator, /rendered\.printBoard\(snapshot\)/u);
-  // Sólo el golpe puede esperar a la captura, y con un tope: imprimir el tablero sobre trozos
-  // que ya vuelan seria un salto, y quedarse mirando una pantalla rajada tampoco vale.
-  assert.match(animator, /const EARLIEST_BURST_MS = 1560/u);
-  assert.match(animator, /const LATEST_BURST_MS = 4200/u);
-  assert.match(animator, /elapsed >= Math\.min\(readyToBurstAtMs \?\? Infinity, LATEST_BURST_MS\)/u);
-  // Terminar la captura, subir la textura y retirar el tablero vivo cuestan; ninguna de esas
-  // tres cosas puede caer encima del estallido.
-  assert.match(animator, /const PLATE_SETTLE_MS = 260/u);
-  assert.match(animator, /coverPending = true;/u);
-  assert.match(animator, /coverAfterPaint = true;/u);
+  // Once the preflight succeeds, timing is deterministic.
+  assert.match(animator, /const preflightDrew = renderShatterFrame\(\);/u);
+  assert.ok(animator.indexOf("const preflightDrew = renderShatterFrame();") < animator.lastIndexOf("onSequenceStart();"));
+  assert.match(animator, /const CRACK_AT_MS = 0/u);
+  assert.match(animator, /const BURST_SETTLE_MS = 40/u);
+  assert.match(animator, /const BURST_AT_MS = CRACK_AT_MS \+ CRACK_SPAN_MS \+ BURST_SETTLE_MS/u);
+  assert.match(animator, /elapsed >= BURST_AT_MS/u);
+  // The live board is hidden only after the captured plate has painted.
+  assert.match(animator, /coverAfterPaint = Boolean\(snapshotImage\);/u);
   assert.match(animator, /if \(coverAfterPaint\) \{[\s\S]*?coverBoard\(\);/u);
-  assert.match(animator, /if \(burstAtMs !== undefined\) return;/u);
   // El render/copy fullscreen no corre a 120/144 Hz ni excede el presupuesto 2560x1440.
   assert.match(animator, /const FRAME_INTERVAL_MS = 1000 \/ 60/u);
   assert.match(animator, /boundedVfxPixelRatio\(width, height, window\.devicePixelRatio \|\| 1\)/u);
@@ -1148,18 +1151,14 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(styles, /\.defeat-outcome \{\s*position: absolute;[\s\S]*?place-items: center;/u);
   assert.match(styles, /@keyframes defeat-outcome-in \{\s*from \{ opacity: 0; transform: translateY\(10px\); \}/u);
   assert.match(modal, /className="defeat-outcome-inner"/u);
-  // El fondo no participa: la capa de ambiente es un elemento real justamente para poder
-  // descartarla de la captura, y sigue viva detrás del vidrio roto.
-  assert.match(animator, /!node\.classList\?\.contains\("game-screen-ambience"\)/u);
+  // TemporalBackdrop and ambience remain alive below the opaque shard geometry.
   assert.match(styles, /\.game-screen-ambience \{/u);
   assert.doesNotMatch(styles, /\.game-screen::before/u);
   assert.match(board, /className="game-screen-ambience"/u);
-  assert.match(board, /const defeatReady = game\.winner === "host" && !resolvingHostCombat/u);
   assert.match(board, /sessionKind === "normal" && defeatReady/u);
   // El vidrio se lee aunque no haya nada impreso: alfa de la captura con suelo de Fresnel.
   assert.match(glassShader, /float printed = middle\.a/u);
   assert.match(glassShader, /vFade \* max\(printed, glassEdge\)/u);
-  assert.match(animator, /if \(cancelled \|\| !snapshot\) return;/u);
   assert.doesNotMatch(animator, /new THREE\.DataTexture/u);
   assert.match(animator, /createDefeatGlassMaterial/u);
   // Una sola malla con atributos por trozo: ni una geometría por fragmento ni luces
@@ -1181,7 +1180,7 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.doesNotMatch(glassShader, /gl_FragColor = vec4\(color \* fade, 1\.0\)/u);
   assert.doesNotMatch(animator, /new THREE\.WebGLRenderer|forceContextLoss/u);
   assert.match(animator, /prefers-reduced-motion:\s*reduce/u);
-  assert.match(modal, /<DefeatShatterAnimator seed=\{game\.seed\} onSequenceStart=\{startSequence\}/u);
+  assert.match(modal, /<DefeatShatterAnimator seed=\{game\.seed\} snapshotImage=\{snapshotImage\} onSequenceStart=\{startSequence\}/u);
   assert.match(modal, /t\("destiny\.futureLostLineOne"\)/u);
   assert.match(modal, /t\("destiny\.futureLostLineTwo"\)/u);
   // Detrás del vidrio no se dibuja ningún fondo propio: el lienzo queda transparente y lo
@@ -1194,8 +1193,7 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.doesNotMatch(readFileSync(new URL("../src/components/temporalBackdropShader.ts", import.meta.url), "utf8"), /uDefeat/u);
   assert.match(styles, /body\.is-defeat-plated \.game-screen > \*:not\(\.temporal-backdrop\):not\(\.game-screen-ambience\):not\(\.game-result-overlay\)/u);
   assert.match(styles, /body\.is-defeat-plated[\s\S]*?\.temporal-backdrop-grid \{ visibility: hidden; \}/u);
-  // La captura web llega sin cielo porque `html-to-image` no fotografía WebGL: se compone
-  // sobre el lienzo vivo para que el cosmos no desaparezca al montarse la placa.
+  // No opaque placeholder is used when the desktop bridge is unavailable.
   assert.doesNotMatch(animator, /backgroundColor: "#07100f"/u);
   // En lineal: la conversión sRGB del renderer compartido aclara la captura y el Fresnel
   // deja de leerse frío.
@@ -1209,7 +1207,7 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   // temblor de pantalla. El golpe lo cuenta la onda WebGL.
   assert.doesNotMatch(animator, /defeat-shatter-impact/u);
   assert.doesNotMatch(styles, /defeat-screen-tremor|defeat-result-darkness|defeat-shatter-impact/u);
-  assert.match(styles, /animation:\s*defeat-crack-grow 520ms 620ms/u);
+  assert.match(styles, /animation:\s*defeat-crack-grow 520ms 0ms/u);
   assert.match(styles, /\.is-bursting \.defeat-shatter-fractures \{\s*animation: defeat-cracks-away 280ms ease-out both;/u);
   assert.match(styles, /\.is-bursting \.defeat-shatter-vignette \{\s*animation: defeat-vignette-close 700ms ease both;/u);
   assert.match(styles, /\.defeat-shatter\.is-fallback \{\s*background: transparent;/u);

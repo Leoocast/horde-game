@@ -41,7 +41,6 @@
   "dependencies": {
     "framer-motion": "^12.42.2",
     "gsap": "3.12.2",
-    "html-to-image": "1.11.13",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

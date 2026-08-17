@@ -33,6 +33,8 @@ import {
 
 const CREDIT_URL = "https://github.com/Leoocast";
 const APP_ID = "com.hostfall.game";
+const DEFEAT_CAPTURE_MAX_WIDTH = 2560;
+const DEFEAT_CAPTURE_MAX_HEIGHT = 1440;
 const EXTERNAL_LINKS = Object.freeze({ credits: CREDIT_URL });
 const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
 const smokeMode = process.env.HOSTFALL_ELECTRON_SMOKE === "1";
@@ -318,7 +320,21 @@ function registerIpcHandlers(): void {
   ipcMain.handle("hostfall:capture-viewport", async (event) => {
     assertTrustedRenderer(event);
     const capture = await event.sender.capturePage();
-    return capture.isEmpty() ? undefined : capture.toDataURL();
+    if (capture.isEmpty()) return undefined;
+    const size = capture.getSize();
+    const scale = Math.min(
+      1,
+      DEFEAT_CAPTURE_MAX_WIDTH / Math.max(1, size.width),
+      DEFEAT_CAPTURE_MAX_HEIGHT / Math.max(1, size.height),
+    );
+    const prepared = scale < 1
+      ? capture.resize({
+          width: Math.max(1, Math.round(size.width * scale)),
+          height: Math.max(1, Math.round(size.height * scale)),
+          quality: "good",
+        })
+      : capture;
+    return prepared.toDataURL();
   });
 
   ipcMain.handle("hostfall:get-window-state", (event) => {
