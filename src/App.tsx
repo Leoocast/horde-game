@@ -6,7 +6,12 @@ import { DestinyRewriteTransition, type DestinyTransitionKind } from "./componen
 import { ENCOUNTER_IMPACT_MS, ENCOUNTER_OPEN_MS, ENCOUNTER_TRANSITION_MS, EncounterTransition } from "./components/EncounterTransition";
 import { ChronicleSigilOverture } from "./components/ChronicleSigilOverture";
 import { GameLoadingScreen } from "./components/GameLoadingScreen";
-import { StartMenu } from "./components/StartMenu";
+import { StartMenu, type HowToPlayMenuEntry } from "./components/StartMenu";
+import {
+  GUIDED_LESSON_BOARD_SESSION,
+  LEARN_TO_PLAY_BOARD_SESSION,
+  NORMAL_BOARD_SESSION,
+} from "./components/boardSessionPolicies";
 import { findInspectableDeck, hostInspectableDecks, playerInspectableDecks } from "./data/deckCatalog";
 import type { GameMode } from "./engine/GameTypes";
 import { useAudioStore } from "./store/useAudioStore";
@@ -26,7 +31,9 @@ import {
 import { restoreResumeGame } from "./persistence/resumeSave";
 import { initializeGuidedProgressPersistence } from "./persistence/guidedProgressPersistence";
 import { guidedProductLifecycle } from "./guidance/productRuntime";
-import { BASIC_TUTORIAL_LESSON_ID, guidedLessonRegistry } from "./guidance/registry";
+import { guidedLessonRegistry } from "./guidance/registry";
+import { HOW_TO_PLAY_CATALOG } from "./guidance/howToPlayCatalog";
+import { LEARN_TO_PLAY_JOURNEY, learnToPlayJourneyLifecycle } from "./guidance/learnToPlayJourney";
 
 // The conditional imports are compile-time: release builds remove both developer modules instead
 // of merely hiding their entry buttons.
@@ -37,7 +44,7 @@ const AudioLabScreen = import.meta.env.DEV
   ? lazy(() => import("./audio-lab/AudioLabScreen").then((module) => ({ default: module.AudioLabScreen })))
   : undefined;
 
-type AppScreen = "start" | "deckInspector" | "game" | "tutorial" | "playground" | "audioLab";
+type AppScreen = "start" | "deckInspector" | "game" | "tutorial" | "journey" | "playground" | "audioLab";
 
 type LaunchTransitionState = {
   id: number;
@@ -69,6 +76,8 @@ const BOARD_OVERTURE_HAND_DELAY_MS = 650;
 
 const subscribeGuidedLifecycle = (listener: () => void) => guidedProductLifecycle.subscribe(listener);
 const readGuidedLifecycle = () => guidedProductLifecycle.snapshot();
+const subscribeJourneyLifecycle = (listener: () => void) => learnToPlayJourneyLifecycle.subscribe(listener);
+const readJourneyLifecycle = () => learnToPlayJourneyLifecycle.snapshot();
 
 export default function App() {
   const reset = useGameStore((state) => state.reset);
@@ -104,10 +113,15 @@ export default function App() {
   const [preferencesReady, setPreferencesReady] = useState(false);
   const [requiredTutorialOffered, setRequiredTutorialOffered] = useState(false);
   const guidedLifecycle = useSyncExternalStore(subscribeGuidedLifecycle, readGuidedLifecycle, readGuidedLifecycle);
-  // Development keeps required lessons opt-in so reloads never interrupt iteration. Release builds
-  // preserve the mandatory first-run gate.
+  const journeyLifecycle = useSyncExternalStore(subscribeJourneyLifecycle, readJourneyLifecycle, readJourneyLifecycle);
+  // The generic lesson gate remains available, but the current catalog contains only optional
+  // Preparation. Learn to Play does not enter first-open gating until its later handoff phase.
   const requiredLesson = IS_DEV ? undefined : guidedProductLifecycle.nextRequiredLesson();
-  const basicTutorialLesson = guidedLessonRegistry.find(BASIC_TUTORIAL_LESSON_ID);
+  const boardSessionPolicy = screen === "tutorial"
+    ? GUIDED_LESSON_BOARD_SESSION
+    : screen === "journey"
+      ? LEARN_TO_PLAY_BOARD_SESSION
+      : NORMAL_BOARD_SESSION;
 
   useEffect(() => {
     return registerDesktopLifecycle();
@@ -126,9 +140,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (screen !== "game") return;
+    if (!boardSessionPolicy.autosave || screen !== "game") return;
     return startDesktopResumeCheckpointing({ setupTurns, playerName });
-  }, [playerName, screen, setupTurns]);
+  }, [boardSessionPolicy, playerName, screen, setupTurns]);
 
   useEffect(() => {
     let active = true;
@@ -282,6 +296,19 @@ export default function App() {
     guidedProductLifecycle.restart();
   }
 
+  function launchLearnToPlayJourney() {
+    setSetupTurns(LEARN_TO_PLAY_JOURNEY.setupTurns);
+    setPreserveMenuMusic(false);
+    stopMusic();
+    if (!learnToPlayJourneyLifecycle.start()) return;
+    setScreen("journey");
+    startBattleMusic(true);
+  }
+
+  function restartLearnToPlayJourney() {
+    learnToPlayJourneyLifecycle.restart();
+  }
+
   const beginDestinyTransition = useCallback((kind: DestinyTransitionKind) => {
     if (destinyTransitionRef.current) return;
     const gameStore = useGameStore.getState();
@@ -322,6 +349,13 @@ export default function App() {
 
   function leaveGuidedLesson() {
     guidedProductLifecycle.stop();
+    setPreserveMenuMusic(false);
+    setMenuReturnScreen("home");
+    setScreen("start");
+  }
+
+  function leaveLearnToPlayJourney() {
+    learnToPlayJourneyLifecycle.stop();
     setPreserveMenuMusic(false);
     setMenuReturnScreen("home");
     setScreen("start");
@@ -397,6 +431,24 @@ export default function App() {
   }
 
   if (screen === "start") {
+    const howToPlayEntries: readonly HowToPlayMenuEntry[] = HOW_TO_PLAY_CATALOG.map((entry) => {
+      if (entry.launcher.kind === "guided-lesson") {
+        const lesson = guidedLessonRegistry.find(entry.launcher.lessonId);
+        return {
+          ...entry,
+          onLaunch: lesson ? () => {
+            setRequiredTutorialOffered(true);
+            launchGuidedLesson(lesson.id);
+          } : undefined,
+        };
+      }
+      return {
+        ...entry,
+        // The authored advanced battle arrives in the next phase. Development can exercise the
+        // lifecycle shell now; product builds present the catalog entry without a false promise.
+        onLaunch: IS_DEV ? launchLearnToPlayJourney : undefined,
+      };
+    });
     return (
       <>
         <AudioClickListener />
@@ -440,11 +492,9 @@ export default function App() {
             stopMusic();
             setScreen("audioLab");
           } : undefined}
-          onOpenBasicTutorial={basicTutorialLesson ? () => {
-            setRequiredTutorialOffered(true);
-            launchGuidedLesson(basicTutorialLesson.id);
-          } : undefined}
-          resumeStatus={requiredLesson ? "none" : desktopResume.status}
+          howToPlayEntries={howToPlayEntries}
+          resumeStatus={desktopResume.status}
+          continueDisabled
           onContinue={!requiredLesson && desktopResume.save ? () => {
             const save = desktopResume.save!;
             const deckIds = resumeDeckIds(save);
@@ -536,13 +586,17 @@ export default function App() {
         overtureSettling={boardOverture?.phase === "overlap"}
         overtureHandPending={Boolean(boardOverture && !boardOverture.handReady)}
         overtureDialPending={Boolean(boardOverture?.dialPending)}
-        sessionKind={screen === "tutorial" ? "tutorial" : "normal"}
+        sessionPolicy={boardSessionPolicy}
         tutorialInterrupted={screen === "tutorial" && (guidedLifecycle.status === "aborted" || guidedLifecycle.status === "failed")}
-        tutorialErrorMessage={guidedLifecycle.errorMessage}
-        onRestartTutorial={screen === "tutorial" ? restartGuidedLesson : undefined}
+        tutorialErrorMessage={screen === "tutorial" ? guidedLifecycle.errorMessage : journeyLifecycle.errorMessage}
+        onRestartTutorial={screen === "tutorial"
+          ? restartGuidedLesson
+          : screen === "journey"
+            ? restartLearnToPlayJourney
+            : undefined}
         onRewriteFuture={screen === "game" ? () => beginDestinyTransition("rewrite") : undefined}
         onContemplateFuture={screen === "game" ? () => beginDestinyTransition("contemplate") : undefined}
-        onReturnToMenu={screen === "tutorial" ? leaveGuidedLesson : () => {
+        onReturnToMenu={screen === "tutorial" ? leaveGuidedLesson : screen === "journey" ? leaveLearnToPlayJourney : () => {
           void deleteDesktopResume();
           setDesktopResume({ status: "none" });
           setPreserveMenuMusic(false);

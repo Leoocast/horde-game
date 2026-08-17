@@ -13,11 +13,12 @@ import { ZoneDrawer } from "./ZoneDrawer";
 type Props = {
   onReturnToMenu?: () => void;
   onRestartTutorial?: () => void;
-  sessionKind?: "normal" | "tutorial";
+  sessionKind?: "normal" | "tutorial" | "journey";
+  restricted?: boolean;
   setupTurns?: number;
 };
 
-export function SettingsMenu({ onReturnToMenu, onRestartTutorial, sessionKind = "normal", setupTurns = 3 }: Props) {
+export function SettingsMenu({ onReturnToMenu, onRestartTutorial, sessionKind = "normal", restricted, setupTurns = 3 }: Props) {
   const t = useTranslation();
   const game = useGameStore((state) => state.game);
   const reset = useGameStore((state) => state.reset);
@@ -28,7 +29,8 @@ export function SettingsMenu({ onReturnToMenu, onRestartTutorial, sessionKind = 
   const modalPresence = useAnimatedPresence(open, 220);
   const [showRestartConfirmation, setShowRestartConfirmation] = useState(false);
   const restartPresence = useAnimatedPresence(showRestartConfirmation, 190);
-  const tutorial = sessionKind === "tutorial";
+  const guided = restricted ?? sessionKind !== "normal";
+  const journey = sessionKind === "journey";
   const guidanceProgress = useSyncExternalStore(
     (listener) => guidedProgressStore.subscribe(listener),
     () => guidedProgressStore.snapshot(),
@@ -61,7 +63,7 @@ export function SettingsMenu({ onReturnToMenu, onRestartTutorial, sessionKind = 
   }
 
   function restartGame() {
-    if (tutorial) {
+    if (guided) {
       onRestartTutorial?.();
       setShowRestartConfirmation(false);
       setOpen(false);
@@ -75,7 +77,7 @@ export function SettingsMenu({ onReturnToMenu, onRestartTutorial, sessionKind = 
   return (
     <>
       <button
-        {...(tutorial ? { "data-guided-system-control": "true" } : {})}
+        {...(guided ? { "data-guided-system-control": "true" } : {})}
         className="game-header-button flex h-10 w-10 items-center justify-center transition"
         onClick={() => setOpen(true)}
         title={t("menu.settings")}
@@ -86,22 +88,22 @@ export function SettingsMenu({ onReturnToMenu, onRestartTutorial, sessionKind = 
 
       {modalPresence.mounted && (
         <div
-          {...(tutorial ? { "data-guided-system-control": "true", "data-guided-system-modal": "true" } : {})}
-          className={[`game-settings-modal-backdrop fixed inset-0 ${tutorial ? "z-[20030]" : "z-[430]"} flex items-center justify-center p-5`, modalPresence.closing ? "is-closing" : ""].join(" ")}
+          {...(guided ? { "data-guided-system-control": "true", "data-guided-system-modal": "true" } : {})}
+          className={[`game-settings-modal-backdrop fixed inset-0 ${guided ? "z-[20030]" : "z-[430]"} flex items-center justify-center p-5`, modalPresence.closing ? "is-closing" : ""].join(" ")}
           role="presentation"
         >
-          <section className={[`game-settings-modal old-panel flex max-h-[min(860px,calc(100vh-40px))] ${tutorial ? "w-[min(560px,calc(100vw-40px))]" : "w-[min(1040px,calc(100vw-40px))]"} flex-col overflow-hidden`, modalPresence.closing ? "is-closing" : ""].join(" ")} role="dialog" aria-modal="true" aria-labelledby="battle-settings-title">
+          <section className={[`game-settings-modal old-panel flex max-h-[min(860px,calc(100vh-40px))] ${guided ? "w-[min(560px,calc(100vw-40px))]" : "w-[min(1040px,calc(100vw-40px))]"} flex-col overflow-hidden`, modalPresence.closing ? "is-closing" : ""].join(" ")} role="dialog" aria-modal="true" aria-labelledby="battle-settings-title">
             <header className="game-settings-modal-header flex items-center justify-between gap-5 px-7 py-5">
               <div>
-                <div className="game-dialog-kicker">{t(tutorial ? "guided.settings.kicker" : "settings.battleConfiguration")}</div>
-                <h2 id="battle-settings-title">{t(tutorial ? "guided.settings.title" : "settings.battleTitle")}</h2>
+                <div className="game-dialog-kicker">{t(journey ? "guided.journey.settingsKicker" : guided ? "guided.settings.kicker" : "settings.battleConfiguration")}</div>
+                <h2 id="battle-settings-title">{t(journey ? "guided.journey.settingsTitle" : guided ? "guided.settings.title" : "settings.battleTitle")}</h2>
               </div>
               <button className="game-header-button flex h-10 w-10 items-center justify-center" type="button" onClick={() => setOpen(false)} title={t("settings.close")} aria-label={t("settings.close")}>
                 <X size={19} />
               </button>
             </header>
 
-            <div className={`grid min-h-0 flex-1 ${tutorial ? "grid-cols-1" : "grid-cols-[320px_minmax(0,1fr)]"} gap-5 overflow-hidden p-5`}>
+            <div className={`grid min-h-0 flex-1 ${guided ? "grid-cols-1" : "grid-cols-[320px_minmax(0,1fr)]"} gap-5 overflow-hidden p-5`}>
               <div className="old-scrollbar min-h-0 space-y-4 overflow-y-auto pr-2">
                 <LanguageSelector variant="panel" />
                 <AudioControls />
@@ -122,9 +124,9 @@ export function SettingsMenu({ onReturnToMenu, onRestartTutorial, sessionKind = 
                   </label>
                 </section>
 
-                {!tutorial && <ZoneDrawer game={game} />}
+                {!guided && <ZoneDrawer game={game} />}
 
-                {!tutorial && isDeveloperMode && (
+                {!guided && isDeveloperMode && (
                   <section className="old-panel-soft p-4">
                     <div className="game-settings-section-title">{t("settings.developerOptions")}</div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
@@ -135,18 +137,18 @@ export function SettingsMenu({ onReturnToMenu, onRestartTutorial, sessionKind = 
                   </section>
                 )}
 
-                {tutorial && (
+                {guided && (
                   <section className="old-panel-soft p-4">
-                    <div className="game-settings-section-title">{t("guided.settings.lesson")}</div>
-                    <p className="mt-2 text-sm text-[#8d9a94]">{t("guided.settings.restartDescription")}</p>
+                    <div className="game-settings-section-title">{t(journey ? "guided.journey.current" : "guided.settings.lesson")}</div>
+                    <p className="mt-2 text-sm text-[#8d9a94]">{t(journey ? "guided.journey.restartDescription" : "guided.settings.restartDescription")}</p>
                     <button className="game-dialog-action mt-4 flex h-10 w-full items-center justify-center gap-2 text-xs font-bold uppercase" type="button" onClick={openRestartConfirmation}>
-                      <RefreshCcw size={15} /> {t("guided.lifecycle.restart")}
+                      <RefreshCcw size={15} /> {t(journey ? "guided.journey.restart" : "guided.lifecycle.restart")}
                     </button>
                   </section>
                 )}
               </div>
 
-              {!tutorial && <section className="game-settings-log old-panel-soft flex min-h-[430px] flex-col p-5">
+              {!guided && <section className="game-settings-log old-panel-soft flex min-h-[430px] flex-col p-5">
                 <div className="game-settings-chronicle-title">Chronicle</div>
                 <p>Every action recorded during this battle.</p>
                 <GameLog game={game} variant="embedded" className="mt-4 min-h-0 flex-1" />
@@ -155,7 +157,7 @@ export function SettingsMenu({ onReturnToMenu, onRestartTutorial, sessionKind = 
 
             <footer className="game-settings-modal-footer flex items-center justify-between gap-4 px-5 py-4">
               {onReturnToMenu && (
-                <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 px-6 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onReturnToMenu}><Home size={16} /> {t(tutorial ? "guided.lifecycle.exit" : "settings.returnMenu")}</button>
+                <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 px-6 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onReturnToMenu}><Home size={16} /> {t(journey ? "guided.journey.exit" : guided ? "guided.lifecycle.exit" : "settings.returnMenu")}</button>
               )}
               <button className="game-dialog-action flex h-11 items-center justify-center px-6 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={() => setOpen(false)}>{t("common.close")}</button>
             </footer>
@@ -165,17 +167,17 @@ export function SettingsMenu({ onReturnToMenu, onRestartTutorial, sessionKind = 
 
       {restartPresence.mounted && (
         <div
-          {...(tutorial ? { "data-guided-system-control": "true", "data-guided-system-modal": "true" } : {})}
-          className={[`game-home-backdrop fixed inset-0 ${tutorial ? "z-[20040]" : "z-[460]"} flex items-center justify-center p-6 text-[#e4ddc2]`, restartPresence.closing ? "is-closing" : ""].join(" ")}
+          {...(guided ? { "data-guided-system-control": "true", "data-guided-system-modal": "true" } : {})}
+          className={[`game-home-backdrop fixed inset-0 ${guided ? "z-[20040]" : "z-[460]"} flex items-center justify-center p-6 text-[#e4ddc2]`, restartPresence.closing ? "is-closing" : ""].join(" ")}
           role="presentation"
         >
           <section className={["old-panel game-home-dialog w-full max-w-md p-6", restartPresence.closing ? "is-closing" : ""].join(" ")} role="dialog" aria-modal="true" aria-labelledby="restart-game-title">
             <div className="flex items-start gap-3">
               <div className="game-dialog-icon flex h-10 w-10 shrink-0 items-center justify-center"><AlertTriangle size={20} /></div>
               <div>
-                <div className="game-dialog-kicker">{t(tutorial ? "guided.settings.restartKicker" : isDeveloperMode ? "settings.developerOptions" : "settings.rewriteChronicle")}</div>
-                <h2 id="restart-game-title" className="old-title mt-1 text-xl font-medium uppercase tracking-[0.08em]">{t(tutorial ? "guided.settings.restartTitle" : "settings.restartQuestion")}</h2>
-                <p className="mt-2 text-sm text-[#8d9a94]">{t(tutorial ? "guided.settings.restartBody" : "settings.currentProgressLost")}</p>
+                <div className="game-dialog-kicker">{t(journey ? "guided.journey.restartKicker" : guided ? "guided.settings.restartKicker" : isDeveloperMode ? "settings.developerOptions" : "settings.rewriteChronicle")}</div>
+                <h2 id="restart-game-title" className="old-title mt-1 text-xl font-medium uppercase tracking-[0.08em]">{t(journey ? "guided.journey.restartTitle" : guided ? "guided.settings.restartTitle" : "settings.restartQuestion")}</h2>
+                <p className="mt-2 text-sm text-[#8d9a94]">{t(journey ? "guided.journey.restartBody" : guided ? "guided.settings.restartBody" : "settings.currentProgressLost")}</p>
               </div>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3">

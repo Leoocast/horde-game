@@ -45,6 +45,7 @@ import { RootsTouchedSkyAnimator } from "./RootsTouchedSkyAnimator";
 import { EnergyFlowAnimator } from "./EnergyFlowAnimator";
 import { GuidedTutorialOverlay } from "./GuidedTutorialOverlay";
 import { ContextualTutorialCallout } from "./ContextualTutorialCallout";
+import { NORMAL_BOARD_SESSION, type BoardSessionPolicy } from "./boardSessionPolicies";
 import { useHiddenDefenseLinkIds } from "./useDefenseLinkVisibility";
 import { IS_DEV } from "../utils/devMode";
 import { guidedPresentationActivity } from "../guidance";
@@ -61,7 +62,7 @@ type Props = {
   overtureHandPending?: boolean;
   /** El disco de grados todavía no fue entregado por el signo. */
   overtureDialPending?: boolean;
-  sessionKind?: "normal" | "tutorial";
+  sessionPolicy?: BoardSessionPolicy;
   tutorialInterrupted?: boolean;
   tutorialErrorMessage?: string;
   onRestartTutorial?: () => void;
@@ -206,7 +207,7 @@ export function Board({
   overtureSettling = false,
   overtureHandPending = false,
   overtureDialPending = false,
-  sessionKind = "normal",
+  sessionPolicy = NORMAL_BOARD_SESSION,
   tutorialInterrupted = false,
   tutorialErrorMessage,
   onRestartTutorial,
@@ -265,11 +266,11 @@ export function Board({
       forcedOutcomeDrain
       || (!storePresentationActive && localPresentation.activeCount === 0)
     );
-  const defeatOutcomeReady = outcomeOutroReady && game.winner === "host";
+  const defeatOutcomeReady = sessionPolicy.showStandardOutcome && outcomeOutroReady && game.winner === "host";
   const defeatReady = defeatOutcomeReady && defeatSnapshot !== undefined;
   // La victoria no captura nada: en cuanto la presentación se asienta, el tablero puede retirarse.
-  const victoryReady = outcomeOutroReady && game.winner === "player";
-  const outcomePresentationPending = Boolean(game.winner) && !defeatReady && !victoryReady;
+  const victoryReady = sessionPolicy.showStandardOutcome && outcomeOutroReady && game.winner === "player";
+  const outcomePresentationPending = sessionPolicy.showStandardOutcome && Boolean(game.winner) && !defeatReady && !victoryReady;
   /* Al preservarse el Futuro el instrumento vuelve a su Norte mientras las motas todavía viajan:
      la constelación es cardinal y sus puntas tienen que clavarse sobre las marcas, no al lado.
      Es sólo presentación, así que el ángulo acumulado del store no se toca. */
@@ -282,6 +283,10 @@ export function Board({
   );
 
   useEffect(() => {
+    if (!sessionPolicy.showStandardOutcome) {
+      setForcedOutcomeDrainSessionId(undefined);
+      return;
+    }
     if (!game.winner) {
       setForcedOutcomeDrainSessionId(undefined);
       return;
@@ -299,7 +304,7 @@ export function Board({
       setForcedOutcomeDrainSessionId(watchedSessionId);
     }, OUTCOME_DRAIN_WATCHDOG_MS);
     return () => window.clearTimeout(timer);
-  }, [outcomeOutroReady, game.winner, gameSessionId, stopGamePresentation]);
+  }, [outcomeOutroReady, game.winner, gameSessionId, sessionPolicy.showStandardOutcome, stopGamePresentation]);
 
   useEffect(() => {
     if (!defeatOutcomeReady) {
@@ -399,10 +404,11 @@ export function Board({
         left={game.openingHandAccepted ? <TurnPhaseHud game={game} setupTurns={setupTurns} /> : undefined}
         setupTurns={setupTurns}
         elevated={!game.openingHandAccepted}
-        sessionKind={sessionKind}
+        sessionKind={sessionPolicy.id === "normal" ? "normal" : sessionPolicy.id === "learn-to-play" ? "journey" : "tutorial"}
+        settingsRestricted={sessionPolicy.restrictedSettings}
         onRestartTutorial={onRestartTutorial}
-        onRewriteFuture={onRewriteFuture}
-        onContemplateFuture={onContemplateFuture}
+        onRewriteFuture={sessionPolicy.showFutureControls ? onRewriteFuture : undefined}
+        onContemplateFuture={sessionPolicy.showFutureControls ? onContemplateFuture : undefined}
         futureSeed={game.seed}
         onReturnToMenu={() => setShowHomeConfirmation(true)}
       />
@@ -410,7 +416,7 @@ export function Board({
       <PhaseBanner
         game={game}
         setupTurns={setupTurns}
-        suspended={encounterEntering || overtureActive || !game.openingHandAccepted || sessionKind === "tutorial"}
+        suspended={encounterEntering || overtureActive || !game.openingHandAccepted || !sessionPolicy.showPhaseBanner}
       />
       {game.openingHandAccepted && <PhaseOrb game={game} />}
       <CombatArrows game={game} hiddenDefenseLinkIds={hiddenDefenseLinkIds} />
@@ -462,7 +468,7 @@ export function Board({
       <GuidedTutorialOverlay />
       <ContextualTutorialCallout />
 
-      {sessionKind === "normal" && defeatReady && onRewriteFuture && onContemplateFuture && (
+      {sessionPolicy.showStandardOutcome && defeatReady && onRewriteFuture && onContemplateFuture && (
         <DefeatModal
           game={game}
           snapshotImage={defeatSnapshot ?? undefined}
@@ -470,11 +476,11 @@ export function Board({
           onContemplateFuture={onContemplateFuture}
         />
       )}
-      {sessionKind === "normal" && victoryReady && onRewriteFuture && onContemplateFuture && (
+      {sessionPolicy.showStandardOutcome && victoryReady && onRewriteFuture && onContemplateFuture && (
         <VictoryModal game={game} onRewriteFuture={onRewriteFuture} onContemplateFuture={onContemplateFuture} />
       )}
 
-      {sessionKind === "tutorial" && tutorialInterrupted && (
+      {sessionPolicy.showGuidedInterruption && tutorialInterrupted && (
         <div data-guided-system-control="true" className="game-home-backdrop fixed inset-0 z-[20040] flex items-center justify-center p-6 text-[#e4ddc2]" role="presentation">
           <section className="old-panel game-dialog game-home-dialog w-full max-w-md p-6" role="dialog" aria-modal="true" aria-labelledby="tutorial-interrupted-title">
             <div className="flex items-start gap-3">
@@ -500,8 +506,8 @@ export function Board({
 
       {homeConfirmationPresence.mounted && (
         <div
-          {...(sessionKind === "tutorial" ? { "data-guided-system-control": "true" } : {})}
-          className={[`game-home-backdrop fixed inset-0 ${sessionKind === "tutorial" ? "z-[20040]" : "z-[450]"} flex items-center justify-center p-6 text-[#e4ddc2]`, homeConfirmationPresence.closing ? "is-closing" : ""].join(" ")}
+          {...(sessionPolicy.guidedSystemControls ? { "data-guided-system-control": "true" } : {})}
+          className={[`game-home-backdrop fixed inset-0 ${sessionPolicy.guidedSystemControls ? "z-[20040]" : "z-[450]"} flex items-center justify-center p-6 text-[#e4ddc2]`, homeConfirmationPresence.closing ? "is-closing" : ""].join(" ")}
           role="presentation"
         >
           <section className={["old-panel game-dialog game-home-dialog w-full max-w-md p-6", homeConfirmationPresence.closing ? "is-closing" : ""].join(" ")} role="dialog" aria-modal="true" aria-labelledby="return-home-title">
@@ -510,11 +516,11 @@ export function Board({
                 <AlertTriangle size={20} />
               </div>
               <div>
-                <div className="game-dialog-kicker">{t(sessionKind === "tutorial" ? "guided.lifecycle.leaveKicker" : "game.leaveBattlefield")}</div>
+                <div className="game-dialog-kicker">{t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveKicker" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveKicker" : "game.leaveBattlefield")}</div>
                 <h2 id="return-home-title" className="old-title mt-1 text-xl font-medium uppercase tracking-[0.08em]">
-                  {t(sessionKind === "tutorial" ? "guided.lifecycle.leaveTitle" : "game.returnHomeQuestion")}
+                  {t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveTitle" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveTitle" : "game.returnHomeQuestion")}
                 </h2>
-                <p className="mt-2 text-sm text-[#8d9a94]">{t(sessionKind === "tutorial" ? "guided.lifecycle.leaveBody" : "game.progressLost")}</p>
+                <p className="mt-2 text-sm text-[#8d9a94]">{t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveBody" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveBody" : "game.progressLost")}</p>
               </div>
             </div>
 
@@ -524,7 +530,7 @@ export function Board({
               </button>
               <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onReturnToMenu}>
                 <Home size={16} />
-                {t(sessionKind === "tutorial" ? "guided.lifecycle.exit" : "game.returnHome")}
+                {t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.exit" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.exit" : "game.returnHome")}
               </button>
             </div>
           </section>

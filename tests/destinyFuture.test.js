@@ -87,7 +87,7 @@ test("the narrative Future control owns normal rewrites outside Settings", async
   assert.ok(header.indexOf("<DestinyRewriteControl") < header.indexOf("<MusicPlayerMenu"));
   assert.match(header, /futureSeed\?\.trim\(\)\.toLowerCase\(\) !== "developer"/u);
   assert.doesNotMatch(settings, /settings\.battleSeed|game-seed-input|setSeed/u);
-  assert.match(settings, /!tutorial && isDeveloperMode/u);
+  assert.match(settings, /!guided && isDeveloperMode/u);
 
   assert.match(result, /futureCodeFromSeed\(game\.seed\)/u);
   assert.match(result, /navigator\.clipboard\.writeText\(game\.seed\)/u);

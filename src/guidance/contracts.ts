@@ -291,6 +291,19 @@ export type GuidedObserveStep = GuidedStepBase & Readonly<{
 
 export type GuidedStep = GuidedExplainStep | GuidedActStep | GuidedObserveStep;
 
+/** Step-only definition attached to an already loaded board; it never owns or completes a lesson. */
+export type GuidedInterventionDefinition = Readonly<{
+  id: string;
+  revision: number;
+  startStepId: string;
+  steps: readonly GuidedStep[];
+}>;
+
+export type GuidedSessionDefinition = Pick<
+  GuidedInterventionDefinition,
+  "id" | "revision" | "startStepId" | "steps"
+>;
+
 export type GuidedLessonDefinition = Readonly<{
   schemaVersion: typeof GUIDED_LESSON_SCHEMA_VERSION;
   id: string;

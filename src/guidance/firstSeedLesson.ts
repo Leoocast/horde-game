@@ -22,7 +22,7 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
   schemaVersion: GUIDED_LESSON_SCHEMA_VERSION,
   id: "first-seed",
   revision: 4,
-  mode: "required",
+  mode: "optional",
   startStepId: "explain-objective",
   scenario: {
     seed: "first-seed-preparation-v2",

@@ -173,7 +173,7 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(styles, /\.guided-tutorial-body p\s*\{[^}]*font-family:\s*inherit;/su);
   assert.match(styles, /\.guided-tutorial-continue\s*\{[^}]*font-family:\s*inherit;/su);
   assert.match(styles, /\.guided-player-sources-anchor\s*\{[^}]*width:\s*174px;[^}]*height:\s*85px;/su);
-  assert.match(board, /sessionKind === "tutorial"/u);
+  assert.match(board, /sessionPolicy\.guidedSystemControls/u);
 });
 
 function fakeElement({ isConnected }) {

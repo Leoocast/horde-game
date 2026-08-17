@@ -1,6 +1,6 @@
 # Auditoría y plan por fases — Aprender a jugar y ayudas contextuales
 
-Estado: **auditoría técnica completada; Fases 1 y 2 implementadas y verificadas; primer corte fijado
+Estado: **auditoría técnica completada; Fases 1, 2 y 3 implementadas y verificadas; primer corte fijado
 hasta la derrota y la aparición de su CTA; handoff y partida posterior aplazados**.
 
 Última actualización: **2026-08-17**.
@@ -472,6 +472,11 @@ registro de producto permanece vacío hasta authorar los conceptos del prólogo 
 abandono y accesibilidad básica.
 
 ### Fase 3 — Catálogo de Cómo jugar y shell del recorrido
+
+**Estado: completada el 2026-08-17.** El launcher de **Aprender a jugar** sólo está activo en
+development hasta que la Fase 4 sustituya su tablero shell por el snapshot avanzado authored; en
+producto la tarjeta ya existe y comunica que está pendiente. No se activó ningún gate de primera
+apertura.
 
 - Mantener `first-seed` y presentar su tarjeta como **Preparación**.
 - Registrar `learn-to-play` con identidad independiente y launcher propio.

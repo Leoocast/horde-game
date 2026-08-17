@@ -147,8 +147,8 @@ test("la victoria retira el tablero pero conserva el espacio y el instrumento", 
   );
 
   // El desenlace espera a que la presentación se asiente, igual que la derrota.
-  assert.match(board, /const victoryReady = outcomeOutroReady && game\.winner === "player"/u);
-  assert.match(board, /sessionKind === "normal" && victoryReady/u);
+  assert.match(board, /const victoryReady = sessionPolicy\.showStandardOutcome && outcomeOutroReady && game\.winner === "player"/u);
+  assert.match(board, /sessionPolicy\.showStandardOutcome && victoryReady/u);
   // El tema entra con el desenlace, no con el último golpe.
   assert.match(board, /if \(victoryReady\) playCollection\("winTheme"\)/u);
 

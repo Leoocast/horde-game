@@ -2,8 +2,9 @@ import { contentCatalog } from "../content/bootstrap";
 import type { GuidedLessonDefinition } from "./contracts";
 import { FIRST_SEED_LESSON } from "./firstSeedLesson";
 import { GuidedLessonRegistry } from "./GuidedLessonRegistry";
+import { PREPARATION_LESSON_ID } from "./howToPlayCatalog";
 
-export const BASIC_TUTORIAL_LESSON_ID = "first-seed";
+export const BASIC_TUTORIAL_LESSON_ID = PREPARATION_LESSON_ID;
 
 /**
  * Release registry. First Seed is authored here as real content; Guidance Lab keeps its isolated

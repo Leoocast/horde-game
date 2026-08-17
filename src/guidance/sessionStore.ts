@@ -1,5 +1,5 @@
 import type { GameState, Side, ZoneName } from "../engine/GameTypes";
-import type { GuidedCardAlias, GuidedLessonDefinition, GuidedPrecondition, GuidedStep } from "./contracts";
+import type { GuidedCardAlias, GuidedPrecondition, GuidedSessionDefinition, GuidedStep } from "./contracts";
 import {
   GuidedInteractionGate,
   receiptMatchesSpec,
@@ -34,7 +34,7 @@ type CheckpointProbe = () => boolean;
 type CheckpointScheduler = (check: () => void) => void;
 
 export type StartGuidedSessionInput = Readonly<{
-  definition: GuidedLessonDefinition;
+  definition: GuidedSessionDefinition;
   bindings: Readonly<Record<GuidedCardAlias, string>>;
   sessionId?: string;
   gameState?: () => GameState;
@@ -48,7 +48,7 @@ export class GuidedSessionStore {
   readonly #gate: GuidedInteractionGate;
   readonly #barrier: GuidedBeatBarrier;
   #listeners = new Set<(snapshot: GuidedSessionSnapshot) => void>();
-  #definition: GuidedLessonDefinition | undefined;
+  #definition: GuidedSessionDefinition | undefined;
   #steps = new Map<string, GuidedStep>();
   #currentStep: GuidedStep | undefined;
   #mode: GuidedSessionMode | undefined;

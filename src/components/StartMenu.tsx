@@ -19,6 +19,11 @@ import { DisplayControls } from "./DisplayControls";
 import { LanguageSelector } from "./LanguageSelector";
 import { TemporalBackdrop } from "./TemporalBackdrop";
 import { ToastStack } from "./ToastStack";
+import type { HowToPlayCatalogEntry } from "../guidance/howToPlayCatalog";
+
+export type HowToPlayMenuEntry = HowToPlayCatalogEntry & Readonly<{
+  onLaunch?: () => void;
+}>;
 
 type Props = {
   decks: InspectableDeck[];
@@ -39,10 +44,10 @@ type Props = {
   onOpenPlayground?: () => void;
   /** Only provided in development builds; edits the checked-in per-file audio mix. */
   onOpenAudioLab?: () => void;
-  /** Starts the registered First Seed. The catalog shell remains visible without content. */
-  onOpenBasicTutorial?: () => void;
+  howToPlayEntries: readonly HowToPlayMenuEntry[];
   resumeStatus?: "none" | "available" | "recovered" | "corrupt";
   onContinue?: () => void;
+  continueDisabled?: boolean;
   onDiscardResume?: () => void;
   onStart: (options: { playerName: string; mode: DifficultyMode; gameMode: GameMode; setupTurns: number; seed: string }) => void;
 };
@@ -56,7 +61,7 @@ const modes: Array<{ id: DifficultyMode; setupTurns: number }> = [
   { id: "hard", setupTurns: 2 },
 ];
 
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, onOpenBasicTutorial, resumeStatus = "none", onContinue, onDiscardResume, onStart }: Props) {
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, howToPlayEntries, resumeStatus = "none", onContinue, continueDisabled = false, onDiscardResume, onStart }: Props) {
   const t = useTranslation();
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [mode, setMode] = useState<DifficultyMode>("easy");
@@ -265,8 +270,14 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           </div>
 
           <nav className="main-menu-nav" aria-label={t("menu.mainAria")}>
-            {(resumeStatus === "available" || resumeStatus === "recovered") && onContinue && (
-              <button className="main-menu-entry group" type="button" onClick={onContinue}>
+            {(resumeStatus === "available" || resumeStatus === "recovered") && (
+              <button
+                className={`main-menu-entry group ${continueDisabled || !onContinue ? "is-disabled" : ""}`}
+                type="button"
+                onClick={continueDisabled ? undefined : onContinue}
+                disabled={continueDisabled || !onContinue}
+                title={continueDisabled ? t("menu.continueUnavailable") : undefined}
+              >
                 <span className="main-menu-entry-mark" />
                 <span>{resumeStatus === "recovered" ? t("menu.continueRecovered") : t("menu.continue")}</span>
               </button>
@@ -385,22 +396,28 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
             <div className="main-settings-content old-scrollbar">
               <section className="main-settings-section how-to-play-lessons">
                 <div className="main-settings-section-title">{t("howToPlay.tutorials")}</div>
-                <button
-                  className="how-to-play-lesson"
-                  type="button"
-                  disabled={!onOpenBasicTutorial}
-                  onClick={onOpenBasicTutorial}
-                >
-                  <span className="how-to-play-lesson-icon" aria-hidden="true"><BookOpen size={25} /></span>
-                  <span className="how-to-play-lesson-copy">
-                    <small>{t("howToPlay.firstSeed")}</small>
-                    <strong>{t("howToPlay.basicTutorial")}</strong>
-                    <span>{t("howToPlay.basicDescription")}</span>
-                  </span>
-                  <span className={`how-to-play-lesson-status ${onOpenBasicTutorial ? "is-ready" : ""}`}>
-                    {t(onOpenBasicTutorial ? "howToPlay.start" : "howToPlay.comingSoon")}
-                  </span>
-                </button>
+                {howToPlayEntries.map((entry) => {
+                  const Icon = entry.icon === "learn" ? Sparkles : BookOpen;
+                  return (
+                    <button
+                      key={entry.id}
+                      className="how-to-play-lesson"
+                      type="button"
+                      disabled={!entry.onLaunch}
+                      onClick={entry.onLaunch}
+                    >
+                      <span className="how-to-play-lesson-icon" aria-hidden="true"><Icon size={25} /></span>
+                      <span className="how-to-play-lesson-copy">
+                        <small>{t(entry.kickerKey)}</small>
+                        <strong>{t(entry.titleKey)}</strong>
+                        <span>{t(entry.descriptionKey)}</span>
+                      </span>
+                      <span className={`how-to-play-lesson-status ${entry.onLaunch ? "is-ready" : ""}`}>
+                        {t(entry.onLaunch ? "howToPlay.start" : "howToPlay.comingSoon")}
+                      </span>
+                    </button>
+                  );
+                })}
               </section>
             </div>
           </section>

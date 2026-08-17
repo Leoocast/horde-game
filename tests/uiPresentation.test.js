@@ -627,7 +627,7 @@ test("production resume checkpoints exclude Playground and presentation state", 
   assert.doesNotMatch(service, /playground/iu);
   assert.doesNotMatch(schema, /playground/iu);
   assert.match(schema, /checkpoint:\s*Object\.freeze\(\{ game:/u);
-  assert.match(app, /if \(screen !== "game"\) return;/u);
+  assert.match(app, /if \(!boardSessionPolicy\.autosave \|\| screen !== "game"\) return;/u);
 });
 
 test("procedural Burn never mounts the legacy full-screen white flash", () => {
@@ -892,15 +892,15 @@ test("deck setup panels and deck cards opt into shared click audio", () => {
   assert.match(decksView, /onClick=\{\(\) => \{\s*playSfx\("click"\);\s*onOpen\(\);/u);
 });
 
-test("How to Play opens a right-side catalog and keeps Basic Tutorial content-gated", () => {
+test("How to Play opens a right-side data-driven tutorial catalog", () => {
   const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.match(startMenu, /type MenuScreen = [^;]*"howToPlay"/u);
   assert.match(startMenu, /setMenuScreen\("howToPlay"\)/u);
   assert.match(startMenu, /main-settings-screen how-to-play-screen/u);
-  assert.match(startMenu, /howToPlay\.basicTutorial/u);
-  assert.match(startMenu, /disabled=\{!onOpenBasicTutorial\}/u);
+  assert.match(startMenu, /howToPlayEntries\.map/u);
+  assert.match(startMenu, /disabled=\{!entry\.onLaunch\}/u);
   assert.match(styles, /\.how-to-play-lesson\s*\{[^}]*grid-template-columns:/u);
 });
 
@@ -1120,13 +1120,13 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(board, /await image\.decode\(\)/u);
   assert.match(board, /const destinyDialSettled = settledDestinyDialRevision === destinyDialRevision/u);
   assert.match(board, /const outcomeOutroReady = Boolean\(game\.winner\)[\s\S]*?destinyDialSettled[\s\S]*?!storePresentationActive[\s\S]*?localPresentation\.activeCount === 0/u);
-  assert.match(board, /const defeatOutcomeReady = outcomeOutroReady && game\.winner === "host"/u);
+  assert.match(board, /const defeatOutcomeReady = sessionPolicy\.showStandardOutcome && outcomeOutroReady && game\.winner === "host"/u);
   assert.match(board, /const OUTCOME_DRAIN_WATCHDOG_MS = 15000/u);
   assert.match(board, /if \(outcomeOutroReady\) return;/u);
   assert.match(board, /stopGamePresentation\(\);[\s\S]*?setForcedOutcomeDrainSessionId\(watchedSessionId\)/u);
   assert.match(board, /settleDialImmediately=\{forcedOutcomeDrain\}/u);
   assert.match(board, /const defeatReady = defeatOutcomeReady && defeatSnapshot !== undefined/u);
-  assert.match(board, /const outcomePresentationPending = Boolean\(game\.winner\) && !defeatReady && !victoryReady/u);
+  assert.match(board, /const outcomePresentationPending = sessionPolicy\.showStandardOutcome && Boolean\(game\.winner\) && !defeatReady && !victoryReady/u);
   assert.match(board, /presentationInputBlocked && \(!tributeOfTheFourSorrowsSelectionActive \|\| outcomePresentationPending\)/u);
   assert.match(board, /snapshotImage=\{defeatSnapshot \?\? undefined\}/u);
   assert.match(board, /settleDefeatCapture\(capturePaintedDefeatFrame\(\)\)/u);
@@ -1179,7 +1179,7 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(styles, /\.game-screen-ambience \{/u);
   assert.doesNotMatch(styles, /\.game-screen::before/u);
   assert.match(board, /className="game-screen-ambience"/u);
-  assert.match(board, /sessionKind === "normal" && defeatReady/u);
+  assert.match(board, /sessionPolicy\.showStandardOutcome && defeatReady/u);
   // El vidrio se lee aunque no haya nada impreso: alfa de la captura con suelo de Fresnel.
   assert.match(glassShader, /float printed = middle\.a/u);
   assert.match(glassShader, /vFade \* max\(printed, glassEdge\)/u);

@@ -29,7 +29,7 @@ test("First Seed teaches its exact three-step Preparation sequence and stops aft
   assert.deepEqual(validateGuidedLesson(FIRST_SEED_LESSON, contentCatalog), []);
   assert.equal(BASIC_TUTORIAL_LESSON_ID, FIRST_SEED_LESSON.id);
   assert.equal(guidedLessonRegistry.require(BASIC_TUTORIAL_LESSON_ID).revision, 4);
-  assert.equal(guidedLessonRegistry.require(BASIC_TUTORIAL_LESSON_ID).mode, "required");
+  assert.equal(guidedLessonRegistry.require(BASIC_TUTORIAL_LESSON_ID).mode, "optional");
   const built = buildGuidedScenario(FIRST_SEED_LESSON, contentCatalog);
   const id = (alias) => built.bindings[alias].instanceId;
   let game = built.game;

@@ -577,9 +577,9 @@ guiada actual como tutorial específico **Preparación** y crear un tutorial pri
 **Aprender a jugar**: un prólogo determinista semi-guiado, seguido más adelante por una partida real
 de Elarion contra los Sinsepulcro con seed preparada y ayudas contextuales. **Aprender a jugar** será
 el tutorial obligatorio y **Preparación** será opcional; ambos podrán repetirse desde **Cómo jugar**.
-El rediseño de producto todavía no está entregado; hasta que se complete el recorrido, el producto
-sigue ejecutando la revisión 4 requerida de `first-seed`. Las Fases 1 y 2 técnicas quedaron
-implementadas el 2026-08-17: existe un stream semántico pasivo por sesión que observa también
+El recorrido authored todavía no está entregado y no se activará como gate de primera apertura
+hasta completar su handoff. Las Fases 1, 2 y 3 técnicas quedaron implementadas el 2026-08-17:
+existe un stream semántico pasivo por sesión que observa también
 partidas normales, y el motor tipa los rechazos necesarios para límite de Fuentes, Acción de Fuente
 usada, Estabilizándose, Agotado, Volar/Guardia aérea, Furtivo, defensor ya asignado y fase
 incorrecta. El
@@ -617,7 +617,13 @@ se confirma al cerrar la ayuda; el modo provisional permite commit atómico o ro
 futuro prólogo. El registro release sigue vacío: el Playground instala fixtures sintéticos en un
 scope de desarrollo y el contenido real se authora en fases posteriores. Las ayudas imprescindibles
 reutilizan la guía actual. El plan se ejecuta fase por fase con
-aprobación explícita. Para una fase posterior siguen pendientes la Mano/mulligan, seed, dificultad y
+aprobación explícita. **Cómo jugar** ya consume un catálogo y presenta **Aprender a jugar** antes de
+**Preparación**; `first-seed` conserva su ID pero ahora es opcional. El recorrido tiene lifecycle
+efímero independiente, rollback de conceptos provisionales, reinicio total, autosave apagado,
+políticas explícitas de tablero e intervenciones estrictas adjuntas al `GameState` vivo. En
+development puede abrirse su tablero shell; en producto permanece como Próximamente hasta authorar
+el prólogo. **Continuar** está deshabilitado globalmente. Para una fase posterior siguen pendientes
+la Mano/mulligan, seed, dificultad y
 Preparación de la partida real; el comportamiento de primera apertura y perfiles existentes; y la
 persistencia exacta si la aplicación se cierra durante el vórtice.
 
@@ -696,18 +702,16 @@ en lugar de construir y arrancar la sesión manualmente; sigue siendo sólo una 
 
 La antigua Fase 6 de herramientas de autoría fue eliminada por decisión explícita del usuario; no
 queda como mejora futura. La Fase 7 usa `GuidedProductLifecycle` y una pantalla `tutorial` separada:
-sólo la pantalla `game` activa autosave. Web persiste finalización en
-`hostfall-guided-progress:v1`; desktop la guarda dentro de `profile/preferences-v1.json`. El registro
-contiene únicamente `lessonId`, revisión pedagógica completada y fecha, nunca paso, escenario,
-bindings, timers o `GameState`. Entrar, reiniciar, salir o completar una lección preserva cualquier
-resume normal, que sólo se oculta mientras exista una lección obligatoria pendiente. Onboarding de
+sólo las políticas de sesión normal activan autosave. Web persiste el envelope
+`hostfall-guided-progress:v2`; desktop lo guarda dentro de `profile/preferences-v1.json`. El registro
+contiene finalizaciones de lecciones y recorridos, conceptos vistos y la preferencia contextual;
+nunca paso, escenario, bindings, timers o `GameState`. Entrar, reiniciar, salir o completar una
+lección preserva cualquier resume normal. Onboarding de
 nombre y tutorial completado son estados independientes. Settings en tutorial conserva idioma,
 audio, pantalla, reinicio total y salida, y oculta toda mutación o inspección del escenario. El
-registro release contiene la primera versión jugable de `first-seed`. El menú **Cómo jugar** abre su
-panel lateral y ofrece **Tutorial básico**; la misma lección se inicia obligatoriamente mientras su
-revisión pedagógica no figure como completada. En development este gate obligatorio se desactiva
-para que recargar no interrumpa el trabajo: la lección permanece disponible manualmente desde
-**Cómo jugar**. Los builds de producto conservan el gate.
+registro release contiene la revisión jugable de `first-seed`, presentada como **Preparación** y
+marcada opcional. El menú **Cómo jugar** lista además **Aprender a jugar** con identidad propia. No
+hay un gate tutorial activo mientras ese recorrido principal siga incompleto.
 
 La revisión 4 de **La Primera Semilla** usa **El Pacto de Elarion** contra **El Alzamiento de los
 Sinsepulcro** y empieza al inicio de Preparación 1/3. Su Mano inicial exacta contiene dos Fuentes,

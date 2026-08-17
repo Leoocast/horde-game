@@ -92,18 +92,19 @@ test("App isolates tutorial sessions from resume and Settings hides scenario mut
     readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/SettingsMenu.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(app, /if \(screen !== "game"\) return;/u);
+  assert.match(app, /if \(!boardSessionPolicy\.autosave \|\| screen !== "game"\) return;/u);
   assert.match(app, /const requiredLesson = IS_DEV \? undefined : guidedProductLifecycle\.nextRequiredLesson\(\);/u);
   assert.match(app, /if \(!requiredLesson\) return;/u);
-  assert.match(app, /resumeStatus=\{requiredLesson \? "none" : desktopResume\.status\}/u);
+  assert.match(app, /resumeStatus=\{desktopResume\.status\}/u);
+  assert.match(app, /continueDisabled/u);
 
   const launch = app.slice(app.indexOf("function launchGuidedLesson"), app.indexOf("function restartGuidedLesson"));
   const leave = app.slice(app.indexOf("function leaveGuidedLesson"), app.indexOf("if (loading || !preferencesReady)"));
   assert.doesNotMatch(launch, /deleteDesktopResume/u);
   assert.doesNotMatch(leave, /deleteDesktopResume/u);
 
-  assert.match(settings, /!tutorial && <ZoneDrawer/u);
-  assert.match(settings, /!tutorial && isDeveloperMode/u);
+  assert.match(settings, /!guided && <ZoneDrawer/u);
+  assert.match(settings, /!guided && isDeveloperMode/u);
   assert.match(settings, /data-guided-system-control/u);
 });
 

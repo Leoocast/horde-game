@@ -28,6 +28,7 @@ try {
   await server.ssrLoadModule("/tests/contextualGuidance.test.js");
   await server.ssrLoadModule("/tests/guidedSession.test.js");
   await server.ssrLoadModule("/tests/guidedLifecycle.test.js");
+  await server.ssrLoadModule("/tests/learnToPlayInfrastructure.test.js");
   await server.ssrLoadModule("/tests/guidedOverlay.test.js");
   await server.ssrLoadModule("/tests/destinyFuture.test.js");
   await server.ssrLoadModule("/tests/chronicleSigilGeometry.test.js");
