@@ -36,6 +36,9 @@ retirado. Su fuente de verdad es el JSON del deck.
 
 Estos documentos se conservan porque contienen decisiones o validaciones sin terminar:
 
+- [`plans/learn_to_play_tutorial.md`](plans/learn_to_play_tutorial.md) — documento vivo del nuevo
+  onboarding **Aprender a jugar**; fija el prólogo hasta su derrota predeterminada y el salto a una
+  partida real preparada, y conserva las decisiones abiertas antes del análisis de implementación.
 - [`plans/guided_tutorial_system_plan.md`](plans/guided_tutorial_system_plan.md) — framework escalable
   de pausa, bloqueo, resaltado y explicación; sus fases están cerradas y la primera versión jugable
   de la Primera Semilla se encuentra en QA e iteración pedagógica.

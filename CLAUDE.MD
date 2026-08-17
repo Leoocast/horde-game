@@ -571,6 +571,23 @@ overlay, el gate de acciones ni el orquestador. La sesión activa nunca se reanu
 persiste la finalización versionada; cerrar o salir obliga a empezar el recorrido desde el primer
 paso.
 
+El contenido futuro del onboarding se diseña en
+`docs/plans/learn_to_play_tutorial.md`. La decisión de producto vigente es conservar la lección
+guiada actual como tutorial específico **Preparación** y crear un tutorial principal
+**Aprender a jugar**: un prólogo determinista semi-guiado, seguido más adelante por una partida real
+de Elarion contra los Sinsepulcro con seed preparada y ayudas contextuales. Este rediseño todavía no
+está implementado; hasta entonces el producto sigue ejecutando la revisión 4 de `first-seed`. El
+prólogo queda diseñado desde el cold open hasta una derrota predeterminada: la primera Oleada usa
+ramas equivalentes de Ladrones, Titán y Soldado; el turno posterior enseña Mano vacía y Devolver
+Fuente; y el cierre authored calcula el mejor resultado defensivo antes de Invocar un Titán y los
+Soldados necesarios para que el ataque sea letal. Esa Invocación terminal no redefine la regla
+normal de Oleada. La derrota salta semánticamente a **Contemplar otro futuro** y carga una seed real
+preparada; la relación exacta entre buena Mano y mulligan sigue abierta. Si no queda un atacante
+estabilizado, la enseñanza del ataque no bloquea el flujo, permanece como no vista y reaparece en
+una partida posterior. La preferencia global de no repetir ayudas sólo suprime conceptos ya
+mostrados: un concepto no visto conserva siempre su primera aparición. No traducir escenas aisladas
+a código antes de cerrar el recorrido completo y realizar el análisis técnico conjunto.
+
 La Fase 0 quedó cerrada el 2026-08-11. La Primera Semilla obligatoria será canónica y usará **El
 Pacto de Elarion** como deck del Cronista; la Hueste y el escenario pertenecen al futuro diseño de
 contenido. El ciclo aprobado es **Explicar → Actuar → Observar → checkpoint estable**. Sólo la

@@ -867,6 +867,11 @@ test("main menu reserves enough width and breathing room for the Hostfall title"
   assert.match(styles, /\.main-menu-title\s*\{[^}]*margin:\s*16px 0 0;/u);
 });
 
+test("deck inspection keeps the same temporal sky as the main menu", () => {
+  const deckInspector = readFileSync(new URL("../src/components/DeckInspector.tsx", import.meta.url), "utf8");
+  assert.match(deckInspector, /<main className=\{`deck-detail-screen[\s\S]*?<TemporalBackdrop \/>/u);
+});
+
 test("the Hostfall wordmark and Chronicler name use the bundled decorative face", () => {
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
