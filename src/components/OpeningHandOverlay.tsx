@@ -1,5 +1,5 @@
 import { Check, RefreshCcw } from "lucide-react";
-import { motion } from "framer-motion";
+import { useRef } from "react";
 import { UI_FEATURE_FLAGS } from "../config/featureFlags";
 import type { GameState } from "../engine/GameTypes";
 import { useTranslation } from "../i18n/useTranslation";
@@ -13,6 +13,15 @@ export function OpeningHandOverlay({ game }: { game: GameState }) {
   const acceptOpeningHand = useGameStore((state) => state.acceptOpeningHand);
   const mulliganOpeningHand = useGameStore((state) => state.mulliganOpeningHand);
   const canMulligan = game.player.hand.length > 1;
+  const committedMulliganRevisionRef = useRef<number | null>(null);
+
+  const rewriteOpeningHand = () => {
+    /* Un doble click puede llegar antes del render que incrementa `mulligansTaken`. El commit
+       pertenece a esa revisión de la Mano y sólo puede ejecutarse una vez. */
+    if (committedMulliganRevisionRef.current === game.mulligansTaken) return;
+    committedMulliganRevisionRef.current = game.mulligansTaken;
+    mulliganOpeningHand();
+  };
 
   if (game.openingHandAccepted) return null;
 
@@ -34,12 +43,10 @@ export function OpeningHandOverlay({ game }: { game: GameState }) {
               UI_FEATURE_FLAGS.useNativeHdHandImageRendering;
 
             return (
-              <motion.div
+              <div
                 key={`${game.mulligansTaken}-${card.instanceId}`}
                 className="opening-hand-card-entry"
-                initial={{ opacity: 0, y: 26, scale: 0.92 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: index * 0.055, duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                style={{ animationDelay: `${index * 55}ms` }}
               >
                 <div
                   ref={(element) => guidedAnchorRegistry.set(
@@ -66,7 +73,7 @@ export function OpeningHandOverlay({ game }: { game: GameState }) {
                     hideStats={!UI_FEATURE_FLAGS.showDynamicHandCardStats}
                   />
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>
@@ -90,7 +97,7 @@ export function OpeningHandOverlay({ game }: { game: GameState }) {
             data-audio-click={canMulligan ? "valid" : "off"}
             className="opening-hand-button opening-hand-button-mulligan"
             type="button"
-            onClick={mulliganOpeningHand}
+            onClick={rewriteOpeningHand}
             disabled={!canMulligan}
           >
             <RefreshCcw size={17} />

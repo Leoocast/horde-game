@@ -224,6 +224,19 @@
     stroke-width: 1;
   }
 
+  /* El disco entra encendiéndose cuando el signo del Futuro termina su vuelta al aro, no
+     con el resto del tablero. La transición es sólo de opacidad: animar el grupo entero
+     movería los grados y el aparato dejaría de leerse como un instrumento fijo. */
+  .temporal-backdrop-grid .dial {
+    opacity: 1;
+    transition: opacity 620ms ease-out;
+  }
+
+  .temporal-backdrop-grid .dial.is-dial-hidden {
+    opacity: 0;
+    transition: none;
+  }
+
   .temporal-backdrop-grid .dial-ring { stroke: rgb(199 170 105 / 0.16); }
   .temporal-backdrop-grid .dial-arc { stroke: rgb(199 170 105 / 0.12); }
 
@@ -2290,20 +2303,75 @@
     55%, 100% { opacity: 0; transform: rotate(var(--encounter-cut-angle)) scaleX(1.18); }
   }
 
-  .game-screen.is-encounter-entering {
+  .game-screen.is-encounter-entering:not(.is-overture) {
     animation: encounter-board-background 1100ms ease-out both;
   }
 
-  .game-screen.is-encounter-entering .game-battlefield-stage {
+  /* ── Obertura del tablero ─────────────────────────────────────────────────────────
+     El corte y la apertura del encuentro no se tocan. Lo que cambia es lo que hay
+     DEBAJO cuando se abren: el Campo llega desnudo para que el signo del Futuro tenga
+     escenario propio, y el HUD espera a que le entregue el instrumento de grados.
+     La maqueta de decisión es `dev/mockups/vfx/board-overture.html`. */
+
+  .chronicle-sigil-overture {
+    pointer-events: none;
+    /* Por encima de todo el tablero y por debajo de las cortinas del encuentro (1000),
+       que siguen terminando su corte mientras el signo empieza a trazarse. */
+    position: fixed;
+    z-index: 900;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 120ms linear;
+  }
+
+  /* Se ocultan sin animación: la entrada tiene su propio beat al terminar la obertura. */
+  .game-screen.is-overture .game-command-bar,
+  .game-screen.is-overture .game-hud-host,
+  .game-screen.is-overture .game-hud-player,
+  .game-screen.is-overture .hand-atmosphere-shell,
+  .game-screen.is-overture .player-hand-region {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* La entrada legacy queda completamente fuera de esta ejecución. No sólo el HUD: animar
+     otra vez el escenario debajo de las cortinas se leía como una apertura vieja seguida
+     por la nueva. */
+  .game-screen.is-overture.is-encounter-entering,
+  .game-screen.is-overture.is-encounter-entering .game-battlefield-stage,
+  .game-screen.is-overture.is-encounter-entering .game-command-bar,
+  .game-screen.is-overture.is-encounter-entering .hand-atmosphere,
+  .game-screen.is-overture.is-encounter-entering .player-hand-region {
+    animation: none;
+  }
+
+  .game-screen.is-overture-settling .game-command-bar,
+  .game-screen.is-overture-settling .game-hud-host {
+    animation: encounter-board-ui-top 620ms ease-out both;
+  }
+
+  .game-screen.is-overture-settling .game-hud-player {
+    animation: encounter-board-ui-top 620ms 120ms ease-out both;
+  }
+
+  .game-screen.is-overture-settling .hand-atmosphere-shell,
+  .game-screen.is-overture-settling .player-hand-region {
+    animation: encounter-board-ui-bottom 680ms 200ms cubic-bezier(0.2, 0.82, 0.2, 1) both;
+  }
+
+  .game-screen.is-encounter-entering:not(.is-overture) .game-battlefield-stage {
     animation: encounter-board-stage 900ms 430ms cubic-bezier(0.18, 0.8, 0.25, 1) both;
   }
 
-  .game-screen.is-encounter-entering .game-command-bar {
+  .game-screen.is-encounter-entering:not(.is-overture) .game-command-bar {
     animation: encounter-board-ui-top 680ms 650ms ease-out both;
   }
 
-  .game-screen.is-encounter-entering .hand-atmosphere,
-  .game-screen.is-encounter-entering .player-hand-region {
+  .game-screen.is-encounter-entering:not(.is-overture) .hand-atmosphere,
+  .game-screen.is-encounter-entering:not(.is-overture) .player-hand-region {
     animation: encounter-board-ui-bottom 720ms 760ms cubic-bezier(0.2, 0.82, 0.2, 1) both;
   }
 
@@ -2362,9 +2430,17 @@
     .encounter-transition,
     .encounter-transition *,
     .game-screen.is-encounter-entering,
-    .game-screen.is-encounter-entering * {
+    .game-screen.is-encounter-entering *,
+    .game-screen.is-overture-settling,
+    .game-screen.is-overture-settling * {
       animation-duration: 1ms !important;
       animation-delay: 0ms !important;
+    }
+
+    /* Sin movimiento la obertura no llega a montarse, pero si el ajuste cambia a mitad el
+       disco debe aparecer de una vez en lugar de fundirse. */
+    .temporal-backdrop-grid .dial {
+      transition-duration: 1ms !important;
     }
 
     .expedition-deck-drawer,
@@ -17566,6 +17642,14 @@
   width: 100%;
   max-width: 215px;
   aspect-ratio: 488 / 680;
+  animation: opening-hand-card-enter 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* CSS inicia una sola vez al insertar la nueva revisión de la carta. A diferencia del
+   controlador declarativo anterior, el remontaje de efectos de StrictMode no reinicia el beat. */
+@keyframes opening-hand-card-enter {
+  from { opacity: 0; transform: translateY(26px) scale(0.92); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .opening-hand-card {
@@ -17681,6 +17765,12 @@
   .opening-hand-cards { gap: 4px; }
   .opening-hand-actions { width: 100%; gap: 8px; }
   .opening-hand-button { min-height: 48px; font-size: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .opening-hand-card-entry {
+    animation: none;
+  }
 }
 
 /* Playground — developer-only tooling. Deliberately plainer than the game UI: it must never be

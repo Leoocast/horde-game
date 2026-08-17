@@ -1,9 +1,10 @@
-import { Suspense, lazy, useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AudioClickListener } from "./components/AudioClickListener";
 import { Board } from "./components/Board";
 import { DeckInspector } from "./components/DeckInspector";
 import { DestinyRewriteTransition, type DestinyTransitionKind } from "./components/DestinyRewriteTransition";
-import { ENCOUNTER_IMPACT_MS, ENCOUNTER_TRANSITION_MS, EncounterTransition } from "./components/EncounterTransition";
+import { ENCOUNTER_IMPACT_MS, ENCOUNTER_OPEN_MS, ENCOUNTER_TRANSITION_MS, EncounterTransition } from "./components/EncounterTransition";
+import { ChronicleSigilOverture } from "./components/ChronicleSigilOverture";
 import { GameLoadingScreen } from "./components/GameLoadingScreen";
 import { StartMenu } from "./components/StartMenu";
 import { findInspectableDeck, hostInspectableDecks, playerInspectableDecks } from "./data/deckCatalog";
@@ -38,6 +39,32 @@ const AudioLabScreen = import.meta.env.DEV
 
 type AppScreen = "start" | "deckInspector" | "game" | "tutorial" | "playground" | "audioLab";
 
+type LaunchTransitionState = {
+  id: number;
+  chronicleDeckId: string;
+  hostDeckId: string;
+  gameMode: GameMode;
+  startedAtMs: number;
+  reducedMotion: boolean;
+};
+
+type BoardOvertureState = {
+  id: number;
+  seed: string;
+  dialPending: boolean;
+  startsAtMs: number;
+  phase: "sigil" | "hud";
+};
+
+type DestinyTransitionState = {
+  id: number;
+  kind: DestinyTransitionKind;
+  seed: string;
+};
+
+/** El HUD termina de entrar antes de montar la Mano inicial. */
+const BOARD_OVERTURE_HUD_MS = 900;
+
 const subscribeGuidedLifecycle = (listener: () => void) => guidedProductLifecycle.subscribe(listener);
 const readGuidedLifecycle = () => guidedProductLifecycle.snapshot();
 
@@ -61,15 +88,16 @@ export default function App() {
   const [inspectorDeckId, setInspectorDeckId] = useState(playerInspectableDecks[0].id);
   const [menuReturnScreen, setMenuReturnScreen] = useState<"home" | "setup" | "chaos" | "chronicles" | "hosts">("home");
   const [preserveMenuMusic, setPreserveMenuMusic] = useState(false);
-  const [launchTransition, setLaunchTransition] = useState<{
-    chronicleDeckId: string;
-    hostDeckId: string;
-    gameMode: GameMode;
-  } | null>(null);
-  const [destinyTransition, setDestinyTransition] = useState<{
-    kind: DestinyTransitionKind;
-    seed: string;
-  } | null>(null);
+  const [launchTransition, setLaunchTransition] = useState<LaunchTransitionState | null>(null);
+  /* Obertura del tablero: el signo del Futuro se traza sobre el Campo desnudo cuando el
+     encuentro empieza a abrirse y le entrega el instrumento de grados. Vive aquí porque el
+     lanzamiento ya se secuencia en App; `Board` sólo se entera de en qué fase está. */
+  const [boardOverture, setBoardOverture] = useState<BoardOvertureState | null>(null);
+  const [destinyTransition, setDestinyTransition] = useState<DestinyTransitionState | null>(null);
+  const launchIdRef = useRef(0);
+  const destinyIdRef = useRef(0);
+  const destinyTransitionRef = useRef<DestinyTransitionState | null>(null);
+  const resolvedDestinyIdRef = useRef<number | null>(null);
   const [desktopResume, setDesktopResume] = useState<DesktopResumeLoad>({ status: "none" });
   const [preferencesReady, setPreferencesReady] = useState(false);
   const [requiredTutorialOffered, setRequiredTutorialOffered] = useState(false);
@@ -187,19 +215,39 @@ export default function App() {
 
   useEffect(() => {
     if (!launchTransition) return;
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const { id, reducedMotion, startedAtMs } = launchTransition;
+    const remainingUntil = (offsetMs: number) => Math.max(0, startedAtMs + offsetMs - performance.now());
     const revealTimeout = window.setTimeout(() => {
       startBattleMusic(true);
       setScreen("game");
-    }, reducedMotion ? 80 : ENCOUNTER_IMPACT_MS);
+    }, reducedMotion ? 80 : remainingUntil(ENCOUNTER_IMPACT_MS));
     const finishTimeout = window.setTimeout(() => {
-      setLaunchTransition(null);
-    }, reducedMotion ? 180 : ENCOUNTER_TRANSITION_MS);
+      setLaunchTransition((current) => (current?.id === id ? null : current));
+    }, reducedMotion ? 180 : remainingUntil(ENCOUNTER_TRANSITION_MS));
     return () => {
       window.clearTimeout(revealTimeout);
       window.clearTimeout(finishTimeout);
     };
   }, [launchTransition, startBattleMusic]);
+
+  /* Una sola máquina de estados entrega signo -> HUD -> Mano. La Mano no llega a montarse
+     entre fases, que era lo que hacía visible la entrada dos veces. */
+  useEffect(() => {
+    if (boardOverture?.phase !== "hud") return;
+    const id = boardOverture.id;
+    const timer = window.setTimeout(() => {
+      setBoardOverture((current) => (current?.id === id ? null : current));
+    }, BOARD_OVERTURE_HUD_MS);
+    return () => window.clearTimeout(timer);
+  }, [boardOverture?.id, boardOverture?.phase]);
+
+  /* Salir del tablero a mitad de la obertura la deja pendiente, y la siguiente partida
+     montaría con el HUD apagado. Mientras existe `launchTransition` seguimos en el menú a
+     propósito: la obertura ya está armada para el primer render del tablero. */
+  useEffect(() => {
+    if (screen === "game" || launchTransition) return;
+    setBoardOverture(null);
+  }, [launchTransition, screen]);
 
   useEffect(() => {
     if (loading || !preferencesReady || requestInitialName || requiredTutorialOffered || screen !== "start") return;
@@ -230,16 +278,25 @@ export default function App() {
   }
 
   const beginDestinyTransition = useCallback((kind: DestinyTransitionKind) => {
-    if (destinyTransition) return;
+    if (destinyTransitionRef.current) return;
     const gameStore = useGameStore.getState();
     gameStore.stopGamePresentation();
-    setDestinyTransition({ kind, seed: gameStore.game.seed });
-  }, [destinyTransition]);
+    const transition = {
+      id: ++destinyIdRef.current,
+      kind,
+      seed: gameStore.game.seed,
+    };
+    destinyTransitionRef.current = transition;
+    resolvedDestinyIdRef.current = null;
+    setDestinyTransition(transition);
+  }, []);
 
-  const resolveDestinyTransition = useCallback(() => {
-    if (!destinyTransition) return;
-    if (destinyTransition.kind === "rewrite") {
-      reset(destinyTransition.seed, setupTurns);
+  const resolveDestinyTransition = useCallback((transitionId: number) => {
+    const transition = destinyTransitionRef.current;
+    if (!transition || transition.id !== transitionId || resolvedDestinyIdRef.current === transitionId) return;
+    resolvedDestinyIdRef.current = transitionId;
+    if (transition.kind === "rewrite") {
+      reset(transition.seed, setupTurns);
       startBattleMusic(true);
       return;
     }
@@ -249,10 +306,13 @@ export default function App() {
     setPreserveMenuMusic(false);
     setMenuReturnScreen("setup");
     setScreen("start");
-  }, [destinyTransition, reset, setupTurns, startBattleMusic]);
+  }, [reset, setupTurns, startBattleMusic]);
 
-  const completeDestinyTransition = useCallback(() => {
-    setDestinyTransition(null);
+  const completeDestinyTransition = useCallback((transitionId: number) => {
+    if (destinyTransitionRef.current?.id !== transitionId) return;
+    destinyTransitionRef.current = null;
+    resolvedDestinyIdRef.current = null;
+    setDestinyTransition((current) => (current?.id === transitionId ? null : current));
   }, []);
 
   function leaveGuidedLesson() {
@@ -268,6 +328,7 @@ export default function App() {
 
   const transitionOverlay = launchTransition ? (
     <EncounterTransition
+      key={`encounter-${launchTransition.id}`}
       chronicleDeckId={launchTransition.chronicleDeckId}
       hostDeckId={launchTransition.hostDeckId}
       gameMode={launchTransition.gameMode}
@@ -275,6 +336,8 @@ export default function App() {
   ) : null;
   const destinyTransitionOverlay = destinyTransition ? (
     <DestinyRewriteTransition
+      key={`destiny-${destinyTransition.id}`}
+      transitionId={destinyTransition.id}
       kind={destinyTransition.kind}
       seed={destinyTransition.seed}
       onCovered={resolveDestinyTransition}
@@ -424,10 +487,26 @@ export default function App() {
               options.mode,
               options.gameMode,
             );
+            const id = ++launchIdRef.current;
+            const startedAtMs = performance.now();
+            const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            /* Se arma en el mismo evento que crea la partida, antes de que pueda existir un
+               primer render del tablero. `id` impide que un callback viejo cierre otra
+               obertura y el reloj absoluto la ancla a la apertura real de las cortinas. */
+            setBoardOverture(reducedMotion ? null : {
+              id,
+              seed: useGameStore.getState().game.seed,
+              dialPending: true,
+              startsAtMs: startedAtMs + ENCOUNTER_OPEN_MS,
+              phase: "sigil",
+            });
             setLaunchTransition({
+              id,
               chronicleDeckId: selectedDeckId,
               hostDeckId: selectedHostDeckId,
               gameMode: options.gameMode,
+              startedAtMs,
+              reducedMotion,
             });
           }}
         />
@@ -446,6 +525,9 @@ export default function App() {
         playerName={playerName}
         setupTurns={setupTurns}
         encounterEntering={Boolean(launchTransition)}
+        overtureActive={boardOverture?.phase === "sigil"}
+        overtureSettling={boardOverture?.phase === "hud"}
+        overtureDialPending={Boolean(boardOverture?.dialPending)}
         sessionKind={screen === "tutorial" ? "tutorial" : "normal"}
         tutorialInterrupted={screen === "tutorial" && (guidedLifecycle.status === "aborted" || guidedLifecycle.status === "failed")}
         tutorialErrorMessage={guidedLifecycle.errorMessage}
@@ -460,7 +542,31 @@ export default function App() {
           setScreen("start");
         }}
       />
+      {/* Conserva el mismo slot que ocupa junto a StartMenu. Si la obertura se insertara
+          antes, React remontaría EncounterTransition al revelar Board y el choque empezaría
+          por segunda vez mientras el signo ya corre con el reloj original. */}
       {transitionOverlay}
+      {boardOverture?.phase === "sigil" && (
+        <ChronicleSigilOverture
+          key={`overture-${boardOverture.id}`}
+          seed={boardOverture.seed}
+          startsAtMs={boardOverture.startsAtMs}
+          onDialReady={() => {
+            const id = boardOverture.id;
+            setBoardOverture((current) => (
+              current?.id === id ? { ...current, dialPending: false } : current
+            ));
+          }}
+          onComplete={() => {
+            const id = boardOverture.id;
+            setBoardOverture((current) => (
+              current?.id === id
+                ? { ...current, dialPending: false, phase: "hud" }
+                : current
+            ));
+          }}
+        />
+      )}
       {destinyTransitionOverlay}
     </>
   );

@@ -5,6 +5,14 @@ import {
   BURN_MAX_ROUTES,
 } from "./burnFireball";
 import {
+  CHRONICLE_SIGIL_EDGES,
+  CHRONICLE_SIGIL_NODES,
+} from "./chronicleSigilGeometry";
+import {
+  CHRONICLE_SIGIL_FRAGMENT_SHADER,
+  CHRONICLE_SIGIL_VERTEX_SHADER,
+} from "./chronicleSigilShader";
+import {
   DESTINY_VORTEX_FRAGMENT_SHADER,
   DESTINY_VORTEX_VERTEX_SHADER,
 } from "./destinyVortexShader";
@@ -198,6 +206,44 @@ function createDestinyVortexFrame(): WarmupFrame {
 }
 
 /**
+ * El signo del Futuro es el primer efecto visible de la sesión: se traza mientras el encuentro
+ * todavía se está abriendo. Compilarlo en ese momento cuesta un tirón justo en la entrada al
+ * tablero, así que se paga durante la carga como el resto.
+ */
+function createChronicleSigilFrame(): WarmupFrame {
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      uRes: { value: new THREE.Vector2(64, 64) },
+      uPixelRatio: { value: 1 },
+      uTime: { value: 0 },
+      uT: { value: 0 },
+      uCenter: { value: new THREE.Vector2(32, 32) },
+      uUnit: { value: 8 },
+      uDialR: { value: 18 },
+      uScale: { value: 1 },
+      uPresence: { value: 0 },
+      uMotes: { value: 0 },
+      uCharge: { value: 0 },
+      uSeat: { value: 0 },
+      uSweep: { value: 0 },
+      uSweepPresence: { value: 0 },
+      uNode: { value: Array.from({ length: CHRONICLE_SIGIL_NODES }, () => new THREE.Vector4()) },
+      uEdge: { value: Array.from({ length: CHRONICLE_SIGIL_EDGES }, () => new THREE.Vector4()) },
+      uEdgeT: { value: new Array<number>(CHRONICLE_SIGIL_EDGES).fill(0) },
+    },
+    vertexShader: CHRONICLE_SIGIL_VERTEX_SHADER,
+    fragmentShader: CHRONICLE_SIGIL_FRAGMENT_SHADER,
+    transparent: true,
+    premultipliedAlpha: true,
+    depthTest: false,
+    depthWrite: false,
+  });
+  const scene = new THREE.Scene();
+  scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
+  return { scene, camera: new THREE.Camera(), outputEncoding: THREE.LinearEncoding };
+}
+
+/**
  * El vidrio de la derrota se monta justo cuando la Vida llega a 0. Compilar entonces sus dos
  * programas cuesta un tirón en el peor momento posible, así que se paga durante la carga con el
  * mismo plan real: los atributos por trozo forman parte del programa.
@@ -239,6 +285,7 @@ function createWarmupFrames(): WarmupFrame[] {
   return [
     createBuiltinMaterialFrame(),
     createBurnFrame(),
+    createChronicleSigilFrame(),
     createDestinyVortexFrame(),
     createDefeatGlassFrame(),
   ];

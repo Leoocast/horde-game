@@ -386,12 +386,11 @@
       .stage {
         --d-vs: 2450ms;
         --delay-board: 1050ms;
-        --d-board: 850ms;
-        --delay-instrument: 3450ms;
+        --delay-instrument: 3446ms;
         --d-instrument: 600ms;
-        --delay-hud: 4250ms;
+        --delay-hud: 4616ms;
         --d-hud: 620ms;
-        --delay-mulligan: 5250ms;
+        --delay-mulligan: 5516ms;
         --d-mulligan: 480ms;
       }
 
@@ -417,7 +416,9 @@
       }
       .stage.is-playing .vs-rift { animation: vs-rift var(--d-vs) cubic-bezier(0.22, 0.76, 0.18, 1) both; }
 
-      .stage.is-playing .board-scene { animation: board-reveal var(--d-board) var(--delay-board) ease-out both; }
+      /* El tablero queda presente mientras las cortinas aún están cerradas. No tiene una
+         segunda entrada propia: la única apertura visible es la de las cortinas. */
+      .stage.is-playing .board-scene { animation: board-present 1ms var(--delay-board) steps(1, end) both; }
       .stage.is-playing .board-instrument { animation: instrument-settle var(--d-instrument) var(--delay-instrument) ease-out both; }
 
       .stage.is-playing .hud-turn { animation: hud-in var(--d-hud) var(--delay-hud) cubic-bezier(0.16, 1, 0.3, 1) both; }
@@ -474,7 +475,7 @@
       @keyframes vs-combatant-left-exit { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(104%); } }
       @keyframes vs-combatant-right-exit { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-104%); } }
 
-      @keyframes board-reveal { from { opacity: 0; transform: scale(1.035); } to { opacity: 1; transform: scale(1); } }
+      @keyframes board-present { from { opacity: 0; } to { opacity: 1; } }
       @keyframes instrument-settle { from { opacity: 0; } to { opacity: 1; } }
       @keyframes hud-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
       @keyframes hud-drop { from { opacity: 0; transform: translate(-50%, -12px); } to { opacity: 1; transform: translate(-50%, 0); } }
@@ -692,8 +693,8 @@
           <li><b>Fijar, 2.63–3.37 s:</b> el signo carga una vez y se sienta en sus marcas.</li>
           <li><b>El círculo, 3.22–3.92 s:</b> la luz recorre el aro.</li>
           <li><b>Entregar, 3.45–4.42 s:</b> el instrumento se enciende debajo y el signo se apaga.</li>
-          <li><b>HUD, 4.25–5.15 s:</b> entran turno, Archivo de la Hueste, herramientas, Energía, fases y vitals, escalonados.</li>
-          <li><b>Mano inicial, 5.25–6.10 s:</b> las cartas suben escalonadas 55 ms como en <code>OpeningHandOverlay</code>, con Conservar y Reescribir.</li>
+          <li><b>HUD, 4.62–5.52 s:</b> entran turno, Archivo de la Hueste, herramientas, Energía, fases y vitals, escalonados.</li>
+          <li><b>Mano inicial, 5.52–6.10 s:</b> las cartas suben escalonadas 55 ms como en <code>OpeningHandOverlay</code>, con Conservar y Reescribir.</li>
         </ul>
 
         <h3>Que no duela a oscuras</h3>
@@ -869,7 +870,7 @@
           "uniform vec2 uRes; uniform float uPR; uniform float uTime; uniform float uT;",
           "uniform vec2 uCenter; uniform float uUnit; uniform float uSeed; uniform float uDialR;",
           "uniform float uScale; uniform float uPresence; uniform float uMotes; uniform float uCharge;",
-          "uniform float uSeat; uniform float uSweep;",
+          "uniform float uSeat; uniform float uSweep; uniform float uSweepPresence;",
           // xy = desplazamiento respecto al centro, z = instante en que queda fijo, w = semilla propia
           "uniform vec4 uNode[NODES];",
           // xy/zw = extremos, también relativos al centro
@@ -1024,11 +1025,13 @@
           "    float ang = atan(q.y, q.x) + 1.57079633;",
           "    float turn = fract(ang / 6.28318531);",
           "    float ringD = abs(r - uDialR);",
-          "    float body = exp(-ringD/max(1.4, uDialR*0.0075));",
+          "    float body = smoothstep(1.10,0.18,ringD);",
+          "    float halo = exp(-ringD/1.8);",
           "    float drawn = step(turn, uSweep);",
           "    float lead  = exp(-max(uSweep - turn, 0.0)*7.0);",
-          "    add(col, al, GOLD, body*drawn*(0.16 + lead*0.62)*pres);",
-          "    add(col, al, CORE, body*drawn*lead*0.34*pres);",
+          "    float ringPresence = pres*uSweepPresence;",
+          "    add(col, al, GOLD, (body*(0.055 + lead*0.08) + halo*0.018)*drawn*ringPresence);",
+          "    add(col, al, CORE, body*drawn*lead*0.025*ringPresence);",
           "  }",
 
           // Rodilla filmica: por encima de 1 la suma aditiva se convierte en pantalla blanca.
@@ -1039,7 +1042,7 @@
 
         var star = buildProgram(gl, FRAG,
           ["uRes","uPR","uTime","uT","uCenter","uUnit","uSeed","uDialR","uScale","uPresence",
-           "uMotes","uCharge","uSeat","uSweep","uNode","uEdge","uEdgeT"]);
+           "uMotes","uCharge","uSeat","uSweep","uSweepPresence","uNode","uEdge","uEdgeT"]);
         if (!star) return;
         var U = star.uniforms;
 
@@ -1180,7 +1183,10 @@
           gl.uniform1f(U.uMotes, 1 - smooth(1.06, 1.30, t));
           gl.uniform1f(U.uCharge, pulse(t, 0.96, 1.42, 1.70));
           gl.uniform1f(U.uSeat, seat);
-          gl.uniform1f(U.uSweep, smooth(1.55, 2.25, t) * (1 - smooth(2.35, 2.95, t)));
+          /* El progreso sólo avanza. La retirada tiene otra opacidad para que la cabeza no
+             vuelva de 360° a 0° después de cerrar el aro. */
+          gl.uniform1f(U.uSweep, smooth(1.55, 2.25, t));
+          gl.uniform1f(U.uSweepPresence, 1 - smooth(2.25, 2.55, t));
           gl.uniform4fv(U.uNode, nodeBuf);
           gl.uniform4fv(U.uEdge, edgeBuf);
           gl.uniform1fv(U.uEdgeT, edgeTBuf);
@@ -1222,12 +1228,11 @@
           var values = {
             "--d-vs": 2450,
             "--delay-board": 1050,
-            "--d-board": 850,
-            "--delay-instrument": 3450,
+            "--delay-instrument": 3446,
             "--d-instrument": 600,
-            "--delay-hud": 4250,
+            "--delay-hud": 4616,
             "--d-hud": 620,
-            "--delay-mulligan": 5250,
+            "--delay-mulligan": 5516,
             "--d-mulligan": 480
           };
           Object.keys(values).forEach(function (name) {
@@ -1241,8 +1246,8 @@
           if (time < 2820) return "El signo se traza";
           if (time < 3220) return "El signo se sienta";
           if (time < 3920) return "El círculo recorre el aro";
-          if (time < 4420) return "Queda el instrumento";
-          if (time < 5250) return "Entra el HUD";
+          if (time < 4616) return "Queda el instrumento";
+          if (time < 5516) return "Entra el HUD";
           if (time < BASE_TOTAL) return "Mano inicial";
           return "Tablero listo";
         }

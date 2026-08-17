@@ -98,6 +98,7 @@ test("the narrative Future control owns normal rewrites outside Settings", async
   assert.match(transition, /document\.body\.classList\.remove/u);
   assert.match(shader, /uniform float uSeed/u);
   assert.match(warmup, /uSeed/u);
-  assert.match(app, /reset\(destinyTransition\.seed, setupTurns\)/u);
+  assert.match(app, /resolvedDestinyIdRef\.current === transitionId/u);
+  assert.match(app, /reset\(transition\.seed, setupTurns\)/u);
   assert.match(app, /setMenuReturnScreen\("setup"\)/u);
 });

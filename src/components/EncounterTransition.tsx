@@ -13,6 +13,12 @@ type Props = {
 /** Shared with App so the board begins revealing under the CSS clash beat. */
 export const ENCOUNTER_IMPACT_MS = 1050;
 export const ENCOUNTER_TRANSITION_MS = 2450;
+/**
+ * Instante en que las cortinas dejan de estar cerradas y empieza el corte diagonal: es el
+ * 68 % de `encounter-curtain-player` / `encounter-curtain-host`. La obertura del tablero se
+ * engancha aquí, así que mover ese keyframe obliga a mover esta constante con él.
+ */
+export const ENCOUNTER_OPEN_MS = Math.round(ENCOUNTER_TRANSITION_MS * 0.68);
 
 export function EncounterTransition({ chronicleDeckId, hostDeckId, gameMode }: Props) {
   const t = useTranslation();

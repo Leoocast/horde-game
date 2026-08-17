@@ -115,7 +115,7 @@ export function DuelHud({ game }: { game: GameState }) {
   }, [playerAttackAnimation]);
 
   return (
-    <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : tributeOfTheFourSorrowsCard || deathRevealCard || hostSpellCard ? "z-[117]" : "z-50"].join(" ")}>
+    <div className={["game-hud-host fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : tributeOfTheFourSorrowsCard || deathRevealCard || hostSpellCard ? "z-[117]" : "z-50"].join(" ")}>
       <div className="flex items-start justify-end gap-2">
         <AnimatePresence>
         {deathRevealCard && (
@@ -574,7 +574,7 @@ export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameSt
     <>
       <div
         className={[
-          "player-life-dock fixed bottom-4 right-4 flex items-end justify-end overflow-visible",
+          "player-life-dock game-hud-player fixed bottom-4 right-4 flex items-end justify-end overflow-visible",
           finalBanquetAnimation
             ? "pointer-events-none z-[205]"
             : bloodPactAnimation

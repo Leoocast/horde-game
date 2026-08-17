@@ -14,10 +14,11 @@ import { renderSharedVfxFrame, sharedVfxUnavailable } from "./sharedVfxRenderer"
 export type DestinyTransitionKind = "rewrite" | "contemplate";
 
 type Props = {
+  transitionId: number;
   kind: DestinyTransitionKind;
   seed: string;
-  onCovered: () => void;
-  onComplete: () => void;
+  onCovered: (transitionId: number) => void;
+  onComplete: (transitionId: number) => void;
 };
 
 const COVER_MS = 980;
@@ -74,7 +75,7 @@ function collectShards(root: Element, viewport: { width: number; height: number 
   return shards;
 }
 
-export function DestinyRewriteTransition({ kind, seed, onCovered, onComplete }: Props) {
+export function DestinyRewriteTransition({ transitionId, kind, seed, onCovered, onComplete }: Props) {
   const t = useTranslation();
   const playSfx = useAudioStore((state) => state.playSfx);
   const [phase, setPhase] = useState<"absorbing" | "revealing">("absorbing");
@@ -82,6 +83,10 @@ export function DestinyRewriteTransition({ kind, seed, onCovered, onComplete }: 
   const [still, setStill] = useState(false);
   const futureCode = futureCodeFromSeed(seed);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const startSoundPlayedRef = useRef(false);
+  const coverCommittedRef = useRef(false);
+  const revealSoundPlayedRef = useRef(false);
+  const completeCommittedRef = useRef(false);
 
   useEffect(() => {
     const reducedMotion = prefersReducedMotion();
@@ -89,19 +94,34 @@ export function DestinyRewriteTransition({ kind, seed, onCovered, onComplete }: 
     const completeMs = reducedMotion ? REDUCED_COMPLETE_MS : COMPLETE_MS;
 
     document.body.classList.add("destiny-rewrite-active", "destiny-rewrite-absorbing");
-    playSfx("activateEffect", { rate: 0.72 });
+    // StrictMode vuelve a ejecutar los efectos de montaje. El sonido y los commits pertenecen
+    // a la transición, no a cada ejecución del efecto.
+    if (!startSoundPlayedRef.current) {
+      startSoundPlayedRef.current = true;
+      playSfx("activateEffect", { rate: 0.72 });
+    }
 
     const coverTimer = window.setTimeout(() => {
+      if (coverCommittedRef.current) return;
+      coverCommittedRef.current = true;
       document.body.classList.remove("destiny-rewrite-absorbing");
       document.body.classList.add("destiny-rewrite-revealing");
       setPhase("revealing");
-      onCovered();
+      onCovered(transitionId);
       // El horizonte se cierra sobre la escena: ese golpe es el clímax y no puede ser mudo.
       playSfx("stoneCrash", { rate: 0.62 });
     }, coverMs);
     // El futuro nuevo llega después del golpe, no encima; con movimiento reducido, casi pegado.
-    const revealTimer = window.setTimeout(() => playSfx("drawOne", { rate: 0.78 }), coverMs + (reducedMotion ? 80 : 260));
-    const completeTimer = window.setTimeout(onComplete, completeMs);
+    const revealTimer = window.setTimeout(() => {
+      if (revealSoundPlayedRef.current) return;
+      revealSoundPlayedRef.current = true;
+      playSfx("drawOne", { rate: 0.78 });
+    }, coverMs + (reducedMotion ? 80 : 260));
+    const completeTimer = window.setTimeout(() => {
+      if (completeCommittedRef.current) return;
+      completeCommittedRef.current = true;
+      onComplete(transitionId);
+    }, completeMs);
 
     return () => {
       window.clearTimeout(coverTimer);
@@ -109,7 +129,7 @@ export function DestinyRewriteTransition({ kind, seed, onCovered, onComplete }: 
       window.clearTimeout(completeTimer);
       document.body.classList.remove("destiny-rewrite-active", "destiny-rewrite-absorbing", "destiny-rewrite-revealing");
     };
-  }, [onComplete, onCovered, playSfx]);
+  }, [onComplete, onCovered, playSfx, transitionId]);
 
   /* La escena no cae como un bloque: cada pieza se va por su cuenta, se estira en el eje que apunta
      al horizonte y llega tarde según lo lejos que estaba. Las animaciones se cancelan al pasar a

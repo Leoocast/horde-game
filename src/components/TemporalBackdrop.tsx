@@ -37,6 +37,7 @@ const DIAL_SETTLE_EPSILON = 0.05;
 export function TemporalBackdrop({
   climax = 0,
   grid = false,
+  dialHidden = false,
   dial = 0,
   dialRevision = 0,
   settleDialImmediately = false,
@@ -46,6 +47,13 @@ export function TemporalBackdrop({
   climax?: number;
   /** Retículo del instrumento. Sólo en el tablero: el menú va a cielo limpio. */
   grid?: boolean;
+  /** Oculta sólo el disco de grados y conserva el cristal.
+   *
+   * El cristal es la superficie a través de la que se mira y está desde el primer fotograma;
+   * el disco de grados no, porque lo entrega el signo del Futuro durante la obertura del
+   * tablero. Son dos piezas del mismo aparato con dueños distintos, así que no pueden
+   * seguir compartiendo una sola condición de montaje. */
+  dialHidden?: boolean;
   /** Ángulo acumulado del disco de grados, en grados. El aparato mide cómo se mueve
    *  el futuro: a la derecha cuando la Hueste pierde, a la izquierda cuando pierde
    *  el Cronista. */
@@ -315,8 +323,15 @@ export function TemporalBackdrop({
         {/* El canto que capta la luz, arriba e izquierda: da grosor al cristal. */}
         <path className="glass-lip" d="M27 541 V21 H973" />
 
-        {/* Los grados: la parte central del instrumento. */}
-        <g ref={dialRef} className="dial" transform={temporalDialTransform(0)}>
+        {/* Los grados: la parte central del instrumento. Durante la obertura del tablero
+            llega apagado, porque es el signo del Futuro quien lo enciende al entregarle su
+            aro. `is-dial-hidden` sólo toca su opacidad: el ángulo lo sigue llevando el
+            store, así que reaparecer no lo descoloca. */}
+        <g
+          ref={dialRef}
+          className={`dial${dialHidden ? " is-dial-hidden" : ""}`}
+          transform={temporalDialTransform(0)}
+        >
           <circle className="dial-ring" r="196" pathLength={360} strokeDasharray="1 14" />
           <circle className="dial-arc" r="183" pathLength={360} strokeDasharray="34 18 5 33" />
 

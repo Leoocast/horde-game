@@ -51,6 +51,12 @@ type Props = {
   playerName: string;
   setupTurns: number;
   encounterEntering?: boolean;
+  /** El signo del Futuro se está trazando sobre el Campo: el tablero llega desnudo. */
+  overtureActive?: boolean;
+  /** El signo ya terminó y el HUD está entrando; la Mano todavía no se monta. */
+  overtureSettling?: boolean;
+  /** El disco de grados todavía no fue entregado por el signo. */
+  overtureDialPending?: boolean;
   sessionKind?: "normal" | "tutorial";
   tutorialInterrupted?: boolean;
   tutorialErrorMessage?: string;
@@ -188,6 +194,9 @@ export function Board({
   playerName,
   setupTurns,
   encounterEntering = false,
+  overtureActive = false,
+  overtureSettling = false,
+  overtureDialPending = false,
   sessionKind = "normal",
   tutorialInterrupted = false,
   tutorialErrorMessage,
@@ -336,9 +345,17 @@ export function Board({
   }, [encounterEntering, game.openingHandAccepted, playSfx]);
 
   return (
-    <main className={`duel-table game-screen h-screen overflow-hidden ${encounterEntering ? "is-encounter-entering" : ""}`}>
+    <main
+      className={[
+        "duel-table game-screen h-screen overflow-hidden",
+        encounterEntering ? "is-encounter-entering" : "",
+        overtureActive ? "is-overture" : "",
+        overtureSettling ? "is-overture-settling" : "",
+      ].filter(Boolean).join(" ")}
+    >
       <TemporalBackdrop
         grid
+        dialHidden={overtureDialPending}
         climax={climaxReached ? 1 : 0}
         dial={destinyDial}
         dialRevision={destinyDialRevision}
@@ -362,7 +379,7 @@ export function Board({
       <PhaseBanner
         game={game}
         setupTurns={setupTurns}
-        suspended={encounterEntering || !game.openingHandAccepted || sessionKind === "tutorial"}
+        suspended={encounterEntering || overtureActive || !game.openingHandAccepted || sessionKind === "tutorial"}
       />
       {game.openingHandAccepted && <PhaseOrb game={game} />}
       <CombatArrows game={game} hiddenDefenseLinkIds={hiddenDefenseLinkIds} />
@@ -408,7 +425,9 @@ export function Board({
         </section>
       </div>
       {game.openingHandAccepted && <Hand game={game} />}
-      <OpeningHandOverlay game={game} />
+      {/* La mano inicial espera a que el signo entregue el instrumento: pedir un mulligan
+          mientras el tablero todavía se está presentando parte la obertura en dos. */}
+      {!overtureActive && !overtureSettling && <OpeningHandOverlay game={game} />}
       <GuidedTutorialOverlay />
 
       {sessionKind === "normal" && defeatReady && onRewriteFuture && onContemplateFuture && (
