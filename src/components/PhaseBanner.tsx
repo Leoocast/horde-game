@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { useTranslation } from "../i18n/useTranslation";
 import { setupJustCompleted, setupProgress } from "./setupPresentation";
+import { guidedPresentationActivity } from "../guidance";
 
 type BannerTone = "main" | "battle" | "defend" | "host";
 
@@ -50,9 +51,16 @@ export function PhaseBanner({ game, setupTurns, suspended = false }: { game: Gam
       setVisiblePhase(undefined);
       return;
     }
+    const activity = guidedPresentationActivity.begin("phase.banner", nextPhase.key);
     setVisiblePhase(nextPhase);
-    const timer = window.setTimeout(() => setVisiblePhase(undefined), BANNER_DURATION_MS);
-    return () => window.clearTimeout(timer);
+    const timer = window.setTimeout(() => {
+      setVisiblePhase(undefined);
+      activity.end();
+    }, BANNER_DURATION_MS);
+    return () => {
+      window.clearTimeout(timer);
+      activity.end();
+    };
   }, [game.seed, game.setupTurnsRemaining, game.turnNumber, phase, suspended, t]);
 
   if (!visiblePhase) return null;

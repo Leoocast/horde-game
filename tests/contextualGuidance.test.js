@@ -140,6 +140,22 @@ test("provisional acknowledgement commits atomically or rolls back completely", 
   fixture.dispose();
 });
 
+test("isolated tutorial sessions ignore global seen checks and never write global progress", () => {
+  const fixture = createRuntime([RESERVE_CONCEPT]);
+  fixture.progress.markConceptSeen("reserve-flow", 1, "2026-08-17T00:00:00.000Z");
+  fixture.signals.beginSession("tutorial:1");
+  fixture.runtime.beginSession("tutorial:1", "isolated");
+  fixture.signals.publish({ kind: "player.reserveReleased", amount: 1 });
+  fixture.drain();
+  assert.equal(fixture.runtime.snapshot().active?.conceptId, "reserve-flow");
+
+  const progressBefore = fixture.progress.snapshot();
+  fixture.runtime.acknowledgeActive("2026-08-17T03:00:00.000Z");
+  assert.strictEqual(fixture.progress.snapshot(), progressBefore);
+  assert.deepEqual(fixture.runtime.snapshot().provisionalConcepts, []);
+  fixture.dispose();
+});
+
 test("preventive policy intercepts only its matching intent until the help is acknowledged", () => {
   const fixture = createRuntime([PREVENTIVE_CONCEPT]);
   const unrelated = fixture.runtime.authorizeIntent({ kind: "phase.endTurn" });

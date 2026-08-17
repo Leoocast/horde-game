@@ -14,6 +14,7 @@ export type GuidedCardState = Readonly<{
   damageMarked?: number;
   attacksMade?: number;
   counters?: Readonly<Record<string, number>>;
+  flags?: Readonly<Record<string, boolean>>;
 }>;
 
 export type GuidedCardSpec = Readonly<{

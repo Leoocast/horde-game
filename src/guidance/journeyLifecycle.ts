@@ -22,7 +22,7 @@ export type GuidedJourneyHost = Readonly<{
 }>;
 
 export type GuidedJourneyContextualProgress = Readonly<{
-  beginSession(gameSessionId: string, mode: "provisional"): void;
+  beginSession(gameSessionId: string, mode: "isolated"): void;
   rollbackProvisional(): void;
   setProgressMode(mode: "immediate"): void;
 }>;
@@ -85,7 +85,7 @@ export class GuidedJourneyLifecycle {
     this.#host.stopPresentation();
     try {
       const gameSessionId = this.#host.loadInitialBoard();
-      this.#contextual.beginSession(gameSessionId, "provisional");
+      this.#contextual.beginSession(gameSessionId, "isolated");
       this.#attempt += 1;
       this.#emit("running", { gameSessionId });
       return true;

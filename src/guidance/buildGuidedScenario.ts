@@ -183,6 +183,7 @@ function applyCardState(
   card.damageMarked = state?.damageMarked ?? 0;
   card.attacksMade = state?.attacksMade ?? 0;
   if (state?.counters) card.counters = { ...state.counters };
+  if (state?.flags) card.flags = { ...card.flags, ...state.flags };
   if (zone === "field" && state?.enteredThisTurn) {
     card.fieldEntryTurn = card.controller === "host" ? hostTurn : playerTurn;
   } else {

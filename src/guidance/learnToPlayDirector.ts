@@ -28,6 +28,7 @@ export type LearnToPlayPrologueSnapshot = Readonly<{
   cursor: number;
   stage: LearnToPlayPrologueStage;
   gameSessionId?: string;
+  suggestedAttackerId?: string;
 }>;
 
 type DirectorHost = Readonly<{
@@ -71,17 +72,6 @@ export class LearnToPlayPrologueDirector {
       journeyId: "learn-to-play",
       authorize: (intent) => {
         const game = this.#host.readStore().game;
-        if (this.#stage === "opening-attack" && (
-          intent.kind === "combat.cancelAttackers"
-          || (intent.kind === "combat.toggleAttacker" && !intent.selected)
-          || intent.kind === "phase.passCombat"
-        )) {
-          return Object.freeze({
-            allowed: false,
-            guidanceId: "learn-to-play.opening-attack-required",
-            relatedCardIds: Object.freeze([this.#bindings.maela]),
-          });
-        }
         const vaelorId = this.#bindings.vaelor;
         const vaelorStillRequired = game.hostTurnNumber >= 9
           && game.activeSide === "player"
@@ -226,7 +216,14 @@ export class LearnToPlayPrologueDirector {
   #setStage(stage: LearnToPlayPrologueStage): void {
     if (this.#stage === stage) return;
     this.#stage = stage;
-    this.#snapshot = Object.freeze({ cursor: ++this.#cursor, stage, gameSessionId: this.#gameSessionId });
+    this.#snapshot = Object.freeze({
+      cursor: ++this.#cursor,
+      stage,
+      gameSessionId: this.#gameSessionId,
+      ...(stage === "opening-attack" && this.#bindings.maela
+        ? { suggestedAttackerId: this.#bindings.maela }
+        : {}),
+    });
     for (const listener of this.#listeners) listener();
   }
 }

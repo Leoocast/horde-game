@@ -51,7 +51,12 @@ export function ContextualTutorialCallout() {
     const key: GuidedAnchorKey = highlight.kind === "card"
       ? guidedCardAnchorKey(highlight.instanceId)
       : guidedSurfaceAnchorKey(highlight.anchor);
-    return Object.freeze({ key, role: highlight.role ?? "focus", element: guidedAnchorRegistry.preferred(key) });
+    return Object.freeze({
+      key,
+      role: highlight.role ?? "focus",
+      padding: highlight.padding ?? 6,
+      element: guidedAnchorRegistry.preferred(key),
+    });
   }), [active, anchors.revision]);
 
   useLayoutEffect(() => {
@@ -61,10 +66,10 @@ export function ContextualTutorialCallout() {
     }
     let frame = 0;
     const measure = () => {
-      const next = resolved.flatMap(({ key, role, element }) => {
+      const next = resolved.flatMap(({ key, role, padding, element }) => {
         if (!element) return [];
         const bounds = element.getBoundingClientRect();
-        return bounds.width > 0 && bounds.height > 0 ? [paddedGuidedRect(key, role, bounds, 6)] : [];
+        return bounds.width > 0 && bounds.height > 0 ? [paddedGuidedRect(key, role, bounds, padding)] : [];
       });
       setRects((current) => guidedRectsEqual(current, next) ? current : Object.freeze(next));
       setViewport((current) => {
@@ -153,7 +158,7 @@ export function ContextualTutorialCallout() {
       >
         <span className="contextual-tutorial-mark" aria-hidden="true" />
         <div className="contextual-tutorial-heading">
-          <span>{t(`guided.contextual.mode.${active.policy}` as const)}</span>
+          <span className="tutorial-dialog-heading-ornament" aria-hidden="true"><i /><i /></span>
           <button
             ref={closeRef}
             type="button"

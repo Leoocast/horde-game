@@ -45,6 +45,7 @@ import { RootsTouchedSkyAnimator } from "./RootsTouchedSkyAnimator";
 import { EnergyFlowAnimator } from "./EnergyFlowAnimator";
 import { GuidedTutorialOverlay } from "./GuidedTutorialOverlay";
 import { ContextualTutorialCallout } from "./ContextualTutorialCallout";
+import { LearnToPlayJourneyCues } from "./LearnToPlayJourneyCues";
 import { NORMAL_BOARD_SESSION, type BoardSessionPolicy } from "./boardSessionPolicies";
 import { useHiddenDefenseLinkIds } from "./useDefenseLinkVisibility";
 import { IS_DEV } from "../utils/devMode";
@@ -418,6 +419,7 @@ export function Board({
         setupTurns={setupTurns}
         suspended={encounterEntering || overtureActive || !game.openingHandAccepted || !sessionPolicy.showPhaseBanner}
       />
+      {sessionPolicy.id === "learn-to-play" && <LearnToPlayJourneyCues />}
       {game.openingHandAccepted && <PhaseOrb game={game} hostStartDelayMs={sessionPolicy.hostStartDelayMs} />}
       <CombatArrows game={game} hiddenDefenseLinkIds={hiddenDefenseLinkIds} />
       <CounterTargetingOverlay game={game} />

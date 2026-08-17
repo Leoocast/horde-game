@@ -12,7 +12,7 @@ import type {
 } from "./contextualContracts";
 import type { ContextualIntentAuthorization } from "./contextualIntentGate";
 
-export type ContextualProgressMode = "immediate" | "provisional";
+export type ContextualProgressMode = "immediate" | "provisional" | "isolated";
 export type ContextualRuntimeStatus = "idle" | "waiting" | "presenting";
 
 export type ContextualRuntimeSnapshot = Readonly<{
@@ -128,7 +128,7 @@ export class ContextualTutorialRuntime {
       shownAt,
     });
     if (this.#progressMode === "provisional") this.#provisional.set(entry.conceptId, entry);
-    else this.#progress.markConceptSeen(entry.conceptId, entry.shownRevision, entry.shownAt);
+    else if (this.#progressMode === "immediate") this.#progress.markConceptSeen(entry.conceptId, entry.shownRevision, entry.shownAt);
     this.#active = undefined;
     this.#lastInterceptedConceptId = undefined;
     this.#emit();
@@ -185,6 +185,7 @@ export class ContextualTutorialRuntime {
     if (this.#shownThisMatch.has(definition.id)) return false;
     if (this.#active?.definition.id === definition.id) return false;
     if (this.#queue.some((item) => item.definition.id === definition.id)) return false;
+    if (this.#progressMode === "isolated") return true;
     const progress = this.#progress.snapshot();
     return !contextualConceptSeen(progress, definition) || !progress.preferences.hideSeenContextualHelp;
   }

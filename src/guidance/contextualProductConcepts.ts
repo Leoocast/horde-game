@@ -131,10 +131,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
     evaluate: () => undefined,
     prevent: (intent) => intent.kind === "combat.confirmArchiveAttack" && intent.targetIds.length > 0
       ? {
-          highlights: [
-            { kind: "surface", anchor: "player.field", role: "origin" },
-            { kind: "surface", anchor: "host.archive", role: "destination" },
-          ],
+          highlights: [{ kind: "surface", anchor: "host.archive" }],
         }
       : undefined,
     revalidate: (_match, context) => context.game.activeSide === "player" && context.game.phase === "combat",
@@ -152,7 +149,11 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
     signalKinds: ["action.committed"],
     evaluate: (signal) => signal.kind === "action.committed" && signal.receipt.kind === "archiveAttack.confirmed"
       ? {
-          highlights: (signal.receipt.targetIds ?? []).map((instanceId) => ({ kind: "card", instanceId })),
+          highlights: (signal.receipt.targetIds ?? []).map((instanceId) => ({
+            kind: "card",
+            instanceId,
+            padding: 18,
+          })),
         }
       : undefined,
     revalidate: (match, context) => highlightedCards(match)
@@ -170,7 +171,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
     },
     signalKinds: ["host.surgeStarted"],
     evaluate: (_signal, context) => hostInSurge(context.game)
-      ? { highlights: [{ kind: "surface", anchor: "host.field" }] }
+      ? { highlights: [] }
       : undefined,
     revalidate: (_match, context) => hostInSurge(context.game),
   },

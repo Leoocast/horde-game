@@ -2,6 +2,7 @@ export type GuidedPresentationActivityKind =
   | "hand.entry"
   | "reserve.transfer"
   | "battlefield.heavy-landing"
+  | "phase.banner"
   | "life.damage"
   | "host.invoked-trigger"
   | "host.trigger-beat"

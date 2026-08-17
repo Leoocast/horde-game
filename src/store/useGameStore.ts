@@ -16,6 +16,7 @@ import {
   finishHostCombat,
   isHostAttackEventCurrent,
   pendingHostCombatDamageVolley,
+  previewPlayerCombatArchiveDiscards,
   refreshHostAttackEvent,
   resolvePendingHostCombatDamageVolleys,
   resolvePlayerAttackerDrain,
@@ -334,6 +335,9 @@ let energyFlowAfterCommit: (() => void) | undefined;
 const publishedGuidedTransitionStates = new WeakSet<GameState>();
 let hostCombatSequenceId = 0;
 let playerCombatSequenceId = 0;
+let defensePhaseBannerTimer: number | undefined;
+let defensePhaseBannerActivity: ReturnType<typeof guidedPresentationActivity.begin> | undefined;
+const DEFENSE_PHASE_BANNER_MS = 1320;
 
 export type HostAttackAnimation = {
   attackerId: string;
@@ -1680,10 +1684,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set((state) => ({ game: next, selectedPlayerCreatureId: undefined, hostMillAnimationQueue: appendHostMillAnimations(state, game, next) }));
       return;
     }
-    publishGameplayReceipt({ kind: "archiveAttack.confirmed", targetIds: attackers });
     const sequenceId = ++playerCombatSequenceId;
 
-    const previewMillCards = previewPlayerCombatMillCards(game, attackers);
+    const previewMillCards = previewPlayerCombatArchiveDiscards(game, attackers);
     const personalAttackAnimations = new Map<string, PersonalAttackAnimationPlan>(
       attackers.flatMap((attackerId) => {
         const attacker = game.player.field.find((candidate) => candidate.instanceId === attackerId);
@@ -1853,6 +1856,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hostMillPreviewCards: [],
         hostMillAnimationQueue: previewMillCards.length > 0 ? state.hostMillAnimationQueue : appendHostMillAnimations(state, latest, next),
       }));
+      // The action is committed at confirmation, but contextual guidance must not speak over the
+      // attack, impact or Archive flights. Publish its semantic receipt only after that sequence
+      // has handed the board to End; any remaining mill queue is still covered by the shared
+      // presentation barrier.
+      publishGameplayReceipt({ kind: "archiveAttack.confirmed", targetIds: attackers });
     }, elapsed + 40);
   },
   runHostMain: () => {
@@ -2115,6 +2123,30 @@ useGameStore.subscribe((state, previousState) => {
   ) return;
   const lifeLossSourceId = state.hostAttackAnimation?.attackerId
     ?? previousState.hostAttackAnimation?.attackerId;
+  const defenseJustDeclared = state.game.activeSide === "host"
+    && state.game.combat.hostAttackers.length > 0
+    && (previousState.game.activeSide !== "host"
+      || previousState.game.combat.hostAttackers.length === 0);
+  if (defenseJustDeclared) {
+    defensePhaseBannerActivity?.end();
+    if (defensePhaseBannerTimer !== undefined && typeof window !== "undefined") {
+      window.clearTimeout(defensePhaseBannerTimer);
+    }
+    defensePhaseBannerActivity = guidedPresentationActivity.begin(
+      "phase.banner",
+      `host-defend-${state.game.turnNumber}`,
+    );
+    if (typeof window !== "undefined") {
+      defensePhaseBannerTimer = window.setTimeout(() => {
+        defensePhaseBannerActivity?.end();
+        defensePhaseBannerActivity = undefined;
+        defensePhaseBannerTimer = undefined;
+      }, DEFENSE_PHASE_BANNER_MS);
+    } else {
+      defensePhaseBannerActivity.end();
+      defensePhaseBannerActivity = undefined;
+    }
+  }
   for (const signal of gameplaySignalsForTransition(previousState.game, state.game, { lifeLossSourceId })) {
     gameplaySignalStream.publish(signal);
   }
@@ -2681,6 +2713,12 @@ function cancelScheduledPresentation(): void {
   guidedSessionStore.invalidate("presentation-reset");
   guidedPresentationActivity.reset();
 
+  if (defensePhaseBannerTimer !== undefined && typeof window !== "undefined") {
+    window.clearTimeout(defensePhaseBannerTimer);
+  }
+  defensePhaseBannerTimer = undefined;
+  defensePhaseBannerActivity = undefined;
+
   if (typeof window !== "undefined") {
     if (activeEffectCloseTimer !== undefined) window.clearTimeout(activeEffectCloseTimer);
     if (effectActivationPulseTimer !== undefined) window.clearTimeout(effectActivationPulseTimer);
@@ -2818,27 +2856,6 @@ function scheduleLandPlaySummoningSafetyClear(): void {
     useGameStore.setState((state) => ({ summoningAnimationCount: Math.max(0, state.summoningAnimationCount - 1) }));
     landPlaySummoningSafetyTimer = undefined;
   }, SUMMONING_ANIMATION_SAFETY_CLEAR_MS);
-}
-
-function previewPlayerCombatMillCards(game: GameState, attackers: string[]): Array<{ attackerIndex: number; cardIndexInHit: number; card: CardInstance }> {
-  const previews: Array<{ attackerIndex: number; cardIndexInHit: number; card: CardInstance }> = [];
-  let totalDamage = 0;
-  let previousMill = 0;
-
-  attackers.forEach((attackerId, attackerIndex) => {
-    const attacker = game.player.field.find((card) => card.instanceId === attackerId);
-    if (!attacker) return;
-    totalDamage += getPowerEndurance(game, attacker).power;
-    const nextMill = Math.floor(totalDamage / game.hostRules.damagePerArchiveDiscard);
-    const newMill = nextMill - previousMill;
-    previousMill = nextMill;
-    for (let index = 0; index < newMill; index += 1) {
-      const card = game.host.archive[previews.length];
-      if (card) previews.push({ attackerIndex, cardIndexInHit: index, card });
-    }
-  });
-
-  return previews;
 }
 
 function findMarkedCreatureIds(game: GameState): string[] {

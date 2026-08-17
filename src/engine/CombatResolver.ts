@@ -1,7 +1,13 @@
 import type { ActionFailureCode, GameState } from "./GameTypes";
 import type { CardInstance } from "./GameTypes";
 import { attackRestriction, blockRestriction, canAttack, getPoisonAmount, hasTrait } from "./Traits";
-import { destroyPermanent, discardHostArchiveToMemory, enqueueSurvivedDamageEvent, losePlayerLife } from "./EffectResolver";
+import {
+  destroyPermanent,
+  discardHostArchiveToMemory,
+  enqueueSurvivedDamageEvent,
+  losePlayerLife,
+  selectHostArchiveDiscardCards,
+} from "./EffectResolver";
 import { getPowerEndurance } from "./StaticEffects";
 import { drainEventQueue } from "./EventQueue";
 import { enqueue } from "./EventQueue";
@@ -16,6 +22,39 @@ export type HostAttackEvent = {
   attackerDamageMarked?: number;
   blockerDamageMarked?: number;
 };
+
+const PLAYER_COMBAT_DISCARD_PRIORITY_FLAG = "playerCombatArchiveDiscardPriority";
+
+export type PlayerCombatArchiveDiscardPreview = Readonly<{
+  attackerIndex: number;
+  cardIndexInHit: number;
+  card: CardInstance;
+}>;
+
+/** Mirrors the exact Archive cards combat will discard, including authored expendable cards. */
+export function previewPlayerCombatArchiveDiscards(
+  game: GameState,
+  attackers: readonly string[],
+): PlayerCombatArchiveDiscardPreview[] {
+  const previews: PlayerCombatArchiveDiscardPreview[] = [];
+  const preferredCardIds = playerCombatDiscardPriorityIds(game);
+  let totalDamage = 0;
+  let previousDiscardCount = 0;
+
+  attackers.forEach((attackerId, attackerIndex) => {
+    const attacker = game.player.field.find((card) => card.instanceId === attackerId);
+    if (!attacker) return;
+    totalDamage += getPowerEndurance(game, attacker).power;
+    const nextDiscardCount = Math.floor(totalDamage / game.hostRules.damagePerArchiveDiscard);
+    const planned = selectHostArchiveDiscardCards(game, nextDiscardCount, preferredCardIds);
+    planned.slice(previousDiscardCount).forEach((card, cardIndexInHit) => {
+      previews.push({ attackerIndex, cardIndexInHit, card });
+    });
+    previousDiscardCount = nextDiscardCount;
+  });
+
+  return previews;
+}
 
 export function togglePlayerAttacker(game: GameState, id: string): GameState {
   const next = structuredClone(game) as GameState;
@@ -92,11 +131,21 @@ export function resolvePlayerCombat(
     next.host.poisonCounters += poisonCounters;
     log(next, `Host gets ${poisonCounters} poison counter(s).`);
   }
-  if (archiveDiscards > 0) discardHostArchiveToMemory(next, archiveDiscards);
+  if (archiveDiscards > 0) {
+    discardHostArchiveToMemory(next, archiveDiscards, {
+      preferredCardIds: playerCombatDiscardPriorityIds(next),
+    });
+  }
   next.combat.playerAttackers = [];
   drainEventQueue(next);
   checkWinLoss(next);
   return next;
+}
+
+function playerCombatDiscardPriorityIds(game: GameState): string[] {
+  return game.host.archive
+    .filter((card) => card.flags[PLAYER_COMBAT_DISCARD_PRIORITY_FLAG])
+    .map((card) => card.instanceId);
 }
 
 export function beginHostCombat(game: GameState, options: { deferTriggeredEvents?: boolean } = {}): GameState {

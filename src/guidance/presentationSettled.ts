@@ -25,7 +25,12 @@ export function guidedPresentationBlockers(
   if (state.deathRevealCard) blockers.push("death.reveal");
   if (state.hostSpellCard) blockers.push("host.spell");
   if (state.playerAttackAnimation) blockers.push("player.attack");
+  if (state.resolvingHostCombat) blockers.push("host.combat");
   if (state.summoningAnimationCount > 0) blockers.push("summoning");
+  if (state.hostAutoTriggerCount > 0) blockers.push("host.trigger");
+  if (state.playerAutoTriggerCount > 0) blockers.push("player.trigger");
+  if (state.pendingTriggeredEffectCount > 0) blockers.push("trigger.pending");
+  if (state.pendingStaticAuras.length > 0) blockers.push("aura.pending");
   if (state.surgeTransitionActive) blockers.push("surge.transition");
   if (state.hostMillAnimationQueue.length > 0) blockers.push("host.archive.discard");
   if (state.hostMillPreviewCards.length > 0) blockers.push("host.archive.preview");

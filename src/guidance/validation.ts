@@ -224,6 +224,10 @@ function validateCardState(alias: string, spec: GuidedCardSpec, problems: string
     if (!counter.trim()) problems.push(`Card alias "${alias}" has an empty counter name.`);
     validateInteger(`${alias}.counters.${counter}`, amount, 0, problems);
   }
+  for (const [flag, enabled] of Object.entries(state.flags ?? {})) {
+    if (!flag.trim()) problems.push(`Card alias "${alias}" has an empty flag name.`);
+    if (typeof enabled !== "boolean") problems.push(`${alias}.flags.${flag} must be boolean.`);
+  }
 }
 
 function validateZones(

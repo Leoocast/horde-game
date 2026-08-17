@@ -34,7 +34,7 @@ function buildPrologue() {
   };
 }
 
-function playOpeningTurn(aelyraTarget = "maela") {
+function playOpeningTurn(aelyraTarget = "maela", attackArchive = true) {
   const built = buildPrologue();
   const { id } = built;
   let game = castCard(built.game, id("fourth_source"));
@@ -48,8 +48,12 @@ function playOpeningTurn(aelyraTarget = "maela") {
     targets: { target: id(aelyraTarget), targetCreature: id(aelyraTarget) },
   });
   game = advancePhase(game, "combat");
-  game = togglePlayerAttacker(game, id("maela"));
-  game = resolvePlayerCombat(game);
+  if (attackArchive) {
+    game = togglePlayerAttacker(game, id("maela"));
+    game = resolvePlayerCombat(game);
+  } else {
+    game = advancePhase(game, "end");
+  }
   game = endPlayerTurn(game);
   return { ...built, game };
 }
@@ -125,16 +129,7 @@ test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms comb
   assert.equal(opening.get("choose-aelyra-target").callout, "hidden");
   assert.equal(opening.get("confirm-aelyra-target").callout, "hidden");
   assert.deepEqual(opening.get("enter-first-combat").presentation, { kind: "spotlight", tone: "gold" });
-  assert.deepEqual(opening.get("select-maela-attacker").allowedIntent, {
-    kind: "combat.toggleAttacker",
-    cardAlias: "maela",
-    selected: true,
-  });
-  assert.deepEqual(opening.get("select-maela-attacker").presentation, {
-    kind: "directionalCue",
-    direction: "up",
-    tone: "attack",
-  });
+  assert.equal(opening.has("select-maela-attacker"), false, "the attack suggestion must not install an input shield");
   assert.equal(opening.has("pass-first-combat"), false);
   assert.deepEqual(LEARN_TO_PLAY_END_OPENING_TURN_INTERVENTION.steps[0].presentation, {
     kind: "spotlight",
@@ -176,13 +171,13 @@ test("Learn to Play authors the exact advanced board two Host turns before Surge
   ]);
   assert.equal(game.host.field.at(-1).counters["+1/+1"], 2);
   assert.deepEqual(definitionIds(game.host.archive), [
-    "graveless_soldier",
     "winged_stalker_of_the_crypt",
     "graveless_soldier",
     "graveless_soldier",
     "memory_thief",
     "memory_thief",
     "graveless_titan",
+    "graveless_soldier",
     "graveless_soldier",
   ]);
 });
@@ -220,6 +215,22 @@ test("the ordinary Host turn preserves left-to-right attack order and restores s
     "winged_stalker_of_the_crypt",
   ]);
   assert.equal(game.host.field.at(-1).instanceId, id("second_winged_stalker"));
+});
+
+test("attacking or passing preserves the same authored Winged Stalker response", () => {
+  for (const attackArchive of [false, true]) {
+    const opening = playOpeningTurn("maela", attackArchive);
+    let game = runHostMain(opening.game);
+    assert.equal(game.host.field.at(-1).instanceId, opening.id("second_winged_stalker"));
+    assert.deepEqual(definitionIds(game.host.archive).slice(0, 2), [
+      "graveless_soldier",
+      "graveless_soldier",
+    ]);
+    assert.equal(
+      game.host.archive.some((card) => card.instanceId === opening.id("opening_attack_discard")),
+      !attackArchive,
+    );
+  }
 });
 
 test("Vaelor leaves only a 7/9 Harvester whether the Flower is used before him or not", () => {

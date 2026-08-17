@@ -43,8 +43,6 @@ export const LEARN_TO_PLAY_PROLOGUE_SCENARIO = Object.freeze({
       playerMemory: [],
       playerOblivion: [],
       hostArchiveTopToBottom: [
-        // Maela's required opening attack discards this Soldier without consuming a later beat.
-        "opening_attack_discard",
         "second_winged_stalker",
         // Return to Memory consumes these two before the first Surge.
         "return_mill_one",
@@ -54,6 +52,9 @@ export const LEARN_TO_PLAY_PROLOGUE_SCENARIO = Object.freeze({
         "memory_thief_b",
         "surge_titan",
         "surge_soldier",
+        // If the player attacks, combat takes this expendable Soldier from the authored bottom
+        // instead of consuming the next reveal. Passing leaves it harmlessly behind the Surge line.
+        "opening_attack_discard",
       ],
       hostField: [
         "return_to_memory",
@@ -83,7 +84,10 @@ export const LEARN_TO_PLAY_PROLOGUE_SCENARIO = Object.freeze({
       state: { counters: { "+1/+1": 2 } },
     },
     second_winged_stalker: { cardKey: gravelessCard("winged_stalker_of_the_crypt") },
-    opening_attack_discard: { cardKey: gravelessCard("graveless_soldier") },
+    opening_attack_discard: {
+      cardKey: gravelessCard("graveless_soldier"),
+      state: { flags: { playerCombatArchiveDiscardPriority: true } },
+    },
     return_mill_one: { cardKey: gravelessCard("graveless_soldier") },
     return_mill_two: { cardKey: gravelessCard("graveless_soldier") },
     memory_thief_a: { cardKey: gravelessCard("memory_thief") },
@@ -201,19 +205,6 @@ export const LEARN_TO_PLAY_OPENING_INTERVENTION = Object.freeze({
       highlights: [{ kind: "surface", anchor: "phase.primaryAction" }],
       presentation: { kind: "spotlight", tone: "gold" },
       allowedIntent: { kind: "phase.chooseAttackers" },
-      nextStepId: "select-maela-attacker",
-    },
-    {
-      id: "select-maela-attacker",
-      kind: "act",
-      callout: "hidden",
-      copy: {
-        titleKey: "guided.learnToPlay.passOpeningCombatTitle",
-        bodyKey: "guided.learnToPlay.passOpeningCombatBody",
-      },
-      highlights: [{ kind: "card", alias: "maela", role: "origin" }],
-      presentation: { kind: "directionalCue", direction: "up", tone: "attack" },
-      allowedIntent: { kind: "combat.toggleAttacker", cardAlias: "maela", selected: true },
     },
   ],
 } satisfies GuidedInterventionDefinition);

@@ -48,7 +48,7 @@ test("board session policies isolate persistence, outcomes, and guided controls"
   assert.equal(LEARN_TO_PLAY_BOARD_SESSION.leaveCopy, "journey");
 });
 
-test("journey attempts rebuild from the opening and roll provisional concepts back", () => {
+test("journey attempts rebuild from the opening with isolated contextual progress", () => {
   const calls = [];
   let boardRevision = 0;
   const lifecycle = new GuidedJourneyLifecycle(
@@ -89,8 +89,8 @@ test("journey attempts rebuild from the opening and roll provisional concepts ba
   assert.equal(calls.filter((call) => call === "load").length, 2);
   assert.equal(calls.includes("mode:immediate"), true);
   assert.ok(calls.indexOf("mode:immediate") < calls.lastIndexOf("stop-presentation"));
-  assert.equal(calls.includes("begin:game-1:provisional"), true);
-  assert.equal(calls.includes("begin:game-2:provisional"), true);
+  assert.equal(calls.includes("begin:game-1:isolated"), true);
+  assert.equal(calls.includes("begin:game-2:isolated"), true);
 });
 
 test("a strict intervention attaches to the current board without rebuilding it", () => {
@@ -176,10 +176,7 @@ test("the opening attack explanation is contextual and the defense prompt prefer
   assert.deepEqual(
     attack.prevent({ kind: "combat.confirmArchiveAttack", targetIds: ["maela"] }, {}),
     {
-      highlights: [
-        { kind: "surface", anchor: "player.field", role: "origin" },
-        { kind: "surface", anchor: "host.archive", role: "destination" },
-      ],
+      highlights: [{ kind: "surface", anchor: "host.archive" }],
     },
   );
   assert.deepEqual(defense.evaluate({ kind: "host.attackersDeclared" }, {}), {

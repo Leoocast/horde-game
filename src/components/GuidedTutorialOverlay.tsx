@@ -8,6 +8,7 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 import {
   guidedAnchorRegistry,
   guidedConnectorPath,
@@ -30,6 +31,7 @@ import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { GuidedCardComparison } from "./GuidedCardComparison";
 import { GameTooltip } from "./GameTooltip";
+import { TutorialDirectionalCueGlyph } from "./TutorialDirectionalCue";
 
 const subscribeSession = (listener: () => void) => guidedSessionStore.subscribe(listener);
 const readSession = () => guidedSessionStore.snapshot();
@@ -92,7 +94,6 @@ export function GuidedTutorialOverlay() {
     && session.currentStep.allowedIntent.kind === "phase.continueSetup";
   const showCallout = session.currentStep?.callout !== "hidden"
     && dismissedActionCalloutStepId !== session.currentStep?.id;
-  const showSilentSpotlight = presentation?.kind === "spotlight";
   const isLearnToPlay = session.lessonId?.startsWith("learn-to-play.") ?? false;
 
   useEffect(() => {
@@ -196,7 +197,7 @@ export function GuidedTutorialOverlay() {
     const allowedPointers = new Set<number>();
     let lastFeedbackAt = 0;
     const blockedMessage = session.mode === "explain"
-      ? t("guided.blocked.explain")
+      ? t(isLearnToPlay ? "guided.blocked.explainUnderstood" : "guided.blocked.explain")
       : session.mode === "observe"
       ? t("guided.blocked.observe")
       : t("guided.blocked");
@@ -302,7 +303,7 @@ export function GuidedTutorialOverlay() {
       document.removeEventListener("drop", handleEvent, true);
       document.removeEventListener("keydown", handleKeyDown, true);
     };
-  }, [active, activeKeys, dismissCalloutOnAction, resolved, session.currentStep?.id, session.mode, t]);
+  }, [active, activeKeys, dismissCalloutOnAction, isLearnToPlay, resolved, session.currentStep?.id, session.mode, t]);
 
   useEffect(() => {
     const rejection = interaction.lastRejection;
@@ -332,6 +333,13 @@ export function GuidedTutorialOverlay() {
     ? rects.find((rect) => rect.role === "origin") ?? rects[0]
     : undefined;
   const directionalBounds = directionalTarget ? guidedDirectionalCueBounds(directionalTarget) : undefined;
+  const dismissLearnToPlayCallout = () => {
+    if (session.mode === "explain") {
+      if (session.canContinue) guidedSessionStore.continueExplanation();
+      return;
+    }
+    setDismissedActionCalloutStepId(session.currentStep?.id);
+  };
 
   return createPortal(
     <div
@@ -370,13 +378,13 @@ export function GuidedTutorialOverlay() {
         </>
       )}
 
-      {(showCallout || showSilentSpotlight) && !missingAnchor && presentation?.kind !== "directionalCue" && rects.map((rect) => (
+      {showCallout && !missingAnchor && presentation?.kind !== "directionalCue" && rects.map((rect) => (
         <span
           key={`${rect.key}:${rect.role}:${feedbackPulse}`}
           className={["guided-tutorial-ring", feedback ? "is-rejected" : ""].join(" ")}
           data-anchor-key={rect.key}
           data-anchor-role={rect.role}
-          data-tone={showSilentSpotlight ? presentation.tone : undefined}
+          data-tone={undefined}
           style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
           aria-hidden="true"
         />
@@ -390,10 +398,7 @@ export function GuidedTutorialOverlay() {
           style={directionalBounds}
           aria-hidden="true"
         >
-          <svg viewBox="0 0 48 140" preserveAspectRatio="none">
-            <path className="guided-tutorial-directional-shaft" d="M24 132 L24 22" />
-            <path className="guided-tutorial-directional-head" d="M10 38 L24 18 L38 38" />
-          </svg>
+          <TutorialDirectionalCueGlyph />
         </span>
       )}
 
@@ -420,6 +425,21 @@ export function GuidedTutorialOverlay() {
         data-guided-overlay-control="true"
       >
         <span className="guided-tutorial-callout-mark" aria-hidden="true" />
+        {isLearnToPlay && (
+          <div className="tutorial-dialog-heading">
+            <span className="tutorial-dialog-heading-ornament" aria-hidden="true"><i /><i /></span>
+            <button
+              type="button"
+              className="tutorial-dialog-close"
+              onClick={dismissLearnToPlayCallout}
+              disabled={session.mode === "explain" && !session.canContinue}
+              title={t("common.close")}
+              aria-label={t("common.close")}
+            >
+              <X size={15} />
+            </button>
+          </div>
+        )}
         {!isLearnToPlay && (
           <div className="guided-tutorial-step">
             <span>{modeLabel}</span>
@@ -453,16 +473,22 @@ export function GuidedTutorialOverlay() {
           ))}
         </div>
         <div className="guided-tutorial-feedback" role="status" aria-live="polite">{feedback}</div>
-        {session.mode === "explain" && !missingAnchor && (
+        {(session.mode === "explain" || (isLearnToPlay && session.mode === "act")) && !missingAnchor && (
           <button
             ref={continueRef}
             type="button"
-            data-audio-click={session.canContinue ? "valid" : "off"}
+            data-audio-click={session.mode === "act" || session.canContinue ? "valid" : "off"}
             className="guided-tutorial-continue"
-            disabled={!session.canContinue}
-            onClick={() => guidedSessionStore.continueExplanation()}
+            disabled={session.mode === "explain" && !session.canContinue}
+            onClick={isLearnToPlay
+              ? dismissLearnToPlayCallout
+              : () => guidedSessionStore.continueExplanation()}
           >
-            {t(finalExplanation ? "guided.finish" : "guided.continue")}
+            {t(isLearnToPlay && session.mode === "explain"
+              ? "guided.contextual.understood"
+              : finalExplanation
+              ? "guided.finish"
+              : "guided.continue")}
           </button>
         )}
       </section>
