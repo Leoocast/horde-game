@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { captureDesktopViewport } from "../platform/desktopBridge";
 import { useAudioStore } from "../store/useAudioStore";
 import { futureVisualSignature } from "../utils/futureIdentity";
 import { buildDefeatShatterPlan } from "./defeatShatterGeometry";
@@ -11,11 +10,12 @@ import {
   type DefeatShockMaterial,
 } from "./defeatGlassShader";
 import { renderSharedVfxFrame } from "./sharedVfxRenderer";
-import { captureTemporalSky } from "./TemporalBackdrop";
 
 type Props = {
   seed: string;
   onSequenceStart: () => void;
+  /** El desenlace puede nombrarse: el golpe ya ocurrió. */
+  onBurst: () => void;
 };
 
 type ShatterScene = {
@@ -25,24 +25,30 @@ type ShatterScene = {
   shockMaterial: DefeatShockMaterial;
   shockMesh: THREE.Mesh;
   cameraRest: number;
+  /** Sustituye el vidrio limpio por la captura del tablero. */
+  printBoard: (board: HTMLCanvasElement) => void;
   dispose: () => void;
 };
 
 /** El cuarteado recorre la placa, la onda la cruza y con ella sueltan los trozos. */
-const FREEZE_MS = 700;
 const CRACK_AT_MS = 620;
 const CRACK_SPAN_MS = 900;
-const SHOCK_AT_MS = 1560;
+const EARLIEST_BURST_MS = 1560;
 const SHOCK_SPAN_MS = 940;
-const BURST_MS = SHOCK_AT_MS;
 /**
- * El reloj arranca con la Vida a 0, no cuando termina la captura: el hielo y las
- * quebraduras entran sobre la pantalla viva mientras se fotografía el tablero. La placa
- * tiene que estar montada antes del golpe; después ya no puede sustituir a la pantalla.
+ * El reloj arranca con la Vida a 0, nunca cuando termina la captura: el vidrio se cuartea
+ * de inmediato, con el tablero vivo todavía detrás de una lámina limpia. Lo único que puede
+ * esperar es el golpe, porque imprimir el tablero sobre trozos que ya vuelan sería un
+ * salto. Fotografiar el DOM cuesta lo que cuesta y el tope evita quedarse mirando una
+ * pantalla rajada: pasado ese margen revienta igual, con vidrio limpio.
  */
-const PLATE_DEADLINE_MS = BURST_MS - 80;
-/** Con la placa montada el tablero vivo desaparece y detrás sólo queda el espacio. */
+const LATEST_BURST_MS = 4200;
+/** Después del golpe la captura ya no sirve: llegaría a imprimirse sobre trozos sueltos. */
+const PLATE_DEADLINE_MS = LATEST_BURST_MS;
+/** Con el tablero ya impreso o estallado, lo vivo se retira y detrás sólo queda el espacio. */
 const PLATED_BODY_CLASS = "is-defeat-plated";
+/** El desenlace se nombra respecto del golpe real, no del arranque de la secuencia. */
+const REVEAL_AFTER_BURST_MS = 1340;
 
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
@@ -66,37 +72,18 @@ function settleBefore<T>(task: Promise<T>, timeoutMs: number): Promise<T | undef
   });
 }
 
-async function dataUrlToCanvas(
-  dataUrl: string,
-  width: number,
-  height: number,
-): Promise<HTMLCanvasElement | undefined> {
-  const image = new Image();
-  image.decoding = "async";
-  const loadedTask = new Promise<boolean>((resolve) => {
-    image.onload = () => resolve(true);
-    image.onerror = () => resolve(false);
-  });
-  image.src = dataUrl;
-  if (!await settleBefore(loadedTask, 900)) return undefined;
-
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext("2d");
-  if (!context) return undefined;
-  context.drawImage(image, 0, 0, width, height);
-  return canvas;
-}
-
-/** Rechaza lienzos uniformes: nunca sustituimos la pantalla por un color de reserva. */
+/**
+ * Rechaza lienzos uniformes: nunca sustituimos la pantalla por un color de reserva. La
+ * captura llega con alfa a propósito —el espacio tiene que seguir viéndose por donde el
+ * tablero no pinta—, así que se exige materia suficiente y variada, no opacidad.
+ */
 function snapshotHasVisualDetail(canvas: HTMLCanvasElement): boolean {
   const context = canvas.getContext("2d", { willReadFrequently: true });
   if (!context || canvas.width < 2 || canvas.height < 2) return false;
   const bins = new Set<string>();
   let minLuma = 255;
   let maxLuma = 0;
-  let opaqueSamples = 0;
+  let paintedSamples = 0;
   const columns = 11;
   const rows = 7;
   for (let row = 1; row <= rows; row += 1) {
@@ -104,58 +91,34 @@ function snapshotHasVisualDetail(canvas: HTMLCanvasElement): boolean {
       const x = Math.min(canvas.width - 1, Math.round((column / (columns + 1)) * canvas.width));
       const y = Math.min(canvas.height - 1, Math.round((row / (rows + 1)) * canvas.height));
       const [red, green, blue, alpha] = context.getImageData(x, y, 1, 1).data;
-      if (alpha > 220) opaqueSamples += 1;
+      if (alpha <= 24) continue;
+      paintedSamples += 1;
       const luma = red * 0.2126 + green * 0.7152 + blue * 0.0722;
       minLuma = Math.min(minLuma, luma);
       maxLuma = Math.max(maxLuma, luma);
       bins.add(`${red >> 4}:${green >> 4}:${blue >> 4}`);
     }
   }
-  return opaqueSamples >= columns * rows * 0.9 && (maxLuma - minLuma > 18 || bins.size >= 8);
+  return paintedSamples >= 10 && (maxLuma - minLuma > 18 || bins.size >= 8);
 }
 
 /**
- * `html-to-image` no puede fotografiar un lienzo WebGL, así que la captura web llega sin
- * cielo. El espacio se pone debajo desde el propio fondo vivo: si la placa entrara con un
- * fondo plano, el cosmos desaparecería de golpe al montarse el vidrio.
+ * La placa es el tablero, nunca el fondo.
+ *
+ * `capturePage` fotografía la ventana entera y devuelve píxeles opacos, así que el espacio
+ * acabaría dentro del vidrio y saldría volando con los trozos para reaparecer después. Por
+ * eso la captura es siempre `html-to-image`, que sí deja alfa: se fotografía `body` —la
+ * Reserva y los tooltips cuelgan de ahí por portal—, se descartan los lienzos WebGL y se
+ * neutraliza el fondo de la pantalla. Lo que queda es cartas, campo, HUD y el instrumento
+ * de grados sobre transparencia, con el espacio intacto detrás.
  */
-function composeOverLiveSky(board: HTMLCanvasElement): HTMLCanvasElement {
-  const composed = document.createElement("canvas");
-  composed.width = board.width;
-  composed.height = board.height;
-  const context = composed.getContext("2d");
-  if (!context) return board;
-  context.fillStyle = "#07110f";
-  context.fillRect(0, 0, composed.width, composed.height);
-  const sky = captureTemporalSky(composed.width, composed.height);
-  if (sky) context.drawImage(sky, 0, 0, composed.width, composed.height);
-  context.drawImage(board, 0, 0);
-  return composed;
-}
-
-async function captureBattlefield(
-  width: number,
-  height: number,
-  overlay: HTMLElement,
-): Promise<HTMLCanvasElement | undefined> {
+async function captureBattlefield(width: number, height: number): Promise<HTMLCanvasElement | undefined> {
   const gameScreen = document.querySelector<HTMLElement>(".game-screen");
   if (!gameScreen) return undefined;
 
   // useEffect corre después del commit; esperar otro paint garantiza que Vida 0 ya esté compuesta.
   await settleBefore(nextPaint(), 80);
-  // `capturePage` fotografía la ventana entera: el hielo y las quebraduras que ya están
-  // corriendo entrarían dentro de la propia placa. Se apagan mientras dura el disparo.
-  overlay.style.visibility = "hidden";
-  const desktopDataUrl = await settleBefore(captureDesktopViewport(), 900);
-  overlay.style.visibility = "";
-  if (desktopDataUrl) {
-    const desktopCanvas = await dataUrlToCanvas(desktopDataUrl, width, height);
-    if (desktopCanvas && snapshotHasVisualDetail(desktopCanvas)) return desktopCanvas;
-  }
 
-  // Se fotografía `body`, no `.game-screen`: la Reserva, los tooltips y el registro cuelgan
-  // del cuerpo por portal, y capturando sólo el tablero desaparecerían al montarse la placa.
-  // Su fondo se apaga mientras dura el clonado; el cielo opaco lo tapa, así que no se ve.
   const screenBackground = gameScreen.style.backgroundColor;
   gameScreen.style.backgroundColor = "transparent";
   try {
@@ -169,8 +132,6 @@ async function captureBattlefield(
       skipAutoScale: true,
       cacheBust: false,
       skipFonts: true,
-      // Sin relleno propio y con el fondo del cuerpo neutralizado en el clon: el cielo lo
-      // aporta el lienzo vivo justo debajo, no un gris plano.
       style: { backgroundColor: "transparent" },
       onImageErrorHandler: () => undefined,
       filter: (node) => (
@@ -179,10 +140,9 @@ async function captureBattlefield(
         && !(node instanceof HTMLVideoElement)
         && !(node instanceof HTMLIFrameElement)
       ),
-    }), 1300);
+    }), 3600);
     if (!webCanvas) return undefined;
-    const composed = composeOverLiveSky(webCanvas);
-    return snapshotHasVisualDetail(composed) ? composed : undefined;
+    return snapshotHasVisualDetail(webCanvas) ? webCanvas : undefined;
   } catch {
     return undefined;
   } finally {
@@ -190,12 +150,19 @@ async function captureBattlefield(
   }
 }
 
+/** Lámina limpia: un texel transparente, nunca un color que finja el tablero. */
+function createClearGlassTexture(): THREE.CanvasTexture {
+  const blank = document.createElement("canvas");
+  blank.width = 1;
+  blank.height = 1;
+  return new THREE.CanvasTexture(blank);
+}
+
 function createShatterScene(
   width: number,
   height: number,
   pixelRatio: number,
   signature: number,
-  snapshot: HTMLCanvasElement,
 ): ShatterScene {
   const aspect = width / Math.max(1, height);
   const plan = buildDefeatShatterPlan(aspect, signature);
@@ -205,7 +172,9 @@ function createShatterScene(
   camera.position.set(0, 0, cameraRest);
   camera.lookAt(0, 0, 0);
 
-  const screenTexture = new THREE.CanvasTexture(snapshot);
+  // El vidrio nace limpio y se imprime cuando la captura llega: así el cuarteado empieza
+  // con la Vida a 0 en vez de esperar a que termine de fotografiarse el tablero.
+  const screenTexture = createClearGlassTexture();
   screenTexture.minFilter = THREE.LinearFilter;
   screenTexture.magFilter = THREE.LinearFilter;
   screenTexture.generateMipmaps = false;
@@ -265,6 +234,10 @@ function createShatterScene(
     shockMaterial,
     shockMesh,
     cameraRest,
+    printBoard: (board: HTMLCanvasElement) => {
+      screenTexture.image = board;
+      screenTexture.needsUpdate = true;
+    },
     dispose: () => {
       geometry.dispose();
       quadGeometry.dispose();
@@ -276,13 +249,12 @@ function createShatterScene(
   };
 }
 
-function updateShatterScene(rendered: ShatterScene, elapsedMs: number): void {
+function updateShatterScene(rendered: ShatterScene, elapsedMs: number, burstAtMs: number): void {
   const material = rendered.material;
-  material.uniforms.uFreeze.value = clamp01(elapsedMs / FREEZE_MS);
   material.uniforms.uCrack.value = clamp01((elapsedMs - CRACK_AT_MS) / CRACK_SPAN_MS);
-  material.uniforms.uT.value = (elapsedMs - BURST_MS) / 1000;
+  material.uniforms.uT.value = (elapsedMs - burstAtMs) / 1000;
 
-  const shock = (elapsedMs - SHOCK_AT_MS) / SHOCK_SPAN_MS;
+  const shock = (elapsedMs - burstAtMs) / SHOCK_SPAN_MS;
   const shockLive = shock >= 0 && shock <= 1;
   material.uniforms.uShock.value = shockLive ? shock : -1;
   rendered.shockMaterial.uniforms.uShock.value = shockLive ? shock : -1;
@@ -290,7 +262,7 @@ function updateShatterScene(rendered: ShatterScene, elapsedMs: number): void {
 
   // Deriva de cámara: sólo tras el estallido, y muy poca. Basta para que los restos
   // suspendidos den paralaje y el vacío se lea como espacio.
-  const after = Math.max(0, (elapsedMs - BURST_MS) / 1000);
+  const after = Math.max(0, (elapsedMs - burstAtMs) / 1000);
   const settle = 1 - Math.exp(-after / 1.6);
   rendered.camera.position.set(
     rendered.cameraRest * 0.017 * settle,
@@ -300,17 +272,16 @@ function updateShatterScene(rendered: ShatterScene, elapsedMs: number): void {
   rendered.camera.lookAt(0, 0, 0);
 }
 
-export function DefeatShatterAnimator({ seed, onSequenceStart }: Props) {
-  const rootRef = useRef<HTMLDivElement>(null);
+export function DefeatShatterAnimator({ seed, onSequenceStart, onBurst }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fallback, setFallback] = useState(false);
   const [plated, setPlated] = useState(false);
+  const [bursting, setBursting] = useState(false);
   const playSfx = useAudioStore((state) => state.playSfx);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const root = rootRef.current;
-    if (!canvas || !root) return;
+    if (!canvas) return;
 
     // El tablero vivo desaparece en cuanto hay algo que lo sustituya: la placa de vidrio,
     // o el respaldo. Detrás sólo queda el espacio, que es fondo permanente del juego.
@@ -321,95 +292,111 @@ export function DefeatShatterAnimator({ seed, onSequenceStart }: Props) {
       setFallback(true);
       coverBoard();
       onSequenceStart();
+      onBurst();
       return () => document.body.classList.remove(PLATED_BODY_CLASS);
     }
 
     const width = Math.max(1, window.innerWidth);
     const height = Math.max(1, window.innerHeight);
     const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.35);
-    let rendered: ShatterScene | undefined;
     let animationFrame = 0;
     let cancelled = false;
+    let burstAtMs: number | undefined;
+    let printed = false;
 
-    // La secuencia empieza con la Vida a 0. El hielo y las quebraduras corren ya sobre la
-    // pantalla viva mientras se toma la captura, así que el golpe no espera a nadie.
+    // La secuencia empieza con la Vida a 0: la escena existe desde el primer fotograma y
+    // el vidrio se cuartea limpio, con el tablero vivo todavía visible a través.
     const startedAt = performance.now();
+    const rendered = createShatterScene(width, height, pixelRatio, futureVisualSignature(seed));
     onSequenceStart();
-    const impactTimer = window.setTimeout(() => playSfx("stoneCrash", { rate: 0.62 }), BURST_MS);
+
+    const fireBurst = (elapsedMs: number) => {
+      burstAtMs = elapsedMs;
+      // El tablero vivo se retira sí o sí en el golpe: a partir de aquí lo que hay detrás
+      // del vidrio es el espacio.
+      coverBoard();
+      // Estado, no clase suelta: cualquier re-render posterior recalcula `className` y
+      // borraría una clase escrita a mano sobre el nodo.
+      setBursting(true);
+      playSfx("stoneCrash", { rate: 0.62 });
+      window.setTimeout(() => {
+        if (!cancelled) onBurst();
+      }, REVEAL_AFTER_BURST_MS);
+    };
+
+    let firstFrame = true;
+    const draw = (now: number) => {
+      if (cancelled) return;
+      const elapsed = now - startedAt;
+      // El golpe espera a la captura porque imprimir el tablero sobre trozos que ya vuelan
+      // sería un salto; el cuarteado, en cambio, no espera a nadie.
+      if (burstAtMs === undefined && elapsed >= (printed ? EARLIEST_BURST_MS : LATEST_BURST_MS)) {
+        fireBurst(Math.max(EARLIEST_BURST_MS, elapsed));
+      }
+      // Sin golpe todavía, el reloj del estallido se mantiene lejos en el futuro.
+      updateShatterScene(rendered, elapsed, burstAtMs ?? elapsed + 1_000_000);
+      const drew = renderSharedVfxFrame(canvas, {
+        scene: rendered.scene,
+        camera: rendered.camera,
+        width,
+        height,
+        pixelRatio,
+        // El vidrio se calibró en lineal: la conversión sRGB del renderer compartido
+        // aclara la captura y el Fresnel deja de leerse frío.
+        outputEncoding: THREE.LinearEncoding,
+      });
+      if (!drew) {
+        setFallback(true);
+        coverBoard();
+        onBurst();
+        return;
+      }
+      if (firstFrame) {
+        firstFrame = false;
+        canvas.classList.add("is-ready");
+      }
+      // Los restos suspendidos siguen derivando sobre el espacio hasta que el Cronista
+      // elige salida.
+      animationFrame = window.requestAnimationFrame(draw);
+    };
 
     const begin = async () => {
       try {
-        const snapshot = await settleBefore(
-          captureBattlefield(width, height, root),
-          PLATE_DEADLINE_MS,
-        );
-        if (cancelled) return;
-        if (!snapshot) {
-          setFallback(true);
-          coverBoard();
-          return;
-        }
-        rendered = createShatterScene(width, height, pixelRatio, futureVisualSignature(seed), snapshot);
-        let firstFrame = true;
-
-        const draw = (now: number) => {
-          if (cancelled || !rendered) return;
-          updateShatterScene(rendered, now - startedAt);
-          const drew = renderSharedVfxFrame(canvas, {
-            scene: rendered.scene,
-            camera: rendered.camera,
-            width,
-            height,
-            pixelRatio,
-            // El vidrio se calibró en lineal: la conversión sRGB del renderer compartido
-            // aclara la captura y el Fresnel deja de leerse frío.
-            outputEncoding: THREE.LinearEncoding,
-          });
-          if (!drew) {
-            setFallback(true);
-            coverBoard();
-            return;
-          }
-          if (firstFrame) {
-            firstFrame = false;
-            // La placa entra en el mismo fotograma en que el tablero vivo se retira: son
-            // la misma imagen, así que el relevo no se ve.
-            canvas.classList.add("is-ready");
-            coverBoard();
-            setPlated(true);
-          }
-          // Los restos suspendidos siguen derivando sobre el espacio hasta que el
-          // Cronista elige salida.
-          animationFrame = window.requestAnimationFrame(draw);
-        };
-
-        animationFrame = window.requestAnimationFrame(draw);
-      } catch {
-        if (cancelled) return;
-        setFallback(true);
+        const snapshot = await settleBefore(captureBattlefield(width, height), PLATE_DEADLINE_MS);
+        if (cancelled || !snapshot) return;
+        // Pasado el golpe la captura ya no sirve: el vidrio limpio se queda como está.
+        if (burstAtMs !== undefined) return;
+        rendered.printBoard(snapshot);
+        printed = true;
+        // La placa releva a la pantalla viva en el mismo fotograma: es la misma imagen,
+        // así que el relevo no se ve.
         coverBoard();
+        setPlated(true);
+      } catch {
+        // Sin captura el vidrio se rompe igual, limpio y sobre el espacio.
       }
     };
 
+    animationFrame = window.requestAnimationFrame(draw);
     void begin();
     return () => {
       cancelled = true;
       window.cancelAnimationFrame(animationFrame);
-      window.clearTimeout(impactTimer);
       document.body.classList.remove(PLATED_BODY_CLASS);
-      rendered?.dispose();
+      rendered.dispose();
     };
-  }, [onSequenceStart, playSfx, seed]);
+  }, [onBurst, onSequenceStart, playSfx, seed]);
 
   return (
     <div
-      ref={rootRef}
-      className={`defeat-shatter ${fallback ? "is-fallback" : ""} ${plated ? "is-plated" : ""}`}
+      className={[
+        "defeat-shatter",
+        fallback ? "is-fallback" : "",
+        plated ? "is-plated" : "",
+        bursting ? "is-bursting" : "",
+      ].join(" ")}
       aria-hidden="true"
     >
-      {/* El tiempo se detiene con la Vida a 0, no cuando llega la captura: el hielo entra
-          sobre la pantalla viva y el vidrio lo hereda al montarse la placa. */}
-      <div className="defeat-shatter-freeze" />
       <canvas ref={canvasRef} className="defeat-shatter-canvas" />
       {/* Las quebraduras crecen desde el impacto como líneas: los muros del prisma
           quedan casi de canto vistos de frente y no sirven para enseñar la raja. */}

@@ -23,7 +23,6 @@ precision highp float;
 uniform vec2 uRes;
 uniform float uTime;
 uniform float uClimax;
-uniform float uDefeat;
 
 float hash21(vec2 p) {
   p = fract(p * vec2(123.34, 345.45));
@@ -167,17 +166,6 @@ void main() {
   // que hacía falta para las cartas lo aporta la propia pantalla con sus degradados.
   float vig = 1.0 - smoothstep(0.40, 1.0, length(p * vec2(0.76, 1.0)));
   color *= mix(0.62, 1.0, vig);
-
-  // Derrota: el espacio se enrojece. No basta con multiplicar la paleta, porque el
-  // fondo es casi negro y multiplicar casi-nada sigue dando casi-nada. El rojo lleva
-  // suelo propio y un rescoldo algo más caliente hacia el centro.
-  float heat = 1.0 - smoothstep(0.05, 0.92, length(p * vec2(0.82, 1.0)));
-  vec3 ember = vec3(
-    color.r * 2.2 + 0.052 + heat * 0.062,
-    color.g * 0.42 + 0.008 + heat * 0.010,
-    color.b * 0.34 + 0.007
-  );
-  color = mix(color, ember, uDefeat);
 
   gl_FragColor = vec4(pow(max(color, 0.0), vec3(0.92)), 1.0);
 }

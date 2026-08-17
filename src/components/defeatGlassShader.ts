@@ -15,7 +15,6 @@ export type DefeatGlassMaterial = THREE.ShaderMaterial & {
     uBoard: { value: THREE.Texture | null };
     uT: { value: number };
     uCrack: { value: number };
-    uFreeze: { value: number };
     uShock: { value: number };
     uImpact: { value: THREE.Vector2 };
     uImpactUv: { value: THREE.Vector2 };
@@ -113,7 +112,6 @@ const FRAGMENT = `
 precision highp float;
 
 uniform sampler2D uBoard;
-uniform float uFreeze;
 uniform float uShock;
 uniform vec2 uImpactUv;
 uniform float uAspect;
@@ -149,16 +147,17 @@ void main() {
   float shockBand = exp(-pow((shockR - shockFront) / 0.038, 2.0)) * step(0.0, uShock);
   bend += normalize(toImpact + 0.0001) * shockBand * 0.042;
 
+  vec4 middle = texture2D(uBoard, vUv + bend);
   vec3 base;
   base.r = texture2D(uBoard, vUv + bend * 1.18).r;
-  base.g = texture2D(uBoard, vUv + bend).g;
+  base.g = middle.g;
   base.b = texture2D(uBoard, vUv + bend * 0.82).b;
+  // La captura del tablero llega con alfa: lo que el tablero deja ver es cielo, no un
+  // relleno. Mientras la captura no está lista, la lámina entera es vidrio limpio.
+  float printed = middle.a;
 
-  // Sello frío del momento de detener.
-  float luma = dot(base, vec3(0.299, 0.587, 0.114));
-  base = mix(base, mix(vec3(luma), vec3(luma) * vec3(0.82, 0.98, 1.0), 0.6), uFreeze * 0.34);
-  base *= mix(1.0, 0.88, uFreeze);
-
+  // Nada de sello frío antes del golpe: la placa tiene que ser la misma pantalla que
+  // sustituye. Cualquier tinte previo se lee como que algo cambió sin motivo.
   float ndv = clamp(dot(N, V), 0.0, 1.0);
   float fresnel = pow(1.0 - ndv, 3.0);
   vec3 cold = vec3(0.42, 0.62, 0.70);
@@ -184,7 +183,13 @@ void main() {
 
   color += vec3(0.86, 0.94, 1.0) * shockBand * 0.3;
 
-  gl_FragColor = vec4(color, vFade);
+  // El vidrio existe aunque no haya nada impreso encima: se lee por su Fresnel, su
+  // especular y sus cantos. Donde la captura sí pintó, la placa es opaca como la pantalla
+  // que sustituye; donde no, el espacio del juego sigue viéndose a través.
+  float glassEdge = clamp(fresnel * 0.9 + spec * 1.25 + sheen * 2.4 + shockBand * 0.6, 0.0, 1.0);
+  if (vKind > 1.5) glassEdge = max(glassEdge, 0.55);
+
+  gl_FragColor = vec4(color, vFade * max(printed, glassEdge));
 }
 `;
 
@@ -280,7 +285,6 @@ export function createDefeatGlassMaterial(
       uBoard: { value: board },
       uT: { value: -1 },
       uCrack: { value: 0 },
-      uFreeze: { value: 0 },
       uShock: { value: -1 },
       uImpact: { value: new THREE.Vector2(impact.x, impact.y) },
       uImpactUv: { value: new THREE.Vector2(impactUv.x, impactUv.y) },

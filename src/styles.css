@@ -21619,7 +21619,6 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
   pointer-events: none;
 }
 
-.defeat-shatter-freeze,
 .defeat-shatter-canvas,
 .defeat-shatter-fractures,
 .defeat-shatter-vignette {
@@ -21629,23 +21628,6 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
   height: 100%;
   pointer-events: none;
 }
-
-/* El tiempo se detiene con la Vida a 0, antes de que exista la placa: este es el mismo sello frío
-   que después aplica `uFreeze` sobre la captura, para que el relevo no se note. Sólo anima
-   opacidad, así que no repinta el árbol del tablero. */
-.defeat-shatter-freeze {
-  z-index: 0;
-  background: linear-gradient(180deg, rgb(28 46 55 / 0.30), rgb(16 30 38 / 0.34));
-  opacity: 0;
-}
-
-.game-result-defeat.is-sequence-running .defeat-shatter-freeze {
-  animation: defeat-freeze-settle 700ms linear both;
-}
-
-/* Con el vidrio montado el sello lo hace el shader. */
-.defeat-shatter.is-plated .defeat-shatter-freeze,
-.defeat-shatter.is-fallback .defeat-shatter-freeze { display: none; }
 
 .defeat-shatter-canvas {
   z-index: 1;
@@ -21662,6 +21644,10 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
 body.is-defeat-plated > *:not(#root),
 body.is-defeat-plated .game-screen > *:not(.temporal-backdrop):not(.game-result-overlay),
 body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
+
+/* Los degradados de la pantalla viajan dentro de la captura, así que la copia viva sobra: sin
+   esto se sumarían dos veces por los huecos transparentes de la placa. */
+body.is-defeat-plated .game-screen::before { display: none; }
 
 /* Las quebraduras crecen desde el impacto: los muros del prisma quedan casi de canto vistos de
    frente, así que no sirven para enseñar la raja. El vidrio sí se tensa por debajo. */
@@ -21688,9 +21674,11 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 .game-result-defeat.is-sequence-running .defeat-shatter-fractures path:nth-child(2n) { animation-delay: 740ms; }
 .game-result-defeat.is-sequence-running .defeat-shatter-fractures path:nth-child(3n) { animation-delay: 860ms; }
 
-/* Se van con el golpe: a partir de ahí la raja ya no es una línea, son trozos separándose. */
-.game-result-defeat.is-sequence-running .defeat-shatter-fractures {
-  animation: defeat-cracks-away 280ms 1560ms ease-out both;
+/* Se van con el golpe: a partir de ahí la raja ya no es una línea, son trozos separándose. El
+   golpe no está en un reloj de CSS porque puede esperar a que termine de fotografiarse el
+   tablero; lo anuncia el animador cuando de verdad revienta. */
+.game-result-defeat .defeat-shatter.is-bursting .defeat-shatter-fractures {
+  animation: defeat-cracks-away 280ms ease-out both;
 }
 
 .defeat-shatter-vignette {
@@ -21698,11 +21686,12 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
   background:
     radial-gradient(ellipse at center, transparent 12%, rgb(1 5 6 / 0.16) 46%, rgb(0 2 3 / 0.78) 100%),
     linear-gradient(180deg, rgb(3 8 9 / 0.12), rgb(0 3 4 / 0.46));
-  opacity: 0.22;
+  /* Nada cambia de color antes de que el vidrio se rompa: la viñeta entra con el golpe. */
+  opacity: 0;
 }
 
-.game-result-defeat.is-sequence-running .defeat-shatter-vignette {
-  animation: defeat-vignette-close 700ms 1560ms ease both;
+.game-result-defeat .defeat-shatter.is-bursting .defeat-shatter-vignette {
+  animation: defeat-vignette-close 700ms ease both;
 }
 
 /* Sin WebGL o sin captura no hay vidrio: queda la fractura quieta sobre el espacio, con el tablero
@@ -21715,14 +21704,22 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 .defeat-shatter.is-fallback .defeat-shatter-canvas { display: none; }
 .defeat-shatter.is-fallback .defeat-shatter-fractures path { opacity: 0.48; stroke-dashoffset: 0; }
 
-/* El desenlace es un `role="dialog"` dentro de `.game-screen`, y esa regla genérica le impone
-   `game-surface-in`, cuyo fotograma final deja `transform: translateY(0) scale(1)` y borra el
-   centrado. El selector tiene que ganarle: si no, el bloque cuelga de la esquina central. */
-.game-result-defeat .defeat-outcome {
+/* El desenlace se centra con una capa a pantalla completa y su bloque no lleva `transform`
+   propio. Dos cosas lo pisarían: la regla genérica `.game-screen [role="dialog"]`, que impone
+   `game-surface-in` y termina en `translateY(0) scale(1)`, y la succión del vórtice, que anima
+   `transform` sobre cada pieza de la escena. Con el centrado en el contenedor, ninguna de las
+   dos puede descolgar el texto hacia abajo y a la derecha. */
+.defeat-outcome {
   position: absolute;
   z-index: 8;
-  left: 50%;
-  top: 50%;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.defeat-outcome-inner {
+  position: relative;
   display: grid;
   width: min(820px, 94%);
   justify-items: center;
@@ -21730,12 +21727,10 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
   isolation: isolate;
   opacity: 0;
   text-align: center;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
   animation: defeat-outcome-in 460ms ease-out both;
 }
 
-.defeat-outcome::before {
+.defeat-outcome-inner::before {
   position: absolute;
   z-index: -1;
   inset: -34% -20%;
@@ -21881,11 +21876,6 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
   animation: defeat-copy-rise 620ms 1080ms ease-out both;
 }
 
-@keyframes defeat-freeze-settle {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
 @keyframes defeat-crack-grow {
   0% { opacity: 0; stroke-dashoffset: 1; }
   18% { opacity: 1; }
@@ -21898,13 +21888,13 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 }
 
 @keyframes defeat-vignette-close {
-  from { opacity: 0.22; }
+  from { opacity: 0; }
   to { opacity: 0.72; }
 }
 
 @keyframes defeat-outcome-in {
-  from { opacity: 0; transform: translate(-50%, -46%); }
-  to { opacity: 1; transform: translate(-50%, -50%); }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes defeat-title-reveal {
@@ -21929,13 +21919,13 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 }
 
 @media (max-height: 720px) {
-  .defeat-outcome { gap: 4px; }
+  .defeat-outcome-inner { gap: 4px; }
   .defeat-kicker { margin-bottom: 12px; }
   .defeat-outcome-actions { margin-top: 16px; }
 }
 
 @media (max-width: 520px) {
-  .defeat-outcome { width: calc(100% - 32px); }
+  .defeat-outcome-inner { width: calc(100% - 32px); }
   .defeat-kicker { letter-spacing: 0.24em; }
   .defeat-kicker::before, .defeat-kicker::after { width: 32px; }
   .defeat-future-plate { min-width: 100%; }
@@ -21943,24 +21933,22 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .defeat-shatter-freeze,
   .defeat-shatter-fractures,
   .defeat-shatter-fractures path,
   .defeat-shatter-vignette,
-  .defeat-outcome,
+  .defeat-outcome-inner,
   .defeat-kicker,
   .defeat-title .line,
   .defeat-title::after,
   .defeat-subtitle,
   .defeat-future-plate,
   .defeat-outcome-actions { animation: none !important; }
-  .defeat-outcome,
+  .defeat-outcome-inner,
   .defeat-kicker,
   .defeat-subtitle,
   .defeat-future-plate,
   .defeat-outcome-actions { opacity: 1; }
-  .game-result-defeat .defeat-outcome { transform: translate(-50%, -50%); }
-  .defeat-shatter-freeze { display: none; }
+  .defeat-outcome-inner { transform: none; }
   .defeat-title .line { opacity: 1; clip-path: inset(0); transform: none; }
   .defeat-title::after { display: none; }
   .defeat-shatter-vignette { opacity: 0.72; }

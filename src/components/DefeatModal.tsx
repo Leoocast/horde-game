@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Copy, RefreshCcw, Sparkles } from "lucide-react";
 import type { GameState } from "../engine/GameTypes";
 import { useToastStore } from "../store/useToastStore";
@@ -12,9 +12,6 @@ type Props = {
   onContemplateFuture: () => void;
 };
 
-/** El desenlace se nombra cuando el abismo ya quedó al descubierto, no antes. */
-const REVEAL_AT_MS = 2900;
-
 export function DefeatModal({ game, onRewriteFuture, onContemplateFuture }: Props) {
   const t = useTranslation();
   const pushToast = useToastStore((state) => state.pushToast);
@@ -22,13 +19,9 @@ export function DefeatModal({ game, onRewriteFuture, onContemplateFuture }: Prop
   const [sequenceStarted, setSequenceStarted] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const startSequence = useCallback(() => setSequenceStarted(true), []);
-
-  useEffect(() => {
-    if (!sequenceStarted) return;
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const timer = window.setTimeout(() => setRevealed(true), reducedMotion ? 60 : REVEAL_AT_MS);
-    return () => window.clearTimeout(timer);
-  }, [sequenceStarted]);
+  // El desenlace se nombra cuando el vidrio ya reventó, no en un reloj propio: el golpe
+  // puede esperar a que termine de fotografiarse el tablero, y el texto va con él.
+  const revealOutcome = useCallback(() => setRevealed(true), []);
 
   async function copySeed() {
     try {
@@ -41,11 +34,15 @@ export function DefeatModal({ game, onRewriteFuture, onContemplateFuture }: Prop
 
   return (
     <div className={`game-result-overlay game-result-defeat fixed inset-0 z-[140] ${sequenceStarted ? "is-sequence-running" : ""}`}>
-      <DefeatShatterAnimator seed={game.seed} onSequenceStart={startSequence} />
+      <DefeatShatterAnimator seed={game.seed} onSequenceStart={startSequence} onBurst={revealOutcome} />
 
+      {/* El bloque se centra con una capa a pantalla completa, no con un `translate` propio:
+          la succión del vórtice anima `transform` sobre cada pieza de la escena y borraría
+          ese desplazamiento, dejando el desenlace descolgado hacia abajo y a la derecha. */}
       {revealed && (
+        <div className="defeat-outcome">
         <div
-          className="defeat-outcome"
+          className="defeat-outcome-inner"
           role="dialog"
           aria-modal="true"
           aria-labelledby="defeat-result-title"
@@ -89,6 +86,7 @@ export function DefeatModal({ game, onRewriteFuture, onContemplateFuture }: Prop
               {t("destiny.rewriteThis")}
             </button>
           </div>
+        </div>
         </div>
       )}
     </div>

@@ -132,7 +132,6 @@ export function Board({
       <TemporalBackdrop
         grid
         climax={climaxReached ? 1 : 0}
-        defeat={game.winner === "host" ? 1 : 0}
         dial={destinyDial}
       />
       <AppHeader

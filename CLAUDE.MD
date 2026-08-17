@@ -345,27 +345,37 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   maqueta `dev/mockups/vfx/future-shattered-3d.html`. Cada triángulo del plan estable por seed de
   `defeatShatterGeometry.ts` es un **prisma extruido** —cara frontal, trasera y tres muros—, y toda
   la animación vive en el vertex shader de `defeatGlassShader.ts` a partir de sus atributos por
-  trozo: una malla y una llamada de dibujo. Antes del impacto Electron toma una captura real con
-  `webContents.capturePage()`; la web conserva `html-to-image` como respaldo. La captura debe
-  validarse antes de crear la escena y no existe textura plana de reserva. Después mapea cada trozo
-  exacto mediante UV globales.
-- La secuencia arranca con la Vida a 0, no cuando termina la captura. El hielo y las quebraduras
-  corren sobre la pantalla viva mientras se fotografía el tablero, y la placa releva a esa pantalla
-  en el mismo fotograma en que se monta; el vidrio tiene que estar listo antes del golpe o la
-  derrota cae al respaldo. `capturePage` fotografía la ventana entera, así que el overlay se apaga
-  mientras dura el disparo para no hornear el hielo dentro de la propia placa. `html-to-image` no
-  puede fotografiar un lienzo WebGL: la captura web sale sin fondo propio y se compone sobre el
-  cielo vivo con `captureTemporalSky`, porque una placa de fondo plano borraría el cosmos al entrar.
-- El reloj de la derrota es el de la maqueta: enfriar la captura a 700 ms, cuartear desde 620 ms,
-  onda expansiva e impulso a 1560 ms y nombrar el desenlace a 2900 ms. La lámina entera tiene
+  trozo: una malla y una llamada de dibujo. Lo que se rompe es el tablero: cartas, campo, HUD y el
+  instrumento de grados con su retículo. El fondo no participa. Por eso la captura es siempre
+  `html-to-image` sobre `body`, que deja alfa; `webContents.capturePage()` devuelve píxeles opacos
+  y metería el espacio dentro del vidrio, así que la derrota no lo usa aunque el bridge exista. La
+  captura descarta lienzos WebGL y neutraliza el fondo de la pantalla; se valida y una lámina
+  uniforme se rechaza, porque no existe textura plana de reserva. Después mapea cada trozo exacto
+  mediante UV globales.
+- La secuencia arranca con la Vida a 0, nunca cuando termina la captura. La escena existe desde el
+  primer fotograma con la lámina limpia —un texel transparente, jamás un color que finja el
+  tablero—, así que el cuarteado corre de inmediato con el tablero vivo todavía visible a través
+  del vidrio. La captura sólo lo imprime cuando llega, y con ella el tablero vivo se retira. Lo
+  único que puede esperar es el golpe, porque imprimir sobre trozos que ya vuelan sería un salto:
+  revienta al llegar la placa, nunca antes de 1560 ms y como muy tarde a los 4200 ms, y pasado ese
+  tope revienta con vidrio limpio y la captura se descarta. Fotografiar el DOM cuesta lo que cuesta
+  y el diseño no puede depender de que sea rápido. La captura se toma sobre `body` porque la
+  Reserva y los tooltips cuelgan de ahí por portal.
+- Nada cambia de color antes de que el vidrio se rompa. No hay sello frío sobre la captura, ni capa
+  de hielo en el DOM, ni viñeta encendida de salida: la pantalla se ve igual que un instante antes
+  y lo primero que ocurre es el cuarteado. Reintroducir un tinte previo es una regresión.
+- El reloj de la derrota es el de la maqueta salvo por eso: cuartear desde 620 ms, onda expansiva e
+  impulso en el golpe y nombrar el desenlace 1340 ms después de ese golpe. El desenlace se cuelga
+  del golpe real mediante `onBurst`, no de un reloj propio del modal. La lámina entera tiene
   espesor cero —los muros vecinos coinciden y en escorzo asomarían como aristas doradas en
   z-fighting— y sólo gana grosor al separarse. Las magnitudes del diseño se dieron sobre un plano de
   alto 1 y llegan al shader escaladas por `uScale`; no reajustarlas convierte la tensión del
   cuarteado en un salto visible.
 - Lo que se rompe es el tablero y lo que queda detrás es el **espacio exterior del propio juego**,
   no un fondo aparte. La escena de la derrota no dibuja fondo: su lienzo queda transparente y lo que
-  asoma por cada hueco es el `TemporalBackdrop` vivo, que además enrojece con su prop `defeat`. Con
-  la placa montada, `body.is-defeat-plated` retira el tablero vivo y el retículo del cristal —ese
+  asoma por cada hueco es el `TemporalBackdrop` vivo, sin teñir. El espacio ya no se enrojece al
+  perder: ese intento quedó retirado y no debe reintroducirse. Con el tablero impreso o estallado,
+  `body.is-defeat-plated` retira el tablero vivo y el retículo del cristal —ese
   retículo pertenece al vidrio que se está rompiendo y viaja dentro de la captura—, y sólo el cielo
   permanece. No existe un abismo procedural ni un oscurecimiento de CSS detrás del vidrio. El golpe
   tampoco monta destello DOM ni temblor de pantalla: lo cuenta la onda WebGL aditiva. En el DOM sólo
@@ -374,6 +384,11 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   `LinearEncoding`: la conversión sRGB aclara la captura y enfría mal el Fresnel. Reutiliza el
   renderer WebGL compartido y conserva una fractura SVG quieta para movimiento reducido o falta de
   WebGL; ese respaldo también retira el tablero y deja ver el espacio.
+- El desenlace se centra con una capa a pantalla completa y su bloque no lleva `transform` propio.
+  Dos cosas lo pisarían: la regla genérica `.game-screen [role="dialog"]`, que impone
+  `game-surface-in` y termina en `translateY(0) scale(1)`, y la succión del vórtice al Reescribir,
+  que anima `transform` sobre cada pieza de la escena. Con un `translate` propio, el texto se
+  descuelga hacia abajo y a la derecha justo antes de la transición.
 - El desenlace es el bloque de la maqueta: etiqueta **Derrota** con reglas laterales, título en dos
   líneas que se abren desde el centro con su corte de luz, subtítulo y placa de **Futuro**. Copiar
   identidad vive en el canto de la placa y las dos salidas siguen siendo **Contemplar otro futuro**

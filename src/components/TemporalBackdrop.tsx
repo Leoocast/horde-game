@@ -21,25 +21,6 @@ const DIAL_LABELS = [
 ] as const;
 
 /**
- * El cielo vivo, tal y como se está viendo en este instante.
- *
- * El lienzo del fondo no conserva su búfer de dibujo, así que leerlo desde fuera del
- * fotograma que lo pintó devuelve un cuadro vacío. Esta referencia la publica el propio
- * efecto: dibuja y copia dentro de la misma tarea, que es la única forma de sacar sus
- * píxeles sin pagar `preserveDrawingBuffer` durante toda la sesión.
- */
-let skySnapshotSource: ((width: number, height: number) => HTMLCanvasElement | undefined) | null = null;
-
-/**
- * Copia del espacio para quien necesite componerlo con una captura del DOM. La derrota la
- * usa porque `html-to-image` no puede fotografiar un lienzo WebGL y sin el cielo la placa
- * de vidrio entraría en pantalla como un fondo plano.
- */
-export function captureTemporalSky(width: number, height: number): HTMLCanvasElement | undefined {
-  return skySnapshotSource?.(width, height);
-}
-
-/**
  * Fondo espacio/temporal permanente.
  *
  * Tiene contexto propio a propósito. `sharedVfxRenderer` está construido para efectos
@@ -52,14 +33,11 @@ export function captureTemporalSky(width: number, height: number): HTMLCanvasEle
  */
 export function TemporalBackdrop({
   climax = 0,
-  defeat = 0,
   grid = false,
   dial = 0,
 }: {
   /** Mismo umbral que lleva la música a clímax. */
   climax?: number;
-  /** Derrota: el espacio se enrojece. Es un estado aparte del clímax, no su extremo. */
-  defeat?: number;
   /** Retículo del instrumento. Sólo en el tablero: el menú va a cielo limpio. */
   grid?: boolean;
   /** Ángulo acumulado del disco de grados, en grados. El aparato mide cómo se mueve
@@ -70,10 +48,10 @@ export function TemporalBackdrop({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const dialRef = useRef<SVGGElement | null>(null);
   const dialLabelRefs = useRef<Array<SVGTextElement | null>>([]);
-  const targetRef = useRef({ climax, defeat, dial });
+  const targetRef = useRef({ climax, dial });
 
   // El bucle lee los valores por referencia para no reiniciarse en cada cambio.
-  targetRef.current = { climax, defeat, dial };
+  targetRef.current = { climax, dial };
 
   const positionDial = (degrees: number) => {
     dialRef.current?.setAttribute("transform", temporalDialTransform(degrees));
@@ -149,12 +127,10 @@ export function TemporalBackdrop({
     const uRes = gl.getUniformLocation(program, "uRes");
     const uTime = gl.getUniformLocation(program, "uTime");
     const uClimax = gl.getUniformLocation(program, "uClimax");
-    const uDefeat = gl.getUniformLocation(program, "uDefeat");
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const startedAt = performance.now();
     let climaxMix = targetRef.current.climax;
-    let defeatMix = targetRef.current.defeat;
     let dialMix = targetRef.current.dial;
     let frame = 0;
     let disposed = false;
@@ -170,9 +146,6 @@ export function TemporalBackdrop({
 
       // El cambio de estado se interpola: un salto seco se ve.
       climaxMix += (targetRef.current.climax - climaxMix) * 0.04;
-      // Más lento que el clímax: la derrota se asienta, no salta.
-      defeatMix += (targetRef.current.defeat - defeatMix) * 0.022;
-
       // El disco gira despacio hasta su nuevo ángulo y se queda ahí: el futuro se
       // movió y no vuelve. Se escribe el atributo en vez de usar CSS porque el origen
       // de rotación del grupo ya es su propio centro y así no depende de `fill-box`.
@@ -183,7 +156,6 @@ export function TemporalBackdrop({
       gl.uniform2f(uRes, width, height);
       gl.uniform1f(uTime, reducedMotion ? 8 : (now - startedAt) / 1000);
       gl.uniform1f(uClimax, climaxMix);
-      gl.uniform1f(uDefeat, defeatMix);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     };
 
@@ -199,20 +171,6 @@ export function TemporalBackdrop({
     } else {
       frame = requestAnimationFrame(loop);
     }
-
-    // Dibujar y copiar dentro de la misma tarea: es lo que hace legible el búfer.
-    skySnapshotSource = (snapshotWidth, snapshotHeight) => {
-      if (disposed) return undefined;
-      draw(performance.now());
-      const copy = document.createElement("canvas");
-      copy.width = Math.max(1, Math.round(snapshotWidth));
-      copy.height = Math.max(1, Math.round(snapshotHeight));
-      const context = copy.getContext("2d");
-      if (!context) return undefined;
-      context.drawImage(canvas, 0, 0, copy.width, copy.height);
-      return copy;
-    };
-    const ownSnapshotSource = skySnapshotSource;
 
     // La ventana oculta no debe seguir dibujando; acompaña a `backgroundThrottling`.
     const onVisibility = () => {
@@ -231,8 +189,6 @@ export function TemporalBackdrop({
 
     return () => {
       disposed = true;
-      // StrictMode remonta sobre este mismo nodo: sólo se retira la referencia propia.
-      if (skySnapshotSource === ownSnapshotSource) skySnapshotSource = null;
       cancelAnimationFrame(frame);
       document.removeEventListener("visibilitychange", onVisibility);
       canvas.removeEventListener("webglcontextlost", onContextLost);

@@ -65,24 +65,29 @@ Implementaciones utiles como referencia:
   por seed vive en `defeatShatterGeometry.ts` y cada triangulo sale como prisma extruido —cara
   frontal, trasera y tres muros con normal propia— dentro de un unico `BufferGeometry`: toda la
   animacion ocurre en el vertex shader a partir de atributos por trozo, no hay una malla por
-  fragmento. Antes del primer impacto Electron captura el viewport real con
-  `webContents.capturePage()` y la version web usa `html-to-image` sobre `.game-screen` sin el
-  overlay final. La captura se valida y el estallido no se construye si resulta uniforme o falla:
-  no existe una textura de color que pueda fingir el tablero. Cada cara recibe las UV globales de
-  su trozo exacto.
-- El reloj arranca con la Vida a 0, no cuando termina la captura: el hielo y las quebraduras corren
-  sobre la pantalla viva mientras se fotografia el tablero, y la placa releva a esa pantalla en el
-  mismo fotograma en que se monta. Si no llega antes del golpe, la derrota cae al respaldo.
-  `capturePage` fotografia la ventana entera, asi que el overlay se apaga mientras dura el disparo.
-  `html-to-image` no puede fotografiar un lienzo WebGL, de modo que la captura web se compone sobre
-  el cielo vivo con `captureTemporalSky`, que dibuja y copia el fondo dentro de la misma tarea en
-  lugar de pagar `preserveDrawingBuffer` durante toda la sesion.
+  fragmento. Lo que se rompe es el tablero —cartas, campo, HUD y el instrumento de grados con su
+  reticulo—; el fondo no participa. Por eso la captura es siempre `html-to-image` sobre `body` sin
+  el overlay final: deja alfa, mientras que `webContents.capturePage()` devuelve pixeles opacos y
+  meteria el espacio dentro del vidrio. La captura se valida y una lamina uniforme se descarta: no
+  existe una textura de color que pueda fingir el tablero. Cada cara recibe las UV globales de su
+  trozo exacto.
+- El reloj arranca con la Vida a 0, nunca cuando termina la captura. La escena existe desde el
+  primer fotograma con la lamina limpia —un texel transparente, jamas un color que finja el
+  tablero—, de modo que el cuarteado corre de inmediato con el tablero vivo todavia visible a
+  traves del vidrio. Nada tine la pantalla antes de romperse: no hay sello frio sobre la captura,
+  ni capa de hielo en el DOM, ni vineta encendida de salida. La captura solo lo imprime cuando llega, y con ella se retira el
+  tablero vivo. Lo unico que espera es el golpe, porque imprimir sobre trozos que ya vuelan seria un
+  salto: revienta al llegar la placa, nunca antes de 1560 ms y como muy tarde a los 4200 ms; pasado
+  ese tope revienta con vidrio limpio y la captura se descarta. El desenlace se cuelga de ese golpe
+  real con `onBurst`, 1340 ms despues, no de un reloj propio del modal. La captura se toma sobre
+  `body` porque la Reserva y los tooltips cuelgan de ahi por portal, y sale con alfa: el vidrio es
+  opaco donde el tablero pintaba y transparente donde no.
 - La escena de la derrota son dos capas en una sola escena, porque `renderSharedVfxFrame` dibuja
   una escena con una camara: el vidrio y la onda expansiva aditiva por encima. No dibuja fondo: el
   lienzo queda transparente y lo que asoma por cada hueco es el `TemporalBackdrop` vivo, el mismo
-  espacio exterior del juego, ya enrojecido por su prop `defeat`. Con la placa montada,
-  `body.is-defeat-plated` retira el tablero vivo y el reticulo del cristal, que viaja dentro de la
-  captura porque es el propio vidrio que se rompe. Mientras la lamina esta entera su espesor es
+  espacio exterior del juego y sin tenir: el fondo ya no se enrojece al perder. Con el tablero
+  impreso o estallado, `body.is-defeat-plated` retira el tablero vivo y el reticulo del cristal, que
+  viaja dentro de la captura porque es el propio vidrio que se rompe. Mientras la lamina esta entera su espesor es
   cero —los muros vecinos coinciden en el espacio y asomarian como aristas en z-fighting— y solo
   gana grosor al separarse cada trozo. `defeatGlassShader.ts` resuelve refraccion con dispersion
   cromatica, Fresnel azul grisaceo/dorado y especular contra la normal real de cada trozo; solo los
