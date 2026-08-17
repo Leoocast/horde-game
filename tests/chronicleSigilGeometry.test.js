@@ -154,28 +154,40 @@ test("la luz del aro completa una sola vuelta y nunca rebobina hacia el Norte", 
   assert.equal(chronicleSigilSweepPresenceAt(CHRONICLE_SIGIL_SWEEP_FADE_END), 0);
 });
 
-test("la obertura queda armada antes de revelar el tablero y la Mano sólo se monta al final", () => {
+test("HUD y Mano toman el relevo mientras el signo termina su fundido", () => {
   const app = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
   const board = readFileSync(new URL("../src/components/Board.tsx", import.meta.url), "utf8");
   const battlefield = readFileSync(new URL("../src/components/Battlefield.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  const mockup = readFileSync(new URL("../dev/mockups/vfx/board-overture.html", import.meta.url), "utf8");
   const startSequence = app.slice(
     app.indexOf("onStart={(options) => {"),
     app.indexOf("setLaunchTransition({", app.indexOf("onStart={(options) => {")) + 320,
   );
+  const handDelay = Number(app.match(/BOARD_OVERTURE_HAND_DELAY_MS = (\d+)/u)?.[1]);
 
   assert.ok(startSequence.indexOf("setBoardOverture(") < startSequence.indexOf("setLaunchTransition({"));
   assert.match(startSequence, /startsAtMs: startedAtMs \+ ENCOUNTER_OPEN_MS/u);
   assert.match(startSequence, /phase: "sigil"/u);
-  assert.match(app, /current\?\.id === id[\s\S]*phase: "hud"/u);
+  assert.match(startSequence, /handReady: false/u);
+  assert.match(startSequence, /sigilComplete: false/u);
+  assert.match(app, /current\?\.id === id[\s\S]*phase: "overlap"/u);
+  assert.match(app, /current\.sigilComplete \? null : \{ \.\.\.current, handReady: true \}/u);
+  assert.match(app, /current\.handReady[\s\S]*sigilComplete: true/u);
+  assert.ok(Number.isFinite(handDelay));
+  assert.ok(
+    CHRONICLE_SIGIL_DIAL_AT * 1000 + handDelay < CHRONICLE_SIGIL_DURATION_MS,
+    "la Mano debe aparecer antes del último frame del signo",
+  );
   assert.match(app, /<EncounterTransition\s+key=\{`encounter-\$\{launchTransition\.id\}`\}/u);
   const finalBoardTree = app.slice(app.lastIndexOf("  return ("));
   assert.ok(
-    finalBoardTree.indexOf("{transitionOverlay}") < finalBoardTree.indexOf('{boardOverture?.phase === "sigil" && ('),
+    finalBoardTree.indexOf("{transitionOverlay}") < finalBoardTree.indexOf("{boardOverture && !boardOverture.sigilComplete && ("),
     "EncounterTransition conserva su slot al reemplazar StartMenu por Board",
   );
   assert.doesNotMatch(app, /useLayoutEffect/u);
-  assert.match(board, /\{!overtureActive && !overtureSettling && <OpeningHandOverlay game=\{game\} \/>\}/u);
+  assert.match(app, /overtureHandPending=\{Boolean\(boardOverture && !boardOverture\.handReady\)\}/u);
+  assert.match(board, /\{!overtureHandPending && <OpeningHandOverlay game=\{game\} \/>\}/u);
   assert.match(board, /document\.body\.classList\.toggle\("board-overture-active", overtureActive\)/u);
   assert.match(board, /document\.body\.classList\.toggle\("board-overture-settling", overtureSettling\)/u);
   assert.match(battlefield, /"game-hud-energy"/u);
@@ -183,6 +195,9 @@ test("la obertura queda armada antes de revelar el tablero y la Mano sólo se mo
   assert.match(styles, /is-overture\.is-encounter-entering \.game-battlefield-stage[\s\S]*animation: none/u);
   assert.match(styles, /body\.board-overture-active \.game-hud-energy/u);
   assert.match(styles, /body\.board-overture-settling \.game-hud-energy[\s\S]*encounter-board-ui-bottom/u);
+  assert.match(styles, /\.chronicle-sigil-overture[\s\S]*z-index: 410/u);
+  assert.match(mockup, /--delay-hud: 3446ms/u);
+  assert.match(mockup, /--delay-mulligan: 4096ms/u);
 });
 
 test("el signo no pinta facetas triangulares ni otra estrella en el corazón", () => {

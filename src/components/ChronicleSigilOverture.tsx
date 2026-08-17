@@ -41,7 +41,7 @@ type Props = {
 /**
  * Obertura del tablero: el signo del Futuro se traza sobre el Campo desnudo cuando el
  * encuentro empieza a abrirse, se sienta en las marcas del instrumento de grados, le entrega
- * su aro y desaparece. Recién entonces entra el HUD y detrás la mano inicial.
+ * su aro y desaparece. Durante ese último fundido ya entran el HUD y la mano inicial.
  *
  * El corte y la apertura del VS no se tocan: este componente monta exactamente cuando las
  * cortinas dejan de estar cerradas y no interviene en su animación.

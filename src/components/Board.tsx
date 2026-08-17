@@ -53,8 +53,10 @@ type Props = {
   encounterEntering?: boolean;
   /** El signo del Futuro se está trazando sobre el Campo: el tablero llega desnudo. */
   overtureActive?: boolean;
-  /** El signo ya terminó y el HUD está entrando; la Mano todavía no se monta. */
+  /** El signo entregó el aro y se está apagando mientras entra el HUD. */
   overtureSettling?: boolean;
+  /** El HUD todavía no abrió espacio suficiente para presentar la Mano. */
+  overtureHandPending?: boolean;
   /** El disco de grados todavía no fue entregado por el signo. */
   overtureDialPending?: boolean;
   sessionKind?: "normal" | "tutorial";
@@ -196,6 +198,7 @@ export function Board({
   encounterEntering = false,
   overtureActive = false,
   overtureSettling = false,
+  overtureHandPending = false,
   overtureDialPending = false,
   sessionKind = "normal",
   tutorialInterrupted = false,
@@ -435,9 +438,9 @@ export function Board({
         </section>
       </div>
       {game.openingHandAccepted && <Hand game={game} />}
-      {/* La mano inicial espera a que el signo entregue el instrumento: pedir un mulligan
-          mientras el tablero todavía se está presentando parte la obertura en dos. */}
-      {!overtureActive && !overtureSettling && <OpeningHandOverlay game={game} />}
+      {/* La Mano entra durante el fundido final del signo, después de que el HUD ya empezó
+          a ocupar los bordes. La espera es independiente del final completo del shader. */}
+      {!overtureHandPending && <OpeningHandOverlay game={game} />}
       <GuidedTutorialOverlay />
 
       {sessionKind === "normal" && defeatReady && onRewriteFuture && onContemplateFuture && (

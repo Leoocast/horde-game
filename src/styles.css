@@ -2310,15 +2310,15 @@
   /* ── Obertura del tablero ─────────────────────────────────────────────────────────
      El corte y la apertura del encuentro no se tocan. Lo que cambia es lo que hay
      DEBAJO cuando se abren: el Campo llega desnudo para que el signo del Futuro tenga
-     escenario propio, y el HUD espera a que le entregue el instrumento de grados.
+     escenario propio; al recibir el instrumento, el HUD entra mientras el signo se apaga.
      La maqueta de decisión es `dev/mockups/vfx/board-overture.html`. */
 
   .chronicle-sigil-overture {
     pointer-events: none;
-    /* Por encima de todo el tablero y por debajo de las cortinas del encuentro (1000),
-       que siguen terminando su corte mientras el signo empieza a trazarse. */
+    /* Sobre el Campo y el HUD, pero bajo la Mano inicial (420) y las cortinas (1000).
+       Así el último rastro acompaña el relevo sin pintar encima de las cartas. */
     position: fixed;
-    z-index: 900;
+    z-index: 410;
     inset: 0;
     display: block;
     width: 100%;

@@ -53,7 +53,9 @@ type BoardOvertureState = {
   seed: string;
   dialPending: boolean;
   startsAtMs: number;
-  phase: "sigil" | "hud";
+  phase: "sigil" | "overlap";
+  handReady: boolean;
+  sigilComplete: boolean;
 };
 
 type DestinyTransitionState = {
@@ -62,8 +64,8 @@ type DestinyTransitionState = {
   seed: string;
 };
 
-/** El HUD termina de entrar antes de montar la Mano inicial. */
-const BOARD_OVERTURE_HUD_MS = 900;
+/** La Mano empieza a subir mientras el último rastro del signo termina de apagarse. */
+const BOARD_OVERTURE_HAND_DELAY_MS = 650;
 
 const subscribeGuidedLifecycle = (listener: () => void) => guidedProductLifecycle.subscribe(listener);
 const readGuidedLifecycle = () => guidedProductLifecycle.snapshot();
@@ -230,16 +232,19 @@ export default function App() {
     };
   }, [launchTransition, startBattleMusic]);
 
-  /* Una sola máquina de estados entrega signo -> HUD -> Mano. La Mano no llega a montarse
-     entre fases, que era lo que hacía visible la entrada dos veces. */
+  /* Al entregar el aro, signo, HUD y Mano se solapan de forma deliberada. La bandera de
+     final evita desmontar el shader antes de su último frame si la Mano llega primero. */
   useEffect(() => {
-    if (boardOverture?.phase !== "hud") return;
+    if (boardOverture?.phase !== "overlap" || boardOverture.handReady) return;
     const id = boardOverture.id;
     const timer = window.setTimeout(() => {
-      setBoardOverture((current) => (current?.id === id ? null : current));
-    }, BOARD_OVERTURE_HUD_MS);
+      setBoardOverture((current) => {
+        if (current?.id !== id) return current;
+        return current.sigilComplete ? null : { ...current, handReady: true };
+      });
+    }, BOARD_OVERTURE_HAND_DELAY_MS);
     return () => window.clearTimeout(timer);
-  }, [boardOverture?.id, boardOverture?.phase]);
+  }, [boardOverture?.handReady, boardOverture?.id, boardOverture?.phase]);
 
   /* Salir del tablero a mitad de la obertura la deja pendiente, y la siguiente partida
      montaría con el HUD apagado. Mientras existe `launchTransition` seguimos en el menú a
@@ -499,6 +504,8 @@ export default function App() {
               dialPending: true,
               startsAtMs: startedAtMs + ENCOUNTER_OPEN_MS,
               phase: "sigil",
+              handReady: false,
+              sigilComplete: false,
             });
             setLaunchTransition({
               id,
@@ -526,7 +533,8 @@ export default function App() {
         setupTurns={setupTurns}
         encounterEntering={Boolean(launchTransition)}
         overtureActive={boardOverture?.phase === "sigil"}
-        overtureSettling={boardOverture?.phase === "hud"}
+        overtureSettling={boardOverture?.phase === "overlap"}
+        overtureHandPending={Boolean(boardOverture && !boardOverture.handReady)}
         overtureDialPending={Boolean(boardOverture?.dialPending)}
         sessionKind={screen === "tutorial" ? "tutorial" : "normal"}
         tutorialInterrupted={screen === "tutorial" && (guidedLifecycle.status === "aborted" || guidedLifecycle.status === "failed")}
@@ -546,7 +554,7 @@ export default function App() {
           antes, React remontaría EncounterTransition al revelar Board y el choque empezaría
           por segunda vez mientras el signo ya corre con el reloj original. */}
       {transitionOverlay}
-      {boardOverture?.phase === "sigil" && (
+      {boardOverture && !boardOverture.sigilComplete && (
         <ChronicleSigilOverture
           key={`overture-${boardOverture.id}`}
           seed={boardOverture.seed}
@@ -554,16 +562,19 @@ export default function App() {
           onDialReady={() => {
             const id = boardOverture.id;
             setBoardOverture((current) => (
-              current?.id === id ? { ...current, dialPending: false } : current
+              current?.id === id
+                ? { ...current, dialPending: false, phase: "overlap" }
+                : current
             ));
           }}
           onComplete={() => {
             const id = boardOverture.id;
-            setBoardOverture((current) => (
-              current?.id === id
-                ? { ...current, dialPending: false, phase: "hud" }
-                : current
-            ));
+            setBoardOverture((current) => {
+              if (current?.id !== id) return current;
+              return current.handReady
+                ? null
+                : { ...current, dialPending: false, sigilComplete: true };
+            });
           }}
         />
       )}

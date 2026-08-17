@@ -126,7 +126,7 @@
 
       /* Se revela debajo del VS a los 1050 ms, igual que en el juego, pero SIN HUD:
          sólo el espacio, el cristal y la luz del Campo. El signo necesita escenario
-         propio, y el HUD llega después de que se lo entregue al instrumento. */
+         propio; al recibir el instrumento, el HUD entra mientras el signo se apaga. */
       .board-scene { position: absolute; z-index: 1; inset: 0; opacity: 0; }
 
       .board-floor {
@@ -387,9 +387,9 @@
         --delay-board: 1050ms;
         --delay-instrument: 3446ms;
         --d-instrument: 600ms;
-        --delay-hud: 4616ms;
+        --delay-hud: 3446ms;
         --d-hud: 620ms;
-        --delay-mulligan: 5516ms;
+        --delay-mulligan: 4096ms;
         --d-mulligan: 480ms;
       }
 
@@ -519,7 +519,7 @@
         <p>
           El VS vigente no cambia. Cuando <strong>empieza a abrirse</strong>, el signo del Futuro se dibuja sobre el
           Campo desnudo, se cierra sobre sí mismo, entrega su aro al <strong>instrumento de grados</strong> y
-          desaparece. Recién entonces entra el HUD, y detrás la mano inicial.
+          desaparece mientras el HUD y la mano inicial toman su lugar.
         </p>
       </header>
 
@@ -691,9 +691,9 @@
           <li><b>Trazar, 1.67–2.82 s:</b> el corazón queda fijo primero; después las motas caen desde los cuatro bordes con el color de su bando y el contorno se cierra en horario desde el Norte.</li>
           <li><b>Fijar, 2.63–3.37 s:</b> el signo carga una vez y se sienta en sus marcas.</li>
           <li><b>El círculo, 3.22–3.92 s:</b> la luz recorre el aro.</li>
-          <li><b>Entregar, 3.45–4.42 s:</b> el instrumento se enciende debajo y el signo se apaga.</li>
-          <li><b>HUD, 4.62–5.52 s:</b> entran turno, Archivo de la Hueste, herramientas, Energía, fases y vitals, escalonados.</li>
-          <li><b>Mano inicial, 5.52–6.10 s:</b> las cartas suben escalonadas 55 ms como en <code>OpeningHandOverlay</code>, con Conservar y Reescribir.</li>
+          <li><b>Entregar, 3.45–4.42 s:</b> el instrumento y el HUD entran mientras el signo se apaga.</li>
+          <li><b>HUD, 3.45–4.45 s:</b> entran turno, Archivo de la Hueste, herramientas, Energía, fases y vitals, escalonados.</li>
+          <li><b>Mano inicial, 4.10–4.72 s:</b> las cartas suben escalonadas 55 ms durante el último fundido del signo, con Conservar y Reescribir.</li>
         </ul>
 
         <h3>Que no duela a oscuras</h3>
@@ -1208,7 +1208,7 @@
         var fill = document.getElementById("fill");
         var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-        var BASE_TOTAL = 6600;
+        var BASE_TOTAL = 4800;
         var timeScale = 1;
         var state = "idle";
         var startTime = 0;
@@ -1220,9 +1220,9 @@
             "--delay-board": 1050,
             "--delay-instrument": 3446,
             "--d-instrument": 600,
-            "--delay-hud": 4616,
+            "--delay-hud": 3446,
             "--d-hud": 620,
-            "--delay-mulligan": 5516,
+            "--delay-mulligan": 4096,
             "--d-mulligan": 480
           };
           Object.keys(values).forEach(function (name) {
@@ -1235,9 +1235,8 @@
           if (time < 1666) return "El tablero espera debajo";
           if (time < 2820) return "El signo se traza";
           if (time < 3220) return "El signo se sienta";
-          if (time < 3920) return "El círculo recorre el aro";
-          if (time < 4616) return "Queda el instrumento";
-          if (time < 5516) return "Entra el HUD";
+          if (time < 3446) return "El círculo recorre el aro";
+          if (time < 4096) return "El signo entrega el HUD";
           if (time < BASE_TOTAL) return "Mano inicial";
           return "Tablero listo";
         }
