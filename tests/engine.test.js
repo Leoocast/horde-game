@@ -155,8 +155,12 @@ test("devlost starts at 15 Life without enabling the Developer Mode setup", () =
   assert.equal(game.setupTurnsRemaining, 3);
 });
 
-test("devwin starts with only two Host cards and otherwise uses the normal setup", () => {
-  const game = createInitialGame(playerDeck, hostDeck, "devwin", 3);
+test("devwin starts with only two basic Zombies and otherwise uses the normal setup", () => {
+  const reorderedHostDeck = {
+    ...hostDeck,
+    cards: [...hostDeck.cards].reverse(),
+  };
+  const game = createInitialGame(playerDeck, reorderedHostDeck, "devwin", 3);
   const hostCardCount = game.host.archive.length
     + game.host.field.length
     + game.host.memory.length
@@ -164,6 +168,12 @@ test("devwin starts with only two Host cards and otherwise uses the normal setup
 
   assert.equal(hostCardCount, 2);
   assert.equal(game.host.archive.length, 2);
+  assert.deepEqual(
+    game.host.archive.map((card) => card.definitionId),
+    ["graveless_soldier", "graveless_soldier"],
+  );
+  assert.equal(new Set(game.host.archive.map((card) => card.instanceId)).size, 2);
+  assert.equal(game.hostDeckOrderHash, "graveless_soldier|graveless_soldier");
   assert.equal(game.player.life, 50);
   assert.equal(game.player.hand.length, 7);
   assert.equal(game.player.field.length, 0);

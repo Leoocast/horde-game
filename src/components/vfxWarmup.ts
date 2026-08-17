@@ -13,6 +13,14 @@ import {
   CHRONICLE_SIGIL_VERTEX_SHADER,
 } from "./chronicleSigilShader";
 import {
+  DESTINY_CONSTELLATION_EDGES,
+  DESTINY_CONSTELLATION_NODES,
+} from "./destinyConstellationGeometry";
+import {
+  DESTINY_CONSTELLATION_FRAGMENT_SHADER,
+  DESTINY_CONSTELLATION_VERTEX_SHADER,
+} from "./destinyConstellationShader";
+import {
   DESTINY_VORTEX_FRAGMENT_SHADER,
   DESTINY_VORTEX_VERTEX_SHADER,
 } from "./destinyVortexShader";
@@ -244,6 +252,38 @@ function createChronicleSigilFrame(): WarmupFrame {
 }
 
 /**
+ * La constelación de la Victoria se monta en cuanto la Hueste se queda sin amenazas, y su primer
+ * fotograma ya lleva motas en vuelo. Compilarla entonces cuesta un tirón justo en la entrada del
+ * desenlace, así que se paga durante la carga como el resto.
+ */
+function createDestinyConstellationFrame(): WarmupFrame {
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      uRes: { value: new THREE.Vector2(64, 64) },
+      uPixelRatio: { value: 1 },
+      uTime: { value: 0 },
+      uT: { value: 0 },
+      uCenter: { value: new THREE.Vector2(32, 32) },
+      uUnit: { value: 8 },
+      uBloom: { value: 0 },
+      uSeed: { value: 0.37 },
+      uNode: { value: Array.from({ length: DESTINY_CONSTELLATION_NODES }, () => new THREE.Vector4()) },
+      uEdge: { value: Array.from({ length: DESTINY_CONSTELLATION_EDGES }, () => new THREE.Vector4()) },
+      uEdgeT: { value: new Array<number>(DESTINY_CONSTELLATION_EDGES).fill(0) },
+    },
+    vertexShader: DESTINY_CONSTELLATION_VERTEX_SHADER,
+    fragmentShader: DESTINY_CONSTELLATION_FRAGMENT_SHADER,
+    transparent: true,
+    premultipliedAlpha: true,
+    depthTest: false,
+    depthWrite: false,
+  });
+  const scene = new THREE.Scene();
+  scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
+  return { scene, camera: new THREE.Camera(), outputEncoding: THREE.LinearEncoding };
+}
+
+/**
  * El vidrio de la derrota se monta justo cuando la Vida llega a 0. Compilar entonces sus dos
  * programas cuesta un tirón en el peor momento posible, así que se paga durante la carga con el
  * mismo plan real: los atributos por trozo forman parte del programa.
@@ -286,6 +326,7 @@ function createWarmupFrames(): WarmupFrame[] {
     createBuiltinMaterialFrame(),
     createBurnFrame(),
     createChronicleSigilFrame(),
+    createDestinyConstellationFrame(),
     createDestinyVortexFrame(),
     createDefeatGlassFrame(),
   ];

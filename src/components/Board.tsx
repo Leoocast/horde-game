@@ -68,10 +68,10 @@ type Props = {
   onReturnToMenu: () => void;
 };
 
-const DEFEAT_PRESENTATION_SETTLE_TIMEOUT_MS = 6000;
+const OUTCOME_PRESENTATION_SETTLE_TIMEOUT_MS = 6000;
 // No beat normal se acerca a este presupuesto. Es solamente una salida de emergencia para que un
-// token o callback defectuoso no deje la partida perdida bloqueada para siempre.
-const DEFEAT_DRAIN_WATCHDOG_MS = 15000;
+// token o callback defectuoso no deje la partida terminada bloqueada para siempre.
+const OUTCOME_DRAIN_WATCHDOG_MS = 15000;
 
 const subscribeToPresentationActivity = (listener: () => void) =>
   guidedPresentationActivity.subscribe(listener);
@@ -96,7 +96,7 @@ function waitForAnimationFrame(): Promise<void> {
 /** Espera dos paints consecutivos sin animación finita. El reescaneo importa: soltar una baja
  * puede crear un reflow en el frame posterior al que terminó su efecto. */
 async function waitForFiniteDocumentAnimations(
-  timeoutMs = DEFEAT_PRESENTATION_SETTLE_TIMEOUT_MS,
+  timeoutMs = OUTCOME_PRESENTATION_SETTLE_TIMEOUT_MS,
 ): Promise<void> {
   const deadline = performance.now() + timeoutMs;
   let quietFrames = 0;
@@ -117,9 +117,13 @@ async function waitForFiniteDocumentAnimations(
 }
 
 /** Todo trabajo de presentación observable desde Zustand que tiene un final automático. Los
- * estados que requieren input no entran aquí: al perder ya no pueden resolverse y la limpieza
- * final los cierra justo antes de la captura. */
-function defeatStorePresentationActive(state: GameStore): boolean {
+ * estados que requieren input no entran aquí: con la partida terminada ya no pueden resolverse y
+ * la limpieza final los cierra justo antes de la captura.
+ *
+ * La barrera es común a los dos desenlaces: la derrota necesita drenarla para capturar el frame
+ * exacto que va a romperse, y la victoria para que el tablero no empiece a retirarse encima de
+ * un beat todavía en curso. */
+function outcomePresentationActive(state: GameStore): boolean {
   return Boolean(
     state.hostAttackAnimation
     || state.burnAnimation
@@ -212,7 +216,7 @@ export function Board({
   const game = useGameStore((state) => state.game);
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
-  const storePresentationActive = useGameStore(defeatStorePresentationActive);
+  const storePresentationActive = useGameStore(outcomePresentationActive);
   // Tribute of the Four Sorrows turns the Host's auto-trigger against the player, so hostAutoTriggerCount stays > 0
   // while they must pick a card to discard / creatures & lands to sacrifice. The board-wide input
   // blocker below would swallow those clicks, so drop it while a Tribute of the Four Sorrows selection is pending — the
@@ -229,7 +233,7 @@ export function Board({
   const [showHomeConfirmation, setShowHomeConfirmation] = useState(false);
   // undefined = preparando el frame final; null = la captura nativa no está disponible.
   const [defeatSnapshot, setDefeatSnapshot] = useState<HTMLImageElement | null | undefined>(undefined);
-  const [forcedDefeatDrainSessionId, setForcedDefeatDrainSessionId] = useState<number>();
+  const [forcedOutcomeDrainSessionId, setForcedOutcomeDrainSessionId] = useState<number>();
   const defeatCaptureTaskRef = useRef<Promise<HTMLImageElement | null> | null>(null);
   const defeatCaptureGenerationRef = useRef(0);
   const homeConfirmationPresence = useAnimatedPresence(showHomeConfirmation, 210);
@@ -250,40 +254,44 @@ export function Board({
     readPresentationActivity,
   );
   const destinyDialSettled = settledDestinyDialRevision === destinyDialRevision;
-  const forcedDefeatDrain = game.winner === "host"
-    && forcedDefeatDrainSessionId === gameSessionId;
-  const defeatOutcomeReady = game.winner === "host"
+  const forcedOutcomeDrain = Boolean(game.winner)
+    && forcedOutcomeDrainSessionId === gameSessionId;
+  // La barrera se abre igual para los dos desenlaces: sólo lo que ocurre después difiere.
+  const outcomeOutroReady = Boolean(game.winner)
     && destinyDialSettled
     && (
-      forcedDefeatDrain
+      forcedOutcomeDrain
       || (!storePresentationActive && localPresentation.activeCount === 0)
     );
+  const defeatOutcomeReady = outcomeOutroReady && game.winner === "host";
   const defeatReady = defeatOutcomeReady && defeatSnapshot !== undefined;
-  const defeatPresentationPending = game.winner === "host" && !defeatReady;
+  // La victoria no captura nada: en cuanto la presentación se asienta, el tablero puede retirarse.
+  const victoryReady = outcomeOutroReady && game.winner === "player";
+  const outcomePresentationPending = Boolean(game.winner) && !defeatReady && !victoryReady;
   const presentationInputBlocked = (
     (!game.winner && storePresentationActive)
-    || defeatPresentationPending
+    || outcomePresentationPending
   );
 
   useEffect(() => {
-    if (game.winner !== "host") {
-      setForcedDefeatDrainSessionId(undefined);
+    if (!game.winner) {
+      setForcedOutcomeDrainSessionId(undefined);
       return;
     }
     // Once the real barrier opened, capture has its own bounded timeout; do not let the emergency
     // timer fire later while the already-correct shatter/result screen is playing.
-    if (defeatOutcomeReady) return;
+    if (outcomeOutroReady) return;
     const watchedSessionId = gameSessionId;
     const timer = window.setTimeout(() => {
       const current = useGameStore.getState();
-      if (current.gameSessionId !== watchedSessionId || current.game.winner !== "host") return;
+      if (current.gameSessionId !== watchedSessionId || !current.game.winner) return;
       // La ruta normal espera todos los finales observables. El watchdog sólo invalida trabajo
-      // huérfano después de 15 s y pide al dial su frame exacto antes de habilitar la captura.
+      // huérfano después de 15 s y pide al dial su frame exacto antes de abrir el desenlace.
       stopGamePresentation();
-      setForcedDefeatDrainSessionId(watchedSessionId);
-    }, DEFEAT_DRAIN_WATCHDOG_MS);
+      setForcedOutcomeDrainSessionId(watchedSessionId);
+    }, OUTCOME_DRAIN_WATCHDOG_MS);
     return () => window.clearTimeout(timer);
-  }, [defeatOutcomeReady, game.winner, gameSessionId, stopGamePresentation]);
+  }, [outcomeOutroReady, game.winner, gameSessionId, stopGamePresentation]);
 
   useEffect(() => {
     if (!defeatOutcomeReady) {
@@ -309,7 +317,7 @@ export function Board({
             && current.game.winner === "host"
             && current.destinyDial === dialTarget
             && current.destinyDialRevision === dialTargetRevision
-            && !defeatStorePresentationActive(current)
+            && !outcomePresentationActive(current)
             && guidedPresentationActivity.snapshot().activeCount === 0;
         };
 
@@ -337,10 +345,12 @@ export function Board({
     if (climaxReached) setMusicVariant("climax");
   }, [climaxReached, setMusicVariant]);
 
+  // El tema entra con el desenlace, no con el último golpe: así la música cambia en el mismo
+  // instante en que el tablero empieza a retirarse.
   useEffect(() => {
-    if (game.winner === "player") playCollection("winTheme");
+    if (victoryReady) playCollection("winTheme");
     else if (defeatOutcomeReady) playCollection("lossTheme");
-  }, [defeatOutcomeReady, game.winner, playCollection]);
+  }, [defeatOutcomeReady, playCollection, victoryReady]);
 
   useEffect(() => {
     if (!game.openingHandAccepted || encounterEntering) return;
@@ -372,7 +382,7 @@ export function Board({
         climax={climaxReached ? 1 : 0}
         dial={destinyDial}
         dialRevision={destinyDialRevision}
-        settleDialImmediately={forcedDefeatDrain}
+        settleDialImmediately={forcedOutcomeDrain}
         onDialSettled={setSettledDestinyDialRevision}
       />
       {/* El fondo permanece vivo bajo la placa capturada y aparece entre los trozos. */}
@@ -417,7 +427,7 @@ export function Board({
       <FinalBanquetAnimator />
       <RootsTouchedSkyAnimator />
       <EnergyFlowAnimator />
-      {presentationInputBlocked && (!tributeOfTheFourSorrowsSelectionActive || defeatPresentationPending) && (
+      {presentationInputBlocked && (!tributeOfTheFourSorrowsSelectionActive || outcomePresentationPending) && (
         <div data-audio-click="off" className="fixed inset-0 z-[189]" />
       )}
       {(activeEffectCardId || closingEffectCardId) && (
@@ -451,7 +461,7 @@ export function Board({
           onContemplateFuture={onContemplateFuture}
         />
       )}
-      {sessionKind === "normal" && game.winner === "player" && onRewriteFuture && onContemplateFuture && (
+      {sessionKind === "normal" && victoryReady && onRewriteFuture && onContemplateFuture && (
         <VictoryModal game={game} onRewriteFuture={onRewriteFuture} onContemplateFuture={onContemplateFuture} />
       )}
 

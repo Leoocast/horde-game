@@ -1105,21 +1105,24 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(board, /captureDesktopViewport\(\)/u);
   // The native capture happens after every finite store/local/DOM presentation settles and
   // before the overlay mounts. Electron copies painted pixels, so it never reloads card URLs.
-  assert.match(board, /function defeatStorePresentationActive\(state: GameStore\)/u);
+  // La barrera es común a los dos desenlaces: la derrota la drena para capturar el frame exacto
+  // que va a romperse y la victoria para no retirar el tablero encima de un beat en curso.
+  assert.match(board, /function outcomePresentationActive\(state: GameStore\)/u);
   assert.match(board, /guidedPresentationActivity\.snapshot\(\)\.activeCount === 0/u);
   assert.match(board, /await waitForFiniteDocumentAnimations\(\)/u);
   assert.match(board, /stopGamePresentation\(\);\s*await waitForFiniteDocumentAnimations\(\)/u);
   assert.match(board, /image\.decoding = "async"/u);
   assert.match(board, /await image\.decode\(\)/u);
   assert.match(board, /const destinyDialSettled = settledDestinyDialRevision === destinyDialRevision/u);
-  assert.match(board, /const defeatOutcomeReady = game\.winner === "host"[\s\S]*?destinyDialSettled[\s\S]*?!storePresentationActive[\s\S]*?localPresentation\.activeCount === 0/u);
-  assert.match(board, /const DEFEAT_DRAIN_WATCHDOG_MS = 15000/u);
-  assert.match(board, /if \(defeatOutcomeReady\) return;/u);
-  assert.match(board, /stopGamePresentation\(\);[\s\S]*?setForcedDefeatDrainSessionId\(watchedSessionId\)/u);
-  assert.match(board, /settleDialImmediately=\{forcedDefeatDrain\}/u);
+  assert.match(board, /const outcomeOutroReady = Boolean\(game\.winner\)[\s\S]*?destinyDialSettled[\s\S]*?!storePresentationActive[\s\S]*?localPresentation\.activeCount === 0/u);
+  assert.match(board, /const defeatOutcomeReady = outcomeOutroReady && game\.winner === "host"/u);
+  assert.match(board, /const OUTCOME_DRAIN_WATCHDOG_MS = 15000/u);
+  assert.match(board, /if \(outcomeOutroReady\) return;/u);
+  assert.match(board, /stopGamePresentation\(\);[\s\S]*?setForcedOutcomeDrainSessionId\(watchedSessionId\)/u);
+  assert.match(board, /settleDialImmediately=\{forcedOutcomeDrain\}/u);
   assert.match(board, /const defeatReady = defeatOutcomeReady && defeatSnapshot !== undefined/u);
-  assert.match(board, /const defeatPresentationPending = game\.winner === "host" && !defeatReady/u);
-  assert.match(board, /presentationInputBlocked && \(!tributeOfTheFourSorrowsSelectionActive \|\| defeatPresentationPending\)/u);
+  assert.match(board, /const outcomePresentationPending = Boolean\(game\.winner\) && !defeatReady && !victoryReady/u);
+  assert.match(board, /presentationInputBlocked && \(!tributeOfTheFourSorrowsSelectionActive \|\| outcomePresentationPending\)/u);
   assert.match(board, /snapshotImage=\{defeatSnapshot \?\? undefined\}/u);
   assert.match(board, /settleDefeatCapture\(capturePaintedDefeatFrame\(\)\)/u);
   assert.match(backdrop, /const DIAL_SETTLE_EPSILON = 0\.05/u);

@@ -16404,68 +16404,9 @@
   transform: translate(-50%, -50%);
 }
 
-.game-screen .game-result-panel {
-  position: relative;
-  width: min(470px, calc(100vw - 32px));
-  overflow: visible;
-  border: 1px solid color-mix(in srgb, var(--result-accent) 48%, transparent) !important;
-  border-top-color: color-mix(in srgb, var(--result-accent-bright) 62%, transparent) !important;
-  border-radius: 0;
-  background:
-    radial-gradient(circle at 50% 0%, var(--result-accent-soft), transparent 42%),
-    linear-gradient(145deg, rgb(23 31 28 / 0.98), rgb(6 13 12 / 0.99)) !important;
-  box-shadow:
-    inset 0 1px 0 rgb(238 229 190 / 0.08),
-    inset 0 -18px 38px rgb(0 0 0 / 0.18),
-    0 32px 80px rgb(0 0 0 / 0.58) !important;
-  animation: game-result-panel-in 800ms 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.game-result-panel::after {
-  position: absolute;
-  right: 18px;
-  bottom: -5px;
-  left: 18px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--result-accent) 65%, transparent), transparent);
-  content: "";
-}
-
-.game-result-panel-mark {
-  position: absolute;
-  top: -7px;
-  left: 50%;
-  width: 14px;
-  height: 14px;
-  border: 1px solid color-mix(in srgb, var(--result-accent) 68%, transparent);
-  background: #111b17;
-  box-shadow: 0 0 14px var(--result-accent-soft);
-  transform: translateX(-50%) rotate(45deg);
-}
-
-.game-result-message {
-  margin: 8px 0 0;
-  color: #d9d2b9;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 15px;
-  letter-spacing: 0.08em;
-  line-height: 1.45;
-  text-transform: uppercase;
-}
-
-.game-result-seed-label {
-  color: color-mix(in srgb, var(--result-accent-bright) 70%, #88938b);
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-
-.game-result-seed .old-input {
-  border-color: color-mix(in srgb, var(--result-accent) 38%, transparent);
-  background: rgb(3 10 9 / 0.76);
-}
-
+/* El panel genérico de resultado ya no existe: los dos desenlaces imprimen su propio bloque
+   —constelación y vidrio— y de esta familia sólo sobreviven el estandarte, que reutiliza la
+   Oleada, y los botones, que comparten los dos. */
 .game-result-action {
   border: 1px solid color-mix(in srgb, var(--result-accent) 44%, transparent);
   background: linear-gradient(180deg, rgb(34 43 40 / 0.96), rgb(9 17 16 / 0.99));
@@ -16529,25 +16470,8 @@
   42%, 100% { opacity: 1; filter: blur(0); transform: translateY(0); }
 }
 
-@keyframes game-result-panel-in {
-  from { opacity: 0; filter: blur(5px); transform: translateY(22px) scale(0.98); }
-  to { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
-}
-
-.game-result-victory {
-  animation-duration: 420ms;
-}
-
-.game-result-victory .game-result-atmosphere { animation-duration: 900ms; }
-.game-result-victory .game-result-banner { animation-duration: 780ms; }
-.game-result-victory .game-result-banner::before { animation-duration: 720ms; }
-.game-result-victory .game-result-line { animation-duration: 650ms; animation-delay: 35ms; }
-.game-result-victory .game-result-crest { animation-duration: 690ms; }
-.game-result-victory .game-result-banner h1 { animation-duration: 760ms; }
-.game-screen .game-result-victory .game-result-panel {
-  animation-duration: 620ms;
-  animation-delay: 1100ms;
-}
+/* La Victoria ya no usa el estandarte ni el panel genéricos: su desenlace vive con la
+   constelación, al final de esta hoja, junto al de la derrota. */
 
 /* One-shot warning shown before the first Host turn that resolves in Surge. */
 .surge-transition {
@@ -16666,8 +16590,6 @@
     letter-spacing: 0.07em;
   }
   .game-result-banner::before { width: 72vw; height: 92px; }
-  .game-result-panel { padding: 24px 18px 20px; }
-  .game-result-actions { grid-template-columns: 1fr; }
 }
 
 /* Deck collection themes — the same accent-driven language used by result dialogs. */
@@ -21509,34 +21431,6 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
   text-shadow: 0 0 14px rgb(75 140 137 / 0.22);
 }
 
-.game-result-future {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 12px;
-  border: 1px solid color-mix(in srgb, var(--result-accent) 38%, transparent);
-  padding: 11px 12px;
-  background: rgb(4 12 12 / 0.54);
-  text-align: left;
-}
-
-.game-result-future-glyph {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--result-accent) 45%, transparent);
-  border-radius: 50%;
-  color: var(--result-accent-bright);
-}
-
-.game-result-future > span:nth-child(2) { display: grid; gap: 3px; }
-.game-result-future small { color: var(--result-accent-bright); font-size: 10px; font-weight: 900; letter-spacing: 0.16em; text-transform: uppercase; }
-.game-result-future strong { color: #88978f; font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; }
-.game-result-future button { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid rgb(158 151 110 / 0.26); background: rgb(8 15 15 / 0.7); color: #9da28c; }
-.game-result-future button:hover,
-.game-result-future button:focus-visible { border-color: color-mix(in srgb, var(--result-accent) 70%, transparent); color: var(--result-accent-bright); outline: none; }
-
 /* Full-screen collapse/reveal. The overlay stays at App level so it survives a Board reset. */
 body.destiny-rewrite-active { overflow: hidden; }
 /* Sólo transform y opacity: la escena se promociona a una capa, se rasteriza una vez y el resto lo
@@ -21669,7 +21563,6 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
   .destiny-command-button { min-width: 42px; width: 42px; padding: 0 5px; justify-content: center; }
   .destiny-command-copy { display: none; }
   .destiny-dialog { padding: 34px 22px 26px; }
-  .game-result-actions { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -22045,4 +21938,388 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
   .defeat-shatter-vignette { opacity: 0.42; }
   .defeat-shatter-canvas { display: none; }
   .defeat-shatter-fractures path { opacity: 0.22; stroke-dashoffset: 0; }
+}
+
+
+/* Victoria: no hay captura, ni placa, ni nada que romper. El tablero vivo se retira solo y las
+   motas convergen sobre el disco de grados que ya estaba en pantalla. La figura que encienden es
+   la misma rosa cardinal del signo del Futuro, así que el instrumento y el cielo se quedan
+   animados debajo: lo que se preserva se ve preservado.
+   La maqueta de decisión es `dev/mockups/vfx/destiny-constellation.html`. */
+.game-result-overlay.game-result-victory {
+  --result-accent: #c7aa69;
+  --result-accent-bright: #e6d59e;
+  --result-accent-soft: rgb(116 152 146 / 0.26);
+  display: block;
+  padding: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  animation: none;
+}
+
+/* El tablero se va mientras las motas todavía viajan. Se conservan el cielo, la capa de ambiente
+   y el retículo completo: a diferencia de la derrota, aquí el instrumento es el sitio exacto
+   donde va a encenderse la figura y no puede irse con el HUD.
+   La regla de `body` alcanza los portales —la Reserva, los tooltips y el registro cuelgan de ahí,
+   fuera de `.game-screen`— sin enumerar sus clases una por una. Los avisos quedan fuera: copiar
+   la identidad del Futuro tiene que poder confirmarse.
+   Las exclusiones van en `:where()` para que no sumen especificidad: así las salidas dirigidas de
+   abajo empatan con este fundido genérico y ganan por orden en vez de por peso. */
+body.is-victory-clearing > *:not(:where(#root, .toast-stack)),
+body.is-victory-clearing .game-screen > *:not(:where(.temporal-backdrop, .game-screen-ambience, .game-result-overlay)) {
+  animation: victory-board-fade 620ms ease-in both;
+  pointer-events: none;
+}
+
+/* La salida es el espejo de la entrada del tablero: lo de arriba se va hacia arriba, lo de abajo
+   hacia abajo, y el Campo se disuelve creciendo un punto, como entró. */
+body.is-victory-clearing .game-command-bar,
+body.is-victory-clearing .game-hud-host {
+  animation: victory-board-out-top 560ms ease-in both;
+}
+
+body.is-victory-clearing .player-hand-shell,
+body.is-victory-clearing .hand-atmosphere-shell,
+body.is-victory-clearing .player-life-dock,
+body.is-victory-clearing .game-hud-energy {
+  animation: victory-board-out-bottom 600ms 60ms ease-in both;
+}
+
+body.is-victory-clearing .game-battlefield-stage {
+  animation: victory-board-out-stage 760ms 40ms cubic-bezier(0.4, 0, 0.6, 1) both;
+}
+
+.victory-constellation {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.victory-constellation-canvas,
+.victory-constellation-still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.victory-constellation-canvas {
+  z-index: 1;
+  opacity: 0;
+  transform: translateZ(0);
+}
+
+/* El lienzo sólo se revela cuando ya copió un fotograma válido del shader. */
+.game-result-victory .victory-constellation-canvas.is-ready { opacity: 1; }
+
+.victory-constellation.is-fallback .victory-constellation-canvas { display: none; }
+
+/* Con movimiento reducido o sin WebGL queda la figura quieta, sobre el mismo aro. */
+.victory-constellation-still {
+  z-index: 2;
+  overflow: visible;
+}
+
+.victory-constellation-still polygon {
+  fill: rgb(199 170 105 / 0.05);
+  stroke: rgb(214 192 122 / 0.5);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.victory-constellation-still circle { fill: rgb(255 244 214 / 0.85); }
+
+/* El desenlace se centra con una capa a pantalla completa y su bloque no lleva `transform`
+   propio, por la misma razón que en la derrota: la regla genérica `.game-screen [role="dialog"]`
+   y la succión del vórtice animan `transform` y lo descolgarían. */
+.victory-outcome {
+  position: absolute;
+  z-index: 8;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.victory-outcome-inner {
+  position: relative;
+  display: grid;
+  width: min(820px, 94%);
+  justify-items: center;
+  gap: 8px;
+  isolation: isolate;
+  opacity: 0;
+  text-align: center;
+  animation: victory-outcome-in 420ms ease-out both;
+}
+
+/* El corazón de la constelación cae justo detrás del título: sin este asiento el texto se lee
+   sobre el punto más brillante de la escena. */
+.victory-outcome-inner::before {
+  position: absolute;
+  z-index: -1;
+  inset: -30% -18%;
+  background: radial-gradient(ellipse at center, rgb(1 6 7 / 0.9) 0 30%, rgb(2 9 10 / 0.66) 48%, transparent 73%);
+  content: "";
+  opacity: 0;
+  animation: victory-backdrop-in 900ms ease-out both;
+}
+
+.victory-outcome button { pointer-events: auto; }
+
+.victory-kicker {
+  position: relative;
+  margin-bottom: 18px;
+  color: #f5dda4;
+  font: 800 16px/1 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px rgb(224 190 98 / 0.46);
+  opacity: 0;
+  animation: victory-copy-rise 620ms 120ms ease-out both;
+}
+
+.victory-kicker::before,
+.victory-kicker::after {
+  position: absolute;
+  top: 50%;
+  width: 56px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(224 197 122 / 0.72));
+  content: "";
+}
+
+.victory-kicker::before { right: calc(100% + 16px); }
+.victory-kicker::after { left: calc(100% + 12px); transform: rotate(180deg); }
+
+.victory-title {
+  position: relative;
+  display: grid;
+  margin: 0;
+  color: #f6ecd5;
+  font: 700 clamp(48px, 8.4vw, 96px)/0.9 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+  text-shadow: 0 3px 7px #000, 0 0 16px rgb(239 215 151 / 0.28);
+}
+
+.victory-title .line {
+  display: block;
+  opacity: 0;
+  clip-path: inset(0 50%);
+  transform: translateY(12px);
+}
+
+.victory-title .line:last-child { margin-top: 0.08em; }
+.victory-title .line:first-child { animation: victory-title-forge 1050ms 170ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.victory-title .line:last-child { animation: victory-title-forge 1120ms 300ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* El corte de luz se abre desde el centro, como la forja de cada línea. */
+.victory-title::after {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 12px;
+  height: 2px;
+  background: #fff8de;
+  box-shadow: 0 0 12px 4px rgb(255 239 184 / 0.9), 0 0 44px 16px rgb(197 165 85 / 0.5);
+  content: "";
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  animation: victory-title-flare 880ms 230ms ease-out both;
+}
+
+.victory-subtitle {
+  margin-top: 7px;
+  color: rgb(174 190 181 / 0.8);
+  font: 600 clamp(12px, 1.45vw, 16px)/1.4 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  opacity: 0;
+  animation: victory-copy-rise 700ms 760ms ease-out both;
+}
+
+.victory-future-plate {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: min(390px, 88%);
+  margin-top: 11px;
+  padding: 10px 24px 9px;
+  border-top: 1px solid rgb(199 170 105 / 0.48);
+  border-bottom: 1px solid rgb(199 170 105 / 0.32);
+  background: linear-gradient(90deg, transparent, rgb(4 14 15 / 0.9) 17% 83%, transparent);
+  opacity: 0;
+  animation: victory-plate-rise 720ms 940ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Los dos rombos del canto: la placa es un sello, no una barra. */
+.victory-future-plate::before,
+.victory-future-plate::after {
+  position: absolute;
+  top: -3px;
+  width: 5px;
+  height: 5px;
+  border: 1px solid rgb(224 201 132 / 0.72);
+  content: "";
+  transform: rotate(45deg);
+}
+
+.victory-future-plate::before { left: 16%; }
+.victory-future-plate::after { right: 16%; }
+
+.victory-future-plate span {
+  color: #d8e9e3;
+  font: 800 14px/1.2 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 8px #000;
+}
+
+.victory-future-plate b {
+  color: #fff0c4;
+  font: 800 clamp(23px, 2.8vw, 33px)/1.2 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.13em;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 12px rgb(220 185 94 / 0.42);
+}
+
+/* Copiar identidad vive en el canto de la placa, igual que en la derrota. */
+.victory-future-plate button {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid rgb(158 151 110 / 0.26);
+  background: rgb(4 14 15 / 0.7);
+  color: #9da28c;
+  transform: translateY(-50%);
+}
+
+.victory-future-plate button:hover,
+.victory-future-plate button:focus-visible {
+  border-color: rgb(214 192 122 / 0.7);
+  color: var(--result-accent-bright);
+  outline: none;
+}
+
+.victory-outcome-actions {
+  display: grid;
+  width: min(620px, calc(100vw - 16px));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(6px, 1.5vw, 12px);
+  margin-top: 22px;
+  opacity: 0;
+  animation: victory-copy-rise 620ms 1120ms ease-out both;
+}
+
+.game-result-victory .game-result-action {
+  min-width: 0;
+  padding-inline: clamp(4px, 1.2vw, 14px);
+  font-size: clamp(8px, 2.1vw, 13px);
+  letter-spacing: clamp(0.05em, 0.16vw, 0.12em);
+  white-space: nowrap;
+}
+
+.game-result-victory .game-result-action svg { flex: 0 0 auto; }
+
+/* Los cuatro terminan en `visibility: hidden`, y no es cosmético: al Reescribir, la succión del
+   vórtice anima `transform` y `opacity` sobre cada pieza de la escena con la API de animaciones,
+   que gana a estas reglas y devolvería el tablero ya retirado a la vista. `visibility` no está
+   entre las propiedades que anima, así que lo retirado sigue retirado. Se interpola en escalón:
+   la pieza sólo desaparece al terminar su propio recorrido. */
+@keyframes victory-board-fade {
+  from { opacity: 1; }
+  to { opacity: 0; visibility: hidden; }
+}
+
+@keyframes victory-board-out-top {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; visibility: hidden; transform: translateY(-18px); }
+}
+
+@keyframes victory-board-out-bottom {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; visibility: hidden; transform: translateY(24px); }
+}
+
+@keyframes victory-board-out-stage {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; visibility: hidden; transform: scale(1.035); }
+}
+
+@keyframes victory-outcome-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes victory-backdrop-in {
+  from { opacity: 0; transform: scale(0.72); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes victory-title-forge {
+  0% { opacity: 0; clip-path: inset(0 50%); transform: translateY(12px); }
+  38% { opacity: 1; }
+  100% { opacity: 1; clip-path: inset(0); transform: translateY(0); }
+}
+
+@keyframes victory-title-flare {
+  0% { opacity: 0; width: 12px; }
+  32% { opacity: 1; }
+  100% { opacity: 0; width: 92%; }
+}
+
+@keyframes victory-copy-rise {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes victory-plate-rise {
+  from { opacity: 0; transform: translateY(10px) scaleX(0.72); }
+  to { opacity: 1; transform: translateY(0) scaleX(1); }
+}
+
+@media (max-height: 720px) {
+  .victory-outcome-inner { gap: 4px; }
+  .victory-kicker { margin-bottom: 12px; }
+  .victory-outcome-actions { margin-top: 16px; }
+}
+
+@media (max-width: 520px) {
+  .victory-outcome-inner { width: calc(100% - 32px); }
+  .victory-kicker { letter-spacing: 0.24em; }
+  .victory-kicker::before, .victory-kicker::after { width: 32px; }
+  .victory-future-plate { min-width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .victory-outcome-inner,
+  .victory-outcome-inner::before,
+  .victory-kicker,
+  .victory-title .line,
+  .victory-title::after,
+  .victory-subtitle,
+  .victory-future-plate,
+  .victory-outcome-actions { animation: none !important; }
+  .victory-outcome-inner,
+  .victory-outcome-inner::before,
+  .victory-kicker,
+  .victory-subtitle,
+  .victory-future-plate,
+  .victory-outcome-actions { opacity: 1; }
+  .victory-outcome-inner { transform: none; }
+  .victory-title .line { opacity: 1; clip-path: inset(0); transform: none; }
+  .victory-title::after { display: none; }
+  /* El tablero se retira igual, pero sin recorrido: sólo deja de estar. */
+  body.is-victory-clearing > *:not(:where(#root, .toast-stack)),
+  body.is-victory-clearing .game-screen > *:not(:where(.temporal-backdrop, .game-screen-ambience, .game-result-overlay)) { animation: none !important; visibility: hidden; }
 }

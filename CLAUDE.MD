@@ -405,6 +405,31 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   placa de **Futuro**. Copiar identidad vive en el canto de la placa. **Contemplar otro futuro** no
   lleva icono y comparte una única fila, sin partir texto, con **Reescribir este futuro**; no vuelve
   a envolverse en un panel de resultado genérico.
+- La victoria normal no rompe nada: su referencia canónica es `dev/mockups/vfx/destiny-constellation.html`
+  y la resuelven `VictoryConstellationAnimator.tsx`, `destinyConstellationGeometry.ts` y
+  `destinyConstellationShader.ts`. Motas de luz entran desde puntos deterministas fuera de los
+  cuatro bordes, encienden el corazón y una a una las ocho puntas, y el contorno se traza detrás;
+  cada hilo espera a sus **dos** extremos. Al cerrarse, el corazón suelta una única onda circular y
+  la figura se queda encendida: no se desvanece.
+- La constelación **no tiene geometría propia**. Es la misma rosa cardinal de
+  `chronicleSigilGeometry.ts` construida sobre el radio del aro del disco de grados, así que se
+  enciende exactamente encima del instrumento que ya está en el tablero. Darle un tamaño propio la
+  convierte en otra estrella pegada sobre la pantalla. La semilla cambia el reparto y el fraseo de
+  las motas, nunca el giro. Lo único que añade la victoria es el reloj de construcción.
+- No hay captura, ni placa, ni tinte: `body.is-victory-clearing` retira el HUD y las cartas con el
+  espejo de su propia entrada —arriba hacia arriba, abajo hacia abajo, el Campo creciendo un
+  punto— y conserva `TemporalBackdrop` completo, incluido el retículo, más `.game-screen-ambience`.
+  Cada salida termina en `visibility: hidden`: la succión del vórtice al Reescribir anima
+  `transform` y `opacity` con la API de animaciones y devolvería el tablero ya retirado a la vista.
+- La barrera de presentación es común a los dos desenlaces (`outcomePresentationActive`,
+  `outcomeOutroReady` y el watchdog de 15 s en `Board`): la derrota la drena para capturar su frame
+  exacto y la victoria para no empezar a retirar el tablero encima de un beat en curso. El tema de
+  victoria entra con el desenlace, no con el último golpe.
+- El desenlace reutiliza la estructura de la derrota con la paleta dorada: etiqueta **Victoria** con
+  reglas laterales, título en dos líneas que se abren desde el centro con su corte de luz, subtítulo
+  y placa de **Futuro** con los dos rombos del canto. Copiar identidad vive en el canto de la placa
+  y las dos salidas son las mismas. El estandarte y el panel genéricos de resultado quedaron
+  retirados: sólo la Oleada los conserva.
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado
   aunque los impactos visuales se escalonen.
 

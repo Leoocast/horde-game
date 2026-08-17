@@ -10,7 +10,7 @@ const DEVWIN_SEED = "devwin";
 const STANDARD_STARTING_LIFE = 50;
 const CHAOS_STARTING_LIFE = 35;
 const DEVLOST_STARTING_LIFE = 15;
-const DEVWIN_HOST_ARCHIVE_SIZE = 2;
+const DEVWIN_HOST_ARCHIVE = ["graveless_soldier", "graveless_soldier"];
 export const DEFAULT_PLAYER_DECK_LAND_COUNT = 9;
 const DEVELOPER_OPENING_HAND = ["the_judgment_of_elarion", "the_judgment_of_elarion"];
 const DEVELOPER_RANDOM_OPENING_CARDS = 5;
@@ -173,9 +173,11 @@ function applyDeveloperHostOpeningArchive(seed: string, archive: CardInstance[])
 }
 
 function applyDevwinHostArchive(seed: string, archive: CardInstance[]): CardInstance[] {
-  return seed.trim().toLowerCase() === DEVWIN_SEED
-    ? archive.slice(0, DEVWIN_HOST_ARCHIVE_SIZE)
-    : archive;
+  if (seed.trim().toLowerCase() !== DEVWIN_SEED) return archive;
+  const { forced } = forceCardsToFront(archive, DEVWIN_HOST_ARCHIVE);
+  return forced.length === DEVWIN_HOST_ARCHIVE.length
+    ? forced
+    : archive.slice(0, DEVWIN_HOST_ARCHIVE.length);
 }
 
 function placeOnBattlefield(game: GameState, entries: readonly { definitionId: string; amount: number }[]): void {

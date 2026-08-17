@@ -1,8 +1,10 @@
-import { Copy, Crown, Orbit, RefreshCcw, Sparkles } from "lucide-react";
+import { useCallback, useState } from "react";
+import { Copy, RefreshCcw } from "lucide-react";
 import type { GameState } from "../engine/GameTypes";
 import { useToastStore } from "../store/useToastStore";
 import { useTranslation } from "../i18n/useTranslation";
 import { futureCodeFromSeed } from "../utils/futureIdentity";
+import { VictoryConstellationAnimator } from "./VictoryConstellationAnimator";
 
 type Props = {
   game: GameState;
@@ -14,6 +16,11 @@ export function VictoryModal({ game, onRewriteFuture, onContemplateFuture }: Pro
   const t = useTranslation();
   const pushToast = useToastStore((state) => state.pushToast);
   const futureCode = futureCodeFromSeed(game.seed);
+  const [sequenceStarted, setSequenceStarted] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const startSequence = useCallback(() => setSequenceStarted(true), []);
+  // El desenlace se nombra cuando la figura ya cerró, no en un reloj propio.
+  const revealOutcome = useCallback(() => setRevealed(true), []);
 
   async function copySeed() {
     try {
@@ -25,44 +32,61 @@ export function VictoryModal({ game, onRewriteFuture, onContemplateFuture }: Pro
   }
 
   return (
-    <div className="game-result-overlay game-result-victory fixed inset-0 z-[140] flex flex-col items-center justify-center">
-      <div className="game-result-atmosphere" />
-      <div className="game-result-banner" aria-hidden="true">
-        <span className="game-result-line" />
-        <span className="game-result-crest"><Crown size={32} strokeWidth={1.7} /></span>
-        <h1>{t("result.victory")}</h1>
-        <span className="game-result-line game-result-line-right" />
-      </div>
+    <div className={`game-result-overlay game-result-victory fixed inset-0 z-[140] ${sequenceStarted ? "is-sequence-running" : ""}`}>
+      <VictoryConstellationAnimator seed={game.seed} onSequenceStart={startSequence} onVerdict={revealOutcome} />
 
-      <section className="game-result-panel old-panel w-full max-w-md p-6 text-center" role="dialog" aria-modal="true" aria-labelledby="victory-result-title">
-        <span className="game-result-panel-mark" />
-        <p id="victory-result-title" className="game-result-message">
-          {t("result.hostDefeated")}
-        </p>
-
-        <div className="game-result-future mt-6">
-          <span className="game-result-future-glyph" aria-hidden="true"><Orbit size={25} strokeWidth={1.35} /></span>
-          <span><small>{t("destiny.future", { code: futureCode })}</small><strong>{t("destiny.destinyPreserved")}</strong></span>
-          <button type="button" onClick={copySeed} title={t("destiny.copyIdentity")} aria-label={t("destiny.copyIdentity")}><Copy size={16} /></button>
-        </div>
-
-        <div className="game-result-actions mt-5 grid grid-cols-2 gap-3">
-          <button
-            className="game-result-action game-result-action-secondary flex h-12 w-full items-center justify-center gap-2"
-            onClick={onContemplateFuture}
+      {/* El bloque se centra con una capa a pantalla completa, no con un `translate` propio: la
+          succión del vórtice anima `transform` sobre cada pieza de la escena y borraría ese
+          desplazamiento, dejando el desenlace descolgado hacia abajo y a la derecha. */}
+      {revealed && (
+        <div className="victory-outcome">
+          <div
+            className="victory-outcome-inner"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="victory-result-title"
+            aria-describedby="victory-result-description"
           >
-            <Sparkles size={17} />
-            {t("destiny.contemplateAnother")}
-          </button>
-          <button
-            className="game-result-action game-result-action-primary flex h-12 w-full items-center justify-center gap-2"
-            onClick={onRewriteFuture}
-          >
-            <RefreshCcw size={18} />
-            {t("destiny.rewriteThis")}
-          </button>
+            <span className="victory-kicker">{t("result.victory")}</span>
+            <strong className="victory-title" id="victory-result-title">
+              <span className="line">{t("destiny.futurePreservedLineOne")}</span>
+              <span className="line">{t("destiny.futurePreservedLineTwo")}</span>
+            </strong>
+            <span className="victory-subtitle" id="victory-result-description">
+              {t("result.chapterEnduresInChronicle")}
+            </span>
+
+            <span className="victory-future-plate">
+              <span>{t("destiny.futureWord")}</span>
+              <b>{futureCode}</b>
+              <button
+                type="button"
+                onClick={copySeed}
+                title={t("destiny.copyIdentity")}
+                aria-label={t("destiny.copyIdentity")}
+              >
+                <Copy size={14} />
+              </button>
+            </span>
+
+            <div className="victory-outcome-actions">
+              <button
+                className="game-result-action game-result-action-secondary flex h-12 w-full min-w-0 items-center justify-center"
+                onClick={onContemplateFuture}
+              >
+                <span>{t("destiny.contemplateAnother")}</span>
+              </button>
+              <button
+                className="game-result-action game-result-action-primary flex h-12 w-full min-w-0 items-center justify-center gap-2"
+                onClick={onRewriteFuture}
+              >
+                <RefreshCcw size={18} aria-hidden="true" />
+                <span>{t("destiny.rewriteThis")}</span>
+              </button>
+            </div>
+          </div>
         </div>
-      </section>
+      )}
     </div>
   );
 }
