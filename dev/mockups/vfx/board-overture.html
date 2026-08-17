@@ -385,11 +385,11 @@
       .stage {
         --d-vs: 2450ms;
         --delay-board: 1050ms;
-        --delay-instrument: 3446ms;
+        --delay-instrument: 2686ms;
         --d-instrument: 600ms;
-        --delay-hud: 3446ms;
+        --delay-hud: 2686ms;
         --d-hud: 620ms;
-        --delay-mulligan: 4096ms;
+        --delay-mulligan: 3336ms;
         --d-mulligan: 480ms;
       }
 
@@ -444,7 +444,7 @@
 
       /* Curtinas: mismas keyframes que src/styles.css. Entran en horizontal, se
          mantienen cerradas del 17 % al 68 % y se separan en diagonal. Ese 68 %
-         —1666 ms— es el instante en que empieza a dibujarse el signo. */
+         —1666 ms— es el instante en que aparece el sello completo. */
       @keyframes vs-curtain-player {
         0% { transform: translateX(-102%); }
         17%, 68% { transform: translateX(0); }
@@ -517,8 +517,8 @@
         <div class="eyebrow">Obertura · del VS al tablero</div>
         <h1>Obertura del Tablero</h1>
         <p>
-          El VS vigente no cambia. Cuando <strong>empieza a abrirse</strong>, el signo del Futuro se dibuja sobre el
-          Campo desnudo, se cierra sobre sí mismo, entrega su aro al <strong>instrumento de grados</strong> y
+          El VS vigente no cambia. Cuando <strong>empieza a abrirse</strong>, el signo del Futuro aparece ya sellado sobre el
+          Campo desnudo, pulsa una vez, entrega su aro al <strong>instrumento de grados</strong> y
           desaparece mientras el HUD y la mano inicial toman su lugar.
         </p>
       </header>
@@ -668,7 +668,7 @@
         <ul>
           <li>El VS <b>no cambia</b>. Está reproducido con los tiempos reales de <code>EncounterTransition</code>: cortinas de 2450 ms con la misma curva y las mismas keyframes, combatientes entrando a 160 ms y saliendo a 1666 ms, la marca a 300 ms y el texto saliendo a 1764 ms. Las dos mitades son los mismos triángulos recortados con <code>clip-path</code>.</li>
           <li>El tablero se revela debajo a los <b>1050 ms</b>, que es <code>ENCOUNTER_IMPACT_MS</code>, igual que en el juego.</li>
-          <li>Lo nuevo empieza en el <b>68 % de las cortinas: 1666 ms</b>, el fotograma exacto en que dejan de estar cerradas y arranca el corte diagonal. Ahí se empieza a dibujar el signo, y se lo ve aparecer por el hueco que las cortinas van abriendo.</li>
+          <li>Lo nuevo empieza en el <b>68 % de las cortinas: 1666 ms</b>, el fotograma exacto en que dejan de estar cerradas y arranca el corte diagonal. Ahí aparece el signo ya completo por el hueco y da un único pulso.</li>
         </ul>
 
         <h3>El tablero llega desnudo</h3>
@@ -681,24 +681,24 @@
         <ul>
           <li>Las ocho marcas del instrumento caen en 000°·N, 045°, 090°·E, 135°, 180°·S, 225°, 270°·O y 315°, que son exactamente los ocho ángulos de las puntas. Su aro mide <code>r=196</code> sobre un viewBox de 562, o sea <b>0.349·H</b>, contra <b>0.347·H</b> de la punta larga. Es el mismo círculo.</li>
           <li>Por eso <code>unit</code> se deriva del radio del aro en vez de un número redondo: el signo nace ya del tamaño del aparato y el relevo es una <b>entrega de geometría</b>. Al sentarse, las puntas avanzan un 2.8 % hasta el centro de sus marcas.</li>
-          <li>El círculo es una sola luz que recorre el aro <b>desde el Norte en sentido horario</b>, igual que se cerró el contorno al construirse. Cuando termina la vuelta, el SVG del aparato ya está encendido debajo con los mismos radios y el signo se apaga.</li>
+          <li>El círculo es una sola luz que recorre el aro <b>desde el Norte en sentido horario</b>. Cuando termina la vuelta, el SVG del aparato ya está encendido debajo con los mismos radios y el signo se apaga.</li>
         </ul>
 
         <h3>Ritmo propuesto</h3>
         <ul>
           <li><b>VS, 0.00–2.45 s:</b> el encuentro vigente, sin tocar.</li>
           <li><b>Revelar, 1.05–1.90 s:</b> el tablero desnudo aparece debajo de las cortinas.</li>
-          <li><b>Trazar, 1.67–2.82 s:</b> el corazón queda fijo primero; después las motas caen desde los cuatro bordes con el color de su bando y el contorno se cierra en horario desde el Norte.</li>
-          <li><b>Fijar, 2.63–3.37 s:</b> el signo carga una vez y se sienta en sus marcas.</li>
-          <li><b>El círculo, 3.22–3.92 s:</b> la luz recorre el aro.</li>
-          <li><b>Entregar, 3.45–4.42 s:</b> el instrumento y el HUD entran mientras el signo se apaga.</li>
-          <li><b>HUD, 3.45–4.45 s:</b> entran turno, Archivo de la Hueste, herramientas, Energía, fases y vitals, escalonados.</li>
-          <li><b>Mano inicial, 4.10–4.72 s:</b> las cartas suben escalonadas 55 ms durante el último fundido del signo, con Conservar y Reescribir.</li>
+          <li><b>Pulso, 1.67–2.29 s:</b> el sello ya está completo y respira una sola vez.</li>
+          <li><b>Fijar, 2.05–2.57 s:</b> el signo se sienta en sus marcas.</li>
+          <li><b>El círculo, 2.49–3.09 s:</b> la luz recorre el aro.</li>
+          <li><b>Entregar, 2.69–3.59 s:</b> el instrumento y el HUD entran mientras el signo se apaga.</li>
+          <li><b>HUD, 2.69–3.69 s:</b> entran turno, Archivo de la Hueste, herramientas, Energía, fases y vitals, escalonados.</li>
+          <li><b>Mano inicial, 3.34–3.96 s:</b> las cartas suben escalonadas 55 ms durante el último fundido del signo, con Conservar y Reescribir.</li>
         </ul>
 
         <h3>Que no duela a oscuras</h3>
         <ul>
-          <li>No hay cobertura de ningún tipo: ni destello, ni abertura, ni fundido a blanco. El signo se dibuja, se cierra y se apaga.</li>
+          <li>No hay cobertura de ningún tipo: ni destello, ni abertura, ni fundido a blanco. El sello pulsa, entrega el aro y se apaga.</li>
           <li>Ni un blanco puro en la paleta y una <b>rodilla filmica</b> antes de componer: por encima de 1.0 la suma aditiva se convierte en pantalla blanca, y a oscuras eso es lo que hace daño.</li>
         </ul>
 
@@ -708,7 +708,7 @@
           <li>El cielo es <code>TEMPORAL_BACKDROP_FRAGMENT</code> tal cual, vivo bajo las cortinas y bajo el tablero. En runtime ya existe como <code>TemporalBackdrop</code>.</li>
           <li>El instrumento está calcado de <code>TemporalBackdrop.tsx</code> y <code>styles.css</code>. Si se retocan aquí, la maqueta deja de prometer el aparato de verdad. Llevarlo al juego significa poder montar el retículo <b>sin</b> su disco de grados durante la obertura.</li>
           <li>La firma de la semilla usa <code>futureVisualSignature</code>, la misma de <code>src/utils/futureIdentity.ts</code>: el mismo Futuro dibuja siempre el mismo signo.</li>
-          <li>El modo de movimiento reducido salta al tablero con el instrumento y el HUD ya puestos, sin trazado ni entrega.</li>
+          <li>El modo de movimiento reducido salta al tablero con el instrumento y el HUD ya puestos, sin pulso ni entrega.</li>
           <li>Falta audio: <code>buff</code> subiendo de tono con cada punta que se fija, un golpe seco por punta al sentarse, y el aro cerrando con un tono sostenido.</li>
         </ul>
       </section>
@@ -718,8 +718,8 @@
       /* Obertura del Tablero.
 
          El signo del Futuro es la misma rosa cardinal de destiny-constellation y de la
-         Victoria: puntas pares en N, E, S y O, y la construyen las dos identidades que
-         acaban de chocar en el VS. Al terminar entrega su aro al instrumento de grados,
+           Victoria: puntas pares en N, E, S y O, y mezcla las dos identidades que
+           acaban de chocar en el VS. Después del pulso entrega su aro al instrumento de grados,
          que no se le parece: ES la misma figura quieta.
 
          El reloj interno del signo arranca a los 1666 ms del reloj de la maqueta —el
@@ -868,13 +868,12 @@
           "#define EDGES " + EDGES,
           "uniform vec2 uRes; uniform float uPR; uniform float uTime; uniform float uT;",
           "uniform vec2 uCenter; uniform float uUnit; uniform float uSeed; uniform float uDialR;",
-          "uniform float uScale; uniform float uPresence; uniform float uMotes; uniform float uCharge;",
+          "uniform float uScale; uniform float uPresence; uniform float uCharge;",
           "uniform float uSeat; uniform float uSweep; uniform float uSweepPresence;",
-          // xy = desplazamiento respecto al centro, z = instante en que queda fijo, w = semilla propia
+          // xy = desplazamiento respecto al centro, z = reservado en cero, w = semilla propia
           "uniform vec4 uNode[NODES];",
           // xy/zw = extremos, también relativos al centro
           "uniform vec4 uEdge[EDGES];",
-          "uniform float uEdgeT[EDGES];",
 
           "float h11(float n){ return fract(sin(n*78.233)*43758.5453123); }",
           "float segSD(vec2 p, vec2 a, vec2 b){ vec2 pa=p-a, ba=b-a;",
@@ -895,94 +894,40 @@
           "  vec3 col = vec3(0.0); float al = 0.0;",
           "  float pres = uPresence;",
 
-          // 1. motas que entran desde los cuatro bordes y se fijan en las puntas.
-          //    Llegan con el color de su bando —los dos que acaban de chocar en el VS— y
-          //    sólo se vuelven oro al quedar fijas.
-          "  if (uMotes > 0.001) {",
-          "    for (int i = 0; i < NODES; i++) {",
-          "      vec4 nd = uNode[i];",
-          "      if (i != 16 && mod(float(i), 2.0) > 0.5) continue;",
-          "      vec2 target = uCenter + nd.xy*uScale;",
-          "      vec3 origin = nd.x < 0.0 ? VERD : EMBER;",
-          "      if (i == 16) origin = mix(VERD, EMBER, 0.5);",
-          "      float lock = nd.z;",
-          "      for (int j = 0; j < 3; j++) {",
-          "        float sd = nd.w + float(j)*13.7;",
-          "        float born = max(0.0, lock - 0.40 - h11(sd)*0.20);",
-          "        float k = (uT - born) / max(lock - born, 0.001);",
-          "        if (k <= 0.0 || k >= 1.08) continue;",
-          "        float e = clamp(k,0.0,1.0);",
-          "        float ease = e*e*(3.0-2.0*e);",
-          "        float sidePick = floor(h11(sd*2.1)*4.0);",
-          "        float lane = 0.025 + h11(sd*4.7)*0.95;",
-          "        float outside = uUnit*(0.65 + h11(sd*5.3)*0.65);",
-          "        vec2 from = vec2(-outside, lane*uRes.y);",
-          "        if (sidePick >= 1.0 && sidePick < 2.0) from = vec2(uRes.x + outside, lane*uRes.y);",
-          "        else if (sidePick >= 2.0 && sidePick < 3.0) from = vec2(lane*uRes.x, -outside);",
-          "        else if (sidePick >= 3.0) from = vec2(lane*uRes.x, uRes.y + outside);",
-          "        vec2 travel = target - from;",
-          "        vec2 bend = normalize(vec2(-travel.y, travel.x) + vec2(1e-5));",
-          "        vec2 ctrl = mix(from, target, 0.5) + bend*(h11(sd*3.3)-0.5)*uUnit*2.8;",
-          "        float iv = 1.0-ease;",
-          "        vec2 pos = iv*iv*from + 2.0*iv*ease*ctrl + ease*ease*target;",
-          "        vec2 delta = p - pos;",
-          "        float sz = uUnit*(0.038 + h11(sd*5.9)*0.032)*(1.0-0.35*ease);",
-          "        vec2 dir = normalize(target - from + vec2(1e-5));",
-          "        vec2 nm = vec2(-dir.y, dir.x);",
-          "        float along = dot(delta,dir);",
-          "        float ahead = max(along,0.0)/(sz*0.92);",
-          "        float behind = max(-along,0.0)/(sz*(2.8 + 5.2*(1.0-ease)));",
-          "        float across = abs(dot(delta,nm))/(sz*0.96);",
-          "        float field = sqrt((ahead+behind)*(ahead+behind) + across*across);",
-          "        float glow = exp(-field*2.65) + exp(-field*1.08)*0.12;",
-          "        float amt = glow * smoothstep(0.0,0.12,e) * (1.0-smoothstep(0.94,1.06,k));",
-          "        add(col, al, mix(origin, GOLD, ease*ease), amt*0.62*uMotes);",
-          "      }",
-          "    }",
-          "  }",
-
-          // 2. grabados interiores separados del corazón. Antes cada punta era un triángulo
+          // 1. grabados interiores separados del corazón. Antes cada punta era un triángulo
           //    con alfa: sus ocho áreas se sumaban en el centro y dibujaban otra estrella.
           "  for (int i = 0; i < NODES; i++) {",
           "    if (i == 16 || mod(float(i), 2.0) > 0.5) continue;",
           "    vec4 nd = uNode[i];",
-          "    if (uT < nd.z) continue;",
           "    vec2 axis = nd.xy * uScale;",
           "    vec2 innerA = uCenter + axis*0.24;",
           "    vec2 innerB = uCenter + axis*0.68;",
-          "    float draw = clamp((uT - nd.z)/0.18, 0.0, 1.0);",
-          "    float creaseD = segSD(p, innerA, mix(innerA, innerB, draw));",
+          "    float creaseD = segSD(p, innerA, innerB);",
           "    float crease = smoothstep(0.90, 0.18, creaseD);",
-          "    float reveal = smoothstep(nd.z, nd.z + 0.13, uT);",
           "    vec3 tone = mix(mix(VERD, EMBER, step(0.0, nd.x)), GOLD, 0.62);",
-          "    add(col, al, tone, crease*reveal*pres*(0.026 + uCharge*0.016));",
+          "    add(col, al, tone, crease*pres*(0.026 + uCharge*0.016));",
           "  }",
 
-          // 3. contorno tenue, sin halo; la luz pertenece a las puntas y al corazón
+          // 2. contorno completo y tenue; la luz pertenece a las puntas y al corazón
           "  for (int e = 0; e < EDGES; e++) {",
-          "    float t0 = uEdgeT[e];",
-          "    if (uT < t0) continue;",
           "    vec4 seg = uEdge[e];",
           "    vec2 a = uCenter + seg.xy*uScale;",
           "    vec2 b = uCenter + seg.zw*uScale;",
-          "    float draw = clamp((uT - t0)/0.14, 0.0, 1.0);",
-          "    float d = segSD(p, a, mix(a, b, draw));",
+          "    float d = segSD(p, a, b);",
           "    float hw = max(0.75, uUnit*0.0085);",
           "    float ink = smoothstep(hw, 0.22, d);",
-          "    float settle = 0.11 + 0.06*(1.0-exp(-(uT-t0)*12.0)) + uCharge*0.08;",
+          "    float settle = 0.15 + uCharge*0.08;",
           "    add(col, al, mix(GOLD, CORE, 0.28), ink*settle*pres);",
           "  }",
 
-          // 4. sólo las ocho puntas y el corazón conservan brillo
+          // 3. sólo las ocho puntas y el corazón conservan brillo
           "  for (int i = 0; i < NODES; i++) {",
           "    vec4 nd = uNode[i];",
-          "    if (uT < nd.z) continue;",
           "    bool centerNode = i == 16;",
           "    bool tipNode = !centerNode && mod(float(i), 2.0) < 0.5;",
-          "    float age = uT - nd.z;",
           "    vec2 at = uCenter + nd.xy*uScale;",
           "    float d = length(p - at);",
-          "    float pop = exp(-age*11.0);",
+          "    float pop = uCharge;",
           "    float breathe = 0.94 + 0.06*sin(uTime*1.7 + nd.w*6.0);",
           "    float charge = 1.0 + uCharge*0.25;",
           "    if (centerNode) {",
@@ -1009,7 +954,7 @@
           "    }",
           "  }",
 
-          // 5. el círculo: una luz recorre el aro desde el Norte en sentido horario y deja
+          // 4. el círculo: una luz recorre el aro desde el Norte en sentido horario y deja
           //    encendido el radio exacto del instrumento, donde el SVG ya está esperando.
           "  if (uSweep > 0.001) {",
           "    float ang = atan(q.y, q.x) + 1.57079633;",
@@ -1032,13 +977,12 @@
 
         var star = buildProgram(gl, FRAG,
           ["uRes","uPR","uTime","uT","uCenter","uUnit","uSeed","uDialR","uScale","uPresence",
-           "uMotes","uCharge","uSeat","uSweep","uSweepPresence","uNode","uEdge","uEdgeT"]);
+           "uCharge","uSeat","uSweep","uSweepPresence","uNode","uEdge"]);
         if (!star) return;
         var U = star.uniforms;
 
         var nodeBuf = new Float32Array(NODES * 4);
         var edgeBuf = new Float32Array(EDGES * 4);
-        var edgeTBuf = new Float32Array(EDGES);
         var W = 1, H = 1, unit = 1, dialR = 1, PR = 1, signature = 0.3187;
 
         // Mismas funciones que src/utils/futureIdentity.ts, para que la semilla case con el juego.
@@ -1062,7 +1006,7 @@
         }
 
         /* Rosa cardinal, idéntica a la de la Victoria: puntas pares en N, E, S y O.
-           La semilla cambia el fraseo de las motas, nunca el giro; una estrella cardinal
+           La semilla cambia el fraseo del pulso, nunca el giro; una estrella cardinal
            girada deja de apuntar a ninguna parte. */
         function buildStar() {
           var tipLong = unit * 2.24;
@@ -1077,13 +1021,12 @@
             pts.push(polar(tipAngle + 360 / (TIPS * 2), valley));
           }
 
-          // El corazón se fija primero: es el origen de la luz.
           nodeBuf[64] = 0; nodeBuf[65] = 0;
-          nodeBuf[66] = 0.10; nodeBuf[67] = signature * 10;
+          nodeBuf[66] = 0; nodeBuf[67] = signature * 10;
           for (var i = 0; i < 16; i++) {
             nodeBuf[i * 4] = pts[i][0];
             nodeBuf[i * 4 + 1] = pts[i][1];
-            nodeBuf[i * 4 + 2] = 0.30 + (i / 16) * 0.70;
+            nodeBuf[i * 4 + 2] = 0;
             nodeBuf[i * 4 + 3] = signature * 10 + i * 3.7;
           }
 
@@ -1091,8 +1034,6 @@
             var a = pts[j], b = pts[(j + 1) % 16];
             edgeBuf[j * 4] = a[0]; edgeBuf[j * 4 + 1] = a[1];
             edgeBuf[j * 4 + 2] = b[0]; edgeBuf[j * 4 + 3] = b[1];
-            // El hilo espera a que estén fijos SUS DOS extremos.
-            edgeTBuf[j] = Math.max(nodeBuf[j * 4 + 2], nodeBuf[((j + 1) % 16) * 4 + 2]);
           }
         }
 
@@ -1136,12 +1077,11 @@
           skyGl.drawArrays(skyGl.TRIANGLES, 0, 3);
         }
 
-        /* El signo arranca su propio reloj a los 1666 ms de la obertura, el instante en que
-           las cortinas del VS dejan de estar cerradas. En tiempo del signo:
-             0.00–1.15  el corazón y luego las dieciséis marcas quedan fijas
-             0.96–1.70  carga una vez y se sienta en sus marcas
-             1.55–2.25  el círculo recorre el aro
-             2.15–2.75  se apaga; queda el instrumento de grados */
+        /* El signo arranca su propio reloj a los 1666 ms de la obertura, ya completo:
+             0.04–0.62  pulsa una vez
+             0.38–0.90  se sienta en sus marcas
+             0.82–1.42  el círculo recorre el aro
+             1.32–1.92  se apaga; queda el instrumento de grados */
         var STAR_START = 1.666;
 
         function render(timeMs) {
@@ -1155,9 +1095,9 @@
 
           // El signo nace en el radio del aro y sólo se asienta hacia fuera, hasta el centro
           // de las marcas. Es un 2.8 %: se lee como posarse, no como encogerse.
-          var seat = smooth(0.98, 1.62, t);
+          var seat = smooth(0.38, 0.90, t);
           var scale = 1 + (DIAL_SEAT / DIAL_RING - 1) * seat;
-          var presence = 1 - smooth(2.15, 2.75, t);
+          var presence = 1 - smooth(1.32, 1.92, t);
 
           gl.useProgram(star.program);
           gl.uniform2f(U.uRes, W, H);
@@ -1170,16 +1110,14 @@
           gl.uniform1f(U.uDialR, dialR);
           gl.uniform1f(U.uScale, scale);
           gl.uniform1f(U.uPresence, clamp(presence, 0, 1));
-          gl.uniform1f(U.uMotes, 1 - smooth(1.06, 1.30, t));
-          gl.uniform1f(U.uCharge, pulse(t, 0.96, 1.42, 1.70));
+          gl.uniform1f(U.uCharge, pulse(t, 0.04, 0.28, 0.62));
           gl.uniform1f(U.uSeat, seat);
           /* El progreso sólo avanza. La retirada tiene otra opacidad para que la cabeza no
              vuelva de 360° a 0° después de cerrar el aro. */
-          gl.uniform1f(U.uSweep, smooth(1.55, 2.25, t));
-          gl.uniform1f(U.uSweepPresence, 1 - smooth(2.25, 2.55, t));
+          gl.uniform1f(U.uSweep, smooth(0.82, 1.42, t));
+          gl.uniform1f(U.uSweepPresence, 1 - smooth(1.42, 1.68, t));
           gl.uniform4fv(U.uNode, nodeBuf);
           gl.uniform4fv(U.uEdge, edgeBuf);
-          gl.uniform1fv(U.uEdgeT, edgeTBuf);
           gl.drawArrays(gl.TRIANGLES, 0, 3);
         }
 
@@ -1208,7 +1146,7 @@
         var fill = document.getElementById("fill");
         var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-        var BASE_TOTAL = 4800;
+        var BASE_TOTAL = 4100;
         var timeScale = 1;
         var state = "idle";
         var startTime = 0;
@@ -1218,11 +1156,11 @@
           var values = {
             "--d-vs": 2450,
             "--delay-board": 1050,
-            "--delay-instrument": 3446,
+            "--delay-instrument": 2686,
             "--d-instrument": 600,
-            "--delay-hud": 3446,
+            "--delay-hud": 2686,
             "--d-hud": 620,
-            "--delay-mulligan": 4096,
+            "--delay-mulligan": 3336,
             "--d-mulligan": 480
           };
           Object.keys(values).forEach(function (name) {
@@ -1233,10 +1171,10 @@
         function phaseAt(time) {
           if (time < 1050) return "El encuentro choca";
           if (time < 1666) return "El tablero espera debajo";
-          if (time < 2820) return "El signo se traza";
-          if (time < 3220) return "El signo se sienta";
-          if (time < 3446) return "El círculo recorre el aro";
-          if (time < 4096) return "El signo entrega el HUD";
+          if (time < 2290) return "El sello palpita";
+          if (time < 2490) return "El signo se sienta";
+          if (time < 2686) return "El círculo recorre el aro";
+          if (time < 3336) return "El signo entrega el HUD";
           if (time < BASE_TOTAL) return "Mano inicial";
           return "Tablero listo";
         }

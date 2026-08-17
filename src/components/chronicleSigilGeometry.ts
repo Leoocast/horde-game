@@ -8,7 +8,7 @@
  * radio del aro y no al revés: con un número redondo el relevo queda desalineado por unos
  * píxeles y se lee como dos figuras parecidas en vez de una sola entregándose.
  *
- * Vive aparte del componente porque es lógica: radios, ángulos, orden de encendido y reloj.
+ * Vive aparte del componente porque es lógica: radios, ángulos, asiento y reloj.
  * La maqueta de decisión es `dev/mockups/vfx/board-overture.html`.
  */
 
@@ -25,32 +25,29 @@ export const CHRONICLE_SIGIL_TIPS = 8;
 export const CHRONICLE_SIGIL_NODES = 17;
 export const CHRONICLE_SIGIL_EDGES = 16;
 
-/* Reloj propio del signo, en segundos desde que empieza a trazarse. Arranca cuando las
-   cortinas del encuentro dejan de estar cerradas, no cuando monta el tablero. */
-export const CHRONICLE_SIGIL_HEART_LOCK = 0.1;
-export const CHRONICLE_SIGIL_CONTOUR_START = 0.3;
-export const CHRONICLE_SIGIL_CONTOUR_SPAN = 0.7;
-export const CHRONICLE_SIGIL_SEAT_START = 0.98;
-export const CHRONICLE_SIGIL_SEAT_END = 1.62;
-export const CHRONICLE_SIGIL_SWEEP_START = 1.55;
-export const CHRONICLE_SIGIL_SWEEP_END = 2.25;
+/* Reloj propio del signo. Aparece ya sellado cuando las cortinas dejan de estar cerradas,
+   pulsa una vez y pasa directamente al asiento y a la entrega. */
+export const CHRONICLE_SIGIL_SEAT_START = 0.38;
+export const CHRONICLE_SIGIL_SEAT_END = 0.9;
+export const CHRONICLE_SIGIL_SWEEP_START = 0.82;
+export const CHRONICLE_SIGIL_SWEEP_END = 1.42;
 /** El aro completo se desvanece; su cabeza nunca recorre el camino en sentido inverso. */
 export const CHRONICLE_SIGIL_SWEEP_FADE_START = CHRONICLE_SIGIL_SWEEP_END;
-export const CHRONICLE_SIGIL_SWEEP_FADE_END = 2.55;
-export const CHRONICLE_SIGIL_FADE_START = 2.15;
-export const CHRONICLE_SIGIL_FADE_END = 2.75;
+export const CHRONICLE_SIGIL_SWEEP_FADE_END = 1.68;
+export const CHRONICLE_SIGIL_FADE_START = 1.32;
+export const CHRONICLE_SIGIL_FADE_END = 1.92;
 /** Instante en que el instrumento del tablero ya puede encenderse debajo del signo. */
-export const CHRONICLE_SIGIL_DIAL_AT = 1.78;
+export const CHRONICLE_SIGIL_DIAL_AT = 1.02;
 /** Duración total antes de devolver el control al tablero. */
-export const CHRONICLE_SIGIL_DURATION_MS = 2950;
+export const CHRONICLE_SIGIL_DURATION_MS = 2050;
 
 export type ChronicleSigilNode = {
   /** Desplazamiento respecto al centro del instrumento, en píxeles CSS. */
   x: number;
   y: number;
-  /** Segundo en que el nodo queda fijo. */
+  /** El sello nace completo, así que todos los nodos están fijos desde el segundo cero. */
   lockAt: number;
-  /** Valor derivado de la semilla; sólo cambia el fraseo de las motas. */
+  /** Valor derivado de la semilla; cambia el fraseo sutil del pulso y el asiento. */
   seed: number;
 };
 
@@ -59,8 +56,6 @@ export type ChronicleSigilEdge = {
   ay: number;
   bx: number;
   by: number;
-  /** El hilo espera a que estén fijos SUS DOS extremos. */
-  drawAt: number;
 };
 
 export type ChronicleSigilPlan = {
@@ -101,7 +96,7 @@ export function chronicleSigilSeatScale(): number {
 
 /**
  * Rosa cardinal. Las puntas pares caen en N, E, S y O. La orientación es fija a propósito:
- * la semilla cambia el fraseo de las motas, nunca el giro, porque una estrella cardinal
+ * la semilla cambia el fraseo del pulso, nunca el giro, porque una estrella cardinal
  * girada deja de apuntar a ninguna parte.
  */
 export function chronicleSigilPlan(ringRadius: number, signature: number): ChronicleSigilPlan {
@@ -122,11 +117,10 @@ export function chronicleSigilPlan(ringRadius: number, signature: number): Chron
   const nodes: ChronicleSigilNode[] = contour.map((point, index) => ({
     x: point.x,
     y: point.y,
-    lockAt: CHRONICLE_SIGIL_CONTOUR_START + (index / 16) * CHRONICLE_SIGIL_CONTOUR_SPAN,
+    lockAt: 0,
     seed: signature * 10 + index * 3.7,
   }));
-  // El corazón se fija primero: es el origen de la luz.
-  nodes.push({ x: 0, y: 0, lockAt: CHRONICLE_SIGIL_HEART_LOCK, seed: signature * 10 });
+  nodes.push({ x: 0, y: 0, lockAt: 0, seed: signature * 10 });
 
   const edges: ChronicleSigilEdge[] = [];
   for (let index = 0; index < 16; index += 1) {
@@ -136,9 +130,6 @@ export function chronicleSigilPlan(ringRadius: number, signature: number): Chron
       ay: nodes[index].y,
       bx: nodes[next].x,
       by: nodes[next].y,
-      // Tomar sólo el destino haría aparecer el hilo de cierre (15 → 0) al principio,
-      // cuando su origen todavía no existe.
-      drawAt: Math.max(nodes[index].lockAt, nodes[next].lockAt),
     });
   }
 
@@ -150,7 +141,7 @@ function polar(degrees: number, radius: number): { x: number; y: number } {
   return { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
 }
 
-/** Escala de la figura en un instante: 1 mientras se traza, hasta el asiento al terminar. */
+/** Escala de la figura en un instante: 1 durante el pulso, hasta el asiento al terminar. */
 export function chronicleSigilScaleAt(seconds: number): number {
   const seat = smooth(CHRONICLE_SIGIL_SEAT_START, CHRONICLE_SIGIL_SEAT_END, seconds);
   return 1 + (chronicleSigilSeatScale() - 1) * seat;
@@ -178,10 +169,6 @@ export function chronicleSigilSweepPresenceAt(seconds: number): number {
   return 1 - smooth(CHRONICLE_SIGIL_SWEEP_FADE_START, CHRONICLE_SIGIL_SWEEP_FADE_END, seconds);
 }
 
-export function chronicleSigilMotesAt(seconds: number): number {
-  return 1 - smooth(1.06, 1.3, seconds);
-}
-
 export function chronicleSigilChargeAt(seconds: number): number {
-  return smooth(0.96, 1.42, seconds) * (1 - smooth(1.42, 1.7, seconds));
+  return smooth(0.04, 0.28, seconds) * (1 - smooth(0.28, 0.62, seconds));
 }

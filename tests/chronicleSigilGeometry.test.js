@@ -15,6 +15,7 @@ import {
   TEMPORAL_DIAL_VIEWBOX_HEIGHT,
   TEMPORAL_DIAL_VIEWBOX_WIDTH,
   chronicleSigilPlan,
+  chronicleSigilChargeAt,
   chronicleSigilPresenceAt,
   chronicleSigilScaleAt,
   chronicleSigilSweepAt,
@@ -80,30 +81,16 @@ test("las ocho puntas caen en los ocho rótulos del instrumento", () => {
   });
 });
 
-test("el corazón se fija antes que cualquier punta y el contorno cierra en horario", () => {
+test("el sello nace completo y da un único pulso", () => {
   const plan = chronicleSigilPlan(200, 0.42);
   const heart = plan.nodes[CHRONICLE_SIGIL_NODES - 1];
   assert.equal(heart.x, 0);
   assert.equal(heart.y, 0);
-  for (const node of plan.nodes.slice(0, 16)) {
-    assert.ok(heart.lockAt < node.lockAt, "el corazón es el origen de la luz");
-  }
-  for (let index = 1; index < 16; index += 1) {
-    assert.ok(plan.nodes[index].lockAt > plan.nodes[index - 1].lockAt);
-  }
-});
-
-test("cada hilo espera a que estén fijos SUS DOS extremos", () => {
-  const plan = chronicleSigilPlan(200, 0.42);
-  plan.edges.forEach((edge, index) => {
-    const from = plan.nodes[index];
-    const to = plan.nodes[(index + 1) % 16];
-    assert.equal(edge.drawAt, Math.max(from.lockAt, to.lockAt));
-  });
-  // El hilo de cierre (15 → 0) es el caso que delata tomar sólo el destino: aparecería al
-  // principio, cuando su origen todavía no existe.
-  const closing = plan.edges[15];
-  assert.equal(closing.drawAt, plan.nodes[15].lockAt);
+  assert.ok(plan.nodes.every((node) => node.lockAt === 0));
+  assert.equal(chronicleSigilChargeAt(0), 0);
+  assert.equal(chronicleSigilChargeAt(0.28), 1);
+  assert.equal(chronicleSigilChargeAt(0.62), 0);
+  assert.equal(chronicleSigilChargeAt(1), 0);
 });
 
 test("el signo se sienta en el centro de las marcas, no en el aro", () => {
@@ -113,7 +100,7 @@ test("el signo se sienta en el centro de las marcas, no en el aro", () => {
 
   // La punta Norte es cardinal, así que antes de sentarse mide el aro.
   assert.ok(Math.abs(radius(north) - ringRadius) < 1e-9);
-  assert.ok(Math.abs(radius(north) * chronicleSigilScaleAt(0.5) - ringRadius) < 1e-9);
+  assert.ok(Math.abs(radius(north) * chronicleSigilScaleAt(0.2) - ringRadius) < 1e-9);
 
   // Ya sentada mide el centro de la marca, que va de 195 a 208 en unidades del viewBox.
   const seated = radius(north) * chronicleSigilScaleAt(2.0);
@@ -196,8 +183,8 @@ test("HUD y Mano toman el relevo mientras el signo termina su fundido", () => {
   assert.match(styles, /body\.board-overture-active \.game-hud-energy/u);
   assert.match(styles, /body\.board-overture-settling \.game-hud-energy[\s\S]*encounter-board-ui-bottom/u);
   assert.match(styles, /\.chronicle-sigil-overture[\s\S]*z-index: 410/u);
-  assert.match(mockup, /--delay-hud: 3446ms/u);
-  assert.match(mockup, /--delay-mulligan: 4096ms/u);
+  assert.match(mockup, /--delay-hud: 2686ms/u);
+  assert.match(mockup, /--delay-mulligan: 3336ms/u);
 });
 
 test("el signo no pinta facetas triangulares ni otra estrella en el corazón", () => {
@@ -206,8 +193,10 @@ test("el signo no pinta facetas triangulares ni otra estrella en el corazón", (
 
   for (const source of [shader, mockup]) {
     assert.doesNotMatch(source, /float facet|float halfWidth|float star =/u);
+    assert.doesNotMatch(source, /uMotes|float born|crease\s*\*\s*reveal/u);
     assert.match(source, /innerA = uCenter \+ axis\s*\*\s*0\.24/u);
     assert.match(source, /innerB = uCenter \+ axis\s*\*\s*0\.68/u);
+    assert.match(source, /float pop = uCharge/u);
   }
   assert.match(shader, /Un punto de origen, no otra rosa dentro de la rosa/u);
 });
@@ -243,7 +232,7 @@ test("el mismo Futuro dibuja siempre el mismo signo y Futuros distintos lo frase
   const other = chronicleSigilPlan(ringRadius, futureVisualSignature("991-004"));
 
   assert.deepEqual(a.nodes, b.nodes);
-  // La semilla cambia el fraseo de las motas, nunca el giro: las posiciones son idénticas.
+  // La semilla cambia el fraseo sutil del pulso, nunca el giro: las posiciones son idénticas.
   a.nodes.forEach((node, index) => {
     assert.equal(node.x, other.nodes[index].x);
     assert.equal(node.y, other.nodes[index].y);

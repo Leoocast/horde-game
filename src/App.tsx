@@ -91,8 +91,8 @@ export default function App() {
   const [menuReturnScreen, setMenuReturnScreen] = useState<"home" | "setup" | "chaos" | "chronicles" | "hosts">("home");
   const [preserveMenuMusic, setPreserveMenuMusic] = useState(false);
   const [launchTransition, setLaunchTransition] = useState<LaunchTransitionState | null>(null);
-  /* Obertura del tablero: el signo del Futuro se traza sobre el Campo desnudo cuando el
-     encuentro empieza a abrirse y le entrega el instrumento de grados. Vive aquí porque el
+  /* Obertura del tablero: el signo del Futuro aparece sellado sobre el Campo desnudo cuando
+     el encuentro empieza a abrirse y le entrega el instrumento de grados. Vive aquí porque el
      lanzamiento ya se secuencia en App; `Board` sólo se entera de en qué fase está. */
   const [boardOverture, setBoardOverture] = useState<BoardOvertureState | null>(null);
   const [destinyTransition, setDestinyTransition] = useState<DestinyTransitionState | null>(null);

@@ -7,9 +7,8 @@ import {
  * El signo del Futuro: una escena y un plano, como Burn, el vórtice y la constelación.
  *
  * Todo el brillo vive en el corazón y en las ocho puntas; el contorno y los grabados interiores
- * apenas se leen, igual que en la constelación de la Victoria. Las motas llegan con
- * el color del bando que acaba de chocar en el encuentro —verdín a la izquierda, hierro
- * caliente a la derecha— y sólo se vuelven oro al quedar fijas.
+ * apenas se leen, igual que en la constelación de la Victoria. El sello aparece completo,
+ * mezcla el verdín y el hierro caliente de los dos bandos y pulsa una sola vez.
  *
  * Dos decisiones que no son de gusto:
  *
@@ -17,8 +16,8 @@ import {
  *   Por encima de 1.0 la suma aditiva se convierte en pantalla blanca, y a oscuras eso es
  *   exactamente lo que hace daño. Medido sobre la obertura entera, ningún fotograma tiene
  *   área quemada apreciable.
- * - No hay cobertura de ningún tipo: ni destello, ni abertura, ni fundido. El signo se
- *   dibuja, se cierra sobre su aro y se apaga. Reintroducir un flash es una regresión.
+ * - No hay cobertura de ningún tipo: ni destello, ni abertura, ni fundido. El signo pulsa,
+ *   se cierra sobre su aro y se apaga. Reintroducir un flash es una regresión.
  */
 export const CHRONICLE_SIGIL_VERTEX_SHADER = `
 varying vec2 vUv;
@@ -43,16 +42,14 @@ uniform float uUnit;
 uniform float uDialR;
 uniform float uScale;
 uniform float uPresence;
-uniform float uMotes;
 uniform float uCharge;
 uniform float uSeat;
 uniform float uSweep;
 uniform float uSweepPresence;
-// xy = desplazamiento respecto al centro, z = instante en que queda fijo, w = semilla propia
+// xy = desplazamiento respecto al centro, z = reservado en cero, w = semilla propia
 uniform vec4 uNode[NODES];
 // xy/zw = extremos, también relativos al centro
 uniform vec4 uEdge[EDGES];
-uniform float uEdgeT[EDGES];
 
 varying vec2 vUv;
 
@@ -84,93 +81,41 @@ void main() {
   float al = 0.0;
   float pres = uPresence;
 
-  // 1. Motas que entran desde los cuatro bordes y se fijan en las puntas.
-  if (uMotes > 0.001) {
-    for (int i = 0; i < NODES; i++) {
-      vec4 nd = uNode[i];
-      if (i != NODES - 1 && mod(float(i), 2.0) > 0.5) continue;
-      vec2 target = uCenter + nd.xy * uScale;
-      vec3 origin = nd.x < 0.0 ? VERD : EMBER;
-      if (i == NODES - 1) origin = mix(VERD, EMBER, 0.5);
-      float lock = nd.z;
-      for (int j = 0; j < 3; j++) {
-        float sd = nd.w + float(j) * 13.7;
-        float born = max(0.0, lock - 0.40 - h11(sd) * 0.20);
-        float k = (uT - born) / max(lock - born, 0.001);
-        if (k <= 0.0 || k >= 1.08) continue;
-        float e = clamp(k, 0.0, 1.0);
-        float ease = e * e * (3.0 - 2.0 * e);
-        float sidePick = floor(h11(sd * 2.1) * 4.0);
-        float lane = 0.025 + h11(sd * 4.7) * 0.95;
-        float outside = uUnit * (0.65 + h11(sd * 5.3) * 0.65);
-        vec2 from = vec2(-outside, lane * uRes.y);
-        if (sidePick >= 1.0 && sidePick < 2.0) from = vec2(uRes.x + outside, lane * uRes.y);
-        else if (sidePick >= 2.0 && sidePick < 3.0) from = vec2(lane * uRes.x, -outside);
-        else if (sidePick >= 3.0) from = vec2(lane * uRes.x, uRes.y + outside);
-        vec2 travel = target - from;
-        vec2 bend = normalize(vec2(-travel.y, travel.x) + vec2(1e-5));
-        vec2 ctrl = mix(from, target, 0.5) + bend * (h11(sd * 3.3) - 0.5) * uUnit * 2.8;
-        float iv = 1.0 - ease;
-        vec2 pos = iv * iv * from + 2.0 * iv * ease * ctrl + ease * ease * target;
-        vec2 delta = p - pos;
-        float sz = uUnit * (0.038 + h11(sd * 5.9) * 0.032) * (1.0 - 0.35 * ease);
-        vec2 dir = normalize(target - from + vec2(1e-5));
-        vec2 nm = vec2(-dir.y, dir.x);
-        float along = dot(delta, dir);
-        float ahead = max(along, 0.0) / (sz * 0.92);
-        float behind = max(-along, 0.0) / (sz * (2.8 + 5.2 * (1.0 - ease)));
-        float across = abs(dot(delta, nm)) / (sz * 0.96);
-        float field = sqrt((ahead + behind) * (ahead + behind) + across * across);
-        float glow = exp(-field * 2.65) + exp(-field * 1.08) * 0.12;
-        float amt = glow * smoothstep(0.0, 0.12, e) * (1.0 - smoothstep(0.94, 1.06, k));
-        add(col, al, mix(origin, GOLD, ease * ease), amt * 0.62 * uMotes);
-      }
-    }
-  }
-
-  // 2. Grabados interiores separados del corazón. Antes cada punta era un triángulo con
+  // 1. Grabados interiores separados del corazón. Antes cada punta era un triángulo con
   //    alfa; sus ocho áreas se sumaban en el centro y dibujaban una segunda estrella.
-  //    Estas incisiones no tienen área y ni siquiera llegan al corazón.
+  //    Estas incisiones no tienen área, no llegan al corazón y nacen ya completas.
   for (int i = 0; i < NODES; i++) {
     if (i == NODES - 1 || mod(float(i), 2.0) > 0.5) continue;
     vec4 nd = uNode[i];
-    if (uT < nd.z) continue;
     vec2 axis = nd.xy * uScale;
     vec2 innerA = uCenter + axis * 0.24;
     vec2 innerB = uCenter + axis * 0.68;
-    float draw = clamp((uT - nd.z) / 0.18, 0.0, 1.0);
-    float creaseD = segSD(p, innerA, mix(innerA, innerB, draw));
+    float creaseD = segSD(p, innerA, innerB);
     float crease = smoothstep(0.90, 0.18, creaseD);
-    float reveal = smoothstep(nd.z, nd.z + 0.13, uT);
     vec3 tone = mix(mix(VERD, EMBER, step(0.0, nd.x)), GOLD, 0.62);
-    add(col, al, tone, crease * reveal * pres * (0.026 + uCharge * 0.016));
+    add(col, al, tone, crease * pres * (0.026 + uCharge * 0.016));
   }
 
-  // 3. Contorno tenue, sin halo: la luz pertenece a las puntas y al corazón.
+  // 2. Contorno completo y tenue, sin halo: la luz pertenece a las puntas y al corazón.
   for (int e = 0; e < EDGES; e++) {
-    float t0 = uEdgeT[e];
-    if (uT < t0) continue;
     vec4 seg = uEdge[e];
     vec2 a = uCenter + seg.xy * uScale;
     vec2 b = uCenter + seg.zw * uScale;
-    float draw = clamp((uT - t0) / 0.14, 0.0, 1.0);
-    float d = segSD(p, a, mix(a, b, draw));
+    float d = segSD(p, a, b);
     float hw = max(0.75, uUnit * 0.0085);
     float ink = smoothstep(hw, 0.22, d);
-    float settle = 0.11 + 0.06 * (1.0 - exp(-(uT - t0) * 12.0)) + uCharge * 0.08;
+    float settle = 0.15 + uCharge * 0.08;
     add(col, al, mix(GOLD, CORE, 0.28), ink * settle * pres);
   }
 
-  // 4. Sólo las ocho puntas y el corazón conservan brillo.
+  // 3. Sólo las ocho puntas y el corazón conservan brillo.
   for (int i = 0; i < NODES; i++) {
     vec4 nd = uNode[i];
-    if (uT < nd.z) continue;
     bool centerNode = i == NODES - 1;
     bool tipNode = !centerNode && mod(float(i), 2.0) < 0.5;
-    float age = uT - nd.z;
     vec2 at = uCenter + nd.xy * uScale;
     float d = length(p - at);
-    float pop = exp(-age * 11.0);
+    float pop = uCharge;
     float breathe = 0.94 + 0.06 * sin(uTime * 1.7 + nd.w * 6.0);
     float charge = 1.0 + uCharge * 0.25;
     if (centerNode) {
@@ -198,7 +143,7 @@ void main() {
     }
   }
 
-  // 5. La entrega: una luz recorre el aro desde el Norte en sentido horario y deja
+  // 4. La entrega: una luz recorre el aro desde el Norte en sentido horario y deja
   //    encendido el radio exacto del instrumento, donde el retículo ya está esperando.
   if (uSweep > 0.001) {
     float ang = atan(q.y, q.x) + 1.57079633;

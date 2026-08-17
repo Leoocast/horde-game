@@ -7,7 +7,6 @@ import {
   CHRONICLE_SIGIL_EDGES,
   CHRONICLE_SIGIL_NODES,
   chronicleSigilChargeAt,
-  chronicleSigilMotesAt,
   chronicleSigilPlan,
   chronicleSigilPresenceAt,
   chronicleSigilScaleAt,
@@ -39,8 +38,8 @@ type Props = {
 };
 
 /**
- * Obertura del tablero: el signo del Futuro se traza sobre el Campo desnudo cuando el
- * encuentro empieza a abrirse, se sienta en las marcas del instrumento de grados, le entrega
+ * Obertura del tablero: el signo del Futuro aparece ya sellado sobre el Campo desnudo cuando
+ * el encuentro empieza a abrirse, pulsa, se sienta en las marcas del instrumento, le entrega
  * su aro y desaparece. Durante ese último fundido ya entran el HUD y la mano inicial.
  *
  * El corte y la apertura del VS no se tocan: este componente monta exactamente cuando las
@@ -88,14 +87,12 @@ export function ChronicleSigilOverture({ seed, startsAtMs, onDialReady, onComple
       uDialR: { value: 1 },
       uScale: { value: 1 },
       uPresence: { value: 0 },
-      uMotes: { value: 1 },
       uCharge: { value: 0 },
       uSeat: { value: 0 },
       uSweep: { value: 0 },
       uSweepPresence: { value: 1 },
       uNode: { value: Array.from({ length: CHRONICLE_SIGIL_NODES }, () => new THREE.Vector4()) },
       uEdge: { value: Array.from({ length: CHRONICLE_SIGIL_EDGES }, () => new THREE.Vector4()) },
-      uEdgeT: { value: new Array<number>(CHRONICLE_SIGIL_EDGES).fill(0) },
     };
 
     const geometry = new THREE.PlaneGeometry(2, 2);
@@ -137,7 +134,6 @@ export function ChronicleSigilOverture({ seed, startsAtMs, onDialReady, onComple
       });
       plan.edges.forEach((edge, index) => {
         uniforms.uEdge.value[index].set(edge.ax, edge.ay, edge.bx, edge.by);
-        uniforms.uEdgeT.value[index] = edge.drawAt;
       });
     };
     resize();
@@ -155,7 +151,6 @@ export function ChronicleSigilOverture({ seed, startsAtMs, onDialReady, onComple
       uniforms.uT.value = seconds;
       uniforms.uScale.value = chronicleSigilScaleAt(seconds);
       uniforms.uPresence.value = chronicleSigilPresenceAt(seconds);
-      uniforms.uMotes.value = chronicleSigilMotesAt(seconds);
       uniforms.uCharge.value = chronicleSigilChargeAt(seconds);
       uniforms.uSeat.value = chronicleSigilSeatAt(seconds);
       uniforms.uSweep.value = chronicleSigilSweepAt(seconds);
