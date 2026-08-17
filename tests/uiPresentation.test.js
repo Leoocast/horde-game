@@ -1097,21 +1097,36 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   const board = readFileSync(new URL("../src/components/Board.tsx", import.meta.url), "utf8");
   const desktopMain = readFileSync(new URL("../electron/main.ts", import.meta.url), "utf8");
   const backdrop = readFileSync(new URL("../src/components/TemporalBackdrop.tsx", import.meta.url), "utf8");
+  const heavyLanding = readFileSync(new URL("../src/components/HeavyCreatureLanding.tsx", import.meta.url), "utf8");
+  const duelHud = readFileSync(new URL("../src/components/DuelHud.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.match(animator, /renderSharedVfxFrame/u);
   assert.match(board, /captureDesktopViewport\(\)/u);
-  // The native capture happens after combat settles and before the overlay mounts. Electron
-  // copies painted pixels, so the defeat path never clones the DOM or reloads card URLs.
-  assert.match(board, /await waitForDefeatCapturePaint\(\)/u);
+  // The native capture happens after every finite store/local/DOM presentation settles and
+  // before the overlay mounts. Electron copies painted pixels, so it never reloads card URLs.
+  assert.match(board, /function defeatStorePresentationActive\(state: GameStore\)/u);
+  assert.match(board, /guidedPresentationActivity\.snapshot\(\)\.activeCount === 0/u);
+  assert.match(board, /await waitForFiniteDocumentAnimations\(\)/u);
+  assert.match(board, /stopGamePresentation\(\);\s*await waitForFiniteDocumentAnimations\(\)/u);
   assert.match(board, /image\.decoding = "async"/u);
   assert.match(board, /await image\.decode\(\)/u);
-  assert.match(board, /const defeatOutcomeReady = game\.winner === "host" && !resolvingHostCombat/u);
+  assert.match(board, /const destinyDialSettled = settledDestinyDialRevision === destinyDialRevision/u);
+  assert.match(board, /const defeatOutcomeReady = game\.winner === "host"[\s\S]*?destinyDialSettled[\s\S]*?!storePresentationActive[\s\S]*?localPresentation\.activeCount === 0/u);
+  assert.match(board, /const DEFEAT_DRAIN_WATCHDOG_MS = 15000/u);
+  assert.match(board, /if \(defeatOutcomeReady\) return;/u);
+  assert.match(board, /stopGamePresentation\(\);[\s\S]*?setForcedDefeatDrainSessionId\(watchedSessionId\)/u);
+  assert.match(board, /settleDialImmediately=\{forcedDefeatDrain\}/u);
   assert.match(board, /const defeatReady = defeatOutcomeReady && defeatSnapshot !== undefined/u);
-  assert.match(board, /const defeatPresentationPending = game\.winner === "host"\s*&& \(resolvingHostCombat \|\| defeatSnapshot === undefined\)/u);
-  assert.match(board, /presentationInputBlocked && !tributeOfTheFourSorrowsSelectionActive/u);
+  assert.match(board, /const defeatPresentationPending = game\.winner === "host" && !defeatReady/u);
+  assert.match(board, /presentationInputBlocked && \(!tributeOfTheFourSorrowsSelectionActive \|\| defeatPresentationPending\)/u);
   assert.match(board, /snapshotImage=\{defeatSnapshot \?\? undefined\}/u);
   assert.match(board, /settleDefeatCapture\(capturePaintedDefeatFrame\(\)\)/u);
+  assert.match(backdrop, /const DIAL_SETTLE_EPSILON = 0\.05/u);
+  assert.match(backdrop, /lastReportedDialRevision !== targetRevision/u);
+  assert.match(backdrop, /onDialSettledRef\.current\?\.\(targetRevision\)/u);
+  assert.match(heavyLanding, /guidedPresentationActivity\.begin\(\s*"battlefield\.heavy-landing"/u);
+  assert.match(duelHud, /guidedPresentationActivity\.begin\(\s*"life\.damage"/u);
   assert.match(desktopMain, /const DEFEAT_CAPTURE_MAX_WIDTH = 2560/u);
   assert.match(desktopMain, /const DEFEAT_CAPTURE_MAX_HEIGHT = 1440/u);
   assert.match(desktopMain, /capture\.resize\(\{/u);
@@ -1127,6 +1142,7 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(animator, /const preflightDrew = renderShatterFrame\(\);/u);
   assert.ok(animator.indexOf("const preflightDrew = renderShatterFrame();") < animator.lastIndexOf("onSequenceStart();"));
   assert.match(animator, /const CRACK_AT_MS = 0/u);
+  assert.match(animator, /const CRACK_SPAN_MS = 900/u);
   assert.match(animator, /const BURST_SETTLE_MS = 40/u);
   assert.match(animator, /const BURST_AT_MS = CRACK_AT_MS \+ CRACK_SPAN_MS \+ BURST_SETTLE_MS/u);
   assert.match(animator, /elapsed >= BURST_AT_MS/u);
@@ -1208,17 +1224,38 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.doesNotMatch(animator, /defeat-shatter-impact/u);
   assert.doesNotMatch(styles, /defeat-screen-tremor|defeat-result-darkness|defeat-shatter-impact/u);
   assert.match(styles, /animation:\s*defeat-crack-grow 520ms 0ms/u);
+  assert.match(styles, /path:nth-child\(3n\) \{ animation-delay: 240ms; \}/u);
   assert.match(styles, /\.is-bursting \.defeat-shatter-fractures \{\s*animation: defeat-cracks-away 280ms ease-out both;/u);
   assert.match(styles, /\.is-bursting \.defeat-shatter-vignette \{\s*animation: defeat-vignette-close 700ms ease both;/u);
   assert.match(styles, /\.defeat-shatter\.is-fallback \{\s*background: transparent;/u);
   assert.doesNotMatch(styles, /\.defeat-shatter-fractures \{[^}]*filter:/u);
   assert.doesNotMatch(styles, /\.defeat-outcome-inner::before/u);
   assert.match(styles, /@keyframes defeat-vignette-close \{\s*from \{ opacity: 0; \}\s*to \{ opacity: 0\.42; \}/u);
-  // Todo el bloque de derrota sube un paso de tamaño sin tocar la victoria.
-  assert.match(styles, /font: 800 14px\/1 "Cinzel"/u);
-  assert.match(styles, /font: 700 clamp\(44px, 8vw, 90px\)\/0\.9 "Cinzel"/u);
-  assert.match(styles, /font: 600 clamp\(10px, 1\.3vw, 14px\)\/1\.4 "Cinzel"/u);
-  assert.match(styles, /\.game-result-defeat \.game-result-action \{ font-size: 12px; \}/u);
+  // Todo el bloque de derrota sube un paso de tamaño sin tocar la victoria. Las dos acciones
+  // permanecen en una sola fila y ninguna etiqueta se parte en dos líneas.
+  const defeatKicker = styles.match(/\.defeat-kicker \{[\s\S]*?\n\}/u)?.[0] ?? "";
+  const defeatTitle = styles.match(/\.defeat-title \{[\s\S]*?\n\}/u)?.[0] ?? "";
+  const defeatSubtitle = styles.match(/\.defeat-subtitle \{[\s\S]*?\n\}/u)?.[0] ?? "";
+  const defeatFutureLabel = styles.match(/\.defeat-future-plate span \{[\s\S]*?\n\}/u)?.[0] ?? "";
+  const defeatFutureCode = styles.match(/\.defeat-future-plate b \{[\s\S]*?\n\}/u)?.[0] ?? "";
+  assert.match(defeatKicker, /font: 800 16px\/1 "Cinzel"/u);
+  assert.match(defeatTitle, /font: 700 clamp\(48px, 8\.4vw, 96px\)\/0\.9 "Cinzel"/u);
+  assert.match(defeatSubtitle, /font: 600 clamp\(12px, 1\.45vw, 16px\)\/1\.4 "Cinzel"/u);
+  assert.match(defeatFutureLabel, /font: 800 14px\/1\.2 "Cinzel"/u);
+  assert.match(defeatFutureCode, /font: 800 clamp\(23px, 2\.8vw, 33px\)\/1\.2 "Cinzel"/u);
+  assert.match(styles, /grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/u);
+  assert.match(styles, /\.game-result-defeat \.game-result-action \{[\s\S]*?font-size: clamp\(8px, 2\.1vw, 13px\);[\s\S]*?white-space: nowrap;/u);
+  const contemplateHandlerAt = modal.indexOf("onClick={onContemplateFuture}");
+  const contemplateButton = modal.slice(
+    modal.lastIndexOf("<button", contemplateHandlerAt),
+    modal.indexOf("</button>", contemplateHandlerAt) + "</button>".length,
+  );
+  assert.ok(contemplateHandlerAt >= 0);
+  assert.doesNotMatch(contemplateButton, /<(?:svg|[A-Z][A-Za-z0-9]*)\b/u);
+  assert.doesNotMatch(modal, /Sparkles/u);
+  assert.doesNotMatch(styles, /@media \(max-width: 520px\) \{[\s\S]*?\.defeat-outcome-actions \{ grid-template-columns: 1fr; \}/u);
+  const vortexVeil = styles.match(/\.destiny-vortex-veil \{[\s\S]*?\n\}/u)?.[0] ?? "";
+  assert.doesNotMatch(vortexVeil, /repeating-conic-gradient/u);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.defeat-shatter-canvas \{ display:\s*none; \}/u);
 });
 

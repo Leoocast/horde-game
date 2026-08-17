@@ -164,6 +164,91 @@ test("a lethal personal fireball keeps the defeat gated through its full animati
   }
 });
 
+test("a lethal death reaction releases Host combat after its complete follow-up beat", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { resetHostSequence },
+    { resetPlayerTriggerSequence },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/store/hostBeats"),
+    import("../src/store/playerBeats"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  const originalStopAllSfx = useAudioStore.getState().stopAllSfx;
+  useAudioStore.setState({ playSfx: () => undefined, stopAllSfx: () => undefined });
+
+  try {
+    resetHostSequence();
+    resetPlayerTriggerSequence();
+    const game = createTestGame("lethal-post-combat-death-reaction");
+    game.player.life = 1;
+    game.activeSide = "host";
+    game.phase = "combat";
+    addCard(game, cardFromDeck("nerezh_graveless_matriarch", "host"));
+    const attacker = addCard(game, cardFromDeck("graveless_soldier", "host"));
+    const blocker = addCard(game, customCard("reaction_survivor", "player", { power: 4, endurance: 4 }));
+    game.combat.hostAttackers = [attacker.instanceId];
+    game.combat.blockers = { [attacker.instanceId]: [blocker.instanceId] };
+
+    useGameStore.setState({
+      game,
+      hostAttackAnimation: undefined,
+      burnAnimation: undefined,
+      resolvingHostCombat: false,
+      hostAutoTriggerCount: 0,
+      playerAutoTriggerCount: 0,
+      hostCombatDeadCardIds: [],
+      hostCombatVisualDamage: {},
+    });
+
+    useGameStore.getState().resolveHostCombat();
+    timers.releaseExpiredAt(465);
+    assert.equal(useGameStore.getState().game.player.life, 1);
+    assert.equal(useGameStore.getState().game.host.field.some((card) => card.instanceId === attacker.instanceId), false);
+
+    timers.releaseExpiredAt(500);
+    timers.releaseExpiredAt(930);
+    timers.releaseExpiredAt(1110);
+    timers.releaseExpiredAt(1748);
+    const atReactionImpact = useGameStore.getState();
+    assert.equal(atReactionImpact.game.winner, "host");
+    assert.equal(atReactionImpact.resolvingHostCombat, true);
+    assert.ok(atReactionImpact.burnAnimation);
+
+    timers.releaseExpiredAt(2330);
+    const afterReaction = useGameStore.getState();
+    assert.equal(afterReaction.burnAnimation, undefined);
+    assert.equal(afterReaction.hostAutoTriggerCount, 0);
+    assert.equal(afterReaction.hostCombatDeadCardIds.length, 0);
+    assert.equal(afterReaction.resolvingHostCombat, false);
+  } finally {
+    resetPlayerTriggerSequence();
+    resetHostSequence();
+    useAudioStore.setState({ playSfx: originalPlaySfx, stopAllSfx: originalStopAllSfx });
+    globalThis.window = originalWindow;
+  }
+});
+
 test("Vaelor's winning defense overrides Varka's losing personal attack animation", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
@@ -739,6 +824,9 @@ test("the shared reaction runner hands surviving damage to the player and animat
     game.combat.blockers = { [attacker.instanceId]: [guardian.instanceId] };
     const [impact] = buildHostAttackEvents(game);
     const afterImpact = applyHostAttackEvent(game, impact);
+    // This test isolates queue hand-off. Keep the synthetic one-attacker board non-terminal after
+    // combat cleanup so the presentation runner is allowed to resolve its surviving-damage beat.
+    afterImpact.winner = undefined;
 
     useGameStore.setState({
       game: afterImpact,
@@ -2191,6 +2279,180 @@ test("Tribute of the Four Sorrows sacrifices the weakest Host Echo without disca
   } finally {
     resetHostSequence();
     useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
+test("a lethal Tribute life-loss beat finishes without opening an impossible selection", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+    innerWidth: 1280,
+    innerHeight: 720,
+  };
+
+  const [
+    { resetHostSequence },
+    { resetPlayerTriggerSequence },
+    { runTributeOfTheFourSorrowsSequence },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame, customCard },
+  ] = await Promise.all([
+    import("../src/store/hostBeats"),
+    import("../src/store/playerBeats"),
+    import("../src/store/tributeOfTheFourSorrowsSequence"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  useAudioStore.setState({ playSfx: () => undefined });
+
+  try {
+    resetHostSequence();
+    resetPlayerTriggerSequence();
+    const game = createTestGame("tribute-lethal-life-loss");
+    const tribute = cardFromDeck("tribute_of_the_four_sorrows", "host");
+    game.player.life = 1;
+    addCard(game, customCard("tribute_discard_witness", "player"), "player", "hand");
+    game.host.pendingCard = tribute;
+    useGameStore.setState({
+      game,
+      tributeOfTheFourSorrowsCard: undefined,
+      tributeOfTheFourSorrowsSelection: undefined,
+      hostAutoTriggerCount: 0,
+      playerAutoTriggerCount: 0,
+      summoningAnimationCount: 0,
+      pendingStaticAuras: [],
+      heldStaticAuraBonuses: {},
+      specialDeadCardIds: [],
+      burnAnimation: undefined,
+      hostMillAnimationQueue: [],
+      resolvingHostCombat: false,
+    });
+
+    runTributeOfTheFourSorrowsSequence(tribute);
+    timers.releaseExpiredAt(700);
+    timers.releaseExpiredAt(900);
+    timers.releaseExpiredAt(1600);
+
+    const atImpact = useGameStore.getState();
+    assert.equal(atImpact.game.winner, "host");
+    assert.equal(atImpact.hostAutoTriggerCount, 1);
+    assert.equal(atImpact.tributeOfTheFourSorrowsSelection, undefined);
+
+    timers.releaseExpiredAt(2080);
+    const afterImpact = useGameStore.getState();
+    assert.equal(afterImpact.hostAutoTriggerCount, 0);
+    assert.equal(afterImpact.tributeOfTheFourSorrowsCard, undefined);
+    assert.equal(afterImpact.tributeOfTheFourSorrowsSelection, undefined);
+    assert.equal(afterImpact.resolvingHostCombat, false);
+    assert.equal(afterImpact.game.host.memory.some((card) => card.instanceId === tribute.instanceId), true);
+  } finally {
+    resetHostSequence();
+    useAudioStore.setState({ playSfx: originalPlaySfx });
+    globalThis.window = originalWindow;
+  }
+});
+
+test("a lethal reaction to Tribute's Host sacrifice finalizes Tribute without starting its player round", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+    innerWidth: 1280,
+    innerHeight: 720,
+  };
+
+  const [
+    { resetHostSequence },
+    { resetPlayerTriggerSequence },
+    { runTributeOfTheFourSorrowsSequence },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame },
+  ] = await Promise.all([
+    import("../src/store/hostBeats"),
+    import("../src/store/playerBeats"),
+    import("../src/store/tributeOfTheFourSorrowsSequence"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  const originalStopAllSfx = useAudioStore.getState().stopAllSfx;
+  useAudioStore.setState({ playSfx: () => undefined, stopAllSfx: () => undefined });
+
+  try {
+    resetHostSequence();
+    resetPlayerTriggerSequence();
+    // Reset module-owned timer handles before this test's fake timer ids start at 1 again.
+    useGameStore.getState().stopGamePresentation();
+    const game = createTestGame("tribute-lethal-host-sacrifice-reaction");
+    const tribute = cardFromDeck("tribute_of_the_four_sorrows", "host");
+    game.player.life = 1;
+    const sacrificed = addCard(game, cardFromDeck("graveless_soldier", "host"));
+    addCard(game, cardFromDeck("nerezh_graveless_matriarch", "host"));
+    addCard(game, cardFromDeck("liora_keeper_of_the_grove", "player", "hand"), "player", "hand");
+    game.host.pendingCard = tribute;
+    useGameStore.setState({
+      game,
+      tributeOfTheFourSorrowsCard: undefined,
+      tributeOfTheFourSorrowsSelection: undefined,
+      hostAutoTriggerCount: 0,
+      playerAutoTriggerCount: 0,
+      summoningAnimationCount: 0,
+      pendingStaticAuras: [],
+      heldStaticAuraBonuses: {},
+      specialDeadCardIds: [],
+      burnAnimation: undefined,
+      hostMillAnimationQueue: [],
+    });
+
+    runTributeOfTheFourSorrowsSequence(tribute);
+    timers.releaseExpiredAt(700);
+    assert.deepEqual(useGameStore.getState().specialDeadCardIds, [sacrificed.instanceId]);
+
+    timers.releaseExpiredAt(960);
+    timers.releaseExpiredAt(1390);
+    timers.releaseExpiredAt(1570);
+    timers.releaseExpiredAt(2208);
+    timers.releaseExpiredAt(2790);
+    // Timer throttling can move nested handoffs. Walk a few generous frames; with the old
+    // continuation this fixture would be stuck asking the player to discard the Hand card.
+    timers.releaseExpiredAt(4000);
+    timers.releaseExpiredAt(5500);
+    timers.releaseExpiredAt(7000);
+    const terminal = useGameStore.getState();
+    assert.equal(terminal.game.winner, "host");
+    assert.equal(terminal.hostAutoTriggerCount, 0);
+    assert.equal(terminal.tributeOfTheFourSorrowsCard, undefined);
+    assert.equal(terminal.tributeOfTheFourSorrowsSelection, undefined);
+    assert.equal(terminal.game.host.memory.some((card) => card.instanceId === tribute.instanceId), true);
+  } finally {
+    resetPlayerTriggerSequence();
+    resetHostSequence();
+    useAudioStore.setState({ playSfx: originalPlaySfx, stopAllSfx: originalStopAllSfx });
     globalThis.window = originalWindow;
   }
 });

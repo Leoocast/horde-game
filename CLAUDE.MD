@@ -346,14 +346,21 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   `defeatShatterGeometry.ts` es un **prisma extruido** —cara frontal, trasera y tres muros—, y toda
   la animación vive en el vertex shader de `defeatGlassShader.ts`: una malla y una llamada de dibujo.
   Cada cara recibe mediante UV globales el recorte exacto del último frame visible.
-- Cuando el atacante letal termina su animación y `resolvingHostCombat` vuelve a `false`, `Board`
-  espera a que Vida 0 y la limpieza del combate lleguen al compositor. Antes de montar el overlay
-  pide una sola captura nativa mediante `webContents.capturePage()`, limitada en el proceso main a
+- `Board` no inicia la derrota sólo porque `resolvingHostCombat` volvió a `false`: drena toda la
+  presentación finita que ya estaba en curso. La barrera incluye ataques, habilidades de entrada,
+  muertes, invocaciones, colas, buffs y VFX locales registrados (impacto de Vida y aterrizaje
+  pesado); el disco de grados hace snap bajo epsilon y confirma la revisión monotónica exacta de su
+  objetivo, de modo que `0 → 7 → 0` no puede confundirse con un disco que nunca se movió. Después espera dos
+  paints consecutivos sin una animación finita del documento, ejecuta una única limpieza global y
+  vuelve a comprobar el compositor. Recién entonces pide una captura nativa mediante
+  `webContents.capturePage()`, limitada en el proceso main a
   2560×1440 y decodificada de forma asíncrona. Es una captura de los píxeles ya pintados: no clona
   el DOM, no recalcula estilos y no vuelve a resolver URLs de cartas, fuentes ni portales. La placa
   es deliberadamente opaca e incluye la composición completa de ese instante; la transparencia la
   abren después los huecos entre los prismas. En web o si falla el bridge se usa vidrio limpio, sin
-  serializador DOM ni color opaco de reserva.
+  serializador DOM ni color opaco de reserva. Un watchdog de 15 s existe sólo como salida de
+  emergencia para un token defectuoso: invalida la presentación huérfana y fuerza el frame exacto
+  del disco; no acorta ningún beat de la ruta normal.
 - El overlay sólo se monta cuando esa preparación termina. Antes de arrancar el reloj visible, el
   animador hace un render oculto que crea/reutiliza el contexto, sube la textura fullscreen y
   completa la primera copia WebGL→2D. Así ningún coste de captura, decodificación o primera subida
@@ -365,8 +372,8 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
 - Nada cambia de color antes de que el vidrio se rompa. No hay sello frío sobre la captura, ni capa
   de hielo en el DOM, ni viñeta encendida de salida: la pantalla se ve igual que un instante antes
   y lo primero que ocurre es el cuarteado. Reintroducir un tinte previo es una regresión.
-- El reloj de la derrota conserva el ritmo de la maqueta salvo por el anclaje al combate: el
-  cuarteado empieza en el primer frame visible tras terminar el atacante, la onda y el impulso
+- El reloj de la derrota conserva el ritmo de la maqueta salvo por el anclaje a la presentación:
+  el cuarteado empieza en el primer frame visible tras terminar todos los beats anteriores, la onda y el impulso
   llegan en el golpe, y el desenlace se nombra 1340 ms después. El desenlace se cuelga
   del golpe real mediante `onBurst`, no de un reloj propio del modal. La lámina entera tiene
   espesor cero —los muros vecinos coinciden y en escorzo asomarían como aristas doradas en
@@ -393,10 +400,11 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   `game-surface-in` y termina en `translateY(0) scale(1)`, y la succión del vórtice al Reescribir,
   que anima `transform` sobre cada pieza de la escena. Con un `translate` propio, el texto se
   descuelga hacia abajo y a la derecha justo antes de la transición.
-- El desenlace es el bloque de la maqueta: etiqueta **Derrota** con reglas laterales, título en dos
-  líneas que se abren desde el centro con su corte de luz, subtítulo y placa de **Futuro**. Copiar
-  identidad vive en el canto de la placa y las dos salidas siguen siendo **Contemplar otro futuro**
-  y **Reescribir**; no vuelve a envolverse en un panel de resultado genérico.
+- El desenlace es el bloque de la maqueta, ampliado un paso: etiqueta **Derrota** con reglas
+  laterales, título en dos líneas que se abren desde el centro con su corte de luz, subtítulo y
+  placa de **Futuro**. Copiar identidad vive en el canto de la placa. **Contemplar otro futuro** no
+  lleva icono y comparte una única fila, sin partir texto, con **Reescribir este futuro**; no vuelve
+  a envolverse en un panel de resultado genérico.
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado
   aunque los impactos visuales se escalonen.
 
@@ -475,7 +483,8 @@ cae en espiral y la descarga de brasas de la liberación. Su reloj llega en dos 
 lienzo permanece oculto hasta copiar su primer frame válido. `uSeed` recibe una firma normalizada de
 la seed: materia, brasas y quiralidad se repiten al reescribir el mismo Futuro y cambian entre
 Futuros. Con movimiento reducido o sin un canvas utilizable queda la silueta quieta
-`.destiny-vortex-still`.
+`.destiny-vortex-still`. El velo de cobertura es radial: no debe añadir `repeating-conic-gradient`
+ni haces que nazcan artificialmente desde el centro.
 
 La escena no se traga como un bloque rígido y tampoco gira entera. `destinyShardSuction.ts` da la
 geometría pura y la transición recorre el DOM para repartir la escena en piezas: cada una cae hacia

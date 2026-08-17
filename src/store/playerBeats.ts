@@ -47,6 +47,11 @@ export function scheduleQueuedPlayerTriggers(onComplete?: () => void): void {
 
 function scheduleNextPlayerTrigger(sequenceId: number, onComplete?: () => void): void {
   if (sequenceId !== playerTriggerSequenceId) return;
+  if (useGameStore.getState().game.winner) {
+    useGameStore.setState({ playerAutoTriggerCount: 0 });
+    onComplete?.();
+    return;
+  }
   if (!guidedBeatBarrier.request("player.trigger", () => scheduleNextPlayerTrigger(sequenceId, onComplete))) return;
 
   let event: EventItem | undefined;

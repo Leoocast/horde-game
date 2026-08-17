@@ -112,8 +112,12 @@ export function discardPauseInProgress(state: GameStore): boolean {
   return Boolean(state.handLimitDiscardActive || state.tributeOfTheFourSorrowsSelection?.kind === "discard" || state.playerDiscardAnimationQueue.length > 0);
 }
 
-export function resumeAfterDiscardPause(onReady: () => void): void {
+export function resumeAfterDiscardPause(
+  onReady: () => void,
+  shouldContinue: () => boolean = () => true,
+): void {
   const check = () => {
+    if (!shouldContinue()) return;
     if (discardPauseInProgress(useGameStore.getState())) {
       window.setTimeout(check, 120);
       return;

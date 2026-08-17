@@ -21477,7 +21477,6 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
   inset: -15%;
   background:
     radial-gradient(circle at 50% 50%, transparent 0 7%, rgb(0 3 5 / 0.25) 23%, rgb(0 2 4 / 0.88) 62%, #000204 86%),
-    repeating-conic-gradient(from 16deg at 50% 50%, rgb(38 91 91 / 0.08) 0 3deg, transparent 4deg 17deg),
     rgb(0 3 5 / 0.15);
   opacity: 0;
   transform: scale(1.2);
@@ -21734,7 +21733,7 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
   position: relative;
   margin-bottom: 18px;
   color: #d5a67e;
-  font: 800 14px/1 "Cinzel", Georgia, "Times New Roman", serif;
+  font: 800 16px/1 "Cinzel", Georgia, "Times New Roman", serif;
   letter-spacing: 0.34em;
   text-transform: uppercase;
   text-shadow: 0 0 12px rgb(154 71 42 / 0.48);
@@ -21760,7 +21759,7 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
   display: grid;
   margin: 0;
   color: #e9e6dc;
-  font: 700 clamp(44px, 8vw, 90px)/0.9 "Cinzel", Georgia, "Times New Roman", serif;
+  font: 700 clamp(48px, 8.4vw, 96px)/0.9 "Cinzel", Georgia, "Times New Roman", serif;
   letter-spacing: 0.065em;
   text-transform: uppercase;
   text-shadow: 0 3px 8px #000, 0 0 18px rgb(151 190 192 / 0.24);
@@ -21794,7 +21793,7 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 .defeat-subtitle {
   margin-top: 7px;
   color: rgb(172 187 184 / 0.82);
-  font: 600 clamp(10px, 1.3vw, 14px)/1.4 "Cinzel", Georgia, "Times New Roman", serif;
+  font: 600 clamp(12px, 1.45vw, 16px)/1.4 "Cinzel", Georgia, "Times New Roman", serif;
   letter-spacing: 0.25em;
   text-transform: uppercase;
   opacity: 0;
@@ -21818,14 +21817,14 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 
 .defeat-future-plate span {
   color: #c8d9d5;
-  font: 800 13px/1.2 "Cinzel", Georgia, "Times New Roman", serif;
+  font: 800 14px/1.2 "Cinzel", Georgia, "Times New Roman", serif;
   letter-spacing: 0.26em;
   text-transform: uppercase;
 }
 
 .defeat-future-plate b {
   color: #e5c89e;
-  font: 800 clamp(21px, 2.6vw, 30px)/1.2 "Cinzel", Georgia, "Times New Roman", serif;
+  font: 800 clamp(23px, 2.8vw, 33px)/1.2 "Cinzel", Georgia, "Times New Roman", serif;
   letter-spacing: 0.13em;
   font-variant-numeric: tabular-nums;
   text-shadow: 0 0 12px rgb(159 100 62 / 0.36);
@@ -21855,15 +21854,23 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 
 .defeat-outcome-actions {
   display: grid;
-  width: min(520px, calc(100vw - 32px));
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  width: min(620px, calc(100vw - 16px));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(6px, 1.5vw, 12px);
   margin-top: 22px;
   opacity: 0;
   animation: defeat-copy-rise 620ms 1080ms ease-out both;
 }
 
-.game-result-defeat .game-result-action { font-size: 12px; }
+.game-result-defeat .game-result-action {
+  min-width: 0;
+  padding-inline: clamp(4px, 1.2vw, 14px);
+  font-size: clamp(8px, 2.1vw, 13px);
+  letter-spacing: clamp(0.05em, 0.16vw, 0.12em);
+  white-space: nowrap;
+}
+
+.game-result-defeat .game-result-action svg { flex: 0 0 auto; }
 
 @keyframes defeat-crack-grow {
   0% { opacity: 0; stroke-dashoffset: 1; }
@@ -21920,7 +21927,6 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
   .defeat-kicker { letter-spacing: 0.24em; }
   .defeat-kicker::before, .defeat-kicker::after { width: 32px; }
   .defeat-future-plate { min-width: 100%; }
-  .defeat-outcome-actions { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

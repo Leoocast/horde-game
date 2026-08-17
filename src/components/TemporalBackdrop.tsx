@@ -20,6 +20,9 @@ const DIAL_LABELS = [
   { x: -160, y: -155, text: "315°", textAnchor: "end" },
 ] as const;
 
+const DIAL_DAMPING_PER_SECOND = 12;
+const DIAL_SETTLE_EPSILON = 0.05;
+
 /**
  * Fondo espacio/temporal permanente.
  *
@@ -35,6 +38,9 @@ export function TemporalBackdrop({
   climax = 0,
   grid = false,
   dial = 0,
+  dialRevision = 0,
+  settleDialImmediately = false,
+  onDialSettled,
 }: {
   /** Mismo umbral que lleva la música a clímax. */
   climax?: number;
@@ -44,14 +50,24 @@ export function TemporalBackdrop({
    *  el futuro: a la derecha cuando la Hueste pierde, a la izquierda cuando pierde
    *  el Cronista. */
   dial?: number;
+  /** Revisión monotónica del objetivo; un valor que vuelve al ángulo anterior sigue siendo un
+   * movimiento nuevo que debe asentarse. */
+  dialRevision?: number;
+  /** Emergency path: present the exact dial target on the next rendered frame. */
+  settleDialImmediately?: boolean;
+  /** Señala la revisión exacta que ya terminó de presentar. */
+  onDialSettled?: (dialRevision: number) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const dialRef = useRef<SVGGElement | null>(null);
   const dialLabelRefs = useRef<Array<SVGTextElement | null>>([]);
-  const targetRef = useRef({ climax, dial });
+  const targetRef = useRef({ climax, dial, dialRevision, settleDialImmediately });
+  const dialLoopActiveRef = useRef(false);
+  const onDialSettledRef = useRef(onDialSettled);
 
   // El bucle lee los valores por referencia para no reiniciarse en cada cambio.
-  targetRef.current = { climax, dial };
+  targetRef.current = { climax, dial, dialRevision, settleDialImmediately };
+  onDialSettledRef.current = onDialSettled;
 
   const positionDial = (degrees: number) => {
     dialRef.current?.setAttribute("transform", temporalDialTransform(degrees));
@@ -64,12 +80,15 @@ export function TemporalBackdrop({
     });
   };
 
-  // Con movimiento reducido no hay bucle, así que el disco salta a su sitio.
+  // Con movimiento reducido o sin renderer activo no hay bucle: el disco salta a su sitio y
+  // también completa el handshake para que una captura nunca quede esperando un contexto ausente.
   useEffect(() => {
     if (!dialRef.current) return;
-    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (dialLoopActiveRef.current && !reducedMotion && !settleDialImmediately) return;
     positionDial(dial);
-  }, [dial]);
+    onDialSettledRef.current?.(dialRevision);
+  }, [dial, dialRevision, settleDialImmediately]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -129,11 +148,15 @@ export function TemporalBackdrop({
     const uClimax = gl.getUniformLocation(program, "uClimax");
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    dialLoopActiveRef.current = !reducedMotion;
     const startedAt = performance.now();
     let climaxMix = targetRef.current.climax;
     let dialMix = targetRef.current.dial;
+    let lastDrawAt = startedAt;
+    let lastReportedDialRevision = targetRef.current.dialRevision;
     let frame = 0;
     let disposed = false;
+    let contextLost = false;
 
     const draw = (now: number) => {
       const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
@@ -146,10 +169,30 @@ export function TemporalBackdrop({
 
       // El cambio de estado se interpola: un salto seco se ve.
       climaxMix += (targetRef.current.climax - climaxMix) * 0.04;
-      // El disco gira despacio hasta su nuevo ángulo y se queda ahí: el futuro se
-      // movió y no vuelve. Se escribe el atributo en vez de usar CSS porque el origen
-      // de rotación del grupo ya es su propio centro y así no depende de `fill-box`.
-      dialMix += (targetRef.current.dial - dialMix) * 0.035;
+      // Damping por tiempo, no por frame: el giro conserva velocidad a 60/120/144 Hz y, a
+      // diferencia de la aproximación asintótica anterior, hace snap y tiene un final observable.
+      const deltaSeconds = Math.min(Math.max((now - lastDrawAt) / 1000, 0), 0.05);
+      lastDrawAt = now;
+      const dialTarget = targetRef.current.dial;
+      const targetRevision = targetRef.current.dialRevision;
+      const dialDelta = dialTarget - dialMix;
+      if (targetRef.current.settleDialImmediately) {
+        dialMix = dialTarget;
+        if (lastReportedDialRevision !== targetRevision) {
+          lastReportedDialRevision = targetRevision;
+          onDialSettledRef.current?.(targetRevision);
+        }
+      } else if (Math.abs(dialDelta) <= DIAL_SETTLE_EPSILON) {
+        dialMix = dialTarget;
+        if (lastReportedDialRevision !== targetRevision) {
+          lastReportedDialRevision = targetRevision;
+          onDialSettledRef.current?.(targetRevision);
+        }
+      } else {
+        dialMix += dialDelta * (1 - Math.exp(-DIAL_DAMPING_PER_SECOND * deltaSeconds));
+      }
+      // Se escribe el atributo en vez de usar CSS porque el origen de rotación del grupo ya es
+      // su propio centro y así no depende de `fill-box`.
       positionDial(dialMix);
 
       gl.viewport(0, 0, width, height);
@@ -160,7 +203,7 @@ export function TemporalBackdrop({
     };
 
     const loop = (now: number) => {
-      if (disposed) return;
+      if (disposed || contextLost) return;
       draw(now);
       frame = requestAnimationFrame(loop);
     };
@@ -174,7 +217,7 @@ export function TemporalBackdrop({
 
     // La ventana oculta no debe seguir dibujando; acompaña a `backgroundThrottling`.
     const onVisibility = () => {
-      if (reducedMotion || disposed) return;
+      if (reducedMotion || disposed || contextLost) return;
       cancelAnimationFrame(frame);
       if (!document.hidden) frame = requestAnimationFrame(loop);
     };
@@ -182,13 +225,18 @@ export function TemporalBackdrop({
 
     const onContextLost = (event: Event) => {
       event.preventDefault();
+      contextLost = true;
       cancelAnimationFrame(frame);
+      dialLoopActiveRef.current = false;
+      positionDial(targetRef.current.dial);
+      onDialSettledRef.current?.(targetRef.current.dialRevision);
       canvas.style.display = "none";
     };
     canvas.addEventListener("webglcontextlost", onContextLost);
 
     return () => {
       disposed = true;
+      dialLoopActiveRef.current = false;
       cancelAnimationFrame(frame);
       document.removeEventListener("visibilitychange", onVisibility);
       canvas.removeEventListener("webglcontextlost", onContextLost);

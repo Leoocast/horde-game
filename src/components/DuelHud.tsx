@@ -21,7 +21,7 @@ import {
 import { playerAttackHostHitDelay } from "./playerAttackPresentation";
 import { PlayerArchiveForecast } from "./PlayerArchiveForecast";
 import { setupProgress } from "./setupPresentation";
-import { guidedAnchorRegistry, guidedSurfaceAnchorKey } from "../guidance";
+import { guidedAnchorRegistry, guidedPresentationActivity, guidedSurfaceAnchorKey } from "../guidance";
 
 export function DuelHud({ game }: { game: GameState }) {
   const t = useTranslation();
@@ -518,7 +518,14 @@ export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameSt
     lastEventId.current = hostAttackAnimation.eventId;
     const hitDelay = hostAttackPlayerHitDelay(hostAttackAnimation.customAnimation);
     let frame: number | undefined;
+    let impactStarted = false;
+    let damageActivity: ReturnType<typeof guidedPresentationActivity.begin> | undefined;
     const impact = () => {
+      impactStarted = true;
+      damageActivity = guidedPresentationActivity.begin(
+        "life.damage",
+        `host-attack:${hostAttackAnimation.eventId}`,
+      );
       if (hitDelay === 0) {
         setVisualLife((life) => Math.max(0, life - hostAttackAnimation.playerDamage));
       }
@@ -526,23 +533,40 @@ export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameSt
       frame = window.requestAnimationFrame(() => setTakingDamage(true));
     };
     const impactTimeout = window.setTimeout(impact, hitDelay);
-    const clearTimeout = window.setTimeout(() => setTakingDamage(false), hitDelay + 430);
+    const clearTimeout = window.setTimeout(() => {
+      setTakingDamage(false);
+      damageActivity?.end();
+    }, hitDelay + 430);
     return () => {
+      // El store puede retirar `hostAttackAnimation` apenas vuelve el atacante. Si el impacto ya
+      // empezó, su reacción de Vida conserva su propio reloj y token hasta el último frame.
+      if (impactStarted) return;
       if (frame !== undefined) window.cancelAnimationFrame(frame);
       window.clearTimeout(impactTimeout);
       window.clearTimeout(clearTimeout);
+      damageActivity?.end();
+      setTakingDamage(false);
     };
   }, [hostAttackAnimation]);
 
   useEffect(() => {
     if (!lifeDamageAnimationId || lifeDamageAnimationId === lastLifeDamageAnimationId.current) return;
     lastLifeDamageAnimationId.current = lifeDamageAnimationId;
+    const damageActivity = guidedPresentationActivity.begin(
+      "life.damage",
+      `effect:${lifeDamageAnimationId}`,
+    );
     setTakingDamage(false);
     const frame = window.requestAnimationFrame(() => setTakingDamage(true));
-    const timeout = window.setTimeout(() => setTakingDamage(false), 430);
+    const timeout = window.setTimeout(() => {
+      setTakingDamage(false);
+      damageActivity.end();
+    }, 430);
     return () => {
       window.cancelAnimationFrame(frame);
       window.clearTimeout(timeout);
+      damageActivity.end();
+      setTakingDamage(false);
     };
   }, [lifeDamageAnimationId]);
 

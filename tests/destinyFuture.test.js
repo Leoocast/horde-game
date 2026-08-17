@@ -38,27 +38,31 @@ test("the degree dial tracks every card death outside the battle phase", () => {
   addCard(game, customCard("host-death-two", "host"));
   addCard(game, customCard("player-death", "player"));
   useGameStore.getState().loadScenario(game, TEST_DECK_IDS);
-  useGameStore.setState({ destinyDial: 0 });
+  useGameStore.setState({ destinyDial: 0, destinyDialRevision: 0 });
 
   const afterHostDeaths = structuredClone(useGameStore.getState().game);
   for (const card of [...afterHostDeaths.host.field]) destroyPermanent(afterHostDeaths, card);
   useGameStore.setState({ game: afterHostDeaths });
   assert.equal(useGameStore.getState().destinyDial, 14);
+  assert.equal(useGameStore.getState().destinyDialRevision, 1);
 
   const afterPlayerDeath = structuredClone(useGameStore.getState().game);
   destroyPermanent(afterPlayerDeath, afterPlayerDeath.player.field[0]);
   useGameStore.setState({ game: afterPlayerDeath });
   assert.equal(useGameStore.getState().destinyDial, 7);
+  assert.equal(useGameStore.getState().destinyDialRevision, 2);
 });
 
 test("rewriting or loading a new game resets the degree dial to zero", () => {
-  useGameStore.setState({ destinyDial: 35 });
+  useGameStore.setState({ destinyDial: 35, destinyDialRevision: 4 });
   useGameStore.getState().reset("destiny-dial-rewrite", 3);
   assert.equal(useGameStore.getState().destinyDial, 0);
+  assert.equal(useGameStore.getState().destinyDialRevision, 0);
 
-  useGameStore.setState({ destinyDial: -21 });
+  useGameStore.setState({ destinyDial: -21, destinyDialRevision: 7 });
   useGameStore.getState().loadScenario(createTestGame("destiny-dial-new-game"), TEST_DECK_IDS);
   assert.equal(useGameStore.getState().destinyDial, 0);
+  assert.equal(useGameStore.getState().destinyDialRevision, 0);
 });
 
 test("degree labels counter-rotate around their anchors and stay horizontal", () => {

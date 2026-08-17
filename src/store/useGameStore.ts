@@ -45,7 +45,11 @@ import {
   startHostCombatSequence,
 } from "./hostBeats";
 import { fireballCastSfx, fireballHitSfx, type SfxId } from "../audio/soundManifest";
-import { advanceTributeOfTheFourSorrowsSequence, runTributeOfTheFourSorrowsSequence } from "./tributeOfTheFourSorrowsSequence";
+import {
+  advanceTributeOfTheFourSorrowsSequence,
+  finishTributeOfTheFourSorrowsAfterDefeat,
+  runTributeOfTheFourSorrowsSequence,
+} from "./tributeOfTheFourSorrowsSequence";
 import {
   hasQueuedPlayerTriggers,
   resetPlayerTriggerSequence,
@@ -144,6 +148,8 @@ export type GameStore = {
    * futuro impacto a impacto, no al cerrar la batalla.
    */
   destinyDial: number;
+  /** Revisión monotónica del objetivo del disco. Distingue 0 → 7 → 0 de un 0 que nunca se movió. */
+  destinyDialRevision: number;
   hostCombatVisualDamage?: Record<string, number>;
   hostCombatDeadCardIds: string[];
   specialDeadCardIds: string[];
@@ -633,6 +639,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   surgeTransitionActive: false,
   surgeTransitionShown: false,
   destinyDial: 0,
+  destinyDialRevision: 0,
   hostCombatVisualDamage: undefined,
   hostCombatDeadCardIds: [],
   specialDeadCardIds: [],
@@ -673,6 +680,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         game: next,
         gameSessionId: state.gameSessionId + 1,
         destinyDial: 0,
+        destinyDialRevision: 0,
         seed,
         playerDeckId,
         hostDeckId,
@@ -688,6 +696,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         game,
         gameSessionId: state.gameSessionId + 1,
         destinyDial: 0,
+        destinyDialRevision: 0,
         seed: game.seed,
         playerDeckId: deckIds.playerDeckId,
         hostDeckId: deckIds.hostDeckId,
@@ -870,7 +879,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     publishGameplayReceipt({ kind: "target.deselected", reason: "tribute" });
   },
   confirmTributeOfTheFourSorrowsSelection: () => {
-    const { game, tributeOfTheFourSorrowsSelection } = get();
+    const { game, gameSessionId, tributeOfTheFourSorrowsSelection } = get();
     if (!tributeOfTheFourSorrowsSelection?.targetId) return;
     const { kind, targetId } = tributeOfTheFourSorrowsSelection;
     if (!gameplayIntentAllowed({ kind: "target.confirm", context: "tribute", targetIds: [targetId] })) return;
@@ -880,20 +889,41 @@ export const useGameStore = create<GameStore>((set, get) => ({
       notifyDiscardEffects(game, next);
       set({ game: next, tributeOfTheFourSorrowsSelection: undefined });
       publishGameplayReceipt({ kind: "target.confirmed", targetIds: [targetId], reason: "tribute" });
-      resumeAfterDiscardPause(() => advanceTributeOfTheFourSorrowsSequence("after-discard"));
+      resumeAfterDiscardPause(
+        () => {
+          const current = get();
+          if (current.gameSessionId !== gameSessionId) return;
+          if (current.game.winner) {
+            finishTributeOfTheFourSorrowsAfterDefeat();
+            return;
+          }
+          advanceTributeOfTheFourSorrowsSequence("after-discard");
+        },
+        () => get().gameSessionId === gameSessionId,
+      );
       return;
     }
     set({ tributeOfTheFourSorrowsSelection: undefined, specialDeadCardIds: [targetId] });
     publishGameplayReceipt({ kind: "target.confirmed", targetIds: [targetId], reason: "tribute" });
     useAudioStore.getState().playSfx("attack");
     window.setTimeout(() => {
+      if (get().gameSessionId !== gameSessionId) return;
       set((state) => {
+        if (state.gameSessionId !== gameSessionId) return {};
         const resolved = structuredClone(state.game) as GameState;
         const target = resolved.player.field.find((card) => card.instanceId === targetId);
         if (target) destroyPermanent(resolved, target);
         return { game: resolved, specialDeadCardIds: [] };
       });
-      window.setTimeout(() => advanceTributeOfTheFourSorrowsSequence(kind === "sacrifice-creature" ? "after-sacrifice-creature" : "after-sacrifice-land"), 320);
+      window.setTimeout(() => {
+        const current = get();
+        if (current.gameSessionId !== gameSessionId) return;
+        if (current.game.winner) {
+          finishTributeOfTheFourSorrowsAfterDefeat();
+          return;
+        }
+        advanceTributeOfTheFourSorrowsSequence(kind === "sacrifice-creature" ? "after-sacrifice-creature" : "after-sacrifice-land");
+      }, 320);
     }, 260);
   },
   selectHandLimitDiscard: (id) => {
@@ -1707,7 +1737,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
         useGameStore.setState((state) => {
           const striker = state.game.player.field.find((card) => card.instanceId === attackerId);
           const struck = striker ? getPowerEndurance(state.game, striker).power > 0 : false;
-          return struck ? { destinyDial: state.destinyDial + DESTINY_DIAL_STEP } : {};
+          return struck
+            ? {
+                destinyDial: state.destinyDial + DESTINY_DIAL_STEP,
+                destinyDialRevision: state.destinyDialRevision + 1,
+              }
+            : {};
         });
         useGameStore.setState((state) => {
           const afterLifesteal = resolvePlayerAttackerDrain(state.game, attackerId);
@@ -2044,7 +2079,10 @@ useGameStore.subscribe((state, previousState) => {
       current.game !== state.game ||
       current.gameSessionId !== state.gameSessionId
     ) return {};
-    return { destinyDial: current.destinyDial + delta };
+    return {
+      destinyDial: current.destinyDial + delta,
+      destinyDialRevision: current.destinyDialRevision + 1,
+    };
   });
 });
 
@@ -2218,8 +2256,29 @@ function playerDrawReason(previous: GameState, next: GameState): string {
   return "effect";
 }
 
+/** Libera solamente el beat de combate ya terminado. La limpieza global pertenece a Board y se
+ * ejecuta después de que el resto de la presentación de derrota haya quedado estable. */
+function releaseHostCombatPresentationAfterDefeat(): void {
+  useGameStore.setState({
+    hostAttackAnimation: undefined,
+    burnAnimation: undefined,
+    burnImpactCardId: undefined,
+    burnImpactCardIds: [],
+    resolvingHostCombat: false,
+    hostAutoTriggerCount: 0,
+    hostCombatVisualDamage: undefined,
+    hostCombatDeadCardIds: [],
+    selectedHostCreatureId: undefined,
+    selectedPlayerCreatureId: undefined,
+  });
+}
+
 function runHostCombatEventSequence(events: HostAttackEvent[], index: number, sequenceId: number): void {
-  if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
+  if (sequenceId !== hostCombatSequenceId) return;
+  if (useGameStore.getState().game.winner) {
+    releaseHostCombatPresentationAfterDefeat();
+    return;
+  }
   const plannedEvent = events[index];
   if (!plannedEvent) {
     runPendingHostCombatVolleyOrFinish(sequenceId);
@@ -2331,7 +2390,12 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
       const dialTurn = event.playerDamage > 0 ? -DESTINY_DIAL_STEP : 0;
       return {
         game: next,
-        ...(dialTurn === 0 ? {} : { destinyDial: state.destinyDial + dialTurn }),
+        ...(dialTurn === 0
+          ? {}
+          : {
+              destinyDial: state.destinyDial + dialTurn,
+              destinyDialRevision: state.destinyDialRevision + 1,
+            }),
         hostCombatVisualDamage: nextVisualDamage(event),
         hostCombatDeadCardIds: nextDeadCardIds(event),
         ...(gainedLife ? startLifeBuffBeat() : {}),
@@ -2349,11 +2413,18 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
       burnImpactCardIds: [],
     });
     if (gameEnded) {
-      useGameStore.getState().stopGamePresentation();
+      // Board es la única autoridad que hace la limpieza global de una derrota. Aquí sólo se
+      // libera el combate que ya terminó; así la reacción de Vida, el dial y cualquier VFX local
+      // conservan sus propios finales antes de que se tome la captura.
+      releaseHostCombatPresentationAfterDefeat();
       return;
     }
     scheduleQueuedCombatReactions(() => {
-      if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
+      if (sequenceId !== hostCombatSequenceId) return;
+      if (useGameStore.getState().game.winner) {
+        releaseHostCombatPresentationAfterDefeat();
+        return;
+      }
       useGameStore.setState({ hostCombatDeadCardIds: [] });
       runHostCombatEventSequence(events, index + 1, sequenceId);
     });
@@ -2361,6 +2432,10 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
 }
 
 function scheduleQueuedCombatReactions(onComplete: () => void): void {
+  if (useGameStore.getState().game.winner) {
+    onComplete();
+    return;
+  }
   if (hasQueuedPlayerTriggers(useGameStore.getState().game)) {
     scheduleQueuedPlayerTriggers(() => scheduleQueuedCombatReactions(onComplete));
     return;
@@ -2375,7 +2450,11 @@ function scheduleQueuedCombatReactions(onComplete: () => void): void {
 }
 
 function runPendingHostCombatVolleyOrFinish(combatSequenceId: number): void {
-  if (combatSequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
+  if (combatSequenceId !== hostCombatSequenceId) return;
+  if (useGameStore.getState().game.winner) {
+    releaseHostCombatPresentationAfterDefeat();
+    return;
+  }
   const state = useGameStore.getState();
   const volley = pendingHostCombatDamageVolley(state.game);
   if (!volley || volley.damage <= 0) {
@@ -2436,7 +2515,7 @@ function runPendingHostCombatVolleyOrFinish(combatSequenceId: number): void {
       if (sequenceId !== hostSequenceEpoch() || combatSequenceId !== hostCombatSequenceId) return;
       useGameStore.setState({ burnAnimation: undefined });
       if (useGameStore.getState().game.winner) {
-        useGameStore.getState().stopGamePresentation();
+        releaseHostCombatPresentationAfterDefeat();
         return;
       }
       finishAnimatedHostCombat();
@@ -2778,7 +2857,8 @@ const MANUAL_TRIGGER_AFTER_REACTION_MS = 420;
 const MANUAL_TRIGGER_SUMMON_WAIT_POLL_MS = 60;
 
 function scheduleManualTriggerOverlay(manualTriggeredCard: CardInstance, startDelayMs: number): void {
-  window.setTimeout(() => fireManualTriggerOverlay(manualTriggeredCard), startDelayMs);
+  const sessionId = useGameStore.getState().gameSessionId;
+  window.setTimeout(() => fireManualTriggerOverlay(manualTriggeredCard, sessionId), startDelayMs);
 }
 
 // `.effect-card-lifted`/`.effect-card-activating` (the pulse this triggers) animate the same
@@ -2786,8 +2866,17 @@ function scheduleManualTriggerOverlay(manualTriggeredCard: CardInstance, startDe
 // The fixed delay callers pass is usually enough clearance, but under main-thread jank the pulse
 // can still start while the pop is mid-flight and cut it short. Wait for summoningAnimationCount
 // to actually drop to 0 (with a bounded safety clear already in the store) instead of guessing.
-function fireManualTriggerOverlay(manualTriggeredCard: CardInstance): void {
-  const latest = useGameStore.getState().game;
+function fireManualTriggerOverlay(manualTriggeredCard: CardInstance, sessionId: number): void {
+  const current = useGameStore.getState();
+  if (current.gameSessionId !== sessionId) return;
+  if (current.game.winner) {
+    useGameStore.setState((state) => ({
+      pendingTriggeredEffectCount: Math.max(0, state.pendingTriggeredEffectCount - 1),
+      pendingTriggeredEffectSourceId: undefined,
+    }));
+    return;
+  }
+  const latest = current.game;
   if (!findBattlefieldCard(latest, manualTriggeredCard.instanceId)) {
     useGameStore.setState((state) => ({
       pendingTriggeredEffectCount: Math.max(0, state.pendingTriggeredEffectCount - 1),
@@ -2795,13 +2884,18 @@ function fireManualTriggerOverlay(manualTriggeredCard: CardInstance): void {
     }));
     return;
   }
-  if (useGameStore.getState().summoningAnimationCount > 0) {
-    window.setTimeout(() => fireManualTriggerOverlay(manualTriggeredCard), MANUAL_TRIGGER_SUMMON_WAIT_POLL_MS);
+  if (current.summoningAnimationCount > 0) {
+    window.setTimeout(
+      () => fireManualTriggerOverlay(manualTriggeredCard, sessionId),
+      MANUAL_TRIGGER_SUMMON_WAIT_POLL_MS,
+    );
     return;
   }
   useAudioStore.getState().playSfx("activateEffect");
   useGameStore.getState().triggerEffectActivationPulse(manualTriggeredCard.instanceId);
   window.setTimeout(() => {
+    const latestStore = useGameStore.getState();
+    if (latestStore.gameSessionId !== sessionId || latestStore.game.winner) return;
     useGameStore.setState({
       counterTargeting: {
         sourceId: manualTriggeredCard.instanceId,
@@ -2819,6 +2913,9 @@ function fireManualTriggerOverlay(manualTriggeredCard: CardInstance): void {
 // *after* the card is already visible, without delaying the cast itself. Host resolves before
 // any manual trigger on the just-cast card (APNAP: non-active player's trigger goes on top of the stack).
 function scheduleCardPlayedReaction(sources: CardInstance[], manualTriggeredCard: CardInstance | undefined): void {
+  const initialState = useGameStore.getState();
+  if (initialState.game.winner) return;
+  const sessionId = initialState.gameSessionId;
   useGameStore.setState((state) => ({ hostAutoTriggerCount: state.hostAutoTriggerCount + 1 }));
   useAudioStore.getState().playSfx("activateEffect");
   for (const source of sources) useGameStore.getState().triggerEffectActivationPulse(source.instanceId);
@@ -2828,6 +2925,14 @@ function scheduleCardPlayedReaction(sources: CardInstance[], manualTriggeredCard
     tone: "host",
   });
   window.setTimeout(() => {
+    const latestStore = useGameStore.getState();
+    if (latestStore.gameSessionId !== sessionId) return;
+    if (latestStore.game.winner) {
+      useGameStore.setState((state) => ({
+        hostAutoTriggerCount: Math.max(0, state.hostAutoTriggerCount - 1),
+      }));
+      return;
+    }
     useGameStore.setState((state) => {
       const previous = state.game;
       const next = structuredClone(previous) as GameState;
@@ -2846,7 +2951,9 @@ function scheduleCardPlayedReaction(sources: CardInstance[], manualTriggeredCard
         ...(buffBeat ?? {}),
       };
     });
-    if (manualTriggeredCard) scheduleManualTriggerOverlay(manualTriggeredCard, MANUAL_TRIGGER_AFTER_REACTION_MS);
+    if (manualTriggeredCard && !useGameStore.getState().game.winner) {
+      scheduleManualTriggerOverlay(manualTriggeredCard, MANUAL_TRIGGER_AFTER_REACTION_MS);
+    }
   }, CARD_PLAYED_REACTION_RESOLVE_MS);
 }
 

@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Copy, RefreshCcw, Sparkles } from "lucide-react";
+import { Copy, RefreshCcw } from "lucide-react";
 import type { GameState } from "../engine/GameTypes";
 import { useToastStore } from "../store/useToastStore";
 import { useTranslation } from "../i18n/useTranslation";
@@ -72,18 +72,17 @@ export function DefeatModal({ game, snapshotImage, onRewriteFuture, onContemplat
 
           <div className="defeat-outcome-actions">
             <button
-              className="game-result-action game-result-action-secondary flex h-12 items-center justify-center gap-2"
+              className="game-result-action game-result-action-secondary flex h-12 w-full min-w-0 items-center justify-center"
               onClick={onContemplateFuture}
             >
-              <Sparkles size={17} />
-              {t("destiny.contemplateAnother")}
+              <span>{t("destiny.contemplateAnother")}</span>
             </button>
             <button
-              className="game-result-action game-result-action-primary flex h-12 items-center justify-center gap-2"
+              className="game-result-action game-result-action-primary flex h-12 w-full min-w-0 items-center justify-center gap-2"
               onClick={onRewriteFuture}
             >
-              <RefreshCcw size={18} />
-              {t("destiny.rewriteThis")}
+              <RefreshCcw size={18} aria-hidden="true" />
+              <span>{t("destiny.rewriteThis")}</span>
             </button>
           </div>
         </div>

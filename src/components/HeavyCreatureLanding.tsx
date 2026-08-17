@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
 import { renderSharedVfxFrame } from "./sharedVfxRenderer";
+import { guidedPresentationActivity } from "../guidance";
 
 type Props = {
   cardId: string;
@@ -65,6 +66,10 @@ export function HeavyCreatureLanding({ cardId, eventId, onComplete }: Props) {
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const presentationActivity = guidedPresentationActivity.begin(
+      "battlefield.heavy-landing",
+      `${cardId}:${eventId}`,
+    );
 
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     const duration = reducedMotion ? 0.72 : EFFECT_DURATION;
@@ -296,12 +301,14 @@ export function HeavyCreatureLanding({ cardId, eventId, onComplete }: Props) {
         frame = window.requestAnimationFrame(animate);
       } else if (!completed) {
         completed = true;
+        presentationActivity.end();
         onCompleteRef.current(cardId, eventId);
       }
     };
 
     frame = window.requestAnimationFrame(animate);
     return () => {
+      presentationActivity.end();
       window.cancelAnimationFrame(frame);
       for (const object of ownedObjects) scene.remove(object);
       for (const material of ownedMaterials) material.dispose();

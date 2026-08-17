@@ -14,6 +14,7 @@ import { hasQueuedPlayerTriggers, scheduleQueuedPlayerTriggers } from "./playerB
 // a card to discard, choose a creature to sacrifice, choose a land to sacrifice). Everything here is
 // sequential and blocks the board via `hostAutoTriggerCount`, same as other Host reactions.
 export function runTributeOfTheFourSorrowsSequence(card: CardInstance): void {
+  if (useGameStore.getState().game.winner) return;
   const resetEpoch = hostSequenceEpoch();
   useGameStore.setState((state) => {
     const next = structuredClone(state.game) as GameState;
@@ -25,6 +26,10 @@ export function runTributeOfTheFourSorrowsSequence(card: CardInstance): void {
   useToastStore.getState().pushToast({ title: uiText("toast.hostEffect"), message: uiText("toast.afflictsHost", { card: uiCardName(card) }), tone: "host" });
   window.setTimeout(() => {
     if (resetEpoch !== hostSequenceEpoch()) return;
+    if (useGameStore.getState().game.winner) {
+      finishTributeOfTheFourSorrowsSequence(false);
+      return;
+    }
     let sacrificedId: string | undefined;
     useGameStore.setState((state) => {
       const next = structuredClone(state.game) as GameState;
@@ -32,7 +37,14 @@ export function runTributeOfTheFourSorrowsSequence(card: CardInstance): void {
       return { game: next };
     });
     if (!sacrificedId) {
-      window.setTimeout(() => beginTributeOfTheFourSorrowsPlayerRound(resetEpoch), 200);
+      window.setTimeout(() => {
+        if (resetEpoch !== hostSequenceEpoch()) return;
+        if (useGameStore.getState().game.winner) {
+          finishTributeOfTheFourSorrowsSequence(false);
+          return;
+        }
+        beginTributeOfTheFourSorrowsPlayerRound(resetEpoch);
+      }, 200);
       return;
     }
     useGameStore.setState({ specialDeadCardIds: [sacrificedId] });
@@ -46,7 +58,18 @@ export function runTributeOfTheFourSorrowsSequence(card: CardInstance): void {
         return { game: next, specialDeadCardIds: [] };
       });
       scheduleQueuedHostTriggers(() => {
-        window.setTimeout(() => beginTributeOfTheFourSorrowsPlayerRound(resetEpoch), 320);
+        if (useGameStore.getState().game.winner) {
+          finishTributeOfTheFourSorrowsSequence(false);
+          return;
+        }
+        window.setTimeout(() => {
+          if (resetEpoch !== hostSequenceEpoch()) return;
+          if (useGameStore.getState().game.winner) {
+            finishTributeOfTheFourSorrowsSequence(false);
+            return;
+          }
+          beginTributeOfTheFourSorrowsPlayerRound(resetEpoch);
+        }, 320);
       });
     }, 260);
   }, 700);
@@ -54,21 +77,44 @@ export function runTributeOfTheFourSorrowsSequence(card: CardInstance): void {
 
 function beginTributeOfTheFourSorrowsPlayerRound(resetEpoch: number): void {
   if (resetEpoch !== hostSequenceEpoch()) return;
+  if (useGameStore.getState().game.winner) {
+    finishTributeOfTheFourSorrowsSequence(false);
+    return;
+  }
   const card = useGameStore.getState().tributeOfTheFourSorrowsCard;
   useAudioStore.getState().playSfx("activateEffect");
   if (card) useGameStore.getState().triggerEffectActivationPulse(card.instanceId);
   useToastStore.getState().pushToast({ title: uiText("toast.hostEffect"), message: uiText("toast.turnsAgainst", { card: card ? uiCardName(card) : "Tribute of the Four Sorrows" }), tone: "host" });
   window.setTimeout(() => {
     if (resetEpoch !== hostSequenceEpoch()) return;
+    if (useGameStore.getState().game.winner) {
+      finishTributeOfTheFourSorrowsSequence(false);
+      return;
+    }
     useGameStore.setState((state) => {
       const next = structuredClone(state.game) as GameState;
       losePlayerLife(next, 1, card?.instanceId);
       next.log.unshift("Player loses 1 life.");
       return { game: next, lifeDamageAnimationId: Date.now() };
     });
+    if (useGameStore.getState().game.winner === "host") {
+      // La derrota cancela la parte interactiva del Tributo, pero conserva el beat de impacto
+      // completo. Sin esta rama el contador quedaría esperando una selección que la pantalla de
+      // derrota bloquea, por lo que nunca podría tomarse la captura final.
+      window.setTimeout(() => {
+        if (resetEpoch !== hostSequenceEpoch()) return;
+        finishTributeOfTheFourSorrowsSequence(false);
+      }, 480);
+      return;
+    }
     const continueAfterLifeLoss = () => window.setTimeout(() => {
       if (resetEpoch !== hostSequenceEpoch()) return;
-      if (useGameStore.getState().game.player.hand.length > 0) startTributeOfTheFourSorrowsSelectionStep("discard");
+      const current = useGameStore.getState();
+      if (current.game.winner) {
+        finishTributeOfTheFourSorrowsSequence(false);
+        return;
+      }
+      if (current.game.player.hand.length > 0) startTributeOfTheFourSorrowsSelectionStep("discard");
       else advanceTributeOfTheFourSorrowsSequence("after-discard");
     }, 480);
     if (hasQueuedPlayerTriggers(useGameStore.getState().game)) {
@@ -80,6 +126,10 @@ function beginTributeOfTheFourSorrowsPlayerRound(resetEpoch: number): void {
 }
 
 function startTributeOfTheFourSorrowsSelectionStep(kind: TributeOfTheFourSorrowsSelectionState["kind"]): void {
+  if (useGameStore.getState().game.winner) {
+    finishTributeOfTheFourSorrowsSequence(false);
+    return;
+  }
   useGameStore.setState({
     tributeOfTheFourSorrowsSelection: { kind, targetId: undefined, x: window.innerWidth * 0.5, y: window.innerHeight * 0.42 },
   });
@@ -87,6 +137,10 @@ function startTributeOfTheFourSorrowsSelectionStep(kind: TributeOfTheFourSorrows
 
 export function advanceTributeOfTheFourSorrowsSequence(from: "after-discard" | "after-sacrifice-creature" | "after-sacrifice-land"): void {
   const game = useGameStore.getState().game;
+  if (game.winner) {
+    finishTributeOfTheFourSorrowsSequence(false);
+    return;
+  }
   if (from === "after-discard") {
     const hasCreature = game.player.field.some((card) => card.kinds.includes("ECHO"));
     if (hasCreature) startTributeOfTheFourSorrowsSelectionStep("sacrifice-creature");
@@ -102,7 +156,7 @@ export function advanceTributeOfTheFourSorrowsSequence(from: "after-discard" | "
   finishTributeOfTheFourSorrowsSequence();
 }
 
-function finishTributeOfTheFourSorrowsSequence(): void {
+function finishTributeOfTheFourSorrowsSequence(startCombat = true): void {
   useGameStore.setState((state) => {
     const previous = state.game;
     const next = structuredClone(previous) as GameState;
@@ -116,9 +170,15 @@ function finishTributeOfTheFourSorrowsSequence(): void {
     return {
       game: next,
       tributeOfTheFourSorrowsCard: undefined,
+      tributeOfTheFourSorrowsSelection: undefined,
       hostAutoTriggerCount: Math.max(0, state.hostAutoTriggerCount - 1),
       hostMillAnimationQueue: appendHostMillAnimations(state, previous, next),
     };
   });
-  startHostCombatSequence();
+  if (startCombat) startHostCombatSequence();
+}
+
+/** Terminal hand-off used when another visible Tribute beat caused defeat. */
+export function finishTributeOfTheFourSorrowsAfterDefeat(): void {
+  finishTributeOfTheFourSorrowsSequence(false);
 }

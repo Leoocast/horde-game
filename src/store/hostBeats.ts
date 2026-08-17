@@ -113,6 +113,10 @@ export function scheduleHostInvokedTriggers(
   const sequenceId = ++hostAutoTriggerSequenceId;
   const runNext = (index: number) => {
     if (sequenceId !== hostAutoTriggerSequenceId) return;
+    if (useGameStore.getState().game.winner) {
+      useGameStore.setState({ hostAutoTriggerCount: 0 });
+      return;
+    }
     if (!guidedBeatBarrier.request("host.invoked-trigger", () => runNext(index))) return;
     const card = cards[index];
     if (!card) {
@@ -196,6 +200,10 @@ export function scheduleHostInvokedTriggers(
  * arrivals without a self trigger still broadcast ECHO_INVOKED silently, while a card whose aura
  * already supplied the activation pulse keeps its ETB as a separate beat without glowing twice. */
 export function scheduleHostArrivalEffects(cards: CardInstance[], onComplete?: () => void): void {
+  if (useGameStore.getState().game.winner) {
+    useGameStore.setState({ hostAutoTriggerCount: 0 });
+    return;
+  }
   const waitingSequenceId = hostAutoTriggerSequenceId;
   if (useGameStore.getState().summoningAnimationCount > 0) {
     window.setTimeout(() => {
@@ -219,6 +227,10 @@ export function scheduleHostArrivalEffects(cards: CardInstance[], onComplete?: (
 }
 
 export function startHostCombatSequence(): void {
+  if (useGameStore.getState().game.winner) {
+    useGameStore.setState({ hostAutoTriggerCount: 0 });
+    return;
+  }
   if (useGameStore.getState().summoningAnimationCount > 0) {
     const waitingSequenceId = hostAutoTriggerSequenceId;
     window.setTimeout(() => {
@@ -232,11 +244,13 @@ export function startHostCombatSequence(): void {
   const begun = beginHostCombat(useGameStore.getState().game, { deferTriggeredEvents: true });
   useGameStore.setState({ game: begun });
   scheduleQueuedHostTriggers(() => {
+    if (useGameStore.getState().game.winner) return;
     const declared = declareHostAttackers(useGameStore.getState().game, { deferTriggeredEvents: true });
     useGameStore.setState({ game: declared });
     // Attack triggers can add creatures (Vardek, Marshal of the Wave), so re-check aura coverage
     // once they settled instead of before they existed.
     scheduleQueuedHostTriggers(() => {
+      if (useGameStore.getState().game.winner) return;
       captureStaticAuraBeats();
       flushStaticAuraBeats();
       scheduleQueuedHostTriggers();
@@ -339,6 +353,18 @@ type HostBeatHandler = {
 };
 
 export function scheduleQueuedHostTriggers(onComplete?: () => void): void {
+  if (useGameStore.getState().game.winner) {
+    // The game is already terminal: discard bookkeeping events that no longer own a rules beat,
+    // but still run the caller's terminal cleanup (combat release / Tribute finalization).
+    useGameStore.setState((state) => {
+      if (state.game.eventQueue.length === 0) return { hostAutoTriggerCount: 0 };
+      const game = structuredClone(state.game) as GameState;
+      game.eventQueue = [];
+      return { game, hostAutoTriggerCount: 0 };
+    });
+    onComplete?.();
+    return;
+  }
   if (useGameStore.getState().summoningAnimationCount > 0) {
     const waitingSequenceId = hostAutoTriggerSequenceId;
     window.setTimeout(() => {
@@ -347,7 +373,15 @@ export function scheduleQueuedHostTriggers(onComplete?: () => void): void {
     return;
   }
   if (discardPauseInProgress(useGameStore.getState())) {
-    window.setTimeout(() => scheduleQueuedHostTriggers(onComplete), 120);
+    const waitingSequenceId = hostAutoTriggerSequenceId;
+    const waitingSessionId = useGameStore.getState().gameSessionId;
+    window.setTimeout(() => {
+      const current = useGameStore.getState();
+      if (
+        waitingSequenceId === hostAutoTriggerSequenceId
+        && waitingSessionId === current.gameSessionId
+      ) scheduleQueuedHostTriggers(onComplete);
+    }, 120);
     return;
   }
   if (!guidedBeatBarrier.request("host.trigger", () => scheduleQueuedHostTriggers(onComplete))) return;
@@ -355,6 +389,7 @@ export function scheduleQueuedHostTriggers(onComplete?: () => void): void {
   let event: EventItem | undefined;
   let sources: CardInstance[] = [];
   let handler: HostBeatHandler | undefined;
+  let yieldedToPlayer = false;
 
   useGameStore.setState((state) => {
     const previous = state.game;
@@ -372,11 +407,16 @@ export function scheduleQueuedHostTriggers(onComplete?: () => void): void {
       }
       // A shared queue can park a player reaction in front of Host work during combat. Yield
       // without resolving it so the player beat can announce the source and land its animation.
-      if (pendingSources.some((source) => source.controller === "player")) break;
+      if (pendingSources.some((source) => source.controller === "player")) {
+        yieldedToPlayer = true;
+        break;
+      }
       next.eventQueue.shift();
       resolveTriggeredEvent(next, candidate);
     }
-    if (!event) checkWinLoss(next);
+    // A player reaction in front of us still owns a visible beat and may change the terminal
+    // result (for example, Guardian recovering Life). Do not declare a winner underneath it.
+    if (!event && !yieldedToPlayer) checkWinLoss(next);
     return {
       game: next,
       hostAutoTriggerCount: event ? 1 : 0,

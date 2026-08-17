@@ -59,20 +59,26 @@ Implementaciones utiles como referencia:
   de choque. El GLSL vive aparte en `destinyVortexShader.ts` y recibe dos relojes separados,
   `uCollapse` y `uBurst`, para no mezclar cubrir la escena con liberar el nuevo futuro; el giro se
   acumula por delta time. No es un animador de carta: no consulta store ni engine, solo presenta la
-  transicion que `App` ya decidio.
+  transicion que `App` ya decidio. El velo de cobertura conserva sólo su caída radial; no usa
+  godrays ni un `repeating-conic-gradient` desde el centro.
 - `DefeatShatterAnimator.tsx`: al perder una partida normal rompe la pantalla en vidrio con espesor
   real. Su referencia canonica es `dev/mockups/vfx/future-shattered-3d.html`. La teselacion estable
   por seed vive en `defeatShatterGeometry.ts` y cada triangulo sale como prisma extruido —cara
   frontal, trasera y tres muros con normal propia— dentro de un unico `BufferGeometry`: toda la
   animacion ocurre en el vertex shader a partir de atributos por trozo, no hay una malla por
   fragmento. Cada cara recibe mediante UV globales su recorte exacto del ultimo frame visible.
-- La captura ocurre en `Board`, cuando el atacante letal ya termino y `resolvingHostCombat` volvio a
-  `false`, pero antes de montar el overlay. Tras esperar el paint de Vida 0 usa el bridge Electron
+- La captura ocurre en `Board`, antes de montar el overlay y después de drenar toda presentación
+  finita: ataques, ETB, muertes, invocaciones, colas y buffs del store; VFX locales registrados como
+  impacto de Vida y aterrizaje pesado; la revisión monotónica exacta del objetivo del disco de grados
+  (incluido un recorrido que vuelva al mismo ángulo); y dos paints consecutivos
+  sin animaciones finitas del documento. Sólo entonces limpia selecciones/timers y usa el bridge Electron
   hacia `webContents.capturePage()`: copia los pixeles ya compuestos y no clona el DOM, recalcula
   estilos ni reabre las URLs de las cartas. Main reduce capturas mayores al presupuesto 2560x1440
   antes de codificarlas; renderer las decodifica antes de montar el efecto. La imagen es opaca e
   incluye la composicion completa del instante. Los huecos entre prismas, no el PNG, aportan la
-  transparencia final. En web o ante un fallo se usa vidrio limpio y nunca un color de reserva.
+  transparencia final. En web o ante un fallo se usa vidrio limpio y nunca un color de reserva. Un
+  watchdog de 15 s sólo recupera tokens huérfanos: limpia esa presentación defectuosa y fuerza el
+  frame exacto del disco, sin intervenir en el recorrido normal.
 - Antes de arrancar el reloj visible, el animador fuerza un render oculto para crear/reutilizar el
   contexto, subir la textura fullscreen y completar la primera copia WebGL→2D. El cuarteado empieza
   en el primer frame visible despues de ese preflight, de modo que captura, decode y upload no

@@ -1,7 +1,7 @@
 import { AlertTriangle, Home, RotateCcw } from "lucide-react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
-import { useGameStore } from "../store/useGameStore";
+import { useGameStore, type GameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
 import { hostInSurge } from "../engine/StaticEffects";
 import { useTranslation } from "../i18n/useTranslation";
@@ -45,6 +45,7 @@ import { EnergyFlowAnimator } from "./EnergyFlowAnimator";
 import { GuidedTutorialOverlay } from "./GuidedTutorialOverlay";
 import { useHiddenDefenseLinkIds } from "./useDefenseLinkVisibility";
 import { IS_DEV } from "../utils/devMode";
+import { guidedPresentationActivity } from "../guidance";
 
 type Props = {
   playerName: string;
@@ -59,13 +60,93 @@ type Props = {
   onReturnToMenu: () => void;
 };
 
-/** Espera a que la limpieza del combate y Vida 0 lleguen al compositor desktop. */
-function waitForDefeatCapturePaint(): Promise<void> {
-  return new Promise((resolve) => {
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => resolve());
-    });
+const DEFEAT_PRESENTATION_SETTLE_TIMEOUT_MS = 6000;
+// No beat normal se acerca a este presupuesto. Es solamente una salida de emergencia para que un
+// token o callback defectuoso no deje la partida perdida bloqueada para siempre.
+const DEFEAT_DRAIN_WATCHDOG_MS = 15000;
+
+const subscribeToPresentationActivity = (listener: () => void) =>
+  guidedPresentationActivity.subscribe(listener);
+const readPresentationActivity = () => guidedPresentationActivity.snapshot();
+
+/** Trabajo visual finito que todavía debe completar su último frame. Se ignoran los idles
+ * infinitos del tablero (vuelo, agua, energía y ambiente), porque nunca forman parte de un beat. */
+function runningFiniteDocumentAnimations(): Animation[] {
+  return document.getAnimations().filter((animation) => {
+    if (animation.playState !== "running" && !animation.pending) return false;
+    const endTime = animation.effect?.getComputedTiming().endTime;
+    return typeof endTime === "number" && Number.isFinite(endTime);
   });
+}
+
+function waitForAnimationFrame(): Promise<void> {
+  return new Promise((resolve) => {
+    window.requestAnimationFrame(() => resolve());
+  });
+}
+
+/** Espera dos paints consecutivos sin animación finita. El reescaneo importa: soltar una baja
+ * puede crear un reflow en el frame posterior al que terminó su efecto. */
+async function waitForFiniteDocumentAnimations(
+  timeoutMs = DEFEAT_PRESENTATION_SETTLE_TIMEOUT_MS,
+): Promise<void> {
+  const deadline = performance.now() + timeoutMs;
+  let quietFrames = 0;
+  while (performance.now() < deadline && quietFrames < 2) {
+    await waitForAnimationFrame();
+    const animations = runningFiniteDocumentAnimations();
+    if (animations.length === 0) {
+      quietFrames += 1;
+      continue;
+    }
+    quietFrames = 0;
+    const remaining = Math.max(0, deadline - performance.now());
+    await Promise.race([
+      Promise.allSettled(animations.map((animation) => animation.finished)),
+      new Promise<void>((resolve) => window.setTimeout(resolve, Math.min(250, remaining))),
+    ]);
+  }
+}
+
+/** Todo trabajo de presentación observable desde Zustand que tiene un final automático. Los
+ * estados que requieren input no entran aquí: al perder ya no pueden resolverse y la limpieza
+ * final los cierra justo antes de la captura. */
+function defeatStorePresentationActive(state: GameStore): boolean {
+  return Boolean(
+    state.hostAttackAnimation
+    || state.burnAnimation
+    || state.lifePaymentAnimation
+    || state.lifestealAttackAnimations.length > 0
+    || state.poisonAttackAnimation
+    || state.poisonConsumeAnimation
+    || state.bloodPactAnimation
+    || state.drainEssenceAnimation
+    || state.finalBanquetAnimation
+    || state.energyFlowAnimation
+    || state.deathRevealCard
+    || state.hostSpellCard
+    || state.pendingStaticAuras.length > 0
+    || state.playerAttackAnimation
+    || state.resolvingHostCombat
+    || state.summoningAnimationCount > 0
+    || state.hostAutoTriggerCount > 0
+    || state.playerAutoTriggerCount > 0
+    || state.surgeTransitionActive
+    || state.hostCombatDeadCardIds.length > 0
+    || state.specialDeadCardIds.length > 0
+    || state.hostMillAnimationQueue.length > 0
+    || state.hostMillPreviewCards.length > 0
+    || state.playerDiscardAnimationQueue.length > 0
+    || state.landPlayAnimationQueue.length > 0
+    || state.energyRecycleAnimation
+    || state.autoPaidLandAnimation
+    || state.spellFightAnimation
+    || state.rootsTouchedSkyAnimation
+    || state.buffAnimationCardIds.length > 0
+    || state.lifeBuffAnimationId
+    || state.activatingEffectCardId
+    || state.closingEffectCardId
+  );
 }
 
 /**
@@ -119,17 +200,7 @@ export function Board({
   const game = useGameStore((state) => state.game);
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
-  const hostAutoTriggerCount = useGameStore((state) => state.hostAutoTriggerCount);
-  const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
-  const burnAnimationActive = useGameStore((state) => Boolean(state.burnAnimation));
-  const lifePaymentAnimationActive = useGameStore((state) => Boolean(state.lifePaymentAnimation));
-  const bloodPactAnimationActive = useGameStore((state) => Boolean(state.bloodPactAnimation));
-  const drainEssenceAnimationActive = useGameStore((state) => Boolean(state.drainEssenceAnimation));
-  const finalBanquetAnimationActive = useGameStore((state) => Boolean(state.finalBanquetAnimation));
-  const rootsTouchedSkyAnimationActive = useGameStore((state) => Boolean(state.rootsTouchedSkyAnimation));
-  const energyFlowAnimationActive = useGameStore((state) => Boolean(state.energyFlowAnimation));
-  const poisonConsumeAnimationActive = useGameStore((state) => Boolean(state.poisonConsumeAnimation));
-  const resolvingHostCombat = useGameStore((state) => state.resolvingHostCombat);
+  const storePresentationActive = useGameStore(defeatStorePresentationActive);
   // Tribute of the Four Sorrows turns the Host's auto-trigger against the player, so hostAutoTriggerCount stays > 0
   // while they must pick a card to discard / creatures & lands to sacrifice. The board-wide input
   // blocker below would swallow those clicks, so drop it while a Tribute of the Four Sorrows selection is pending — the
@@ -146,7 +217,9 @@ export function Board({
   const [showHomeConfirmation, setShowHomeConfirmation] = useState(false);
   // undefined = preparando el frame final; null = la captura nativa no está disponible.
   const [defeatSnapshot, setDefeatSnapshot] = useState<HTMLImageElement | null | undefined>(undefined);
+  const [forcedDefeatDrainSessionId, setForcedDefeatDrainSessionId] = useState<number>();
   const defeatCaptureTaskRef = useRef<Promise<HTMLImageElement | null> | null>(null);
+  const defeatCaptureGenerationRef = useRef(0);
   const homeConfirmationPresence = useAnimatedPresence(showHomeConfirmation, 210);
   const surgeReached = surgeTransitionShown || hostInSurge(game);
   const hiddenDefenseLinkIds = useHiddenDefenseLinkIds(game);
@@ -156,50 +229,97 @@ export function Board({
   // El disco de grados mide cómo se mueve el futuro. Lo acumula el store impacto a
   // impacto, que es quien conoce cada golpe y cada baja; aquí sólo se lee.
   const destinyDial = useGameStore((state) => state.destinyDial);
-  const defeatOutcomeReady = game.winner === "host" && !resolvingHostCombat;
-  const defeatReady = defeatOutcomeReady && defeatSnapshot !== undefined;
-  const gameplayPresentationActive = (
-    hostAutoTriggerCount > 0
-    || playerAutoTriggerCount > 0
-    || burnAnimationActive
-    || lifePaymentAnimationActive
-    || bloodPactAnimationActive
-    || drainEssenceAnimationActive
-    || finalBanquetAnimationActive
-    || rootsTouchedSkyAnimationActive
-    || energyFlowAnimationActive
-    || poisonConsumeAnimationActive
-    || resolvingHostCombat
+  const destinyDialRevision = useGameStore((state) => state.destinyDialRevision);
+  const gameSessionId = useGameStore((state) => state.gameSessionId);
+  const [settledDestinyDialRevision, setSettledDestinyDialRevision] = useState(destinyDialRevision);
+  const localPresentation = useSyncExternalStore(
+    subscribeToPresentationActivity,
+    readPresentationActivity,
+    readPresentationActivity,
   );
-  const defeatPresentationPending = game.winner === "host"
-    && (resolvingHostCombat || defeatSnapshot === undefined);
+  const destinyDialSettled = settledDestinyDialRevision === destinyDialRevision;
+  const forcedDefeatDrain = game.winner === "host"
+    && forcedDefeatDrainSessionId === gameSessionId;
+  const defeatOutcomeReady = game.winner === "host"
+    && destinyDialSettled
+    && (
+      forcedDefeatDrain
+      || (!storePresentationActive && localPresentation.activeCount === 0)
+    );
+  const defeatReady = defeatOutcomeReady && defeatSnapshot !== undefined;
+  const defeatPresentationPending = game.winner === "host" && !defeatReady;
   const presentationInputBlocked = (
-    (!game.winner && gameplayPresentationActive)
+    (!game.winner && storePresentationActive)
     || defeatPresentationPending
   );
 
   useEffect(() => {
+    if (game.winner !== "host") {
+      setForcedDefeatDrainSessionId(undefined);
+      return;
+    }
+    // Once the real barrier opened, capture has its own bounded timeout; do not let the emergency
+    // timer fire later while the already-correct shatter/result screen is playing.
+    if (defeatOutcomeReady) return;
+    const watchedSessionId = gameSessionId;
+    const timer = window.setTimeout(() => {
+      const current = useGameStore.getState();
+      if (current.gameSessionId !== watchedSessionId || current.game.winner !== "host") return;
+      // La ruta normal espera todos los finales observables. El watchdog sólo invalida trabajo
+      // huérfano después de 15 s y pide al dial su frame exacto antes de habilitar la captura.
+      stopGamePresentation();
+      setForcedDefeatDrainSessionId(watchedSessionId);
+    }, DEFEAT_DRAIN_WATCHDOG_MS);
+    return () => window.clearTimeout(timer);
+  }, [defeatOutcomeReady, game.winner, gameSessionId, stopGamePresentation]);
+
+  useEffect(() => {
     if (!defeatOutcomeReady) {
+      defeatCaptureGenerationRef.current += 1;
       defeatCaptureTaskRef.current = null;
       setDefeatSnapshot(undefined);
       return;
     }
 
     let active = true;
-    const prepareSnapshot = async () => {
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
-      await waitForDefeatCapturePaint();
-      return settleDefeatCapture(capturePaintedDefeatFrame());
-    };
-    const task = defeatCaptureTaskRef.current ?? prepareSnapshot();
-    defeatCaptureTaskRef.current = task;
+    let task = defeatCaptureTaskRef.current;
+    if (!task) {
+      const generation = ++defeatCaptureGenerationRef.current;
+      const prepareSnapshot = async () => {
+        const sessionId = useGameStore.getState().gameSessionId;
+        const dialTarget = destinyDial;
+        const dialTargetRevision = destinyDialRevision;
+        const canCleanDefeat = () => {
+          const current = useGameStore.getState();
+          return active
+            && defeatCaptureGenerationRef.current === generation
+            && current.gameSessionId === sessionId
+            && current.game.winner === "host"
+            && current.destinyDial === dialTarget
+            && current.destinyDialRevision === dialTargetRevision
+            && !defeatStorePresentationActive(current)
+            && guidedPresentationActivity.snapshot().activeCount === 0;
+        };
+
+        await waitForFiniteDocumentAnimations();
+        if (!canCleanDefeat()) return null;
+        // Una sola autoridad cierra selecciones y timers: sólo después de drenar cada beat visible.
+        stopGamePresentation();
+        await waitForFiniteDocumentAnimations();
+        if (!canCleanDefeat()) return null;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
+        return settleDefeatCapture(capturePaintedDefeatFrame());
+      };
+      task = prepareSnapshot();
+      defeatCaptureTaskRef.current = task;
+    }
     void task.then((snapshot) => {
       if (active) setDefeatSnapshot(snapshot);
     });
     return () => {
       active = false;
     };
-  }, [defeatOutcomeReady]);
+  }, [defeatOutcomeReady, destinyDial, destinyDialRevision, stopGamePresentation]);
 
   useEffect(() => {
     if (climaxReached) setMusicVariant("climax");
@@ -209,10 +329,6 @@ export function Board({
     if (game.winner === "player") playCollection("winTheme");
     else if (defeatOutcomeReady) playCollection("lossTheme");
   }, [defeatOutcomeReady, game.winner, playCollection]);
-
-  useLayoutEffect(() => {
-    if (defeatOutcomeReady) stopGamePresentation();
-  }, [defeatOutcomeReady, stopGamePresentation]);
 
   useEffect(() => {
     if (!game.openingHandAccepted || encounterEntering) return;
@@ -225,6 +341,9 @@ export function Board({
         grid
         climax={climaxReached ? 1 : 0}
         dial={destinyDial}
+        dialRevision={destinyDialRevision}
+        settleDialImmediately={forcedDefeatDrain}
+        onDialSettled={setSettledDestinyDialRevision}
       />
       {/* El fondo permanece vivo bajo la placa capturada y aparece entre los trozos. */}
       <div className="game-screen-ambience" aria-hidden="true" />
@@ -268,7 +387,7 @@ export function Board({
       <FinalBanquetAnimator />
       <RootsTouchedSkyAnimator />
       <EnergyFlowAnimator />
-      {presentationInputBlocked && !tributeOfTheFourSorrowsSelectionActive && (
+      {presentationInputBlocked && (!tributeOfTheFourSorrowsSelectionActive || defeatPresentationPending) && (
         <div data-audio-click="off" className="fixed inset-0 z-[189]" />
       )}
       {(activeEffectCardId || closingEffectCardId) && (
