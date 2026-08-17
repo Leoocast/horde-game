@@ -129,8 +129,10 @@ Contratos desktop vigentes:
   `extraResources`, Card Studio/Playground no se empaquetan y los gates automáticos son
   `electron:verify` + `electron:smoke`.
 - La carga llama `prewarmGameVfx`: crea el único renderer WebGL, reserva el framebuffer y compila
-  Burn, el vórtice del Destino, Phong, Basic, Sprite y Line antes del primer efecto visible. Sus escenas mínimas quedan
-  retenidas para conservar los programas GPU; no crear renderers nuevos en los animadores.
+  Burn, el vórtice del Destino, el vidrio y la onda de la derrota, Phong, Basic, Sprite y Line antes
+  del primer efecto visible. El vidrio se monta justo cuando la Vida llega a 0, así que compilarlo
+  entonces costaría un tirón en el peor momento. Sus escenas mínimas quedan retenidas para conservar
+  los programas GPU; no crear renderers nuevos en los animadores.
 - Fase 4 separa `profile/preferences-v1.json`, `profile/saves/resume-v1.json` y el local-only
   `local/window-state-v1.json`. El contrato, backups, recuperación, Cloud-worthy data y checkpoints
   seguros están en `docs/electron/persistence.md`.
@@ -347,20 +349,31 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   `webContents.capturePage()`; la web conserva `html-to-image` como respaldo. La captura debe
   validarse antes de crear la escena y no existe textura plana de reserva. Después mapea cada trozo
   exacto mediante UV globales.
+- La secuencia arranca con la Vida a 0, no cuando termina la captura. El hielo y las quebraduras
+  corren sobre la pantalla viva mientras se fotografía el tablero, y la placa releva a esa pantalla
+  en el mismo fotograma en que se monta; el vidrio tiene que estar listo antes del golpe o la
+  derrota cae al respaldo. `capturePage` fotografía la ventana entera, así que el overlay se apaga
+  mientras dura el disparo para no hornear el hielo dentro de la propia placa. `html-to-image` no
+  puede fotografiar un lienzo WebGL: la captura web sale sin fondo propio y se compone sobre el
+  cielo vivo con `captureTemporalSky`, porque una placa de fondo plano borraría el cosmos al entrar.
 - El reloj de la derrota es el de la maqueta: enfriar la captura a 700 ms, cuartear desde 620 ms,
   onda expansiva e impulso a 1560 ms y nombrar el desenlace a 2900 ms. La lámina entera tiene
   espesor cero —los muros vecinos coinciden y en escorzo asomarían como aristas doradas en
   z-fighting— y sólo gana grosor al separarse. Las magnitudes del diseño se dieron sobre un plano de
   alto 1 y llegan al shader escaladas por `uScale`; no reajustarlas convierte la tensión del
   cuarteado en un salto visible.
-- Detrás del vidrio no hay un oscurecimiento de CSS sino el **abismo**: `createDefeatAbyssMaterial`
-  dibuja nebulosa fría, estrellas moribundas y un vacío central en la misma escena, antes que el
-  vidrio y sin escribir profundidad. El golpe tampoco monta destello DOM ni temblor de pantalla: lo
-  cuenta la onda WebGL aditiva. En el DOM sólo quedan las quebraduras SVG, la viñeta y el texto.
-  Las tres capas comparten escena porque `renderSharedVfxFrame` dibuja una escena con una cámara, y
-  el fotograma se pide en `LinearEncoding`: la conversión sRGB lava el abismo y enfría mal el
-  Fresnel. Reutiliza el renderer WebGL compartido y conserva una fractura SVG quieta para
-  movimiento reducido o falta de WebGL.
+- Lo que se rompe es el tablero y lo que queda detrás es el **espacio exterior del propio juego**,
+  no un fondo aparte. La escena de la derrota no dibuja fondo: su lienzo queda transparente y lo que
+  asoma por cada hueco es el `TemporalBackdrop` vivo, que además enrojece con su prop `defeat`. Con
+  la placa montada, `body.is-defeat-plated` retira el tablero vivo y el retículo del cristal —ese
+  retículo pertenece al vidrio que se está rompiendo y viaja dentro de la captura—, y sólo el cielo
+  permanece. No existe un abismo procedural ni un oscurecimiento de CSS detrás del vidrio. El golpe
+  tampoco monta destello DOM ni temblor de pantalla: lo cuenta la onda WebGL aditiva. En el DOM sólo
+  quedan el hielo, las quebraduras SVG, la viñeta y el texto. Vidrio y onda comparten escena porque
+  `renderSharedVfxFrame` dibuja una escena con una cámara, y el fotograma se pide en
+  `LinearEncoding`: la conversión sRGB aclara la captura y enfría mal el Fresnel. Reutiliza el
+  renderer WebGL compartido y conserva una fractura SVG quieta para movimiento reducido o falta de
+  WebGL; ese respaldo también retira el tablero y deja ver el espacio.
 - El desenlace es el bloque de la maqueta: etiqueta **Derrota** con reglas laterales, título en dos
   líneas que se abren desde el centro con su corte de luz, subtítulo y placa de **Futuro**. Copiar
   identidad vive en el canto de la placa y las dos salidas siguen siendo **Contemplar otro futuro**

@@ -21,6 +21,25 @@ const DIAL_LABELS = [
 ] as const;
 
 /**
+ * El cielo vivo, tal y como se está viendo en este instante.
+ *
+ * El lienzo del fondo no conserva su búfer de dibujo, así que leerlo desde fuera del
+ * fotograma que lo pintó devuelve un cuadro vacío. Esta referencia la publica el propio
+ * efecto: dibuja y copia dentro de la misma tarea, que es la única forma de sacar sus
+ * píxeles sin pagar `preserveDrawingBuffer` durante toda la sesión.
+ */
+let skySnapshotSource: ((width: number, height: number) => HTMLCanvasElement | undefined) | null = null;
+
+/**
+ * Copia del espacio para quien necesite componerlo con una captura del DOM. La derrota la
+ * usa porque `html-to-image` no puede fotografiar un lienzo WebGL y sin el cielo la placa
+ * de vidrio entraría en pantalla como un fondo plano.
+ */
+export function captureTemporalSky(width: number, height: number): HTMLCanvasElement | undefined {
+  return skySnapshotSource?.(width, height);
+}
+
+/**
  * Fondo espacio/temporal permanente.
  *
  * Tiene contexto propio a propósito. `sharedVfxRenderer` está construido para efectos
@@ -181,6 +200,20 @@ export function TemporalBackdrop({
       frame = requestAnimationFrame(loop);
     }
 
+    // Dibujar y copiar dentro de la misma tarea: es lo que hace legible el búfer.
+    skySnapshotSource = (snapshotWidth, snapshotHeight) => {
+      if (disposed) return undefined;
+      draw(performance.now());
+      const copy = document.createElement("canvas");
+      copy.width = Math.max(1, Math.round(snapshotWidth));
+      copy.height = Math.max(1, Math.round(snapshotHeight));
+      const context = copy.getContext("2d");
+      if (!context) return undefined;
+      context.drawImage(canvas, 0, 0, copy.width, copy.height);
+      return copy;
+    };
+    const ownSnapshotSource = skySnapshotSource;
+
     // La ventana oculta no debe seguir dibujando; acompaña a `backgroundThrottling`.
     const onVisibility = () => {
       if (reducedMotion || disposed) return;
@@ -198,6 +231,8 @@ export function TemporalBackdrop({
 
     return () => {
       disposed = true;
+      // StrictMode remonta sobre este mismo nodo: sólo se retira la referencia propia.
+      if (skySnapshotSource === ownSnapshotSource) skySnapshotSource = null;
       cancelAnimationFrame(frame);
       document.removeEventListener("visibilitychange", onVisibility);
       canvas.removeEventListener("webglcontextlost", onContextLost);

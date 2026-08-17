@@ -189,10 +189,10 @@ void main() {
 `;
 
 /**
- * Fondo y onda viven en la misma escena que el vidrio en vez de en pasadas aparte:
+ * La onda vive en la misma escena que el vidrio en vez de en una pasada aparte:
  * `renderSharedVfxFrame` dibuja una sola escena con una cámara, y abrir un segundo
  * contexto WebGL sólo para esto no compensa. Este vertex ignora la cámara a propósito,
- * así que ambas capas cubren el cuadro sea cual sea la deriva del encuadre.
+ * así que la capa cubre el cuadro sea cual sea la deriva del encuadre.
  */
 const FULLSCREEN_VERTEX = `
 void main() {
@@ -266,132 +266,6 @@ export function createDefeatShockMaterial(
     depthWrite: false,
     blending: THREE.AdditiveBlending,
   }) as DefeatShockMaterial;
-}
-
-/**
- * El abismo que queda detrás del vidrio. Es lo que ve el Cronista cuando los trozos se
- * van: nebulosa fría, estrellas moribundas y un vacío que se traga la luz en el centro.
- * Va como malla opaca dentro de la misma escena, antes que el vidrio, porque
- * `renderSharedVfxFrame` dibuja una sola escena con una cámara. El vertex ignora la
- * cámara a propósito, así que cubre el cuadro sea cual sea la deriva del encuadre.
- */
-const ABYSS_FRAGMENT = `
-precision highp float;
-
-uniform vec2 uRes;
-uniform float uTime;
-
-float hash21(vec2 p) {
-  p = fract(p * vec2(123.34, 345.45));
-  p += dot(p, p + 34.345);
-  return fract(p.x * p.y);
-}
-
-vec2 hash22(vec2 p) {
-  float n = hash21(p);
-  return vec2(n, hash21(p + n + 19.19));
-}
-
-float valueNoise(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
-  f = f * f * (3.0 - 2.0 * f);
-  float a = hash21(i);
-  float b = hash21(i + vec2(1.0, 0.0));
-  float c = hash21(i + vec2(0.0, 1.0));
-  float d = hash21(i + vec2(1.0, 1.0));
-  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-}
-
-float fbm(vec2 p) {
-  float value = 0.0;
-  float amplitude = 0.54;
-  mat2 turn = mat2(0.82, -0.57, 0.57, 0.82);
-  for (int i = 0; i < 5; i++) {
-    value += amplitude * valueNoise(p);
-    p = turn * p * 2.03 + vec2(17.13, 9.71);
-    amplitude *= 0.48;
-  }
-  return value;
-}
-
-float starLayer(vec2 p, float scale, float gate) {
-  vec2 grid = p * scale;
-  vec2 id = floor(grid);
-  vec2 cell = fract(grid) - 0.5;
-  float seed = hash21(id);
-  vec2 shift = (hash22(id + 7.31) - 0.5) * 0.7;
-  float d = length(cell - shift);
-  float core = (1.0 - smoothstep(0.0, 0.038, d)) * step(gate, seed);
-  float halo = (1.0 - smoothstep(0.0, 0.13, d)) * step(0.993, seed) * 0.28;
-  float twinkle = 0.93 + 0.07 * sin(uTime * 0.08 + seed * 6.2831);
-  return (core + halo) * twinkle;
-}
-
-void main() {
-  vec2 uv = gl_FragCoord.xy / uRes;
-  float aspect = uRes.x / uRes.y;
-  vec2 p = (uv - 0.5) * vec2(aspect, 1.0);
-  vec2 drift = vec2(uTime * 0.0022, -uTime * 0.0014);
-  vec2 warp = vec2(fbm(p * 1.42 + drift + 3.7), fbm(p * 1.42 - drift + 11.9)) - 0.5;
-  vec2 q = p + warp * 0.17;
-  float broad = fbm(q * 1.72 + drift * 0.7);
-  float folds = fbm(q * 3.86 - drift * 1.3 + 23.4);
-  float edgeBias = smoothstep(0.1, 0.74, length(p - vec2(-0.11, 0.03)));
-  float nebula = smoothstep(0.54, 0.88, broad + folds * 0.18) * mix(0.16, 0.82, edgeBias);
-  float coldVein = smoothstep(0.68, 0.91, fbm(q * 4.8 + vec2(7.4, 2.1))) * nebula;
-  float rustTrace = smoothstep(0.81, 0.96, fbm(q * 6.1 + vec2(31.2, 15.7))) * edgeBias;
-  float swallowingCloud = smoothstep(0.3, 0.73, fbm(q * 2.46 + vec2(4.9, 26.1)));
-
-  vec3 color = vec3(0.0008, 0.002, 0.006);
-  color += vec3(0.003, 0.012, 0.029) * (0.12 + broad * 0.45);
-  color += vec3(0.012, 0.055, 0.076) * nebula * 0.72;
-  color += vec3(0.014, 0.12, 0.15) * coldVein * 0.3;
-  color += vec3(0.12, 0.025, 0.014) * rustTrace * 0.18;
-  color *= mix(0.28, 1.0, swallowingCloud);
-
-  float whiteStars = starLayer(p + warp * 0.035, 72.0, 0.982);
-  float blueStars = starLayer(p * 1.017 - warp * 0.025 + 5.3, 141.0, 0.997);
-  float dyingStars = starLayer(p - warp * 0.02 + 13.7, 96.0, 0.998);
-  color += vec3(0.44, 0.57, 0.64) * whiteStars * 0.48;
-  color += vec3(0.11, 0.26, 0.34) * blueStars * 0.4;
-  color += vec3(0.4, 0.22, 0.12) * dyingStars * 0.3;
-
-  vec2 timeCenter = p - vec2(0.035, -0.04);
-  float radius = length(timeCenter);
-  float timeRipple = sin(radius * 78.0 - uTime * 0.08) * exp(-radius * 7.5);
-  color += vec3(0.025, 0.085, 0.1) * max(0.0, timeRipple) * 0.025;
-
-  // El vacío del centro se traga la luz: no es un degradado encima, apaga la paleta.
-  float abyss = 1.0 - smoothstep(0.09, 0.49, radius + warp.x * 0.13);
-  color *= mix(1.0, 0.2, abyss);
-  float vignette = 1.0 - smoothstep(0.42, 0.98, length(p * vec2(0.76, 1.0)));
-  color *= mix(0.43, 1.0, vignette);
-
-  gl_FragColor = vec4(pow(color, vec3(0.94)), 1.0);
-}
-`;
-
-export type DefeatAbyssMaterial = THREE.ShaderMaterial & {
-  uniforms: {
-    uRes: { value: THREE.Vector2 };
-    uTime: { value: number };
-  };
-};
-
-export function createDefeatAbyssMaterial(width: number, height: number): DefeatAbyssMaterial {
-  return new THREE.ShaderMaterial({
-    uniforms: {
-      uRes: { value: new THREE.Vector2(width, height) },
-      uTime: { value: 0 },
-    },
-    vertexShader: FULLSCREEN_VERTEX,
-    fragmentShader: ABYSS_FRAGMENT,
-    // Opaco y sin z: es el fondo, y el vidrio decide su propia profundidad encima.
-    transparent: false,
-    depthTest: false,
-    depthWrite: false,
-  }) as DefeatAbyssMaterial;
 }
 
 export function createDefeatGlassMaterial(

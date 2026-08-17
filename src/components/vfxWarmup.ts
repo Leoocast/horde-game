@@ -8,6 +8,8 @@ import {
   DESTINY_VORTEX_FRAGMENT_SHADER,
   DESTINY_VORTEX_VERTEX_SHADER,
 } from "./destinyVortexShader";
+import { createDefeatGlassMaterial, createDefeatShockMaterial } from "./defeatGlassShader";
+import { buildDefeatShatterPlan } from "./defeatShatterGeometry";
 import { warmSharedVfxFrame } from "./sharedVfxRenderer";
 
 type WarmupFrame = {
@@ -195,8 +197,51 @@ function createDestinyVortexFrame(): WarmupFrame {
   return { scene, camera: new THREE.Camera(), outputEncoding: THREE.LinearEncoding };
 }
 
+/**
+ * El vidrio de la derrota se monta justo cuando la Vida llega a 0. Compilar entonces sus dos
+ * programas cuesta un tirón en el peor momento posible, así que se paga durante la carga con el
+ * mismo plan real: los atributos por trozo forman parte del programa.
+ */
+function createDefeatGlassFrame(): WarmupFrame {
+  const plan = buildDefeatShatterPlan(16 / 9, 0.31);
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(plan.positions, 3));
+  geometry.setAttribute("aCentroid", new THREE.BufferAttribute(plan.centroids, 3));
+  geometry.setAttribute("aUv", new THREE.BufferAttribute(plan.uvs, 2));
+  geometry.setAttribute("aNrm", new THREE.BufferAttribute(plan.normals, 3));
+  geometry.setAttribute("aAxis", new THREE.BufferAttribute(plan.axes, 3));
+  geometry.setAttribute("aMotion", new THREE.BufferAttribute(plan.motions, 4));
+  geometry.setAttribute("aDyn", new THREE.BufferAttribute(plan.dynamics, 3));
+  geometry.setAttribute("aInfo", new THREE.BufferAttribute(plan.infos, 4));
+
+  const scene = new THREE.Scene();
+  const glass = new THREE.Mesh(
+    geometry,
+    createDefeatGlassMaterial(makeTexture(), plan.impact, plan.impactUv, 16 / 9, plan.halfHeight * 2),
+  );
+  glass.frustumCulled = false;
+  scene.add(glass);
+
+  const shock = new THREE.Mesh(
+    new THREE.PlaneGeometry(2, 2),
+    createDefeatShockMaterial(64, 64, { x: 0, y: 0 }),
+  );
+  shock.frustumCulled = false;
+  scene.add(shock);
+
+  const camera = new THREE.PerspectiveCamera(42, 16 / 9, 0.02, 400);
+  camera.position.set(0, 0, plan.halfHeight / Math.tan(THREE.MathUtils.degToRad(21)));
+  camera.lookAt(0, 0, 0);
+  return { scene, camera, outputEncoding: THREE.LinearEncoding };
+}
+
 function createWarmupFrames(): WarmupFrame[] {
-  return [createBuiltinMaterialFrame(), createBurnFrame(), createDestinyVortexFrame()];
+  return [
+    createBuiltinMaterialFrame(),
+    createBurnFrame(),
+    createDestinyVortexFrame(),
+    createDefeatGlassFrame(),
+  ];
 }
 
 /** Traslada al loading la creación del contexto, el framebuffer y los shaders usados en juego. */

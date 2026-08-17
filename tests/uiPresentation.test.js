@@ -1091,15 +1091,23 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   const preload = readFileSync(new URL("../electron/preload.ts", import.meta.url), "utf8");
   const electronMain = readFileSync(new URL("../electron/main.ts", import.meta.url), "utf8");
   const modal = readFileSync(new URL("../src/components/DefeatModal.tsx", import.meta.url), "utf8");
+  const backdrop = readFileSync(new URL("../src/components/TemporalBackdrop.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.match(animator, /renderSharedVfxFrame/u);
   assert.match(animator, /await import\("html-to-image"\)/u);
+  // Se fotografía `body`: la Reserva y los tooltips cuelgan de ahí por portal y sólo con el
+  // tablero desaparecerían al montarse la placa.
+  assert.match(animator, /toCanvas\(document\.body, \{/u);
   assert.match(animator, /new THREE\.CanvasTexture\(snapshot\)/u);
   assert.match(animator, /captureDesktopViewport\(\)/u);
   assert.match(animator, /snapshotHasVisualDetail/u);
   assert.match(animator, /function settleBefore<T>/u);
-  assert.match(animator, /settleBefore\(captureBattlefield\(width, height\), 2600\)/u);
+  assert.match(animator, /captureBattlefield\(width, height, root\),\s*PLATE_DEADLINE_MS,/u);
+  // La secuencia arranca con la Vida a 0: la captura corre por debajo y la placa releva a la
+  // pantalla viva cuando está lista, nunca al revés.
+  assert.match(animator, /const startedAt = performance\.now\(\);\s*onSequenceStart\(\);/u);
+  assert.match(animator, /const PLATE_DEADLINE_MS = BURST_MS - 80/u);
   assert.match(animator, /if \(!snapshot\) \{[\s\S]*?setFallback\(true\)[\s\S]*?return;/u);
   assert.doesNotMatch(animator, /new THREE\.DataTexture/u);
   assert.match(animator, /createDefeatGlassMaterial/u);
@@ -1126,11 +1134,24 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(modal, /const REVEAL_AT_MS = 2900/u);
   assert.match(modal, /t\("destiny\.futureLostLineOne"\)/u);
   assert.match(modal, /t\("destiny\.futureLostLineTwo"\)/u);
-  // El abismo va detrás del vidrio en la misma escena, y en lineal: la conversión sRGB
-  // del renderer compartido lo lava y el Fresnel deja de leerse frío.
-  assert.match(animator, /createDefeatAbyssMaterial/u);
-  assert.match(animator, /abyssMesh\.renderOrder = -10/u);
+  // Detrás del vidrio no se dibuja ningún fondo propio: el lienzo queda transparente y lo
+  // que asoma es el espacio permanente del juego, con el tablero vivo ya retirado.
+  assert.doesNotMatch(animator, /Abyss/u);
+  assert.doesNotMatch(glassShader, /Abyss|ABYSS/u);
+  assert.match(animator, /const PLATED_BODY_CLASS = "is-defeat-plated"/u);
+  assert.match(styles, /body\.is-defeat-plated \.game-screen > \*:not\(\.temporal-backdrop\):not\(\.game-result-overlay\)/u);
+  assert.match(styles, /body\.is-defeat-plated[\s\S]*?\.temporal-backdrop-grid \{ visibility: hidden; \}/u);
+  // La captura web llega sin cielo porque `html-to-image` no fotografía WebGL: se compone
+  // sobre el lienzo vivo para que el cosmos no desaparezca al montarse la placa.
+  assert.match(animator, /captureTemporalSky/u);
+  assert.match(backdrop, /export function captureTemporalSky/u);
+  assert.doesNotMatch(animator, /backgroundColor: "#07100f"/u);
+  // En lineal: la conversión sRGB del renderer compartido aclara la captura y el Fresnel
+  // deja de leerse frío.
   assert.match(animator, /outputEncoding: THREE\.LinearEncoding/u);
+  // El desenlace tiene que ganarle a `.game-screen [role="dialog"]`, que impone
+  // `game-surface-in` y borra el centrado con su transform final.
+  assert.match(styles, /\.game-result-defeat \.defeat-outcome \{[\s\S]*?transform: translate\(-50%, -50%\);[\s\S]*?animation: defeat-outcome-in/u);
   // Las magnitudes del cuarteado se dieron sobre un plano de alto 1: escalar sin
   // reajustarlas convierte la tensión en un salto visible.
   assert.match(glassShader, /dir \* wave \* 0\.004 \* uScale/u);

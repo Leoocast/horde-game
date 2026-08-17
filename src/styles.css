@@ -21596,8 +21596,9 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
 
 
 /* Derrota: la pantalla se captura una vez y se mapea sobre los prismas de vidrio. Cada trozo se
-   lleva su recorte exacto de lo que fue el tablero y deja ver el abismo que había detrás. El
-   abismo, el vidrio y la onda son WebGL; aquí sólo viven las quebraduras, la viñeta y el texto. */
+   lleva su recorte exacto de lo que fue el tablero y deja ver el espacio que había detrás, que es
+   el mismo fondo permanente del juego. El vidrio y la onda son WebGL; aquí sólo viven el hielo,
+   las quebraduras, la viñeta y el texto. */
 .game-result-overlay.game-result-defeat {
   --result-accent: #aa9455;
   --result-accent-bright: #ddca84;
@@ -21618,6 +21619,7 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
   pointer-events: none;
 }
 
+.defeat-shatter-freeze,
 .defeat-shatter-canvas,
 .defeat-shatter-fractures,
 .defeat-shatter-vignette {
@@ -21628,6 +21630,23 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
   pointer-events: none;
 }
 
+/* El tiempo se detiene con la Vida a 0, antes de que exista la placa: este es el mismo sello frío
+   que después aplica `uFreeze` sobre la captura, para que el relevo no se note. Sólo anima
+   opacidad, así que no repinta el árbol del tablero. */
+.defeat-shatter-freeze {
+  z-index: 0;
+  background: linear-gradient(180deg, rgb(28 46 55 / 0.30), rgb(16 30 38 / 0.34));
+  opacity: 0;
+}
+
+.game-result-defeat.is-sequence-running .defeat-shatter-freeze {
+  animation: defeat-freeze-settle 700ms linear both;
+}
+
+/* Con el vidrio montado el sello lo hace el shader. */
+.defeat-shatter.is-plated .defeat-shatter-freeze,
+.defeat-shatter.is-fallback .defeat-shatter-freeze { display: none; }
+
 .defeat-shatter-canvas {
   z-index: 1;
   opacity: 0;
@@ -21635,6 +21654,14 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
 }
 
 .game-result-defeat.is-sequence-running .defeat-shatter-canvas.is-ready { opacity: 1; }
+
+/* La placa ya contiene el tablero, así que lo vivo se retira y detrás sólo queda el espacio. El
+   retículo pertenece al cristal que se está rompiendo: se va con él, no sobrevive al estallido.
+   La regla de `body` alcanza los portales —la Reserva, los tooltips y el registro cuelgan de ahí,
+   fuera de `.game-screen`— sin tener que enumerar sus clases una por una. */
+body.is-defeat-plated > *:not(#root),
+body.is-defeat-plated .game-screen > *:not(.temporal-backdrop):not(.game-result-overlay),
+body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 
 /* Las quebraduras crecen desde el impacto: los muros del prisma quedan casi de canto vistos de
    frente, así que no sirven para enseñar la raja. El vidrio sí se tensa por debajo. */
@@ -21678,18 +21705,20 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
   animation: defeat-vignette-close 700ms 1560ms ease both;
 }
 
-/* Sin WebGL o sin captura no hay vidrio: queda la fractura quieta sobre el vacío, nunca el
-   tablero vivo asomando por debajo. */
+/* Sin WebGL o sin captura no hay vidrio: queda la fractura quieta sobre el espacio, con el tablero
+   vivo ya retirado por debajo. El oscurecimiento deja respirar el fondo en vez de taparlo. */
 .defeat-shatter.is-fallback {
   background:
-    radial-gradient(circle at 52% 46%, rgb(21 33 34 / 0.9), rgb(2 6 7 / 0.97) 54%, rgb(0 2 3 / 1) 100%),
-    #010506;
+    radial-gradient(circle at 52% 46%, rgb(6 14 16 / 0.62), rgb(1 5 6 / 0.88) 56%, rgb(0 2 3 / 0.95) 100%);
 }
 
 .defeat-shatter.is-fallback .defeat-shatter-canvas { display: none; }
 .defeat-shatter.is-fallback .defeat-shatter-fractures path { opacity: 0.48; stroke-dashoffset: 0; }
 
-.defeat-outcome {
+/* El desenlace es un `role="dialog"` dentro de `.game-screen`, y esa regla genérica le impone
+   `game-surface-in`, cuyo fotograma final deja `transform: translateY(0) scale(1)` y borra el
+   centrado. El selector tiene que ganarle: si no, el bloque cuelga de la esquina central. */
+.game-result-defeat .defeat-outcome {
   position: absolute;
   z-index: 8;
   left: 50%;
@@ -21702,7 +21731,7 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
   opacity: 0;
   text-align: center;
   pointer-events: none;
-  transform: translate(-50%, -48%);
+  transform: translate(-50%, -50%);
   animation: defeat-outcome-in 460ms ease-out both;
 }
 
@@ -21852,6 +21881,11 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
   animation: defeat-copy-rise 620ms 1080ms ease-out both;
 }
 
+@keyframes defeat-freeze-settle {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @keyframes defeat-crack-grow {
   0% { opacity: 0; stroke-dashoffset: 1; }
   18% { opacity: 1; }
@@ -21909,6 +21943,7 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .defeat-shatter-freeze,
   .defeat-shatter-fractures,
   .defeat-shatter-fractures path,
   .defeat-shatter-vignette,
@@ -21924,7 +21959,8 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
   .defeat-subtitle,
   .defeat-future-plate,
   .defeat-outcome-actions { opacity: 1; }
-  .defeat-outcome { transform: translate(-50%, -50%); }
+  .game-result-defeat .defeat-outcome { transform: translate(-50%, -50%); }
+  .defeat-shatter-freeze { display: none; }
   .defeat-title .line { opacity: 1; clip-path: inset(0); transform: none; }
   .defeat-title::after { display: none; }
   .defeat-shatter-vignette { opacity: 0.72; }
