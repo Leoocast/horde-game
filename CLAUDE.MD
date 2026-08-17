@@ -575,18 +575,38 @@ El contenido futuro del onboarding se diseña en
 `docs/plans/learn_to_play_tutorial.md`. La decisión de producto vigente es conservar la lección
 guiada actual como tutorial específico **Preparación** y crear un tutorial principal
 **Aprender a jugar**: un prólogo determinista semi-guiado, seguido más adelante por una partida real
-de Elarion contra los Sinsepulcro con seed preparada y ayudas contextuales. Este rediseño todavía no
-está implementado; hasta entonces el producto sigue ejecutando la revisión 4 de `first-seed`. El
+de Elarion contra los Sinsepulcro con seed preparada y ayudas contextuales. **Aprender a jugar** será
+el tutorial obligatorio y **Preparación** será opcional; ambos podrán repetirse desde **Cómo jugar**.
+Este rediseño todavía no está implementado; hasta que se entregue completo el producto sigue
+ejecutando la revisión 4 requerida de `first-seed`. El
 prólogo queda diseñado desde el cold open hasta una derrota predeterminada: la primera Oleada usa
 ramas equivalentes de Ladrones, Titán y Soldado; el turno posterior enseña Mano vacía y Devolver
 Fuente; y el cierre authored calcula el mejor resultado defensivo antes de Invocar un Titán y los
-Soldados necesarios para que el ataque sea letal. Esa Invocación terminal no redefine la regla
-normal de Oleada. La derrota salta semánticamente a **Contemplar otro futuro** y carga una seed real
-preparada; la relación exacta entre buena Mano y mulligan sigue abierta. Si no queda un atacante
+Soldados necesarios para que el ataque sea letal. Tres Soldados dentro del Archivo protegen al Titán
+terminal de los descartes opcionales; Choque conserva su ventana legal y la posición del Titán puede
+variar. Esa Invocación terminal no redefine la regla normal de Oleada y cada llegada se presenta una
+a una mediante el revelado normal, sin agrupación visual. El CTA único se llama **Contemplar otro
+futuro**. El primer corte aprobado termina cuando la derrota lo muestra: activar el botón, persistir
+la finalización, ejecutar el vórtice y cargar la seed real pertenecen a una fase posterior. La
+relación exacta entre buena Mano y mulligan sigue abierta. Si no queda un atacante
 estabilizado, la enseñanza del ataque no bloquea el flujo, permanece como no vista y reaparece en
 una partida posterior. La preferencia global de no repetir ayudas sólo suprime conceptos ya
-mostrados: un concepto no visto conserva siempre su primera aparición. No traducir escenas aisladas
-a código antes de cerrar el recorrido completo y realizar el análisis técnico conjunto.
+mostrados: un concepto no visto conserva siempre su primera aparición. Está activa por defecto, se
+marca al cerrar/aceptar la ayuda y las repeticiones se limitan a una por concepto y partida.
+**Continuar** permanece deshabilitado globalmente por ahora. No traducir escenas aisladas a código
+fuera de las fases aprobadas.
+
+La auditoría y el plan técnico de esa extensión viven en
+`docs/plans/learn_to_play_implementation_plan.md`. La decisión arquitectónica vigente es conservar
+el schema guiado v1 para **Preparación** y separar: observaciones semánticas siempre activas,
+runtime/progreso por concepto, director efímero de **Aprender a jugar** y catálogo de producto. El
+builder exacto, anchors, barrera de presentación y overlay estricto se reutilizan; los receipts
+actuales no bastan porque desaparecen sin una policy guiada, y el overlay estricto no representa una
+ayuda contextual. Las ayudas observadas no bloquean, las preventivas interceptan sólo la acción
+relevante y las imprescindibles reutilizan la guía actual. El plan se ejecuta fase por fase con
+aprobación explícita. Para una fase posterior siguen pendientes la Mano/mulligan, seed, dificultad y
+Preparación de la partida real; el comportamiento de primera apertura y perfiles existentes; y la
+persistencia exacta si la aplicación se cierra durante el vórtice.
 
 La Fase 0 quedó cerrada el 2026-08-11. La Primera Semilla obligatoria será canónica y usará **El
 Pacto de Elarion** como deck del Cronista; la Hueste y el escenario pertenecen al futuro diseño de

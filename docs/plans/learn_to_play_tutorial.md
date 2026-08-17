@@ -1,7 +1,7 @@
 # Aprender a jugar — diseño vivo del onboarding
 
-Estado: **diseño de contenido abierto; prólogo fijado hasta la derrota predeterminada y su salto a
-otro futuro, con el mulligan posterior todavía abierto**.
+Estado: **diseño de contenido abierto; primer corte fijado hasta la derrota predeterminada y la
+aparición de “Contemplar otro futuro”; el handoff posterior está aplazado**.
 
 Última actualización: **2026-08-17**.
 
@@ -16,6 +16,10 @@ No es todavía una receta de `src/guidance/`, un desglose técnico ni una autori
 código. Las decisiones marcadas como abiertas no se deben completar por inferencia durante la
 implementación.
 
+La auditoría de los sistemas existentes y el plan incremental correspondiente viven en
+[`learn_to_play_implementation_plan.md`](learn_to_play_implementation_plan.md). Este documento sigue
+siendo la fuente de verdad del contenido; el otro gobierna arquitectura, riesgos y fases.
+
 El recorrido guiado que existe actualmente no se elimina. La intención de producto es conservarlo
 como un tutorial específico llamado **Preparación**. El nuevo recorrido principal será **Aprender a
 jugar**. Los nombres, menús y registros actuales continúan sin cambios hasta que se apruebe una fase
@@ -23,8 +27,9 @@ de implementación.
 
 ## Decisiones globales ya fijadas
 
-- **Aprender a jugar** será obligatorio para un jugador nuevo.
-- Si el jugador abandona el tramo obligatorio antes de completarlo, no se guarda un paso intermedio:
+- **Aprender a jugar** será el tutorial obligatorio y también podrá repetirse desde **Cómo jugar**.
+  **Preparación** conservará el contenido guiado actual, pero será un tutorial opcional.
+- Si el jugador abandona el recorrido iniciado antes de completarlo, no se guarda un paso intermedio:
   la próxima vez empieza otra vez desde el cold open.
 - El tutorial no ofrece libertad total. Presenta una partida authored y determinista, con cartas,
   estados y órdenes preparados para que todas las decisiones permitidas sean conocidas y puedan ser
@@ -36,12 +41,13 @@ de implementación.
   un defensor.
 - Las demás explicaciones aparecen cuando la mecánica sucede por primera vez o cuando el jugador
   intenta una acción cuya restricción todavía no conoce.
-- Completar el tramo obligatorio no exige haber provocado todos los tutoriales contextuales. Cada
+- Completar el recorrido no exige haber provocado todos los tutoriales contextuales. Cada
   concepto conserva su propio estado; lo que no ocurrió permanece como `no visto` y puede enseñarse
   en una partida posterior cuando por fin exista la situación adecuada.
 - **No volver a mostrar explicaciones ya vistas** es una preferencia global. Suprimir repeticiones
   nunca suprime el primer encuentro de un concepto: toda ayuda con estado `no visto` aparece una vez
-  cuando finalmente ocurre su contexto.
+  cuando finalmente ocurre su contexto. Estará activa por defecto; un concepto cuenta como visto al
+  cerrar/aceptar su ayuda y, si se permiten repeticiones, aparece como máximo una vez por partida.
 - Una regla oculta que puede cambiar una decisión irreversible se explica **antes** de confirmar esa
   decisión. Una consecuencia visible y recuperable puede explicarse después de ocurrir.
 - El prólogo terminará más adelante en una derrota predeterminada. Debe sentirse como un futuro que
@@ -51,15 +57,19 @@ de implementación.
   tantos Soldados Sinsepulcro como sean necesarios para que ningún resultado legal evite la muerte.
 - Esta Invocación terminal es un evento authored del futuro perdido, no una ampliación de la regla
   general de Oleada. La Oleada normal se habrá enseñado antes con sus revelados reales.
-- Tras **Contemplar otro futuro**, el jugador entrará en una partida real de **El Pacto de Elarion** contra **El
-  Alzamiento de los Sinsepulcro**, con reglas y decks reales. Su seed será específica para ofrecer
-  una Mano y mulligans favorables; la partida no será una receta vacía disfrazada de partida normal.
+- Tres Soldados reales dentro del Archivo protegen al Titán terminal de los tres descartes opcionales
+  máximos. Choque de Ecos conserva su ventana legal después de ver la fuerza terminal, y la posición
+  del Titán puede variar como consecuencia de los descartes anteriores.
+- El CTA único de salida se llama **Contemplar otro futuro**. En el diseño completo, activarlo
+  completará el tutorial y conducirá a una partida real de **El Pacto de Elarion** contra **El
+  Alzamiento de los Sinsepulcro**; el contrato exacto de persistencia y handoff se resolverá después.
 - En esa partida real y en las siguientes, las ayudas pendientes serán contextuales. Cada concepto
   conserva si ya fue mostrado; la preferencia global decide si los conceptos vistos pueden
   repetirse, pero los no vistos siempre conservan su primera aparición.
-- La salida de este prólogo ya corresponde a **Contemplar otro futuro**. La nomenclatura y el
-  comportamiento generales de **Reescribir**, el mulligan y el reinicio siguen abiertos fuera de
-  este handoff.
+- **Continuar** permanece deshabilitado globalmente por ahora.
+- El primer corte de implementación termina cuando la derrota muestra **Contemplar otro futuro**.
+  No incluye todavía activar el botón, ejecutar el vórtice, persistir la finalización ni cargar la
+  siguiente partida.
 - La introducción cinematográfica, las voces y las líneas narrativas finales quedan fuera de la
   implementación actual. El documento sólo conserva su intención y copy provisional.
 
@@ -109,7 +119,7 @@ No incluye todavía:
 - las cartas reveladas por la Oleada;
 - el camino desde la Oleada hasta la derrota;
 - los valores finales de Vida y del Archivo de la Hueste;
-- la escena de derrota, Reescribir o el mulligan;
+- la escena de derrota, el CTA **Contemplar otro futuro** o el mulligan;
 - la partida real posterior al prólogo.
 
 ### Cold open
@@ -309,9 +319,9 @@ No se restringen las defensas ni se altera el escenario sólo para garantizar es
 Vida, Volar/Guardia aérea, Estabilizándose y ataque son aprendizajes independientes. Que uno no se
 active no bloquea el prólogo ni marca los demás como completados.
 
-Mientras el tramo obligatorio siga incompleto, los conceptos vistos pertenecen únicamente al
+Mientras el recorrido siga incompleto, los conceptos vistos pertenecen únicamente al
 intento actual. Si el jugador abandona, el prólogo se reconstruye desde el cold open y no persiste
-nada de ese intento. Al completar el tramo obligatorio, se conservan sólo los conceptos que
+nada de ese intento. Al completar el recorrido, se conservan sólo los conceptos que
 realmente aparecieron; los demás siguen en `no visto` y pueden surgir contextualmente después. Si
 la preferencia global de no repetir está activa, sólo se aplica a ese conjunto ya mostrado.
 
@@ -478,16 +488,18 @@ La Vida ya no necesita calibrarse para morir en una cantidad fija de ataques; el
 se ocupa de eso. Sólo debe garantizar que incluso la rama menos defensiva alcance el turno de Mano
 vacía y Devolver Fuente.
 
-Con las cifras actuales, el mínimo conservador preliminar es 31:
+La auditoría del motor confirmó que el mínimo analítico es 31:
 
 `31 + 3 de Aelyra - 13 del primer ataque - 20 de la primera Oleada = 1`
 
-Este valor supone que el jugador no defiende absolutamente nada. Debe verificarse contra el orden y
-las estadísticas reales de la receta completa antes de fijarse como valor final.
+No defender es el peor caso. Cada Zombi anterior que muera defendido evita al menos 2 de daño y sólo
+agrega 1 de Fuerza a la Cosechadora; durante la Oleada, la Cosechadora ataca antes que los cuerpos
+recién llegados. Con 30, la rama sin defensas pierde antes del turno pedagógico. La receta final debe
+conservar un test exhaustivo que certifique esta prueba y detecte futuros cambios de cartas/reglas.
 
 ---
 
-## Fase 3 — Derrota y salto a otro futuro
+## Fase 3 — Derrota y CTA hacia otro futuro
 
 ### Presentación de derrota
 
@@ -505,20 +517,19 @@ confundir el objeto narrativo que acaba de fracasar.
 
 ### Acción de salida
 
-Este desenlace no reinicia la misma seed condenada. Semánticamente corresponde a **Contemplar otro
-futuro**, no a **Reescribir este futuro**, que en el producto vigente reinicia el mismo Futuro con
-la misma seed.
+Este desenlace no reiniciará la misma seed condenada: conducirá a un Futuro distinto. La presentación
+reutiliza la escena visual de derrota, pero ofrece un único CTA narrativo sin la elección normal
+entre Reescribir y Contemplar. Su nombre visible confirmado es **Contemplar otro futuro**.
 
-La propuesta actual es reutilizar la escena visual de derrota, pero durante el prólogo ofrecer un
-único CTA narrativo, **Contemplar otro futuro**, sin mostrar una elección falsa entre las dos salidas
-normales. El vórtice conduce directamente a una partida real de El Pacto de Elarion contra El
-Alzamiento de los Sinsepulcro con una seed específica. No aparece selección de decks entre ambos
-estados.
+El primer corte termina al presentar ese botón. Su activación, el vórtice, el commit persistente y la
+carga directa de una partida real se implementarán en otra fase. La intención de diseño se mantiene:
+el clic será el acto que completa **Aprender a jugar**, pero la durabilidad exacta si la aplicación se
+cierra durante la transición queda pendiente hasta preparar el release.
 
-### Buena Mano y mulligan: decisión todavía abierta
+### Buena Mano y mulligan: fuera del primer corte
 
-La seed real debe ser favorable y determinista, pero hay una contradicción que todavía debe
-resolverse explícitamente:
+La seed real deberá ser favorable y determinista, pero su diseño se aplaza hasta trabajar la partida
+posterior. Entonces deberá resolverse explícitamente:
 
 - la decisión anterior pedía un mulligan obligatorio para explicar que la Mano del futuro perdido
   contribuyó a la derrota;
@@ -528,10 +539,10 @@ La opción recomendada es que la seed muestre primero una Mano deliberadamente m
 obligue a realizar un mulligan y entregue después la buena Mano preparada. Si la buena Mano aparece
 desde el comienzo, no debe conservarse un mulligan obligatorio sin una razón diferente.
 
-El prólogo no se considera completado al llegar a 0 de Vida. El checkpoint recomendado es la carga
-estable del nuevo Futuro; cerrar durante la derrota o el vórtice reinicia desde el cold open. Falta
-confirmar si el mulligan y la Preparación simplificada pertenecen todavía al tramo obligatorio o si
-ya forman parte de las ayudas contextuales de la partida real.
+El prólogo no se considera completado sólo por llegar a 0 de Vida. En el producto final, la
+activación del CTA será el acto de finalización. Cerrar antes de ese clic reinicia desde el cold open;
+el comportamiento al cerrar durante el vórtice se decidirá antes del release. Cualquier mulligan o
+Preparación simplificada posterior pertenece a la partida real y queda fuera del primer corte.
 
 ---
 
@@ -594,52 +605,57 @@ Esta lista describe información semántica necesaria, no nombres de APIs defini
 - Titán y cantidad adaptativa de Soldados Invocados;
 - ataque terminal resuelto y Vida en 0;
 - presentación normal de derrota asentada;
-- activación de la salida narrativa hacia el nuevo Futuro;
-- nuevo `GameState` real cargado de forma estable antes del checkpoint de finalización.
+- CTA **Contemplar otro futuro** presentado.
+
+La activación del CTA, el commit de recorrido/conceptos, el vórtice y el nuevo `GameState` real son
+observables de una fase posterior.
 
 El análisis futuro deberá distinguir qué observables ya existen como intents, receipts, eventos o
 estado estable y cuáles requieren una señal nueva. No debe deducir progreso leyendo strings del log,
 texto visible, tiempos de animación o nombres de cartas.
 
-## Necesidades que quedan aplazadas hasta cerrar el recorrido completo
+## Necesidades técnicas registradas para la implementación
 
 - Forma declarativa de representar un `GameState` de mitad de partida con turnos, contadores,
   Fuentes, Reserva y orden de Campo exactos.
 - Política de acciones para un tutorial semi-guiado: acciones requeridas, acciones libres,
   intentos inválidos explicables y ramas equivalentes.
-- Disparadores contextuales por concepto, progreso independiente del recorrido obligatorio y
+- Disparadores contextuales por concepto, progreso independiente del recorrido principal y
   confirmación diferida de ese progreso para no recordar un intento abandonado.
 - Garantía de que el orden visual izquierda→derecha coincide con la resolución real cuando existen
   copias agrupadas y nuevas Invocaciones.
 - Orden completo de ambos Archivos alrededor de los segmentos ya fijados, incluidas las cartas de
-  relleno que consume Retorno a la Memoria y la reserva terminal de Soldados.
+  relleno que consume Retorno a la Memoria, los tres Soldados de guardia, el Titán terminal y su
+  reserva posterior de Soldados.
 - Evaluador puro de letalidad que contemple defensa, Reacciones y orden real de combate sin ejecutar
   ni mutar el `GameState` mientras prueba candidatos.
 - Validación exhaustiva del mínimo preliminar de 31 de Vida y del máximo de Soldados que puede pedir
   cualquier rama alcanzable.
 - Representación narrativa y técnica de la Invocación terminal para no confundirla con el límite
   ordinario de revelados de la Oleada.
-- Integración de la derrota normal, la salida **Contemplar otro futuro** y la carga directa de una
-  partida real preparada.
-- Separación de progreso entre el prólogo obligatorio, el tutorial específico **Preparación** y las
+- Integración de la derrota normal y el CTA único **Contemplar otro futuro**. La carga directa de una
+  partida real preparada pertenece a una fase posterior.
+- Separación de progreso entre el prólogo, el tutorial específico **Preparación** y las
   ayudas contextuales que continúan en partidas normales.
 
-Estas necesidades se analizarán juntas cuando el flujo completo esté diseñado. No se debe mover
-código por cada escena aislada mientras todavía puede cambiar el contrato general.
+La auditoría de estas necesidades y sus fases está en
+[`learn_to_play_implementation_plan.md`](learn_to_play_implementation_plan.md). No se deben mover
+escenas aisladas a código fuera de la fase aprobada.
 
 ## Decisiones abiertas al terminar esta actualización
 
 1. Copy del narrador al entrar y antes de la Oleada.
 2. Copy definitivo de la derrota; el borrador actual usa «llegamos demasiado tarde» y «contemplar
    otro futuro».
-3. Orden visual del Titán dentro de la Invocación terminal y presentación de un número variable de
-   Soldados sin hacerla pasar por una Oleada ordinaria.
-4. Confirmación de 31 como Vida inicial y cantidad máxima de Soldados necesaria en todas las ramas.
-5. Si la seed real muestra primero una Mano mala y el mulligan entrega la buena, o si comienza ya
+3. Certificación automatizada de 31 como Vida inicial y cantidad máxima de Soldados necesaria en
+   todas las ramas.
+4. Si la seed real muestra primero una Mano mala y el mulligan entrega la buena, o si comienza ya
    con la buena Mano y elimina el mulligan obligatorio.
-6. Si mulligan y Preparación simplificada siguen dentro del tramo obligatorio o pertenecen ya a la
-   partida real con ayudas contextuales.
-7. Momento exacto en que se persiste la finalización del prólogo durante la transición.
+5. Seed, dificultad y cantidad de turnos de Preparación de la partida real.
+6. Comportamiento de primera apertura y alcance sobre perfiles existentes.
+7. Persistencia exacta si la aplicación se cierra durante el vórtice.
 8. Lore previo del Cronista.
-9. Nomenclatura general de mulligan y reinicio fuera de este handoff; aquí la salida semántica es
-    **Contemplar otro futuro**, no reiniciar la seed condenada.
+
+La llegada terminal no está abierta: todas las cartas se presentan una por una con el revelado
+normal y sin agrupación visual. Esto no cambia que el evento terminal sea authored y pueda superar
+el número ordinario de revelados de una Oleada.
