@@ -241,7 +241,12 @@ void main() {
   float flash = exp(-uShock * 14.0) * (1.0 - smoothstep(0.0, 0.3, r));
   color += vec3(1.0, 0.97, 0.92) * flash * 1.2;
 
-  gl_FragColor = vec4(color * fade, 1.0);
+  // Este quad vive sobre un framebuffer transparente. Alfa 1 fuera del frente escribiría una
+  // lámina negra de pantalla completa hasta que termine la onda, tapando el cielo del juego.
+  vec3 emitted = color * fade;
+  float coverage = clamp(max(emitted.r, max(emitted.g, emitted.b)), 0.0, 1.0);
+  if (coverage < 0.001) discard;
+  gl_FragColor = vec4(emitted, coverage);
 }
 `;
 
@@ -270,6 +275,7 @@ export function createDefeatShockMaterial(
     depthTest: false,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
+    premultipliedAlpha: true,
   }) as DefeatShockMaterial;
 }
 

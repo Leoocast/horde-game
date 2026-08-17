@@ -349,16 +349,22 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   instrumento de grados con su retículo. El fondo no participa. Por eso la captura es siempre
   `html-to-image` sobre `body`, que deja alfa; `webContents.capturePage()` devuelve píxeles opacos
   y metería el espacio dentro del vidrio, así que la derrota no lo usa aunque el bridge exista. La
-  captura descarta lienzos WebGL y neutraliza el fondo de la pantalla; se valida y una lámina
-  uniforme se rechaza, porque no existe textura plana de reserva. Después mapea cada trozo exacto
-  mediante UV globales.
+  captura descarta todo lo que es fondo —lienzos WebGL, `.game-screen-ambience` y el color de la
+  propia pantalla—; se valida y una lámina uniforme se rechaza, porque no existe textura plana de
+  reserva. Después mapea cada trozo exacto mediante UV globales. Los degradados de ambiente viven en
+  un elemento real y no en un pseudo justamente para poder quedarse fuera: cualquier película oscura
+  a pantalla completa que entre en la placa se va volando con los trozos, y entonces el fondo parece
+  aclararse después de la explosión en vez de quedarse quieto.
 - La secuencia arranca con la Vida a 0, nunca cuando termina la captura. La escena existe desde el
   primer fotograma con la lámina limpia —un texel transparente, jamás un color que finja el
   tablero—, así que el cuarteado corre de inmediato con el tablero vivo todavía visible a través
   del vidrio. La captura sólo lo imprime cuando llega, y con ella el tablero vivo se retira. Lo
   único que puede esperar es el golpe, porque imprimir sobre trozos que ya vuelan sería un salto:
-  revienta al llegar la placa, nunca antes de 1560 ms y como muy tarde a los 4200 ms, y pasado ese
-  tope revienta con vidrio limpio y la captura se descarta. Fotografiar el DOM cuesta lo que cuesta
+  revienta al llegar la placa más un margen de asiento, nunca antes de 1560 ms y como muy tarde a
+  los 4200 ms, y pasado ese tope revienta con vidrio limpio y la captura se descarta. Ese margen no
+  es decorativo: terminar de fotografiar el DOM, subir la textura y retirar el tablero vivo son tres
+  costes que no pueden caer encima del estallido, y por eso además el relevo del tablero ocurre un
+  fotograma después de subir la textura. Fotografiar el DOM cuesta lo que cuesta
   y el diseño no puede depender de que sea rápido. La captura se toma sobre `body` porque la
   Reserva y los tooltips cuelgan de ahí por portal.
 - Nada cambia de color antes de que el vidrio se rompa. No hay sello frío sobre la captura, ni capa
@@ -384,6 +390,8 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   `LinearEncoding`: la conversión sRGB aclara la captura y enfría mal el Fresnel. Reutiliza el
   renderer WebGL compartido y conserva una fractura SVG quieta para movimiento reducido o falta de
   WebGL; ese respaldo también retira el tablero y deja ver el espacio.
+- El desenlace no lleva mancha propia detrás y la viñeta cierra a 0.42, no a 0.72: ahora cae sobre
+  el espacio real y apretarla más lo deja negro por los bordes.
 - El desenlace se centra con una capa a pantalla completa y su bloque no lleva `transform` propio.
   Dos cosas lo pisarían: la regla genérica `.game-screen [role="dialog"]`, que impone
   `game-surface-in` y termina en `translateY(0) scale(1)`, y la succión del vórtice al Reescribir,

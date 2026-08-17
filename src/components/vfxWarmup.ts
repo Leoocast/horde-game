@@ -10,7 +10,7 @@ import {
 } from "./destinyVortexShader";
 import { createDefeatGlassMaterial, createDefeatShockMaterial } from "./defeatGlassShader";
 import { buildDefeatShatterPlan } from "./defeatShatterGeometry";
-import { warmSharedVfxFrame } from "./sharedVfxRenderer";
+import { boundedVfxPixelRatio, warmSharedVfxFrame } from "./sharedVfxRenderer";
 
 type WarmupFrame = {
   scene: THREE.Scene;
@@ -252,7 +252,7 @@ export function prewarmGameVfx(): Promise<void> {
       retainedFrames ??= createWarmupFrames();
       const width = Math.max(1, window.innerWidth);
       const height = Math.max(1, window.innerHeight);
-      const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.35);
+      const pixelRatio = boundedVfxPixelRatio(width, height, window.devicePixelRatio || 1);
       for (const frame of retainedFrames) {
         warmSharedVfxFrame({ ...frame, width, height, pixelRatio });
       }

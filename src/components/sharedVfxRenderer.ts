@@ -29,6 +29,28 @@ export type SharedVfxSurface = {
   height: number;
 };
 
+/** Presupuesto para efectos de pantalla completa. El renderer compartido nunca encoge, por lo
+ * que reservar el framebuffer al DPR nativo de una pantalla 4K/5K penaliza todos los frames
+ * posteriores aunque el detalle extra no sea perceptible durante un efecto en movimiento. */
+export function boundedVfxPixelRatio(
+  width: number,
+  height: number,
+  devicePixelRatio: number,
+  maxWidth = 2560,
+  maxHeight = 1440,
+  maxPixelRatio = 1.35,
+): number {
+  const safeWidth = Math.max(1, width);
+  const safeHeight = Math.max(1, height);
+  const safeDeviceRatio = devicePixelRatio > 0 ? devicePixelRatio : 1;
+  return Math.max(0.01, Math.min(
+    safeDeviceRatio,
+    maxPixelRatio,
+    maxWidth / safeWidth,
+    maxHeight / safeHeight,
+  ));
+}
+
 /** Redimensionar reasigna el búfer, así que sólo se hace cuando el efecto no cabe. La superficie
  * crece hasta el efecto más grande visto y no vuelve a encogerse durante la sesión. */
 export function grownVfxSurface(

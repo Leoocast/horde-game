@@ -68,7 +68,10 @@ Implementaciones utiles como referencia:
   fragmento. Lo que se rompe es el tablero —cartas, campo, HUD y el instrumento de grados con su
   reticulo—; el fondo no participa. Por eso la captura es siempre `html-to-image` sobre `body` sin
   el overlay final: deja alfa, mientras que `webContents.capturePage()` devuelve pixeles opacos y
-  meteria el espacio dentro del vidrio. La captura se valida y una lamina uniforme se descarta: no
+  meteria el espacio dentro del vidrio. Tambien quedan fuera los lienzos WebGL y
+  `.game-screen-ambience`, que es un elemento real y no un pseudo precisamente para poder
+  descartarlo: una pelicula oscura a pantalla completa dentro de la placa se va volando con los
+  trozos y el fondo parece aclararse despues de la explosion. La captura se valida y una lamina uniforme se descarta: no
   existe una textura de color que pueda fingir el tablero. Cada cara recibe las UV globales de su
   trozo exacto.
 - El reloj arranca con la Vida a 0, nunca cuando termina la captura. La escena existe desde el
@@ -77,8 +80,10 @@ Implementaciones utiles como referencia:
   traves del vidrio. Nada tine la pantalla antes de romperse: no hay sello frio sobre la captura,
   ni capa de hielo en el DOM, ni vineta encendida de salida. La captura solo lo imprime cuando llega, y con ella se retira el
   tablero vivo. Lo unico que espera es el golpe, porque imprimir sobre trozos que ya vuelan seria un
-  salto: revienta al llegar la placa, nunca antes de 1560 ms y como muy tarde a los 4200 ms; pasado
-  ese tope revienta con vidrio limpio y la captura se descarta. El desenlace se cuelga de ese golpe
+  salto: revienta al llegar la placa mas un margen de asiento, nunca antes de 1560 ms y como muy
+  tarde a los 4200 ms; pasado ese tope revienta con vidrio limpio y la captura se descarta. El
+  margen evita que terminar la captura, subir la textura y retirar el tablero vivo caigan encima del
+  estallido; por lo mismo el relevo del tablero ocurre un fotograma despues de subir la textura. El desenlace se cuelga de ese golpe
   real con `onBurst`, 1340 ms despues, no de un reloj propio del modal. La captura se toma sobre
   `body` porque la Reserva y los tooltips cuelgan de ahi por portal, y sale con alfa: el vidrio es
   opaco donde el tablero pintaba y transparente donde no.

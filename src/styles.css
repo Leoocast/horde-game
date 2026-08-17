@@ -172,8 +172,8 @@
     overflow: hidden;
   }
 
-  /* Va en z-index -2 para quedar por debajo del ::before de la pantalla: ese degradado
-     es el que mantiene legible el texto sobre el fondo, y debe seguir encima. */
+  /* Va en z-index -2 para quedar por debajo de la capa de ambiente de la pantalla: ese
+     degradado mantiene legible el texto sobre el fondo y debe seguir encima. */
   .temporal-backdrop {
     pointer-events: none;
     position: absolute;
@@ -11297,14 +11297,15 @@
   background-image: none;
 }
 
-/* Los degradados pasan a un pseudo-elemento porque el fondo del propio elemento se
-   pinta por debajo de los hijos negativos: dentro de `background-image` quedarían
-   tapados por el lienzo, y son los que asientan la legibilidad de las cartas. */
-.game-screen::before {
+/* Los degradados van en su propia capa porque el fondo del propio elemento se pinta por
+   debajo de los hijos negativos: dentro de `background-image` quedarían tapados por el
+   lienzo, y son los que asientan la legibilidad de las cartas. Es un elemento real y no un
+   pseudo porque la captura de la derrota tiene que poder descartarlo: pertenece al fondo,
+   no al tablero, y no debe viajar dentro del vidrio que se rompe. */
+.game-screen-ambience {
   position: absolute;
   z-index: -1;
   inset: 0;
-  content: "";
   pointer-events: none;
   background:
     radial-gradient(ellipse at 50% 44%, transparent 18%, rgb(1 5 4 / 0.14) 70%, rgb(0 2 2 / 0.38) 100%),
@@ -21637,24 +21638,20 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
 
 .game-result-defeat.is-sequence-running .defeat-shatter-canvas.is-ready { opacity: 1; }
 
-/* La placa ya contiene el tablero, así que lo vivo se retira y detrás sólo queda el espacio. El
-   retículo pertenece al cristal que se está rompiendo: se va con él, no sobrevive al estallido.
+/* La placa ya contiene el tablero, así que lo vivo se retira y detrás sólo queda el fondo: el
+   espacio y sus degradados, que no entran en la captura ni se rompen. El retículo, en cambio,
+   pertenece al cristal: se va con él y no sobrevive al estallido.
    La regla de `body` alcanza los portales —la Reserva, los tooltips y el registro cuelgan de ahí,
    fuera de `.game-screen`— sin tener que enumerar sus clases una por una. */
 body.is-defeat-plated > *:not(#root),
-body.is-defeat-plated .game-screen > *:not(.temporal-backdrop):not(.game-result-overlay),
+body.is-defeat-plated .game-screen > *:not(.temporal-backdrop):not(.game-screen-ambience):not(.game-result-overlay),
 body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
-
-/* Los degradados de la pantalla viajan dentro de la captura, así que la copia viva sobra: sin
-   esto se sumarían dos veces por los huecos transparentes de la placa. */
-body.is-defeat-plated .game-screen::before { display: none; }
 
 /* Las quebraduras crecen desde el impacto: los muros del prisma quedan casi de canto vistos de
    frente, así que no sirven para enseñar la raja. El vidrio sí se tensa por debajo. */
 .defeat-shatter-fractures {
   z-index: 3;
   overflow: visible;
-  filter: drop-shadow(0 0 3px rgb(185 222 221 / 0.46));
 }
 
 .defeat-shatter-fractures path {
@@ -21688,6 +21685,7 @@ body.is-defeat-plated .game-screen::before { display: none; }
     linear-gradient(180deg, rgb(3 8 9 / 0.12), rgb(0 3 4 / 0.46));
   /* Nada cambia de color antes de que el vidrio se rompa: la viñeta entra con el golpe. */
   opacity: 0;
+  will-change: opacity;
 }
 
 .game-result-defeat .defeat-shatter.is-bursting .defeat-shatter-vignette {
@@ -21697,8 +21695,7 @@ body.is-defeat-plated .game-screen::before { display: none; }
 /* Sin WebGL o sin captura no hay vidrio: queda la fractura quieta sobre el espacio, con el tablero
    vivo ya retirado por debajo. El oscurecimiento deja respirar el fondo en vez de taparlo. */
 .defeat-shatter.is-fallback {
-  background:
-    radial-gradient(circle at 52% 46%, rgb(6 14 16 / 0.62), rgb(1 5 6 / 0.88) 56%, rgb(0 2 3 / 0.95) 100%);
+  background: transparent;
 }
 
 .defeat-shatter.is-fallback .defeat-shatter-canvas { display: none; }
@@ -21730,15 +21727,6 @@ body.is-defeat-plated .game-screen::before { display: none; }
   animation: defeat-outcome-in 460ms ease-out both;
 }
 
-.defeat-outcome-inner::before {
-  position: absolute;
-  z-index: -1;
-  inset: -34% -20%;
-  content: "";
-  background: radial-gradient(ellipse, rgb(1 5 7 / 0.94) 0 31%, rgb(2 8 10 / 0.72) 52%, transparent 74%);
-  filter: blur(12px);
-}
-
 .defeat-outcome button { pointer-events: auto; }
 
 /* Derrota sube y respira: separada del título deja de leerse como su primera línea y pasa a ser
@@ -21747,7 +21735,7 @@ body.is-defeat-plated .game-screen::before { display: none; }
   position: relative;
   margin-bottom: 18px;
   color: #d5a67e;
-  font: 800 12px/1 "Cinzel", Georgia, "Times New Roman", serif;
+  font: 800 14px/1 "Cinzel", Georgia, "Times New Roman", serif;
   letter-spacing: 0.34em;
   text-transform: uppercase;
   text-shadow: 0 0 12px rgb(154 71 42 / 0.48);
@@ -21773,7 +21761,7 @@ body.is-defeat-plated .game-screen::before { display: none; }
   display: grid;
   margin: 0;
   color: #e9e6dc;
-  font: 700 clamp(38px, 7vw, 78px)/0.9 "Cinzel", Georgia, "Times New Roman", serif;
+  font: 700 clamp(44px, 8vw, 90px)/0.9 "Cinzel", Georgia, "Times New Roman", serif;
   letter-spacing: 0.065em;
   text-transform: uppercase;
   text-shadow: 0 3px 8px #000, 0 0 18px rgb(151 190 192 / 0.24);
@@ -21807,7 +21795,7 @@ body.is-defeat-plated .game-screen::before { display: none; }
 .defeat-subtitle {
   margin-top: 7px;
   color: rgb(172 187 184 / 0.82);
-  font: 600 clamp(8px, 1.1vw, 11px)/1.4 "Cinzel", Georgia, "Times New Roman", serif;
+  font: 600 clamp(10px, 1.3vw, 14px)/1.4 "Cinzel", Georgia, "Times New Roman", serif;
   letter-spacing: 0.25em;
   text-transform: uppercase;
   opacity: 0;
@@ -21831,14 +21819,14 @@ body.is-defeat-plated .game-screen::before { display: none; }
 
 .defeat-future-plate span {
   color: #c8d9d5;
-  font: 800 11px/1.2 "Cinzel", Georgia, "Times New Roman", serif;
+  font: 800 13px/1.2 "Cinzel", Georgia, "Times New Roman", serif;
   letter-spacing: 0.26em;
   text-transform: uppercase;
 }
 
 .defeat-future-plate b {
   color: #e5c89e;
-  font: 800 clamp(18px, 2.25vw, 25px)/1.2 "Cinzel", Georgia, "Times New Roman", serif;
+  font: 800 clamp(21px, 2.6vw, 30px)/1.2 "Cinzel", Georgia, "Times New Roman", serif;
   letter-spacing: 0.13em;
   font-variant-numeric: tabular-nums;
   text-shadow: 0 0 12px rgb(159 100 62 / 0.36);
@@ -21868,13 +21856,15 @@ body.is-defeat-plated .game-screen::before { display: none; }
 
 .defeat-outcome-actions {
   display: grid;
-  width: min(470px, calc(100vw - 32px));
+  width: min(520px, calc(100vw - 32px));
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-top: 22px;
   opacity: 0;
   animation: defeat-copy-rise 620ms 1080ms ease-out both;
 }
+
+.game-result-defeat .game-result-action { font-size: 12px; }
 
 @keyframes defeat-crack-grow {
   0% { opacity: 0; stroke-dashoffset: 1; }
@@ -21887,9 +21877,11 @@ body.is-defeat-plated .game-screen::before { display: none; }
   to { opacity: 0; transform: scale(1.04); }
 }
 
+/* Sin abismo detrás, la viñeta cae sobre el espacio real: apretarla hasta 0.72 lo dejaba casi
+   negro por los bordes. Encuadra el desenlace sin tapar el fondo. */
 @keyframes defeat-vignette-close {
   from { opacity: 0; }
-  to { opacity: 0.72; }
+  to { opacity: 0.42; }
 }
 
 @keyframes defeat-outcome-in {
@@ -21951,7 +21943,7 @@ body.is-defeat-plated .game-screen::before { display: none; }
   .defeat-outcome-inner { transform: none; }
   .defeat-title .line { opacity: 1; clip-path: inset(0); transform: none; }
   .defeat-title::after { display: none; }
-  .defeat-shatter-vignette { opacity: 0.72; }
+  .defeat-shatter-vignette { opacity: 0.42; }
   .defeat-shatter-canvas { display: none; }
   .defeat-shatter-fractures path { opacity: 0.22; stroke-dashoffset: 0; }
 }

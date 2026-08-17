@@ -9,7 +9,7 @@ import {
   type DefeatGlassMaterial,
   type DefeatShockMaterial,
 } from "./defeatGlassShader";
-import { renderSharedVfxFrame } from "./sharedVfxRenderer";
+import { boundedVfxPixelRatio, renderSharedVfxFrame } from "./sharedVfxRenderer";
 
 type Props = {
   seed: string;
@@ -45,10 +45,22 @@ const SHOCK_SPAN_MS = 940;
 const LATEST_BURST_MS = 4200;
 /** Después del golpe la captura ya no sirve: llegaría a imprimirse sobre trozos sueltos. */
 const PLATE_DEADLINE_MS = LATEST_BURST_MS;
+/**
+ * Terminar de fotografiar el DOM y subir la textura a la GPU bloquea el hilo un momento. Si el
+ * golpe saliera en el fotograma siguiente, ese tirón caería justo encima del estallido, que es
+ * donde peor se ve. Este margen deja que la placa se asiente antes de reventar.
+ */
+const PLATE_SETTLE_MS = 260;
 /** Con el tablero ya impreso o estallado, lo vivo se retira y detrás sólo queda el espacio. */
 const PLATED_BODY_CLASS = "is-defeat-plated";
 /** El desenlace se nombra respecto del golpe real, no del arranque de la secuencia. */
 const REVEAL_AFTER_BURST_MS = 1340;
+/** El canvas se copia de WebGL a 2D: más de 60 entregas por segundo sólo duplican trabajo. */
+const FRAME_INTERVAL_MS = 1000 / 60;
+
+// `DefeatModal` forma parte del Board desde el inicio de la partida. Comenzar a cargar este chunk
+// entonces evita pagar su fetch y parseo justo cuando la Vida llega a 0.
+const htmlToImageRuntime = import("html-to-image").catch(() => undefined);
 
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
@@ -78,26 +90,30 @@ function settleBefore<T>(task: Promise<T>, timeoutMs: number): Promise<T | undef
  * tablero no pinta—, así que se exige materia suficiente y variada, no opacidad.
  */
 function snapshotHasVisualDetail(canvas: HTMLCanvasElement): boolean {
-  const context = canvas.getContext("2d", { willReadFrequently: true });
-  if (!context || canvas.width < 2 || canvas.height < 2) return false;
+  if (canvas.width < 2 || canvas.height < 2) return false;
+  // Una sola lectura pequeña evita 77 sincronizaciones GPU→CPU al terminar la captura.
+  const sample = document.createElement("canvas");
+  sample.width = 11;
+  sample.height = 7;
+  const context = sample.getContext("2d", { willReadFrequently: true });
+  if (!context) return false;
+  context.drawImage(canvas, 0, 0, sample.width, sample.height);
+  const pixels = context.getImageData(0, 0, sample.width, sample.height).data;
   const bins = new Set<string>();
   let minLuma = 255;
   let maxLuma = 0;
   let paintedSamples = 0;
-  const columns = 11;
-  const rows = 7;
-  for (let row = 1; row <= rows; row += 1) {
-    for (let column = 1; column <= columns; column += 1) {
-      const x = Math.min(canvas.width - 1, Math.round((column / (columns + 1)) * canvas.width));
-      const y = Math.min(canvas.height - 1, Math.round((row / (rows + 1)) * canvas.height));
-      const [red, green, blue, alpha] = context.getImageData(x, y, 1, 1).data;
-      if (alpha <= 24) continue;
-      paintedSamples += 1;
-      const luma = red * 0.2126 + green * 0.7152 + blue * 0.0722;
-      minLuma = Math.min(minLuma, luma);
-      maxLuma = Math.max(maxLuma, luma);
-      bins.add(`${red >> 4}:${green >> 4}:${blue >> 4}`);
-    }
+  for (let offset = 0; offset < pixels.length; offset += 4) {
+    const red = pixels[offset];
+    const green = pixels[offset + 1];
+    const blue = pixels[offset + 2];
+    const alpha = pixels[offset + 3];
+    if (alpha <= 24) continue;
+    paintedSamples += 1;
+    const luma = red * 0.2126 + green * 0.7152 + blue * 0.0722;
+    minLuma = Math.min(minLuma, luma);
+    maxLuma = Math.max(maxLuma, luma);
+    bins.add(`${red >> 4}:${green >> 4}:${blue >> 4}`);
   }
   return paintedSamples >= 10 && (maxLuma - minLuma > 18 || bins.size >= 8);
 }
@@ -108,11 +124,18 @@ function snapshotHasVisualDetail(canvas: HTMLCanvasElement): boolean {
  * `capturePage` fotografía la ventana entera y devuelve píxeles opacos, así que el espacio
  * acabaría dentro del vidrio y saldría volando con los trozos para reaparecer después. Por
  * eso la captura es siempre `html-to-image`, que sí deja alfa: se fotografía `body` —la
- * Reserva y los tooltips cuelgan de ahí por portal—, se descartan los lienzos WebGL y se
- * neutraliza el fondo de la pantalla. Lo que queda es cartas, campo, HUD y el instrumento
- * de grados sobre transparencia, con el espacio intacto detrás.
+ * Reserva y los tooltips cuelgan de ahí por portal—, y se descarta todo lo que es fondo: los
+ * lienzos WebGL, la capa de ambiente y el color de la propia pantalla. Lo que queda es
+ * cartas, campo, HUD y el instrumento de grados sobre transparencia. Cualquier película
+ * oscura a pantalla completa que se colase aquí se iría volando con los trozos, y el fondo
+ * parecería aclararse despues de la explosión en vez de quedarse quieto.
  */
-async function captureBattlefield(width: number, height: number): Promise<HTMLCanvasElement | undefined> {
+async function captureBattlefield(
+  width: number,
+  height: number,
+  canvasWidth: number,
+  canvasHeight: number,
+): Promise<HTMLCanvasElement | undefined> {
   const gameScreen = document.querySelector<HTMLElement>(".game-screen");
   if (!gameScreen) return undefined;
 
@@ -122,12 +145,14 @@ async function captureBattlefield(width: number, height: number): Promise<HTMLCa
   const screenBackground = gameScreen.style.backgroundColor;
   gameScreen.style.backgroundColor = "transparent";
   try {
-    const { toCanvas } = await import("html-to-image");
+    const runtime = await htmlToImageRuntime;
+    if (!runtime) return undefined;
+    const { toCanvas } = runtime;
     const webCanvas = await settleBefore(toCanvas(document.body, {
       width,
       height,
-      canvasWidth: width,
-      canvasHeight: height,
+      canvasWidth,
+      canvasHeight,
       pixelRatio: 1,
       skipAutoScale: true,
       cacheBust: false,
@@ -136,6 +161,7 @@ async function captureBattlefield(width: number, height: number): Promise<HTMLCa
       onImageErrorHandler: () => undefined,
       filter: (node) => (
         !node.classList?.contains("game-result-overlay")
+        && !node.classList?.contains("game-screen-ambience")
         && !(node instanceof HTMLCanvasElement)
         && !(node instanceof HTMLVideoElement)
         && !(node instanceof HTMLIFrameElement)
@@ -275,7 +301,6 @@ function updateShatterScene(rendered: ShatterScene, elapsedMs: number, burstAtMs
 export function DefeatShatterAnimator({ seed, onSequenceStart, onBurst }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fallback, setFallback] = useState(false);
-  const [plated, setPlated] = useState(false);
   const [bursting, setBursting] = useState(false);
   const playSfx = useAudioStore((state) => state.playSfx);
 
@@ -298,11 +323,20 @@ export function DefeatShatterAnimator({ seed, onSequenceStart, onBurst }: Props)
 
     const width = Math.max(1, window.innerWidth);
     const height = Math.max(1, window.innerHeight);
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.35);
+    const pixelRatio = boundedVfxPixelRatio(width, height, window.devicePixelRatio || 1);
+    const pixelWidth = Math.max(1, Math.round(width * pixelRatio));
+    const pixelHeight = Math.max(1, Math.round(height * pixelRatio));
+    // La geometría gana con un poco de supersampling, pero fotografiar el DOM por encima de su
+    // resolución CSS sólo aumenta el bloqueo de `html-to-image`. En 4K sí se reduce al presupuesto.
+    const snapshotWidth = Math.min(width, pixelWidth);
+    const snapshotHeight = Math.min(height, pixelHeight);
     let animationFrame = 0;
     let cancelled = false;
     let burstAtMs: number | undefined;
-    let printed = false;
+    let readyToBurstAtMs: number | undefined;
+    let coverPending = false;
+    let coverAfterPaint = false;
+    let lastRenderedAt = Number.NEGATIVE_INFINITY;
 
     // La secuencia empieza con la Vida a 0: la escena existe desde el primer fotograma y
     // el vidrio se cuartea limpio, con el tablero vivo todavía visible a través.
@@ -327,10 +361,33 @@ export function DefeatShatterAnimator({ seed, onSequenceStart, onBurst }: Props)
     let firstFrame = true;
     const draw = (now: number) => {
       if (cancelled) return;
+
+      // El frame anterior ya subió, copió y pintó la placa. Recién en este rAF se retira
+      // el tablero vivo, para no sumar la invalidación del DOM a la subida de la textura.
+      if (coverAfterPaint) {
+        coverAfterPaint = false;
+        coverBoard();
+        readyToBurstAtMs = Math.max(
+          EARLIEST_BURST_MS,
+          now - startedAt + PLATE_SETTLE_MS,
+        );
+      }
+
+      // En paneles de 120/144 Hz la copia WebGL→2D no necesita repetirse en cada refresco.
+      // El reloj sigue basado en `now`, por lo que saltar una entrega no ralentiza el efecto.
+      if (now - lastRenderedAt < FRAME_INTERVAL_MS) {
+        animationFrame = window.requestAnimationFrame(draw);
+        return;
+      }
+      const sinceLastRender = now - lastRenderedAt;
+      lastRenderedAt = Number.isFinite(sinceLastRender)
+        ? now - (sinceLastRender % FRAME_INTERVAL_MS)
+        : now;
+
       const elapsed = now - startedAt;
       // El golpe espera a la captura porque imprimir el tablero sobre trozos que ya vuelan
       // sería un salto; el cuarteado, en cambio, no espera a nadie.
-      if (burstAtMs === undefined && elapsed >= (printed ? EARLIEST_BURST_MS : LATEST_BURST_MS)) {
+      if (burstAtMs === undefined && elapsed >= Math.min(readyToBurstAtMs ?? Infinity, LATEST_BURST_MS)) {
         fireBurst(Math.max(EARLIEST_BURST_MS, elapsed));
       }
       // Sin golpe todavía, el reloj del estallido se mantiene lejos en el futuro.
@@ -355,6 +412,13 @@ export function DefeatShatterAnimator({ seed, onSequenceStart, onBurst }: Props)
         firstFrame = false;
         canvas.classList.add("is-ready");
       }
+      // Retirar el tablero vivo invalida medio árbol, y subir la textura de pantalla completa
+      // tampoco es gratis. Van en fotogramas distintos para que el tirón no se sume: este
+      // fotograma ya dibujó la placa, así que el relevo no deja hueco.
+      if (coverPending) {
+        coverPending = false;
+        coverAfterPaint = true;
+      }
       // Los restos suspendidos siguen derivando sobre el espacio hasta que el Cronista
       // elige salida.
       animationFrame = window.requestAnimationFrame(draw);
@@ -362,16 +426,15 @@ export function DefeatShatterAnimator({ seed, onSequenceStart, onBurst }: Props)
 
     const begin = async () => {
       try {
-        const snapshot = await settleBefore(captureBattlefield(width, height), PLATE_DEADLINE_MS);
+        const snapshot = await settleBefore(
+          captureBattlefield(width, height, snapshotWidth, snapshotHeight),
+          PLATE_DEADLINE_MS,
+        );
         if (cancelled || !snapshot) return;
         // Pasado el golpe la captura ya no sirve: el vidrio limpio se queda como está.
         if (burstAtMs !== undefined) return;
         rendered.printBoard(snapshot);
-        printed = true;
-        // La placa releva a la pantalla viva en el mismo fotograma: es la misma imagen,
-        // así que el relevo no se ve.
-        coverBoard();
-        setPlated(true);
+        coverPending = true;
       } catch {
         // Sin captura el vidrio se rompe igual, limpio y sobre el espacio.
       }
@@ -392,7 +455,6 @@ export function DefeatShatterAnimator({ seed, onSequenceStart, onBurst }: Props)
       className={[
         "defeat-shatter",
         fallback ? "is-fallback" : "",
-        plated ? "is-plated" : "",
         bursting ? "is-bursting" : "",
       ].join(" ")}
       aria-hidden="true"

@@ -108,6 +108,7 @@ export function Board({
   // El disco de grados mide cómo se mueve el futuro. Lo acumula el store impacto a
   // impacto, que es quien conoce cada golpe y cada baja; aquí sólo se lee.
   const destinyDial = useGameStore((state) => state.destinyDial);
+  const defeatReady = game.winner === "host" && !resolvingHostCombat;
 
   useEffect(() => {
     if (climaxReached) setMusicVariant("climax");
@@ -115,12 +116,12 @@ export function Board({
 
   useEffect(() => {
     if (game.winner === "player") playCollection("winTheme");
-    else if (game.winner === "host") playCollection("lossTheme");
-  }, [game.winner, playCollection]);
+    else if (defeatReady) playCollection("lossTheme");
+  }, [defeatReady, game.winner, playCollection]);
 
   useLayoutEffect(() => {
-    if (game.winner === "host") stopGamePresentation();
-  }, [game.winner, stopGamePresentation]);
+    if (defeatReady) stopGamePresentation();
+  }, [defeatReady, stopGamePresentation]);
 
   useEffect(() => {
     if (!game.openingHandAccepted || encounterEntering) return;
@@ -134,6 +135,8 @@ export function Board({
         climax={climaxReached ? 1 : 0}
         dial={destinyDial}
       />
+      {/* Capa de fondo, no de tablero: la derrota la deja fuera de la captura y no se rompe. */}
+      <div className="game-screen-ambience" aria-hidden="true" />
       <AppHeader
         left={game.openingHandAccepted ? <TurnPhaseHud game={game} setupTurns={setupTurns} /> : undefined}
         setupTurns={setupTurns}
@@ -196,7 +199,7 @@ export function Board({
       <OpeningHandOverlay game={game} />
       <GuidedTutorialOverlay />
 
-      {sessionKind === "normal" && game.winner === "host" && onRewriteFuture && onContemplateFuture && (
+      {sessionKind === "normal" && defeatReady && onRewriteFuture && onContemplateFuture && (
         <DefeatModal game={game} onRewriteFuture={onRewriteFuture} onContemplateFuture={onContemplateFuture} />
       )}
       {sessionKind === "normal" && game.winner === "player" && onRewriteFuture && onContemplateFuture && (
@@ -262,4 +265,3 @@ export function Board({
     </main>
   );
 }
-

@@ -2316,27 +2316,19 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
     if (customAnimation?.effect.type === "fireball") {
       useAudioStore.getState().playSfx(fireballHitSfx);
     }
-    let gameEnded = false;
     useGameStore.setState((state) => {
       const previous = state.game;
       const next = applyHostAttackEvent(previous, event);
-      // Combat is presented one impact at a time. Declare a lethal impact immediately instead of
-      // waiting for finishHostCombat after every remaining attacker has played its animation.
+      // La derrota ya es verdad en el impacto, pero la presentación del ataque conserva su beat
+      // completo. El callback de `durationMs` limpia la animación sólo después de que el atacante
+      // regresó a su slot; entonces `Board` puede montar el quiebre sin cortar el movimiento.
       checkWinLoss(next);
-      gameEnded = Boolean(next.winner);
       const gainedLife = next.player.life > previous.player.life;
       if (gainedLife) useAudioStore.getState().playSfx("buff");
       notifyDiscardEffects(previous, next);
       // Field losses are observed centrally for combat and every effect path. Direct
       // damage still tips the Future here because no card changes zones for that hit.
       const dialTurn = event.playerDamage > 0 ? -DESTINY_DIAL_STEP : 0;
-      if (gameEnded) {
-        return {
-          ...createCleanUiState(),
-          game: next,
-          ...(dialTurn === 0 ? {} : { destinyDial: state.destinyDial + dialTurn }),
-        };
-      }
       return {
         game: next,
         ...(dialTurn === 0 ? {} : { destinyDial: state.destinyDial + dialTurn }),
@@ -2345,17 +2337,21 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
         ...(gainedLife ? startLifeBuffBeat() : {}),
       };
     });
-    if (gameEnded) useGameStore.getState().stopGamePresentation();
   }, impactMs);
 
   window.setTimeout(() => {
-    if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
+    if (sequenceId !== hostCombatSequenceId) return;
+    const gameEnded = Boolean(useGameStore.getState().game.winner);
     useGameStore.setState({
       hostAttackAnimation: undefined,
       burnAnimation: undefined,
       burnImpactCardId: undefined,
       burnImpactCardIds: [],
     });
+    if (gameEnded) {
+      useGameStore.getState().stopGamePresentation();
+      return;
+    }
     scheduleQueuedCombatReactions(() => {
       if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
       useGameStore.setState({ hostCombatDeadCardIds: [] });
@@ -2429,21 +2425,20 @@ function runPendingHostCombatVolleyOrFinish(combatSequenceId: number): void {
         if (sequenceId !== hostSequenceEpoch() || combatSequenceId !== hostCombatSequenceId) return;
         useAudioStore.getState().playSfx(fireballHitSfx);
         if (projectileIndex !== projectileCount - 1) return;
-        let gameEnded = false;
         useGameStore.setState((current) => {
           const next = resolvePendingHostCombatDamageVolleys(current.game);
-          gameEnded = Boolean(next.winner);
-          return gameEnded
-            ? { ...createCleanUiState(), game: next }
-            : { game: next, lifeDamageAnimationId: Date.now() };
+          return { game: next, lifeDamageAnimationId: Date.now() };
         });
-        if (gameEnded) useGameStore.getState().stopGamePresentation();
       }, COMBAT_VOLLEY_IMPACT_MS + projectileDelay);
     }
 
     window.setTimeout(() => {
       if (sequenceId !== hostSequenceEpoch() || combatSequenceId !== hostCombatSequenceId) return;
       useGameStore.setState({ burnAnimation: undefined });
+      if (useGameStore.getState().game.winner) {
+        useGameStore.getState().stopGamePresentation();
+        return;
+      }
       finishAnimatedHostCombat();
     }, COMBAT_VOLLEY_ANIMATION_MS + volleyDelay);
   }, COMBAT_VOLLEY_LEAD_IN_MS);

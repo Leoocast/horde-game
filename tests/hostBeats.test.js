@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-test("a lethal Host impact stops the remaining attack sequence immediately", async () => {
+test("a lethal Host impact waits for its attacker to return before ending presentation", async () => {
   const originalWindow = globalThis.window;
   const timers = createThrottledTimerHarness();
   const storage = new Map();
@@ -58,17 +58,104 @@ test("a lethal Host impact stops the remaining attack sequence immediately", asy
     assert.equal(useGameStore.getState().resolvingHostCombat, true);
 
     timers.releaseExpiredAt(465);
-    const atDefeat = useGameStore.getState();
-    assert.equal(atDefeat.game.winner, "host");
-    assert.equal(atDefeat.game.player.life, -1);
-    assert.equal(atDefeat.hostAttackAnimation, undefined);
-    assert.equal(atDefeat.resolvingHostCombat, false);
-    assert.equal(atDefeat.hostAutoTriggerCount, 0);
-    assert.equal(atDefeat.playerAutoTriggerCount, 0);
+    const atImpact = useGameStore.getState();
+    assert.equal(atImpact.game.winner, "host");
+    assert.equal(atImpact.game.player.life, -1);
+    assert.equal(atImpact.hostAttackAnimation?.attackerId, lethalAttacker.instanceId);
+    assert.equal(atImpact.resolvingHostCombat, true);
+
+    timers.releaseExpiredAt(500);
+    const afterReturn = useGameStore.getState();
+    assert.equal(afterReturn.hostAttackAnimation, undefined);
+    assert.equal(afterReturn.resolvingHostCombat, false);
+    assert.equal(afterReturn.hostAutoTriggerCount, 0);
+    assert.equal(afterReturn.playerAutoTriggerCount, 0);
 
     timers.releaseExpiredAt(10_000);
     assert.equal(useGameStore.getState().game.player.life, -1);
     assert.equal(useGameStore.getState().hostAttackAnimation, undefined);
+  } finally {
+    resetPlayerTriggerSequence();
+    resetHostSequence();
+    useAudioStore.setState({ playSfx: originalPlaySfx, stopAllSfx: originalStopAllSfx });
+    globalThis.window = originalWindow;
+  }
+});
+
+test("a lethal personal fireball keeps the defeat gated through its full animation", async () => {
+  const originalWindow = globalThis.window;
+  const timers = createThrottledTimerHarness();
+  const storage = new Map();
+  globalThis.window = {
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    navigator: { language: "en" },
+  };
+
+  const [
+    { resetHostSequence },
+    { resetPlayerTriggerSequence },
+    { useAudioStore },
+    { useGameStore },
+    { addCard, cardFromDeck, createTestGame },
+  ] = await Promise.all([
+    import("../src/store/hostBeats"),
+    import("../src/store/playerBeats"),
+    import("../src/store/useAudioStore"),
+    import("../src/store/useGameStore"),
+    import("./engineTestUtils"),
+  ]);
+
+  const originalPlaySfx = useAudioStore.getState().playSfx;
+  const originalStopAllSfx = useAudioStore.getState().stopAllSfx;
+  useAudioStore.setState({ playSfx: () => undefined, stopAllSfx: () => undefined });
+
+  try {
+    resetHostSequence();
+    resetPlayerTriggerSequence();
+    const game = createTestGame("lethal-personal-fireball-return");
+    game.player.life = 1;
+    game.activeSide = "host";
+    game.phase = "combat";
+    const varka = addCard(game, cardFromDeck("varka_infernal_matriarch", "host"));
+    game.combat.hostAttackers = [varka.instanceId];
+
+    useGameStore.setState({
+      game,
+      hostAttackAnimation: undefined,
+      burnAnimation: undefined,
+      resolvingHostCombat: false,
+      hostAutoTriggerCount: 0,
+      playerAutoTriggerCount: 0,
+    });
+
+    useGameStore.getState().resolveHostCombat();
+    const started = useGameStore.getState();
+    assert.equal(started.hostAttackAnimation?.customAnimation?.preset, "infernal-fireball");
+    assert.equal(started.resolvingHostCombat, true);
+
+    timers.releaseExpiredAt(638);
+    const atImpact = useGameStore.getState();
+    assert.equal(atImpact.game.winner, "host");
+    assert.ok(atImpact.game.player.life <= 0);
+    assert.equal(atImpact.hostAttackAnimation?.attackerId, varka.instanceId);
+    assert.equal(atImpact.burnAnimation?.sourceId, varka.instanceId);
+    assert.equal(atImpact.resolvingHostCombat, true);
+
+    timers.releaseExpiredAt(1219);
+    assert.equal(useGameStore.getState().hostAttackAnimation?.attackerId, varka.instanceId);
+    assert.equal(useGameStore.getState().resolvingHostCombat, true);
+
+    timers.releaseExpiredAt(1220);
+    const afterReturn = useGameStore.getState();
+    assert.equal(afterReturn.hostAttackAnimation, undefined);
+    assert.equal(afterReturn.burnAnimation, undefined);
+    assert.equal(afterReturn.resolvingHostCombat, false);
   } finally {
     resetPlayerTriggerSequence();
     resetHostSequence();
