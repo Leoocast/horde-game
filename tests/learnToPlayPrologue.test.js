@@ -210,14 +210,27 @@ test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms comb
     { kind: "surface", anchor: "player.sources" },
     { kind: "surface", anchor: "player.reserve" },
   ]);
-  assert.deepEqual(LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION.steps[0].allowedIntent, {
+  assert.equal(LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION.revision, 2);
+  assert.equal(LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION.startStepId, "explain-return-source");
+  assert.deepEqual(
+    LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION.steps.map(({ id, kind, callout }) => ({ id, kind, callout })),
+    [
+      { id: "explain-return-source", kind: "explain", callout: undefined },
+      { id: "return-source", kind: "act", callout: "hidden" },
+    ],
+  );
+  assert.deepEqual(LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION.steps[1].allowedIntent, {
     kind: "source.recycle",
     cardAlias: "post_surge_source",
   });
-  assert.deepEqual(LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION.steps[0].highlights, [
+  assert.deepEqual(LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION.steps[1].highlights, [
     { kind: "card", alias: "post_surge_source", role: "origin" },
     { kind: "surface", anchor: "player.archive", role: "destination" },
   ]);
+  assert.deepEqual(LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION.steps[1].presentation, {
+    kind: "spotlight",
+    tone: "gold",
+  });
 });
 
 test("Learn to Play authors the exact advanced board two Host turns before Surge", () => {

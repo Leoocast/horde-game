@@ -5,7 +5,10 @@ import { test } from "node:test";
 import {
   GUIDED_GAMEPLAY_ENTRY_POINTS,
   GuidedInteractionGate,
+  GuidedInterventionOrchestrator,
+  guidedSessionStore,
   guidedInteractionGate,
+  LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION,
   receiptMatchesSpec,
   runGuidedSystemAction,
 } from "../src/guidance";
@@ -208,17 +211,32 @@ test("the real store blocks wrong cards, commits the authored card once and emit
   });
 });
 
-test("the strict Source-return action reaches the store, draws, and emits its authored receipt", async () => {
+test("Source recycling stays locked behind its help modal, then draws and emits its authored receipt", async () => {
   await withStoreHarness(async () => {
     const game = createTestGame("guided-store-source-return");
     preparePlayerMain(game);
     const source = addCard(game, cardFromDeck("river_of_elarion", "player", "hand"));
     const nextDraw = addCard(game, cardFromDeck("clash_of_echoes", "player", "archive"));
     useGameStore.getState().loadScenario(game, { playerDeckId: "pact_of_elarion", hostDeckId: "uprising_of_the_graveless" });
-    guidedInteractionGate.activate(policy({
-      bindings: { post_surge_source: source.instanceId },
-      allowedIntent: { kind: "source.recycle", cardAlias: "post_surge_source" },
-    }));
+    const intervention = new GuidedInterventionOrchestrator(guidedSessionStore, {
+      readGame: () => useGameStore.getState().game,
+      stopPresentation: () => undefined,
+    });
+    intervention.start(
+      LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION,
+      { post_surge_source: source.instanceId },
+      "guided-store-source-return:help",
+    );
+    guidedSessionStore.notifyCheckpointState(true);
+
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "explain-return-source");
+    useGameStore.getState().startEnergyRecycle(source.instanceId, { x: 1168, y: 700 });
+    assert.equal(useGameStore.getState().energyRecycleAnimation, undefined);
+    assert.equal(guidedInteractionGate.snapshot().lastRejection.reason, "step-not-actionable");
+
+    assert.equal(guidedSessionStore.continueExplanation(), true);
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "return-source");
+    assert.equal(guidedSessionStore.snapshot().currentStep.callout, "hidden");
 
     useGameStore.getState().startEnergyRecycle(source.instanceId, { x: 1168, y: 700 });
     assert.equal(useGameStore.getState().energyRecycleAnimation?.card.instanceId, source.instanceId);
@@ -441,10 +459,12 @@ async function withStoreHarness(run) {
   };
   globalThis.document = { querySelector: () => undefined };
   useAudioStore.setState({ playSfx: () => undefined, stopAllSfx: () => undefined });
+  guidedSessionStore.resetForTests();
   guidedInteractionGate.reset();
   try {
     await run();
   } finally {
+    guidedSessionStore.resetForTests();
     guidedInteractionGate.reset();
     useGameStore.getState().stopGamePresentation();
     for (const timer of timers) clearTimeout(timer);

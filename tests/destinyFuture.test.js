@@ -99,6 +99,23 @@ test("the narrative Future control owns normal rewrites outside Settings", async
   assert.match(shader, /uniform float uSeed/u);
   assert.match(warmup, /uSeed/u);
   assert.match(app, /resolvedDestinyIdRef\.current === transitionId/u);
-  assert.match(app, /reset\(transition\.seed, setupTurns\)/u);
+  assert.match(app, /seed: gameStore\.game\.seed,\s*setupTurns,\s*destination,/u);
+  assert.match(app, /reset\(transition\.seed, transition\.setupTurns\)/u);
+  assert.match(app, /\}, \[reset, startBattleMusic\]\);/u);
   assert.match(app, /setMenuReturnScreen\("setup"\)/u);
+
+  const lifecycleEffectAt = transition.indexOf("  useEffect(() => {");
+  const shardEffectAt = transition.indexOf("  /* La escena no cae", lifecycleEffectAt);
+  const lifecycleEffect = transition.slice(lifecycleEffectAt, shardEffectAt);
+  const completeTimerAt = transition.indexOf("const completeTimer");
+  const synchronousCleanupAt = transition.indexOf("clearDestinyTransitionBodyClasses();", completeTimerAt);
+  const completeCallbackAt = transition.indexOf("completeCallbackRef.current(transitionId);", completeTimerAt);
+  assert.match(transition, /coveredCallbackRef\.current = onCovered/u);
+  assert.match(transition, /completeCallbackRef\.current = onComplete/u);
+  assert.match(lifecycleEffect, /coveredCallbackRef\.current\(transitionId\)/u);
+  assert.match(lifecycleEffect, /\}, \[transitionId\]\);/u);
+  assert.doesNotMatch(lifecycleEffect, /\[[^\]]*(?:onCovered|onComplete|playSfx)[^\]]*\]/u);
+  assert.ok(completeTimerAt >= 0);
+  assert.ok(synchronousCleanupAt > completeTimerAt);
+  assert.ok(completeCallbackAt > synchronousCleanupAt);
 });

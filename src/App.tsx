@@ -71,6 +71,7 @@ type DestinyTransitionState = {
   id: number;
   kind: DestinyTransitionKind;
   seed: string;
+  setupTurns: number;
   destination: "standard" | "learn-to-play-random";
 };
 
@@ -334,20 +335,21 @@ export default function App() {
       id: ++destinyIdRef.current,
       kind,
       seed: gameStore.game.seed,
+      setupTurns,
       destination,
     };
     destinyTransitionRef.current = transition;
     resolvedDestinyIdRef.current = null;
     setDestinyTransition(transition);
     return true;
-  }, []);
+  }, [setupTurns]);
 
   const resolveDestinyTransition = useCallback((transitionId: number) => {
     const transition = destinyTransitionRef.current;
     if (!transition || transition.id !== transitionId || resolvedDestinyIdRef.current === transitionId) return;
     resolvedDestinyIdRef.current = transitionId;
     if (transition.kind === "rewrite") {
-      reset(transition.seed, setupTurns);
+      reset(transition.seed, transition.setupTurns);
       startBattleMusic(true);
       return;
     }
@@ -377,7 +379,7 @@ export default function App() {
     setPreserveMenuMusic(false);
     setMenuReturnScreen("setup");
     setScreen("start");
-  }, [reset, setupTurns, startBattleMusic]);
+  }, [reset, startBattleMusic]);
 
   const completeDestinyTransition = useCallback((transitionId: number) => {
     if (destinyTransitionRef.current?.id !== transitionId) return;
