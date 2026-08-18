@@ -123,6 +123,11 @@ export function guidedRectsEqual(left: readonly GuidedRect[], right: readonly Gu
   });
 }
 
+export function guidedBoundsEqual(left: GuidedBounds | undefined, right: GuidedBounds | undefined): boolean {
+  if (!left || !right) return left === right;
+  return left.left === right.left && left.top === right.top && left.width === right.width && left.height === right.height;
+}
+
 function unionRect(rects: readonly GuidedRect[]): GuidedRect {
   const left = Math.min(...rects.map((rect) => rect.left));
   const top = Math.min(...rects.map((rect) => rect.top));

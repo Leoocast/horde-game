@@ -1,7 +1,8 @@
-import { useLayoutEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import {
   guidedAnchorRegistry,
+  guidedBoundsEqual,
   guidedCardAnchorKey,
   guidedDirectionalCueBounds,
   paddedGuidedRect,
@@ -10,6 +11,7 @@ import {
 import { learnToPlayDirector } from "../guidance/learnToPlayJourney";
 import { useGameStore } from "../store/useGameStore";
 import { TutorialDirectionalCueGlyph } from "./TutorialDirectionalCue";
+import { createGuidedFrameLoop } from "./guidedFrameLoop";
 
 const subscribeDirector = (listener: () => void) => learnToPlayDirector.subscribe(listener);
 const readDirector = () => learnToPlayDirector.snapshot();
@@ -22,6 +24,7 @@ export function LearnToPlayJourneyCues() {
   const anchors = useSyncExternalStore(subscribeAnchors, readAnchors, readAnchors);
   const game = useGameStore((state) => state.game);
   const [bounds, setBounds] = useState<GuidedBounds>();
+  const boundsRef = useRef<GuidedBounds | undefined>(undefined);
   const cardId = director.stage === "opening-attack" ? director.suggestedAttackerId : undefined;
   const visible = Boolean(
     cardId
@@ -36,19 +39,25 @@ export function LearnToPlayJourneyCues() {
 
   useLayoutEffect(() => {
     if (!visible || !element) {
-      setBounds(undefined);
+      if (boundsRef.current) {
+        boundsRef.current = undefined;
+        setBounds(undefined);
+      }
       return;
     }
-    let frame = 0;
     const measure = () => {
       const rect = element.getBoundingClientRect();
       if (rect.width > 0 && rect.height > 0) {
-        setBounds(guidedDirectionalCueBounds(paddedGuidedRect("learn-to-play:maela", "origin", rect, 0)));
+        const next = guidedDirectionalCueBounds(paddedGuidedRect("learn-to-play:maela", "origin", rect, 0));
+        if (!guidedBoundsEqual(boundsRef.current, next)) {
+          boundsRef.current = next;
+          setBounds(next);
+        }
       }
-      frame = window.requestAnimationFrame(measure);
     };
-    measure();
-    return () => window.cancelAnimationFrame(frame);
+    const loop = createGuidedFrameLoop(measure);
+    loop.start();
+    return () => loop.stop();
   }, [element, visible]);
 
   if (!visible || !bounds || typeof document === "undefined") return null;

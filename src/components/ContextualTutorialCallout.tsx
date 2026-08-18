@@ -25,6 +25,7 @@ import {
 import { contextualTutorialRuntime } from "../guidance/contextualProductRuntime";
 import { useTranslation } from "../i18n/useTranslation";
 import { GameTooltip } from "./GameTooltip";
+import { createGuidedFrameLoop } from "./guidedFrameLoop";
 import { tutorialCalloutWidth } from "./tutorialCalloutSizing";
 
 const subscribeRuntime = (listener: () => void) => contextualTutorialRuntime.subscribe(listener);
@@ -46,7 +47,10 @@ export function ContextualTutorialCallout() {
   const calloutRef = useRef<HTMLElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const rectsRef = useRef(rects);
+  const viewportRef = useRef(viewport);
   const active = runtime.active;
+  const visible = Boolean(active && guided.status !== "running");
 
   const resolved = useMemo(() => (active?.highlights ?? []).map((highlight) => {
     const key: GuidedAnchorKey = highlight.kind === "card"
@@ -62,30 +66,38 @@ export function ContextualTutorialCallout() {
   }), [active, anchors.revision]);
 
   useLayoutEffect(() => {
-    if (!active) {
-      setRects(Object.freeze([]));
+    if (!visible) {
+      if (rectsRef.current.length > 0) {
+        const empty = Object.freeze([]);
+        rectsRef.current = empty;
+        setRects(empty);
+      }
       return;
     }
-    let frame = 0;
     const measure = () => {
       const next = resolved.flatMap(({ key, role, padding, element }) => {
         if (!element) return [];
         const bounds = element.getBoundingClientRect();
         return bounds.width > 0 && bounds.height > 0 ? [paddedGuidedRect(key, role, bounds, padding)] : [];
       });
-      setRects((current) => guidedRectsEqual(current, next) ? current : Object.freeze(next));
-      setViewport((current) => {
-        const nextViewport = readViewport();
-        return current.width === nextViewport.width && current.height === nextViewport.height ? current : nextViewport;
-      });
-      frame = window.requestAnimationFrame(measure);
+      if (!guidedRectsEqual(rectsRef.current, next)) {
+        const frozen = Object.freeze(next);
+        rectsRef.current = frozen;
+        setRects(frozen);
+      }
+      const nextViewport = readViewport();
+      if (viewportRef.current.width !== nextViewport.width || viewportRef.current.height !== nextViewport.height) {
+        viewportRef.current = nextViewport;
+        setViewport(nextViewport);
+      }
     };
-    measure();
-    return () => window.cancelAnimationFrame(frame);
-  }, [active, resolved]);
+    const loop = createGuidedFrameLoop(measure);
+    loop.start();
+    return () => loop.stop();
+  }, [resolved, visible]);
 
   useLayoutEffect(() => {
-    if (!active || !calloutRef.current || typeof ResizeObserver === "undefined") return;
+    if (!visible || !calloutRef.current || typeof ResizeObserver === "undefined") return;
     const element = calloutRef.current;
     const measure = () => {
       const bounds = element.getBoundingClientRect();
@@ -98,10 +110,10 @@ export function ContextualTutorialCallout() {
     observer.observe(element);
     measure();
     return () => observer.disconnect();
-  }, [active]);
+  }, [visible]);
 
   useEffect(() => {
-    if (active?.policy !== "preventive") return;
+    if (!visible || active?.policy !== "preventive") return;
     previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const frame = window.requestAnimationFrame(() => closeRef.current?.focus({ preventScroll: true }));
     return () => {
@@ -109,9 +121,9 @@ export function ContextualTutorialCallout() {
       if (previousFocusRef.current?.isConnected) previousFocusRef.current.focus({ preventScroll: true });
       previousFocusRef.current = null;
     };
-  }, [active?.conceptId, active?.policy]);
+  }, [active?.conceptId, active?.policy, visible]);
 
-  if (!active || guided.status === "running" || typeof document === "undefined") return null;
+  if (!visible || !active || typeof document === "undefined") return null;
 
   const missingAnchor = resolved.length !== rects.length;
   const title = t(active.copy.titleKey);

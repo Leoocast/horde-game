@@ -522,7 +522,24 @@ test("procedural Burn hides the WebGL buffer until its first rendered frame", ()
   assert.ok(revealIndex > renderIndex);
   assert.match(animator, /if \(drawn && !firstFramePresented\)/u);
   assert.match(animator, /canvas\.style\.opacity = "0";\s*cancelAnimationFrame/u);
+  assert.match(animator, /boundedVfxPixelRatio\(/u);
+  assert.match(animator, /const FRAME_INTERVAL_MS = 1000 \/ 60/u);
+  assert.match(animator, /if \(now - lastRenderedAt < FRAME_INTERVAL_MS/u);
+  assert.match(animator, /canvas\.width = 1;\s*canvas\.height = 1;/u);
   assert.match(styles, /\.burn-canvas\s*\{[^}]*opacity:\s*0;/u);
+});
+
+test("the permanent temporal sky stays inside the fullscreen GPU budget", () => {
+  const backdrop = readFileSync(new URL("../src/components/TemporalBackdrop.tsx", import.meta.url), "utf8");
+  const vortex = readFileSync(new URL("../src/components/DestinyRewriteTransition.tsx", import.meta.url), "utf8");
+
+  assert.match(backdrop, /boundedVfxPixelRatio\(cssWidth, cssHeight, window\.devicePixelRatio \|\| 1\)/u);
+  assert.match(backdrop, /const FRAME_INTERVAL_MS = 1000 \/ 60/u);
+  assert.match(backdrop, /if \(now - lastRenderedAt < FRAME_INTERVAL_MS\)/u);
+  assert.match(backdrop, /if \(dialMix !== lastPositionedDial\)/u);
+  assert.match(vortex, /boundedVfxPixelRatio\(width, height, window\.devicePixelRatio \|\| 1\)/u);
+  assert.match(vortex, /const FRAME_INTERVAL_MS = 1000 \/ 60/u);
+  assert.match(vortex, /canvas\.width = 1;\s*canvas\.height = 1;/u);
 });
 
 // Migración a un único contexto WebGL: ver docs/plans/webgl_context_budget.md.

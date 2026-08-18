@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 
 import {
   GuidedAnchorRegistry,
+  guidedBoundsEqual,
   guidedCardAnchorKey,
   guidedConnectorPath,
   guidedDirectionalCueBounds,
@@ -15,6 +16,7 @@ import {
   validateGuidedLesson,
 } from "../src/guidance";
 import { contentCatalog } from "../src/content/bootstrap";
+import { createGuidedFrameLoop } from "../src/components/guidedFrameLoop";
 import { tutorialCalloutWidth } from "../src/components/tutorialCalloutSizing";
 import { GUIDANCE_LAB_LESSON } from "../src/playground/guidanceLabDefinition";
 
@@ -87,6 +89,70 @@ test("directional cues rise inside their authored card", () => {
   assert.ok(cue.top + cue.height <= target.top + target.height);
 });
 
+test("guided geometry loops keep one frame owner and stop without orphan callbacks", () => {
+  let nextFrame = 0;
+  let measurements = 0;
+  const pending = new Map();
+  const loop = createGuidedFrameLoop(
+    () => { measurements += 1; },
+    {
+      request(callback) {
+        const frame = ++nextFrame;
+        pending.set(frame, callback);
+        return frame;
+      },
+      cancel(frame) {
+        pending.delete(frame);
+      },
+    },
+  );
+
+  loop.start();
+  assert.equal(measurements, 1);
+  assert.equal(pending.size, 1);
+
+  for (let notification = 0; notification < 20; notification += 1) loop.measureNow();
+  assert.equal(pending.size, 1, "observer measurements must not create another frame chain");
+
+  for (let tick = 0; tick < 100; tick += 1) {
+    const [frame, callback] = pending.entries().next().value;
+    pending.delete(frame);
+    callback(tick * 16.67);
+    assert.equal(pending.size, 1);
+  }
+
+  const staleCallback = pending.values().next().value;
+  loop.stop();
+  assert.equal(pending.size, 0);
+  staleCallback(2_000);
+  assert.equal(pending.size, 0, "a late cancelled callback must not resurrect the loop");
+
+  loop.start();
+  assert.equal(pending.size, 1);
+  const measurementsAfterRestart = measurements;
+  staleCallback(2_100);
+  assert.equal(pending.size, 1, "a stale callback must not duplicate a restarted loop");
+  assert.equal(measurements, measurementsAfterRestart, "a stale callback must not sample the new lifecycle");
+  loop.stop();
+});
+
+test("identical journey cue bounds do not create repeated state identities", () => {
+  let current;
+  let changes = 0;
+  const accept = (next) => {
+    if (guidedBoundsEqual(current, next)) return;
+    current = next;
+    changes += 1;
+  };
+
+  for (let frame = 0; frame < 10_000; frame += 1) {
+    accept({ left: 120, top: 80, width: 72, height: 140 });
+  }
+  assert.equal(changes, 1);
+  accept({ left: 121, top: 80, width: 72, height: 140 });
+  assert.equal(changes, 2);
+});
+
 test("origin and destination highlights produce a directional connector", () => {
   const path = guidedConnectorPath([
     { key: "card:source", role: "origin", left: 100, top: 420, width: 100, height: 140 },
@@ -134,10 +200,12 @@ test("lesson validation rejects unknown highlight roles and Act steps without a 
 });
 
 test("the real Board mounts the overlay and its capture shield covers every input family", async () => {
-  const [board, battlefield, overlay, comparison, card, styles] = await Promise.all([
+  const [board, battlefield, overlay, contextual, journeyCues, comparison, card, styles] = await Promise.all([
     readFile(new URL("../src/components/Board.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/Battlefield.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/GuidedTutorialOverlay.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/ContextualTutorialCallout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/LearnToPlayJourneyCues.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/GuidedCardComparison.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/Card.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/styles.css", import.meta.url), "utf8"),
@@ -181,6 +249,16 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(overlay, /setDismissedActionCalloutStepId\(session\.currentStep\.id\)/u);
   assert.match(overlay, /guidedUnionBounds/u);
   assert.match(overlay, /tutorialCalloutWidth/u);
+  assert.doesNotMatch(
+    overlay,
+    /requestAnimationFrame\(measure\)/u,
+    "an observer measurement callback must not own a self-scheduling animation-frame chain",
+  );
+  assert.match(overlay, /createGuidedFrameLoop\(measure\)/u);
+  assert.match(overlay, /new ResizeObserver\(\(\) => loop\.measureNow\(\)\)/u);
+  assert.match(contextual, /const visible = Boolean\(active && guided\.status !== "running"\)/u);
+  assert.match(contextual, /createGuidedFrameLoop\(measure\)/u);
+  assert.match(journeyCues, /guidedBoundsEqual\(boundsRef\.current, next\)/u);
   assert.match(styles, /\.guided-tutorial-overlay\[data-mode="explain"\],[\s\S]*?pointer-events: auto;/u);
   assert.match(styles, /guided-tutorial-overlay:not\(\[data-card-preview-visible="true"\]\)/u);
   assert.match(styles, /\.guided-card-comparison\s*\{[^}]*top:\s*56%;[^}]*left:\s*50%;[^}]*transform:\s*translate\(-50%, -50%\);/su);

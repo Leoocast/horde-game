@@ -8,6 +8,7 @@ import {
   temporalDialTransform,
   uprightTemporalDialLabelTransform,
 } from "./temporalDialPresentation";
+import { boundedVfxPixelRatio } from "./sharedVfxRenderer";
 
 const DIAL_LABELS = [
   { x: 0, y: -215, text: "000° · N", textAnchor: "middle" },
@@ -22,6 +23,7 @@ const DIAL_LABELS = [
 
 const DIAL_DAMPING_PER_SECOND = 12;
 const DIAL_SETTLE_EPSILON = 0.05;
+const FRAME_INTERVAL_MS = 1000 / 60;
 
 /**
  * Fondo espacio/temporal permanente.
@@ -161,15 +163,19 @@ export function TemporalBackdrop({
     let climaxMix = targetRef.current.climax;
     let dialMix = targetRef.current.dial;
     let lastDrawAt = startedAt;
+    let lastRenderedAt = Number.NEGATIVE_INFINITY;
+    let lastPositionedDial = Number.NaN;
     let lastReportedDialRevision = targetRef.current.dialRevision;
     let frame = 0;
     let disposed = false;
     let contextLost = false;
 
     const draw = (now: number) => {
-      const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
-      const width = Math.max(2, Math.round(canvas.clientWidth * ratio));
-      const height = Math.max(2, Math.round(canvas.clientHeight * ratio));
+      const cssWidth = Math.max(1, canvas.clientWidth);
+      const cssHeight = Math.max(1, canvas.clientHeight);
+      const ratio = boundedVfxPixelRatio(cssWidth, cssHeight, window.devicePixelRatio || 1);
+      const width = Math.max(2, Math.round(cssWidth * ratio));
+      const height = Math.max(2, Math.round(cssHeight * ratio));
       if (canvas.width !== width || canvas.height !== height) {
         canvas.width = width;
         canvas.height = height;
@@ -201,7 +207,10 @@ export function TemporalBackdrop({
       }
       // Se escribe el atributo en vez de usar CSS porque el origen de rotación del grupo ya es
       // su propio centro y así no depende de `fill-box`.
-      positionDial(dialMix);
+      if (dialMix !== lastPositionedDial) {
+        positionDial(dialMix);
+        lastPositionedDial = dialMix;
+      }
 
       gl.viewport(0, 0, width, height);
       gl.uniform2f(uRes, width, height);
@@ -212,6 +221,14 @@ export function TemporalBackdrop({
 
     const loop = (now: number) => {
       if (disposed || contextLost) return;
+      if (now - lastRenderedAt < FRAME_INTERVAL_MS) {
+        frame = requestAnimationFrame(loop);
+        return;
+      }
+      const sinceLastRender = now - lastRenderedAt;
+      lastRenderedAt = Number.isFinite(sinceLastRender)
+        ? now - (sinceLastRender % FRAME_INTERVAL_MS)
+        : now;
       draw(now);
       frame = requestAnimationFrame(loop);
     };

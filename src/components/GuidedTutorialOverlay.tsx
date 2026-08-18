@@ -31,6 +31,7 @@ import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { GuidedCardComparison } from "./GuidedCardComparison";
 import { GameTooltip } from "./GameTooltip";
+import { createGuidedFrameLoop } from "./guidedFrameLoop";
 import { TutorialDirectionalCueGlyph } from "./TutorialDirectionalCue";
 import { tutorialCalloutWidth } from "./tutorialCalloutSizing";
 
@@ -61,6 +62,8 @@ export function GuidedTutorialOverlay() {
   const continueRef = useRef<HTMLButtonElement>(null);
   const feedbackTimerRef = useRef<number | undefined>(undefined);
   const previousFocusRef = useRef<HTMLElement | undefined>(undefined);
+  const rectsRef = useRef(rects);
+  const viewportRef = useRef(viewport);
   const active = session.status === "running" && Boolean(session.currentStep && session.mode);
 
   const resolved = useMemo(
@@ -106,29 +109,39 @@ export function GuidedTutorialOverlay() {
 
   useLayoutEffect(() => {
     if (!active) {
-      setRects(Object.freeze([]));
+      if (rectsRef.current.length > 0) {
+        const empty = Object.freeze([]);
+        rectsRef.current = empty;
+        setRects(empty);
+      }
       return;
     }
-    let frame = 0;
     const measure = () => {
       const next = resolved.flatMap((anchor) => {
         const bounds = anchor.element ? guidedAnchorBounds(anchor.element) : undefined;
         if (!bounds || bounds.width <= 0 || bounds.height <= 0) return [];
         return [paddedGuidedRect(anchor.key, anchor.role, bounds)];
       });
-      setRects((current) => guidedRectsEqual(current, next) ? current : Object.freeze(next));
-      setViewport((current) => {
-        const nextViewport = readViewport();
-        return current.width === nextViewport.width && current.height === nextViewport.height ? current : nextViewport;
-      });
-      frame = window.requestAnimationFrame(measure);
+      if (!guidedRectsEqual(rectsRef.current, next)) {
+        const frozen = Object.freeze(next);
+        rectsRef.current = frozen;
+        setRects(frozen);
+      }
+      const nextViewport = readViewport();
+      if (viewportRef.current.width !== nextViewport.width || viewportRef.current.height !== nextViewport.height) {
+        viewportRef.current = nextViewport;
+        setViewport(nextViewport);
+      }
     };
-    const observer = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(measure);
+    const loop = createGuidedFrameLoop(measure);
+    const observer = typeof ResizeObserver === "undefined"
+      ? undefined
+      : new ResizeObserver(() => loop.measureNow());
     for (const anchor of resolved) if (anchor.element) observer?.observe(anchor.element);
     if (calloutRef.current) observer?.observe(calloutRef.current);
-    measure();
+    loop.start();
     return () => {
-      window.cancelAnimationFrame(frame);
+      loop.stop();
       observer?.disconnect();
     };
   }, [active, resolved]);

@@ -9,7 +9,7 @@ import {
   DESTINY_VORTEX_FRAGMENT_SHADER,
   DESTINY_VORTEX_VERTEX_SHADER,
 } from "./destinyVortexShader";
-import { renderSharedVfxFrame, sharedVfxUnavailable } from "./sharedVfxRenderer";
+import { boundedVfxPixelRatio, renderSharedVfxFrame, sharedVfxUnavailable } from "./sharedVfxRenderer";
 
 export type DestinyTransitionKind = "rewrite" | "contemplate";
 
@@ -26,9 +26,8 @@ const REVEAL_MS = 1_040;
 const COMPLETE_MS = COVER_MS + REVEAL_MS;
 const REDUCED_COVER_MS = 120;
 const REDUCED_COMPLETE_MS = 300;
-/** El lienzo cubre la pantalla: se limita la resolución antes que el detalle del shader. */
-const MAX_PIXEL_RATIO = 1.35;
-
+/** El shader y la copia WebGL→2D no ganan detalle por encima de 60 entregas por segundo. */
+const FRAME_INTERVAL_MS = 1000 / 60;
 /* Recorrido de la escena para repartirla en piezas. Un elemento que ocupa más que `SHARD_MAX_AREA`
    todavía es un contenedor y se abre; uno por debajo de `SHARD_MIN_AREA` es un icono suelto que no
    aporta nada al colapso. El tope de piezas y de profundidad mantiene acotado el número de capas
@@ -179,7 +178,11 @@ export function DestinyRewriteTransition({ transitionId, kind, seed, onCovered, 
       return;
     }
 
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
+    let pixelRatio = boundedVfxPixelRatio(
+      window.innerWidth,
+      window.innerHeight,
+      window.devicePixelRatio || 1,
+    );
     const uniforms = {
       uRes: { value: new THREE.Vector2(1, 1) },
       uPixelRatio: { value: pixelRatio },
@@ -213,7 +216,9 @@ export function DestinyRewriteTransition({ transitionId, kind, seed, onCovered, 
     const resize = () => {
       width = Math.max(1, window.innerWidth);
       height = Math.max(1, window.innerHeight);
+      pixelRatio = boundedVfxPixelRatio(width, height, window.devicePixelRatio || 1);
       uniforms.uRes.value.set(width, height);
+      uniforms.uPixelRatio.value = pixelRatio;
       uniforms.uCenter.value.set(width / 2, height / 2);
       uniforms.uRadius.value = Math.min(width, height) * DESTINY_HORIZON_RATIO;
     };
@@ -226,8 +231,17 @@ export function DestinyRewriteTransition({ transitionId, kind, seed, onCovered, 
     let frame = 0;
     let firstFramePresented = false;
     let failedFrames = 0;
+    let lastRenderedAt = Number.NEGATIVE_INFINITY;
     const tick = (now: number) => {
       const elapsed = now - start;
+      if (now - lastRenderedAt < FRAME_INTERVAL_MS && elapsed <= COMPLETE_MS) {
+        frame = requestAnimationFrame(tick);
+        return;
+      }
+      const sinceLastRender = now - lastRenderedAt;
+      lastRenderedAt = Number.isFinite(sinceLastRender)
+        ? now - (sinceLastRender % FRAME_INTERVAL_MS)
+        : now;
       // El giro se acumula por delta time: acelera al colapsar sin saltar cuando cambia el ritmo.
       const deltaSeconds = Math.min((now - previous) / 1000, 0.05);
       previous = now;
@@ -269,6 +283,8 @@ export function DestinyRewriteTransition({ transitionId, kind, seed, onCovered, 
       cancelAnimationFrame(frame);
       window.removeEventListener("resize", resize);
       canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
+      canvas.width = 1;
+      canvas.height = 1;
       geometry.dispose();
       material.dispose();
     };
