@@ -71,6 +71,7 @@ type DestinyTransitionState = {
   id: number;
   kind: DestinyTransitionKind;
   seed: string;
+  destination: "standard" | "learn-to-play-random";
 };
 
 /** La Mano empieza a subir mientras el último rastro del signo termina de apagarse. */
@@ -322,39 +323,23 @@ export default function App() {
     learnToPlayJourneyLifecycle.restart();
   }
 
-  function continueLearnToPlayIntoRandomFuture() {
-    learnToPlayJourneyLifecycle.stop();
-    guidedProgressStore.markJourneyCompleted(LEARN_TO_PLAY_JOURNEY.id, LEARN_TO_PLAY_JOURNEY.revision);
-    void deleteDesktopResume();
-    setDesktopResume({ status: "none" });
-    setPreserveMenuMusic(false);
-    setSetupTurns(STANDARD_SETUP_TURNS);
-    setSelectedDeckId(DEFAULT_PLAYER_DECK_ID);
-    setSelectedHostDeckId(DEFAULT_HOST_DECK_ID);
-    reset(
-      generateRandomFutureSeed(),
-      STANDARD_SETUP_TURNS,
-      DEFAULT_PLAYER_DECK_ID,
-      DEFAULT_HOST_DECK_ID,
-      "normal",
-      "standard",
-    );
-    setScreen("game");
-    startBattleMusic(true);
-  }
-
-  const beginDestinyTransition = useCallback((kind: DestinyTransitionKind) => {
-    if (destinyTransitionRef.current) return;
+  const beginDestinyTransition = useCallback((
+    kind: DestinyTransitionKind,
+    destination: DestinyTransitionState["destination"] = "standard",
+  ): boolean => {
+    if (destinyTransitionRef.current) return false;
     const gameStore = useGameStore.getState();
     gameStore.stopGamePresentation();
     const transition = {
       id: ++destinyIdRef.current,
       kind,
       seed: gameStore.game.seed,
+      destination,
     };
     destinyTransitionRef.current = transition;
     resolvedDestinyIdRef.current = null;
     setDestinyTransition(transition);
+    return true;
   }, []);
 
   const resolveDestinyTransition = useCallback((transitionId: number) => {
@@ -363,6 +348,26 @@ export default function App() {
     resolvedDestinyIdRef.current = transitionId;
     if (transition.kind === "rewrite") {
       reset(transition.seed, setupTurns);
+      startBattleMusic(true);
+      return;
+    }
+
+    if (transition.destination === "learn-to-play-random") {
+      void deleteDesktopResume();
+      setDesktopResume({ status: "none" });
+      setPreserveMenuMusic(false);
+      setSetupTurns(STANDARD_SETUP_TURNS);
+      setSelectedDeckId(DEFAULT_PLAYER_DECK_ID);
+      setSelectedHostDeckId(DEFAULT_HOST_DECK_ID);
+      reset(
+        generateRandomFutureSeed(),
+        STANDARD_SETUP_TURNS,
+        DEFAULT_PLAYER_DECK_ID,
+        DEFAULT_HOST_DECK_ID,
+        "normal",
+        "standard",
+      );
+      setScreen("game");
       startBattleMusic(true);
       return;
     }
@@ -380,6 +385,14 @@ export default function App() {
     resolvedDestinyIdRef.current = null;
     setDestinyTransition((current) => (current?.id === transitionId ? null : current));
   }, []);
+
+  function continueLearnToPlayIntoRandomFuture() {
+    if (!beginDestinyTransition("contemplate", "learn-to-play-random")) return;
+    // Clicking the CTA is the authored completion boundary. The board remains mounted beneath
+    // the vortex until `onCovered` replaces it with the new, normal Future.
+    learnToPlayJourneyLifecycle.stop();
+    guidedProgressStore.markJourneyCompleted(LEARN_TO_PLAY_JOURNEY.id, LEARN_TO_PLAY_JOURNEY.revision);
+  }
 
   function leaveGuidedLesson() {
     guidedProductLifecycle.stop();

@@ -211,6 +211,18 @@ test("the opening attack explanation is contextual and the defense prompt prefer
   assert.deepEqual(order.signalKinds, []);
 });
 
+test("dragging a ground Echo onto a Flying attacker preserves the denied target for contextual guidance", async () => {
+  const battlefield = await readFile(new URL("../src/components/Battlefield.tsx", import.meta.url), "utf8");
+  assert.match(battlefield, /return reason \? \{ attackerId: candidateId, reason \} : \{ attackerId: candidateId \};/u);
+  assert.match(
+    battlefield,
+    /if \(dropResult\.attackerId && dropResult\.reason\) \{\s*useGameStore\.getState\(\)\.declareBlocker\(blockerId, dropResult\.attackerId\);/u,
+  );
+  const flying = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "flying-defense-restriction");
+  assert.deepEqual(flying.signalKinds, ["action.denied"]);
+  assert.equal(flying.copy.titleKey, "guided.contextual.product.flyingDefenseTitle");
+});
+
 test("the Vaelor reminder expires as soon as Vaelor leaves the Hand", () => {
   const reminder = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "learn-to-play-vaelor-required");
   const match = reminder.evaluate({
@@ -396,6 +408,8 @@ test("App exposes both launchers, disables Continue, and hands the journey to a 
   assert.match(app, /if \(!boardSessionPolicy\.autosave \|\| screen !== "game"\) return;/u);
   assert.match(app, /guidedProgressStore\.markJourneyCompleted\(LEARN_TO_PLAY_JOURNEY\.id, LEARN_TO_PLAY_JOURNEY\.revision\)/u);
   assert.match(app, /generateRandomFutureSeed\(\)[\s\S]*?DEFAULT_PLAYER_DECK_ID[\s\S]*?DEFAULT_HOST_DECK_ID[\s\S]*?"normal"[\s\S]*?"standard"/u);
+  assert.match(app, /beginDestinyTransition\("contemplate", "learn-to-play-random"\)/u);
+  assert.match(app, /transition\.destination === "learn-to-play-random"/u);
   assert.match(app, /screen === "journey"[\s\S]*?continueLearnToPlayIntoRandomFuture/u);
   assert.match(menu, /howToPlayEntries\.map/u);
   assert.match(menu, /disabled=\{continueDisabled \|\| !onContinue\}/u);

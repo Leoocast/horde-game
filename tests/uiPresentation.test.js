@@ -1208,6 +1208,7 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(journeyModal, /destiny-command-button learn-to-play-contemplate-button/u);
   assert.doesNotMatch(journeyModal, /disabled/u);
   assert.doesNotMatch(journeyModal, /onRewriteFuture|defeat-future-plate|destiny-command-glyph/u);
+  assert.match(styles, /\.learn-to-play-contemplate-button::before \{[\s\S]*?width: 180%;[\s\S]*?aspect-ratio: 1;/u);
   // El vidrio se lee aunque no haya nada impreso: alfa de la captura con suelo de Fresnel.
   assert.match(glassShader, /float printed = middle\.a/u);
   assert.match(glassShader, /vFade \* max\(printed, glassEdge\)/u);

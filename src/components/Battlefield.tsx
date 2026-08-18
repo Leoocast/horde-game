@@ -1613,7 +1613,9 @@ function findDropBlockTarget(x: number, y: number, blockerId: string): { attacke
     const attacker = latest.host.field.find((card) => card.instanceId === candidateId);
     if (!attacker) continue;
     const reason = blockRestrictionReason(latest, blocker, attacker);
-    return reason ? { reason } : { attackerId: candidateId };
+    // An invalid drop is still an attempted block. Keep the target so `declareBlocker` can
+    // publish the typed denial consumed by contextual guidance (Flying, Furtive, etc.).
+    return reason ? { attackerId: candidateId, reason } : { attackerId: candidateId };
   }
   return {};
 }

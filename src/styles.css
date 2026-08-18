@@ -22239,8 +22239,9 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 
 .learn-to-play-contemplate-button::before {
   left: 50%;
-  width: 190px;
-  height: 190px;
+  width: 180%;
+  height: auto;
+  aspect-ratio: 1;
   opacity: 0.46;
 }
 
