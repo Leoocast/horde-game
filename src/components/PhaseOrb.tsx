@@ -23,6 +23,8 @@ const PHASE_BLOCKING_CONTEXTUAL_CONCEPTS = new Set([
   "reserve-and-ready",
   "host-surge",
   "attack-exhausts-echo",
+  "empty-hand-draw",
+  "return-source",
 ]);
 
 export function PhaseOrb({ game, hostStartDelayMs = 0 }: { game: GameState; hostStartDelayMs?: number }) {

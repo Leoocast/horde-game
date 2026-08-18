@@ -26,7 +26,7 @@ import {
   togglePlayerAttacker,
   type HostAttackEvent,
 } from "../engine/CombatResolver";
-import { finishHostTurn, revealHostCardFromTop, runHostMain as runHostMainPhase } from "../engine/HostController";
+import { beginHostMain, finishHostTurn, revealHostCardFromTop, runHostMain as runHostMainPhase } from "../engine/HostController";
 import { canAttack, hasTrait } from "../engine/Traits";
 import { getPowerEndurance, hostInSurge } from "../engine/StaticEffects";
 import { EFFECT_ANNOUNCEMENTS, destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, findManualInvokedTargetTrigger, hasEffectPresentation, manualInvokedTargetRequirement, resolveEffect, resolveEffects, triggerConditionMet } from "../engine/EffectResolver";
@@ -114,6 +114,7 @@ import {
   isGuidedPresentationSettled,
   scheduleGuidedCheckpointEvaluation,
 } from "../guidance";
+import { authoredHostTurnGate, type AuthoredHostTurnPlan } from "../guidance/authoredHostTurn";
 import { DESTINY_DIAL_STEP, destinyDialDeathDelta } from "./destinyDial";
 
 export type GameStore = {
@@ -1868,6 +1869,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (discardPauseInProgress(state) || state.surgeTransitionActive) return;
     const { game } = state;
     if (!gameplayIntentAllowed(runHostIntent(game))) return;
+    const authoredPlan = authoredHostTurnGate.plan(game);
+    if (authoredPlan) {
+      runAuthoredHostTurn(game, authoredPlan);
+      return;
+    }
     if (!state.surgeTransitionShown) {
       const preview = runHostMainPhase(game, { deferInvokedTriggers: true });
       if (hostInSurge(preview)) {
@@ -2113,6 +2119,50 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(createCleanUiState());
   },
 }));
+
+function runAuthoredHostTurn(game: GameState, plan: AuthoredHostTurnPlan): void {
+  const begun = beginHostMain(game);
+  useGameStore.setState({
+    game: begun,
+    selectedHostCreatureId: undefined,
+    selectedPlayerCreatureId: undefined,
+    hoveredCardId: undefined,
+    focusedCardId: undefined,
+  });
+  revealAuthoredHostCards(plan.revealCount, () => {
+    publishGameplayReceipt({ kind: "host.resolved" });
+    startHostCombatSequence();
+  });
+}
+
+/** Every authored arrival owns the ordinary reveal, summon and Invoked-trigger presentation. */
+function revealAuthoredHostCards(remaining: number, onComplete: () => void): void {
+  if (remaining <= 0) {
+    onComplete();
+    return;
+  }
+  const state = useGameStore.getState();
+  if (state.game.winner || state.game.host.archive.length === 0) {
+    onComplete();
+    return;
+  }
+  const previous = state.game;
+  const previousIds = new Set(previous.host.field.map((card) => card.instanceId));
+  const next = revealHostCardFromTop(previous, { deferInvokedTriggers: true });
+  const entered = next.host.field.filter((card) => !previousIds.has(card.instanceId));
+  const triggerCards = entered.filter(hasInvokedTrigger);
+  if (entered.length > 0) useAudioStore.getState().playSfx("draw");
+  useGameStore.setState({
+    game: next,
+    selectedHostCreatureId: undefined,
+    selectedPlayerCreatureId: undefined,
+    hostAutoTriggerCount: triggerCards.length,
+    summoningAnimationCount: state.summoningAnimationCount + entered.length,
+    hostMillAnimationQueue: appendHostMillAnimations(state, previous, next),
+  });
+  captureStaticAuraBeats();
+  scheduleHostArrivalEffects(entered, () => revealAuthoredHostCards(remaining - 1, onComplete));
+}
 
 // Project every committed GameState transition into the passive semantic stream. Unlike guided
 // receipts, this remains active in normal matches and has no authority over the rules.

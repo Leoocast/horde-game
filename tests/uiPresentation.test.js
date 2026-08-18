@@ -1108,6 +1108,7 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   const animator = readFileSync(new URL("../src/components/DefeatShatterAnimator.tsx", import.meta.url), "utf8");
   const glassShader = readFileSync(new URL("../src/components/defeatGlassShader.ts", import.meta.url), "utf8");
   const modal = readFileSync(new URL("../src/components/DefeatModal.tsx", import.meta.url), "utf8");
+  const journeyModal = readFileSync(new URL("../src/components/LearnToPlayDefeatModal.tsx", import.meta.url), "utf8");
   const board = readFileSync(new URL("../src/components/Board.tsx", import.meta.url), "utf8");
   const desktopMain = readFileSync(new URL("../electron/main.ts", import.meta.url), "utf8");
   const backdrop = readFileSync(new URL("../src/components/TemporalBackdrop.tsx", import.meta.url), "utf8");
@@ -1129,13 +1130,14 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(board, /await image\.decode\(\)/u);
   assert.match(board, /const destinyDialSettled = settledDestinyDialRevision === destinyDialRevision/u);
   assert.match(board, /const outcomeOutroReady = Boolean\(game\.winner\)[\s\S]*?destinyDialSettled[\s\S]*?!storePresentationActive[\s\S]*?localPresentation\.activeCount === 0/u);
-  assert.match(board, /const defeatOutcomeReady = sessionPolicy\.showStandardOutcome && outcomeOutroReady && game\.winner === "host"/u);
+  assert.match(board, /const outcomeEnabled = sessionPolicy\.showStandardOutcome[\s\S]*?sessionPolicy\.showJourneyDefeat && game\.winner === "host"/u);
+  assert.match(board, /const defeatOutcomeReady = outcomeEnabled && outcomeOutroReady && game\.winner === "host"/u);
   assert.match(board, /const OUTCOME_DRAIN_WATCHDOG_MS = 15000/u);
   assert.match(board, /if \(outcomeOutroReady\) return;/u);
   assert.match(board, /stopGamePresentation\(\);[\s\S]*?setForcedOutcomeDrainSessionId\(watchedSessionId\)/u);
   assert.match(board, /settleDialImmediately=\{forcedOutcomeDrain\}/u);
   assert.match(board, /const defeatReady = defeatOutcomeReady && defeatSnapshot !== undefined/u);
-  assert.match(board, /const outcomePresentationPending = sessionPolicy\.showStandardOutcome && Boolean\(game\.winner\) && !defeatReady && !victoryReady/u);
+  assert.match(board, /const outcomePresentationPending = outcomeEnabled && Boolean\(game\.winner\) && !defeatReady && !victoryReady/u);
   assert.match(board, /presentationInputBlocked && \(!tributeOfTheFourSorrowsSelectionActive \|\| outcomePresentationPending\)/u);
   assert.match(board, /snapshotImage=\{defeatSnapshot \?\? undefined\}/u);
   assert.match(board, /settleDefeatCapture\(capturePaintedDefeatFrame\(\)\)/u);
@@ -1189,6 +1191,11 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.doesNotMatch(styles, /\.game-screen::before/u);
   assert.match(board, /className="game-screen-ambience"/u);
   assert.match(board, /sessionPolicy\.showStandardOutcome && defeatReady/u);
+  assert.match(board, /sessionPolicy\.showJourneyDefeat && defeatReady/u);
+  assert.match(journeyModal, /<DefeatShatterAnimator/u);
+  assert.match(journeyModal, /guided\.learnToPlay\.defeatCta/u);
+  assert.match(journeyModal, /disabled/u);
+  assert.doesNotMatch(journeyModal, /onRewriteFuture|onContemplateFuture|defeat-future-plate/u);
   // El vidrio se lee aunque no haya nada impreso: alfa de la captura con suelo de Fresnel.
   assert.match(glassShader, /float printed = middle\.a/u);
   assert.match(glassShader, /vFade \* max\(printed, glassEdge\)/u);

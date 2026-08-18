@@ -631,9 +631,19 @@ orden y la segunda copia de Acechador como siguiente revelado. La guía exige la
 Aelyra con objetivo libre; el director deja defensa libre, exige Vaelor, hace obligatoria una única
 inspección de la Cosechadora y permite Flor antes, después o nunca. Las pruebas enumeran todas las
 defensas legales y esas ramas, que convergen en Cosechadora 7/9, y certifican cero o un descarte
-opcional antes de la primera Oleada. La implementación termina por ahora en `host.surgeStarted`;
-post-Oleada, muerte y CTA pertenecen a las Fases 5 y 6. **Continuar** está deshabilitado globalmente.
-Para una fase posterior siguen pendientes
+opcional antes de la primera Oleada. El recorrido ya continúa después de `host.surgeStarted`: los
+Ladrones vacían la Mano, la regla real roba Río + Choque, y jugar la quinta Fuente o intentar
+avanzar activa una intervención estricta breve para **Devolver Fuente**. Ciudad, Choque, Flor y el
+ataque posterior permanecen libres. Tres Soldados authored absorben los descartes opcionales antes
+del Titán terminal.
+
+El cierre terminal calcula desde el tablero vivo el mínimo de llegadas que vuelve inevitable la
+derrota, verifica la mejor defensa con el resolutor real y presenta cada carta mediante su llegada
+normal, una a una. La Vida llega a 0 por el combate real; `learn-to-play` reutiliza el quiebre de
+derrota y muestra sólo **Contemplar otro futuro** con copy narrativo propio. El botón permanece
+deshabilitado: activarlo, ejecutar el vórtice, comprometer progreso y cargar la partida preparada
+pertenecen a la Fase 6B aplazada. **Continuar** está deshabilitado globalmente. Para una fase
+posterior siguen pendientes
 la Mano/mulligan, seed, dificultad y
 Preparación de la partida real; el comportamiento de primera apertura y perfiles existentes; y la
 persistencia exacta si la aplicación se cierra durante el vórtice.

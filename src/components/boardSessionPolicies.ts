@@ -3,6 +3,7 @@ export type BoardSessionPolicy = Readonly<{
   autosave: boolean;
   showPhaseBanner: boolean;
   showStandardOutcome: boolean;
+  showJourneyDefeat: boolean;
   showFutureControls: boolean;
   restrictedSettings: boolean;
   guidedSystemControls: boolean;
@@ -16,6 +17,7 @@ export const NORMAL_BOARD_SESSION: BoardSessionPolicy = Object.freeze({
   autosave: true,
   showPhaseBanner: true,
   showStandardOutcome: true,
+  showJourneyDefeat: false,
   showFutureControls: true,
   restrictedSettings: false,
   guidedSystemControls: false,
@@ -29,6 +31,7 @@ export const GUIDED_LESSON_BOARD_SESSION: BoardSessionPolicy = Object.freeze({
   autosave: false,
   showPhaseBanner: false,
   showStandardOutcome: false,
+  showJourneyDefeat: false,
   showFutureControls: false,
   restrictedSettings: true,
   guidedSystemControls: true,
@@ -42,6 +45,7 @@ export const LEARN_TO_PLAY_BOARD_SESSION: BoardSessionPolicy = Object.freeze({
   autosave: false,
   showPhaseBanner: true,
   showStandardOutcome: false,
+  showJourneyDefeat: true,
   showFutureControls: false,
   restrictedSettings: true,
   guidedSystemControls: true,

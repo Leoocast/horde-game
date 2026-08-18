@@ -9,6 +9,7 @@ import {
 } from "../src/components/boardSessionPolicies";
 import { contentCatalog } from "../src/content/bootstrap";
 import { GuidedBeatBarrier } from "../src/guidance/beatBarrier";
+import { AuthoredHostTurnGate } from "../src/guidance/authoredHostTurn";
 import { buildGuidedScenario } from "../src/guidance/buildGuidedScenario";
 import { FIRST_SEED_LESSON } from "../src/guidance/firstSeedLesson";
 import {
@@ -38,11 +39,14 @@ test("How to Play catalogs the main journey before optional Preparation", () => 
 test("board session policies isolate persistence, outcomes, and guided controls", () => {
   assert.equal(NORMAL_BOARD_SESSION.autosave, true);
   assert.equal(NORMAL_BOARD_SESSION.showStandardOutcome, true);
+  assert.equal(NORMAL_BOARD_SESSION.showJourneyDefeat, false);
   assert.equal(GUIDED_LESSON_BOARD_SESSION.autosave, false);
   assert.equal(GUIDED_LESSON_BOARD_SESSION.showPhaseBanner, false);
+  assert.equal(GUIDED_LESSON_BOARD_SESSION.showJourneyDefeat, false);
   assert.equal(LEARN_TO_PLAY_BOARD_SESSION.autosave, false);
   assert.equal(LEARN_TO_PLAY_BOARD_SESSION.showPhaseBanner, true);
   assert.equal(LEARN_TO_PLAY_BOARD_SESSION.showStandardOutcome, false);
+  assert.equal(LEARN_TO_PLAY_BOARD_SESSION.showJourneyDefeat, true);
   assert.equal(LEARN_TO_PLAY_BOARD_SESSION.hostStartDelayMs, 550);
   assert.equal(NORMAL_BOARD_SESSION.hostStartDelayMs, 0);
   assert.equal(LEARN_TO_PLAY_BOARD_SESSION.leaveCopy, "journey");
@@ -163,6 +167,8 @@ test("journey limits are ephemeral and product concepts cover every prologue exp
     "attack-the-host-archive",
     "attack-exhausts-echo",
     "host-surge",
+    "empty-hand-draw",
+    "return-source",
     "learn-to-play-vaelor-required",
     "learn-to-play-harvester-inspection-required",
   ]);
@@ -199,6 +205,77 @@ test("the Vaelor reminder expires as soon as Vaelor leaves the Hand", () => {
   assert.equal(reminder.revalidate(match, { game: { player: { hand: [] } } }), false);
 });
 
+test("post-Surge concepts react only to the real empty-Hand draw and the required Source", () => {
+  const emptyHand = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "empty-hand-draw");
+  const returnSource = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "return-source");
+  const context = {
+    game: {
+      player: {
+        hand: [
+          { instanceId: "river:1", kinds: ["SOURCE"] },
+          { instanceId: "spell:1", kinds: ["SPELL"] },
+        ],
+      },
+    },
+  };
+
+  assert.deepEqual(emptyHand.evaluate({
+    kind: "player.cardsDrawn",
+    amount: 2,
+    reason: "empty-hand",
+    cardIds: ["river:1", "spell:1"],
+  }, context), {
+    highlights: [{ kind: "surface", anchor: "player.hand", showHighlight: false }],
+  });
+  assert.equal(emptyHand.evaluate({
+    kind: "player.cardsDrawn",
+    amount: 2,
+    reason: "easy",
+    cardIds: ["river:1", "spell:1"],
+  }, context), undefined);
+
+  const fifthSource = returnSource.evaluate({
+    kind: "action.denied",
+    code: "SOURCE_LIMIT_REACHED",
+    intent: { kind: "card.play", cardId: "river:1" },
+  }, context);
+  assert.deepEqual(fifthSource, {
+    highlights: [
+      { kind: "card", instanceId: "river:1" },
+      { kind: "surface", anchor: "player.archive" },
+    ],
+  });
+  assert.equal(returnSource.evaluate({
+    kind: "intent.attempted",
+    authorization: "journey-blocked",
+    guidanceId: "learn-to-play.return-source-required",
+    relatedCardIds: ["river:1"],
+  }, context), undefined);
+  assert.equal(returnSource.revalidate(fifthSource, context), true);
+  assert.equal(returnSource.revalidate(fifthSource, {
+    game: { player: { hand: [{ instanceId: "spell:1", kinds: ["SPELL"] }] } },
+  }), false);
+});
+
+test("authored Host-turn policies are scoped and reject invalid reveal plans", () => {
+  const gate = new AuthoredHostTurnGate();
+  gate.activate({
+    journeyId: "learn-to-play",
+    plan: () => ({ revealCount: 4, reason: "lost-future" }),
+  });
+  assert.deepEqual(gate.plan({}), { revealCount: 4, reason: "lost-future" });
+  gate.deactivate("another-journey");
+  assert.equal(gate.plan({}).revealCount, 4);
+  gate.deactivate("learn-to-play");
+  assert.equal(gate.plan({}), undefined);
+
+  gate.activate({
+    journeyId: "learn-to-play",
+    plan: () => ({ revealCount: 0, reason: "invalid" }),
+  });
+  assert.throws(() => gate.plan({}), /Invalid authored Host reveal count/u);
+});
+
 test("App exposes both launchers, disables Continue, and keys autosave from policy", async () => {
   const [app, menu, board] = await Promise.all([
     readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
@@ -213,5 +290,6 @@ test("App exposes both launchers, disables Continue, and keys autosave from poli
   assert.match(menu, /howToPlayEntries\.map/u);
   assert.match(menu, /disabled=\{continueDisabled \|\| !onContinue\}/u);
   assert.match(board, /sessionPolicy\.showStandardOutcome && defeatReady/u);
+  assert.match(board, /sessionPolicy\.showJourneyDefeat && defeatReady/u);
   assert.match(board, /!sessionPolicy\.showPhaseBanner/u);
 });

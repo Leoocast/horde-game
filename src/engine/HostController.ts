@@ -12,16 +12,9 @@ type HostMainOptions = {
 };
 
 export function runHostMain(game: GameState, options: HostMainOptions = {}): GameState {
-  const next = structuredClone(game) as GameState;
+  const next = beginHostMain(game);
   const rules = next.hostRules;
-  const wasInSurge = hostInSurge(next);
-  next.fieldEntriesThisTurn = [];
-  next.hostTurnNumber += 1;
-  next.activeSide = "host";
-  next.phase = "host";
-  next.setupCompletePendingHost = false;
-  readySide(next, "host");
-  next.log.unshift("Host readies its Field.");
+  const wasInSurge = hostInSurge(game);
   revealNormal(next, options);
   if (next.hostTurnNumber === rules.miniSurgeTurn && rules.miniSurgeExtraReveals > 0) {
     next.log.unshift(`Host Mini Surge on turn ${rules.miniSurgeTurn} reveals ${rules.miniSurgeExtraReveals} extra card(s).`);
@@ -37,6 +30,23 @@ export function runHostMain(game: GameState, options: HostMainOptions = {}): Gam
   }
   resolveRequestedRevealRounds(next, options);
   if (!options.deferInvokedTriggers) drainEventQueue(next);
+  return next;
+}
+
+/**
+ * Opens a real Host turn without revealing cards. Authored encounters use this seam when the
+ * number of arrivals is decided from the live board, while ordinary matches continue through
+ * `runHostMain` and its deck rules.
+ */
+export function beginHostMain(game: GameState): GameState {
+  const next = structuredClone(game) as GameState;
+  next.fieldEntriesThisTurn = [];
+  next.hostTurnNumber += 1;
+  next.activeSide = "host";
+  next.phase = "host";
+  next.setupCompletePendingHost = false;
+  readySide(next, "host");
+  next.log.unshift("Host readies its Field.");
   return next;
 }
 

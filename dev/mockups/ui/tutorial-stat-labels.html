@@ -1,0 +1,1125 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hostfall — Etiquetas de Fuerza y Aguante en la comparación del tutorial</title>
+<style>
+  :root {
+    --gold-soft: rgb(181 134 66 / 0.55);
+    --parch: #e9dcbd;
+
+    /* Voz única: el dorado del recuadro contextual. */
+    --tone-gold: #d8c085;
+    /* Dos tonos: cálido para Fuerza, frío para Aguante. */
+    --tone-warm: #e2a273;
+    --tone-cool: #86c9a8;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 26px 22px 90px;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgb(72 52 30 / 0.3), transparent 60%),
+      linear-gradient(180deg, #14100c, #0a0806 60%, #070605);
+    color: var(--parch);
+    font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  }
+
+  h1 { margin: 0 0 6px; font-size: 24px; letter-spacing: 0.04em; color: #f2e2b8; }
+
+  .intro { max-width: 1080px; margin-bottom: 14px; color: rgb(233 220 189 / 0.72); font-size: 14px; line-height: 1.55; }
+  .intro code { color: #f0cf8a; }
+  .intro strong { color: #f2e2b8; }
+  .intro ol { margin: 8px 0 0; padding-left: 20px; }
+  .intro li { margin-bottom: 3px; }
+
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px 13px;
+    border: 1px solid var(--gold-soft);
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgb(30 22 14 / 0.97), rgb(14 10 7 / 0.99));
+    box-shadow: 0 10px 26px rgb(0 0 0 / 0.6);
+    font-size: 13px;
+  }
+  .toolbar label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  .toolbar select, .toolbar input[type="range"] { accent-color: #d9a441; }
+  .toolbar input[type="range"] { width: 92px; }
+  .toolbar select {
+    padding: 3px 6px;
+    border: 1px solid var(--gold-soft);
+    border-radius: 5px;
+    background: #1c1409;
+    color: var(--parch);
+    font-family: inherit;
+  }
+  .toolbar output { min-width: 34px; color: #f0cf8a; }
+  .toolbar .hint { flex-basis: 100%; color: rgb(233 220 189 / 0.5); }
+
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(620px, 1fr)); }
+
+  .variant {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgb(181 134 66 / 0.3);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgb(26 19 13 / 0.92), rgb(12 9 6 / 0.96));
+    box-shadow: 0 14px 30px rgb(0 0 0 / 0.5);
+    overflow: hidden;
+  }
+  .variant.is-current { border-color: rgb(226 140 74 / 0.45); }
+
+  .variant-head {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 11px 15px 9px;
+    border-bottom: 1px solid rgb(181 134 66 / 0.2);
+    background: linear-gradient(180deg, rgb(48 34 20 / 0.5), transparent);
+  }
+  .variant-head .tag {
+    padding: 2px 7px;
+    border: 1px solid var(--gold-soft);
+    border-radius: 4px;
+    color: #f0cf8a;
+    font-size: 11px;
+    letter-spacing: 0.13em;
+    white-space: nowrap;
+  }
+  .variant-head h2 { margin: 0; font-size: 16px; letter-spacing: 0.03em; color: #f2e2b8; }
+
+  .variant-note {
+    padding: 9px 15px 11px;
+    border-top: 1px solid rgb(181 134 66 / 0.16);
+    color: rgb(233 220 189 / 0.62);
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+
+  /* ---------------------------------------------------------------- escenario */
+
+  .stage {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 50% 12%, rgb(46 64 70 / 0.4), transparent 62%),
+      linear-gradient(180deg, #17222b, #0e161c 66%, #080d11);
+  }
+  .grid[data-bg="plano"] .stage { background: #080b0e; }
+
+  /* El velo del tutorial: el mismo 35 % del overlay guiado. */
+  .stage-dim {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    background: #000;
+    opacity: var(--dim, 0.35);
+    pointer-events: none;
+  }
+
+  .stage-inner {
+    position: relative;
+    z-index: 2;
+    padding: 26px 20px 30px;
+  }
+
+  /* Réplica de .guided-card-comparison: dos cartas centradas con hueco propio. */
+  .comparison {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--pair-gap, 24px);
+  }
+
+  .cmp-frame {
+    position: relative;
+    width: var(--frame-w, 208px);
+    aspect-ratio: 488 / 680;
+    container-type: inline-size;
+    filter: drop-shadow(0 24px 26px rgb(0 0 0 / 0.72));
+  }
+
+  .cmp-frame > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 4.918% / 3.529%;
+    object-fit: cover;
+  }
+
+  /* ------------------------------------------------- marcador real de la carta */
+  /* Copia exacta de .card-preview-full-card-frame > .card-stat-badge. */
+
+  .stat-badge {
+    position: absolute;
+    right: 3.28cqw;
+    bottom: 57.79cqw;
+    z-index: 40;
+    isolation: isolate;
+    display: flex;
+    width: auto;
+    height: 9.32cqw;
+    min-width: 16.19cqw;
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+    gap: 0.72cqw;
+    padding: 0 1.43cqw;
+    border: 0;
+    border-radius: 3.07cqw 0.82cqw 3.07cqw 0.82cqw;
+    background:
+      radial-gradient(ellipse at 24% 0%, rgb(204 226 179 / 0.12), transparent 46%),
+      repeating-linear-gradient(112deg, rgb(231 241 217 / 0.018) 0 1px, transparent 1px 5px),
+      linear-gradient(180deg, #305a38 0%, #214329 54%, #0a1c0e 100%);
+    color: #f5eee0;
+    box-shadow:
+      inset 0 0.1cqw 0 rgb(255 255 255 / 0.14),
+      inset 0 -0.31cqw 0.61cqw rgb(0 0 0 / 0.18),
+      0 0.82cqw 2.05cqw rgb(0 0 0 / 0.62);
+    font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
+    /* La comparación lo agranda y le pone un aro de foco. */
+    outline: 1px solid rgb(223 205 147 / 0.28);
+    outline-offset: 1cqw;
+    transform: scale(1.2);
+    transform-origin: center;
+    animation: stats-focus 1.85s ease-in-out infinite;
+  }
+
+  .stat-badge::after {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border: 0.31cqw solid rgb(191 166 106 / 0.62);
+    border-radius: 3.07cqw 0.82cqw 3.07cqw 0.82cqw;
+    content: "";
+  }
+
+  .stat-seg {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0;
+    color: #f5eee0;
+    font-size: 5.53cqw;
+    font-variant-numeric: tabular-nums;
+    font-weight: 950;
+    letter-spacing: 0;
+    line-height: 1;
+    text-shadow: 0.2cqw 0.2cqw 0.41cqw rgb(0 0 0 / 0.86);
+  }
+
+  .stat-sep {
+    position: relative;
+    z-index: 3;
+    color: #eadcad;
+    font-size: 3.69cqw;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1;
+    opacity: 0.82;
+  }
+  .stat-sep::before { content: "/"; }
+
+  /* Teñido de mitades que ya aplica hoy la comparación. */
+  .grid[data-tint="actual"] .stat-power {
+    border-radius: 2cqw 0 0 2cqw;
+    background: linear-gradient(90deg, rgb(185 75 43 / 0.32), transparent 92%);
+    color: #efaa78;
+    text-shadow: 0 0 2.4cqw rgb(208 95 45 / 0.72), 0 1px 3px #000;
+  }
+  .grid[data-tint="actual"] .stat-endurance {
+    border-radius: 0 2cqw 2cqw 0;
+    background: linear-gradient(270deg, rgb(34 132 91 / 0.32), transparent 92%);
+    color: #91d9b6;
+    text-shadow: 0 0 2.4cqw rgb(47 155 117 / 0.72), 0 1px 3px #000;
+  }
+
+  @keyframes stats-focus {
+    0%, 100% { filter: brightness(0.96); }
+    50% { filter: brightness(1.18); }
+  }
+
+  /* ------------------------------------------------------------ etiqueta HOY */
+  /* .guided-card-comparison-stat-label tal cual está en src/styles.css. */
+
+  .legacy-label {
+    position: absolute;
+    z-index: 45;
+    border: 0;
+    border-bottom: 1px solid currentcolor;
+    padding: 0.45cqw 0.7cqw 0.8cqw;
+    background: linear-gradient(90deg, transparent, rgb(6 11 13 / 0.92) 14%, rgb(6 11 13 / 0.92) 86%, transparent);
+    box-shadow: 0 1.2cqw 2.4cqw rgb(0 0 0 / 0.62);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 2.55cqw;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .legacy-label::after {
+    position: absolute;
+    top: 100%;
+    width: 3.2cqw;
+    height: 1px;
+    background: currentcolor;
+    content: "";
+    opacity: 0.7;
+  }
+  .legacy-label.is-power { right: 17.5cqw; bottom: 68.7cqw; color: #e78d61; }
+  .legacy-label.is-power::after { right: -2.8cqw; transform: rotate(32deg); transform-origin: left; }
+  .legacy-label.is-endurance { right: -5.8cqw; bottom: 49.5cqw; color: #75cda5; }
+  .legacy-label.is-endurance::after { left: -2.8cqw; transform: rotate(-32deg); transform-origin: right; }
+
+  /* --------------------------------------------------------- capa de anotación */
+
+  .annot {
+    position: absolute;
+    z-index: 46;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .leaders {
+    position: absolute;
+    z-index: 44;
+    inset: 0;
+    overflow: visible;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .leader {
+    fill: none;
+    stroke: var(--tone, var(--tone-gold));
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    opacity: 0.9;
+    filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.9));
+  }
+  .leader-dot {
+    fill: var(--tone, var(--tone-gold));
+    filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.9));
+  }
+
+  /* Placa: mismo material que .contextual-tutorial-callout, en tamaño de cartela. */
+  .plate {
+    position: absolute;
+    display: grid;
+    gap: 2px;
+    border: 1px solid rgb(142 148 118 / 0.52);
+    border-top-color: rgb(207 190 132 / 0.68);
+    border-radius: 2px;
+    padding: 6px 9px 7px 11px;
+    background:
+      radial-gradient(circle at 15% 0%, rgb(166 185 158 / 0.08), transparent 42%),
+      linear-gradient(145deg, rgb(24 33 35 / 0.985), rgb(7 13 16 / 0.995));
+    box-shadow: inset 0 1px 0 rgb(235 223 179 / 0.07), 0 12px 26px rgb(0 0 0 / 0.52);
+    font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+    white-space: nowrap;
+  }
+  /* Filete de acento: el color vive en 3 px, no en la palabra. */
+  .plate::before {
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    left: 0;
+    width: 3px;
+    background: var(--tone, var(--tone-gold));
+    content: "";
+    opacity: 0.85;
+  }
+  .plate .term {
+    color: #e6dcbe;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  .plate .gloss {
+    color: #9fada8;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+  /* La glosa parte de línea antes que la cartela se salga de la carta. */
+  .plate.is-wrapped .gloss { white-space: normal; }
+  .plate .value {
+    color: var(--tone, var(--tone-gold));
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 950;
+    line-height: 1;
+  }
+  .grid[data-gloss="off"] .plate .gloss { display: none; }
+
+  /* Cartelita mínima pegada al canto del marcador. */
+  .tab {
+    position: absolute;
+    border: 1px solid rgb(150 156 124 / 0.5);
+    border-radius: 2px;
+    padding: 3px 7px 4px;
+    background: linear-gradient(145deg, rgb(22 31 33 / 0.97), rgb(7 12 15 / 0.99));
+    box-shadow: 0 6px 14px rgb(0 0 0 / 0.55);
+    color: #e6dcbe;
+    font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .tab::before {
+    position: absolute;
+    left: var(--stem-x, 14px);
+    width: 1px;
+    height: var(--stem-h, 9px);
+    background: var(--tone, var(--tone-gold));
+    content: "";
+    opacity: 0.9;
+  }
+  .tab.is-above::before { top: 100%; }
+  .tab.is-below::before { bottom: 100%; }
+
+  /* Fila al pie: dos entradas bajo la carta, sin salirse de su ancho. */
+  /* Se agrupan bajo el marcador, no en los cantos: así la guía de Fuerza no cruza
+     la carta entera y el orden izquierda-derecha sigue siendo el de las cifras. */
+  .foot-row {
+    position: absolute;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: 14px;
+  }
+  .foot-item { min-width: 0; }
+  .foot-item {
+    display: grid;
+    gap: 3px;
+    border-top: 1px solid var(--tone, var(--tone-gold));
+    padding-top: 5px;
+    font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+  }
+  .foot-item .term {
+    color: #e6dcbe;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  .foot-item .gloss { color: #9fada8; font-size: 11px; line-height: 1.28; max-width: 15ch; }
+  .grid[data-gloss="off"] .foot-item .gloss { display: none; }
+
+  /* Lupa: el marcador repetido en grande, con sus mitades separadas. */
+  .loupe {
+    position: absolute;
+    display: flex;
+    align-items: stretch;
+    gap: 11px;
+  }
+  .loupe-half { display: grid; gap: 6px; justify-items: center; }
+  .loupe-chip {
+    display: grid;
+    width: 46px;
+    height: 42px;
+    place-items: center;
+    border: 1px solid rgb(191 166 106 / 0.62);
+    background:
+      radial-gradient(ellipse at 24% 0%, rgb(204 226 179 / 0.12), transparent 46%),
+      linear-gradient(180deg, #305a38 0%, #214329 54%, #0a1c0e 100%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 8px 18px rgb(0 0 0 / 0.6);
+    color: #f5eee0;
+    font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
+    font-size: 24px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 950;
+    line-height: 1;
+    text-shadow: 1px 1px 3px rgb(0 0 0 / 0.86);
+  }
+  .loupe-half:first-child .loupe-chip { border-radius: 13px 3px 3px 3px; }
+  .loupe-half:last-child .loupe-chip { border-radius: 3px 3px 13px 3px; }
+  .loupe-caption {
+    display: grid;
+    gap: 2px;
+    justify-items: center;
+    font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+    text-align: center;
+  }
+  .loupe-caption .term {
+    color: var(--tone, var(--tone-gold));
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  .loupe-caption .gloss { color: #9fada8; font-size: 10.5px; line-height: 1.25; max-width: 12ch; }
+  .grid[data-gloss="off"] .loupe-caption .gloss { display: none; }
+
+  /* Ficha de dos filas. */
+  .ledger {
+    position: absolute;
+    display: grid;
+    gap: 7px;
+    border: 1px solid rgb(142 148 118 / 0.52);
+    border-top-color: rgb(207 190 132 / 0.68);
+    border-radius: 2px;
+    padding: 9px 12px 10px;
+    background:
+      radial-gradient(circle at 15% 0%, rgb(166 185 158 / 0.08), transparent 42%),
+      linear-gradient(145deg, rgb(24 33 35 / 0.985), rgb(7 13 16 / 0.995));
+    box-shadow: inset 0 1px 0 rgb(235 223 179 / 0.07), 0 14px 30px rgb(0 0 0 / 0.55);
+    font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+  }
+  .ledger-row {
+    display: grid;
+    align-items: center;
+    gap: 9px;
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+  .ledger-chip {
+    display: grid;
+    height: 24px;
+    place-items: center;
+    border: 1px solid var(--tone, var(--tone-gold));
+    border-radius: 2px;
+    background: rgb(8 14 16 / 0.9);
+    color: var(--tone, var(--tone-gold));
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 950;
+    line-height: 1;
+  }
+  .ledger-row .term {
+    color: #e6dcbe;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    line-height: 1.35;
+    text-transform: uppercase;
+  }
+  .ledger-row .gloss { color: #9fada8; font-size: 11px; line-height: 1.3; }
+  .grid[data-gloss="off"] .ledger-row .gloss { display: none; }
+
+  /* --------------------------------------------------------------- revelado */
+
+  @keyframes annot-a {
+    0%   { opacity: 0; transform: translateY(4px); }
+    7%   { opacity: 1; transform: translateY(0); }
+    93%  { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(0); }
+  }
+  @keyframes annot-b {
+    0%, 24% { opacity: 0; transform: translateY(4px); }
+    32%     { opacity: 1; transform: translateY(0); }
+    93%     { opacity: 1; transform: translateY(0); }
+    100%    { opacity: 0; transform: translateY(0); }
+  }
+  @keyframes leader-a {
+    0%   { opacity: 0; stroke-dashoffset: var(--len, 0); }
+    7%   { opacity: 0.9; stroke-dashoffset: 0; }
+    93%  { opacity: 0.9; stroke-dashoffset: 0; }
+    100% { opacity: 0; stroke-dashoffset: 0; }
+  }
+  @keyframes leader-b {
+    0%, 24% { opacity: 0; stroke-dashoffset: var(--len, 0); }
+    32%     { opacity: 0.9; stroke-dashoffset: 0; }
+    93%     { opacity: 0.9; stroke-dashoffset: 0; }
+    100%    { opacity: 0; stroke-dashoffset: 0; }
+  }
+  /* La cifra se enciende a la vez que su nombre: eso resuelve «qué línea va a qué número». */
+  @keyframes digit-a {
+    0%, 4%, 96%, 100% { filter: none; }
+    10%, 90% { filter: brightness(1.5) drop-shadow(0 0 6px rgb(255 236 190 / 0.55)); }
+  }
+  @keyframes digit-b {
+    0%, 28%, 96%, 100% { filter: none; }
+    34%, 90% { filter: brightness(1.5) drop-shadow(0 0 6px rgb(255 236 190 / 0.55)); }
+  }
+
+  .grid[data-animate="on"] .variant:not(.is-legacy) [data-step="1"] { animation: annot-a var(--cycle, 5.4s) ease-in-out infinite; }
+  .grid[data-animate="on"] .variant:not(.is-legacy) [data-step="2"] { animation: annot-b var(--cycle, 5.4s) ease-in-out infinite; }
+  .grid[data-animate="on"] .variant:not(.is-legacy) path[data-step="1"] { animation: leader-a var(--cycle, 5.4s) ease-in-out infinite; }
+  .grid[data-animate="on"] .variant:not(.is-legacy) path[data-step="2"] { animation: leader-b var(--cycle, 5.4s) ease-in-out infinite; }
+  .grid[data-animate="on"] .variant:not(.is-legacy) .stat-seg[data-step="1"] { animation: digit-a var(--cycle, 5.4s) ease-in-out infinite; }
+  .grid[data-animate="on"] .variant:not(.is-legacy) .stat-seg[data-step="2"] { animation: digit-b var(--cycle, 5.4s) ease-in-out infinite; }
+
+  /* Simultáneo: todo entra con el primer tiempo. */
+  .grid[data-reveal="simultaneo"][data-animate="on"] .variant:not(.is-legacy) [data-step="2"] { animation-name: annot-a; }
+  .grid[data-reveal="simultaneo"][data-animate="on"] .variant:not(.is-legacy) path[data-step="2"] { animation-name: leader-a; }
+  .grid[data-reveal="simultaneo"][data-animate="on"] .variant:not(.is-legacy) .stat-seg[data-step="2"] { animation-name: digit-a; }
+
+  .grid[data-animate="off"] * { animation: none !important; }
+</style>
+</head>
+<body>
+<h1>Fuerza y Aguante — cómo se nombran las dos cifras del marcador</h1>
+<p class="intro">
+  El paso <code>explain-combat-stats</code> de <strong>Aprender a jugar</strong> levanta la comparación grande de
+  <code>presentation.cardComparison</code> con <code>emphasis: "combatStats"</code>: dos cartas al 100 %, el marcador
+  agrandado a 1.2 con su aro, la mitad izquierda teñida de naranja y la derecha de verde, y encima
+  <code>.guided-card-comparison-stat-label</code> escribiendo los dos nombres. Esa etiqueta es lo que revisan estas
+  variantes. Lo que falla hoy:
+</p>
+<ol class="intro">
+  <li>El guion inclinado de 32° es un pelo de 3.2cqw que <strong>apunta cerca de la cifra, no a la cifra</strong>: no la
+    toca, y con el marcador escalado a 1.2 se queda todavía más corto.</li>
+  <li>Las posiciones son cifras fijas en <code>cqw</code> —<code>right: 17.5cqw</code>, <code>bottom: 68.7cqw</code>—
+    calibradas para un marcador de un dígito. Un 12/10 lo ensancha y las etiquetas dejan de encajar.</li>
+  <li><code>AGUANTE</code> vive en <code>right: -5.8cqw</code>: se sale de la carta, y como la comparación muestra
+    <strong>dos cartas juntas</strong>, cae en el hueco entre ambas.</li>
+  <li>El color duplica trabajo. La mitad del marcador ya está teñida de naranja y verde; repetir esos dos tonos
+    saturados en la palabra hace que dos nombres del mismo tipo se lean como dos estados distintos, y el naranja
+    es el color de daño en el resto del juego.</li>
+  <li>El material —serif versalita sobre una mancha negra degradada— no es el de ninguna otra superficie del tutorial.
+    El recuadro contextual es azul carbón con filete dorado.</li>
+  <li>Las dos etiquetas aparecen a la vez y sólo nombran. El recuadro carga toda la enseñanza, así que quien lee
+    <em>Fuerza</em> todavía no sabe cuál de los dos números pega.</li>
+</ol>
+<p class="intro">
+  Las variantes conservan el marcador tal cual y sólo cambian la anotación. Todas anclan sus guías
+  <strong>midiendo el rectángulo real de cada cifra</strong>, así que siguen funcionando con dos dígitos, con la carta
+  a cualquier ancho y con el marcador escalado.
+</p>
+
+<div class="toolbar">
+  <label>Idioma
+    <select id="lang">
+      <option value="es" selected>Español</option>
+      <option value="en">English</option>
+    </select>
+  </label>
+  <label>Color
+    <select id="tone">
+      <option value="gold" selected>Una sola voz (dorado)</option>
+      <option value="dual">Dos tonos (cálido / frío)</option>
+    </select>
+  </label>
+  <label>Cifras
+    <select id="stats">
+      <option value="real" selected>Reales — 2/1 y 3/3</option>
+      <option value="wide">Dos dígitos — 12/10 y 3/3</option>
+      <option value="asym">Asimétricas — 7/2 y 1/9</option>
+    </select>
+  </label>
+  <label>Teñido del marcador
+    <select id="tint">
+      <option value="actual" selected>Como hoy (naranja / verde)</option>
+      <option value="neutro">Neutro (sin teñir)</option>
+    </select>
+  </label>
+  <label>Revelado
+    <select id="reveal">
+      <option value="secuencial" selected>Secuencial</option>
+      <option value="simultaneo">Simultáneo</option>
+    </select>
+  </label>
+  <label>Glosa <input id="gloss" type="checkbox" checked /></label>
+  <label>Ancho de carta <input id="frame" type="range" min="168" max="280" step="4" value="208" /><output id="frameOut">208</output></label>
+  <label>Hueco entre cartas <input id="gap" type="range" min="10" max="60" step="2" value="24" /><output id="gapOut">24</output></label>
+  <label>Velo <input id="dim" type="range" min="0" max="0.7" step="0.05" value="0.35" /><output id="dimOut">35 %</output></label>
+  <label>Ciclo <input id="cycle" type="range" min="3.4" max="9" step="0.2" value="5.4" /><output id="cycleOut">5.4s</output></label>
+  <label>Fondo
+    <select id="bg">
+      <option value="tablero" selected>Tablero</option>
+      <option value="plano">Plano</option>
+    </select>
+  </label>
+  <label><input id="animate" type="checkbox" checked /> Animación</label>
+  <span class="hint">
+    «Cifras» prueba el punto 2: sube a dos dígitos y mira qué anotación aguanta el marcador más ancho. «Hueco entre
+    cartas» prueba el punto 3: acércalas y mira cuál invade a la vecina.
+  </span>
+</div>
+
+<div class="grid" id="grid" data-bg="tablero" data-tint="actual" data-reveal="secuencial" data-gloss="on" data-animate="on"></div>
+
+<script>
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+const CARDS = [
+  {
+    id: "return_to_memory",
+    src: "../assets/ui_references/card-return-to-memory.png",
+    name: { es: "Retorno a la Memoria", en: "Return to Memory" },
+    power: 2,
+    endurance: 1,
+  },
+  {
+    id: "maela",
+    src: "../assets/ui_references/card-maela-watcher-of-the-heights.png",
+    name: { es: "Maela, Vigía de las Alturas", en: "Maela, Watcher of the Heights" },
+    power: 3,
+    endurance: 3,
+  },
+];
+
+// Sobrescrituras para probar el ancho del marcador; el par real es 2/1 contra 3/3.
+const STAT_SETS = {
+  real: { return_to_memory: [2, 1], maela: [3, 3] },
+  wide: { return_to_memory: [12, 10], maela: [3, 3] },
+  asym: { return_to_memory: [7, 2], maela: [1, 9] },
+};
+
+const COPY = {
+  es: {
+    power: "Fuerza",
+    endurance: "Aguante",
+    powerGloss: "el daño que reparte",
+    enduranceGloss: "lo que resiste antes de caer",
+    powerShort: "reparte daño",
+    enduranceShort: "resiste daño",
+  },
+  en: {
+    power: "Power",
+    endurance: "Endurance",
+    powerGloss: "the damage it deals",
+    enduranceGloss: "what it takes before falling",
+    powerShort: "deals damage",
+    enduranceShort: "takes damage",
+  },
+};
+
+/* ------------------------------------------------------------------ utilidades */
+
+function el(tag, attrs, parent) {
+  const node = document.createElement(tag);
+  applyAttrs(node, attrs);
+  if (parent) parent.appendChild(node);
+  return node;
+}
+
+function svgEl(tag, attrs, parent) {
+  const node = document.createElementNS(SVG_NS, tag);
+  applyAttrs(node, attrs);
+  if (parent) parent.appendChild(node);
+  return node;
+}
+
+function applyAttrs(node, attrs) {
+  for (const [key, value] of Object.entries(attrs || {})) {
+    if (value === undefined || value === null) continue;
+    if (key === "text") { node.textContent = String(value); continue; }
+    if (key === "style") { node.setAttribute("style", String(value)); continue; }
+    node.setAttribute(key, String(value));
+  }
+}
+
+/** Rectángulo de `node` en coordenadas del host de anotación. */
+function rectIn(node, host) {
+  const a = node.getBoundingClientRect();
+  const b = host.getBoundingClientRect();
+  return {
+    left: a.left - b.left,
+    top: a.top - b.top,
+    width: a.width,
+    height: a.height,
+    cx: a.left - b.left + a.width / 2,
+    cy: a.top - b.top + a.height / 2,
+    right: a.right - b.left,
+    bottom: a.bottom - b.top,
+  };
+}
+
+/** Punto del canto de `rect` más cercano a (x, y), para que la guía salga por donde toca. */
+function edgePoint(rect, x, y) {
+  const dx = x - rect.cx;
+  const dy = y - rect.cy;
+  if (Math.abs(dx) * rect.height >= Math.abs(dy) * rect.width) {
+    return { x: dx >= 0 ? rect.right : rect.left, y: clamp(y, rect.top + 6, rect.bottom - 6) };
+  }
+  return { x: clamp(x, rect.left + 8, rect.right - 8), y: dy >= 0 ? rect.bottom : rect.top };
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), Math.max(min, max));
+}
+
+function toneVar(kind, mode) {
+  if (mode === "gold") return "var(--tone-gold)";
+  return kind === "power" ? "var(--tone-warm)" : "var(--tone-cool)";
+}
+
+/**
+ * Curva suave de la placa a la cifra. El control se separa del canto en su propia
+ * normal, así que la guía nace perpendicular a la placa y llega recta al número:
+ * la misma idea que `guidedConnectorPath`, en corto.
+ */
+function leaderPath(from, to) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const horizontal = Math.abs(dx) >= Math.abs(dy);
+  const c1 = horizontal ? { x: from.x + dx * 0.55, y: from.y } : { x: from.x, y: from.y + dy * 0.55 };
+  const c2 = horizontal ? { x: from.x + dx * 0.72, y: to.y } : { x: to.x, y: from.y + dy * 0.72 };
+  return `M ${r(from.x)} ${r(from.y)} C ${r(c1.x)} ${r(c1.y)}, ${r(c2.x)} ${r(c2.y)}, ${r(to.x)} ${r(to.y)}`;
+}
+
+function r(value) { return Math.round(value * 10) / 10; }
+
+/* -------------------------------------------------------------------- variantes */
+
+const VARIANTS = [];
+
+function variant(id, name, note, decorate, options) {
+  VARIANTS.push({ id, name, note, decorate, legacy: Boolean(options && options.legacy), current: Boolean(options && options.current) });
+}
+
+variant(
+  "actual",
+  "Actual — nombre suelto con guion inclinado",
+  "Lo que hay hoy, con sus valores reales de src/styles.css. Con las cartas juntas se ve el problema entero: el guion de FUERZA muere en el aire sobre el marcador, y AGUANTE se sale por la derecha y se mete en el hueco de la carta vecina. Sube «Cifras» a dos dígitos y las dos etiquetas se descuadran, porque sus posiciones están fijadas en cqw.",
+  (ctx) => {
+    // Van dentro del marco: sus offsets en cqw dependen del contenedor de la carta.
+    const power = el("span", { class: "legacy-label is-power", text: ctx.copy.power.toUpperCase() }, ctx.frame);
+    const endurance = el("span", { class: "legacy-label is-endurance", text: ctx.copy.endurance.toUpperCase() }, ctx.frame);
+    void power; void endurance;
+    return () => [];
+  },
+  { legacy: true, current: true },
+);
+
+variant(
+  "cartelas",
+  "1 · Cartelas ancladas dentro de la carta",
+  "Misma idea que hoy —dos cartelas, una por cifra— pero corregida: material del recuadro contextual, el color reducido a un filete de 3 px, y la guía medida hasta el centro exacto del número, con un punto que confirma dónde termina. Se miden contra el hueco que queda entre el canto de la carta y el marcador, así que nunca se salen y ninguna invade a la vecina por estrecho que sea el hueco. El precio es que tapan el panel de reglas impreso durante todo el paso.",
+  (ctx) => {
+    const power = plate(ctx, "power", ctx.copy.power, ctx.copy.powerGloss, 1);
+    const endurance = plate(ctx, "endurance", ctx.copy.endurance, ctx.copy.enduranceGloss, 2);
+    return () => {
+      const badge = rectIn(ctx.badge, ctx.annot);
+      const gapX = 20;
+      const inset = 6;
+      // El ancho disponible es el hueco real entre el canto de la carta y el marcador:
+      // la cartela nunca puede salirse, así que la glosa parte de línea antes que eso.
+      const room = badge.left - gapX - (ctx.frameRect.left + inset);
+      for (const node of [power, endurance]) {
+        node.classList.add("is-wrapped");
+        node.style.maxWidth = `${r(room)}px`;
+      }
+      const powerRect = place(power, 0, 0);
+      const enduranceRect = place(endurance, 0, 0);
+      const right = badge.left - gapX;
+      const powerTop = badge.cy - powerRect.height - 9;
+      const enduranceTop = badge.cy + 9;
+      place(power, right - powerRect.width, powerTop);
+      place(endurance, right - enduranceRect.width, enduranceTop);
+      return [
+        link(ctx, power, ctx.digits.power, "power", 1),
+        link(ctx, endurance, ctx.digits.endurance, "endurance", 2),
+      ];
+    };
+  },
+);
+
+variant(
+  "canto",
+  "2 · Cartelitas al canto del marcador",
+  "La anotación más callada: una pestaña encima de la mitad izquierda y otra debajo de la derecha, cada una con un tallo de 1 px que toca el canto del marcador. No hay guía que cruce el arte ni palabra que salga de la carta, y la posición nace del rectángulo real de cada mitad, así que un 12/10 sólo separa más las dos pestañas. A cambio no cabe la glosa: sólo nombra.",
+  (ctx) => {
+    const power = tab(ctx, "power", ctx.copy.power, "is-above", 1);
+    const endurance = tab(ctx, "endurance", ctx.copy.endurance, "is-below", 2);
+    return () => {
+      const badge = rectIn(ctx.badge, ctx.annot);
+      const powerDigit = rectIn(ctx.digits.power, ctx.annot);
+      const enduranceDigit = rectIn(ctx.digits.endurance, ctx.annot);
+      const stem = 10;
+      const powerRect = place(power, 0, 0);
+      const enduranceRect = place(endurance, 0, 0);
+      const powerLeft = clamp(powerDigit.cx - powerRect.width * 0.62, ctx.frameRect.left + 4, ctx.frameRect.right - powerRect.width - 4);
+      const enduranceLeft = clamp(enduranceDigit.cx - enduranceRect.width * 0.38, ctx.frameRect.left + 4, ctx.frameRect.right - enduranceRect.width - 4);
+      place(power, powerLeft, badge.top - stem - powerRect.height);
+      place(endurance, enduranceLeft, badge.bottom + stem);
+      power.style.setProperty("--stem-x", `${r(powerDigit.cx - powerLeft)}px`);
+      endurance.style.setProperty("--stem-x", `${r(enduranceDigit.cx - enduranceLeft)}px`);
+      power.style.setProperty("--stem-h", `${r(stem)}px`);
+      endurance.style.setProperty("--stem-h", `${r(stem)}px`);
+      return [];
+    };
+  },
+);
+
+variant(
+  "pie",
+  "3 · Al pie de la carta, en fila",
+  "Los dos nombres bajan a una fila bajo la carta, alineados a sus bordes y con una regla superior del color de su cifra. El arte queda limpio y hay sitio para que cada término diga qué hace, no sólo cómo se llama. Las guías suben largas: legibles en una carta grande, discutibles si la comparación se encoge en pantallas estrechas.",
+  (ctx) => {
+    const row = el("div", { class: "foot-row" }, ctx.annot);
+    const power = footItem(ctx, row, "power", ctx.copy.power, ctx.copy.powerGloss, 1);
+    const endurance = footItem(ctx, row, "endurance", ctx.copy.endurance, ctx.copy.enduranceGloss, 2);
+    return () => {
+      row.style.left = `${r(ctx.frameRect.left)}px`;
+      row.style.width = `${r(ctx.frameRect.width)}px`;
+      row.style.top = `${r(ctx.frameRect.bottom + 14)}px`;
+      return [
+        link(ctx, power, ctx.digits.power, "power", 1),
+        link(ctx, endurance, ctx.digits.endurance, "endurance", 2),
+      ];
+    };
+  },
+);
+
+variant(
+  "lupa",
+  "4 · Lupa: el marcador repetido en grande",
+  "El marcador se vuelve a dibujar bajo la carta al doble de tamaño y con sus dos mitades separadas, cada una con su nombre debajo. Es la única variante que no obliga a leer un número de 12 px con un aro pulsando encima, y la separación física dice por sí sola que son dos cifras distintas. Cuesta la altura extra bajo la carta.",
+  (ctx) => {
+    const loupe = el("div", { class: "loupe" }, ctx.annot);
+    const power = loupeHalf(ctx, loupe, "power", ctx.copy.power, ctx.copy.powerShort, ctx.values.power, 1);
+    const endurance = loupeHalf(ctx, loupe, "endurance", ctx.copy.endurance, ctx.copy.enduranceShort, ctx.values.endurance, 2);
+    return () => {
+      loupe.style.left = "0px";
+      loupe.style.top = "0px";
+      const size = loupe.getBoundingClientRect();
+      loupe.style.left = `${r(ctx.frameRect.cx - size.width / 2)}px`;
+      loupe.style.top = `${r(ctx.frameRect.bottom + 16)}px`;
+      return [
+        link(ctx, power, ctx.digits.power, "power", 1),
+        link(ctx, endurance, ctx.digits.endurance, "endurance", 2),
+      ];
+    };
+  },
+);
+
+variant(
+  "ficha",
+  "5 · Ficha de dos filas",
+  "Un solo bloque bajo la carta con las dos entradas en columna: cifra, nombre y qué hace. Es la que menos objetos suelta sobre la escena y la que mejor se lee de un vistazo, pero rompe el vínculo espacial —la fila de arriba no está sobre la cifra de la izquierda—, así que depende por completo del encendido sincronizado del número para no confundir cuál es cuál.",
+  (ctx) => {
+    const ledger = el("div", { class: "ledger" }, ctx.annot);
+    const power = ledgerRow(ctx, ledger, "power", ctx.copy.power, ctx.copy.powerGloss, ctx.values.power, 1);
+    const endurance = ledgerRow(ctx, ledger, "endurance", ctx.copy.endurance, ctx.copy.enduranceGloss, ctx.values.endurance, 2);
+    return () => {
+      ledger.style.left = "0px";
+      ledger.style.top = "0px";
+      // Nunca más ancha que su carta: así dos fichas vecinas no pueden tocarse.
+      ledger.style.maxWidth = `${r(ctx.frameRect.width)}px`;
+      const size = ledger.getBoundingClientRect();
+      ledger.style.left = `${r(clamp(ctx.frameRect.cx - size.width / 2, 6, ctx.annot.clientWidth - size.width - 6))}px`;
+      ledger.style.top = `${r(ctx.frameRect.bottom + 16)}px`;
+      return [
+        link(ctx, power, ctx.digits.power, "power", 1),
+        link(ctx, endurance, ctx.digits.endurance, "endurance", 2),
+      ];
+    };
+  },
+);
+
+/* -------------------------------------------------------- piezas de anotación */
+
+function plate(ctx, kind, term, gloss, step) {
+  const node = el("div", { class: "plate", "data-step": step, style: `--tone:${toneVar(kind, ctx.tone)}` }, ctx.annot);
+  el("span", { class: "term", text: term.toUpperCase() }, node);
+  el("span", { class: "gloss", text: gloss }, node);
+  return node;
+}
+
+function tab(ctx, kind, term, side, step) {
+  return el("div", {
+    class: `tab ${side}`,
+    "data-step": step,
+    style: `--tone:${toneVar(kind, ctx.tone)}`,
+    text: term.toUpperCase(),
+  }, ctx.annot);
+}
+
+function footItem(ctx, row, kind, term, gloss, step) {
+  const node = el("div", { class: "foot-item", "data-step": step, style: `--tone:${toneVar(kind, ctx.tone)}` }, row);
+  el("span", { class: "term", text: term.toUpperCase() }, node);
+  el("span", { class: "gloss", text: gloss }, node);
+  return node;
+}
+
+function loupeHalf(ctx, loupe, kind, term, gloss, value, step) {
+  const node = el("div", { class: "loupe-half", "data-step": step, style: `--tone:${toneVar(kind, ctx.tone)}` }, loupe);
+  el("div", { class: "loupe-chip", text: String(value) }, node);
+  const caption = el("div", { class: "loupe-caption" }, node);
+  el("span", { class: "term", text: term.toUpperCase() }, caption);
+  el("span", { class: "gloss", text: gloss }, caption);
+  return node;
+}
+
+function ledgerRow(ctx, ledger, kind, term, gloss, value, step) {
+  const node = el("div", { class: "ledger-row", "data-step": step, style: `--tone:${toneVar(kind, ctx.tone)}` }, ledger);
+  el("div", { class: "ledger-chip", text: String(value) }, node);
+  const text = el("div", {}, node);
+  el("div", { class: "term", text: term.toUpperCase() }, text);
+  el("div", { class: "gloss", text: gloss }, text);
+  return node;
+}
+
+function place(node, left, top) {
+  node.style.left = `${r(left)}px`;
+  node.style.top = `${r(top)}px`;
+  const box = node.getBoundingClientRect();
+  return { width: box.width, height: box.height };
+}
+
+function link(ctx, fromNode, toNode, kind, step) {
+  return { fromNode, toNode, kind, step };
+}
+
+/* ------------------------------------------------------------------- render */
+
+const grid = document.getElementById("grid");
+const controls = {
+  lang: document.getElementById("lang"),
+  tone: document.getElementById("tone"),
+  stats: document.getElementById("stats"),
+  tint: document.getElementById("tint"),
+  reveal: document.getElementById("reveal"),
+  gloss: document.getElementById("gloss"),
+  frame: document.getElementById("frame"),
+  gap: document.getElementById("gap"),
+  dim: document.getElementById("dim"),
+  cycle: document.getElementById("cycle"),
+  bg: document.getElementById("bg"),
+  animate: document.getElementById("animate"),
+};
+const outputs = {
+  frame: document.getElementById("frameOut"),
+  gap: document.getElementById("gapOut"),
+  dim: document.getElementById("dimOut"),
+  cycle: document.getElementById("cycleOut"),
+};
+
+let layoutPasses = [];
+
+function render() {
+  const lang = controls.lang.value;
+  const copy = COPY[lang];
+  const tone = controls.tone.value;
+  const stats = STAT_SETS[controls.stats.value];
+  const frameWidth = Number(controls.frame.value);
+  const pairGap = Number(controls.gap.value);
+  const dim = Number(controls.dim.value);
+  const cycle = Number(controls.cycle.value);
+
+  outputs.frame.textContent = String(frameWidth);
+  outputs.gap.textContent = String(pairGap);
+  outputs.dim.textContent = `${Math.round(dim * 100)} %`;
+  outputs.cycle.textContent = `${cycle.toFixed(1)}s`;
+
+  grid.dataset.bg = controls.bg.value;
+  grid.dataset.tint = controls.tint.value;
+  grid.dataset.reveal = controls.reveal.value;
+  grid.dataset.gloss = controls.gloss.checked ? "on" : "off";
+  grid.dataset.animate = controls.animate.checked ? "on" : "off";
+  grid.style.setProperty("--cycle", `${cycle}s`);
+  grid.textContent = "";
+  layoutPasses = [];
+
+  for (const [index, definition] of VARIANTS.entries()) {
+    const card = el("div", { class: `variant${definition.current ? " is-current" : ""}${definition.legacy ? " is-legacy" : ""}` }, grid);
+
+    const head = el("div", { class: "variant-head" }, card);
+    el("span", { class: "tag", text: definition.current ? "HOY" : String(index).padStart(2, "0") }, head);
+    el("h2", { text: definition.name }, head);
+
+    const stage = el("div", { class: "stage", style: `--dim:${dim}` }, card);
+    el("div", { class: "stage-dim" }, stage);
+    const inner = el("div", { class: "stage-inner" }, stage);
+    const comparison = el("div", {
+      class: "comparison",
+      style: `--frame-w:${frameWidth}px; --pair-gap:${pairGap}px`,
+    }, inner);
+
+    const annot = el("div", { class: "annot" }, inner);
+    const leaders = svgEl("svg", { class: "leaders" }, inner);
+
+    const contexts = CARDS.map((cardData) => {
+      const values = { power: stats[cardData.id][0], endurance: stats[cardData.id][1] };
+      const frame = el("div", { class: "cmp-frame" }, comparison);
+      el("img", { src: cardData.src, alt: cardData.name[lang], draggable: "false" }, frame);
+      const badge = el("div", { class: "stat-badge" }, frame);
+      const powerSeg = el("span", { class: "stat-seg stat-power", "data-step": 1 }, badge);
+      const powerDigit = el("b", { text: String(values.power) }, powerSeg);
+      el("i", { class: "stat-sep" }, badge);
+      const enduranceSeg = el("span", { class: "stat-seg stat-endurance", "data-step": 2 }, badge);
+      const enduranceDigit = el("b", { text: String(values.endurance) }, enduranceSeg);
+      return { frame, badge, annot, copy, tone, values, digits: { power: powerDigit, endurance: enduranceDigit } };
+    });
+
+    const decorations = contexts.map((context) => ({ context, layout: definition.decorate(context) }));
+
+    layoutPasses.push(() => {
+      // El marco sólo se conoce ya montado: todo lo demás cuelga de esa medida.
+      for (const { context } of decorations) context.frameRect = rectIn(context.frame, annot);
+      const links = decorations.flatMap(({ context, layout }) => layout(context));
+      drawLeaders(leaders, annot, links, tone);
+      // La escena crece hacia abajo con las anotaciones al pie: el escenario se ajusta.
+      const bottom = measureContentBottom(inner);
+      inner.style.minHeight = `${r(bottom + 24)}px`;
+    });
+  }
+
+  requestAnimationFrame(runLayout);
+}
+
+function runLayout() {
+  for (const pass of layoutPasses) pass();
+}
+
+function measureContentBottom(inner) {
+  const host = inner.getBoundingClientRect();
+  let bottom = 0;
+  for (const node of inner.querySelectorAll(".cmp-frame, .plate, .tab, .foot-row, .loupe, .ledger")) {
+    const box = node.getBoundingClientRect();
+    bottom = Math.max(bottom, box.bottom - host.top);
+  }
+  return bottom;
+}
+
+function drawLeaders(svg, annot, links, tone) {
+  svg.textContent = "";
+  for (const { fromNode, toNode, kind, step } of links) {
+    const from = rectIn(fromNode, annot);
+    const target = rectIn(toNode, annot);
+    const start = edgePoint(from, target.cx, target.cy);
+    const end = edgePoint(target, start.x, start.y);
+    const path = svgEl("path", {
+      class: "leader",
+      "data-step": step,
+      d: leaderPath(start, end),
+      style: `--tone:${toneVar(kind, tone)}`,
+    }, svg);
+    const length = path.getTotalLength();
+    path.style.strokeDasharray = `${r(length)}`;
+    path.style.setProperty("--len", `${r(length)}`);
+    svgEl("circle", {
+      class: "leader-dot",
+      "data-step": step,
+      cx: r(end.x),
+      cy: r(end.y),
+      r: 2.2,
+      style: `--tone:${toneVar(kind, tone)}`,
+    }, svg);
+  }
+}
+
+for (const control of Object.values(controls)) {
+  control.addEventListener("input", render);
+  control.addEventListener("change", render);
+}
+window.addEventListener("resize", () => requestAnimationFrame(runLayout));
+// Las cartas llegan tarde: su alto está fijado por aspect-ratio, pero se remide igual.
+window.addEventListener("load", () => requestAnimationFrame(runLayout));
+render();
+</script>
+</body>
+</html>

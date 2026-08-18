@@ -1,0 +1,945 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hostfall — Cartelas de Fuerza y Aguante, derivadas</title>
+<style>
+  :root {
+    --gold-soft: rgb(181 134 66 / 0.55);
+    --parch: #e9dcbd;
+    --tone-gold: #d8c085;
+    --tone-warm: #e2a273;
+    --tone-cool: #86c9a8;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 26px 22px 90px;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgb(72 52 30 / 0.3), transparent 60%),
+      linear-gradient(180deg, #14100c, #0a0806 60%, #070605);
+    color: var(--parch);
+    font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  }
+
+  h1 { margin: 0 0 6px; font-size: 24px; letter-spacing: 0.04em; color: #f2e2b8; }
+
+  .intro { max-width: 1080px; margin-bottom: 14px; color: rgb(233 220 189 / 0.72); font-size: 14px; line-height: 1.55; }
+  .intro code { color: #f0cf8a; }
+  .intro strong { color: #f2e2b8; }
+  .intro a { color: #f0cf8a; }
+
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px 13px;
+    border: 1px solid var(--gold-soft);
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgb(30 22 14 / 0.97), rgb(14 10 7 / 0.99));
+    box-shadow: 0 10px 26px rgb(0 0 0 / 0.6);
+    font-size: 13px;
+  }
+  .toolbar label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  .toolbar select, .toolbar input[type="range"] { accent-color: #d9a441; }
+  .toolbar input[type="range"] { width: 92px; }
+  .toolbar select {
+    padding: 3px 6px;
+    border: 1px solid var(--gold-soft);
+    border-radius: 5px;
+    background: #1c1409;
+    color: var(--parch);
+    font-family: inherit;
+  }
+  .toolbar output { min-width: 34px; color: #f0cf8a; }
+  .toolbar .hint { flex-basis: 100%; color: rgb(233 220 189 / 0.5); }
+
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(620px, 1fr)); }
+
+  .variant {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgb(181 134 66 / 0.3);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgb(26 19 13 / 0.92), rgb(12 9 6 / 0.96));
+    box-shadow: 0 14px 30px rgb(0 0 0 / 0.5);
+    overflow: hidden;
+  }
+
+  .variant-head {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 11px 15px 9px;
+    border-bottom: 1px solid rgb(181 134 66 / 0.2);
+    background: linear-gradient(180deg, rgb(48 34 20 / 0.5), transparent);
+  }
+  .variant-head .tag {
+    padding: 2px 7px;
+    border: 1px solid var(--gold-soft);
+    border-radius: 4px;
+    color: #f0cf8a;
+    font-size: 11px;
+    letter-spacing: 0.13em;
+    white-space: nowrap;
+  }
+  .variant-head h2 { margin: 0; font-size: 16px; letter-spacing: 0.03em; color: #f2e2b8; }
+
+  .variant-note {
+    padding: 9px 15px 11px;
+    border-top: 1px solid rgb(181 134 66 / 0.16);
+    color: rgb(233 220 189 / 0.62);
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+  .variant-note .warn { color: #e0a07c; }
+
+  /* ---------------------------------------------------------------- escenario */
+
+  .stage {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 50% 12%, rgb(46 64 70 / 0.4), transparent 62%),
+      linear-gradient(180deg, #17222b, #0e161c 66%, #080d11);
+  }
+  .grid[data-bg="plano"] .stage { background: #080b0e; }
+
+  .stage-dim {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    background: #000;
+    opacity: var(--dim, 0.35);
+    pointer-events: none;
+  }
+
+  .stage-inner { position: relative; z-index: 2; padding: 30px 26px 34px; }
+
+  .comparison {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--pair-gap, 24px);
+  }
+  .grid[data-pair="sola"] .comparison > .cmp-frame:first-child { display: none; }
+
+  .cmp-frame {
+    position: relative;
+    width: var(--frame-w, 232px);
+    aspect-ratio: 488 / 680;
+    container-type: inline-size;
+    filter: drop-shadow(0 24px 26px rgb(0 0 0 / 0.72));
+  }
+  .cmp-frame > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 4.918% / 3.529%;
+    object-fit: cover;
+  }
+
+  /* Marcador real: copia de .card-preview-full-card-frame > .card-stat-badge. */
+  .stat-badge {
+    position: absolute;
+    right: 3.28cqw;
+    bottom: 57.79cqw;
+    z-index: 40;
+    isolation: isolate;
+    display: flex;
+    width: auto;
+    height: 9.32cqw;
+    min-width: 16.19cqw;
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+    gap: 0.72cqw;
+    padding: 0 1.43cqw;
+    border: 0;
+    border-radius: 3.07cqw 0.82cqw 3.07cqw 0.82cqw;
+    background:
+      radial-gradient(ellipse at 24% 0%, rgb(204 226 179 / 0.12), transparent 46%),
+      repeating-linear-gradient(112deg, rgb(231 241 217 / 0.018) 0 1px, transparent 1px 5px),
+      linear-gradient(180deg, #305a38 0%, #214329 54%, #0a1c0e 100%);
+    color: #f5eee0;
+    box-shadow:
+      inset 0 0.1cqw 0 rgb(255 255 255 / 0.14),
+      inset 0 -0.31cqw 0.61cqw rgb(0 0 0 / 0.18),
+      0 0.82cqw 2.05cqw rgb(0 0 0 / 0.62);
+    font-family: "Trebuchet MS", "Outfit", ui-sans-serif, system-ui, sans-serif;
+    outline: 1px solid rgb(223 205 147 / 0.28);
+    outline-offset: 1cqw;
+    transform: scale(1.2);
+    transform-origin: center;
+    animation: stats-focus 1.85s ease-in-out infinite;
+  }
+  .stat-badge::after {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border: 0.31cqw solid rgb(191 166 106 / 0.62);
+    border-radius: 3.07cqw 0.82cqw 3.07cqw 0.82cqw;
+    content: "";
+  }
+  .stat-seg {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    color: #f5eee0;
+    font-size: 5.53cqw;
+    font-variant-numeric: tabular-nums;
+    font-weight: 950;
+    line-height: 1;
+    text-shadow: 0.2cqw 0.2cqw 0.41cqw rgb(0 0 0 / 0.86);
+  }
+  .stat-sep {
+    position: relative;
+    z-index: 3;
+    color: #eadcad;
+    font-size: 3.69cqw;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1;
+    opacity: 0.82;
+  }
+  .stat-sep::before { content: "/"; }
+
+  .grid[data-tint="actual"] .stat-power {
+    border-radius: 2cqw 0 0 2cqw;
+    background: linear-gradient(90deg, rgb(185 75 43 / 0.32), transparent 92%);
+    color: #efaa78;
+    text-shadow: 0 0 2.4cqw rgb(208 95 45 / 0.72), 0 1px 3px #000;
+  }
+  .grid[data-tint="actual"] .stat-endurance {
+    border-radius: 0 2cqw 2cqw 0;
+    background: linear-gradient(270deg, rgb(34 132 91 / 0.32), transparent 92%);
+    color: #91d9b6;
+    text-shadow: 0 0 2.4cqw rgb(47 155 117 / 0.72), 0 1px 3px #000;
+  }
+
+  @keyframes stats-focus {
+    0%, 100% { filter: brightness(0.96); }
+    50% { filter: brightness(1.18); }
+  }
+
+  /* ----------------------------------------------------- cartela = cuadro chico */
+  /*
+   * Material de .guided-tutorial-callout: mismo borde, misma tapa clara arriba,
+   * mismos dos filetes horizontales y el mismo rombo de 11 px girado 45°. Lo único
+   * que cambia es la escala y que el título es el término en vez de un h2.
+   */
+  .cartela {
+    position: absolute;
+    overflow: visible;
+    border: 1px solid rgb(160 148 102 / 0.46);
+    border-top-color: rgb(218 201 142 / 0.68);
+    border-radius: 2px;
+    padding: 9px 12px 10px;
+    background:
+      radial-gradient(circle at 18% 0%, rgb(196 189 153 / 0.075), transparent 44%),
+      linear-gradient(145deg, rgb(28 35 38 / 0.985), rgb(7 12 15 / 0.995));
+    box-shadow:
+      inset 0 1px 0 rgb(238 223 174 / 0.08),
+      inset 0 -18px 30px rgb(0 0 0 / 0.18),
+      0 18px 42px rgb(0 0 0 / 0.62);
+    font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+  }
+  .cartela::before {
+    position: absolute;
+    top: 0;
+    right: 1px;
+    left: 1px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgb(231 218 170 / 0.27), transparent);
+    content: "";
+  }
+  .cartela::after {
+    position: absolute;
+    right: 12px;
+    bottom: -4px;
+    left: 12px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgb(182 166 105 / 0.48), transparent);
+    content: "";
+  }
+
+  /* El rombo del cuadro de diálogo, a la misma escala. */
+  .cartela-mark {
+    position: absolute;
+    z-index: 2;
+    width: 11px;
+    height: 11px;
+    border: 1px solid rgb(190 172 111 / 0.64);
+    background: #111b17;
+    box-shadow: 0 0 12px rgb(176 157 92 / 0.2);
+    transform: rotate(45deg);
+  }
+  .cartela-mark.at-top { top: -6px; left: 18px; }
+  .cartela-mark.at-top-right { top: -6px; right: 18px; }
+  .cartela-mark.at-bottom { bottom: -6px; left: 18px; }
+  .cartela-mark.at-bottom-right { bottom: -6px; right: 18px; }
+  .cartela-mark.at-left { top: 50%; left: -6px; margin-top: -5.5px; }
+  .cartela-mark.at-right { top: 50%; right: -6px; margin-top: -5.5px; }
+  /* Cuando el rombo es el puntero, se agranda y toma el tono de su cifra. */
+  .cartela.is-pointer .cartela-mark {
+    width: 15px;
+    height: 15px;
+    border-color: var(--tone, var(--tone-gold));
+    box-shadow: 0 0 14px rgb(176 157 92 / 0.34);
+  }
+  .cartela.is-pointer .cartela-mark.at-top { top: -8px; }
+  .cartela.is-pointer .cartela-mark.at-top-right { top: -8px; }
+  .cartela.is-pointer .cartela-mark.at-bottom { bottom: -8px; }
+  .cartela.is-pointer .cartela-mark.at-bottom-right { bottom: -8px; }
+  .cartela.is-pointer .cartela-mark.at-left { left: -8px; margin-top: -7.5px; }
+  .cartela.is-pointer .cartela-mark.at-right { right: -8px; margin-top: -7.5px; }
+
+  /* Cabecera: el término ocupa el lugar del título y hereda el filete del paso. */
+  .cartela-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid rgb(166 154 104 / 0.2);
+    padding-bottom: 6px;
+  }
+  .cartela-head .term {
+    color: #e2d7b8;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    line-height: 1;
+    text-shadow: 0 3px 13px rgb(0 0 0 / 0.66);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .cartela-head .value {
+    color: var(--tone, var(--tone-gold));
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    line-height: 1;
+  }
+  .cartela[data-value="off"] .cartela-head .value { display: none; }
+
+  .cartela-body {
+    margin: 7px 0 0;
+    color: #b4bfbb;
+    font-size: 11.5px;
+    font-weight: 500;
+    line-height: 1.38;
+  }
+  .grid[data-gloss="off"] .cartela-body { display: none; }
+  .grid[data-gloss="off"] .cartela-head { border-bottom: 0; padding-bottom: 0; }
+
+  /* --------------------------------------------------------------- guías */
+
+  .leaders {
+    position: absolute;
+    z-index: 44;
+    inset: 0;
+    overflow: visible;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .annot { position: absolute; z-index: 46; inset: 0; pointer-events: none; }
+
+  .leader {
+    fill: none;
+    stroke: var(--tone, var(--tone-gold));
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    opacity: 0.9;
+    filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.9));
+  }
+  .leader-dot { fill: var(--tone, var(--tone-gold)); filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.9)); }
+  .grid[data-leader="off"] .leaders { display: none; }
+
+  /* --------------------------------------------------------------- revelado */
+
+  @keyframes annot-a {
+    0%   { opacity: 0; transform: translateY(4px); }
+    7%   { opacity: 1; transform: translateY(0); }
+    93%  { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(0); }
+  }
+  @keyframes annot-b {
+    0%, 24% { opacity: 0; transform: translateY(4px); }
+    32%     { opacity: 1; transform: translateY(0); }
+    93%     { opacity: 1; transform: translateY(0); }
+    100%    { opacity: 0; transform: translateY(0); }
+  }
+  @keyframes leader-a {
+    0%   { opacity: 0; stroke-dashoffset: var(--len, 0); }
+    7%   { opacity: 0.9; stroke-dashoffset: 0; }
+    93%  { opacity: 0.9; stroke-dashoffset: 0; }
+    100% { opacity: 0; stroke-dashoffset: 0; }
+  }
+  @keyframes leader-b {
+    0%, 24% { opacity: 0; stroke-dashoffset: var(--len, 0); }
+    32%     { opacity: 0.9; stroke-dashoffset: 0; }
+    93%     { opacity: 0.9; stroke-dashoffset: 0; }
+    100%    { opacity: 0; stroke-dashoffset: 0; }
+  }
+  @keyframes digit-a {
+    0%, 4%, 96%, 100% { filter: none; }
+    10%, 90% { filter: brightness(1.5) drop-shadow(0 0 6px rgb(255 236 190 / 0.55)); }
+  }
+  @keyframes digit-b {
+    0%, 28%, 96%, 100% { filter: none; }
+    34%, 90% { filter: brightness(1.5) drop-shadow(0 0 6px rgb(255 236 190 / 0.55)); }
+  }
+
+  .grid[data-animate="on"] [data-step="1"] { animation: annot-a var(--cycle, 5.4s) ease-in-out infinite; }
+  .grid[data-animate="on"] [data-step="2"] { animation: annot-b var(--cycle, 5.4s) ease-in-out infinite; }
+  .grid[data-animate="on"] path[data-step="1"] { animation: leader-a var(--cycle, 5.4s) ease-in-out infinite; }
+  .grid[data-animate="on"] path[data-step="2"] { animation: leader-b var(--cycle, 5.4s) ease-in-out infinite; }
+  .grid[data-animate="on"] .stat-seg[data-step="1"] { animation: digit-a var(--cycle, 5.4s) ease-in-out infinite; }
+  .grid[data-animate="on"] .stat-seg[data-step="2"] { animation: digit-b var(--cycle, 5.4s) ease-in-out infinite; }
+
+  .grid[data-reveal="simultaneo"][data-animate="on"] [data-step="2"] { animation-name: annot-a; }
+  .grid[data-reveal="simultaneo"][data-animate="on"] path[data-step="2"] { animation-name: leader-a; }
+  .grid[data-reveal="simultaneo"][data-animate="on"] .stat-seg[data-step="2"] { animation-name: digit-a; }
+
+  .grid[data-animate="off"] * { animation: none !important; }
+</style>
+</head>
+<body>
+<h1>Cartelas de Fuerza y Aguante — derivadas de la variante 1</h1>
+<p class="intro">
+  Dos cambios sobre la <a href="tutorial-stat-labels.html">exploración anterior</a>. Primero, <strong>Aguante cruza al
+  otro lado</strong>: Fuerza queda arriba y a la izquierda del marcador, Aguante abajo y a la derecha, en diagonal, para
+  que la posición de cada cartela repita el orden de su cifra dentro del marcador. Segundo, la cartela deja de ser una
+  placa genérica y pasa a ser <strong>el cuadro de diálogo del tutorial en chico</strong>: el material, el borde con la
+  tapa clara arriba, los dos filetes horizontales y el <strong>rombo girado</strong> de
+  <code>.guided-tutorial-callout-mark</code>, todo copiado tal cual de <code>src/styles.css</code>. El término ocupa el
+  sitio del título y hereda el filete que en el cuadro grande separa el paso del texto.
+</p>
+<p class="intro">
+  La diagonal tiene un coste que las variantes miden en vez de esconder: el marcador vive pegado al canto derecho de la
+  carta, así que «abajo y a la derecha» <strong>sale de la carta</strong>, y la comparación muestra dos cartas juntas.
+  Cada variante resuelve ese choque de una forma distinta. El interruptor <em>Segunda carta</em> la esconde para juzgar
+  la composición sola, y <em>Hueco entre cartas</em> es la prueba de fuego.
+</p>
+
+<div class="toolbar">
+  <label>Idioma
+    <select id="lang">
+      <option value="es" selected>Español</option>
+      <option value="en">English</option>
+    </select>
+  </label>
+  <label>Color
+    <select id="tone">
+      <option value="gold" selected>Una sola voz (dorado)</option>
+      <option value="dual">Dos tonos (cálido / frío)</option>
+    </select>
+  </label>
+  <label>Cifras
+    <select id="stats">
+      <option value="real" selected>Reales — 2/1 y 3/3</option>
+      <option value="wide">Dos dígitos — 12/10 y 3/3</option>
+    </select>
+  </label>
+  <label>Cifra en la cartela <input id="value" type="checkbox" /></label>
+  <label>Teñido del marcador
+    <select id="tint">
+      <option value="actual" selected>Como hoy (naranja / verde)</option>
+      <option value="neutro">Neutro (sin teñir)</option>
+    </select>
+  </label>
+  <label>Revelado
+    <select id="reveal">
+      <option value="secuencial" selected>Secuencial</option>
+      <option value="simultaneo">Simultáneo</option>
+    </select>
+  </label>
+  <label>Glosa <input id="gloss" type="checkbox" checked /></label>
+  <label>Guía <input id="leader" type="checkbox" checked /></label>
+  <label>Segunda carta <input id="pair" type="checkbox" checked /></label>
+  <label>Ancho de carta <input id="frame" type="range" min="168" max="300" step="4" value="232" /><output id="frameOut">232</output></label>
+  <label>Hueco entre cartas <input id="gap" type="range" min="10" max="80" step="2" value="24" /><output id="gapOut">24</output></label>
+  <label>Velo <input id="dim" type="range" min="0" max="0.7" step="0.05" value="0.35" /><output id="dimOut">35 %</output></label>
+  <label>Ciclo <input id="cycle" type="range" min="3.4" max="9" step="0.2" value="5.4" /><output id="cycleOut">5.4s</output></label>
+  <label>Fondo
+    <select id="bg">
+      <option value="tablero" selected>Tablero</option>
+      <option value="plano">Plano</option>
+    </select>
+  </label>
+  <label><input id="animate" type="checkbox" checked /> Animación</label>
+  <span class="hint">
+    «Cifra en la cartela» repite el número dentro del cuadro, en el hueco donde el diálogo grande lleva el contador de
+    paso. «Guía» apaga las líneas para juzgar cuánto sostiene el rombo por sí solo.
+  </span>
+</div>
+
+<div class="grid" id="grid" data-bg="tablero" data-tint="actual" data-reveal="secuencial" data-gloss="on" data-leader="on" data-pair="par" data-animate="on"></div>
+
+<script>
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+const CARDS = [
+  {
+    id: "return_to_memory",
+    src: "../assets/ui_references/card-return-to-memory.png",
+    name: { es: "Retorno a la Memoria", en: "Return to Memory" },
+  },
+  {
+    id: "maela",
+    src: "../assets/ui_references/card-maela-watcher-of-the-heights.png",
+    name: { es: "Maela, Vigía de las Alturas", en: "Maela, Watcher of the Heights" },
+  },
+];
+
+const STAT_SETS = {
+  real: { return_to_memory: [2, 1], maela: [3, 3] },
+  wide: { return_to_memory: [12, 10], maela: [3, 3] },
+};
+
+const COPY = {
+  es: {
+    power: "Fuerza",
+    endurance: "Aguante",
+    powerGloss: "el daño que reparte",
+    enduranceGloss: "lo que resiste antes de caer",
+  },
+  en: {
+    power: "Power",
+    endurance: "Endurance",
+    powerGloss: "the damage it deals",
+    enduranceGloss: "what it takes before falling",
+  },
+};
+
+/* ------------------------------------------------------------------ utilidades */
+
+function el(tag, attrs, parent) {
+  const node = document.createElement(tag);
+  applyAttrs(node, attrs);
+  if (parent) parent.appendChild(node);
+  return node;
+}
+
+function svgEl(tag, attrs, parent) {
+  const node = document.createElementNS(SVG_NS, tag);
+  applyAttrs(node, attrs);
+  if (parent) parent.appendChild(node);
+  return node;
+}
+
+function applyAttrs(node, attrs) {
+  for (const [key, value] of Object.entries(attrs || {})) {
+    if (value === undefined || value === null) continue;
+    if (key === "text") { node.textContent = String(value); continue; }
+    node.setAttribute(key, String(value));
+  }
+}
+
+function rectIn(node, host) {
+  const a = node.getBoundingClientRect();
+  const b = host.getBoundingClientRect();
+  return {
+    left: a.left - b.left,
+    top: a.top - b.top,
+    width: a.width,
+    height: a.height,
+    cx: a.left - b.left + a.width / 2,
+    cy: a.top - b.top + a.height / 2,
+    right: a.right - b.left,
+    bottom: a.bottom - b.top,
+  };
+}
+
+function edgePoint(rect, x, y) {
+  const dx = x - rect.cx;
+  const dy = y - rect.cy;
+  if (Math.abs(dx) * rect.height >= Math.abs(dy) * rect.width) {
+    return { x: dx >= 0 ? rect.right : rect.left, y: clamp(y, rect.top + 5, rect.bottom - 5) };
+  }
+  return { x: clamp(x, rect.left + 8, rect.right - 8), y: dy >= 0 ? rect.bottom : rect.top };
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), Math.max(min, max));
+}
+
+function toneVar(kind, mode) {
+  if (mode === "gold") return "var(--tone-gold)";
+  return kind === "power" ? "var(--tone-warm)" : "var(--tone-cool)";
+}
+
+function leaderPath(from, to) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const horizontal = Math.abs(dx) >= Math.abs(dy);
+  const c1 = horizontal ? { x: from.x + dx * 0.55, y: from.y } : { x: from.x, y: from.y + dy * 0.55 };
+  const c2 = horizontal ? { x: from.x + dx * 0.72, y: to.y } : { x: to.x, y: from.y + dy * 0.72 };
+  return `M ${r(from.x)} ${r(from.y)} C ${r(c1.x)} ${r(c1.y)}, ${r(c2.x)} ${r(c2.y)}, ${r(to.x)} ${r(to.y)}`;
+}
+
+function r(value) { return Math.round(value * 10) / 10; }
+
+/**
+ * Cuadro de diálogo en chico. `mark` es dónde se clava el rombo; el resto del
+ * material no cambia entre variantes, igual que el cuadro grande es siempre el mismo.
+ */
+function cartela(ctx, kind, term, gloss, value, step, mark, pointer) {
+  const node = el("div", {
+    class: `cartela${pointer ? " is-pointer" : ""}`,
+    "data-step": step,
+    "data-value": ctx.showValue ? "on" : "off",
+    style: `--tone:${toneVar(kind, ctx.tone)}`,
+  }, ctx.annot);
+  el("span", { class: `cartela-mark ${mark}` }, node);
+  const head = el("div", { class: "cartela-head" }, node);
+  el("span", { class: "term", text: term.toUpperCase() }, head);
+  el("b", { class: "value", text: String(value) }, head);
+  el("p", { class: "cartela-body", text: gloss }, node);
+  return node;
+}
+
+function place(node, left, top) {
+  node.style.left = `${r(left)}px`;
+  node.style.top = `${r(top)}px`;
+  const box = node.getBoundingClientRect();
+  return { width: box.width, height: box.height };
+}
+
+/** Ancho máximo para que la cartela no se salga por la izquierda de su carta. */
+function roomLeftOf(ctx, x, inset) {
+  return Math.max(96, x - (ctx.frameRect.left + inset));
+}
+
+/* -------------------------------------------------------------------- variantes */
+
+const VARIANTS = [];
+
+function variant(id, name, note, build) {
+  VARIANTS.push({ id, name, note, build });
+}
+
+variant(
+  "espejo",
+  "A · Espejo diagonal — Aguante fuera de la carta",
+  "La diagonal literal: Fuerza sube por la izquierda del marcador, Aguante baja por la derecha y se apoya en el aire, fuera de la silueta. Es la composición más limpia de las seis y la que mejor reparte el peso alrededor del marcador. <span class=\"warn\">Con las dos cartas a 232 px y el hueco actual de 24, el Aguante de la carta izquierda pisa a la vecina 158 px: haría falta un hueco de unos 182 px para que no la tocara.</span> Sirve tal cual si la comparación deja de mostrar dos cartas.",
+  (ctx) => {
+    const power = cartela(ctx, "power", ctx.copy.power, ctx.copy.powerGloss, ctx.values.power, 1, "at-bottom-right");
+    const endurance = cartela(ctx, "endurance", ctx.copy.endurance, ctx.copy.enduranceGloss, ctx.values.endurance, 2, "at-top");
+    return () => {
+      const badge = rectIn(ctx.badge, ctx.annot);
+      power.style.maxWidth = `${r(roomLeftOf(ctx, badge.left - 18, 6))}px`;
+      endurance.style.maxWidth = "168px";
+      const powerBox = place(power, 0, 0);
+      place(power, badge.left - 18 - powerBox.width, badge.top - 16 - powerBox.height);
+      place(endurance, badge.right + 18, badge.bottom + 16);
+      return [
+        { from: power, to: ctx.digits.power, kind: "power", step: 1 },
+        { from: endurance, to: ctx.digits.endurance, kind: "endurance", step: 2 },
+      ];
+    };
+  },
+);
+
+variant(
+  "contenida",
+  "B · Espejo contenido — Aguante abajo, pegada al canto",
+  "La misma diagonal, pero Aguante se detiene en el borde derecho de la carta en vez de cruzarlo: baja del marcador y crece hacia dentro. Se conserva la lectura arriba-izquierda / abajo-derecha, ninguna cartela toca a la carta vecina y el hueco entre cartas deja de importar. Es la traducción segura de la idea.",
+  (ctx) => {
+    const power = cartela(ctx, "power", ctx.copy.power, ctx.copy.powerGloss, ctx.values.power, 1, "at-bottom-right");
+    const endurance = cartela(ctx, "endurance", ctx.copy.endurance, ctx.copy.enduranceGloss, ctx.values.endurance, 2, "at-top-right");
+    return () => {
+      const badge = rectIn(ctx.badge, ctx.annot);
+      power.style.maxWidth = `${r(roomLeftOf(ctx, badge.left - 18, 6))}px`;
+      endurance.style.maxWidth = `${r(ctx.frameRect.width - 12)}px`;
+      const powerBox = place(power, 0, 0);
+      const enduranceBox = place(endurance, 0, 0);
+      place(power, badge.left - 18 - powerBox.width, badge.top - 16 - powerBox.height);
+      place(endurance, ctx.frameRect.right - 6 - enduranceBox.width, badge.bottom + 16);
+      return [
+        { from: power, to: ctx.digits.power, kind: "power", step: 1 },
+        { from: endurance, to: ctx.digits.endurance, kind: "endurance", step: 2 },
+      ];
+    };
+  },
+);
+
+variant(
+  "desbordada",
+  "C · Espejo justo — Aguante ocupa el hueco disponible",
+  "Igual que A, pero la cartela de Aguante se mide contra el sitio que realmente hay a la derecha: si el hueco entre cartas da, se queda fuera; si no da, se repliega sobre la carta hasta el canto. Una sola regla cubre la comparación de dos cartas y una carta sola, y el diseño no depende de cuántas cartas haya en pantalla.",
+  (ctx) => {
+    const power = cartela(ctx, "power", ctx.copy.power, ctx.copy.powerGloss, ctx.values.power, 1, "at-bottom-right");
+    const endurance = cartela(ctx, "endurance", ctx.copy.endurance, ctx.copy.enduranceGloss, ctx.values.endurance, 2, "at-top");
+    return () => {
+      const badge = rectIn(ctx.badge, ctx.annot);
+      power.style.maxWidth = `${r(roomLeftOf(ctx, badge.left - 18, 6))}px`;
+      const powerBox = place(power, 0, 0);
+      place(power, badge.left - 18 - powerBox.width, badge.top - 16 - powerBox.height);
+
+      // Sitio libre a la derecha: hasta el vecino, o hasta el borde del escenario.
+      const outward = ctx.neighbourLeft ?? (ctx.annot.clientWidth - 10);
+      const roomOut = outward - 12 - (badge.right + 18);
+      const fitsOutside = roomOut >= 132;
+      endurance.style.maxWidth = `${r(fitsOutside ? Math.min(roomOut, 190) : ctx.frameRect.width - 12)}px`;
+      const enduranceBox = place(endurance, 0, 0);
+      endurance.querySelector(".cartela-mark").className = `cartela-mark ${fitsOutside ? "at-top" : "at-top-right"}`;
+      place(
+        endurance,
+        fitsOutside ? badge.right + 18 : ctx.frameRect.right - 6 - enduranceBox.width,
+        badge.bottom + 16,
+      );
+      return [
+        { from: power, to: ctx.digits.power, kind: "power", step: 1 },
+        { from: endurance, to: ctx.digits.endurance, kind: "endurance", step: 2 },
+      ];
+    };
+  },
+);
+
+variant(
+  "rombo",
+  "D · El rombo apunta — sin guía",
+  "La diagonal de B, pero el rombo deja de ser adorno: crece, toma el tono de su cifra y se clava en el canto que mira al marcador, así que la cartela se acerca hasta casi tocarlo y no hace falta ninguna línea. Es la lectura más rápida y la que menos tinta pone sobre el arte; a cambio, ambas cartelas quedan encima del marcador y le comen aire.",
+  (ctx) => {
+    const power = cartela(ctx, "power", ctx.copy.power, ctx.copy.powerGloss, ctx.values.power, 1, "at-bottom-right", true);
+    const endurance = cartela(ctx, "endurance", ctx.copy.endurance, ctx.copy.enduranceGloss, ctx.values.endurance, 2, "at-top-right", true);
+    return () => {
+      const badge = rectIn(ctx.badge, ctx.annot);
+      power.style.maxWidth = `${r(roomLeftOf(ctx, badge.left + 6, 6))}px`;
+      endurance.style.maxWidth = `${r(ctx.frameRect.width - 12)}px`;
+      const powerBox = place(power, 0, 0);
+      const enduranceBox = place(endurance, 0, 0);
+      // El rombo cae sobre la mitad que nombra: se alinea con su dígito.
+      const powerDigit = rectIn(ctx.digits.power, ctx.annot);
+      const enduranceDigit = rectIn(ctx.digits.endurance, ctx.annot);
+      const powerLeft = clamp(powerDigit.cx - powerBox.width + 24, ctx.frameRect.left + 6, ctx.frameRect.right - powerBox.width - 6);
+      const enduranceLeft = clamp(enduranceDigit.cx - enduranceBox.width + 24, ctx.frameRect.left + 6, ctx.frameRect.right - enduranceBox.width - 6);
+      place(power, powerLeft, badge.top - 11 - powerBox.height);
+      place(endurance, enduranceLeft, badge.bottom + 11);
+      power.querySelector(".cartela-mark").style.right = `${r(powerLeft + powerBox.width - powerDigit.cx - 7.5)}px`;
+      endurance.querySelector(".cartela-mark").style.right = `${r(enduranceLeft + enduranceBox.width - enduranceDigit.cx - 7.5)}px`;
+      return [];
+    };
+  },
+);
+
+variant(
+  "escalon",
+  "E · Escalón — la diagonal se separa del marcador",
+  "B con más aire: las dos cartelas se apartan del marcador y se desplazan media placa en sentidos opuestos, de modo que la diagonal se lee como un escalón y el marcador queda solo en el centro con su aro. La guía se alarga y se curva más, que es justo lo que la hace visible sobre el arte oscuro.",
+  (ctx) => {
+    const power = cartela(ctx, "power", ctx.copy.power, ctx.copy.powerGloss, ctx.values.power, 1, "at-bottom-right");
+    const endurance = cartela(ctx, "endurance", ctx.copy.endurance, ctx.copy.enduranceGloss, ctx.values.endurance, 2, "at-top-right");
+    return () => {
+      const badge = rectIn(ctx.badge, ctx.annot);
+      power.style.maxWidth = `${r(roomLeftOf(ctx, badge.left - 30, 6))}px`;
+      endurance.style.maxWidth = `${r(ctx.frameRect.width - 12)}px`;
+      const powerBox = place(power, 0, 0);
+      const enduranceBox = place(endurance, 0, 0);
+      place(power, badge.left - 30 - powerBox.width, badge.top - 34 - powerBox.height);
+      place(endurance, ctx.frameRect.right - 6 - enduranceBox.width, badge.bottom + 34);
+      return [
+        { from: power, to: ctx.digits.power, kind: "power", step: 1 },
+        { from: endurance, to: ctx.digits.endurance, kind: "endurance", step: 2 },
+      ];
+    };
+  },
+);
+
+variant(
+  "estrecha",
+  "F · Espejo estrecho — nombre y cifra, sin glosa",
+  "La diagonal de A con la cartela reducida a cabecera: término y número, sin cuerpo. Al ocupar poco más de la mitad, las dos placas dejan de tapar el arte y la diagonal se lee de un golpe. <span class=\"warn\">Aun así no es gratis: en el par sigue pisando a la vecina 101 px, y necesitaría un hueco de unos 125.</span> Y vuelve a nombrar sin enseñar, así que sólo sirve si el cuadro grande ya explicó qué hace cada cifra.",
+  (ctx) => {
+    const power = cartela(ctx, "power", ctx.copy.power, ctx.copy.powerGloss, ctx.values.power, 1, "at-bottom-right");
+    const endurance = cartela(ctx, "endurance", ctx.copy.endurance, ctx.copy.enduranceGloss, ctx.values.endurance, 2, "at-top");
+    for (const node of [power, endurance]) {
+      node.setAttribute("data-value", "on");
+      node.querySelector(".cartela-body").remove();
+      node.querySelector(".cartela-head").style.border = "0";
+      node.querySelector(".cartela-head").style.paddingBottom = "0";
+    }
+    return () => {
+      const badge = rectIn(ctx.badge, ctx.annot);
+      const powerBox = place(power, 0, 0);
+      place(power, badge.left - 18 - powerBox.width, badge.top - 14 - powerBox.height);
+      place(endurance, badge.right + 18, badge.bottom + 14);
+      return [
+        { from: power, to: ctx.digits.power, kind: "power", step: 1 },
+        { from: endurance, to: ctx.digits.endurance, kind: "endurance", step: 2 },
+      ];
+    };
+  },
+);
+
+/* ------------------------------------------------------------------- render */
+
+const grid = document.getElementById("grid");
+const controls = {
+  lang: document.getElementById("lang"),
+  tone: document.getElementById("tone"),
+  stats: document.getElementById("stats"),
+  value: document.getElementById("value"),
+  tint: document.getElementById("tint"),
+  reveal: document.getElementById("reveal"),
+  gloss: document.getElementById("gloss"),
+  leader: document.getElementById("leader"),
+  pair: document.getElementById("pair"),
+  frame: document.getElementById("frame"),
+  gap: document.getElementById("gap"),
+  dim: document.getElementById("dim"),
+  cycle: document.getElementById("cycle"),
+  bg: document.getElementById("bg"),
+  animate: document.getElementById("animate"),
+};
+const outputs = {
+  frame: document.getElementById("frameOut"),
+  gap: document.getElementById("gapOut"),
+  dim: document.getElementById("dimOut"),
+  cycle: document.getElementById("cycleOut"),
+};
+
+let layoutPasses = [];
+
+function render() {
+  const lang = controls.lang.value;
+  const copy = COPY[lang];
+  const tone = controls.tone.value;
+  const stats = STAT_SETS[controls.stats.value];
+  const showValue = controls.value.checked;
+  const showPair = controls.pair.checked;
+  const frameWidth = Number(controls.frame.value);
+  const pairGap = Number(controls.gap.value);
+  const dim = Number(controls.dim.value);
+  const cycle = Number(controls.cycle.value);
+
+  outputs.frame.textContent = String(frameWidth);
+  outputs.gap.textContent = String(pairGap);
+  outputs.dim.textContent = `${Math.round(dim * 100)} %`;
+  outputs.cycle.textContent = `${cycle.toFixed(1)}s`;
+
+  grid.dataset.bg = controls.bg.value;
+  grid.dataset.tint = controls.tint.value;
+  grid.dataset.reveal = controls.reveal.value;
+  grid.dataset.gloss = controls.gloss.checked ? "on" : "off";
+  grid.dataset.leader = controls.leader.checked ? "on" : "off";
+  grid.dataset.pair = showPair ? "par" : "sola";
+  grid.dataset.animate = controls.animate.checked ? "on" : "off";
+  grid.style.setProperty("--cycle", `${cycle}s`);
+  grid.textContent = "";
+  layoutPasses = [];
+
+  for (const [index, definition] of VARIANTS.entries()) {
+    const card = el("div", { class: "variant" }, grid);
+    const head = el("div", { class: "variant-head" }, card);
+    el("span", { class: "tag", text: String(index).padStart(2, "0") }, head);
+    el("h2", { text: definition.name }, head);
+
+    const stage = el("div", { class: "stage", style: `--dim:${dim}` }, card);
+    el("div", { class: "stage-dim" }, stage);
+    const inner = el("div", { class: "stage-inner" }, stage);
+    const comparison = el("div", {
+      class: "comparison",
+      style: `--frame-w:${frameWidth}px; --pair-gap:${pairGap}px`,
+    }, inner);
+    const annot = el("div", { class: "annot" }, inner);
+    const leaders = svgEl("svg", { class: "leaders" }, inner);
+
+    const contexts = CARDS.map((cardData) => {
+      const values = { power: stats[cardData.id][0], endurance: stats[cardData.id][1] };
+      const frame = el("div", { class: "cmp-frame" }, comparison);
+      el("img", { src: cardData.src, alt: cardData.name[lang], draggable: "false" }, frame);
+      const badge = el("div", { class: "stat-badge" }, frame);
+      const powerSeg = el("span", { class: "stat-seg stat-power", "data-step": 1 }, badge);
+      const powerDigit = el("b", { text: String(values.power) }, powerSeg);
+      el("i", { class: "stat-sep" }, badge);
+      const enduranceSeg = el("span", { class: "stat-seg stat-endurance", "data-step": 2 }, badge);
+      const enduranceDigit = el("b", { text: String(values.endurance) }, enduranceSeg);
+      return { frame, badge, annot, copy, tone, values, showValue, digits: { power: powerDigit, endurance: enduranceDigit } };
+    });
+
+    const active = showPair ? contexts : contexts.slice(1);
+    const decorations = active.map((context) => ({ context, layout: definition.build(context) }));
+
+    layoutPasses.push(() => {
+      for (const { context } of decorations) context.frameRect = rectIn(context.frame, annot);
+      // Cada carta necesita saber dónde empieza su vecina para medir el sitio libre.
+      for (const [position, { context }] of decorations.entries()) {
+        const next = decorations[position + 1];
+        context.neighbourLeft = next ? rectIn(next.context.frame, annot).left : undefined;
+      }
+      const links = decorations.flatMap(({ context, layout }) => layout(context));
+      drawLeaders(leaders, annot, links, tone);
+      inner.style.minHeight = `${r(measureContentBottom(inner) + 26)}px`;
+    });
+
+    // La nota lleva una marca <span class="warn">; el texto es literal de esta maqueta.
+    const note = el("div", { class: "variant-note" }, card);
+    note.innerHTML = definition.note;
+  }
+
+  requestAnimationFrame(runLayout);
+}
+
+function runLayout() {
+  for (const pass of layoutPasses) pass();
+}
+
+function measureContentBottom(inner) {
+  const host = inner.getBoundingClientRect();
+  let bottom = 0;
+  for (const node of inner.querySelectorAll(".cmp-frame, .cartela")) {
+    bottom = Math.max(bottom, node.getBoundingClientRect().bottom - host.top);
+  }
+  return bottom;
+}
+
+function drawLeaders(svg, annot, links, tone) {
+  svg.textContent = "";
+  for (const { from, to, kind, step } of links) {
+    const fromRect = rectIn(from, annot);
+    const target = rectIn(to, annot);
+    const start = edgePoint(fromRect, target.cx, target.cy);
+    const end = edgePoint(target, start.x, start.y);
+    const path = svgEl("path", {
+      class: "leader",
+      "data-step": step,
+      d: leaderPath(start, end),
+      style: `--tone:${toneVar(kind, tone)}`,
+    }, svg);
+    const length = path.getTotalLength();
+    path.style.strokeDasharray = `${r(length)}`;
+    path.style.setProperty("--len", `${r(length)}`);
+    svgEl("circle", {
+      class: "leader-dot",
+      "data-step": step,
+      cx: r(end.x),
+      cy: r(end.y),
+      r: 2.2,
+      style: `--tone:${toneVar(kind, tone)}`,
+    }, svg);
+  }
+}
+
+for (const control of Object.values(controls)) {
+  control.addEventListener("input", render);
+  control.addEventListener("change", render);
+}
+window.addEventListener("resize", () => requestAnimationFrame(runLayout));
+window.addEventListener("load", () => requestAnimationFrame(runLayout));
+render();
+</script>
+</body>
+</html>

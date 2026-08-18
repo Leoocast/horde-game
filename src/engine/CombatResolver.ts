@@ -8,7 +8,7 @@ import {
   losePlayerLife,
   selectHostArchiveDiscardCards,
 } from "./EffectResolver";
-import { getPowerEndurance } from "./StaticEffects";
+import { getPowerEndurance, hostInSurge } from "./StaticEffects";
 import { drainEventQueue } from "./EventQueue";
 import { enqueue } from "./EventQueue";
 
@@ -24,6 +24,7 @@ export type HostAttackEvent = {
 };
 
 const PLAYER_COMBAT_DISCARD_PRIORITY_FLAG = "playerCombatArchiveDiscardPriority";
+const PLAYER_COMBAT_SURGE_DISCARD_PRIORITY_FLAG = "playerCombatArchiveDiscardPriorityInSurge";
 
 export type PlayerCombatArchiveDiscardPreview = Readonly<{
   attackerIndex: number;
@@ -144,7 +145,8 @@ export function resolvePlayerCombat(
 
 function playerCombatDiscardPriorityIds(game: GameState): string[] {
   return game.host.archive
-    .filter((card) => card.flags[PLAYER_COMBAT_DISCARD_PRIORITY_FLAG])
+    .filter((card) => card.flags[PLAYER_COMBAT_DISCARD_PRIORITY_FLAG]
+      || (hostInSurge(game) && card.flags[PLAYER_COMBAT_SURGE_DISCARD_PRIORITY_FLAG]))
     .map((card) => card.instanceId);
 }
 

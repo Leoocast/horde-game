@@ -511,8 +511,9 @@ inspección de la Cosechadora no puede saltarse por cerrar turno durante otra ay
 
 La receta deja la Vida en 31, la Cosechadora con dos contadores y el próximo revelado en el segundo
 Acechador. Retorno consume los dos Soldados de equivalencia al morir; después quedan las dos ramas
-robustas de la primera Oleada, con o sin el descarte opcional previo. El director se detiene en la
-señal real `host.surgeStarted`: no simula la Oleada ni entra todavía al contenido de la Fase 5.
+robustas de la primera Oleada, con o sin el descarte opcional previo. Al cerrar esta fase, el
+director se detenía en la señal real `host.surgeStarted`; las fases siguientes extienden ahora ese
+mismo recorrido sin simular la Oleada.
 
 Las pruebas automáticas enumeran ambos objetivos legales de Aelyra, todas las asignaciones legales
 de Maela/Aelyra y los órdenes `omitir Flor`, `Flor → Vaelor` y `Vaelor → Flor`. Todas las ramas
@@ -523,6 +524,8 @@ se prueban cero o un descarte antes de la primera Oleada.
 para cerrar ritmo, copy y presentación hasta la Oleada.
 
 ### Fase 5 — Post-Oleada y cierre adaptativo
+
+**Estado: implementada el 2026-08-17; pendiente de QA manual de ritmo y presentación.**
 
 - Certificar el segmento robusto de Ladrones/Titán/Soldado frente a cero o un descarte opcional.
 - Resolver descarte de Flor, Mano vacía y robo Río + Choque mediante reglas reales.
@@ -539,7 +542,25 @@ para cerrar ritmo, copy y presentación hasta la Oleada.
 **Cierre:** enumeración automática de todas las ramas alcanzables, sin loops ni fallback arbitrario;
 cada una llega al turno pedagógico y después a derrota.
 
+La receta contiene Río, Choque y Ciudad en el orden authored, vacía la Mano mediante los Ladrones
+reales y usa el robo normal de dos cartas. Jugar la quinta Fuente o intentar avanzar activa una
+intervención estricta breve para **Devolver Fuente**; después, Choque, Ciudad, Flor y el ataque
+permanecen libres. Los descartes opcionales consumen primero los tres Soldados authored y nunca el
+Titán terminal.
+
+El cierre consulta el tablero vivo y calcula cuántas llegadas necesita. Su ruta rápida sólo admite
+las identidades fijadas por este escenario, modela cada ataque con las reglas reales y verifica la
+asignación óptima una vez con `resolveHostCombat`; cualquier divergencia falla cerrada. El store
+revela después exactamente ese número de cartas, una a una, esperando la llegada y sus Reacciones
+antes de continuar, y entrega el combate a la resolución normal.
+
+**Cierre automático alcanzado:** tipos y suite completa aprobados. Las pruebas cubren Flor usada o
+descartada, cero o un descarte antes de Oleada, el rechazo de la quinta Fuente, Río → Ciudad,
+Choque, el ataque opcional contra los Soldados protegidos y una rama defensiva con más Vida.
+
 ### Fase 6 — Derrota y CTA visible — límite del primer corte
+
+**Estado: implementada el 2026-08-17; pendiente de QA manual de copy y presentación.**
 
 - Reutilizar el quiebre normal con variante narrativa y un único CTA.
 - Nombrar ese CTA **Contemplar otro futuro**.
@@ -549,6 +570,11 @@ cada una llega al turno pedagógico y después a derrota.
 
 **Cierre:** la derrota se resuelve con las reglas reales, aparece su presentación narrativa y el
 jugador ve el CTA único. La aceptación de este corte termina ahí.
+
+El tablero de `learn-to-play` reutiliza la misma barrera de presentación, captura y quiebre que una
+derrota normal, pero monta un resultado propio sin código de Futuro ni las dos acciones normales.
+El único CTA visible es **Contemplar otro futuro** y permanece deshabilitado en este corte. Una
+victoria accidental del escenario tampoco puede instalar una barrera de resultado huérfana.
 
 ### Fase 6B — Activación, vórtice y partida real preparada — aplazada
 

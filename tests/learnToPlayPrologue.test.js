@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { contentCatalog } from "../src/content/bootstrap";
-import { activateAbility, castCard } from "../src/engine/GameActions";
+import { activateAbility, castCard, recycleEnergy } from "../src/engine/GameActions";
 import {
   declareBlocker,
   prepareHostAttackers,
@@ -10,7 +10,7 @@ import {
   resolvePlayerCombat,
   togglePlayerAttacker,
 } from "../src/engine/CombatResolver";
-import { finishHostTurn, runHostMain } from "../src/engine/HostController";
+import { beginHostMain, finishHostTurn, revealHostCardFromTop, runHostMain } from "../src/engine/HostController";
 import { findManualInvokedTargetTrigger, resolveEffect } from "../src/engine/EffectResolver";
 import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
 import { getPowerEndurance, hostInSurge } from "../src/engine/StaticEffects";
@@ -21,7 +21,9 @@ import {
   LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION,
   LEARN_TO_PLAY_OPENING_INTERVENTION,
   LEARN_TO_PLAY_PROLOGUE_SCENARIO,
+  LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION,
 } from "../src/guidance/learnToPlayPrologue";
+import { planLearnToPlayTerminalTurn } from "../src/guidance/learnToPlayTerminal";
 import { validateGuidedScenario } from "../src/guidance/validation";
 
 const definitionIds = (cards) => cards.map((card) => card.definitionId);
@@ -75,6 +77,48 @@ function invokeVaelor({ playFlower, aelyraTarget = "maela" }) {
     game = activateAbility(game, built.id("dawn_flower"), "veiled_dawn_flower_gain_energy");
   }
   game = castCard(game, built.id("vaelor"));
+  return { ...built, game };
+}
+
+function reachPostSurgeTurn({
+  playFlower,
+  attackBeforeSurge = false,
+  defense = "none",
+}) {
+  const built = invokeVaelor({ playFlower });
+  let { game } = built;
+  if (attackBeforeSurge) {
+    game = advancePhase(game, "combat");
+    game = togglePlayerAttacker(game, built.id("maela"));
+    assert.equal(game.lastActionResult?.ok, true);
+    game = resolvePlayerCombat(game);
+  }
+  game = endPlayerTurn(game);
+  game = runHostMain(game);
+  assert.equal(hostInSurge(game), true);
+  assert.deepEqual(game.player.hand, [], "Memory Thief must empty the Hand through its real reaction");
+  game = prepareHostAttackers(game);
+  if (defense === "sacrifice-all") {
+    const titan = game.host.field.find((card) => card.instanceId === built.id("surge_titan"));
+    assert.ok(titan);
+    game = declareBlocker(game, built.id("maela"), titan.instanceId);
+    assert.equal(game.lastActionResult?.ok, true);
+    game = declareBlocker(game, built.id("aelyra"), titan.instanceId);
+    assert.equal(game.lastActionResult?.ok, true);
+    game = declareBlocker(game, built.id("vaelor"), titan.instanceId);
+    assert.equal(game.lastActionResult?.ok, true);
+  }
+  game = resolveHostCombat(game);
+  assert.notEqual(game.winner, "host", "the pedagogical empty-Hand turn must always be reached");
+  game = finishHostTurn(game);
+  return { ...built, game };
+}
+
+function returnPostSurgeSource(built) {
+  const source = built.game.player.hand.find((card) => card.instanceId === built.id("post_surge_source"));
+  assert.ok(source);
+  const game = recycleEnergy(built.game, source.instanceId);
+  assert.equal(game.lastActionResult?.ok, true);
   return { ...built, game };
 }
 
@@ -142,6 +186,14 @@ test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms comb
   });
   assert.equal(LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION.steps[0].nextStepId, "explain-combat-stats");
   assert.equal(LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION.steps[1].id, "explain-combat-stats");
+  assert.deepEqual(LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION.steps[0].allowedIntent, {
+    kind: "source.recycle",
+    cardAlias: "post_surge_source",
+  });
+  assert.deepEqual(LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION.steps[0].highlights, [
+    { kind: "card", alias: "post_surge_source", role: "origin" },
+    { kind: "surface", anchor: "player.archive", role: "destination" },
+  ]);
 });
 
 test("Learn to Play authors the exact advanced board two Host turns before Surge", () => {
@@ -164,7 +216,12 @@ test("Learn to Play authors the exact advanced board two Host turns before Surge
     "river_of_elarion",
     "river_of_elarion",
   ]);
-  assert.deepEqual(definitionIds(game.player.archive), ["veiled_dawn_flower"]);
+  assert.deepEqual(definitionIds(game.player.archive), [
+    "veiled_dawn_flower",
+    "river_of_elarion",
+    "clash_of_echoes",
+    "echo_of_the_forgotten_city",
+  ]);
   assert.deepEqual(definitionIds(game.host.field), [
     "return_to_memory",
     "winged_stalker_of_the_crypt",
@@ -172,7 +229,7 @@ test("Learn to Play authors the exact advanced board two Host turns before Surge
     "harvester_of_the_fallen",
   ]);
   assert.equal(game.host.field.at(-1).counters["+1/+1"], 2);
-  assert.deepEqual(definitionIds(game.host.archive), [
+  assert.deepEqual(definitionIds(game.host.archive).slice(0, 8), [
     "winged_stalker_of_the_crypt",
     "graveless_soldier",
     "graveless_soldier",
@@ -240,7 +297,7 @@ test("Vaelor leaves only a 7/9 Harvester whether the Flower is used before him o
     const { game, id } = invokeVaelor({ playFlower });
     assert.deepEqual(game.host.field.map((card) => card.instanceId), [id("harvester")]);
     assert.deepEqual(getPowerEndurance(game, game.host.field[0]), { power: 7, endurance: 9 });
-    assert.deepEqual(definitionIds(game.host.archive), [
+    assert.deepEqual(definitionIds(game.host.archive).slice(0, 4), [
       "memory_thief",
       "memory_thief",
       "graveless_titan",
@@ -290,7 +347,7 @@ test("every legal defense and both Flower orders converge on the same pre-Surge 
           assert.equal(game.lastActionResult?.ok, true, `${aelyraTarget}/${maelaTarget}/${aelyraDefenseTarget}/${order}`);
           assert.deepEqual(game.host.field.map((card) => card.instanceId), [opening.id("harvester")]);
           assert.deepEqual(getPowerEndurance(game, game.host.field[0]), { power: 7, endurance: 9 });
-          assert.deepEqual(definitionIds(game.host.archive), [
+          assert.deepEqual(definitionIds(game.host.archive).slice(0, 4), [
             "memory_thief",
             "memory_thief",
             "graveless_titan",
@@ -332,4 +389,100 @@ test("the first Surge remains authored after either zero or one pre-Surge Archiv
         : ["memory_thief", "memory_thief", "graveless_titan"],
     );
   }
+});
+
+test("the post-Surge turn draws two, returns the fifth Source, and computes an unavoidable collapse", () => {
+  const built = reachPostSurgeTurn({ playFlower: true });
+  let { game } = built;
+
+  assert.deepEqual(definitionIds(game.player.hand), ["river_of_elarion", "clash_of_echoes"]);
+  const returnedSource = game.player.hand.find((card) => card.definitionId === "river_of_elarion");
+  assert.ok(returnedSource);
+  const rejectedFifthSource = castCard(game, returnedSource.instanceId);
+  assert.equal(rejectedFifthSource.lastActionResult?.ok, false);
+  assert.equal(rejectedFifthSource.lastActionResult?.code, "SOURCE_LIMIT_REACHED");
+  assert.equal(rejectedFifthSource.player.energyActionUsedThisTurn, false);
+  game = recycleEnergy(game, returnedSource.instanceId);
+  assert.equal(game.lastActionResult?.ok, true);
+  assert.deepEqual(definitionIds(game.player.hand), ["clash_of_echoes", "echo_of_the_forgotten_city"]);
+
+  game = endPlayerTurn(game);
+  const plan = planLearnToPlayTerminalTurn(game);
+  assert.ok(plan.revealCount >= 1);
+  assert.ok(plan.maximumSurvivingLife <= 0);
+  assert.equal(plan.revealedCardIds.includes(built.id("terminal_titan")), true);
+
+  let terminal = beginHostMain(game);
+  for (let index = 0; index < plan.revealCount; index += 1) terminal = revealHostCardFromTop(terminal);
+  assert.equal(terminal.host.field.some((card) => card.instanceId === built.id("terminal_titan")), true);
+});
+
+test("every first-Surge offset empties the Hand and reaches the real two-card draw", () => {
+  for (const playFlower of [false, true]) {
+    for (const attackBeforeSurge of [false, true]) {
+      const { game } = reachPostSurgeTurn({ playFlower, attackBeforeSurge });
+      assert.equal(game.player.life, 1);
+      assert.deepEqual(definitionIds(game.player.hand), ["river_of_elarion", "clash_of_echoes"]);
+      assert.equal(game.player.field.filter((card) => card.kinds.includes("SOURCE") && !card.exhausted).length, 4);
+    }
+  }
+});
+
+test("the authored terminal guards absorb the maximum optional Archive attack before the Titan", () => {
+  let built = returnPostSurgeSource(reachPostSurgeTurn({ playFlower: true }));
+  let { game } = built;
+  game = castCard(game, built.id("forgotten_city"));
+  assert.equal(game.lastActionResult?.ok, true);
+  assert.equal(game.player.field.some((card) => card.instanceId === built.id("forgotten_city")), true);
+  const memoryBefore = new Set(game.host.memory.map((card) => card.instanceId));
+  game = advancePhase(game, "combat");
+  for (const alias of ["maela", "aelyra", "vaelor"]) {
+    game = togglePlayerAttacker(game, built.id(alias));
+    assert.equal(game.lastActionResult?.ok, true);
+  }
+  game = resolvePlayerCombat(game);
+
+  const discarded = game.host.memory.filter((card) => !memoryBefore.has(card.instanceId));
+  assert.deepEqual(discarded.map((card) => card.instanceId), [
+    built.id("terminal_guard_one"),
+    built.id("terminal_guard_two"),
+    built.id("terminal_guard_three"),
+  ]);
+  assert.equal(game.host.archive.some((card) => card.instanceId === built.id("terminal_titan")), true);
+});
+
+test("the terminal planner covers Choque and a high-Life defense without a fixed Soldier count", () => {
+  const clashBranch = returnPostSurgeSource(reachPostSurgeTurn({ playFlower: true }));
+  let clashGame = clashBranch.game;
+  const clash = clashGame.player.hand.find((card) => card.instanceId === clashBranch.id("clash_of_echoes"));
+  const vaelor = clashGame.player.field.find((card) => card.instanceId === clashBranch.id("vaelor"));
+  const target = clashGame.host.field.find((card) => card.kinds.includes("ECHO"));
+  assert.ok(clash);
+  assert.ok(vaelor);
+  assert.ok(target);
+  const [sourceRequirement, targetRequirement] = clash.requiresTargets;
+  clashGame = castCard(clashGame, clash.instanceId, {
+    targets: {
+      [sourceRequirement.id]: vaelor.instanceId,
+      [targetRequirement.id]: target.instanceId,
+    },
+  });
+  assert.equal(clashGame.lastActionResult?.ok, true);
+  const clashPlan = planLearnToPlayTerminalTurn(endPlayerTurn(clashGame));
+  assert.ok(clashPlan.maximumSurvivingLife <= 0);
+  assert.equal(clashPlan.revealedCardIds.includes(clashBranch.id("terminal_titan")), true);
+
+  let highLifeBranch = returnPostSurgeSource(reachPostSurgeTurn({
+    playFlower: true,
+    defense: "sacrifice-all",
+  }));
+  assert.ok(highLifeBranch.game.player.life > 1);
+  assert.deepEqual(
+    definitionIds(highLifeBranch.game.player.field.filter((card) => card.kinds.includes("ECHO"))),
+    ["veiled_dawn_flower", "vaelor_emerald_guardian"],
+  );
+  const highLifePlan = planLearnToPlayTerminalTurn(endPlayerTurn(highLifeBranch.game));
+  assert.ok(highLifePlan.revealCount >= 1);
+  assert.ok(highLifePlan.maximumSurvivingLife <= 0);
+  assert.equal(highLifePlan.revealedCardIds.includes(highLifeBranch.id("terminal_titan")), true);
 });

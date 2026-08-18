@@ -38,7 +38,12 @@ export const LEARN_TO_PLAY_PROLOGUE_SCENARIO = Object.freeze({
     host: { poisonCounters: 0 },
     zones: {
       openingDeal: ["fourth_source", "aelyra", "vaelor"],
-      playerArchiveTopToBottom: ["dawn_flower"],
+      playerArchiveTopToBottom: [
+        "dawn_flower",
+        "post_surge_source",
+        "clash_of_echoes",
+        "forgotten_city",
+      ],
       playerField: ["maela", "source_one", "source_two", "source_three"],
       playerMemory: [],
       playerOblivion: [],
@@ -55,6 +60,26 @@ export const LEARN_TO_PLAY_PROLOGUE_SCENARIO = Object.freeze({
         // If the player attacks, combat takes this expendable Soldier from the authored bottom
         // instead of consuming the next reveal. Passing leaves it harmlessly behind the Surge line.
         "opening_attack_discard",
+        // The collapse of the lost Future begins here. Once Surge is active, optional Archive
+        // damage consumes the three marked Soldiers before it can touch the required Titan.
+        "terminal_titan",
+        "terminal_guard_one",
+        "terminal_guard_two",
+        "terminal_guard_three",
+        "terminal_soldier_01",
+        "terminal_soldier_02",
+        "terminal_soldier_03",
+        "terminal_soldier_04",
+        "terminal_soldier_05",
+        "terminal_soldier_06",
+        "terminal_soldier_07",
+        "terminal_soldier_08",
+        "terminal_soldier_09",
+        "terminal_soldier_10",
+        "terminal_soldier_11",
+        "terminal_soldier_12",
+        "terminal_soldier_13",
+        "terminal_soldier_14",
       ],
       hostField: [
         "return_to_memory",
@@ -72,6 +97,9 @@ export const LEARN_TO_PLAY_PROLOGUE_SCENARIO = Object.freeze({
     aelyra: { cardKey: elarionCard("aelyra_heir_of_elarion") },
     vaelor: { cardKey: elarionCard("vaelor_emerald_guardian") },
     dawn_flower: { cardKey: elarionCard("veiled_dawn_flower") },
+    post_surge_source: { cardKey: elarionCard("river_of_elarion") },
+    clash_of_echoes: { cardKey: elarionCard("clash_of_echoes") },
+    forgotten_city: { cardKey: elarionCard("echo_of_the_forgotten_city") },
     maela: { cardKey: elarionCard("maela_watcher_of_the_heights") },
     source_one: { cardKey: elarionCard("river_of_elarion") },
     source_two: { cardKey: elarionCard("river_of_elarion") },
@@ -86,14 +114,40 @@ export const LEARN_TO_PLAY_PROLOGUE_SCENARIO = Object.freeze({
     second_winged_stalker: { cardKey: gravelessCard("winged_stalker_of_the_crypt") },
     opening_attack_discard: {
       cardKey: gravelessCard("graveless_soldier"),
-      state: { flags: { playerCombatArchiveDiscardPriority: true } },
+      state: { flags: { playerCombatArchiveDiscardPriority: true, learnToPlayTerminalCard: true } },
     },
     return_mill_one: { cardKey: gravelessCard("graveless_soldier") },
     return_mill_two: { cardKey: gravelessCard("graveless_soldier") },
     memory_thief_a: { cardKey: gravelessCard("memory_thief") },
     memory_thief_b: { cardKey: gravelessCard("memory_thief") },
     surge_titan: { cardKey: gravelessCard("graveless_titan") },
-    surge_soldier: { cardKey: gravelessCard("graveless_soldier") },
+    surge_soldier: {
+      cardKey: gravelessCard("graveless_soldier"),
+      state: { flags: { learnToPlayTerminalCard: true } },
+    },
+    terminal_titan: {
+      cardKey: gravelessCard("graveless_titan"),
+      state: { flags: { learnToPlayTerminalCard: true, learnToPlayTerminalTitan: true } },
+    },
+    terminal_guard_one: {
+      cardKey: gravelessCard("graveless_soldier"),
+      state: { flags: { learnToPlayTerminalCard: true, playerCombatArchiveDiscardPriorityInSurge: true } },
+    },
+    terminal_guard_two: {
+      cardKey: gravelessCard("graveless_soldier"),
+      state: { flags: { learnToPlayTerminalCard: true, playerCombatArchiveDiscardPriorityInSurge: true } },
+    },
+    terminal_guard_three: {
+      cardKey: gravelessCard("graveless_soldier"),
+      state: { flags: { learnToPlayTerminalCard: true, playerCombatArchiveDiscardPriorityInSurge: true } },
+    },
+    ...Object.fromEntries(Array.from({ length: 14 }, (_, index) => [
+      `terminal_soldier_${String(index + 1).padStart(2, "0")}`,
+      {
+        cardKey: gravelessCard("graveless_soldier"),
+        state: { flags: { learnToPlayTerminalCard: true } },
+      },
+    ])),
   },
 } satisfies GuidedScenarioDefinition);
 
@@ -280,6 +334,32 @@ export const LEARN_TO_PLAY_HARVESTER_INSPECTION = Object.freeze({
       highlights: [{ kind: "card", alias: "harvester" }],
       allowedIntent: { kind: "card.inspect", cardAlias: "harvester" },
       preconditions: [{ kind: "card.inZone", cardAlias: "harvester", side: "host", zone: "field" }],
+    },
+  ],
+} satisfies GuidedInterventionDefinition);
+
+/** Strict only after the player tries to play the fifth Source or leave Main without returning it. */
+export const LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION = Object.freeze({
+  id: "learn-to-play.return-source",
+  revision: 1,
+  startStepId: "return-source",
+  steps: [
+    {
+      id: "return-source",
+      kind: "act",
+      copy: {
+        titleKey: "guided.contextual.product.returnSourceTitle",
+        bodyKey: "guided.contextual.product.returnSourceBody",
+        glossaryTerms: ["source", "archive"],
+      },
+      highlights: [
+        { kind: "card", alias: "post_surge_source", role: "origin" },
+        { kind: "surface", anchor: "player.archive", role: "destination" },
+      ],
+      allowedIntent: { kind: "source.recycle", cardAlias: "post_surge_source" },
+      preconditions: [
+        { kind: "card.inZone", cardAlias: "post_surge_source", side: "player", zone: "hand" },
+      ],
     },
   ],
 } satisfies GuidedInterventionDefinition);

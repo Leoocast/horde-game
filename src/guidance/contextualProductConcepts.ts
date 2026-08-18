@@ -176,6 +176,53 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
     revalidate: (_match, context) => hostInSurge(context.game),
   },
   {
+    id: "empty-hand-draw",
+    revision: 1,
+    policy: "informative",
+    priority: 95,
+    copy: {
+      titleKey: "guided.contextual.product.emptyHandDrawTitle",
+      bodyKey: "guided.contextual.product.emptyHandDrawBody",
+      glossaryTerms: ["hand"],
+    },
+    signalKinds: ["player.cardsDrawn"],
+    evaluate: (signal) => signal.kind === "player.cardsDrawn"
+      && signal.reason === "empty-hand"
+      && signal.amount === 2
+      ? { highlights: [{ kind: "surface", anchor: "player.hand", showHighlight: false }] }
+      : undefined,
+  },
+  {
+    id: "return-source",
+    revision: 1,
+    policy: "reactive",
+    priority: 150,
+    copy: {
+      titleKey: "guided.contextual.product.returnSourceTitle",
+      bodyKey: "guided.contextual.product.returnSourceBody",
+      glossaryTerms: ["source", "archive"],
+    },
+    signalKinds: ["action.denied"],
+    evaluate: (signal, context) => {
+      const sourceId = signal.kind === "action.denied"
+        && signal.code === "SOURCE_LIMIT_REACHED"
+        && signal.intent.kind === "card.play"
+        ? signal.intent.cardId
+        : undefined;
+      if (!sourceId || !context.game.player.hand.some((card) => card.instanceId === sourceId && card.kinds.includes("SOURCE"))) {
+        return undefined;
+      }
+      return {
+        highlights: [
+          { kind: "card", instanceId: sourceId },
+          { kind: "surface", anchor: "player.archive" },
+        ],
+      };
+    },
+    revalidate: (match, context) => highlightedCards(match).some((instanceId) =>
+      context.game.player.hand.some((card) => card.instanceId === instanceId && card.kinds.includes("SOURCE"))),
+  },
+  {
     id: "learn-to-play-vaelor-required",
     revision: 1,
     policy: "reactive",

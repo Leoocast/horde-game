@@ -22212,6 +22212,18 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
   animation: defeat-copy-rise 620ms 1080ms ease-out both;
 }
 
+.defeat-outcome-actions.is-single-action {
+  width: min(420px, calc(100vw - 32px));
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.defeat-outcome-actions.is-single-action .game-result-action:disabled {
+  cursor: default;
+  filter: none;
+  opacity: 1;
+  transform: none;
+}
+
 .game-result-defeat .game-result-action {
   min-width: 0;
   padding-inline: clamp(4px, 1.2vw, 14px);

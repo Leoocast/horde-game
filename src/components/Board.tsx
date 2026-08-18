@@ -31,6 +31,7 @@ import { northUprightDialDegrees } from "./temporalDialPresentation";
 import { ToastStack } from "./ToastStack";
 import { TurnPhaseHud } from "./TurnPhaseHud";
 import { DefeatModal } from "./DefeatModal";
+import { LearnToPlayDefeatModal } from "./LearnToPlayDefeatModal";
 import { VictoryModal } from "./VictoryModal";
 import { SurgeTransition } from "./SurgeTransition";
 import { BurnAnimator } from "./BurnAnimator";
@@ -267,11 +268,15 @@ export function Board({
       forcedOutcomeDrain
       || (!storePresentationActive && localPresentation.activeCount === 0)
     );
-  const defeatOutcomeReady = sessionPolicy.showStandardOutcome && outcomeOutroReady && game.winner === "host";
+  // Aprender a jugar sólo tiene un desenlace authored de derrota. Si una regresión llegara a
+  // producir una victoria, no debe instalar una barrera de resultado que nunca podrá resolverse.
+  const outcomeEnabled = sessionPolicy.showStandardOutcome
+    || (sessionPolicy.showJourneyDefeat && game.winner === "host");
+  const defeatOutcomeReady = outcomeEnabled && outcomeOutroReady && game.winner === "host";
   const defeatReady = defeatOutcomeReady && defeatSnapshot !== undefined;
   // La victoria no captura nada: en cuanto la presentación se asienta, el tablero puede retirarse.
   const victoryReady = sessionPolicy.showStandardOutcome && outcomeOutroReady && game.winner === "player";
-  const outcomePresentationPending = sessionPolicy.showStandardOutcome && Boolean(game.winner) && !defeatReady && !victoryReady;
+  const outcomePresentationPending = outcomeEnabled && Boolean(game.winner) && !defeatReady && !victoryReady;
   /* Al preservarse el Futuro el instrumento vuelve a su Norte mientras las motas todavía viajan:
      la constelación es cardinal y sus puntas tienen que clavarse sobre las marcas, no al lado.
      Es sólo presentación, así que el ángulo acumulado del store no se toca. */
@@ -284,7 +289,7 @@ export function Board({
   );
 
   useEffect(() => {
-    if (!sessionPolicy.showStandardOutcome) {
+    if (!outcomeEnabled) {
       setForcedOutcomeDrainSessionId(undefined);
       return;
     }
@@ -305,7 +310,7 @@ export function Board({
       setForcedOutcomeDrainSessionId(watchedSessionId);
     }, OUTCOME_DRAIN_WATCHDOG_MS);
     return () => window.clearTimeout(timer);
-  }, [outcomeOutroReady, game.winner, gameSessionId, sessionPolicy.showStandardOutcome, stopGamePresentation]);
+  }, [outcomeEnabled, outcomeOutroReady, game.winner, gameSessionId, stopGamePresentation]);
 
   useEffect(() => {
     if (!defeatOutcomeReady) {
@@ -477,6 +482,9 @@ export function Board({
           onRewriteFuture={onRewriteFuture}
           onContemplateFuture={onContemplateFuture}
         />
+      )}
+      {sessionPolicy.showJourneyDefeat && defeatReady && (
+        <LearnToPlayDefeatModal game={game} snapshotImage={defeatSnapshot ?? undefined} />
       )}
       {sessionPolicy.showStandardOutcome && victoryReady && onRewriteFuture && onContemplateFuture && (
         <VictoryModal game={game} onRewriteFuture={onRewriteFuture} onContemplateFuture={onContemplateFuture} />
