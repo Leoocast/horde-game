@@ -15,6 +15,7 @@ import {
   validateGuidedLesson,
 } from "../src/guidance";
 import { contentCatalog } from "../src/content/bootstrap";
+import { tutorialCalloutWidth } from "../src/components/tutorialCalloutSizing";
 import { GUIDANCE_LAB_LESSON } from "../src/playground/guidanceLabDefinition";
 
 test("semantic anchors keep simultaneous presentation owners isolated", () => {
@@ -179,6 +180,7 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(overlay, /allowedIntent\.kind === "phase\.continueSetup"/u);
   assert.match(overlay, /setDismissedActionCalloutStepId\(session\.currentStep\.id\)/u);
   assert.match(overlay, /guidedUnionBounds/u);
+  assert.match(overlay, /tutorialCalloutWidth/u);
   assert.match(styles, /\.guided-tutorial-overlay\[data-mode="explain"\],[\s\S]*?pointer-events: auto;/u);
   assert.match(styles, /guided-tutorial-overlay:not\(\[data-card-preview-visible="true"\]\)/u);
   assert.match(styles, /\.guided-card-comparison\s*\{[^}]*top:\s*56%;[^}]*left:\s*50%;[^}]*transform:\s*translate\(-50%, -50%\);/su);
@@ -203,6 +205,8 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(styles, /guided-tutorial-overlay:has\(\.guided-tutorial-ring\[data-anchor-key="surface:player\.sources"\]\)[\s\S]*?guided-tutorial-ring\[data-anchor-key="surface:player\.reserve"\]::after\s*\{\s*display:\s*none;/u);
   assert.match(styles, /\.guided-tutorial-ring\[data-anchor-key\^="card:"\]\s*\{\s*display:\s*none;\s*\}/u);
   assert.match(styles, /\.guided-tutorial-body p\s*\{[^}]*font-size:\s*16px;/su);
+  assert.match(styles, /\.guided-tutorial-callout h2\s*\{[^}]*white-space:\s*nowrap;/su);
+  assert.match(styles, /\.contextual-tutorial-callout h2\s*\{[^}]*white-space:\s*nowrap;/su);
   assert.match(styles, /\.guided-glossary-term\s*\{[^}]*color:\s*#d9bd70;[^}]*text-decoration-style:\s*dotted;/su);
   assert.match(styles, /\.guided-glossary-tooltip\s*\{[^}]*z-index:\s*20020;/su);
   assert.match(
@@ -214,6 +218,23 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(styles, /\.guided-tutorial-continue\s*\{[^}]*font-family:\s*inherit;/su);
   assert.match(styles, /\.guided-player-sources-anchor\s*\{[^}]*width:\s*174px;[^}]*height:\s*85px;/su);
   assert.match(board, /sessionPolicy\.guidedSystemControls/u);
+});
+
+test("tutorial titles expand their dialog before wrapping", () => {
+  const expanded = tutorialCalloutWidth("Invoca a Aelyra, Heredera de Elarion", 1280, {
+    minimum: 430,
+    maximum: 660,
+    titleCharacterWidth: 12.5,
+    chromeWidth: 108,
+  });
+  assert.ok(expanded > 430);
+  assert.ok(expanded <= 660);
+  assert.equal(tutorialCalloutWidth("A deliberately long tutorial title", 320, {
+    minimum: 430,
+    maximum: 660,
+    titleCharacterWidth: 12.5,
+    chromeWidth: 108,
+  }), 288);
 });
 
 function fakeElement({ isConnected }) {

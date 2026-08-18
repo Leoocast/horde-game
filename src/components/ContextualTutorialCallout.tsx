@@ -25,6 +25,7 @@ import {
 import { contextualTutorialRuntime } from "../guidance/contextualProductRuntime";
 import { useTranslation } from "../i18n/useTranslation";
 import { GameTooltip } from "./GameTooltip";
+import { tutorialCalloutWidth } from "./tutorialCalloutSizing";
 
 const subscribeRuntime = (listener: () => void) => contextualTutorialRuntime.subscribe(listener);
 const readRuntime = () => contextualTutorialRuntime.snapshot();
@@ -113,7 +114,19 @@ export function ContextualTutorialCallout() {
   if (!active || guided.status === "running" || typeof document === "undefined") return null;
 
   const missingAnchor = resolved.length !== rects.length;
-  const position = placeGuidedCallout(viewport, calloutSize, missingAnchor ? [] : rects, active.placement);
+  const title = t(active.copy.titleKey);
+  const preferredCalloutWidth = tutorialCalloutWidth(title, viewport.width, {
+    minimum: 410,
+    maximum: 760,
+    titleCharacterWidth: 10.5,
+    chromeWidth: 92,
+  });
+  const position = placeGuidedCallout(
+    viewport,
+    { ...calloutSize, width: preferredCalloutWidth },
+    missingAnchor ? [] : rects,
+    active.placement,
+  );
   const connector = missingAnchor ? undefined : guidedConnectorPath(rects);
   const titleId = `contextual-tutorial-title-${active.conceptId}`;
   const bodyId = `contextual-tutorial-body-${active.conceptId}`;
@@ -145,7 +158,7 @@ export function ContextualTutorialCallout() {
       <section
         ref={calloutRef}
         className="contextual-tutorial-callout"
-        style={{ left: position.left, top: position.top }}
+        style={{ left: position.left, top: position.top, width: preferredCalloutWidth }}
         role="dialog"
         aria-modal="false"
         aria-live="polite"
@@ -159,7 +172,7 @@ export function ContextualTutorialCallout() {
       >
         <span className="contextual-tutorial-mark" aria-hidden="true" />
         <div className="contextual-tutorial-heading">
-          <h2 id={titleId}>{t(active.copy.titleKey)}</h2>
+          <h2 id={titleId}>{title}</h2>
           <button
             ref={closeRef}
             type="button"

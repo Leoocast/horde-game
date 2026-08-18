@@ -10901,9 +10901,12 @@
   flex: 1;
   margin: 0;
   color: #e0d5b5;
-  font-size: 21px;
+  overflow: hidden;
+  font-size: clamp(12px, 2.8vw, 21px);
   font-weight: 600;
   line-height: 1.18;
+  text-overflow: clip;
+  white-space: nowrap;
 }
 
 .contextual-tutorial-body { display: grid; gap: 8px; padding-top: 1px; }
@@ -21084,11 +21087,14 @@ body.playground-active .phase-banner-shell {
   margin: 0;
   color: #e2d7b8;
   font-family: inherit;
-  font-size: 25px;
+  overflow: hidden;
+  font-size: clamp(13px, 3vw, 25px);
   font-weight: 600;
   letter-spacing: 0.035em;
   line-height: 1.14;
   text-shadow: 0 3px 13px rgb(0 0 0 / 0.66);
+  text-overflow: clip;
+  white-space: nowrap;
 }
 
 .tutorial-dialog-heading,
@@ -21108,6 +21114,7 @@ body.playground-active .phase-banner-shell {
   display: grid;
   width: 28px;
   height: 28px;
+  flex: 0 0 28px;
   place-items: center;
   border: 1px solid rgb(126 141 134 / 0.34);
   background: rgb(10 18 20 / 0.76);
@@ -21425,7 +21432,6 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
 
 @media (max-width: 560px) {
   .guided-tutorial-callout { padding: 16px 17px 13px; }
-  .guided-tutorial-callout h2 { font-size: 21px; }
   .guided-tutorial-body p { font-size: 15px; }
   .guided-tutorial-continue { width: 100%; }
 }

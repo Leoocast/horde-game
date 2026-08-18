@@ -201,6 +201,7 @@ test("contextual callout is non-modal, keyboard dismissible and mounted separate
   assert.match(component, /aria-live="polite"/u);
   assert.match(component, /event\.key !== "Escape"/u);
   assert.match(component, /contextualTutorialRuntime\.acknowledgeActive/u);
+  assert.match(component, /tutorialCalloutWidth/u);
   assert.match(component, /<div className="contextual-tutorial-heading">\s*<h2 id=\{titleId\}>/su);
   assert.doesNotMatch(component, /tutorial-dialog-heading-ornament/u);
   assert.match(component, /highlight\.showHighlight !== false/u);

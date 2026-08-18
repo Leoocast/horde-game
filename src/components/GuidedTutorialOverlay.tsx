@@ -32,6 +32,7 @@ import { useGameStore } from "../store/useGameStore";
 import { GuidedCardComparison } from "./GuidedCardComparison";
 import { GameTooltip } from "./GameTooltip";
 import { TutorialDirectionalCueGlyph } from "./TutorialDirectionalCue";
+import { tutorialCalloutWidth } from "./tutorialCalloutSizing";
 
 const subscribeSession = (listener: () => void) => guidedSessionStore.subscribe(listener);
 const readSession = () => guidedSessionStore.snapshot();
@@ -319,9 +320,18 @@ export function GuidedTutorialOverlay() {
 
   if (!active || !session.currentStep || !session.mode || typeof document === "undefined") return null;
 
-  const connectorPath = presentation?.kind === "directionalCue" ? undefined : guidedConnectorPath(rects);
-  const calloutPosition = placeGuidedCallout(viewport, calloutSize, missingAnchor ? [] : rects);
   const title = missingAnchor ? t("guided.anchorMissingTitle") : t(session.currentStep.copy.titleKey);
+  const preferredCalloutWidth = tutorialCalloutWidth(title, viewport.width, {
+    minimum: 430,
+    maximum: 660,
+    titleCharacterWidth: 12.5,
+    chromeWidth: 108,
+  });
+  const positionedCalloutSize = comparisonCards.length > 0
+    ? calloutSize
+    : { ...calloutSize, width: preferredCalloutWidth };
+  const connectorPath = presentation?.kind === "directionalCue" ? undefined : guidedConnectorPath(rects);
+  const calloutPosition = placeGuidedCallout(viewport, positionedCalloutSize, missingAnchor ? [] : rects);
   const body = missingAnchor ? t("guided.anchorMissingBody") : t(session.currentStep.copy.bodyKey);
   const glossaryTerms = missingAnchor ? [] : (session.currentStep.copy.glossaryTerms ?? []);
   const bodyParagraphs = body.split(/\n{2,}/u).filter(Boolean).map(
@@ -419,7 +429,11 @@ export function GuidedTutorialOverlay() {
       <section
         ref={calloutRef}
         className="guided-tutorial-callout"
-        style={{ left: calloutPosition.left, top: calloutPosition.top }}
+        style={{
+          left: calloutPosition.left,
+          top: calloutPosition.top,
+          width: comparisonCards.length > 0 ? undefined : preferredCalloutWidth,
+        }}
         role="dialog"
         aria-modal={session.mode !== "act"}
         aria-labelledby="guided-tutorial-title"
