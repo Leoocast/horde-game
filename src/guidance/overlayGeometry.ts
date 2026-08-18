@@ -87,13 +87,17 @@ export function placeGuidedCallout(
   return Object.freeze(placed[0].point);
 }
 
-/** Places an upward cue over a card while keeping its motion contained inside the card silhouette. */
+/**
+ * Places an upward cue that leaves the card instead of hovering inside it: the
+ * base still rests on the card so the gesture reads as "this one", and the tip
+ * clears its top edge so it reads as "over there".
+ */
 export function guidedDirectionalCueBounds(target: GuidedRect): GuidedBounds {
   const width = Math.max(58, Math.min(82, target.width * 0.46));
   const height = Math.max(100, target.height * 0.82);
   return Object.freeze({
     left: target.left + (target.width - width) / 2,
-    top: target.top + target.height * 0.08,
+    top: target.top - height * 0.34,
     width,
     height,
   });

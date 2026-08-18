@@ -26,7 +26,7 @@ import { contextualTutorialRuntime } from "../guidance/contextualProductRuntime"
 import { useTranslation } from "../i18n/useTranslation";
 import { GameTooltip } from "./GameTooltip";
 import { createGuidedFrameLoop } from "./guidedFrameLoop";
-import { tutorialCalloutWidth } from "./tutorialCalloutSizing";
+import { tutorialCalloutTitleFontSize, tutorialCalloutWidth } from "./tutorialCalloutSizing";
 
 const subscribeRuntime = (listener: () => void) => contextualTutorialRuntime.subscribe(listener);
 const readRuntime = () => contextualTutorialRuntime.snapshot();
@@ -35,6 +35,12 @@ const readAnchors = () => guidedAnchorRegistry.snapshot();
 const subscribeGuided = (listener: () => void) => guidedSessionStore.subscribe(listener);
 const readGuided = () => guidedSessionStore.snapshot();
 const CALLOUT_FALLBACK_SIZE = Object.freeze({ width: 390, height: 190 });
+const CONTEXTUAL_CALLOUT_PROFILE = Object.freeze({
+  minimum: 410,
+  maximum: 760,
+  titleCharacterWidth: 13,
+  chromeWidth: 92,
+});
 
 export function ContextualTutorialCallout() {
   const t = useTranslation();
@@ -131,12 +137,14 @@ export function ContextualTutorialCallout() {
 
   const missingAnchor = resolved.length !== rects.length;
   const title = t(active.copy.titleKey);
-  const preferredCalloutWidth = tutorialCalloutWidth(title, viewport.width, {
-    minimum: 410,
-    maximum: 760,
-    titleCharacterWidth: 10.5,
-    chromeWidth: 92,
-  });
+  const preferredCalloutWidth = tutorialCalloutWidth(title, viewport.width, CONTEXTUAL_CALLOUT_PROFILE);
+  const titleFontSize = tutorialCalloutTitleFontSize(
+    title,
+    preferredCalloutWidth,
+    CONTEXTUAL_CALLOUT_PROFILE,
+    10,
+    21,
+  );
   const position = placeGuidedCallout(
     viewport,
     { ...calloutSize, width: preferredCalloutWidth },
@@ -188,7 +196,7 @@ export function ContextualTutorialCallout() {
       >
         <span className="contextual-tutorial-mark" aria-hidden="true" />
         <div className="contextual-tutorial-heading">
-          <h2 id={titleId}>{title}</h2>
+          <h2 id={titleId} style={{ fontSize: titleFontSize }}>{title}</h2>
           <button
             ref={closeRef}
             type="button"

@@ -33,7 +33,7 @@ import { GuidedCardComparison } from "./GuidedCardComparison";
 import { GameTooltip } from "./GameTooltip";
 import { createGuidedFrameLoop } from "./guidedFrameLoop";
 import { TutorialDirectionalCueGlyph } from "./TutorialDirectionalCue";
-import { tutorialCalloutWidth } from "./tutorialCalloutSizing";
+import { tutorialCalloutTitleFontSize, tutorialCalloutWidth } from "./tutorialCalloutSizing";
 
 const subscribeSession = (listener: () => void) => guidedSessionStore.subscribe(listener);
 const readSession = () => guidedSessionStore.snapshot();
@@ -45,6 +45,17 @@ const readInteraction = () => guidedInteractionGate.snapshot();
 const CALLOUT_FALLBACK_SIZE = Object.freeze({ width: 360, height: 210 });
 const MASK_ID = "guided-tutorial-spotlight-mask";
 const ARROW_ID = "guided-tutorial-arrowhead";
+const GUIDED_CALLOUT_PROFILE = Object.freeze({
+  minimum: 430,
+  maximum: 760,
+  titleCharacterWidth: 15.5,
+  chromeWidth: 108,
+});
+
+type ScopedGuidedFeedback = Readonly<{
+  scope: string;
+  message: string;
+}>;
 
 export function GuidedTutorialOverlay() {
   const t = useTranslation();
@@ -55,9 +66,9 @@ export function GuidedTutorialOverlay() {
   const [rects, setRects] = useState<readonly GuidedRect[]>(Object.freeze([]));
   const [viewport, setViewport] = useState(() => readViewport());
   const [calloutSize, setCalloutSize] = useState<GuidedSize>(CALLOUT_FALLBACK_SIZE);
-  const [feedback, setFeedback] = useState<string>();
+  const [feedbackState, setFeedbackState] = useState<ScopedGuidedFeedback>();
   const [feedbackPulse, setFeedbackPulse] = useState(0);
-  const [dismissedActionCalloutStepId, setDismissedActionCalloutStepId] = useState<string>();
+  const [dismissedActionCalloutScope, setDismissedActionCalloutScope] = useState<string>();
   const calloutRef = useRef<HTMLElement>(null);
   const continueRef = useRef<HTMLButtonElement>(null);
   const feedbackTimerRef = useRef<number | undefined>(undefined);
@@ -65,6 +76,8 @@ export function GuidedTutorialOverlay() {
   const rectsRef = useRef(rects);
   const viewportRef = useRef(viewport);
   const active = session.status === "running" && Boolean(session.currentStep && session.mode);
+  const stepScope = `${session.sessionId ?? "inactive"}:${session.currentStep?.id ?? "none"}`;
+  const feedback = feedbackState?.scope === stepScope ? feedbackState.message : undefined;
 
   const resolved = useMemo(
     () => resolveGuidedAnchors(session.currentStep?.highlights ?? [], session.bindings),
@@ -97,15 +110,11 @@ export function GuidedTutorialOverlay() {
   const dismissCalloutOnAction = session.currentStep?.kind === "act"
     && session.currentStep.allowedIntent.kind === "phase.continueSetup";
   const showCallout = session.currentStep?.callout !== "hidden"
-    && dismissedActionCalloutStepId !== session.currentStep?.id;
+    && dismissedActionCalloutScope !== stepScope;
   const showSilentSpotlight = !showCallout
     && presentation?.kind === "spotlight"
     && session.presentationSettled;
   const isLearnToPlay = session.lessonId?.startsWith("learn-to-play.") ?? false;
-
-  useEffect(() => {
-    setDismissedActionCalloutStepId(undefined);
-  }, [session.currentStep?.id, session.sessionId]);
 
   useLayoutEffect(() => {
     if (!active) {
@@ -175,11 +184,6 @@ export function GuidedTutorialOverlay() {
 
   useEffect(() => {
     if (!active) return;
-    setFeedback(undefined);
-  }, [active, session.currentStep?.id, session.sessionId]);
-
-  useEffect(() => {
-    if (!active) return;
     const frame = window.requestAnimationFrame(() => {
       if (session.mode === "act") {
         const target = firstFocusableAnchor(resolved);
@@ -227,10 +231,10 @@ export function GuidedTutorialOverlay() {
       const now = performance.now();
       if (now - lastFeedbackAt < 120) return;
       lastFeedbackAt = now;
-      setFeedback(message);
+      setFeedbackState(Object.freeze({ scope: stepScope, message }));
       setFeedbackPulse((value) => value + 1);
       window.clearTimeout(feedbackTimerRef.current);
-      feedbackTimerRef.current = window.setTimeout(() => setFeedback(undefined), 1800);
+      feedbackTimerRef.current = window.setTimeout(() => setFeedbackState(undefined), 1800);
     };
 
     const block = (event: Event, message = blockedMessage) => {
@@ -257,7 +261,7 @@ export function GuidedTutorialOverlay() {
     );
     const dismissActionCallout = () => {
       if (dismissCalloutOnAction && session.currentStep?.id) {
-        setDismissedActionCalloutStepId(session.currentStep.id);
+        setDismissedActionCalloutScope(stepScope);
       }
     };
 
@@ -324,26 +328,28 @@ export function GuidedTutorialOverlay() {
       document.removeEventListener("drop", handleEvent, true);
       document.removeEventListener("keydown", handleKeyDown, true);
     };
-  }, [active, activeKeys, dismissCalloutOnAction, isLearnToPlay, resolved, session.currentStep?.id, session.mode, t]);
+  }, [active, activeKeys, dismissCalloutOnAction, isLearnToPlay, resolved, session.currentStep?.id, session.mode, stepScope, t]);
 
   useEffect(() => {
     const rejection = interaction.lastRejection;
     if (!active || !rejection || rejection.sessionId !== session.sessionId || rejection.stepId !== session.currentStep?.id) return;
-    setFeedback(t("guided.blocked"));
+    setFeedbackState(Object.freeze({ scope: stepScope, message: t("guided.blocked") }));
     setFeedbackPulse(rejection.attemptCursor);
     window.clearTimeout(feedbackTimerRef.current);
-    feedbackTimerRef.current = window.setTimeout(() => setFeedback(undefined), 1800);
-  }, [active, interaction.attemptCursor, interaction.lastRejection, session.currentStep?.id, session.sessionId, t]);
+    feedbackTimerRef.current = window.setTimeout(() => setFeedbackState(undefined), 1800);
+  }, [active, interaction.attemptCursor, interaction.lastRejection, session.currentStep?.id, session.sessionId, stepScope, t]);
 
   if (!active || !session.currentStep || !session.mode || typeof document === "undefined") return null;
 
   const title = missingAnchor ? t("guided.anchorMissingTitle") : t(session.currentStep.copy.titleKey);
-  const preferredCalloutWidth = tutorialCalloutWidth(title, viewport.width, {
-    minimum: 430,
-    maximum: 760,
-    titleCharacterWidth: 12.5,
-    chromeWidth: 108,
-  });
+  const preferredCalloutWidth = tutorialCalloutWidth(title, viewport.width, GUIDED_CALLOUT_PROFILE);
+  const titleFontSize = tutorialCalloutTitleFontSize(
+    title,
+    preferredCalloutWidth,
+    GUIDED_CALLOUT_PROFILE,
+    10,
+    25,
+  );
   const positionedCalloutSize = comparisonCards.length > 0
     ? calloutSize
     : { ...calloutSize, width: preferredCalloutWidth };
@@ -373,7 +379,7 @@ export function GuidedTutorialOverlay() {
       if (session.canContinue) guidedSessionStore.continueExplanation();
       return;
     }
-    setDismissedActionCalloutStepId(session.currentStep?.id);
+    setDismissedActionCalloutScope(stepScope);
   };
 
   return createPortal(
@@ -464,7 +470,7 @@ export function GuidedTutorialOverlay() {
       >
         <span className="guided-tutorial-callout-mark" aria-hidden="true" />
         <div className="tutorial-dialog-heading">
-          <h2 id="guided-tutorial-title">{title}</h2>
+          <h2 id="guided-tutorial-title" style={{ fontSize: titleFontSize }}>{title}</h2>
           {isLearnToPlay && (
             <button
               type="button"

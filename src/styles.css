@@ -10907,12 +10907,12 @@
   margin: 0;
   color: #e0d5b5;
   overflow: visible;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   font-size: clamp(12px, 2.8vw, 21px);
   font-weight: 600;
   line-height: 1.18;
-  text-wrap: balance;
-  white-space: normal;
+  text-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .contextual-tutorial-body { display: grid; gap: 8px; padding-top: 1px; }
@@ -20944,19 +20944,21 @@ body.playground-active .phase-banner-shell {
 .guided-tutorial-directional-cue {
   position: absolute;
   z-index: 4;
-  --tutorial-cue-deep: #06171b;
-  --tutorial-cue-face: #174954;
-  --tutorial-cue-inset: #286b72;
-  color: #8bd8d0;
-  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.86)) drop-shadow(0 0 9px rgb(54 168 171 / 0.44));
+  /* El mismo azul del borde de una carta disponible en la Mano: la guía señala
+     con el color que el jugador ya asocia a «esto se puede jugar». */
+  --tutorial-cue-deep: #0f7eb5;
+  --tutorial-cue-mid: #27cff4;
+  --tutorial-cue-hot: #43e2ff;
+  --tutorial-cue-glint: #eaf9ff;
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.86)) drop-shadow(0 0 9px rgb(72 211 244 / 0.5));
   pointer-events: none;
 }
 
 .guided-tutorial-directional-cue[data-tone="attack"] {
-  --tutorial-cue-deep: #1d0c07;
-  --tutorial-cue-face: #67351f;
-  --tutorial-cue-inset: #9a5330;
-  color: #e99a58;
+  --tutorial-cue-deep: #7a2f05;
+  --tutorial-cue-mid: #f28a35;
+  --tutorial-cue-hot: #ffc98a;
+  --tutorial-cue-glint: #fff4e4;
   filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.86)) drop-shadow(0 0 9px rgb(188 83 38 / 0.5));
 }
 
@@ -20970,37 +20972,16 @@ body.playground-active .phase-banner-shell {
   animation: guided-directional-rise 1.8s cubic-bezier(0.2, 0.72, 0.18, 1) infinite;
 }
 
-.tutorial-directional-arrow-shadow,
-.tutorial-directional-arrow-face,
-.tutorial-directional-arrow-inset {
-  stroke-linejoin: round;
-}
+.tutorial-directional-stop-deep { stop-color: var(--tutorial-cue-deep); stop-opacity: 0.2; }
+.tutorial-directional-stop-mid { stop-color: var(--tutorial-cue-mid); stop-opacity: 0.92; }
+.tutorial-directional-stop-hot { stop-color: var(--tutorial-cue-hot); }
+.tutorial-directional-stop-glint { stop-color: var(--tutorial-cue-glint); }
 
-.tutorial-directional-arrow-shadow {
-  fill: var(--tutorial-cue-deep);
-  stroke: rgb(0 0 0 / 0.76);
-  stroke-width: 4;
+/* El destello recorre la hoja de la base a la punta, recortado por su silueta:
+   es el mismo gesto de las flechas de combate, sin repetir su material. */
+.tutorial-directional-glint {
+  animation: guided-directional-glint 2.1s linear infinite;
 }
-
-.tutorial-directional-arrow-face {
-  fill: var(--tutorial-cue-face);
-  stroke: currentcolor;
-  stroke-width: 2;
-}
-
-.tutorial-directional-arrow-inset {
-  fill: var(--tutorial-cue-inset);
-  stroke: rgb(235 250 241 / 0.32);
-  stroke-width: 1;
-}
-
-.tutorial-directional-trail {
-  fill: currentcolor;
-  opacity: 0.82;
-}
-
-.tutorial-directional-trail.trail-two { opacity: 0.58; }
-.tutorial-directional-trail.trail-three { opacity: 0.34; }
 
 .guided-tutorial-callout {
   position: absolute;
@@ -21090,14 +21071,14 @@ body.playground-active .phase-banner-shell {
   color: #e2d7b8;
   font-family: inherit;
   overflow: visible;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   font-size: clamp(13px, 3vw, 25px);
   font-weight: 600;
   letter-spacing: 0.035em;
   line-height: 1.14;
   text-shadow: 0 3px 13px rgb(0 0 0 / 0.66);
-  text-wrap: balance;
-  white-space: normal;
+  text-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .tutorial-dialog-heading,
@@ -21287,54 +21268,145 @@ body.playground-active .phase-banner-shell {
   text-shadow: 0 0 2.4cqw rgb(47 155 117 / 0.72), 0 1px 3px #000;
 }
 
-.guided-card-comparison-stat-label {
+/*
+ * Cartelas de Fuerza y Aguante. Son el cuadro de diálogo del tutorial en chico:
+ * mismo borde con la tapa clara arriba, mismos dos filetes horizontales y el mismo
+ * rombo girado de .guided-tutorial-callout-mark. El término ocupa el sitio del título
+ * y la cifra el del contador de paso.
+ *
+ * Se colocan en escalón alrededor del marcador —Fuerza arriba a la izquierda, Aguante
+ * abajo a la derecha— repitiendo el orden de las dos cifras dentro del marcador. Las
+ * dos quedan dentro de la silueta de la carta: la comparación muestra dos cartas
+ * juntas y salirse invadiría a la vecina.
+ *
+ * Las medidas son las del marcador ya escalado a 1.2: su canto izquierdo cae en
+ * 78.9cqw, el derecho en 98.3cqw, y su alto visible ocupa de 71.3cqw a 82.5cqw
+ * medidos desde el borde superior de la carta.
+ */
+.guided-stat-label {
   position: absolute;
   z-index: 45;
-  border: 0;
-  border-bottom: 1px solid currentcolor;
-  padding: 0.45cqw 0.7cqw 0.8cqw;
-  background: linear-gradient(90deg, transparent, rgb(6 11 13 / 0.92) 14%, rgb(6 11 13 / 0.92) 86%, transparent);
-  box-shadow: 0 1.2cqw 2.4cqw rgb(0 0 0 / 0.62);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 2.55cqw;
+  /* El hueco que queda a la izquierda del marcador: la cartela no puede salirse de
+     la carta porque la comparación muestra dos cartas juntas. */
+  max-width: 62cqw;
+  overflow: visible;
+  border: 1px solid rgb(160 148 102 / 0.46);
+  border-top-color: rgb(218 201 142 / 0.68);
+  border-radius: 2px;
+  padding: clamp(8px, 2.4cqw, 11px) clamp(11px, 3.2cqw, 14px) clamp(9px, 2.6cqw, 12px);
+  background:
+    radial-gradient(circle at 18% 0%, rgb(196 189 153 / 0.075), transparent 44%),
+    linear-gradient(145deg, rgb(28 35 38 / 0.985), rgb(7 12 15 / 0.995));
+  box-shadow:
+    inset 0 1px 0 rgb(238 223 174 / 0.08),
+    inset 0 -6cqw 10cqw rgb(0 0 0 / 0.18),
+    0 5cqw 12cqw rgb(0 0 0 / 0.62);
+  font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+  text-align: left;
+}
+
+.guided-stat-label::before {
+  position: absolute;
+  top: 0;
+  right: 1px;
+  left: 1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(231 218 170 / 0.27), transparent);
+  content: "";
+}
+
+.guided-stat-label::after {
+  position: absolute;
+  right: 3.2cqw;
+  bottom: -3px;
+  left: 3.2cqw;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(182 166 105 / 0.48), transparent);
+  content: "";
+}
+
+.guided-stat-label-mark {
+  position: absolute;
+  z-index: 2;
+  width: clamp(8px, 2.8cqw, 12px);
+  height: clamp(8px, 2.8cqw, 12px);
+  border: 1px solid rgb(190 172 111 / 0.64);
+  background: #111b17;
+  box-shadow: 0 0 12px rgb(176 157 92 / 0.2);
+  transform: rotate(45deg);
+}
+
+.guided-stat-label.is-power .guided-stat-label-mark { right: 4.6cqw; bottom: calc(clamp(8px, 2.8cqw, 12px) / -2 - 1px); }
+.guided-stat-label.is-endurance .guided-stat-label-mark { top: calc(clamp(8px, 2.8cqw, 12px) / -2 - 1px); right: 4.6cqw; }
+
+.guided-stat-label-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgb(166 154 104 / 0.2);
+  padding-bottom: 7px;
+}
+
+.guided-stat-label-term {
+  color: #e2d7b8;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.14em;
   line-height: 1;
+  text-shadow: 0 3px 13px rgb(0 0 0 / 0.66);
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
-.guided-card-comparison-stat-label::after {
+.guided-stat-label-value {
+  color: #a99a6d;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+/* Mismo cuerpo que .guided-tutorial-body p: la cartela se lee como el cuadro grande. */
+.guided-stat-label-body {
+  margin: 7px 0 0;
+  color: #b8c0bf;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/*
+ * Escalón alrededor del marcador. Con la carta en su mínimo real de 260 px el cuerpo
+ * de 16 px parte en tres líneas, así que Aguante arranca en 92cqw: por debajo de esa
+ * marca la cartela se saldría por el pie de la carta.
+ */
+.guided-stat-label.is-power { right: 33.1cqw; bottom: 82cqw; }
+.guided-stat-label.is-endurance { top: 92cqw; right: 2cqw; }
+
+/* Las guías nacen del canto de la cartela y mueren sobre la mitad que nombra. */
+.guided-card-comparison-leaders {
   position: absolute;
-  top: 100%;
-  width: 3.2cqw;
-  height: 1px;
-  background: currentcolor;
-  content: "";
-  opacity: 0.7;
+  z-index: 44;
+  inset: 0;
+  overflow: visible;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
-.guided-card-comparison-stat-label.is-power {
-  right: 17.5cqw;
-  bottom: 68.7cqw;
-  color: #e78d61;
+.guided-card-comparison-leader {
+  fill: none;
+  stroke: rgb(216 192 133 / 0.9);
+  stroke-linecap: round;
+  stroke-width: 0.5cqw;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.9));
 }
 
-.guided-card-comparison-stat-label.is-power::after {
-  right: -2.8cqw;
-  transform: rotate(32deg);
-  transform-origin: left;
-}
-
-.guided-card-comparison-stat-label.is-endurance {
-  right: -5.8cqw;
-  bottom: 49.5cqw;
-  color: #75cda5;
-}
-
-.guided-card-comparison-stat-label.is-endurance::after {
-  left: -2.8cqw;
-  transform: rotate(-32deg);
-  transform-origin: right;
+.guided-card-comparison-leader-dot {
+  fill: rgb(216 192 133 / 0.95);
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.9));
 }
 
 .guided-card-comparison-frame > img {
@@ -21417,6 +21489,13 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
   50% { opacity: 1; transform: translateY(-5px) scale(1.02); }
 }
 
+/* La banda nace bajo la base del glifo y sale por encima de la punta; el
+   recorrido está en unidades del viewBox, no en píxeles de pantalla. */
+@keyframes guided-directional-glint {
+  0% { transform: translateY(252px); }
+  100% { transform: translateY(0); }
+}
+
 @keyframes guided-card-stats-focus {
   0%, 100% { filter: brightness(0.96); }
   50% { filter: brightness(1.18); }
@@ -21457,6 +21536,7 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
   .guided-tutorial-overlay[data-mode="act"] .guided-tutorial-ring,
   .guided-tutorial-callout,
   .guided-tutorial-directional-cue svg,
+  .tutorial-directional-glint,
   .guided-card-comparison.is-combatStats .guided-card-comparison-frame > .card-stat-badge {
     animation: none;
   }

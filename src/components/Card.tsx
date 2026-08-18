@@ -1,4 +1,4 @@
-import type { CSSProperties, KeyboardEvent, MouseEvent, PointerEvent, ReactNode } from "react";
+import type { CSSProperties, KeyboardEvent, MouseEvent, PointerEvent, ReactNode, Ref } from "react";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { localizedCardName, localizedTraitLabel, localizedTraitTooltip, naturalCaseTraitLabel } from "../i18n/cardLocalization";
@@ -467,15 +467,18 @@ export function CardCostBadge({
 export function CardStatsBadge({
   stats,
   preferSingleSword = false,
+  ref,
 }: {
   stats: CardStatDisplay;
   preferSingleSword?: boolean;
+  ref?: Ref<HTMLDivElement>;
 }) {
   const language = useLanguageStore((state) => state.language);
   if (!stats.text) return null;
 
   return (
     <div
+      ref={ref}
       aria-label={language === "es" ? `${stats.power} de Fuerza, ${stats.endurance} de Aguante` : `${stats.power} Power, ${stats.endurance} Endurance`}
       className={[
         "card-stat-badge",

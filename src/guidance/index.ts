@@ -27,4 +27,5 @@ export * from "./progress";
 export * from "./registry";
 export * from "./runtime";
 export * from "./sessionStore";
+export * from "./statLabelGeometry";
 export * from "./validation";

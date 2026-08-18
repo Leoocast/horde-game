@@ -38,6 +38,9 @@ vfx/                exploraciones de efectos
   prueba de encaje que mide cada cadena contra el ancho real de su hueco en `src/styles.css`.
 - `ui/ui-kit.html` — seis pieles completas (botones, modales, paneles, controles, HUD).
 - `ui/ui-actual-lacquer.html` — los componentes reales del juego en la piel actual y en laca azul.
+- `ui/keyword-icons.html` — los once Rasgos y el icono de reserva con SVG propios, comparados contra
+  el icono de `lucide-react` en uso, en tres familias de trazo y en el tamaño real de la insignia de
+  24 px y de la píldora del preview.
 
 ### Fuentes
 

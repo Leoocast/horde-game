@@ -14,12 +14,16 @@ import {
   guidedUnionBounds,
   placeGuidedCallout,
   resolveGuidedAnchors,
+  statBadgeAnchor,
+  statLabelEdgePoint,
+  statLabelLeaders,
+  statLabelLeadersEqual,
   validateGuidedLesson,
 } from "../src/guidance";
 import { contentCatalog } from "../src/content/bootstrap";
 import { createGuidedFrameLoop } from "../src/components/guidedFrameLoop";
 import { energyRecycleDropZoneContains } from "../src/components/energyRecycleDropTarget";
-import { tutorialCalloutWidth } from "../src/components/tutorialCalloutSizing";
+import { tutorialCalloutTitleFontSize, tutorialCalloutWidth } from "../src/components/tutorialCalloutSizing";
 import { GUIDANCE_LAB_LESSON } from "../src/playground/guidanceLabDefinition";
 
 test("semantic anchors keep simultaneous presentation owners isolated", () => {
@@ -98,13 +102,17 @@ test("the Source return keeps the broad rightward gesture and extends down over 
   assert.equal(energyRecycleDropZoneContains({ x: 990, y: 450 }, viewport, archive), false);
 });
 
-test("directional cues rise inside their authored card", () => {
+test("directional cues rise from their authored card and clear its top edge", () => {
   const target = { key: "card:maela", role: "origin", left: 440, top: 320, width: 150, height: 210 };
   const cue = guidedDirectionalCueBounds(target);
   assert.ok(cue.left >= target.left);
   assert.ok(cue.left + cue.width <= target.left + target.width);
-  assert.ok(cue.top >= target.top);
-  assert.ok(cue.top + cue.height <= target.top + target.height);
+  assert.ok(cue.top < target.top, "the tip must leave the card toward the field");
+  assert.ok(
+    cue.top + cue.height > target.top + target.height * 0.4,
+    "the base must still rest on the card so the cue names it",
+  );
+  assert.ok(cue.top + cue.height < target.top + target.height, "the cue must not reach the card's lower edge");
 });
 
 test("guided geometry loops keep one frame owner and stop without orphan callbacks", () => {
@@ -263,12 +271,12 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(overlay, /guided-tutorial-directional-cue/u);
   assert.match(overlay, /!isLearnToPlay &&/u);
   assert.match(overlay, /tutorial-dialog-heading/u);
-  assert.match(overlay, /<div className="tutorial-dialog-heading">\s*<h2 id="guided-tutorial-title">\{title\}<\/h2>/su);
+  assert.match(overlay, /<div className="tutorial-dialog-heading">\s*<h2 id="guided-tutorial-title" style=\{\{ fontSize: titleFontSize \}\}>\{title\}<\/h2>/su);
   assert.doesNotMatch(overlay, /tutorial-dialog-heading-ornament/u);
   assert.match(overlay, /guided\.contextual\.understood/u);
   assert.match(overlay, /\{showCallout && !missingAnchor && comparisonCards\.length > 0 && \(/u);
   assert.match(overlay, /allowedIntent\.kind === "phase\.continueSetup"/u);
-  assert.match(overlay, /setDismissedActionCalloutStepId\(session\.currentStep\.id\)/u);
+  assert.match(overlay, /setDismissedActionCalloutScope\(stepScope\)/u);
   assert.match(overlay, /guidedUnionBounds/u);
   assert.match(overlay, /tutorialCalloutWidth/u);
   assert.doesNotMatch(
@@ -278,10 +286,8 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   );
   assert.match(overlay, /createGuidedFrameLoop\(measure\)/u);
   assert.match(overlay, /new ResizeObserver\(\(\) => loop\.measureNow\(\)\)/u);
-  assert.match(
-    overlay,
-    /useEffect\(\(\) => \{\s*if \(!active\) return;\s*setFeedback\(undefined\);\s*\}, \[active, session\.currentStep\?\.id, session\.sessionId\]\);/u,
-  );
+  assert.doesNotMatch(overlay, /setFeedback\(undefined\)/u);
+  assert.match(overlay, /feedbackState\?\.scope === stepScope/u);
   assert.match(overlay, /session\.currentStep\?\.id === "inspect-harvester"[\s\S]*setFocusedCardId\(harvesterId\)/u);
   assert.doesNotMatch(overlay, /feedback \? "is-rejected"/u);
   assert.doesNotMatch(styles, /\.guided-tutorial-ring\.is-rejected/u);
@@ -316,11 +322,11 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(styles, /\.guided-tutorial-body p\s*\{[^}]*font-size:\s*16px;/su);
   assert.match(
     styles,
-    /\.guided-tutorial-callout h2\s*\{[^}]*overflow-wrap:\s*anywhere;[^}]*white-space:\s*normal;/su,
+    /\.guided-tutorial-callout h2\s*\{[^}]*overflow-wrap:\s*normal;[^}]*white-space:\s*nowrap;/su,
   );
   assert.match(
     styles,
-    /\.contextual-tutorial-callout h2\s*\{[^}]*overflow-wrap:\s*anywhere;[^}]*white-space:\s*normal;/su,
+    /\.contextual-tutorial-callout h2\s*\{[^}]*overflow-wrap:\s*normal;[^}]*white-space:\s*nowrap;/su,
   );
   assert.match(
     styles,
@@ -343,7 +349,7 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(board, /sessionPolicy\.guidedSystemControls/u);
 });
 
-test("tutorial titles expand their dialog before wrapping", () => {
+test("tutorial titles expand their dialog and shrink only when the viewport caps one row", () => {
   const expanded = tutorialCalloutWidth("Invoca a Aelyra, Heredera de Elarion", 1280, {
     minimum: 430,
     maximum: 660,
@@ -358,6 +364,30 @@ test("tutorial titles expand their dialog before wrapping", () => {
     titleCharacterWidth: 12.5,
     chromeWidth: 108,
   }), 288);
+
+  const profile = {
+    minimum: 430,
+    maximum: 760,
+    titleCharacterWidth: 15.5,
+    chromeWidth: 108,
+  };
+  const invokeTitle = "Use your Energy to Invoke new Echoes.";
+  const desktopWidth = tutorialCalloutWidth(invokeTitle, 1280, profile);
+  assert.equal(tutorialCalloutTitleFontSize(invokeTitle, desktopWidth, profile, 10, 25), 25);
+  const constrainedWidth = tutorialCalloutWidth(invokeTitle, 520, profile);
+  const constrainedFont = tutorialCalloutTitleFontSize(invokeTitle, constrainedWidth, profile, 10, 25);
+  assert.ok(constrainedFont < 25);
+  assert.ok(invokeTitle.length * profile.titleCharacterWidth * (constrainedFont / 25) <= constrainedWidth - profile.chromeWidth + 0.1);
+
+  const contextualProfile = {
+    minimum: 410,
+    maximum: 760,
+    titleCharacterWidth: 13,
+    chromeWidth: 92,
+  };
+  const emptyHandTitle = "An empty Hand changes your draw";
+  const contextualWidth = tutorialCalloutWidth(emptyHandTitle, 1024, contextualProfile);
+  assert.equal(tutorialCalloutTitleFontSize(emptyHandTitle, contextualWidth, contextualProfile, 10, 21), 21);
 });
 
 function fakeElement({ isConnected }) {
@@ -372,4 +402,84 @@ function overlapArea(left, right) {
   const width = Math.max(0, Math.min(left.left + left.width, right.left + right.width) - Math.max(left.left, right.left));
   const height = Math.max(0, Math.min(left.top + left.height, right.top + right.height) - Math.max(left.top, right.top));
   return width * height;
+}
+
+test("stat label leaders land on each half of the badge whatever its width", () => {
+  // Marcador de un dígito y el mismo con dos: sólo crece hacia la izquierda.
+  const narrow = { left: 300, top: 400, width: 80, height: 46 };
+  const wide = { left: 276, top: 400, width: 104, height: 46 };
+  const labels = {
+    power: { left: 90, top: 300, width: 150, height: 52 },
+    endurance: { left: 210, top: 500, width: 150, height: 52 },
+  };
+
+  for (const badge of [narrow, wide]) {
+    const leaders = statLabelLeaders(badge, labels);
+    assert.deepEqual(leaders.map((leader) => leader.half), ["power", "endurance"]);
+    const power = statBadgeAnchor(badge, "power");
+    const endurance = statBadgeAnchor(badge, "endurance");
+    // Cada guía apunta dentro de su mitad, nunca al centro ni a la mitad contraria.
+    assert.ok(power.x > badge.left && power.x < badge.left + badge.width / 2);
+    assert.ok(endurance.x > badge.left + badge.width / 2 && endurance.x < badge.left + badge.width);
+    assert.equal(power.y, badge.top + badge.height / 2);
+    assert.equal(endurance.y, badge.top + badge.height / 2);
+    for (const leader of leaders) {
+      const target = leader.half === "power" ? power : endurance;
+      assert.ok(leader.path.endsWith(`${Math.round(target.x * 10) / 10} ${Math.round(target.y * 10) / 10}`));
+      assert.ok(leader.radius >= 1.4);
+    }
+  }
+
+  // El ancho del marcador mueve el destino: la guía no puede quedarse fija.
+  assert.notEqual(statBadgeAnchor(narrow, "power").x, statBadgeAnchor(wide, "power").x);
+});
+
+test("stat label leaders leave through the edge that faces the badge", () => {
+  const badge = { left: 300, top: 400, width: 80, height: 46 };
+  const above = { left: 90, top: 300, width: 150, height: 52 };
+  const below = { left: 210, top: 500, width: 150, height: 52 };
+
+  // La cartela de arriba está a la izquierda y por encima: sale por abajo o por la
+  // derecha, nunca por el lado contrario al marcador.
+  const fromAbove = statLabelEdgePoint(above, statBadgeAnchor(badge, "power"));
+  assert.ok(onBoundary(above, fromAbove));
+  assert.ok(fromAbove.x === above.left + above.width || fromAbove.y === above.top + above.height);
+  assert.notEqual(fromAbove.x, above.left);
+  assert.notEqual(fromAbove.y, above.top);
+
+  // La de abajo queda a la derecha y por debajo: sale por arriba o por la derecha.
+  const fromBelow = statLabelEdgePoint(below, statBadgeAnchor(badge, "endurance"));
+  assert.ok(onBoundary(below, fromBelow));
+  assert.ok(fromBelow.y === below.top || fromBelow.x === below.left + below.width);
+  assert.notEqual(fromBelow.y, below.top + below.height);
+
+  // Un marcador que queda al otro lado mueve la salida a la mitad opuesta del canto.
+  const mirrored = statLabelEdgePoint(below, statBadgeAnchor({ ...badge, left: 20 }, "power"));
+  assert.ok(onBoundary(below, mirrored));
+  assert.ok(mirrored.x < below.left + below.width / 2);
+  assert.ok(fromBelow.x > below.left + below.width / 2);
+});
+
+test("stat label leaders stay stable so the observer cannot loop", () => {
+  const badge = { left: 300, top: 400, width: 80, height: 46 };
+  const labels = {
+    power: { left: 90, top: 300, width: 150, height: 52 },
+    endurance: { left: 210, top: 500, width: 150, height: 52 },
+  };
+  assert.ok(statLabelLeadersEqual(statLabelLeaders(badge, labels), statLabelLeaders(badge, labels)));
+  const moved = { ...badge, left: badge.left + 12 };
+  assert.equal(statLabelLeadersEqual(statLabelLeaders(badge, labels), statLabelLeaders(moved, labels)), false);
+  // Una cartela todavía sin medir no dibuja guía a medias.
+  assert.equal(statLabelLeaders(badge, { ...labels, power: { left: 0, top: 0, width: 0, height: 0 } }).length, 1);
+  assert.equal(statLabelLeaders({ ...badge, width: 0 }, labels).length, 0);
+});
+
+function onBoundary(box, point) {
+  const right = box.left + box.width;
+  const bottom = box.top + box.height;
+  const onVerticalEdge = (point.x === box.left || point.x === right) &&
+    point.y >= box.top && point.y <= bottom;
+  const onHorizontalEdge = (point.y === box.top || point.y === bottom) &&
+    point.x >= box.left && point.x <= right;
+  return onVerticalEdge || onHorizontalEdge;
 }
