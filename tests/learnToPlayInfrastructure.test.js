@@ -27,6 +27,7 @@ import {
   learnToPlayFirstDefenseReady,
   learnToPlayHarvesterInspectionReady,
   learnToPlayReturnSourceRequired,
+  learnToPlaySourceRecycleBlockedByOpenHelp,
 } from "../src/guidance/learnToPlayDirector";
 import { PRODUCT_CONTEXTUAL_CONCEPTS } from "../src/guidance/contextualProductConcepts";
 import {
@@ -370,6 +371,12 @@ test("journey-authored milestones ignore global contextual progress and remain f
     ...sourceTurn,
     player: { ...sourceTurn.player, energyActionUsedThisTurn: true },
   }, bindings), false);
+});
+
+test("the empty-Hand help owns Source recycling until the player closes it", () => {
+  assert.equal(learnToPlaySourceRecycleBlockedByOpenHelp("source.recycle", "empty-hand-draw"), true);
+  assert.equal(learnToPlaySourceRecycleBlockedByOpenHelp("source.recycle", undefined), false);
+  assert.equal(learnToPlaySourceRecycleBlockedByOpenHelp("card.play", "empty-hand-draw"), false);
 });
 
 test("post-Surge concepts react only to the real empty-Hand draw and the required Source", () => {

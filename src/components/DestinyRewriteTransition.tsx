@@ -36,6 +36,15 @@ const SHARD_MAX_AREA = 0.22;
 const SHARD_MIN_AREA = 0.0006;
 const SHARD_MAX_DEPTH = 7;
 const SHARD_LIMIT = 56;
+const DESTINY_BODY_CLASSES = [
+  "destiny-rewrite-active",
+  "destiny-rewrite-absorbing",
+  "destiny-rewrite-revealing",
+] as const;
+
+function clearDestinyTransitionBodyClasses(): void {
+  document.body.classList.remove(...DESTINY_BODY_CLASSES);
+}
 
 function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -86,6 +95,15 @@ export function DestinyRewriteTransition({ transitionId, kind, seed, onCovered, 
   const coverCommittedRef = useRef(false);
   const revealSoundPlayedRef = useRef(false);
   const completeCommittedRef = useRef(false);
+  // El cambio de Futuro puede re-renderizar App (por ejemplo, 0 -> 3 turnos al salir del
+  // tutorial). Igual que la obertura, el reloj conserva una sola ejecución y toma siempre los
+  // callbacks y el audio más recientes desde refs.
+  const coveredCallbackRef = useRef(onCovered);
+  const completeCallbackRef = useRef(onComplete);
+  const playSfxRef = useRef(playSfx);
+  coveredCallbackRef.current = onCovered;
+  completeCallbackRef.current = onComplete;
+  playSfxRef.current = playSfx;
 
   useEffect(() => {
     const reducedMotion = prefersReducedMotion();
@@ -97,7 +115,7 @@ export function DestinyRewriteTransition({ transitionId, kind, seed, onCovered, 
     // a la transición, no a cada ejecución del efecto.
     if (!startSoundPlayedRef.current) {
       startSoundPlayedRef.current = true;
-      playSfx("activateEffect", { rate: 0.72 });
+      playSfxRef.current("activateEffect", { rate: 0.72 });
     }
 
     const coverTimer = window.setTimeout(() => {
@@ -106,29 +124,32 @@ export function DestinyRewriteTransition({ transitionId, kind, seed, onCovered, 
       document.body.classList.remove("destiny-rewrite-absorbing");
       document.body.classList.add("destiny-rewrite-revealing");
       setPhase("revealing");
-      onCovered(transitionId);
+      coveredCallbackRef.current(transitionId);
       // El horizonte se cierra sobre la escena: ese golpe es el clímax y no puede ser mudo.
-      playSfx("stoneCrash", { rate: 0.62 });
+      playSfxRef.current("stoneCrash", { rate: 0.62 });
     }, coverMs);
     // El futuro nuevo llega después del golpe, no encima; con movimiento reducido, casi pegado.
     const revealTimer = window.setTimeout(() => {
       if (revealSoundPlayedRef.current) return;
       revealSoundPlayedRef.current = true;
-      playSfx("drawOne", { rate: 0.78 });
+      playSfxRef.current("drawOne", { rate: 0.78 });
     }, coverMs + (reducedMotion ? 80 : 260));
     const completeTimer = window.setTimeout(() => {
       if (completeCommittedRef.current) return;
       completeCommittedRef.current = true;
-      onComplete(transitionId);
+      // `onComplete` desmonta este overlay. Quitar las clases antes evita que el siguiente paint
+      // vea el tablero todavía bajo la animación mientras el cleanup pasivo espera su turno.
+      clearDestinyTransitionBodyClasses();
+      completeCallbackRef.current(transitionId);
     }, completeMs);
 
     return () => {
       window.clearTimeout(coverTimer);
       window.clearTimeout(revealTimer);
       window.clearTimeout(completeTimer);
-      document.body.classList.remove("destiny-rewrite-active", "destiny-rewrite-absorbing", "destiny-rewrite-revealing");
+      clearDestinyTransitionBodyClasses();
     };
-  }, [onComplete, onCovered, playSfx, transitionId]);
+  }, [transitionId]);
 
   /* La escena no cae como un bloque: cada pieza se va por su cuenta, se estira en el eje que apunta
      al horizonte y llega tarde según lo lejos que estaba. Las animaciones se cancelan al pasar a

@@ -440,12 +440,12 @@ export const LEARN_TO_PLAY_HARVESTER_INSPECTION = Object.freeze({
 /** Strict only after the player tries to play the fifth Source or leave Main without returning it. */
 export const LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION = Object.freeze({
   id: "learn-to-play.return-source",
-  revision: 1,
-  startStepId: "return-source",
+  revision: 2,
+  startStepId: "explain-return-source",
   steps: [
     {
-      id: "return-source",
-      kind: "act",
+      id: "explain-return-source",
+      kind: "explain",
       copy: {
         titleKey: "guided.contextual.product.returnSourceTitle",
         bodyKey: "guided.contextual.product.returnSourceBody",
@@ -455,6 +455,25 @@ export const LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION = Object.freeze({
         { kind: "card", alias: "post_surge_source", role: "origin" },
         { kind: "surface", anchor: "player.archive", role: "destination" },
       ],
+      preconditions: [
+        { kind: "card.inZone", cardAlias: "post_surge_source", side: "player", zone: "hand" },
+      ],
+      nextStepId: "return-source",
+    },
+    {
+      id: "return-source",
+      kind: "act",
+      callout: "hidden",
+      copy: {
+        titleKey: "guided.contextual.product.returnSourceTitle",
+        bodyKey: "guided.contextual.product.returnSourceBody",
+        glossaryTerms: ["source", "archive"],
+      },
+      highlights: [
+        { kind: "card", alias: "post_surge_source", role: "origin" },
+        { kind: "surface", anchor: "player.archive", role: "destination" },
+      ],
+      presentation: { kind: "spotlight", tone: "gold" },
       allowedIntent: { kind: "source.recycle", cardAlias: "post_surge_source" },
       preconditions: [
         { kind: "card.inZone", cardAlias: "post_surge_source", side: "player", zone: "hand" },
