@@ -288,8 +288,16 @@ export const LEARN_TO_PLAY_END_OPENING_TURN_INTERVENTION = Object.freeze({
 export const LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION = Object.freeze({
   id: "learn-to-play.first-defense",
   revision: 1,
-  startStepId: "host-turn",
+  startStepId: "wait-for-host-arrivals",
   steps: [
+    {
+      id: "wait-for-host-arrivals",
+      kind: "observe",
+      callout: "hidden",
+      copy: { titleKey: "guided.learnToPlay.checkpointTitle", bodyKey: "guided.learnToPlay.checkpointBody" },
+      highlights: [],
+      nextStepId: "host-turn",
+    },
     {
       id: "host-turn",
       kind: "explain",
@@ -322,8 +330,16 @@ export const LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION = Object.freeze({
 export const LEARN_TO_PLAY_HARVESTER_INSPECTION = Object.freeze({
   id: "learn-to-play.inspect-harvester",
   revision: 1,
-  startStepId: "inspect-harvester",
+  startStepId: "wait-for-vaelor-aftermath",
   steps: [
+    {
+      id: "wait-for-vaelor-aftermath",
+      kind: "observe",
+      callout: "hidden",
+      copy: { titleKey: "guided.learnToPlay.checkpointTitle", bodyKey: "guided.learnToPlay.checkpointBody" },
+      highlights: [],
+      nextStepId: "inspect-harvester",
+    },
     {
       id: "inspect-harvester",
       kind: "act",

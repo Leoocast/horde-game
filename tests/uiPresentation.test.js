@@ -1193,8 +1193,17 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(board, /sessionPolicy\.showStandardOutcome && defeatReady/u);
   assert.match(board, /sessionPolicy\.showJourneyDefeat && defeatReady/u);
   assert.match(journeyModal, /<DefeatShatterAnimator/u);
+  assert.match(journeyModal, /destiny\.futureLostLineOne/u);
+  assert.match(journeyModal, /destiny\.futureLostLineTwo/u);
+  assert.match(journeyModal, /result\.chapterLostAmongShards/u);
+  assert.match(journeyModal, /LEARN_TO_PLAY_NARRATIVE_DELAY_MS\s*=\s*1_000/u);
+  assert.match(journeyModal, /guided\.learnToPlay\.defeatLineOne/u);
+  assert.match(journeyModal, /guided\.learnToPlay\.defeatLineTwo/u);
+  assert.match(journeyModal, /guided\.learnToPlay\.defeatBody/u);
+  assert.match(journeyModal, /guided\.continue/u);
   assert.match(journeyModal, /guided\.learnToPlay\.defeatCta/u);
   assert.match(journeyModal, /disabled/u);
+  assert.match(journeyModal, /game-result-action-primary/u);
   assert.doesNotMatch(journeyModal, /onRewriteFuture|onContemplateFuture|defeat-future-plate/u);
   // El vidrio se lee aunque no haya nada impreso: alfa de la captura con suelo de Fresnel.
   assert.match(glassShader, /float printed = middle\.a/u);

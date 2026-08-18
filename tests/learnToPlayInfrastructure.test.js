@@ -20,7 +20,13 @@ import {
 import { GuidedInteractionGate } from "../src/guidance/interactionGate";
 import { GuidedInterventionOrchestrator } from "../src/guidance/interventionOrchestrator";
 import { GuidedJourneyLifecycle } from "../src/guidance/journeyLifecycle";
-import { JourneyIntentGate } from "../src/guidance/journeyIntentGate";
+import { JourneyIntentGate, journeyIntentGate } from "../src/guidance/journeyIntentGate";
+import {
+  LearnToPlayPrologueDirector,
+  learnToPlayFirstDefenseReady,
+  learnToPlayHarvesterInspectionReady,
+  learnToPlayReturnSourceRequired,
+} from "../src/guidance/learnToPlayDirector";
 import { PRODUCT_CONTEXTUAL_CONCEPTS } from "../src/guidance/contextualProductConcepts";
 import { emptyGuidedProgress, nextRequiredGuidedLesson } from "../src/guidance/progress";
 import { GuidedSessionStore } from "../src/guidance/sessionStore";
@@ -170,7 +176,6 @@ test("journey limits are ephemeral and product concepts cover every prologue exp
     "empty-hand-draw",
     "return-source",
     "learn-to-play-vaelor-required",
-    "learn-to-play-harvester-inspection-required",
   ]);
 });
 
@@ -203,6 +208,90 @@ test("the Vaelor reminder expires as soon as Vaelor leaves the Hand", () => {
   assert.ok(match);
   assert.equal(reminder.revalidate(match, { game: { player: { hand: [{ instanceId: "vaelor:1" }] } } }), true);
   assert.equal(reminder.revalidate(match, { game: { player: { hand: [] } } }), false);
+});
+
+test("the Harvester inspection cannot block combat after the prologue has entered post-Surge play", () => {
+  const game = {
+    hostTurnNumber: 10,
+    activeSide: "player",
+    hostRules: { surgeTurn: 10 },
+    player: {
+      hand: [],
+      field: [{ instanceId: "vaelor:1" }],
+      energyActionUsedThisTurn: true,
+    },
+    host: { field: [{ instanceId: "harvester:1" }] },
+  };
+  const director = new LearnToPlayPrologueDirector(
+    { readStore: () => ({ game }) },
+    { start() {}, stop() {} },
+  );
+  director.start({
+    vaelor: "vaelor:1",
+    harvester: "harvester:1",
+    return_to_memory: "gone:return",
+    first_winged_stalker: "gone:stalker-a",
+    second_winged_stalker: "gone:stalker-b",
+    stitched_wing_spawn: "gone:spawn",
+    post_surge_source: "gone:source",
+  }, "post-surge-regression");
+  try {
+    assert.deepEqual(journeyIntentGate.authorize({ kind: "phase.chooseAttackers" }), { allowed: true });
+  } finally {
+    director.stop();
+  }
+});
+
+test("journey-authored milestones ignore global contextual progress and remain fact-driven", () => {
+  const bindings = {
+    vaelor: "vaelor:1",
+    harvester: "harvester:1",
+    return_to_memory: "gone:return",
+    first_winged_stalker: "gone:stalker-a",
+    second_winged_stalker: "gone:stalker-b",
+    stitched_wing_spawn: "gone:spawn",
+    post_surge_source: "river:5",
+  };
+  const beforeSurge = {
+    hostTurnNumber: 9,
+    hostRules: { surgeTurn: 10 },
+    player: {
+      field: [{ instanceId: "vaelor:1" }],
+      hand: [],
+      energyActionUsedThisTurn: false,
+    },
+    host: { field: [{ instanceId: "harvester:1" }] },
+  };
+  const firstDefense = {
+    ...beforeSurge,
+    activeSide: "host",
+    combat: { hostAttackers: ["stalker:1"] },
+  };
+  assert.equal(learnToPlayFirstDefenseReady(firstDefense, false, false), true);
+  assert.equal(learnToPlayFirstDefenseReady(firstDefense, true, false), false);
+  assert.equal(learnToPlayFirstDefenseReady(firstDefense, false, true), false);
+  assert.equal(learnToPlayHarvesterInspectionReady(beforeSurge, bindings, false), true);
+  assert.equal(learnToPlayHarvesterInspectionReady(beforeSurge, bindings, true), false);
+  assert.equal(learnToPlayHarvesterInspectionReady({
+    ...beforeSurge,
+    hostTurnNumber: 10,
+  }, bindings, false), false);
+
+  const sourceTurn = {
+    ...beforeSurge,
+    hostTurnNumber: 10,
+    activeSide: "player",
+    player: {
+      ...beforeSurge.player,
+      hand: [{ instanceId: "river:5" }],
+      energyActionUsedThisTurn: false,
+    },
+  };
+  assert.equal(learnToPlayReturnSourceRequired(sourceTurn, bindings), true);
+  assert.equal(learnToPlayReturnSourceRequired({
+    ...sourceTurn,
+    player: { ...sourceTurn.player, energyActionUsedThisTurn: true },
+  }, bindings), false);
 });
 
 test("post-Surge concepts react only to the real empty-Hand draw and the required Source", () => {

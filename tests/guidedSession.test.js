@@ -10,11 +10,19 @@ import {
   GuidedLessonRegistry,
   GuidedPresentationActivityRegistry,
   GuidedSessionStore,
+  guidedPresentationActivity,
+  guidedPresentationBlockers,
   guidedSessionStore,
 } from "../src/guidance";
 import { useAudioStore } from "../src/store/useAudioStore";
 import { useGameStore } from "../src/store/useGameStore";
 import { contentCatalog } from "../src/content/bootstrap";
+import { prepareHostAttackers } from "../src/engine/CombatResolver";
+import { runHostMain } from "../src/engine/HostController";
+import { buildGuidedScenario } from "../src/guidance/buildGuidedScenario";
+import { GuidedInterventionOrchestrator } from "../src/guidance/interventionOrchestrator";
+import { LearnToPlayPrologueDirector } from "../src/guidance/learnToPlayDirector";
+import { LEARN_TO_PLAY_PROLOGUE_SCENARIO } from "../src/guidance/learnToPlayPrologue";
 import { GUIDANCE_LAB_LESSON, GUIDANCE_LAB_REGISTRY } from "../src/playground/guidanceLabDefinition";
 
 test("presentation activity tokens settle once and stale epochs cannot affect a new board", () => {
@@ -295,6 +303,132 @@ test("the Developer Guidance Lab runs the vertical slice on the real GameStore",
     assert.equal(guidedSessionStore.snapshot().currentStep.id, "source-settled");
   });
 });
+
+test("Learn to Play keeps the combat-stat and Harvester interventions reachable in sequence", async () => {
+  await withStoreHarness(async () => {
+    const built = buildGuidedScenario(LEARN_TO_PLAY_PROLOGUE_SCENARIO, contentCatalog);
+    useGameStore.getState().loadScenario(built.game, {
+      playerDeckId: built.playerDeckKey,
+      hostDeckId: built.hostDeckKey,
+    });
+    const bindings = Object.freeze(Object.fromEntries(
+      Object.entries(built.bindings).map(([alias, binding]) => [alias, binding.instanceId]),
+    ));
+    const intervention = new GuidedInterventionOrchestrator(guidedSessionStore, {
+      readGame: () => useGameStore.getState().game,
+      stopPresentation: () => undefined,
+    });
+    const director = new LearnToPlayPrologueDirector(
+      { readStore: () => useGameStore.getState() },
+      intervention,
+    );
+    director.start(bindings, "learn-to-play:director-regression");
+
+    const sourceId = bindings.fourth_source;
+    useGameStore.getState().playLand(sourceId);
+    useGameStore.getState().completeLandPlayAnimation(useGameStore.getState().landPlayAnimationQueue[0].id);
+    await flushMicrotasks();
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "invoke-aelyra");
+
+    useGameStore.getState().castCard(bindings.aelyra);
+    useGameStore.setState({
+      summoningAnimationCount: 0,
+      autoPaidLandAnimation: undefined,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 1_220));
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "choose-aelyra-target");
+    assert.equal(useGameStore.getState().counterTargeting?.sourceId, bindings.aelyra);
+    useGameStore.getState().lockCounterTarget(bindings.maela);
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "confirm-aelyra-target");
+    useGameStore.getState().confirmCounterTargeting();
+    useGameStore.setState({
+      buffAnimationCardIds: [],
+      autoPaidLandAnimation: undefined,
+      lifeBuffAnimationId: undefined,
+    });
+    await flushMicrotasks();
+    guidedSessionStore.notifyCheckpointState(true);
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "enter-first-combat");
+    useGameStore.getState().advancePhase("combat");
+    await flushMicrotasks();
+    assert.equal(
+      guidedSessionStore.snapshot().status,
+      "completed",
+      JSON.stringify({
+        session: guidedSessionStore.snapshot(),
+        blockers: guidedPresentationBlockers(useGameStore.getState(), guidedPresentationActivity.snapshot()),
+      }),
+    );
+    useGameStore.getState().advancePhase("end");
+    await flushMicrotasks();
+    useGameStore.getState().endPlayerTurn();
+    await flushMicrotasks();
+
+    let hostGame = runHostMain(useGameStore.getState().game);
+    hostGame = prepareHostAttackers(hostGame);
+    useGameStore.setState({
+      game: hostGame,
+      summoningAnimationCount: 0,
+      hostAutoTriggerCount: 0,
+      hostMillAnimationQueue: [],
+      buffAnimationCardIds: [],
+    });
+    guidedPresentationActivity.reset();
+    await flushMicrotasks();
+
+    assert.equal(
+      guidedSessionStore.snapshot().lessonId,
+      "learn-to-play.first-defense",
+      JSON.stringify({
+        session: guidedSessionStore.snapshot(),
+        director: director.snapshot(),
+        blockers: guidedPresentationBlockers(useGameStore.getState(), guidedPresentationActivity.snapshot()),
+      }),
+    );
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "host-turn");
+    guidedSessionStore.notifyCheckpointState(true);
+    assert.equal(guidedSessionStore.continueExplanation(), true);
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "explain-combat-stats");
+    assert.deepEqual(guidedSessionStore.snapshot().currentStep.presentation, {
+      kind: "cardComparison",
+      cardAliases: ["return_to_memory", "maela"],
+      emphasis: "combatStats",
+    });
+    guidedSessionStore.notifyCheckpointState(true);
+    assert.equal(guidedSessionStore.continueExplanation(), true);
+    await flushMicrotasks();
+
+    const postVaelor = structuredClone(useGameStore.getState().game);
+    postVaelor.activeSide = "player";
+    postVaelor.phase = "main";
+    postVaelor.hostTurnNumber = 9;
+    const vaelor = postVaelor.player.hand.find((card) => card.instanceId === bindings.vaelor);
+    postVaelor.player.hand = postVaelor.player.hand.filter((card) => card.instanceId !== bindings.vaelor);
+    vaelor.zone = "field";
+    postVaelor.player.field.push(vaelor);
+    const harvester = postVaelor.host.field.find((card) => card.instanceId === bindings.harvester);
+    const removed = postVaelor.host.field.filter((card) => card.instanceId !== bindings.harvester);
+    postVaelor.host.field = [harvester];
+    postVaelor.host.memory.push(...removed.map((card) => ({ ...card, zone: "memory" })));
+    postVaelor.combat.hostAttackers = [];
+    postVaelor.combat.blockers = {};
+    useGameStore.setState({ game: postVaelor });
+    await flushMicrotasks();
+
+    assert.equal(guidedSessionStore.snapshot().lessonId, "learn-to-play.inspect-harvester");
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "inspect-harvester");
+    useGameStore.getState().setFocusedCardId(bindings.harvester);
+    await flushMicrotasks();
+    assert.equal(guidedSessionStore.snapshot().status, "completed");
+    director.stop();
+  });
+});
+
+async function flushMicrotasks() {
+  await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
+}
 
 function preconditionGame(sourceId, zone) {
   const source = { instanceId: sourceId };

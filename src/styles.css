@@ -22224,6 +22224,85 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
   transform: none;
 }
 
+.learn-to-play-defeat-cta {
+  animation: learn-to-play-defeat-cta-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.learn-to-play-defeat-dialog-layer {
+  position: absolute;
+  z-index: 8;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(2 7 8 / 0.46);
+  animation: learn-to-play-defeat-dialog-layer-in 260ms ease-out both;
+}
+
+.learn-to-play-defeat-dialog {
+  position: relative;
+  width: min(590px, calc(100vw - 32px));
+  padding: 22px 24px 20px;
+  border: 1px solid rgb(181 158 89 / 0.52);
+  background:
+    linear-gradient(135deg, rgb(35 43 40 / 0.96), rgb(11 20 19 / 0.985) 58%, rgb(8 14 15 / 0.99));
+  color: #ded7bc;
+  box-shadow:
+    0 28px 80px rgb(0 0 0 / 0.72),
+    inset 0 1px 0 rgb(239 224 171 / 0.08);
+  animation: learn-to-play-defeat-dialog-in 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.learn-to-play-defeat-dialog::before {
+  position: absolute;
+  left: 18px;
+  top: -1px;
+  width: 62px;
+  height: 1px;
+  content: "";
+  background: linear-gradient(90deg, #e2c878, transparent);
+  box-shadow: 0 0 12px rgb(215 187 100 / 0.36);
+}
+
+.learn-to-play-defeat-dialog-header {
+  padding: 0 0 15px;
+  border-bottom: 1px solid rgb(160 163 143 / 0.22);
+}
+
+.learn-to-play-defeat-dialog-header h2 {
+  margin: 0;
+  color: #eee6ca;
+  font: 700 clamp(22px, 3vw, 30px)/1.18 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.025em;
+}
+
+.learn-to-play-defeat-dialog-body {
+  display: grid;
+  gap: 8px;
+  padding: 15px 0 19px;
+  color: #b8c1bc;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.learn-to-play-defeat-dialog-body p { margin: 0; }
+.learn-to-play-defeat-dialog .guided-tutorial-continue { margin-left: auto; }
+
+@keyframes learn-to-play-defeat-dialog-layer-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes learn-to-play-defeat-dialog-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.975); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes learn-to-play-defeat-cta-in {
+  from { opacity: 0; transform: translateY(9px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+
 .game-result-defeat .game-result-action {
   min-width: 0;
   padding-inline: clamp(4px, 1.2vw, 14px);
@@ -22301,12 +22380,16 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
   .defeat-title::after,
   .defeat-subtitle,
   .defeat-future-plate,
-  .defeat-outcome-actions { animation: none !important; }
+  .defeat-outcome-actions,
+  .learn-to-play-defeat-dialog-layer,
+  .learn-to-play-defeat-dialog { animation: none !important; }
   .defeat-outcome-inner,
   .defeat-kicker,
   .defeat-subtitle,
   .defeat-future-plate,
-  .defeat-outcome-actions { opacity: 1; }
+  .defeat-outcome-actions,
+  .learn-to-play-defeat-dialog-layer,
+  .learn-to-play-defeat-dialog { opacity: 1; transform: none; }
   .defeat-outcome-inner { transform: none; }
   .defeat-title .line { opacity: 1; clip-path: inset(0); transform: none; }
   .defeat-title::after { display: none; }

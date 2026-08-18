@@ -46,6 +46,46 @@ type DirectorHost = Readonly<{
   readStore(): GameStore;
 }>;
 
+export function learnToPlayHarvesterInspectionReady(
+  game: GameStore["game"],
+  bindings: Readonly<Record<GuidedCardAlias, string>>,
+  completed: boolean,
+): boolean {
+  if (completed || game.hostTurnNumber >= game.hostRules.surgeTurn) return false;
+  const vaelorEntered = game.player.field.some((card) => card.instanceId === bindings.vaelor);
+  const harvesterPresent = game.host.field.some((card) => card.instanceId === bindings.harvester);
+  const victimsGone = [
+    "return_to_memory",
+    "first_winged_stalker",
+    "second_winged_stalker",
+    "stitched_wing_spawn",
+  ].every((alias) => !game.host.field.some((card) => card.instanceId === bindings[alias]));
+  return vaelorEntered && harvesterPresent && victimsGone;
+}
+
+export function learnToPlayFirstDefenseReady(
+  game: GameStore["game"],
+  started: boolean,
+  completed: boolean,
+): boolean {
+  return !started
+    && !completed
+    && game.activeSide === "host"
+    && game.hostTurnNumber <= 9
+    && game.combat.hostAttackers.length > 0;
+}
+
+export function learnToPlayReturnSourceRequired(
+  game: GameStore["game"],
+  bindings: Readonly<Record<GuidedCardAlias, string>>,
+): boolean {
+  const sourceId = bindings.post_surge_source;
+  return game.hostTurnNumber === game.hostRules.surgeTurn
+    && game.activeSide === "player"
+    && !game.player.energyActionUsedThisTurn
+    && game.player.hand.some((card) => card.instanceId === sourceId);
+}
+
 /** Coordinates authored milestones while every actual rule remains owned by GameStore/engine. */
 export class LearnToPlayPrologueDirector {
   readonly #host: DirectorHost;
@@ -59,6 +99,11 @@ export class LearnToPlayPrologueDirector {
   #evaluationScheduled = false;
   #signalCursor = 0;
   #returnSourcePromptRequested = false;
+  #firstDefenseStarted = false;
+  #firstDefenseCompleted = false;
+  #harvesterInspectionStarted = false;
+  #harvesterInspectionCompleted = false;
+  #returnSourceInterventionStarted = false;
 
   constructor(host: DirectorHost, interventions: GuidedInterventionOrchestrator) {
     this.#host = host;
@@ -84,6 +129,11 @@ export class LearnToPlayPrologueDirector {
     this.#gameSessionId = gameSessionId;
     this.#signalCursor = gameplaySignalStream.snapshot().cursor;
     this.#returnSourcePromptRequested = false;
+    this.#firstDefenseStarted = false;
+    this.#firstDefenseCompleted = false;
+    this.#harvesterInspectionStarted = false;
+    this.#harvesterInspectionCompleted = false;
+    this.#returnSourceInterventionStarted = false;
     journeyIntentGate.activate({
       journeyId: "learn-to-play",
       authorize: (intent) => {
@@ -108,16 +158,14 @@ export class LearnToPlayPrologueDirector {
           });
         }
         const returnSourceId = this.#bindings.post_surge_source;
-        const returnSourceRequired = game.hostTurnNumber === game.hostRules.surgeTurn
-          && game.activeSide === "player"
-          && !game.player.energyActionUsedThisTurn
-          && game.player.hand.some((card) => card.instanceId === returnSourceId);
+        const returnSourceRequired = learnToPlayReturnSourceRequired(game, this.#bindings);
         if (returnSourceRequired && (
           (intent.kind === "card.play" && intent.cardId === returnSourceId)
           || intent.kind === "phase.chooseAttackers"
           || intent.kind === "phase.passCombat"
           || intent.kind === "phase.endTurn"
         )) {
+          this.#requestReturnSourcePrompt();
           return Object.freeze({
             allowed: false,
             guidanceId: "learn-to-play.return-source-required",
@@ -154,6 +202,11 @@ export class LearnToPlayPrologueDirector {
     this.#gameSessionId = undefined;
     this.#signalCursor = gameplaySignalStream.snapshot().cursor;
     this.#returnSourcePromptRequested = false;
+    this.#firstDefenseStarted = false;
+    this.#firstDefenseCompleted = false;
+    this.#harvesterInspectionStarted = false;
+    this.#harvesterInspectionCompleted = false;
+    this.#returnSourceInterventionStarted = false;
     this.#setStage("inactive");
   }
 
@@ -199,33 +252,53 @@ export class LearnToPlayPrologueDirector {
       this.#setStage("awaiting-defense");
     }
     if (this.#stage === "opening-end") return;
-    if (this.#stage === "awaiting-defense") {
-      if (
-        store.game.activeSide === "host"
-        && store.game.combat.hostAttackers.length > 0
-        && session.status !== "running"
-        && isGuidedPresentationSettled(store, guidedPresentationActivity.snapshot())
-      ) {
-        this.#setStage("defense-intro");
-        this.#interventions.start(
-          LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION,
-          this.#bindings,
-          `${this.#gameSessionId}:first-defense`,
-        );
-      }
-      return;
-    }
     if (
-      this.#stage === "defense-intro"
+      this.#firstDefenseStarted
+      && !this.#firstDefenseCompleted
       && session.lessonId === LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION.id
       && session.status === "completed"
     ) {
+      this.#firstDefenseCompleted = true;
       this.#setStage("free-play");
     }
-    if (this.#stage === "defense-intro") return;
-    if (this.#stage === "inspection" && session.lessonId === LEARN_TO_PLAY_HARVESTER_INSPECTION.id && session.status === "completed") {
+    if (
+      learnToPlayFirstDefenseReady(store.game, this.#firstDefenseStarted, this.#firstDefenseCompleted)
+      && session.status !== "running"
+    ) {
+      this.#firstDefenseStarted = true;
+      this.#setStage("defense-intro");
+      this.#interventions.start(
+        LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION,
+        this.#bindings,
+        `${this.#gameSessionId}:first-defense`,
+      );
+      return;
+    }
+    if (this.#firstDefenseStarted && !this.#firstDefenseCompleted) return;
+    if (
+      this.#harvesterInspectionStarted
+      && !this.#harvesterInspectionCompleted
+      && session.lessonId === LEARN_TO_PLAY_HARVESTER_INSPECTION.id
+      && session.status === "completed"
+    ) {
+      this.#harvesterInspectionCompleted = true;
       this.#setStage("awaiting-surge");
     }
+    if (
+      learnToPlayHarvesterInspectionReady(store.game, this.#bindings, this.#harvesterInspectionCompleted)
+      && !this.#harvesterInspectionStarted
+      && session.status !== "running"
+    ) {
+      this.#harvesterInspectionStarted = true;
+      this.#setStage("inspection");
+      this.#interventions.start(
+        LEARN_TO_PLAY_HARVESTER_INSPECTION,
+        this.#bindings,
+        `${this.#gameSessionId}:inspect-harvester`,
+      );
+      return;
+    }
+    if (this.#harvesterInspectionStarted && !this.#harvesterInspectionCompleted) return;
     if (
       (this.#stage === "free-play" || this.#stage === "awaiting-surge")
       && store.game.hostTurnNumber >= store.game.hostRules.surgeTurn
@@ -269,39 +342,10 @@ export class LearnToPlayPrologueDirector {
       if (store.game.winner === "host") this.#setStage("defeat");
       return;
     }
-    if (this.#stage !== "free-play" && this.#stage !== "awaiting-surge") return;
-    if (this.#stage === "awaiting-surge") return;
-    const vaelorEntered = store.game.player.field.some((card) => card.instanceId === this.#bindings.vaelor);
-    const harvesterPresent = store.game.host.field.some((card) => card.instanceId === this.#bindings.harvester);
-    const victimsGone = [
-      "return_to_memory",
-      "first_winged_stalker",
-      "second_winged_stalker",
-      "stitched_wing_spawn",
-    ].every((alias) => !store.game.host.field.some((card) => card.instanceId === this.#bindings[alias]));
-    if (!vaelorEntered || !harvesterPresent || !victimsGone) return;
-    if (guidedSessionStore.snapshot().status === "running") return;
-    if (contextualTutorialRuntime.snapshot().active) return;
-    if (!isGuidedPresentationSettled(store, guidedPresentationActivity.snapshot())) return;
-    this.#setStage("inspection");
-    this.#interventions.start(
-      LEARN_TO_PLAY_HARVESTER_INSPECTION,
-      this.#bindings,
-      `${this.#gameSessionId}:inspect-harvester`,
-    );
   }
 
   #harvesterInspectionRequired(game: GameStore["game"]): boolean {
-    if (this.#stage === "awaiting-surge" || this.#stage === "surge") return false;
-    const vaelorEntered = game.player.field.some((card) => card.instanceId === this.#bindings.vaelor);
-    const harvesterPresent = game.host.field.some((card) => card.instanceId === this.#bindings.harvester);
-    const victimsGone = [
-      "return_to_memory",
-      "first_winged_stalker",
-      "second_winged_stalker",
-      "stitched_wing_spawn",
-    ].every((alias) => !game.host.field.some((card) => card.instanceId === this.#bindings[alias]));
-    return vaelorEntered && harvesterPresent && victimsGone;
+    return learnToPlayHarvesterInspectionReady(game, this.#bindings, this.#harvesterInspectionCompleted);
   }
 
   #consumeSignals(): void {
@@ -313,7 +357,7 @@ export class LearnToPlayPrologueDirector {
         && signal.authorization === "journey-blocked"
         && signal.guidanceId === "learn-to-play.return-source-required"
       ) {
-        this.#returnSourcePromptRequested = true;
+        this.#requestReturnSourcePrompt();
       }
     }
     this.#signalCursor = snapshot.cursor;
@@ -323,13 +367,21 @@ export class LearnToPlayPrologueDirector {
     store: GameStore,
     session: ReturnType<typeof guidedSessionStore.snapshot>,
   ): void {
+    if (this.#returnSourceInterventionStarted) return;
     if (session.status === "running" || contextualTutorialRuntime.snapshot().active) return;
     if (!isGuidedPresentationSettled(store, guidedPresentationActivity.snapshot())) return;
+    this.#returnSourceInterventionStarted = true;
     this.#interventions.start(
       LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION,
       this.#bindings,
       `${this.#gameSessionId}:return-source`,
     );
+  }
+
+  #requestReturnSourcePrompt(): void {
+    if (this.#returnSourcePromptRequested) return;
+    this.#returnSourcePromptRequested = true;
+    this.refresh();
   }
 
   #setStage(stage: LearnToPlayPrologueStage): void {

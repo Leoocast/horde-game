@@ -179,13 +179,16 @@ test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms comb
     kind: "spotlight",
     tone: "gold",
   });
-  assert.deepEqual(LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION.steps[1].presentation, {
+  assert.equal(LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION.startStepId, "wait-for-host-arrivals");
+  assert.equal(LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION.steps[0].callout, "hidden");
+  assert.equal(LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION.steps[0].nextStepId, "host-turn");
+  assert.deepEqual(LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION.steps[2].presentation, {
     kind: "cardComparison",
     cardAliases: ["return_to_memory", "maela"],
     emphasis: "combatStats",
   });
-  assert.equal(LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION.steps[0].nextStepId, "explain-combat-stats");
-  assert.equal(LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION.steps[1].id, "explain-combat-stats");
+  assert.equal(LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION.steps[1].nextStepId, "explain-combat-stats");
+  assert.equal(LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION.steps[2].id, "explain-combat-stats");
   assert.deepEqual(LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION.steps[0].allowedIntent, {
     kind: "source.recycle",
     cardAlias: "post_surge_source",

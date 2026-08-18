@@ -241,23 +241,6 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
     revalidate: (match, context) => highlightedCards(match).every((instanceId) =>
       context.game.player.hand.some((card) => card.instanceId === instanceId)),
   },
-  {
-    id: "learn-to-play-harvester-inspection-required",
-    revision: 1,
-    policy: "reactive",
-    priority: 145,
-    copy: {
-      titleKey: "guided.contextual.product.harvesterInspectionTitle",
-      bodyKey: "guided.contextual.product.harvesterInspectionBody",
-    },
-    signalKinds: ["intent.attempted"],
-    evaluate: (signal) => signal.kind === "intent.attempted"
-      && signal.authorization === "journey-blocked"
-      && signal.guidanceId === "learn-to-play.harvester-inspection-required"
-      ? { highlights: (signal.relatedCardIds ?? []).map((instanceId) => ({ kind: "card", instanceId })) }
-      : undefined,
-    revalidate: cardsRemainRelevant,
-  },
 ] satisfies readonly ContextualConceptDefinition[];
 
 function cardsRemainRelevant(match: ContextualConceptMatch, context: Readonly<{ game: GameState }>): boolean {
