@@ -10,20 +10,24 @@ import { gameplaySignalStream } from "./gameplaySignals";
 import { planLearnToPlayTerminalTurn } from "./learnToPlayTerminal";
 import {
   LEARN_TO_PLAY_END_OPENING_TURN_INTERVENTION,
+  LEARN_TO_PLAY_FIRST_BATTLE_INTERVENTION,
   LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION,
   LEARN_TO_PLAY_HARVESTER_INSPECTION,
   LEARN_TO_PLAY_OPENING_INTERVENTION,
+  LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION,
   LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION,
 } from "./learnToPlayPrologue";
 
 export type LearnToPlayPrologueStage =
   | "inactive"
   | "opening"
+  | "opening-combat-intro"
   | "opening-attack"
   | "opening-end"
   | "awaiting-defense"
   | "defense-intro"
   | "free-play"
+  | "player-return-intro"
   | "inspection"
   | "awaiting-surge"
   | "surge"
@@ -99,6 +103,8 @@ export class LearnToPlayPrologueDirector {
   #returnSourcePromptRequested = false;
   #firstDefenseStarted = false;
   #firstDefenseCompleted = false;
+  #playerReturnIntroStarted = false;
+  #playerReturnIntroCompleted = false;
   #harvesterInspectionStarted = false;
   #harvesterInspectionCompleted = false;
   #returnSourceInterventionStarted = false;
@@ -130,6 +136,8 @@ export class LearnToPlayPrologueDirector {
     this.#returnSourcePromptRequested = false;
     this.#firstDefenseStarted = false;
     this.#firstDefenseCompleted = false;
+    this.#playerReturnIntroStarted = false;
+    this.#playerReturnIntroCompleted = false;
     this.#harvesterInspectionStarted = false;
     this.#harvesterInspectionCompleted = false;
     this.#returnSourceInterventionStarted = false;
@@ -204,6 +212,8 @@ export class LearnToPlayPrologueDirector {
     this.#returnSourcePromptRequested = false;
     this.#firstDefenseStarted = false;
     this.#firstDefenseCompleted = false;
+    this.#playerReturnIntroStarted = false;
+    this.#playerReturnIntroCompleted = false;
     this.#harvesterInspectionStarted = false;
     this.#harvesterInspectionCompleted = false;
     this.#returnSourceInterventionStarted = false;
@@ -225,7 +235,32 @@ export class LearnToPlayPrologueDirector {
     const store = this.#host.readStore();
     const session = guidedSessionStore.snapshot();
     if (this.#stage === "opening" && session.lessonId === LEARN_TO_PLAY_OPENING_INTERVENTION.id && session.status === "completed") {
-      this.#setStage("opening-attack");
+      this.#setStage("opening-combat-intro");
+    }
+    if (this.#stage === "opening-combat-intro") {
+      if (
+        session.lessonId === LEARN_TO_PLAY_FIRST_BATTLE_INTERVENTION.id
+        && session.status === "completed"
+      ) {
+        this.#setStage("opening-attack");
+      } else if (
+        session.status !== "running"
+        && store.game.activeSide === "player"
+        && store.game.phase === "combat"
+        && isGuidedPresentationSettled(store, guidedPresentationActivity.snapshot())
+      ) {
+        contextualTutorialRuntime.suppressConceptsForSession([
+          "attack-the-host-archive",
+          "attack-exhausts-echo",
+          "reserve-and-ready",
+        ]);
+        this.#interventions.start(
+          LEARN_TO_PLAY_FIRST_BATTLE_INTERVENTION,
+          this.#bindings,
+          `${this.#gameSessionId}:first-battle`,
+        );
+      }
+      if (this.#stage === "opening-combat-intro") return;
     }
     if (this.#stage === "opening-attack") {
       const openingTurnAlreadyPassed = store.game.activeSide === "host"
@@ -283,6 +318,41 @@ export class LearnToPlayPrologueDirector {
       return;
     }
     if (this.#firstDefenseStarted && !this.#firstDefenseCompleted) return;
+    if (
+      this.#playerReturnIntroStarted
+      && !this.#playerReturnIntroCompleted
+      && session.lessonId === LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.id
+      && session.status === "completed"
+    ) {
+      this.#playerReturnIntroCompleted = true;
+      this.#setStage("free-play");
+    }
+    const playerReturnReady = (
+      !this.#playerReturnIntroStarted
+      && this.#firstDefenseCompleted
+      && this.#stage === "free-play"
+      && store.game.activeSide === "player"
+      && store.game.phase === "main"
+      && this.#openingHostTurnNumber !== undefined
+      && store.game.hostTurnNumber > this.#openingHostTurnNumber
+    );
+    if (playerReturnReady) {
+      if (session.status === "running") return;
+      if (contextualTutorialRuntime.snapshot().active) {
+        contextualTutorialRuntime.refresh();
+        return;
+      }
+      if (!isGuidedPresentationSettled(store, guidedPresentationActivity.snapshot())) return;
+      this.#playerReturnIntroStarted = true;
+      this.#setStage("player-return-intro");
+      this.#interventions.start(
+        LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION,
+        this.#bindings,
+        `${this.#gameSessionId}:player-return`,
+      );
+      return;
+    }
+    if (this.#playerReturnIntroStarted && !this.#playerReturnIntroCompleted) return;
     if (
       this.#harvesterInspectionStarted
       && !this.#harvesterInspectionCompleted

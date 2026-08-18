@@ -136,6 +136,23 @@ export class ContextualTutorialRuntime {
     return true;
   }
 
+  /**
+   * A strict journey can teach a contextual concept in its own authored sequence. Suppression is
+   * scoped to the current match and never leaks into the player's persisted help preferences.
+   */
+  suppressConceptsForSession(conceptIds: readonly string[]): void {
+    const suppressed = new Set(conceptIds);
+    if (suppressed.size === 0) return;
+    for (const conceptId of suppressed) this.#shownThisMatch.add(conceptId);
+    this.#queue = this.#queue.filter((item) => !suppressed.has(item.definition.id));
+    if (this.#active && suppressed.has(this.#active.definition.id)) {
+      this.#active = undefined;
+      this.#lastInterceptedConceptId = undefined;
+    }
+    this.#emit();
+    this.#schedulePromotion();
+  }
+
   /** Atomic concept commit used by the future journey CTA. */
   commitProvisional(): boolean {
     const entries = [...this.#provisional.values()];

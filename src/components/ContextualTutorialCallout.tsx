@@ -60,6 +60,8 @@ export function ContextualTutorialCallout() {
       key,
       role: highlight.role ?? "focus",
       padding: highlight.padding ?? 6,
+      offsetX: highlight.offsetX ?? 0,
+      offsetY: highlight.offsetY ?? 0,
       showHighlight: highlight.showHighlight !== false,
       element: guidedAnchorRegistry.preferred(key),
     });
@@ -75,10 +77,12 @@ export function ContextualTutorialCallout() {
       return;
     }
     const measure = () => {
-      const next = resolved.flatMap(({ key, role, padding, element }) => {
+      const next = resolved.flatMap(({ key, role, padding, offsetX, offsetY, element }) => {
         if (!element) return [];
         const bounds = element.getBoundingClientRect();
-        return bounds.width > 0 && bounds.height > 0 ? [paddedGuidedRect(key, role, bounds, padding)] : [];
+        return bounds.width > 0 && bounds.height > 0
+          ? [paddedGuidedRect(key, role, bounds, padding, offsetX, offsetY)]
+          : [];
       });
       if (!guidedRectsEqual(rectsRef.current, next)) {
         const frozen = Object.freeze(next);

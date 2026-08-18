@@ -21,6 +21,7 @@ import { GuidedInteractionGate } from "../src/guidance/interactionGate";
 import { GuidedInterventionOrchestrator } from "../src/guidance/interventionOrchestrator";
 import { GuidedJourneyLifecycle } from "../src/guidance/journeyLifecycle";
 import { JourneyIntentGate, journeyIntentGate } from "../src/guidance/journeyIntentGate";
+import { translate } from "../src/i18n/translations";
 import {
   LearnToPlayPrologueDirector,
   learnToPlayFirstDefenseReady,
@@ -45,6 +46,33 @@ test("How to Play catalogs the main journey before optional Preparation", () => 
   assert.equal(HOW_TO_PLAY_CATALOG[1].launcher.kind, "guided-lesson");
   assert.equal(FIRST_SEED_LESSON.mode, "optional");
   assert.equal(nextRequiredGuidedLesson([FIRST_SEED_LESSON], emptyGuidedProgress()), undefined);
+});
+
+test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
+  assert.equal(
+    translate("es", "guided.learnToPlay.invokeAelyraBody"),
+    "Aelyra, Heredera de Elarion, necesita 1 de Energía para ser Invocada. Ya tienes suficiente Energía.",
+  );
+  assert.equal(
+    translate("es", "guided.contextual.product.attackArchiveBody"),
+    "Tus Ecos atacan únicamente el Archivo de la Hueste. Vacía el Archivo de la Hueste para derrotarla.",
+  );
+  assert.equal(
+    translate("es", "guided.contextual.product.attackExhaustsBody"),
+    "Es opcional atacar. Si un Eco ataca, se Agota, por lo que no estará disponible para defender durante el siguiente turno de la Hueste.",
+  );
+  assert.equal(translate("es", "guided.glossary.archive.definition"), "La pila de cartas aún no robadas.");
+  assert.equal(
+    translate("es", "guided.learnToPlay.combatStatsBody"),
+    "La Fuerza indica cuánto daño inflige un Eco. El Aguante indica cuánto daño puede recibir antes de ser destruido. Cuando dos Ecos combaten, ambos se infligen daño al mismo tiempo.",
+  );
+  assert.equal(
+    translate("es", "guided.contextual.product.assignDefendersBody"),
+    "Haz clic en un Eco aliado y arrastra el cursor hasta un Eco atacante. También puedes elegir no defender.",
+  );
+  assert.equal(translate("es", "guided.learnToPlay.playerTurnTitle"), "Ahora es tu turno.");
+  assert.equal(translate("es", "guided.learnToPlay.playerTurnBody"), "Mira lo que pasa con la Energía.");
+  assert.equal(translate("es", "guided.learnToPlay.useEnergyTitle"), "Usa tu Energía para Invocar nuevos Ecos.");
 });
 
 test("contemplating another future records Learn to Play completion once", () => {
@@ -193,7 +221,7 @@ test("journey limits are ephemeral and product concepts cover every prologue exp
   ]);
 });
 
-test("the opening attack explanation is contextual and the defense prompt prefers the left side", () => {
+test("normal matches retain attack help while the defense prompt prefers the left side", () => {
   const attack = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "attack-the-host-archive");
   const defense = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "assign-defenders");
   const order = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "host-defense-order");
@@ -221,6 +249,17 @@ test("dragging a ground Echo onto a Flying attacker preserves the denied target 
   const flying = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "flying-defense-restriction");
   assert.deepEqual(flying.signalKinds, ["action.denied"]);
   assert.equal(flying.copy.titleKey, "guided.contextual.product.flyingDefenseTitle");
+  assert.deepEqual(flying.evaluate({
+    kind: "action.denied",
+    code: "BLOCK_REQUIRES_FLYING_OR_SKYGUARD",
+    intent: { kind: "combat.assignBlocker", cardId: "ground:1", targetId: "flying:1" },
+  }, {}), {
+    highlights: [
+      { kind: "card", instanceId: "ground:1" },
+      { kind: "card", instanceId: "flying:1", padding: 18, offsetX: 16 },
+    ],
+    placement: "center",
+  });
 });
 
 test("the Vaelor reminder expires as soon as Vaelor leaves the Hand", () => {
@@ -345,6 +384,7 @@ test("post-Surge concepts react only to the real empty-Hand draw and the require
     cardIds: ["river:1", "spell:1"],
   }, context), {
     highlights: [{ kind: "surface", anchor: "player.hand", showHighlight: false }],
+    placement: "center",
   });
   assert.equal(emptyHand.evaluate({
     kind: "player.cardsDrawn",

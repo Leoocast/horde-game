@@ -10811,6 +10811,7 @@
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+  background: rgb(1 3 4 / 0.18);
   color: #d7d4c3;
   font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
 }
@@ -10845,14 +10846,18 @@
   position: absolute;
   width: min(410px, calc(100vw - 32px));
   box-sizing: border-box;
-  border: 1px solid rgb(142 148 118 / 0.52);
-  border-top-color: rgb(207 190 132 / 0.68);
+  border: 1px solid rgb(206 180 101 / 0.68);
+  border-top-color: rgb(239 216 143 / 0.82);
   border-radius: 2px;
   padding: 17px 19px 16px;
   background:
     radial-gradient(circle at 15% 0%, rgb(166 185 158 / 0.08), transparent 42%),
     linear-gradient(145deg, rgb(24 33 35 / 0.985), rgb(7 13 16 / 0.995));
-  box-shadow: inset 0 1px 0 rgb(235 223 179 / 0.07), 0 20px 48px rgb(0 0 0 / 0.58);
+  box-shadow:
+    inset 0 1px 0 rgb(255 239 184 / 0.1),
+    0 0 0 1px rgb(120 91 29 / 0.18),
+    0 0 22px rgb(212 169 62 / 0.2),
+    0 20px 48px rgb(0 0 0 / 0.58);
   pointer-events: auto;
   animation: guided-tutorial-callout-in 190ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -14361,6 +14366,12 @@
   line-height: 1;
   pointer-events: none;
   text-shadow: none;
+}
+
+.card-cost-badge.is-guided-emphasis {
+  z-index: 70;
+  transform-origin: center;
+  animation: guided-card-cost-focus 1.35s ease-in-out infinite;
 }
 
 .hand-card-held .card-cost-badge,
@@ -20850,7 +20861,7 @@ body.playground-active .phase-banner-shell {
   pointer-events: none;
 }
 
-.guided-tutorial-dimmer { fill: rgb(2 4 4 / 0.35); }
+.guided-tutorial-dimmer { fill: rgb(2 4 4 / 0.42); }
 
 .guided-tutorial-overlay[data-mode="explain"],
 .guided-tutorial-overlay[data-mode="observe"] {
@@ -20899,6 +20910,8 @@ body.playground-active .phase-banner-shell {
 .guided-tutorial-ring[data-anchor-key^="card:"] { display: none; }
 
 .guided-tutorial-overlay[data-mode="act"] .guided-tutorial-ring {
+  transform-origin: center;
+  will-change: filter, transform;
   animation: guided-tutorial-ready 1.9s ease-in-out infinite;
 }
 
@@ -20908,20 +20921,6 @@ body.playground-active .phase-banner-shell {
   animation:
     guided-phase-frame-arrive 920ms 140ms cubic-bezier(0.12, 0.78, 0.16, 1) both,
     guided-tutorial-ready 1.9s 1060ms ease-in-out infinite;
-}
-
-.guided-tutorial-ring.is-rejected {
-  border-color: #c8664c;
-  animation: guided-tutorial-rejected 180ms ease-in-out 3;
-  box-shadow:
-    0 0 0 2px rgb(28 8 4 / 0.94),
-    0 0 24px rgb(205 74 48 / 0.82),
-    inset 0 0 18px rgb(205 74 48 / 0.18);
-}
-
-.guided-tutorial-ring.is-rejected::after {
-  border-color: #d98268;
-  background: #25100c;
 }
 
 .guided-tutorial-overlay:has(.guided-tutorial-ring[data-anchor-key="surface:player.sources"])
@@ -21007,8 +21006,8 @@ body.playground-active .phase-banner-shell {
   width: min(430px, calc(100vw - 32px));
   box-sizing: border-box;
   overflow: visible;
-  border: 1px solid rgb(160 148 102 / 0.46);
-  border-top-color: rgb(218 201 142 / 0.68);
+  border: 1px solid rgb(210 183 102 / 0.66);
+  border-top-color: rgb(241 218 146 / 0.84);
   border-radius: 2px;
   outline: none;
   padding: 24px 25px 20px;
@@ -21018,6 +21017,8 @@ body.playground-active .phase-banner-shell {
   box-shadow:
     inset 0 1px 0 rgb(238 223 174 / 0.08),
     inset 0 -24px 40px rgb(0 0 0 / 0.18),
+    0 0 0 1px rgb(122 91 27 / 0.18),
+    0 0 26px rgb(216 172 61 / 0.22),
     0 26px 64px rgb(0 0 0 / 0.68);
   pointer-events: auto;
   animation: guided-tutorial-callout-in 190ms cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -21191,7 +21192,7 @@ body.playground-active .phase-banner-shell {
 .guided-tutorial-feedback {
   min-height: 18px;
   margin-top: 8px;
-  color: #d99175;
+  color: #d8c27f;
   font-family: inherit;
   font-size: 10px;
   font-weight: 800;
@@ -21397,8 +21398,8 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
 }
 
 @keyframes guided-tutorial-ready {
-  0%, 100% { filter: brightness(0.9); }
-  50% { filter: brightness(1.2); }
+  0%, 100% { filter: brightness(0.92); transform: scale(0.985); }
+  50% { filter: brightness(1.22); transform: scale(1.045); }
 }
 
 @keyframes guided-phase-frame-arrive {
@@ -21417,12 +21418,6 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
 @keyframes guided-card-stats-focus {
   0%, 100% { filter: brightness(0.96); }
   50% { filter: brightness(1.18); }
-}
-
-@keyframes guided-tutorial-rejected {
-  0%, 100% { transform: translateX(0); }
-  35% { transform: translateX(-4px); }
-  70% { transform: translateX(4px); }
 }
 
 @keyframes guided-tutorial-callout-in {
@@ -21458,16 +21453,14 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
 
 @media (prefers-reduced-motion: reduce) {
   .guided-tutorial-overlay[data-mode="act"] .guided-tutorial-ring,
-  .guided-tutorial-ring.is-rejected,
   .guided-tutorial-callout,
   .guided-tutorial-directional-cue svg,
   .guided-card-comparison.is-combatStats .guided-card-comparison-frame > .card-stat-badge {
     animation: none;
   }
 
-  .guided-card-comparison-frame > .card-cost-badge { animation: none; }
-
-  .guided-tutorial-ring.is-rejected { border-width: 5px; }
+  .guided-card-comparison-frame > .card-cost-badge,
+  .card-cost-badge.is-guided-emphasis { animation: none; }
 }
 
 /* Semillas del Destino — the current deterministic seed is presented as a narrative Future. */

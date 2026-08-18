@@ -49,6 +49,7 @@ type Props = {
   sharpImageOverlay?: boolean;
   showFullImage?: boolean;
   showCostBadge?: boolean;
+  emphasizeCost?: boolean;
   showCroppedTitle?: boolean;
   clipActionSweep?: boolean;
   preferNativeImageRendering?: boolean;
@@ -58,7 +59,7 @@ type Props = {
   glowBorderWidth?: number;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressStabilizing, suppressCardId, onSelect, onKeyboardActivate, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, showCroppedTitle = false, clipActionSweep = false, preferNativeImageRendering = false, useBattlefieldArt = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressStabilizing, suppressCardId, onSelect, onKeyboardActivate, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, emphasizeCost = false, showCroppedTitle = false, clipActionSweep = false, preferNativeImageRendering = false, useBattlefieldArt = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
@@ -277,7 +278,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           <span>{localizedName}</span>
         </div>
       )}
-      {showCostBadge && <CardCostBadge card={card} />}
+      {showCostBadge && <CardCostBadge card={card} emphasized={emphasizeCost} />}
       {showActionGlow && !dragging && (
         clipActionSweep ? (
           <span className="card-actionable-sweep-clip" aria-hidden="true">
@@ -444,15 +445,17 @@ export type CardStatDisplay = ReturnType<typeof cardStatState>;
 
 export function CardCostBadge({
   card,
+  emphasized = false,
 }: {
   card: { energyCost?: number; variableCost?: { hasX?: boolean } };
+  emphasized?: boolean;
 }) {
   const printedCost = Math.max(0, Number(card.energyCost) || 0);
   const label = card.variableCost?.hasX ? "X" : printedCost;
   if (label === 0) return null;
 
   return (
-    <div className="card-cost-badge" aria-hidden="true">
+    <div className={`card-cost-badge${emphasized ? " is-guided-emphasis" : ""}`} aria-hidden="true">
       <span className="card-cost-energy-orb">
         <span className="card-cost-energy-liquid" />
       </span>

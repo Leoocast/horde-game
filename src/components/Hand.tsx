@@ -19,21 +19,24 @@ import {
   HAND_HOVER_CARD_DISPLAY_WIDTH,
 } from "./cardDisplayGeometry";
 import { getHandCardPresentationState, handArchiveEntryOffset } from "./handCardPresentation";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { energyRecycleDropZoneContains, type EnergyRecycleDropBounds } from "./energyRecycleDropTarget";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion, motionValue, type MotionValue, type PanInfo, type Variants } from "framer-motion";
 import {
   guidedAnchorRegistry,
   guidedCardAnchorKey,
   guidedPresentationActivity,
+  guidedSessionStore,
   guidedSurfaceAnchorKey,
   type GuidedPresentationActivityToken,
 } from "../guidance";
 
 const DRAG_PLAY_SCREEN_RATIO = 0.7;
-const ENERGY_RECYCLE_SCREEN_RATIO = 0.82;
 const ENERGY_RECYCLE_MIN_HORIZONTAL_DRAG = 48;
 const HAND_ENTRY_STAGGER = 0.07;
 const HAND_BASE_OVERLAP_RATIO = 0.12;
+const subscribeGuidedSession = (listener: () => void) => guidedSessionStore.subscribe(listener);
+const readGuidedSession = () => guidedSessionStore.snapshot();
 type HandCardMotionContext = {
   entryOrder: number;
   stagger: boolean;
@@ -70,6 +73,11 @@ const handCardMotion: Variants = {
 
 export function Hand({ game }: { game: GameState }) {
   const t = useTranslation();
+  const guidedSession = useSyncExternalStore(subscribeGuidedSession, readGuidedSession, readGuidedSession);
+  const guidedCostCardId = guidedSession.status === "running"
+    && guidedSession.currentStep?.id === "invoke-aelyra"
+    ? guidedSession.bindings.aelyra
+    : undefined;
   const selectedHandId = useGameStore((state) => state.selectedHandId);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHostCreatureId = useGameStore((state) => state.selectedHostCreatureId);
@@ -265,8 +273,11 @@ export function Hand({ game }: { game: GameState }) {
     return (
       card.kinds.includes("SOURCE") &&
       isEnergyRecyclable(game, card, unresolvedTriggerCount) &&
-      pointerY <= window.innerHeight * DRAG_PLAY_SCREEN_RATIO &&
-      pointerX >= window.innerWidth * ENERGY_RECYCLE_SCREEN_RATIO &&
+      energyRecycleDropZoneContains(
+        { x: pointerX, y: pointerY },
+        { width: window.innerWidth, height: window.innerHeight },
+        readEnergyRecycleTargetBounds(),
+      ) &&
       Boolean(dragStart && pointerX - dragStart.x >= ENERGY_RECYCLE_MIN_HORIZONTAL_DRAG)
     );
   }
@@ -552,6 +563,7 @@ export function Hand({ game }: { game: GameState }) {
                       sharpImageOverlay={!useNativeHdRendering}
                       showFullImage={showFullImage}
                       showCostBadge={showFullImage}
+                      emphasizeCost={guidedCostCardId === card.instanceId}
                       clipActionSweep={showFullImage && UI_FEATURE_FLAGS.alignHdHandActionSweep}
                       preferNativeImageRendering={useNativeHdRendering}
                       hideStats={!UI_FEATURE_FLAGS.showDynamicHandCardStats}
@@ -710,10 +722,17 @@ function EnergyRecycleDragHint({ hint, recycleLabel, hintLabel }: { hint: Energy
 }
 
 function readEnergyRecycleTarget(): { x: number; y: number } {
-  const rect = document.querySelector<HTMLElement>("[data-energy-recycle-target='true']")?.getBoundingClientRect();
+  const rect = readEnergyRecycleTargetBounds();
   return rect
     ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
     : { x: window.innerWidth - 72, y: window.innerHeight - 64 };
+}
+
+function readEnergyRecycleTargetBounds(): EnergyRecycleDropBounds | undefined {
+  const rect = document.querySelector<HTMLElement>("[data-energy-recycle-target='true']")?.getBoundingClientRect();
+  return rect
+    ? { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
+    : undefined;
 }
 
 function canPlayCardAtCurrentTiming(game: GameState, card: CardInstance): boolean {

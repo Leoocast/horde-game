@@ -1,6 +1,5 @@
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { hostInSurge } from "../engine/StaticEffects";
-import { hasTrait } from "../engine/Traits";
 import type { ContextualConceptDefinition, ContextualConceptMatch } from "./contextualContracts";
 
 export const PRODUCT_CONTEXTUAL_CONCEPTS = [
@@ -22,7 +21,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
   },
   {
     id: "assign-defenders",
-    revision: 1,
+    revision: 2,
     policy: "informative",
     priority: 85,
     copy: {
@@ -39,7 +38,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
   },
   {
     id: "flying-defense-restriction",
-    revision: 1,
+    revision: 2,
     policy: "reactive",
     priority: 120,
     copy: {
@@ -48,18 +47,20 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
       glossaryTerms: ["flying", "skyguard"],
     },
     signalKinds: ["action.denied"],
-    evaluate: (signal, context) => signal.kind === "action.denied"
+    evaluate: (signal) => signal.kind === "action.denied"
       && signal.code === "BLOCK_REQUIRES_FLYING_OR_SKYGUARD"
       && signal.intent.kind === "combat.assignBlocker"
       ? {
           highlights: [
             { kind: "card", instanceId: signal.intent.cardId },
-            { kind: "card", instanceId: signal.intent.targetId },
-            ...context.game.player.field
-              .filter((card) => !card.exhausted
-                && (hasTrait(context.game, card, "FLYING") || hasTrait(context.game, card, "SKYGUARD")))
-              .map((card) => ({ kind: "card" as const, instanceId: card.instanceId })),
+            {
+              kind: "card",
+              instanceId: signal.intent.targetId,
+              padding: 18,
+              offsetX: 16,
+            },
           ],
+          placement: "center",
         }
       : undefined,
     revalidate: cardsRemainRelevant,
@@ -119,7 +120,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
   },
   {
     id: "attack-the-host-archive",
-    revision: 1,
+    revision: 2,
     policy: "preventive",
     priority: 60,
     copy: {
@@ -138,7 +139,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
   },
   {
     id: "attack-exhausts-echo",
-    revision: 1,
+    revision: 2,
     policy: "informative",
     priority: 55,
     copy: {
@@ -189,7 +190,10 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
     evaluate: (signal) => signal.kind === "player.cardsDrawn"
       && signal.reason === "empty-hand"
       && signal.amount === 2
-      ? { highlights: [{ kind: "surface", anchor: "player.hand", showHighlight: false }] }
+      ? {
+          highlights: [{ kind: "surface", anchor: "player.hand", showHighlight: false }],
+          placement: "center",
+        }
       : undefined,
   },
   {

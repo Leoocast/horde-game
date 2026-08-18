@@ -13,8 +13,24 @@ export const CONTEXTUAL_INTERVENTION_POLICIES = ["informative", "preventive", "r
 export type ContextualInterventionPolicy = (typeof CONTEXTUAL_INTERVENTION_POLICIES)[number];
 
 export type ContextualHighlightRef =
-  | Readonly<{ kind: "card"; instanceId: string; role?: GuidedHighlightRole; padding?: number; showHighlight?: boolean }>
-  | Readonly<{ kind: "surface"; anchor: GuidedSurfaceAnchor; role?: GuidedHighlightRole; padding?: number; showHighlight?: boolean }>;
+  | Readonly<{
+      kind: "card";
+      instanceId: string;
+      role?: GuidedHighlightRole;
+      padding?: number;
+      offsetX?: number;
+      offsetY?: number;
+      showHighlight?: boolean;
+    }>
+  | Readonly<{
+      kind: "surface";
+      anchor: GuidedSurfaceAnchor;
+      role?: GuidedHighlightRole;
+      padding?: number;
+      offsetX?: number;
+      offsetY?: number;
+      showHighlight?: boolean;
+    }>;
 
 export type ContextualConceptCopy = Readonly<{
   titleKey: TranslationKey;

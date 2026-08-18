@@ -18,8 +18,10 @@ import { buildGuidedScenario } from "../src/guidance/buildGuidedScenario";
 import { GuidedInteractionGate } from "../src/guidance/interactionGate";
 import {
   LEARN_TO_PLAY_END_OPENING_TURN_INTERVENTION,
+  LEARN_TO_PLAY_FIRST_BATTLE_INTERVENTION,
   LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION,
   LEARN_TO_PLAY_OPENING_INTERVENTION,
+  LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION,
   LEARN_TO_PLAY_PROLOGUE_SCENARIO,
   LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION,
 } from "../src/guidance/learnToPlayPrologue";
@@ -175,6 +177,13 @@ test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms comb
   assert.deepEqual(opening.get("enter-first-combat").presentation, { kind: "spotlight", tone: "gold" });
   assert.equal(opening.has("select-maela-attacker"), false, "the attack suggestion must not install an input shield");
   assert.equal(opening.has("pass-first-combat"), false);
+  assert.deepEqual(
+    LEARN_TO_PLAY_FIRST_BATTLE_INTERVENTION.steps.map((step) => step.id),
+    ["attack-host-archive", "attacking-is-optional"],
+  );
+  assert.deepEqual(LEARN_TO_PLAY_FIRST_BATTLE_INTERVENTION.steps[0].highlights, [
+    { kind: "surface", anchor: "host.archive" },
+  ]);
   assert.deepEqual(LEARN_TO_PLAY_END_OPENING_TURN_INTERVENTION.steps[0].presentation, {
     kind: "spotlight",
     tone: "gold",
@@ -189,6 +198,14 @@ test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms comb
   });
   assert.equal(LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION.steps[1].nextStepId, "explain-combat-stats");
   assert.equal(LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION.steps[2].id, "explain-combat-stats");
+  assert.deepEqual(
+    LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps.map((step) => step.id),
+    ["player-turn-returned", "explain-renewed-energy", "use-energy-for-echoes"],
+  );
+  assert.deepEqual(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps[1].highlights, [
+    { kind: "surface", anchor: "player.sources" },
+    { kind: "surface", anchor: "player.reserve" },
+  ]);
   assert.deepEqual(LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION.steps[0].allowedIntent, {
     kind: "source.recycle",
     cardAlias: "post_surge_source",

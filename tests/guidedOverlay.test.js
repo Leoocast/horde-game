@@ -9,6 +9,7 @@ import {
   guidedConnectorPath,
   guidedDirectionalCueBounds,
   guidedDomTargetAllowed,
+  paddedGuidedRect,
   guidedSurfaceAnchorKey,
   guidedUnionBounds,
   placeGuidedCallout,
@@ -17,6 +18,7 @@ import {
 } from "../src/guidance";
 import { contentCatalog } from "../src/content/bootstrap";
 import { createGuidedFrameLoop } from "../src/components/guidedFrameLoop";
+import { energyRecycleDropZoneContains } from "../src/components/energyRecycleDropTarget";
 import { tutorialCalloutWidth } from "../src/components/tutorialCalloutSizing";
 import { GUIDANCE_LAB_LESSON } from "../src/playground/guidanceLabDefinition";
 
@@ -78,6 +80,21 @@ test("authored placement keeps defense help left of the player field", () => {
     "left",
   );
   assert.ok(placed.left + 360 < target.left);
+});
+
+test("a sideways Flying attacker can receive a larger highlight shifted to its visual center", () => {
+  assert.deepEqual(
+    paddedGuidedRect("card:flying", "focus", { left: 500, top: 260, width: 210, height: 145 }, 18, 16, 0),
+    { key: "card:flying", role: "focus", left: 498, top: 242, width: 246, height: 181 },
+  );
+});
+
+test("the Source return drop target extends below the printed Archive", () => {
+  const viewport = { width: 1280, height: 720 };
+  const archive = { left: 1120, top: 590, width: 96, height: 72 };
+  assert.equal(energyRecycleDropZoneContains({ x: 1168, y: 700 }, viewport, archive), true);
+  assert.equal(energyRecycleDropZoneContains({ x: 1010, y: 700 }, viewport, archive), false);
+  assert.equal(energyRecycleDropZoneContains({ x: 1168, y: 450 }, viewport, archive), false);
 });
 
 test("directional cues rise inside their authored card", () => {
@@ -200,9 +217,10 @@ test("lesson validation rejects unknown highlight roles and Act steps without a 
 });
 
 test("the real Board mounts the overlay and its capture shield covers every input family", async () => {
-  const [board, battlefield, overlay, contextual, journeyCues, comparison, card, styles] = await Promise.all([
+  const [board, battlefield, hand, overlay, contextual, journeyCues, comparison, card, styles] = await Promise.all([
     readFile(new URL("../src/components/Board.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/Battlefield.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/Hand.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/GuidedTutorialOverlay.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/ContextualTutorialCallout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/LearnToPlayJourneyCues.tsx", import.meta.url), "utf8"),
@@ -216,6 +234,9 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   }
   assert.match(card, /tabIndex=\{selectionDisabled \? undefined : 0\}/u);
   assert.match(card, /onKeyboardActivate \?\? onSelect/u);
+  assert.match(hand, /currentStep\?\.id === "invoke-aelyra"/u);
+  assert.match(hand, /emphasizeCost=\{guidedCostCardId === card\.instanceId\}/u);
+  assert.match(card, /CardCostBadge card=\{card\} emphasized=\{emphasizeCost\}/u);
   assert.match(overlay, /data-guided-overlay-control="true"/u);
   assert.match(overlay, /guidedGlossarySegments/u);
   assert.match(overlay, /data-guided-glossary-term="true"/u);
@@ -256,6 +277,13 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   );
   assert.match(overlay, /createGuidedFrameLoop\(measure\)/u);
   assert.match(overlay, /new ResizeObserver\(\(\) => loop\.measureNow\(\)\)/u);
+  assert.match(
+    overlay,
+    /useEffect\(\(\) => \{\s*if \(!active\) return;\s*setFeedback\(undefined\);\s*\}, \[active, session\.currentStep\?\.id, session\.sessionId\]\);/u,
+  );
+  assert.match(overlay, /session\.currentStep\?\.id === "inspect-harvester"[\s\S]*setFocusedCardId\(harvesterId\)/u);
+  assert.doesNotMatch(overlay, /feedback \? "is-rejected"/u);
+  assert.doesNotMatch(styles, /\.guided-tutorial-ring\.is-rejected/u);
   assert.match(contextual, /const visible = Boolean\(active && guided\.status !== "running"\)/u);
   assert.match(contextual, /createGuidedFrameLoop\(measure\)/u);
   assert.match(journeyCues, /guidedBoundsEqual\(boundsRef\.current, next\)/u);
@@ -278,7 +306,9 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   const costFocus = styles.match(/@keyframes guided-card-cost-focus\s*\{([\s\S]*?)\n\}/u)?.[1] ?? "";
   assert.match(costFocus, /drop-shadow/u);
   assert.doesNotMatch(costFocus, /opacity\s*:/u);
-  assert.match(styles, /\.guided-tutorial-dimmer\s*\{\s*fill:\s*rgb\(2 4 4 \/ 0\.35\);\s*\}/u);
+  assert.match(styles, /\.guided-tutorial-dimmer\s*\{\s*fill:\s*rgb\(2 4 4 \/ 0\.42\);\s*\}/u);
+  assert.match(styles, /@keyframes guided-tutorial-ready\s*\{[^}]*scale\(0\.985\)[\s\S]*?scale\(1\.045\)/u);
+  assert.match(styles, /\.card-cost-badge\.is-guided-emphasis\s*\{/u);
   assert.match(styles, /\.guided-tutorial-ring::after\s*\{[^}]*transform:\s*translateX\(-50%\) rotate\(45deg\);/su);
   assert.match(styles, /guided-tutorial-overlay:has\(\.guided-tutorial-ring\[data-anchor-key="surface:player\.sources"\]\)[\s\S]*?guided-tutorial-ring\[data-anchor-key="surface:player\.reserve"\]::after\s*\{\s*display:\s*none;/u);
   assert.match(styles, /\.guided-tutorial-ring\[data-anchor-key\^="card:"\]\s*\{\s*display:\s*none;\s*\}/u);

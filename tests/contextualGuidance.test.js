@@ -171,6 +171,24 @@ test("isolated tutorial sessions ignore global seen checks and never write globa
   fixture.dispose();
 });
 
+test("a strict journey can suppress duplicate contextual concepts for only its current match", () => {
+  const fixture = createRuntime([RESERVE_CONCEPT]);
+  fixture.runtime.beginSession("match:1", "isolated");
+  fixture.runtime.suppressConceptsForSession(["reserve-flow"]);
+  fixture.signals.publish({ kind: "player.reserveReleased", amount: 1 });
+  fixture.drain();
+  assert.equal(fixture.runtime.snapshot().status, "idle");
+  assert.deepEqual(fixture.runtime.snapshot().shownThisMatch, ["reserve-flow"]);
+  assert.equal(fixture.progress.snapshot().concepts.length, 0);
+
+  fixture.signals.beginSession("match:2");
+  fixture.runtime.beginSession("match:2", "isolated");
+  fixture.signals.publish({ kind: "player.reserveReleased", amount: 1 });
+  fixture.drain();
+  assert.equal(fixture.runtime.snapshot().active?.conceptId, "reserve-flow");
+  fixture.dispose();
+});
+
 test("preventive policy intercepts only its matching intent until the help is acknowledged", () => {
   const fixture = createRuntime([PREVENTIVE_CONCEPT]);
   const unrelated = fixture.runtime.authorizeIntent({ kind: "phase.endTurn" });

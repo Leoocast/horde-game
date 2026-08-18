@@ -263,7 +263,37 @@ export const LEARN_TO_PLAY_OPENING_INTERVENTION = Object.freeze({
   ],
 } satisfies GuidedInterventionDefinition);
 
-/** Silent hand-off shown after Maela's Archive attack and its contextual explanations settle. */
+/** First Battle explanation, opened by the phase transition rather than by an attack attempt. */
+export const LEARN_TO_PLAY_FIRST_BATTLE_INTERVENTION = Object.freeze({
+  id: "learn-to-play.first-battle",
+  revision: 1,
+  startStepId: "attack-host-archive",
+  steps: [
+    {
+      id: "attack-host-archive",
+      kind: "explain",
+      copy: {
+        titleKey: "guided.contextual.product.attackArchiveTitle",
+        bodyKey: "guided.contextual.product.attackArchiveBody",
+        glossaryTerms: ["archive", "echoes"],
+      },
+      highlights: [{ kind: "surface", anchor: "host.archive" }],
+      nextStepId: "attacking-is-optional",
+    },
+    {
+      id: "attacking-is-optional",
+      kind: "explain",
+      copy: {
+        titleKey: "guided.contextual.product.attackExhaustsTitle",
+        bodyKey: "guided.contextual.product.attackExhaustsBody",
+        glossaryTerms: ["exhausted", "echoes"],
+      },
+      highlights: [],
+    },
+  ],
+} satisfies GuidedInterventionDefinition);
+
+/** Silent hand-off shown after the first Battle and its authored explanations settle. */
 export const LEARN_TO_PLAY_END_OPENING_TURN_INTERVENTION = Object.freeze({
   id: "learn-to-play.end-opening-turn",
   revision: 1,
@@ -323,6 +353,50 @@ export const LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION = Object.freeze({
         cardAliases: ["return_to_memory", "maela"],
         emphasis: "combatStats",
       },
+    },
+  ],
+} satisfies GuidedInterventionDefinition);
+
+/** First player turn after defending: phase hand-off, Energy explanation, then a clear next goal. */
+export const LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION = Object.freeze({
+  id: "learn-to-play.player-return",
+  revision: 1,
+  startStepId: "player-turn-returned",
+  steps: [
+    {
+      id: "player-turn-returned",
+      kind: "explain",
+      copy: {
+        titleKey: "guided.learnToPlay.playerTurnTitle",
+        bodyKey: "guided.learnToPlay.playerTurnBody",
+        glossaryTerms: ["energy"],
+      },
+      highlights: [],
+      nextStepId: "explain-renewed-energy",
+    },
+    {
+      id: "explain-renewed-energy",
+      kind: "explain",
+      copy: {
+        titleKey: "guided.contextual.product.reserveTitle",
+        bodyKey: "guided.contextual.product.reserveBody",
+        glossaryTerms: ["source", "energy", "reserve"],
+      },
+      highlights: [
+        { kind: "surface", anchor: "player.sources" },
+        { kind: "surface", anchor: "player.reserve" },
+      ],
+      nextStepId: "use-energy-for-echoes",
+    },
+    {
+      id: "use-energy-for-echoes",
+      kind: "explain",
+      copy: {
+        titleKey: "guided.learnToPlay.useEnergyTitle",
+        bodyKey: "guided.learnToPlay.useEnergyBody",
+        glossaryTerms: ["energy", "invoke", "echoes"],
+      },
+      highlights: [],
     },
   ],
 } satisfies GuidedInterventionDefinition);

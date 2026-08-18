@@ -33,12 +33,14 @@ export function paddedGuidedRect(
   role: GuidedHighlightRole,
   rect: Pick<DOMRectReadOnly, "left" | "top" | "width" | "height">,
   padding = 8,
+  offsetX = 0,
+  offsetY = 0,
 ): GuidedRect {
   return Object.freeze({
     key,
     role,
-    left: Math.round((rect.left - padding) * 2) / 2,
-    top: Math.round((rect.top - padding) * 2) / 2,
+    left: Math.round((rect.left - padding + offsetX) * 2) / 2,
+    top: Math.round((rect.top - padding + offsetY) * 2) / 2,
     width: Math.max(1, Math.round((rect.width + padding * 2) * 2) / 2),
     height: Math.max(1, Math.round((rect.height + padding * 2) * 2) / 2),
   });

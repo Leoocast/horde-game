@@ -357,14 +357,15 @@ test("Learn to Play keeps the combat-stat and Harvester interventions reachable 
     assert.equal(guidedSessionStore.snapshot().currentStep.id, "enter-first-combat");
     useGameStore.getState().advancePhase("combat");
     await flushMicrotasks();
-    assert.equal(
-      guidedSessionStore.snapshot().status,
-      "completed",
-      JSON.stringify({
-        session: guidedSessionStore.snapshot(),
-        blockers: guidedPresentationBlockers(useGameStore.getState(), guidedPresentationActivity.snapshot()),
-      }),
-    );
+    assert.equal(guidedSessionStore.snapshot().lessonId, "learn-to-play.first-battle");
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "attack-host-archive");
+    guidedSessionStore.notifyCheckpointState(true);
+    assert.equal(guidedSessionStore.continueExplanation(), true);
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "attacking-is-optional");
+    guidedSessionStore.notifyCheckpointState(true);
+    assert.equal(guidedSessionStore.continueExplanation(), true);
+    await flushMicrotasks();
+    assert.equal(director.snapshot().stage, "opening-attack");
     useGameStore.getState().advancePhase("end");
     await flushMicrotasks();
     useGameStore.getState().endPlayerTurn();
@@ -421,6 +422,18 @@ test("Learn to Play keeps the combat-stat and Harvester interventions reachable 
     useGameStore.setState({ game: postVaelor });
     await flushMicrotasks();
 
+    assert.equal(guidedSessionStore.snapshot().lessonId, "learn-to-play.player-return");
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "player-turn-returned");
+    guidedSessionStore.notifyCheckpointState(true);
+    assert.equal(guidedSessionStore.continueExplanation(), true);
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "explain-renewed-energy");
+    guidedSessionStore.notifyCheckpointState(true);
+    assert.equal(guidedSessionStore.continueExplanation(), true);
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "use-energy-for-echoes");
+    guidedSessionStore.notifyCheckpointState(true);
+    assert.equal(guidedSessionStore.continueExplanation(), true);
+    await flushMicrotasks();
+
     assert.equal(guidedSessionStore.snapshot().lessonId, "learn-to-play.inspect-harvester");
     assert.equal(guidedSessionStore.snapshot().currentStep.id, "inspect-harvester");
     useGameStore.getState().setFocusedCardId(bindings.harvester);
@@ -458,6 +471,12 @@ test("the production Learn to Play lifecycle recovers when End Turn commits befo
         await flushMicrotasks();
         guidedSessionStore.notifyCheckpointState(true);
         useGameStore.getState().advancePhase("combat");
+        await flushMicrotasks();
+        assert.equal(guidedSessionStore.snapshot().lessonId, "learn-to-play.first-battle");
+        guidedSessionStore.notifyCheckpointState(true);
+        assert.equal(guidedSessionStore.continueExplanation(), true);
+        guidedSessionStore.notifyCheckpointState(true);
+        assert.equal(guidedSessionStore.continueExplanation(), true);
         await flushMicrotasks();
         useGameStore.getState().advancePhase("end");
         useGameStore.getState().endPlayerTurn();
@@ -504,6 +523,14 @@ test("the production Learn to Play lifecycle recovers when End Turn commits befo
         postVaelor.combat.hostAttackers = [];
         postVaelor.combat.blockers = {};
         useGameStore.setState({ game: postVaelor });
+        await flushMicrotasks();
+
+        assert.equal(guidedSessionStore.snapshot().lessonId, "learn-to-play.player-return");
+        for (const stepId of ["player-turn-returned", "explain-renewed-energy", "use-energy-for-echoes"]) {
+          assert.equal(guidedSessionStore.snapshot().currentStep.id, stepId);
+          guidedSessionStore.notifyCheckpointState(true);
+          assert.equal(guidedSessionStore.continueExplanation(), true);
+        }
         await flushMicrotasks();
 
         assert.equal(learnToPlayDirector.snapshot().stage, "inspection");

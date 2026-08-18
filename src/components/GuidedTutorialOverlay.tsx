@@ -176,6 +176,10 @@ export function GuidedTutorialOverlay() {
   useEffect(() => {
     if (!active) return;
     setFeedback(undefined);
+  }, [active, session.currentStep?.id, session.sessionId]);
+
+  useEffect(() => {
+    if (!active) return;
     const frame = window.requestAnimationFrame(() => {
       if (session.mode === "act") {
         const target = firstFocusableAnchor(resolved);
@@ -360,6 +364,11 @@ export function GuidedTutorialOverlay() {
     : undefined;
   const directionalBounds = directionalTarget ? guidedDirectionalCueBounds(directionalTarget) : undefined;
   const dismissLearnToPlayCallout = () => {
+    if (session.currentStep?.id === "inspect-harvester") {
+      const harvesterId = session.bindings.harvester;
+      if (harvesterId) useGameStore.getState().setFocusedCardId(harvesterId);
+      return;
+    }
     if (session.mode === "explain") {
       if (session.canContinue) guidedSessionStore.continueExplanation();
       return;
@@ -372,7 +381,6 @@ export function GuidedTutorialOverlay() {
       id="guided-tutorial-overlay"
       className={[
         "guided-tutorial-overlay",
-        feedback ? "has-rejection" : "",
         comparisonCards.length > 0 ? "has-card-comparison" : "",
         isLearnToPlay ? "is-learn-to-play" : "",
       ].join(" ")}
@@ -407,7 +415,7 @@ export function GuidedTutorialOverlay() {
       {(showCallout || showSilentSpotlight) && !missingAnchor && presentation?.kind !== "directionalCue" && rects.map((rect) => (
         <span
           key={`${session.currentStep?.id}:${rect.key}:${rect.role}:${feedbackPulse}`}
-          className={["guided-tutorial-ring", feedback ? "is-rejected" : ""].join(" ")}
+          className="guided-tutorial-ring"
           data-anchor-key={rect.key}
           data-anchor-role={rect.role}
           data-tone={showSilentSpotlight ? presentation.tone : undefined}

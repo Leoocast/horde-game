@@ -161,13 +161,17 @@ test("Memory, Archive and Life share one row of equal boxes and the Archive owns
 
 test("a recyclable Source keeps the broad right-side gesture while lighting up the Archive box", () => {
   const handSource = readFileSync(new URL("../src/components/Hand.tsx", import.meta.url), "utf8");
+  const dropTargetSource = readFileSync(new URL("../src/components/energyRecycleDropTarget.ts", import.meta.url), "utf8");
   const forecastSource = readFileSync(new URL("../src/components/PlayerArchiveForecast.tsx", import.meta.url), "utf8");
   const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.doesNotMatch(handSource, /SourceActionMenu/u);
   assert.match(handSource, /useSourceActionUiStore/u);
-  assert.match(handSource, /ENERGY_RECYCLE_SCREEN_RATIO = 0\.82/u);
+  assert.match(handSource, /energyRecycleDropZoneContains/u);
   assert.match(handSource, /ENERGY_RECYCLE_MIN_HORIZONTAL_DRAG = 48/u);
+  assert.match(dropTargetSource, /target\.top - 96/u);
+  assert.match(dropTargetSource, /bottom \+ 120/u);
+  assert.match(dropTargetSource, /viewport\.width \* 0\.78/u);
   assert.match(handSource, /setDraggingRecyclableSourceId\(energyRecyclable \? card\.instanceId : undefined\)/u);
   assert.match(handSource, /<EnergyRecycleDragHint/u);
   assert.match(handSource, /className="energy-recycle-drag-path"/u);
