@@ -94,6 +94,9 @@ export function GuidedTutorialOverlay() {
     && session.currentStep.allowedIntent.kind === "phase.continueSetup";
   const showCallout = session.currentStep?.callout !== "hidden"
     && dismissedActionCalloutStepId !== session.currentStep?.id;
+  const showSilentSpotlight = !showCallout
+    && presentation?.kind === "spotlight"
+    && session.presentationSettled;
   const isLearnToPlay = session.lessonId?.startsWith("learn-to-play.") ?? false;
 
   useEffect(() => {
@@ -378,13 +381,13 @@ export function GuidedTutorialOverlay() {
         </>
       )}
 
-      {showCallout && !missingAnchor && presentation?.kind !== "directionalCue" && rects.map((rect) => (
+      {(showCallout || showSilentSpotlight) && !missingAnchor && presentation?.kind !== "directionalCue" && rects.map((rect) => (
         <span
-          key={`${rect.key}:${rect.role}:${feedbackPulse}`}
+          key={`${session.currentStep?.id}:${rect.key}:${rect.role}:${feedbackPulse}`}
           className={["guided-tutorial-ring", feedback ? "is-rejected" : ""].join(" ")}
           data-anchor-key={rect.key}
           data-anchor-role={rect.role}
-          data-tone={undefined}
+          data-tone={showSilentSpotlight ? presentation.tone : undefined}
           style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
           aria-hidden="true"
         />
@@ -425,9 +428,9 @@ export function GuidedTutorialOverlay() {
         data-guided-overlay-control="true"
       >
         <span className="guided-tutorial-callout-mark" aria-hidden="true" />
-        {isLearnToPlay && (
-          <div className="tutorial-dialog-heading">
-            <span className="tutorial-dialog-heading-ornament" aria-hidden="true"><i /><i /></span>
+        <div className="tutorial-dialog-heading">
+          <h2 id="guided-tutorial-title">{title}</h2>
+          {isLearnToPlay && (
             <button
               type="button"
               className="tutorial-dialog-close"
@@ -438,15 +441,14 @@ export function GuidedTutorialOverlay() {
             >
               <X size={15} />
             </button>
-          </div>
-        )}
+          )}
+        </div>
         {!isLearnToPlay && (
           <div className="guided-tutorial-step">
             <span>{modeLabel}</span>
             {session.currentStepIndex && session.stepCount && <b>{session.currentStepIndex} / {session.stepCount}</b>}
           </div>
         )}
-        <h2 id="guided-tutorial-title">{title}</h2>
         <div id="guided-tutorial-body" className="guided-tutorial-body">
           {bodyParagraphs.map((paragraph, paragraphIndex) => (
             <p key={`${session.currentStep?.id}:body:${paragraphIndex}`}>

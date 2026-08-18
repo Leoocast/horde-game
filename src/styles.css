@@ -10872,13 +10872,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgb(145 156 125 / 0.2);
-  padding-bottom: 8px;
-  color: #899892;
-  font-size: 9px;
-  font-weight: 850;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .contextual-tutorial-close {
@@ -10899,14 +10897,16 @@
 }
 
 .contextual-tutorial-callout h2 {
-  margin: 13px 0 7px;
+  min-width: 0;
+  flex: 1;
+  margin: 0;
   color: #e0d5b5;
   font-size: 21px;
   font-weight: 600;
   line-height: 1.18;
 }
 
-.contextual-tutorial-body { display: grid; gap: 8px; }
+.contextual-tutorial-body { display: grid; gap: 8px; padding-top: 1px; }
 .contextual-tutorial-body p { margin: 0; color: #b4bfbb; font-size: 14px; line-height: 1.48; }
 .contextual-glossary-tooltip { z-index: 19970; }
 
@@ -12890,32 +12890,6 @@
     filter 160ms ease,
     box-shadow 180ms ease,
     transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.game-phase-button.is-learn-to-play-attention {
-  animation: learn-to-play-phase-attention 780ms cubic-bezier(0.12, 0.82, 0.18, 1) both;
-}
-
-.game-phase-button.is-learn-to-play-attention::after {
-  position: absolute;
-  border: 1px solid rgb(244 212 128 / 0.72);
-  content: "";
-  inset: 5px;
-  opacity: 0;
-  pointer-events: none;
-  animation: learn-to-play-phase-aura 1.8s 620ms ease-in-out infinite;
-}
-
-@keyframes learn-to-play-phase-attention {
-  0% { filter: brightness(1.34); transform: scale(1.28); }
-  56% { filter: brightness(1.16); transform: scale(0.975); }
-  78% { transform: scale(1.025); }
-  100% { filter: brightness(1); transform: scale(1); }
-}
-
-@keyframes learn-to-play-phase-aura {
-  0%, 100% { box-shadow: inset 0 0 0 rgb(235 203 112 / 0), 0 0 0 rgb(235 203 112 / 0); opacity: 0.16; }
-  50% { box-shadow: inset 0 0 16px rgb(235 203 112 / 0.12), 0 0 20px rgb(235 203 112 / 0.28); opacity: 0.72; }
 }
 
 .game-phase-button:hover:not(:disabled) {
@@ -20925,6 +20899,14 @@ body.playground-active .phase-banner-shell {
   animation: guided-tutorial-ready 1.9s ease-in-out infinite;
 }
 
+.guided-tutorial-ring[data-tone="gold"] {
+  transform-origin: center;
+  will-change: opacity, transform;
+  animation:
+    guided-phase-frame-arrive 920ms 140ms cubic-bezier(0.12, 0.78, 0.16, 1) both,
+    guided-tutorial-ready 1.9s 1060ms ease-in-out infinite;
+}
+
 .guided-tutorial-ring.is-rejected {
   border-color: #c8664c;
   animation: guided-tutorial-rejected 180ms ease-in-out 3;
@@ -20959,14 +20941,20 @@ body.playground-active .phase-banner-shell {
 .guided-tutorial-directional-cue {
   position: absolute;
   z-index: 4;
+  --tutorial-cue-deep: #06171b;
+  --tutorial-cue-face: #174954;
+  --tutorial-cue-inset: #286b72;
   color: #8bd8d0;
-  filter: drop-shadow(0 0 4px rgb(142 226 219 / 0.78)) drop-shadow(0 0 14px rgb(42 142 151 / 0.48));
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.86)) drop-shadow(0 0 9px rgb(54 168 171 / 0.44));
   pointer-events: none;
 }
 
 .guided-tutorial-directional-cue[data-tone="attack"] {
+  --tutorial-cue-deep: #1d0c07;
+  --tutorial-cue-face: #67351f;
+  --tutorial-cue-inset: #9a5330;
   color: #e99a58;
-  filter: drop-shadow(0 0 4px rgb(246 175 103 / 0.84)) drop-shadow(0 0 15px rgb(170 73 28 / 0.5));
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.86)) drop-shadow(0 0 9px rgb(188 83 38 / 0.5));
 }
 
 .learn-to-play-journey-cue { position: fixed; z-index: 19920; }
@@ -20979,26 +20967,37 @@ body.playground-active .phase-banner-shell {
   animation: guided-directional-rise 1.8s cubic-bezier(0.2, 0.72, 0.18, 1) infinite;
 }
 
-.tutorial-directional-aura,
-.tutorial-directional-rail,
-.tutorial-directional-core,
-.tutorial-directional-head,
-.tutorial-directional-diamond {
-  fill: none;
-  stroke: currentcolor;
-  stroke-linecap: round;
+.tutorial-directional-arrow-shadow,
+.tutorial-directional-arrow-face,
+.tutorial-directional-arrow-inset {
   stroke-linejoin: round;
 }
 
-.tutorial-directional-aura { opacity: 0.22; stroke-width: 8; }
-.tutorial-directional-rail { opacity: 0.48; stroke-width: 1.5; }
-.tutorial-directional-core { stroke-width: 2.4; }
-.tutorial-directional-head { fill: rgb(8 18 20 / 0.72); stroke-width: 2.2; }
-.tutorial-directional-diamond { fill: currentcolor; opacity: 0.72; stroke-width: 1; }
-.tutorial-directional-mote { fill: currentcolor; opacity: 0.68; }
-.tutorial-directional-mote.mote-one { animation: tutorial-directional-mote 1.8s 120ms ease-in-out infinite; }
-.tutorial-directional-mote.mote-two { animation: tutorial-directional-mote 1.8s 440ms ease-in-out infinite; }
-.tutorial-directional-mote.mote-three { animation: tutorial-directional-mote 1.8s 720ms ease-in-out infinite; }
+.tutorial-directional-arrow-shadow {
+  fill: var(--tutorial-cue-deep);
+  stroke: rgb(0 0 0 / 0.76);
+  stroke-width: 4;
+}
+
+.tutorial-directional-arrow-face {
+  fill: var(--tutorial-cue-face);
+  stroke: currentcolor;
+  stroke-width: 2;
+}
+
+.tutorial-directional-arrow-inset {
+  fill: var(--tutorial-cue-inset);
+  stroke: rgb(235 250 241 / 0.32);
+  stroke-width: 1;
+}
+
+.tutorial-directional-trail {
+  fill: currentcolor;
+  opacity: 0.82;
+}
+
+.tutorial-directional-trail.trail-two { opacity: 0.58; }
+.tutorial-directional-trail.trail-three { opacity: 0.34; }
 
 .guided-tutorial-callout {
   position: absolute;
@@ -21080,7 +21079,9 @@ body.playground-active .phase-banner-shell {
 }
 
 .guided-tutorial-callout h2 {
-  margin: 15px 0 9px;
+  min-width: 0;
+  flex: 1;
+  margin: 0;
   color: #e2d7b8;
   font-family: inherit;
   font-size: 25px;
@@ -21090,43 +21091,17 @@ body.playground-active .phase-banner-shell {
   text-shadow: 0 3px 13px rgb(0 0 0 / 0.66);
 }
 
-.guided-tutorial-overlay.is-learn-to-play .guided-tutorial-callout h2 { margin-top: 13px; }
-
 .tutorial-dialog-heading,
 .contextual-tutorial-heading {
   display: flex;
   min-height: 29px;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgb(145 156 125 / 0.2);
-  padding-bottom: 8px;
+  border-bottom: 1px solid rgb(145 156 125 / 0.28);
+  gap: 16px;
+  margin-bottom: 11px;
+  padding-bottom: 12px;
 }
-
-.tutorial-dialog-heading-ornament {
-  display: flex;
-  width: 78px;
-  align-items: center;
-  gap: 7px;
-  color: #aa9c6d;
-}
-
-.tutorial-dialog-heading-ornament::before {
-  width: 7px;
-  height: 7px;
-  border: 1px solid currentcolor;
-  content: "";
-  transform: rotate(45deg);
-}
-
-.tutorial-dialog-heading-ornament::after {
-  height: 1px;
-  flex: 1;
-  background: linear-gradient(90deg, currentcolor, transparent);
-  content: "";
-  opacity: 0.58;
-}
-
-.tutorial-dialog-heading-ornament i { display: none; }
 
 .tutorial-dialog-close,
 .contextual-tutorial-close {
@@ -21153,6 +21128,7 @@ body.playground-active .phase-banner-shell {
 .guided-tutorial-body {
   display: grid;
   gap: 10px;
+  padding-top: 1px;
 }
 
 .guided-tutorial-body p {
@@ -21280,19 +21256,23 @@ body.playground-active .phase-banner-shell {
 }
 
 .guided-card-comparison.is-combatStats .guided-card-comparison-frame > .card-stat-badge {
-  outline: 1px solid rgb(223 205 147 / 0.42);
-  outline-offset: 1.2cqw;
+  outline: 1px solid rgb(223 205 147 / 0.28);
+  outline-offset: 1cqw;
   transform: scale(1.2);
   transform-origin: center;
   animation: guided-card-stats-focus 1.85s ease-in-out infinite;
 }
 
 .guided-card-comparison.is-combatStats .card-stat-attack {
+  border-radius: 2cqw 0 0 2cqw;
+  background: linear-gradient(90deg, rgb(185 75 43 / 0.32), transparent 92%);
   color: #efaa78;
   text-shadow: 0 0 2.4cqw rgb(208 95 45 / 0.72), 0 1px 3px #000;
 }
 
 .guided-card-comparison.is-combatStats .card-stat-life {
+  border-radius: 0 2cqw 2cqw 0;
+  background: linear-gradient(270deg, rgb(34 132 91 / 0.32), transparent 92%);
   color: #91d9b6;
   text-shadow: 0 0 2.4cqw rgb(47 155 117 / 0.72), 0 1px 3px #000;
 }
@@ -21300,29 +21280,51 @@ body.playground-active .phase-banner-shell {
 .guided-card-comparison-stat-label {
   position: absolute;
   z-index: 45;
-  border: 1px solid color-mix(in srgb, currentcolor 62%, transparent);
-  padding: 0.9cqw 1.8cqw;
-  background: linear-gradient(110deg, rgb(24 32 32 / 0.96), rgb(7 12 14 / 0.96));
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 0.8cqw 2.2cqw rgb(0 0 0 / 0.58);
-  clip-path: polygon(1.2cqw 0, 100% 0, 100% calc(100% - 1.2cqw), calc(100% - 1.2cqw) 100%, 0 100%, 0 1.2cqw);
+  border: 0;
+  border-bottom: 1px solid currentcolor;
+  padding: 0.45cqw 0.7cqw 0.8cqw;
+  background: linear-gradient(90deg, transparent, rgb(6 11 13 / 0.92) 14%, rgb(6 11 13 / 0.92) 86%, transparent);
+  box-shadow: 0 1.2cqw 2.4cqw rgb(0 0 0 / 0.62);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 2.8cqw;
-  font-weight: 850;
-  letter-spacing: 0.08em;
+  font-size: 2.55cqw;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   line-height: 1;
   text-transform: uppercase;
 }
 
+.guided-card-comparison-stat-label::after {
+  position: absolute;
+  top: 100%;
+  width: 3.2cqw;
+  height: 1px;
+  background: currentcolor;
+  content: "";
+  opacity: 0.7;
+}
+
 .guided-card-comparison-stat-label.is-power {
-  right: 14.5cqw;
-  bottom: 66.2cqw;
+  right: 17.5cqw;
+  bottom: 68.7cqw;
   color: #e78d61;
 }
 
+.guided-card-comparison-stat-label.is-power::after {
+  right: -2.8cqw;
+  transform: rotate(32deg);
+  transform-origin: left;
+}
+
 .guided-card-comparison-stat-label.is-endurance {
-  right: -1.2cqw;
-  bottom: 52.2cqw;
+  right: -5.8cqw;
+  bottom: 49.5cqw;
   color: #75cda5;
+}
+
+.guided-card-comparison-stat-label.is-endurance::after {
+  left: -2.8cqw;
+  transform: rotate(-32deg);
+  transform-origin: right;
 }
 
 .guided-card-comparison-frame > img {
@@ -21392,17 +21394,17 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
   50% { filter: brightness(1.2); }
 }
 
-@keyframes guided-directional-rise {
-  0% { opacity: 0.18; transform: translateY(9px) scale(0.97); }
-  24% { opacity: 0.94; }
-  72% { opacity: 0.88; }
-  100% { opacity: 0; transform: translateY(-9px) scale(1.015); }
+@keyframes guided-phase-frame-arrive {
+  0% { opacity: 0; transform: scale(2.8); }
+  48% { opacity: 0.92; transform: scale(0.94); }
+  68% { opacity: 1; transform: scale(1.08); }
+  84% { transform: scale(0.985); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
-@keyframes tutorial-directional-mote {
-  0%, 100% { opacity: 0; transform: translateY(7px); }
-  35% { opacity: 0.8; }
-  70% { opacity: 0.28; transform: translateY(-9px); }
+@keyframes guided-directional-rise {
+  0%, 100% { opacity: 0.72; transform: translateY(7px) scale(0.98); }
+  50% { opacity: 1; transform: translateY(-5px) scale(1.02); }
 }
 
 @keyframes guided-card-stats-focus {

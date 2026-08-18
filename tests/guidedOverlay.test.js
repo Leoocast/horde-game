@@ -166,10 +166,14 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.doesNotMatch(overlay, /closest\("#guided-tutorial-overlay/u);
   assert.match(overlay, /showCallout && \(/u);
   assert.match(overlay, /\{showCallout && \(\s*<>\s*<svg className="guided-tutorial-mask"/su);
-  assert.doesNotMatch(overlay, /showSilentSpotlight/u);
+  assert.match(overlay, /showSilentSpotlight/u);
+  assert.match(overlay, /presentation\?\.kind === "spotlight"\s*&& session\.presentationSettled/su);
+  assert.match(overlay, /data-tone=\{showSilentSpotlight \? presentation\.tone : undefined\}/u);
   assert.match(overlay, /guided-tutorial-directional-cue/u);
   assert.match(overlay, /!isLearnToPlay &&/u);
   assert.match(overlay, /tutorial-dialog-heading/u);
+  assert.match(overlay, /<div className="tutorial-dialog-heading">\s*<h2 id="guided-tutorial-title">\{title\}<\/h2>/su);
+  assert.doesNotMatch(overlay, /tutorial-dialog-heading-ornament/u);
   assert.match(overlay, /guided\.contextual\.understood/u);
   assert.match(overlay, /\{showCallout && !missingAnchor && comparisonCards\.length > 0 && \(/u);
   assert.match(overlay, /allowedIntent\.kind === "phase\.continueSetup"/u);
@@ -183,6 +187,12 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(styles, /\.guided-card-comparison\.is-combatStats \.card-stat-attack\s*\{/u);
   assert.match(styles, /\.guided-card-comparison\.is-combatStats \.card-stat-life\s*\{/u);
   assert.match(styles, /\.guided-tutorial-directional-cue\[data-tone="attack"\]/u);
+  assert.match(styles, /\.guided-tutorial-ring\[data-tone="gold"\]/u);
+  assert.match(styles, /@keyframes guided-phase-frame-arrive/u);
+  assert.match(styles, /0% \{ opacity: 0; transform: scale\(2\.8\); \}/u);
+  assert.doesNotMatch(styles, /\.game-phase-button\.is-learn-to-play-attention/u);
+  assert.doesNotMatch(styles, /tutorial-dialog-heading-ornament/u);
+  assert.match(styles, /\.tutorial-dialog-heading,\s*\.contextual-tutorial-heading\s*\{[^}]*border-bottom:/su);
   assert.doesNotMatch(styles, /\.guided-card-comparison-frame::after\s*\{/u);
   assert.match(styles, /\.guided-tutorial-overlay\.has-card-comparison \.guided-tutorial-callout\s*\{[^}]*width:\s*min\(580px, calc\(100vw - 48px\)\);/su);
   const costFocus = styles.match(/@keyframes guided-card-cost-focus\s*\{([\s\S]*?)\n\}/u)?.[1] ?? "";

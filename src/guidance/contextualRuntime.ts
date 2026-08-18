@@ -215,17 +215,24 @@ export class ContextualTutorialRuntime {
   }
 
   #promoteNow(): void {
-    if (this.#active) return;
     const context = this.#readContext();
+    let activeDismissed = false;
+    if (this.#active) {
+      const remainsRelevant = this.#active.definition.revalidate?.(this.#active.match, context) ?? true;
+      if (remainsRelevant) return;
+      this.#active = undefined;
+      this.#lastInterceptedConceptId = undefined;
+      activeDismissed = true;
+    }
     const before = this.#queue.length;
     this.#queue = this.#queue.filter((item) => item.definition.revalidate?.(item.match, context) ?? true);
     if (!context.presentationReady || context.guidedActive || context.targetingActive) {
-      if (this.#queue.length !== before) this.#emit();
+      if (activeDismissed || this.#queue.length !== before) this.#emit();
       return;
     }
     const next = this.#queue.shift();
     if (!next) {
-      if (this.#queue.length !== before) this.#emit();
+      if (activeDismissed || this.#queue.length !== before) this.#emit();
       return;
     }
     this.#active = next;

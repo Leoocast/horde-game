@@ -87,8 +87,8 @@ export function placeGuidedCallout(
 
 /** Places an upward cue over a card while keeping its motion contained inside the card silhouette. */
 export function guidedDirectionalCueBounds(target: GuidedRect): GuidedBounds {
-  const width = Math.max(48, Math.min(68, target.width * 0.38));
-  const height = Math.max(88, target.height * 0.78);
+  const width = Math.max(58, Math.min(82, target.width * 0.46));
+  const height = Math.max(100, target.height * 0.82);
   return Object.freeze({
     left: target.left + (target.width - width) / 2,
     top: target.top + target.height * 0.08,

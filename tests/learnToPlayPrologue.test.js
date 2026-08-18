@@ -140,6 +140,8 @@ test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms comb
     cardAliases: ["return_to_memory", "maela"],
     emphasis: "combatStats",
   });
+  assert.equal(LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION.steps[0].nextStepId, "explain-combat-stats");
+  assert.equal(LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION.steps[1].id, "explain-combat-stats");
 });
 
 test("Learn to Play authors the exact advanced board two Host turns before Surge", () => {

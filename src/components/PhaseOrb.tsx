@@ -9,14 +9,34 @@ import { GameTooltip } from "./GameTooltip";
 import { setupPrimaryAction } from "./setupPresentation";
 import { runGuidedSystemAction } from "../guidance/interactionGate";
 import { guidedAnchorRegistry, guidedSurfaceAnchorKey } from "../guidance/anchorRegistry";
+import { contextualTutorialRuntime } from "../guidance/contextualProductRuntime";
+import { journeyIntentGate } from "../guidance/journeyIntentGate";
 import { guidedSessionStore } from "../guidance/runtime";
 
+const subscribeContextualTutorial = (listener: () => void) => contextualTutorialRuntime.subscribe(listener);
+const readContextualTutorial = () => contextualTutorialRuntime.snapshot();
 const subscribeGuidedSession = (listener: () => void) => guidedSessionStore.subscribe(listener);
 const readGuidedSession = () => guidedSessionStore.snapshot();
+const PHASE_BLOCKING_CONTEXTUAL_CONCEPTS = new Set([
+  "assign-defenders",
+  "chronicler-life",
+  "reserve-and-ready",
+  "host-surge",
+  "attack-exhausts-echo",
+]);
 
 export function PhaseOrb({ game, hostStartDelayMs = 0 }: { game: GameState; hostStartDelayMs?: number }) {
   const t = useTranslation();
-  const guided = useSyncExternalStore(subscribeGuidedSession, readGuidedSession, readGuidedSession);
+  const contextualTutorial = useSyncExternalStore(
+    subscribeContextualTutorial,
+    readContextualTutorial,
+    readContextualTutorial,
+  );
+  const guidedSession = useSyncExternalStore(
+    subscribeGuidedSession,
+    readGuidedSession,
+    readGuidedSession,
+  );
   const playSfx = useAudioStore((state) => state.playSfx);
   const advancePhase = useGameStore((state) => state.advancePhase);
   const endPlayerTurn = useGameStore((state) => state.endPlayerTurn);
@@ -53,20 +73,37 @@ export function PhaseOrb({ game, hostStartDelayMs = 0 }: { game: GameState; host
     playerAutoTriggerCount,
     t,
   );
-  const orbDisabled = Boolean(game.winner) || attackAnimating || hostStartPending || Boolean(actionBlockedReason);
+  const contextualTutorialBlocksPhase = [
+    contextualTutorial.active?.conceptId,
+    ...contextualTutorial.queue,
+  ].some((conceptId) => PHASE_BLOCKING_CONTEXTUAL_CONCEPTS.has(conceptId ?? ""));
+  const learnToPlayActive = journeyIntentGate.activeJourneyId() === "learn-to-play";
+  const firstDefenseHelpStarted = contextualTutorial.shownThisMatch.includes("assign-defenders");
+  const reserveHelpStarted = contextualTutorial.shownThisMatch.includes("reserve-and-ready");
+  const learnToPlayDefenseLeadIn = learnToPlayActive
+    && game.activeSide === "host"
+    && game.hostTurnNumber <= 9
+    && !firstDefenseHelpStarted;
+  const learnToPlayRenewalLeadIn = learnToPlayActive
+    && game.activeSide === "player"
+    && game.hostTurnNumber === 9
+    && !reserveHelpStarted;
+  const guidedSpotlightPending = guidedSession.status === "running"
+    && guidedSession.currentStep?.callout === "hidden"
+    && guidedSession.currentStep.presentation?.kind === "spotlight"
+    && !guidedSession.presentationSettled;
+  const orbDisabled = Boolean(game.winner)
+    || attackAnimating
+    || hostStartPending
+    || Boolean(actionBlockedReason)
+    || contextualTutorialBlocksPhase
+    || learnToPlayDefenseLeadIn
+    || learnToPlayRenewalLeadIn
+    || guidedSpotlightPending;
   const hasAssignedBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
   const showCancelDefense = game.activeSide === "host" && game.combat.hostAttackers.length > 0 && hasAssignedBlocks;
   const showCancelAttack = game.activeSide === "player" && game.phase === "combat" && game.combat.playerAttackers.length > 0;
   const showAttackAll = game.activeSide === "player" && game.phase === "combat" && hasAvailableAttackers(game);
-  const learnToPlayAttention = Boolean(
-    guided.status === "running"
-    && guided.lessonId?.startsWith("learn-to-play.")
-    && guided.currentStep?.callout === "hidden"
-    && guided.currentStep.presentation?.kind === "spotlight"
-    && guided.currentStep.highlights.some(
-      (highlight) => highlight.kind === "surface" && highlight.anchor === "phase.primaryAction",
-    ),
-  );
   useEffect(() => () => window.clearTimeout(hostStartTimerRef.current), []);
 
   const beginHostAfterAuthoredPause = () => {
@@ -131,10 +168,7 @@ export function PhaseOrb({ game, hostStartDelayMs = 0 }: { game: GameState; host
             data-tone={state.tone}
             onClick={runOrbAction}
             disabled={orbDisabled}
-            className={[
-              "game-phase-button relative flex h-20 w-60 items-center justify-center overflow-hidden border text-[#f1e6c2] disabled:cursor-default disabled:saturate-75",
-              learnToPlayAttention ? "is-learn-to-play-attention" : "",
-            ].join(" ")}
+            className="game-phase-button relative flex h-20 w-60 items-center justify-center overflow-hidden border text-[#f1e6c2] disabled:cursor-default disabled:saturate-75"
           >
             <span className="game-phase-button-shade pointer-events-none absolute inset-0" />
             <span className="relative z-10 flex w-full items-center justify-between gap-4 px-5 text-left">

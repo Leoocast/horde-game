@@ -32,7 +32,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
     },
     signalKinds: ["host.attackersDeclared"],
     evaluate: () => ({
-      highlights: [{ kind: "surface", anchor: "player.field" }],
+      highlights: [{ kind: "surface", anchor: "player.field", showHighlight: false }],
       placement: "left",
     }),
     revalidate: (_match, context) => context.game.activeSide === "host" && context.game.combat.hostAttackers.length > 0,
@@ -191,7 +191,8 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
       && signal.guidanceId === "learn-to-play.vaelor-required"
       ? { highlights: (signal.relatedCardIds ?? []).map((instanceId) => ({ kind: "card", instanceId })) }
       : undefined,
-    revalidate: cardsRemainRelevant,
+    revalidate: (match, context) => highlightedCards(match).every((instanceId) =>
+      context.game.player.hand.some((card) => card.instanceId === instanceId)),
   },
   {
     id: "learn-to-play-harvester-inspection-required",

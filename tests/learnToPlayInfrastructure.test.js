@@ -180,10 +180,23 @@ test("the opening attack explanation is contextual and the defense prompt prefer
     },
   );
   assert.deepEqual(defense.evaluate({ kind: "host.attackersDeclared" }, {}), {
-    highlights: [{ kind: "surface", anchor: "player.field" }],
+    highlights: [{ kind: "surface", anchor: "player.field", showHighlight: false }],
     placement: "left",
   });
   assert.deepEqual(order.signalKinds, []);
+});
+
+test("the Vaelor reminder expires as soon as Vaelor leaves the Hand", () => {
+  const reminder = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "learn-to-play-vaelor-required");
+  const match = reminder.evaluate({
+    kind: "intent.attempted",
+    authorization: "journey-blocked",
+    guidanceId: "learn-to-play.vaelor-required",
+    relatedCardIds: ["vaelor:1"],
+  }, {});
+  assert.ok(match);
+  assert.equal(reminder.revalidate(match, { game: { player: { hand: [{ instanceId: "vaelor:1" }] } } }), true);
+  assert.equal(reminder.revalidate(match, { game: { player: { hand: [] } } }), false);
 });
 
 test("App exposes both launchers, disables Continue, and keys autosave from policy", async () => {

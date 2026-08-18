@@ -55,6 +55,7 @@ export function ContextualTutorialCallout() {
       key,
       role: highlight.role ?? "focus",
       padding: highlight.padding ?? 6,
+      showHighlight: highlight.showHighlight !== false,
       element: guidedAnchorRegistry.preferred(key),
     });
   }), [active, anchors.revision]);
@@ -132,7 +133,7 @@ export function ContextualTutorialCallout() {
           <path className="contextual-tutorial-connector" d={connector} />
         </svg>
       )}
-      {!missingAnchor && rects.map((rect) => (
+      {!missingAnchor && rects.map((rect, index) => resolved[index]?.showHighlight && (
         <span
           key={`${rect.key}:${rect.role}`}
           className="contextual-tutorial-ring"
@@ -158,7 +159,7 @@ export function ContextualTutorialCallout() {
       >
         <span className="contextual-tutorial-mark" aria-hidden="true" />
         <div className="contextual-tutorial-heading">
-          <span className="tutorial-dialog-heading-ornament" aria-hidden="true"><i /><i /></span>
+          <h2 id={titleId}>{t(active.copy.titleKey)}</h2>
           <button
             ref={closeRef}
             type="button"
@@ -170,7 +171,6 @@ export function ContextualTutorialCallout() {
             <X size={15} />
           </button>
         </div>
-        <h2 id={titleId}>{t(active.copy.titleKey)}</h2>
         <div id={bodyId} className="contextual-tutorial-body">
           {paragraphs.map((paragraph, paragraphIndex) => (
             <p key={`${active.conceptId}:body:${paragraphIndex}`}>

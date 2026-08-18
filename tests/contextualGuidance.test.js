@@ -118,6 +118,21 @@ test("simultaneous triggers queue by priority and revalidate after presentation 
   fixture.dispose();
 });
 
+test("an active contextual reminder closes when its authored condition is fulfilled", () => {
+  let relevant = true;
+  const fixture = createRuntime([{ ...RESERVE_CONCEPT, revalidate: () => relevant }]);
+  fixture.signals.publish({ kind: "player.reserveReleased", amount: 1 });
+  fixture.drain();
+  assert.equal(fixture.runtime.snapshot().active?.conceptId, "reserve-flow");
+
+  relevant = false;
+  fixture.runtime.refresh();
+  fixture.drain();
+  assert.equal(fixture.runtime.snapshot().status, "idle");
+  assert.equal(fixture.runtime.snapshot().active, undefined);
+  fixture.dispose();
+});
+
 test("provisional acknowledgement commits atomically or rolls back completely", () => {
   const fixture = createRuntime([RESERVE_CONCEPT]);
   fixture.runtime.beginSession("match:1", "provisional");
@@ -186,6 +201,10 @@ test("contextual callout is non-modal, keyboard dismissible and mounted separate
   assert.match(component, /aria-live="polite"/u);
   assert.match(component, /event\.key !== "Escape"/u);
   assert.match(component, /contextualTutorialRuntime\.acknowledgeActive/u);
+  assert.match(component, /<div className="contextual-tutorial-heading">\s*<h2 id=\{titleId\}>/su);
+  assert.doesNotMatch(component, /tutorial-dialog-heading-ornament/u);
+  assert.match(component, /highlight\.showHighlight !== false/u);
+  assert.match(component, /resolved\[index\]\?\.showHighlight/u);
   assert.doesNotMatch(component, /addEventListener\("pointerdown"/u);
   assert.match(board, /<GuidedTutorialOverlay\s*\/>\s*<ContextualTutorialCallout\s*\/>/u);
 });
