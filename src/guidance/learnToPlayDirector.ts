@@ -2,6 +2,7 @@ import type { GameStore } from "../store/useGameStore";
 import type { GuidedCardAlias } from "./contracts";
 import { contextualTutorialRuntime } from "./contextualProductRuntime";
 import type { GuidedInterventionOrchestrator } from "./interventionOrchestrator";
+import { runGuidedSystemAction } from "./interactionGate";
 import { isGuidedPresentationSettled } from "./presentationSettled";
 import { guidedPresentationActivity, guidedSessionStore } from "./runtime";
 import { journeyIntentGate } from "./journeyIntentGate";
@@ -58,10 +59,12 @@ export function learnToPlayHarvesterInspectionReady(
   if (completed || game.hostTurnNumber >= game.hostRules.surgeTurn) return false;
   const vaelorEntered = game.player.field.some((card) => card.instanceId === bindings.vaelor);
   const harvesterPresent = game.host.field.some((card) => card.instanceId === bindings.harvester);
+  const vaelorEffectPending = (game.eventQueue ?? []).some((event) => event.sourceId === bindings.vaelor);
   // The hidden observation at the start of the intervention owns the visual wait. Requiring a
   // particular set of other Echoes to have left the Field made the prompt depend on the exact
-  // defense branch and could strand a replay even though its real teaching moment had happened.
-  return vaelorEntered && harvesterPresent;
+  // defense branch and could strand a replay. The authored effect itself is the stable semantic
+  // boundary: its queued volley must have committed before presentation settling can open the cue.
+  return vaelorEntered && harvesterPresent && !vaelorEffectPending;
 }
 
 export function learnToPlayFirstDefenseReady(
@@ -103,8 +106,10 @@ export class LearnToPlayPrologueDirector {
   #returnSourcePromptRequested = false;
   #firstDefenseStarted = false;
   #firstDefenseCompleted = false;
+  #playerReturnPromptRequested = false;
   #playerReturnIntroStarted = false;
   #playerReturnIntroCompleted = false;
+  #playerTurnTransitionStarted = false;
   #harvesterInspectionStarted = false;
   #harvesterInspectionCompleted = false;
   #returnSourceInterventionStarted = false;
@@ -136,8 +141,10 @@ export class LearnToPlayPrologueDirector {
     this.#returnSourcePromptRequested = false;
     this.#firstDefenseStarted = false;
     this.#firstDefenseCompleted = false;
+    this.#playerReturnPromptRequested = false;
     this.#playerReturnIntroStarted = false;
     this.#playerReturnIntroCompleted = false;
+    this.#playerTurnTransitionStarted = false;
     this.#harvesterInspectionStarted = false;
     this.#harvesterInspectionCompleted = false;
     this.#returnSourceInterventionStarted = false;
@@ -145,6 +152,13 @@ export class LearnToPlayPrologueDirector {
       journeyId: "learn-to-play",
       authorize: (intent) => {
         const game = this.#host.readStore().game;
+        if (intent.kind === "phase.startPlayerTurn" && this.#playerReturnHandoffRequired(game)) {
+          this.#requestPlayerReturnPrompt();
+          return Object.freeze({
+            allowed: false,
+            guidanceId: "learn-to-play.player-turn-return",
+          });
+        }
         const vaelorId = this.#bindings.vaelor;
         const vaelorStillRequired = game.hostTurnNumber >= 9
           && game.activeSide === "player"
@@ -212,8 +226,10 @@ export class LearnToPlayPrologueDirector {
     this.#returnSourcePromptRequested = false;
     this.#firstDefenseStarted = false;
     this.#firstDefenseCompleted = false;
+    this.#playerReturnPromptRequested = false;
     this.#playerReturnIntroStarted = false;
     this.#playerReturnIntroCompleted = false;
+    this.#playerTurnTransitionStarted = false;
     this.#harvesterInspectionStarted = false;
     this.#harvesterInspectionCompleted = false;
     this.#returnSourceInterventionStarted = false;
@@ -327,16 +343,14 @@ export class LearnToPlayPrologueDirector {
       this.#playerReturnIntroCompleted = true;
       this.#setStage("free-play");
     }
-    const playerReturnReady = (
-      !this.#playerReturnIntroStarted
+    const playerReturnPromptReady = (
+      this.#playerReturnPromptRequested
+      && !this.#playerReturnIntroStarted
       && this.#firstDefenseCompleted
       && this.#stage === "free-play"
-      && store.game.activeSide === "player"
-      && store.game.phase === "main"
-      && this.#openingHostTurnNumber !== undefined
-      && store.game.hostTurnNumber > this.#openingHostTurnNumber
+      && this.#playerReturnHandoffRequired(store.game)
     );
-    if (playerReturnReady) {
+    if (playerReturnPromptReady) {
       if (session.status === "running") return;
       if (contextualTutorialRuntime.snapshot().active) {
         contextualTutorialRuntime.refresh();
@@ -350,6 +364,17 @@ export class LearnToPlayPrologueDirector {
         this.#bindings,
         `${this.#gameSessionId}:player-return`,
       );
+      return;
+    }
+    if (
+      this.#playerReturnIntroStarted
+      && !this.#playerTurnTransitionStarted
+      && session.lessonId === LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.id
+      && session.status === "running"
+      && session.currentStep?.id === "wait-for-energy-renewal"
+    ) {
+      this.#playerTurnTransitionStarted = true;
+      runGuidedSystemAction(() => this.#host.readStore().finishHostTurn());
       return;
     }
     if (this.#playerReturnIntroStarted && !this.#playerReturnIntroCompleted) return;
@@ -366,6 +391,8 @@ export class LearnToPlayPrologueDirector {
       learnToPlayHarvesterInspectionReady(store.game, this.#bindings, this.#harvesterInspectionCompleted)
       && !this.#harvesterInspectionStarted
       && session.status !== "running"
+      && !contextualTutorialRuntime.snapshot().active
+      && isGuidedPresentationSettled(store, guidedPresentationActivity.snapshot())
     ) {
       this.#harvesterInspectionStarted = true;
       this.#setStage("inspection");
@@ -426,6 +453,14 @@ export class LearnToPlayPrologueDirector {
     return learnToPlayHarvesterInspectionReady(game, this.#bindings, this.#harvesterInspectionCompleted);
   }
 
+  #playerReturnHandoffRequired(game: GameStore["game"]): boolean {
+    return this.#firstDefenseCompleted
+      && !this.#playerReturnIntroCompleted
+      && game.activeSide === "host"
+      && this.#openingHostTurnNumber !== undefined
+      && game.hostTurnNumber > this.#openingHostTurnNumber;
+  }
+
   #consumeSignals(): void {
     const snapshot = gameplaySignalStream.snapshot();
     if (snapshot.cursor <= this.#signalCursor) return;
@@ -459,6 +494,12 @@ export class LearnToPlayPrologueDirector {
   #requestReturnSourcePrompt(): void {
     if (this.#returnSourcePromptRequested) return;
     this.#returnSourcePromptRequested = true;
+    this.refresh();
+  }
+
+  #requestPlayerReturnPrompt(): void {
+    if (this.#playerReturnPromptRequested) return;
+    this.#playerReturnPromptRequested = true;
     this.refresh();
   }
 

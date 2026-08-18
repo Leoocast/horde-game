@@ -5,7 +5,7 @@ export type TutorialCalloutWidthProfile = Readonly<{
   chromeWidth: number;
 }>;
 
-/** Keeps the authored title on one line without making every short tutorial occupy the same width. */
+/** Gives authored titles room before the responsive heading wraps them onto additional lines. */
 export function tutorialCalloutWidth(
   title: string,
   viewportWidth: number,

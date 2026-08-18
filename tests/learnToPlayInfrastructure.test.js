@@ -338,6 +338,15 @@ test("journey-authored milestones ignore global contextual progress and remain f
   assert.equal(learnToPlayHarvesterInspectionReady(beforeSurge, bindings, false), true);
   assert.equal(learnToPlayHarvesterInspectionReady({
     ...beforeSurge,
+    eventQueue: [{
+      id: "vaelor-volley:1",
+      type: "COUNTER_VOLLEY",
+      sourceId: "vaelor:1",
+      payload: { deferForPresentation: true },
+    }],
+  }, bindings, false), false, "the Harvester prompt must wait for Vaelor's queued Invoked effect");
+  assert.equal(learnToPlayHarvesterInspectionReady({
+    ...beforeSurge,
     host: { field: [{ instanceId: "harvester:1" }, { instanceId: "unexpected-survivor:1" }] },
   }, bindings, false), true);
   assert.equal(learnToPlayHarvesterInspectionReady(beforeSurge, bindings, true), false);

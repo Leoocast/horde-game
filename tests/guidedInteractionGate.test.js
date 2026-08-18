@@ -208,6 +208,32 @@ test("the real store blocks wrong cards, commits the authored card once and emit
   });
 });
 
+test("the strict Source-return action reaches the store, draws, and emits its authored receipt", async () => {
+  await withStoreHarness(async () => {
+    const game = createTestGame("guided-store-source-return");
+    preparePlayerMain(game);
+    const source = addCard(game, cardFromDeck("river_of_elarion", "player", "hand"));
+    const nextDraw = addCard(game, cardFromDeck("clash_of_echoes", "player", "archive"));
+    useGameStore.getState().loadScenario(game, { playerDeckId: "pact_of_elarion", hostDeckId: "uprising_of_the_graveless" });
+    guidedInteractionGate.activate(policy({
+      bindings: { post_surge_source: source.instanceId },
+      allowedIntent: { kind: "source.recycle", cardAlias: "post_surge_source" },
+    }));
+
+    useGameStore.getState().startEnergyRecycle(source.instanceId, { x: 1168, y: 700 });
+    assert.equal(useGameStore.getState().energyRecycleAnimation?.card.instanceId, source.instanceId);
+
+    useGameStore.getState().completeEnergyRecycleAnimation();
+    const committed = useGameStore.getState().game;
+    assert.equal(committed.player.hand.some((card) => card.instanceId === source.instanceId), false);
+    assert.equal(committed.player.hand.some((card) => card.instanceId === nextDraw.instanceId), true);
+    assert.equal(committed.player.archive.some((card) => card.instanceId === source.instanceId), true);
+    assert.equal(committed.player.energyActionUsedThisTurn, true);
+    assert.equal(guidedInteractionGate.snapshot().receipts.at(-1)?.kind, "source.recycled");
+    assert.equal(guidedInteractionGate.snapshot().receipts.at(-1)?.cardAlias, "post_surge_source");
+  });
+});
+
 test("guided card inspection accepts only the authored right-click target", async () => {
   await withStoreHarness(async () => {
     const game = createTestGame("guided-card-inspection");

@@ -89,12 +89,13 @@ test("a sideways Flying attacker can receive a larger highlight shifted to its v
   );
 });
 
-test("the Source return drop target extends below the printed Archive", () => {
+test("the Source return keeps the broad rightward gesture and extends down over the printed Archive", () => {
   const viewport = { width: 1280, height: 720 };
   const archive = { left: 1120, top: 590, width: 96, height: 72 };
+  assert.equal(energyRecycleDropZoneContains({ x: 1168, y: 450 }, viewport, archive), true);
   assert.equal(energyRecycleDropZoneContains({ x: 1168, y: 700 }, viewport, archive), true);
-  assert.equal(energyRecycleDropZoneContains({ x: 1010, y: 700 }, viewport, archive), false);
-  assert.equal(energyRecycleDropZoneContains({ x: 1168, y: 450 }, viewport, archive), false);
+  assert.equal(energyRecycleDropZoneContains({ x: 990, y: 700 }, viewport, archive), false);
+  assert.equal(energyRecycleDropZoneContains({ x: 990, y: 450 }, viewport, archive), false);
 });
 
 test("directional cues rise inside their authored card", () => {
@@ -313,8 +314,22 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(styles, /guided-tutorial-overlay:has\(\.guided-tutorial-ring\[data-anchor-key="surface:player\.sources"\]\)[\s\S]*?guided-tutorial-ring\[data-anchor-key="surface:player\.reserve"\]::after\s*\{\s*display:\s*none;/u);
   assert.match(styles, /\.guided-tutorial-ring\[data-anchor-key\^="card:"\]\s*\{\s*display:\s*none;\s*\}/u);
   assert.match(styles, /\.guided-tutorial-body p\s*\{[^}]*font-size:\s*16px;/su);
-  assert.match(styles, /\.guided-tutorial-callout h2\s*\{[^}]*white-space:\s*nowrap;/su);
-  assert.match(styles, /\.contextual-tutorial-callout h2\s*\{[^}]*white-space:\s*nowrap;/su);
+  assert.match(
+    styles,
+    /\.guided-tutorial-callout h2\s*\{[^}]*overflow-wrap:\s*anywhere;[^}]*white-space:\s*normal;/su,
+  );
+  assert.match(
+    styles,
+    /\.contextual-tutorial-callout h2\s*\{[^}]*overflow-wrap:\s*anywhere;[^}]*white-space:\s*normal;/su,
+  );
+  assert.match(
+    styles,
+    /\.tutorial-dialog-heading,\s*\.contextual-tutorial-heading\s*\{[^}]*align-items:\s*flex-start;[^}]*gap:\s*16px;/su,
+  );
+  assert.match(
+    styles,
+    /\.tutorial-dialog-close,\s*\.contextual-tutorial-close\s*\{[^}]*flex:\s*0 0 28px;/su,
+  );
   assert.match(styles, /\.guided-glossary-term\s*\{[^}]*color:\s*#d9bd70;[^}]*text-decoration-style:\s*dotted;/su);
   assert.match(styles, /\.guided-glossary-tooltip\s*\{[^}]*z-index:\s*20020;/su);
   assert.match(

@@ -405,33 +405,68 @@ test("Learn to Play keeps the combat-stat and Harvester interventions reachable 
     assert.equal(guidedSessionStore.continueExplanation(), true);
     await flushMicrotasks();
 
-    const postVaelor = structuredClone(useGameStore.getState().game);
-    postVaelor.activeSide = "player";
-    postVaelor.phase = "main";
-    postVaelor.hostTurnNumber = 9;
-    const vaelor = postVaelor.player.hand.find((card) => card.instanceId === bindings.vaelor);
-    postVaelor.player.hand = postVaelor.player.hand.filter((card) => card.instanceId !== bindings.vaelor);
-    vaelor.zone = "field";
-    postVaelor.player.field.push(vaelor);
-    const harvester = postVaelor.host.field.find((card) => card.instanceId === bindings.harvester);
-    const removed = postVaelor.host.field.filter((card) => card.instanceId !== bindings.harvester);
-    postVaelor.host.field = [harvester];
-    postVaelor.host.memory.push(...removed.map((card) => ({ ...card, zone: "memory" })));
-    postVaelor.combat.hostAttackers = [];
-    postVaelor.combat.blockers = {};
-    useGameStore.setState({ game: postVaelor });
+    const afterDefense = structuredClone(useGameStore.getState().game);
+    afterDefense.combat.hostAttackers = [];
+    afterDefense.combat.blockers = {};
+    useGameStore.setState({ game: afterDefense });
     await flushMicrotasks();
 
+    const turnNumberBeforeHandoff = useGameStore.getState().game.turnNumber;
+    useGameStore.getState().finishHostTurn();
+    assert.equal(useGameStore.getState().game.activeSide, "host", "the first click must pause before Energy renews");
+    await flushMicrotasks();
     assert.equal(guidedSessionStore.snapshot().lessonId, "learn-to-play.player-return");
     assert.equal(guidedSessionStore.snapshot().currentStep.id, "player-turn-returned");
     guidedSessionStore.notifyCheckpointState(true);
     assert.equal(guidedSessionStore.continueExplanation(), true);
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "wait-for-energy-renewal");
+    const reserveTransfer = guidedPresentationActivity.begin("reserve.transfer", "director-regression");
+    await flushMicrotasks();
+    assert.equal(useGameStore.getState().game.activeSide, "player");
+    assert.equal(useGameStore.getState().game.turnNumber, turnNumberBeforeHandoff + 1);
+    assert.equal(
+      guidedSessionStore.snapshot().currentStep.id,
+      "wait-for-energy-renewal",
+      "the Energy explanation must wait for the transfer presentation",
+    );
+    reserveTransfer.end();
+    await flushMicrotasks();
     assert.equal(guidedSessionStore.snapshot().currentStep.id, "explain-renewed-energy");
     guidedSessionStore.notifyCheckpointState(true);
     assert.equal(guidedSessionStore.continueExplanation(), true);
     assert.equal(guidedSessionStore.snapshot().currentStep.id, "use-energy-for-echoes");
     guidedSessionStore.notifyCheckpointState(true);
     assert.equal(guidedSessionStore.continueExplanation(), true);
+    await flushMicrotasks();
+
+    const vaelorEntering = structuredClone(useGameStore.getState().game);
+    const vaelor = vaelorEntering.player.hand.find((card) => card.instanceId === bindings.vaelor);
+    vaelorEntering.player.hand = vaelorEntering.player.hand.filter((card) => card.instanceId !== bindings.vaelor);
+    vaelor.zone = "field";
+    vaelorEntering.player.field.push(vaelor);
+    vaelorEntering.eventQueue.push({
+      id: `vaelor-volley:${attempt}`,
+      type: "COUNTER_VOLLEY",
+      sourceId: bindings.vaelor,
+      payload: { deferForPresentation: true },
+    });
+    useGameStore.setState({ game: vaelorEntering });
+    await flushMicrotasks();
+    assert.notEqual(director.snapshot().stage, "inspection", "Vaelor entering is not his effect settling");
+
+    const vaelorResolved = structuredClone(useGameStore.getState().game);
+    vaelorResolved.eventQueue = vaelorResolved.eventQueue.filter((event) => event.sourceId !== bindings.vaelor);
+    const harvester = vaelorResolved.host.field.find((card) => card.instanceId === bindings.harvester);
+    const removed = vaelorResolved.host.field.filter((card) => card.instanceId !== bindings.harvester);
+    vaelorResolved.host.field = [harvester];
+    vaelorResolved.host.memory.push(...removed.map((card) => ({ ...card, zone: "memory" })));
+    useGameStore.setState({ game: vaelorResolved, hostAutoTriggerCount: 1 });
+    await flushMicrotasks();
+    assert.notEqual(director.snapshot().stage, "inspection", "the prompt must wait for Vaelor's effect tail");
+    useGameStore.setState({ hostAutoTriggerCount: 0 });
+    // The production singleton is subscribed to every store transition. This test owns an
+    // isolated Director, so mirror that subscription when the presentation tail releases.
+    director.refresh();
     await flushMicrotasks();
 
     assert.equal(guidedSessionStore.snapshot().lessonId, "learn-to-play.inspect-harvester");
@@ -508,10 +543,29 @@ test("the production Learn to Play lifecycle recovers when End Turn commits befo
           await flushMicrotasks();
         }
 
+        const afterDefense = structuredClone(useGameStore.getState().game);
+        afterDefense.combat.hostAttackers = [];
+        afterDefense.combat.blockers = {};
+        useGameStore.setState({ game: afterDefense });
+        useGameStore.getState().finishHostTurn();
+        assert.equal(useGameStore.getState().game.activeSide, "host");
+        await flushMicrotasks();
+
+        assert.equal(guidedSessionStore.snapshot().lessonId, "learn-to-play.player-return");
+        assert.equal(guidedSessionStore.snapshot().currentStep.id, "player-turn-returned");
+        guidedSessionStore.notifyCheckpointState(true);
+        assert.equal(guidedSessionStore.continueExplanation(), true);
+        assert.equal(guidedSessionStore.snapshot().currentStep.id, "wait-for-energy-renewal");
+        await flushMicrotasks();
+        assert.equal(useGameStore.getState().game.activeSide, "player");
+        for (const stepId of ["explain-renewed-energy", "use-energy-for-echoes"]) {
+          assert.equal(guidedSessionStore.snapshot().currentStep.id, stepId);
+          guidedSessionStore.notifyCheckpointState(true);
+          assert.equal(guidedSessionStore.continueExplanation(), true);
+        }
+        await flushMicrotasks();
+
         const postVaelor = structuredClone(useGameStore.getState().game);
-        postVaelor.activeSide = "player";
-        postVaelor.phase = "main";
-        postVaelor.hostTurnNumber = 9;
         const vaelor = postVaelor.player.hand.find((card) => card.instanceId === bindings.vaelor);
         postVaelor.player.hand = postVaelor.player.hand.filter((card) => card.instanceId !== bindings.vaelor);
         vaelor.zone = "field";
@@ -520,17 +574,7 @@ test("the production Learn to Play lifecycle recovers when End Turn commits befo
         const removed = postVaelor.host.field.filter((card) => card.instanceId !== bindings.harvester);
         postVaelor.host.field = [harvester];
         postVaelor.host.memory.push(...removed.map((card) => ({ ...card, zone: "memory" })));
-        postVaelor.combat.hostAttackers = [];
-        postVaelor.combat.blockers = {};
         useGameStore.setState({ game: postVaelor });
-        await flushMicrotasks();
-
-        assert.equal(guidedSessionStore.snapshot().lessonId, "learn-to-play.player-return");
-        for (const stepId of ["player-turn-returned", "explain-renewed-energy", "use-energy-for-echoes"]) {
-          assert.equal(guidedSessionStore.snapshot().currentStep.id, stepId);
-          guidedSessionStore.notifyCheckpointState(true);
-          assert.equal(guidedSessionStore.continueExplanation(), true);
-        }
         await flushMicrotasks();
 
         assert.equal(learnToPlayDirector.snapshot().stage, "inspection");

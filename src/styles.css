@@ -10906,12 +10906,13 @@
   flex: 1;
   margin: 0;
   color: #e0d5b5;
-  overflow: hidden;
+  overflow: visible;
+  overflow-wrap: anywhere;
   font-size: clamp(12px, 2.8vw, 21px);
   font-weight: 600;
   line-height: 1.18;
-  text-overflow: clip;
-  white-space: nowrap;
+  text-wrap: balance;
+  white-space: normal;
 }
 
 .contextual-tutorial-body { display: grid; gap: 8px; padding-top: 1px; }
@@ -21088,21 +21089,22 @@ body.playground-active .phase-banner-shell {
   margin: 0;
   color: #e2d7b8;
   font-family: inherit;
-  overflow: hidden;
+  overflow: visible;
+  overflow-wrap: anywhere;
   font-size: clamp(13px, 3vw, 25px);
   font-weight: 600;
   letter-spacing: 0.035em;
   line-height: 1.14;
   text-shadow: 0 3px 13px rgb(0 0 0 / 0.66);
-  text-overflow: clip;
-  white-space: nowrap;
+  text-wrap: balance;
+  white-space: normal;
 }
 
 .tutorial-dialog-heading,
 .contextual-tutorial-heading {
   display: flex;
   min-height: 29px;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   border-bottom: 1px solid rgb(145 156 125 / 0.28);
   gap: 16px;

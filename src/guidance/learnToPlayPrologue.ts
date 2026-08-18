@@ -357,10 +357,10 @@ export const LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION = Object.freeze({
   ],
 } satisfies GuidedInterventionDefinition);
 
-/** First player turn after defending: phase hand-off, Energy explanation, then a clear next goal. */
+/** First player turn after defending: pause before the hand-off, observe Energy, then set the goal. */
 export const LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION = Object.freeze({
   id: "learn-to-play.player-return",
-  revision: 1,
+  revision: 2,
   startStepId: "player-turn-returned",
   steps: [
     {
@@ -372,6 +372,15 @@ export const LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION = Object.freeze({
         glossaryTerms: ["energy"],
       },
       highlights: [],
+      nextStepId: "wait-for-energy-renewal",
+    },
+    {
+      id: "wait-for-energy-renewal",
+      kind: "observe",
+      callout: "hidden",
+      copy: { titleKey: "guided.learnToPlay.checkpointTitle", bodyKey: "guided.learnToPlay.checkpointBody" },
+      highlights: [],
+      expectedReceipt: { kind: "reserve.released" },
       nextStepId: "explain-renewed-energy",
     },
     {
