@@ -14371,6 +14371,17 @@
 
 .card-cost-badge.is-guided-emphasis {
   z-index: 70;
+}
+
+.card-cost-emphasis-frame {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  transform-origin: center;
+}
+
+.card-cost-badge.is-guided-emphasis > .card-cost-emphasis-frame {
   transform-origin: center;
   animation: guided-card-cost-focus 1.35s ease-in-out infinite;
 }
@@ -21542,7 +21553,7 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
   }
 
   .guided-card-comparison-frame > .card-cost-badge,
-  .card-cost-badge.is-guided-emphasis { animation: none; }
+  .card-cost-badge.is-guided-emphasis > .card-cost-emphasis-frame { animation: none; }
 }
 
 /* Semillas del Destino — the current deterministic seed is presented as a narrative Future. */

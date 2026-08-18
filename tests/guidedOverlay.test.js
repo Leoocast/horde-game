@@ -246,6 +246,8 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(hand, /currentStep\?\.id === "invoke-aelyra"/u);
   assert.match(hand, /emphasizeCost=\{guidedCostCardId === card\.instanceId\}/u);
   assert.match(card, /CardCostBadge card=\{card\} emphasized=\{emphasizeCost\}/u);
+  assert.match(card, /data-guided-anchor-extension="true"/u);
+  assert.match(card, /card-cost-emphasis-frame/u);
   assert.match(overlay, /data-guided-overlay-control="true"/u);
   assert.match(overlay, /guidedGlossarySegments/u);
   assert.match(overlay, /data-guided-glossary-term="true"/u);
@@ -265,6 +267,8 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.doesNotMatch(overlay, /closest\("#guided-tutorial-overlay/u);
   assert.match(overlay, /showCallout && \(/u);
   assert.match(overlay, /\{showCallout && \(\s*<>\s*<svg className="guided-tutorial-mask"/su);
+  assert.match(overlay, /const showDimmer = showCallout && session\.currentStep\?\.dimmer !== "hidden";/u);
+  assert.match(overlay, /\{showDimmer && \(\s*<rect className="guided-tutorial-dimmer"/su);
   assert.match(overlay, /showSilentSpotlight/u);
   assert.match(overlay, /presentation\?\.kind === "spotlight"\s*&& session\.presentationSettled/su);
   assert.match(overlay, /data-tone=\{showSilentSpotlight \? presentation\.tone : undefined\}/u);
@@ -316,6 +320,7 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(styles, /\.guided-tutorial-dimmer\s*\{\s*fill:\s*rgb\(2 4 4 \/ 0\.42\);\s*\}/u);
   assert.match(styles, /@keyframes guided-tutorial-ready\s*\{[^}]*scale\(0\.985\)[\s\S]*?scale\(1\.045\)/u);
   assert.match(styles, /\.card-cost-badge\.is-guided-emphasis\s*\{/u);
+  assert.match(styles, /\.card-cost-badge\.is-guided-emphasis > \.card-cost-emphasis-frame\s*\{/u);
   assert.match(styles, /\.guided-tutorial-ring::after\s*\{[^}]*transform:\s*translateX\(-50%\) rotate\(45deg\);/su);
   assert.match(styles, /guided-tutorial-overlay:has\(\.guided-tutorial-ring\[data-anchor-key="surface:player\.sources"\]\)[\s\S]*?guided-tutorial-ring\[data-anchor-key="surface:player\.reserve"\]::after\s*\{\s*display:\s*none;/u);
   assert.match(styles, /\.guided-tutorial-ring\[data-anchor-key\^="card:"\]\s*\{\s*display:\s*none;\s*\}/u);

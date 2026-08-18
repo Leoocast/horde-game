@@ -627,7 +627,7 @@ aprobación explícita. **Cómo jugar** ya consume un catálogo y presenta **Apr
 efímero independiente, rollback de conceptos provisionales, reinicio total, autosave apagado,
 políticas explícitas de tablero e intervenciones estrictas adjuntas al `GameState` vivo. Su launcher
 está activo desde **Cómo jugar** y carga el snapshot avanzado exacto: Vida 31, Maela y tres Fuentes,
-Río/Aelyra/Vaelor en Mano, Flor como próximo robo, Retorno/Acechador/Engendro/Cosechadora en ese
+Vaelor/Aelyra/Río en Mano, Flor como próximo robo, Retorno/Acechador/Engendro/Cosechadora en ese
 orden y la segunda copia de Acechador como siguiente revelado. La guía exige la cuarta Fuente y
 Aelyra con objetivo libre; el director deja defensa libre, exige Vaelor, hace obligatoria una única
 inspección de la Cosechadora y permite Flor antes, después o nunca. Las pruebas enumeran todas las
@@ -799,6 +799,10 @@ la numeración visible. Las anclas de carta ocultan el marco dorado del spotligh
 indicación propia de la carta; si aparece
 una acción contextual fuera de sus límites, el descendiente marcado con
 `data-guided-anchor-extension="true"` amplía el hueco interactivo y la zona evitada por el recuadro.
+El orbe de coste forma parte explícita de esos límites visuales para que el dimmer no lo recorte.
+Las dos primeras acciones del prólogo —jugar Río de Elarion e invocar a Aelyra— declaran
+`dimmer: "hidden"`: conservan el recuadro, la flecha direccional y el bloqueo de acciones, pero no
+oscurecen el tablero. Los pasos posteriores mantienen el dimmer por defecto.
 Al activar `phase.continueSetup`, el overlay retira el recuadro del paso de Acción desde el
 `pointerdown` o teclado aceptado; así no sobrevive un frame mientras comienza el robo automático.
 El oscurecimiento del tutorial usa 35 % de opacidad y el texto admite párrafos separados para evitar

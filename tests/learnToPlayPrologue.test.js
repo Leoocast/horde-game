@@ -172,6 +172,8 @@ test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms comb
     direction: "up",
     tone: "source",
   });
+  assert.equal(opening.get("play-fourth-source").dimmer, "hidden");
+  assert.equal(opening.get("invoke-aelyra").dimmer, "hidden");
   assert.equal(opening.get("choose-aelyra-target").callout, "hidden");
   assert.equal(opening.get("confirm-aelyra-target").callout, "hidden");
   assert.deepEqual(opening.get("enter-first-combat").presentation, { kind: "spotlight", tone: "gold" });
@@ -243,9 +245,9 @@ test("Learn to Play authors the exact advanced board two Host turns before Surge
   assert.equal(game.hostTurnNumber, 8);
   assert.equal(game.player.life, 31);
   assert.deepEqual(game.player.hand.map((card) => card.instanceId), [
-    id("fourth_source"),
-    id("aelyra"),
     id("vaelor"),
+    id("aelyra"),
+    id("fourth_source"),
   ]);
   assert.deepEqual(definitionIds(game.player.field), [
     "maela_watcher_of_the_heights",

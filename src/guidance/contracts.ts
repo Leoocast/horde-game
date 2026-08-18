@@ -263,6 +263,9 @@ export type GuidedGlossaryTermId = (typeof GUIDED_GLOSSARY_TERM_IDS)[number];
 export const GUIDED_CALLOUT_VISIBILITIES = ["visible", "hidden"] as const;
 export type GuidedCalloutVisibility = (typeof GUIDED_CALLOUT_VISIBILITIES)[number];
 
+export const GUIDED_DIMMER_VISIBILITIES = ["visible", "hidden"] as const;
+export type GuidedDimmerVisibility = (typeof GUIDED_DIMMER_VISIBILITIES)[number];
+
 export const GUIDED_CALLOUT_PLACEMENTS = ["auto", "top", "right", "bottom", "left", "center"] as const;
 export type GuidedCalloutPlacement = (typeof GUIDED_CALLOUT_PLACEMENTS)[number];
 
@@ -293,6 +296,7 @@ type GuidedStepBase = Readonly<{
   copy: GuidedStepCopy;
   highlights: readonly GuidedHighlightRef[];
   callout?: GuidedCalloutVisibility;
+  dimmer?: GuidedDimmerVisibility;
   presentation?: GuidedStepPresentation;
   preconditions?: readonly GuidedPrecondition[];
   nextStepId?: string;

@@ -111,6 +111,7 @@ export function GuidedTutorialOverlay() {
     && session.currentStep.allowedIntent.kind === "phase.continueSetup";
   const showCallout = session.currentStep?.callout !== "hidden"
     && dismissedActionCalloutScope !== stepScope;
+  const showDimmer = showCallout && session.currentStep?.dimmer !== "hidden";
   const showSilentSpotlight = !showCallout
     && presentation?.kind === "spotlight"
     && session.presentationSettled;
@@ -409,7 +410,9 @@ export function GuidedTutorialOverlay() {
                 <path d="M 0 0 L 10 5 L 0 10 z" />
               </marker>
             </defs>
-            <rect className="guided-tutorial-dimmer" x="0" y="0" width={viewport.width} height={viewport.height} mask={`url(#${MASK_ID})`} />
+            {showDimmer && (
+              <rect className="guided-tutorial-dimmer" x="0" y="0" width={viewport.width} height={viewport.height} mask={`url(#${MASK_ID})`} />
+            )}
             {!missingAnchor && connectorPath && (
               <path className="guided-tutorial-connector" d={connectorPath} markerEnd={`url(#${ARROW_ID})`} />
             )}

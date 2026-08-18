@@ -37,7 +37,9 @@ export const LEARN_TO_PLAY_PROLOGUE_SCENARIO = Object.freeze({
     },
     host: { poisonCounters: 0 },
     zones: {
-      openingDeal: ["fourth_source", "aelyra", "vaelor"],
+      // Hand order is also visual stacking order: later cards sit naturally above earlier ones.
+      // Keep Aelyra between Vaelor and Río so her guided spotlight does not reveal Vaelor.
+      openingDeal: ["vaelor", "aelyra", "fourth_source"],
       playerArchiveTopToBottom: [
         "dawn_flower",
         "post_surge_source",
@@ -169,6 +171,7 @@ export const LEARN_TO_PLAY_OPENING_INTERVENTION = Object.freeze({
         { kind: "card", alias: "fourth_source", role: "origin" },
         { kind: "surface", anchor: "player.field", role: "destination" },
       ],
+      dimmer: "hidden",
       presentation: { kind: "directionalCue", direction: "up", tone: "source" },
       allowedIntent: { kind: "card.play", cardAlias: "fourth_source" },
       preconditions: [{ kind: "card.inZone", cardAlias: "fourth_source", side: "player", zone: "hand" }],
@@ -196,6 +199,7 @@ export const LEARN_TO_PLAY_OPENING_INTERVENTION = Object.freeze({
         { kind: "card", alias: "aelyra", role: "origin" },
         { kind: "surface", anchor: "player.field", role: "destination" },
       ],
+      dimmer: "hidden",
       presentation: { kind: "directionalCue", direction: "up", tone: "source" },
       allowedIntent: { kind: "card.play", cardAlias: "aelyra" },
       preconditions: [{ kind: "card.inZone", cardAlias: "aelyra", side: "player", zone: "hand" }],
