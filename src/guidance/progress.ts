@@ -113,6 +113,15 @@ export function guidedLessonCompleted(
   );
 }
 
+export function guidedJourneyCompleted(
+  progress: GuidedProgressEnvelope,
+  journey: Readonly<{ id: string; revision: number }>,
+): boolean {
+  return progress.journeys.some(
+    (completion) => completion.journeyId === journey.id && completion.completedRevision >= journey.revision,
+  );
+}
+
 export function nextRequiredGuidedLesson(
   lessons: readonly GuidedLessonDefinition[],
   progress: GuidedProgressEnvelope,
@@ -158,6 +167,23 @@ export class GuidedProgressStore {
       journeys: this.#snapshot.journeys,
       concepts: this.#snapshot.concepts,
       preferences: this.#snapshot.preferences,
+    });
+    this.#emit();
+    return true;
+  }
+
+  markJourneyCompleted(journeyId: string, completedRevision: number, completedAt = new Date().toISOString()): boolean {
+    if (!LESSON_ID_PATTERN.test(journeyId)) throw new Error(`Invalid guided journey id "${journeyId}".`);
+    if (!Number.isInteger(completedRevision) || completedRevision < 1) {
+      throw new Error(`Guided journey "${journeyId}" requires a positive completion revision.`);
+    }
+    const previous = this.#snapshot.journeys.find((completion) => completion.journeyId === journeyId);
+    if (previous && previous.completedRevision >= completedRevision) return false;
+    const journeys = this.#snapshot.journeys.filter((completion) => completion.journeyId !== journeyId);
+    journeys.push(Object.freeze({ journeyId, completedRevision, completedAt }));
+    this.#snapshot = Object.freeze({
+      ...this.#snapshot,
+      journeys: Object.freeze(journeys.sort((left, right) => left.journeyId.localeCompare(right.journeyId))),
     });
     this.#emit();
     return true;

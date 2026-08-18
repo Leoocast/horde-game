@@ -591,8 +591,9 @@ Soldados necesarios para que el ataque sea letal. Tres Soldados dentro del Archi
 terminal de los descartes opcionales; Choque conserva su ventana legal y la posición del Titán puede
 variar. Esa Invocación terminal no redefine la regla normal de Oleada y cada llegada se presenta una
 a una mediante el revelado normal, sin agrupación visual. El CTA único se llama **Contemplar otro
-futuro**. El primer corte aprobado termina cuando la derrota lo muestra: activar el botón, persistir
-la finalización, ejecutar el vórtice y cargar la seed real pertenecen a una fase posterior. La
+futuro**. El corte provisional actual registra la finalización al activarlo y carga una partida
+normal aleatoria de Elarion contra los Sinsepulcro. El vórtice y la seed real preparada pertenecen
+a una fase posterior. La
 relación exacta entre buena Mano y mulligan sigue abierta. Si no queda un atacante
 estabilizado, la enseñanza del ataque no bloquea el flujo, permanece como no vista y reaparece en
 una partida posterior. La preferencia global de no repetir ayudas sólo suprime conceptos ya
@@ -640,9 +641,10 @@ del Titán terminal.
 El cierre terminal calcula desde el tablero vivo el mínimo de llegadas que vuelve inevitable la
 derrota, verifica la mejor defensa con el resolutor real y presenta cada carta mediante su llegada
 normal, una a una. La Vida llega a 0 por el combate real; `learn-to-play` reutiliza el quiebre de
-derrota y muestra sólo **Contemplar otro futuro** con copy narrativo propio. El botón permanece
-deshabilitado: activarlo, ejecutar el vórtice, comprometer progreso y cargar la partida preparada
-pertenecen a la Fase 6B aplazada. **Continuar** está deshabilitado globalmente. Para una fase
+derrota y muestra sólo **Contemplar otro futuro** con copy narrativo propio. Tras aceptar la
+narración, el botón registra el recorrido como completado y abre provisionalmente una partida
+normal con seed aleatoria; ejecutar el vórtice y cargar la partida preparada pertenecen a la Fase
+6B aplazada. **Continuar** está deshabilitado globalmente. Para una fase
 posterior siguen pendientes
 la Mano/mulligan, seed, dificultad y
 Preparación de la partida real; el comportamiento de primera apertura y perfiles existentes; y la

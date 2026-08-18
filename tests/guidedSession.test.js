@@ -22,6 +22,11 @@ import { runHostMain } from "../src/engine/HostController";
 import { buildGuidedScenario } from "../src/guidance/buildGuidedScenario";
 import { GuidedInterventionOrchestrator } from "../src/guidance/interventionOrchestrator";
 import { LearnToPlayPrologueDirector } from "../src/guidance/learnToPlayDirector";
+import {
+  learnToPlayDirector,
+  learnToPlayJourneyLifecycle,
+} from "../src/guidance/learnToPlayJourney";
+import { contextualTutorialRuntime } from "../src/guidance/contextualProductRuntime";
 import { LEARN_TO_PLAY_PROLOGUE_SCENARIO } from "../src/guidance/learnToPlayPrologue";
 import { GUIDANCE_LAB_LESSON, GUIDANCE_LAB_REGISTRY } from "../src/playground/guidanceLabDefinition";
 
@@ -304,16 +309,8 @@ test("the Developer Guidance Lab runs the vertical slice on the real GameStore",
   });
 });
 
-test("Learn to Play keeps the combat-stat and Harvester interventions reachable in sequence", async () => {
+test("Learn to Play keeps the combat-stat and Harvester interventions reachable on every attempt", async () => {
   await withStoreHarness(async () => {
-    const built = buildGuidedScenario(LEARN_TO_PLAY_PROLOGUE_SCENARIO, contentCatalog);
-    useGameStore.getState().loadScenario(built.game, {
-      playerDeckId: built.playerDeckKey,
-      hostDeckId: built.hostDeckKey,
-    });
-    const bindings = Object.freeze(Object.fromEntries(
-      Object.entries(built.bindings).map(([alias, binding]) => [alias, binding.instanceId]),
-    ));
     const intervention = new GuidedInterventionOrchestrator(guidedSessionStore, {
       readGame: () => useGameStore.getState().game,
       stopPresentation: () => undefined,
@@ -322,13 +319,22 @@ test("Learn to Play keeps the combat-stat and Harvester interventions reachable 
       { readStore: () => useGameStore.getState() },
       intervention,
     );
-    director.start(bindings, "learn-to-play:director-regression");
+    for (const attempt of [1, 2]) {
+      const built = buildGuidedScenario(LEARN_TO_PLAY_PROLOGUE_SCENARIO, contentCatalog);
+      useGameStore.getState().loadScenario(built.game, {
+        playerDeckId: built.playerDeckKey,
+        hostDeckId: built.hostDeckKey,
+      });
+      const bindings = Object.freeze(Object.fromEntries(
+        Object.entries(built.bindings).map(([alias, binding]) => [alias, binding.instanceId]),
+      ));
+      director.start(bindings, `learn-to-play:director-regression:${attempt}`);
 
-    const sourceId = bindings.fourth_source;
-    useGameStore.getState().playLand(sourceId);
-    useGameStore.getState().completeLandPlayAnimation(useGameStore.getState().landPlayAnimationQueue[0].id);
-    await flushMicrotasks();
-    assert.equal(guidedSessionStore.snapshot().currentStep.id, "invoke-aelyra");
+      const sourceId = bindings.fourth_source;
+      useGameStore.getState().playLand(sourceId);
+      useGameStore.getState().completeLandPlayAnimation(useGameStore.getState().landPlayAnimationQueue[0].id);
+      await flushMicrotasks();
+      assert.equal(guidedSessionStore.snapshot().currentStep.id, "invoke-aelyra");
 
     useGameStore.getState().castCard(bindings.aelyra);
     useGameStore.setState({
@@ -419,8 +425,94 @@ test("Learn to Play keeps the combat-stat and Harvester interventions reachable 
     assert.equal(guidedSessionStore.snapshot().currentStep.id, "inspect-harvester");
     useGameStore.getState().setFocusedCardId(bindings.harvester);
     await flushMicrotasks();
-    assert.equal(guidedSessionStore.snapshot().status, "completed");
-    director.stop();
+      assert.equal(guidedSessionStore.snapshot().status, "completed");
+      director.stop();
+    }
+  });
+});
+
+test("the production Learn to Play lifecycle recovers when End Turn commits before its queued cue", async () => {
+  await withStoreHarness(async () => {
+    try {
+      for (const attempt of [1, 2]) {
+        assert.equal(
+          attempt === 1 ? learnToPlayJourneyLifecycle.start() : learnToPlayJourneyLifecycle.restart(),
+          true,
+        );
+        assert.equal(contextualTutorialRuntime.snapshot().progressMode, "isolated");
+        const bindings = guidedSessionStore.snapshot().bindings;
+
+        useGameStore.getState().playLand(bindings.fourth_source);
+        useGameStore.getState().completeLandPlayAnimation(useGameStore.getState().landPlayAnimationQueue[0].id);
+        await flushMicrotasks();
+        useGameStore.getState().castCard(bindings.aelyra);
+        useGameStore.setState({ summoningAnimationCount: 0, autoPaidLandAnimation: undefined });
+        await new Promise((resolve) => setTimeout(resolve, 1_220));
+        useGameStore.getState().lockCounterTarget(bindings.maela);
+        useGameStore.getState().confirmCounterTargeting();
+        useGameStore.setState({
+          buffAnimationCardIds: [],
+          autoPaidLandAnimation: undefined,
+          lifeBuffAnimationId: undefined,
+        });
+        await flushMicrotasks();
+        guidedSessionStore.notifyCheckpointState(true);
+        useGameStore.getState().advancePhase("combat");
+        await flushMicrotasks();
+        useGameStore.getState().advancePhase("end");
+        useGameStore.getState().endPlayerTurn();
+        await flushMicrotasks();
+
+        let hostGame = runHostMain(useGameStore.getState().game);
+        hostGame = prepareHostAttackers(hostGame);
+        useGameStore.setState({
+          game: hostGame,
+          summoningAnimationCount: 0,
+          hostAutoTriggerCount: 0,
+          hostMillAnimationQueue: [],
+          buffAnimationCardIds: [],
+        });
+        guidedPresentationActivity.reset();
+        await flushMicrotasks();
+
+        assert.equal(learnToPlayDirector.snapshot().stage, "defense-intro");
+        assert.equal(guidedSessionStore.snapshot().lessonId, "learn-to-play.first-defense");
+        assert.equal(guidedSessionStore.snapshot().currentStep.id, "host-turn");
+        guidedSessionStore.notifyCheckpointState(true);
+        assert.equal(guidedSessionStore.continueExplanation(), true);
+        assert.equal(guidedSessionStore.snapshot().currentStep.id, "explain-combat-stats");
+        guidedSessionStore.notifyCheckpointState(true);
+        assert.equal(guidedSessionStore.continueExplanation(), true);
+        await flushMicrotasks();
+        if (contextualTutorialRuntime.snapshot().active?.conceptId === "assign-defenders") {
+          contextualTutorialRuntime.acknowledgeActive();
+          await flushMicrotasks();
+        }
+
+        const postVaelor = structuredClone(useGameStore.getState().game);
+        postVaelor.activeSide = "player";
+        postVaelor.phase = "main";
+        postVaelor.hostTurnNumber = 9;
+        const vaelor = postVaelor.player.hand.find((card) => card.instanceId === bindings.vaelor);
+        postVaelor.player.hand = postVaelor.player.hand.filter((card) => card.instanceId !== bindings.vaelor);
+        vaelor.zone = "field";
+        postVaelor.player.field.push(vaelor);
+        const harvester = postVaelor.host.field.find((card) => card.instanceId === bindings.harvester);
+        const removed = postVaelor.host.field.filter((card) => card.instanceId !== bindings.harvester);
+        postVaelor.host.field = [harvester];
+        postVaelor.host.memory.push(...removed.map((card) => ({ ...card, zone: "memory" })));
+        postVaelor.combat.hostAttackers = [];
+        postVaelor.combat.blockers = {};
+        useGameStore.setState({ game: postVaelor });
+        await flushMicrotasks();
+
+        assert.equal(learnToPlayDirector.snapshot().stage, "inspection");
+        assert.equal(guidedSessionStore.snapshot().lessonId, "learn-to-play.inspect-harvester");
+        assert.equal(guidedSessionStore.snapshot().currentStep.id, "inspect-harvester");
+      }
+    } finally {
+      learnToPlayJourneyLifecycle.stop();
+    }
   });
 });
 

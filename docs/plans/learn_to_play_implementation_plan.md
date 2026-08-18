@@ -558,25 +558,27 @@ antes de continuar, y entrega el combate a la resolución normal.
 descartada, cero o un descarte antes de Oleada, el rechazo de la quinta Fuente, Río → Ciudad,
 Choque, el ataque opcional contra los Soldados protegidos y una rama defensiva con más Vida.
 
-### Fase 6 — Derrota y CTA visible — límite del primer corte
+### Fase 6 — Derrota y handoff provisional — límite del primer corte
 
-**Estado: implementada el 2026-08-17; pendiente de QA manual de copy y presentación.**
+**Estado: implementada el 2026-08-17; pendiente de QA manual de copy, presentación y handoff.**
 
 - Reutilizar el quiebre normal con variante narrativa y un único CTA.
 - Nombrar ese CTA **Contemplar otro futuro**.
 - Llegar a la pantalla sin convertir la derrota en un aborto de la sesión guiada.
-- Mantener fuera de este corte la activación del CTA, el vórtice, el commit persistente, el gate de
-  primera apertura y la partida real preparada.
+- Activar el CTA para registrar la finalización del recorrido y cargar, como reemplazo provisional,
+  una partida normal de Elarion contra los Sinsepulcro con seed aleatoria.
+- Mantener fuera de este corte el vórtice, el gate de primera apertura y la partida real preparada.
 
 **Cierre:** la derrota se resuelve con las reglas reales, aparece su presentación narrativa y el
-jugador ve el CTA único. La aceptación de este corte termina ahí.
+CTA único conduce a una partida normal aleatoria sin conservar estado parcial del prólogo.
 
 El tablero de `learn-to-play` reutiliza la misma barrera de presentación, captura y quiebre que una
 derrota normal, pero monta un resultado propio sin código de Futuro ni las dos acciones normales.
-El único CTA visible es **Contemplar otro futuro** y permanece deshabilitado en este corte. Una
-victoria accidental del escenario tampoco puede instalar una barrera de resultado huérfana.
+El único CTA visible es **Contemplar otro futuro**. Comparte el material visual del control de
+Reescribir, sin icono ni código de Futuro, y está habilitado sólo después de aceptar la narración.
+Una victoria accidental del escenario tampoco puede instalar una barrera de resultado huérfana.
 
-### Fase 6B — Activación, vórtice y partida real preparada — aplazada
+### Fase 6B — Vórtice y partida real preparada — aplazada
 
 - Definir el comportamiento persistente al activar el CTA y al cerrar durante el vórtice.
 - Definir primera apertura, perfiles existentes y activación del gate obligatorio.

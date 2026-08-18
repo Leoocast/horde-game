@@ -1,7 +1,7 @@
 # Aprender a jugar — diseño vivo del onboarding
 
-Estado: **diseño de contenido abierto; primer corte fijado hasta la derrota predeterminada y la
-aparición de “Contemplar otro futuro”; el handoff posterior está aplazado**.
+Estado: **diseño de contenido abierto; primer corte fijado hasta la derrota predeterminada y un
+handoff provisional desde “Contemplar otro futuro” hacia una partida normal aleatoria**.
 
 Última actualización: **2026-08-17**.
 
@@ -60,16 +60,17 @@ de implementación.
 - Tres Soldados reales dentro del Archivo protegen al Titán terminal de los tres descartes opcionales
   máximos. Choque de Ecos conserva su ventana legal después de ver la fuerza terminal, y la posición
   del Titán puede variar como consecuencia de los descartes anteriores.
-- El CTA único de salida se llama **Contemplar otro futuro**. En el diseño completo, activarlo
-  completará el tutorial y conducirá a una partida real de **El Pacto de Elarion** contra **El
-  Alzamiento de los Sinsepulcro**; el contrato exacto de persistencia y handoff se resolverá después.
+- El CTA único de salida se llama **Contemplar otro futuro**. Activarlo completa el tutorial y, en
+  el corte provisional actual, inicia una partida normal con seed aleatoria de **El Pacto de
+  Elarion** contra **El Alzamiento de los Sinsepulcro**. La seed preparada, el vórtice, el mulligan
+  authored y el contrato final de handoff se resolverán después.
 - En esa partida real y en las siguientes, las ayudas pendientes serán contextuales. Cada concepto
   conserva si ya fue mostrado; la preferencia global decide si los conceptos vistos pueden
   repetirse, pero los no vistos siempre conservan su primera aparición.
 - **Continuar** permanece deshabilitado globalmente por ahora.
-- El primer corte de implementación termina cuando la derrota muestra **Contemplar otro futuro**.
-  No incluye todavía activar el botón, ejecutar el vórtice, persistir la finalización ni cargar la
-  siguiente partida.
+- El primer corte de implementación termina cuando **Contemplar otro futuro** registra la
+  finalización y carga esa partida normal aleatoria. Todavía no incluye el vórtice ni la seed real
+  preparada.
 - La introducción cinematográfica, las voces y las líneas narrativas finales quedan fuera de la
   implementación actual. El documento sólo conserva su intención y copy provisional.
 

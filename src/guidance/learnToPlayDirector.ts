@@ -54,13 +54,10 @@ export function learnToPlayHarvesterInspectionReady(
   if (completed || game.hostTurnNumber >= game.hostRules.surgeTurn) return false;
   const vaelorEntered = game.player.field.some((card) => card.instanceId === bindings.vaelor);
   const harvesterPresent = game.host.field.some((card) => card.instanceId === bindings.harvester);
-  const victimsGone = [
-    "return_to_memory",
-    "first_winged_stalker",
-    "second_winged_stalker",
-    "stitched_wing_spawn",
-  ].every((alias) => !game.host.field.some((card) => card.instanceId === bindings[alias]));
-  return vaelorEntered && harvesterPresent && victimsGone;
+  // The hidden observation at the start of the intervention owns the visual wait. Requiring a
+  // particular set of other Echoes to have left the Field made the prompt depend on the exact
+  // defense branch and could strand a replay even though its real teaching moment had happened.
+  return vaelorEntered && harvesterPresent;
 }
 
 export function learnToPlayFirstDefenseReady(
@@ -92,6 +89,7 @@ export class LearnToPlayPrologueDirector {
   readonly #interventions: GuidedInterventionOrchestrator;
   #bindings: Readonly<Record<GuidedCardAlias, string>> = Object.freeze({});
   #gameSessionId: string | undefined;
+  #openingHostTurnNumber: number | undefined;
   #stage: LearnToPlayPrologueStage = "inactive";
   #cursor = 0;
   #snapshot: LearnToPlayPrologueSnapshot = Object.freeze({ cursor: 0, stage: "inactive" });
@@ -127,6 +125,7 @@ export class LearnToPlayPrologueDirector {
     this.stop();
     this.#bindings = Object.freeze({ ...bindings });
     this.#gameSessionId = gameSessionId;
+    this.#openingHostTurnNumber = this.#host.readStore().game.hostTurnNumber;
     this.#signalCursor = gameplaySignalStream.snapshot().cursor;
     this.#returnSourcePromptRequested = false;
     this.#firstDefenseStarted = false;
@@ -200,6 +199,7 @@ export class LearnToPlayPrologueDirector {
     this.#interventions.stop();
     this.#bindings = Object.freeze({});
     this.#gameSessionId = undefined;
+    this.#openingHostTurnNumber = undefined;
     this.#signalCursor = gameplaySignalStream.snapshot().cursor;
     this.#returnSourcePromptRequested = false;
     this.#firstDefenseStarted = false;
@@ -228,7 +228,15 @@ export class LearnToPlayPrologueDirector {
       this.#setStage("opening-attack");
     }
     if (this.#stage === "opening-attack") {
-      if (
+      const openingTurnAlreadyPassed = store.game.activeSide === "host"
+        || (this.#openingHostTurnNumber !== undefined
+          && store.game.hostTurnNumber > this.#openingHostTurnNumber);
+      if (openingTurnAlreadyPassed) {
+        // The silent End Turn cue is presentation, not a rule checkpoint. A fast phase hand-off
+        // can commit the real turn before the Director's queued evaluation installs that cue.
+        // Recover from the committed GameState instead of stranding every later milestone.
+        this.#setStage("awaiting-defense");
+      } else if (
         store.game.activeSide === "player"
         && store.game.phase === "end"
         && session.status !== "running"
@@ -242,7 +250,7 @@ export class LearnToPlayPrologueDirector {
           `${this.#gameSessionId}:end-opening-turn`,
         );
       }
-      return;
+      if (this.#stage === "opening-attack" || this.#stage === "opening-end") return;
     }
     if (
       this.#stage === "opening-end"

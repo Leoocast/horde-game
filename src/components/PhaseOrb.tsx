@@ -12,11 +12,14 @@ import { guidedAnchorRegistry, guidedSurfaceAnchorKey } from "../guidance/anchor
 import { contextualTutorialRuntime } from "../guidance/contextualProductRuntime";
 import { journeyIntentGate } from "../guidance/journeyIntentGate";
 import { guidedSessionStore } from "../guidance/runtime";
+import { learnToPlayDirector } from "../guidance/learnToPlayJourney";
 
 const subscribeContextualTutorial = (listener: () => void) => contextualTutorialRuntime.subscribe(listener);
 const readContextualTutorial = () => contextualTutorialRuntime.snapshot();
 const subscribeGuidedSession = (listener: () => void) => guidedSessionStore.subscribe(listener);
 const readGuidedSession = () => guidedSessionStore.snapshot();
+const subscribeLearnToPlayDirector = (listener: () => void) => learnToPlayDirector.subscribe(listener);
+const readLearnToPlayDirector = () => learnToPlayDirector.snapshot();
 const PHASE_BLOCKING_CONTEXTUAL_CONCEPTS = new Set([
   "assign-defenders",
   "chronicler-life",
@@ -38,6 +41,11 @@ export function PhaseOrb({ game, hostStartDelayMs = 0 }: { game: GameState; host
     subscribeGuidedSession,
     readGuidedSession,
     readGuidedSession,
+  );
+  const learnToPlay = useSyncExternalStore(
+    subscribeLearnToPlayDirector,
+    readLearnToPlayDirector,
+    readLearnToPlayDirector,
   );
   const playSfx = useAudioStore((state) => state.playSfx);
   const advancePhase = useGameStore((state) => state.advancePhase);
@@ -80,12 +88,15 @@ export function PhaseOrb({ game, hostStartDelayMs = 0 }: { game: GameState; host
     ...contextualTutorial.queue,
   ].some((conceptId) => PHASE_BLOCKING_CONTEXTUAL_CONCEPTS.has(conceptId ?? ""));
   const learnToPlayActive = journeyIntentGate.activeJourneyId() === "learn-to-play";
-  const firstDefenseHelpStarted = contextualTutorial.shownThisMatch.includes("assign-defenders");
   const reserveHelpStarted = contextualTutorial.shownThisMatch.includes("reserve-and-ready");
+  const learnToPlayOpeningEndLeadIn = learnToPlayActive
+    && game.activeSide === "player"
+    && game.phase === "end"
+    && learnToPlay.stage === "opening-attack";
   const learnToPlayDefenseLeadIn = learnToPlayActive
     && game.activeSide === "host"
     && game.hostTurnNumber <= 9
-    && !firstDefenseHelpStarted;
+    && (learnToPlay.stage === "awaiting-defense" || learnToPlay.stage === "defense-intro");
   const learnToPlayRenewalLeadIn = learnToPlayActive
     && game.activeSide === "player"
     && game.hostTurnNumber === 9
@@ -99,6 +110,7 @@ export function PhaseOrb({ game, hostStartDelayMs = 0 }: { game: GameState; host
     || hostStartPending
     || Boolean(actionBlockedReason)
     || contextualTutorialBlocksPhase
+    || learnToPlayOpeningEndLeadIn
     || learnToPlayDefenseLeadIn
     || learnToPlayRenewalLeadIn
     || guidedSpotlightPending;

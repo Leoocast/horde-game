@@ -6,12 +6,13 @@ import { DefeatShatterAnimator } from "./DefeatShatterAnimator";
 type Props = Readonly<{
   game: GameState;
   snapshotImage?: HTMLImageElement;
+  onContemplateFuture: () => void;
 }>;
 
 const LEARN_TO_PLAY_NARRATIVE_DELAY_MS = 1_000;
 
 /** The normal defeat remains intact; the authored narration and its CTA arrive afterward. */
-export function LearnToPlayDefeatModal({ game, snapshotImage }: Props) {
+export function LearnToPlayDefeatModal({ game, snapshotImage, onContemplateFuture }: Props) {
   const t = useTranslation();
   const [sequenceStarted, setSequenceStarted] = useState(false);
   const [revealed, setRevealed] = useState(false);
@@ -66,11 +67,14 @@ export function LearnToPlayDefeatModal({ game, snapshotImage }: Props) {
               <div className="defeat-outcome-actions is-single-action learn-to-play-defeat-cta">
                 <button
                   type="button"
-                  className="game-result-action game-result-action-primary flex h-12 w-full min-w-0 items-center justify-center"
-                  disabled
+                  className="destiny-command-button learn-to-play-contemplate-button"
+                  onClick={onContemplateFuture}
                   aria-describedby="learn-to-play-defeat-description"
                 >
-                  <span>{t("guided.learnToPlay.defeatCta")}</span>
+                  <span className="destiny-command-copy">
+                    <strong>{t("guided.learnToPlay.defeatCta")}</strong>
+                  </span>
+                  <span className="destiny-command-shimmer" aria-hidden="true" />
                 </button>
               </div>
             )}

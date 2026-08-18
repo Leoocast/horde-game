@@ -13,6 +13,7 @@ import {
   NORMAL_BOARD_SESSION,
 } from "./components/boardSessionPolicies";
 import { findInspectableDeck, hostInspectableDecks, playerInspectableDecks } from "./data/deckCatalog";
+import { DEFAULT_HOST_DECK_ID, DEFAULT_PLAYER_DECK_ID } from "./data/decks";
 import type { GameMode } from "./engine/GameTypes";
 import { useAudioStore } from "./store/useAudioStore";
 import { useGameStore } from "./store/useGameStore";
@@ -34,6 +35,7 @@ import { guidedProductLifecycle } from "./guidance/productRuntime";
 import { guidedLessonRegistry } from "./guidance/registry";
 import { HOW_TO_PLAY_CATALOG } from "./guidance/howToPlayCatalog";
 import { LEARN_TO_PLAY_JOURNEY, learnToPlayJourneyLifecycle } from "./guidance/learnToPlayJourney";
+import { guidedProgressStore } from "./guidance/progress";
 
 // The conditional imports are compile-time: release builds remove both developer modules instead
 // of merely hiding their entry buttons.
@@ -73,6 +75,17 @@ type DestinyTransitionState = {
 
 /** La Mano empieza a subir mientras el último rastro del signo termina de apagarse. */
 const BOARD_OVERTURE_HAND_DELAY_MS = 650;
+const STANDARD_SETUP_TURNS = 3;
+
+function generateRandomFutureSeed(): string {
+  const random = new Uint32Array(2);
+  if (typeof crypto !== "undefined" && crypto.getRandomValues) crypto.getRandomValues(random);
+  else {
+    random[0] = Math.floor(Math.random() * 0xffffffff);
+    random[1] = Math.floor(Math.random() * 0xffffffff);
+  }
+  return `hostfall-${Date.now().toString(36)}-${random[0].toString(36)}${random[1].toString(36)}`;
+}
 
 const subscribeGuidedLifecycle = (listener: () => void) => guidedProductLifecycle.subscribe(listener);
 const readGuidedLifecycle = () => guidedProductLifecycle.snapshot();
@@ -307,6 +320,27 @@ export default function App() {
 
   function restartLearnToPlayJourney() {
     learnToPlayJourneyLifecycle.restart();
+  }
+
+  function continueLearnToPlayIntoRandomFuture() {
+    learnToPlayJourneyLifecycle.stop();
+    guidedProgressStore.markJourneyCompleted(LEARN_TO_PLAY_JOURNEY.id, LEARN_TO_PLAY_JOURNEY.revision);
+    void deleteDesktopResume();
+    setDesktopResume({ status: "none" });
+    setPreserveMenuMusic(false);
+    setSetupTurns(STANDARD_SETUP_TURNS);
+    setSelectedDeckId(DEFAULT_PLAYER_DECK_ID);
+    setSelectedHostDeckId(DEFAULT_HOST_DECK_ID);
+    reset(
+      generateRandomFutureSeed(),
+      STANDARD_SETUP_TURNS,
+      DEFAULT_PLAYER_DECK_ID,
+      DEFAULT_HOST_DECK_ID,
+      "normal",
+      "standard",
+    );
+    setScreen("game");
+    startBattleMusic(true);
   }
 
   const beginDestinyTransition = useCallback((kind: DestinyTransitionKind) => {
@@ -593,7 +627,11 @@ export default function App() {
             ? restartLearnToPlayJourney
             : undefined}
         onRewriteFuture={screen === "game" ? () => beginDestinyTransition("rewrite") : undefined}
-        onContemplateFuture={screen === "game" ? () => beginDestinyTransition("contemplate") : undefined}
+        onContemplateFuture={screen === "game"
+          ? () => beginDestinyTransition("contemplate")
+          : screen === "journey"
+            ? continueLearnToPlayIntoRandomFuture
+            : undefined}
         onReturnToMenu={screen === "tutorial" ? leaveGuidedLesson : screen === "journey" ? leaveLearnToPlayJourney : () => {
           void deleteDesktopResume();
           setDesktopResume({ status: "none" });

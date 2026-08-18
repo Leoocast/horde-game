@@ -323,7 +323,7 @@ export function GuidedTutorialOverlay() {
   const title = missingAnchor ? t("guided.anchorMissingTitle") : t(session.currentStep.copy.titleKey);
   const preferredCalloutWidth = tutorialCalloutWidth(title, viewport.width, {
     minimum: 430,
-    maximum: 660,
+    maximum: 760,
     titleCharacterWidth: 12.5,
     chromeWidth: 108,
   });

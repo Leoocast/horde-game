@@ -483,8 +483,12 @@ export function Board({
           onContemplateFuture={onContemplateFuture}
         />
       )}
-      {sessionPolicy.showJourneyDefeat && defeatReady && (
-        <LearnToPlayDefeatModal game={game} snapshotImage={defeatSnapshot ?? undefined} />
+      {sessionPolicy.showJourneyDefeat && defeatReady && onContemplateFuture && (
+        <LearnToPlayDefeatModal
+          game={game}
+          snapshotImage={defeatSnapshot ?? undefined}
+          onContemplateFuture={onContemplateFuture}
+        />
       )}
       {sessionPolicy.showStandardOutcome && victoryReady && onRewriteFuture && onContemplateFuture && (
         <VictoryModal game={game} onRewriteFuture={onRewriteFuture} onContemplateFuture={onContemplateFuture} />

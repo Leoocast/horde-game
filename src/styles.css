@@ -22228,6 +22228,28 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
   animation: learn-to-play-defeat-cta-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+.learn-to-play-contemplate-button {
+  width: 100%;
+  min-width: 0;
+  height: 50px;
+  justify-content: center;
+  padding: 0 22px;
+  text-align: center;
+}
+
+.learn-to-play-contemplate-button::before {
+  left: 50%;
+  width: 190px;
+  height: 190px;
+  opacity: 0.46;
+}
+
+.learn-to-play-contemplate-button .destiny-command-copy strong {
+  font-size: clamp(11px, 2vw, 14px);
+  letter-spacing: 0.13em;
+  white-space: nowrap;
+}
+
 .learn-to-play-defeat-dialog-layer {
   position: absolute;
   z-index: 8;

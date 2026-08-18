@@ -28,7 +28,12 @@ import {
   learnToPlayReturnSourceRequired,
 } from "../src/guidance/learnToPlayDirector";
 import { PRODUCT_CONTEXTUAL_CONCEPTS } from "../src/guidance/contextualProductConcepts";
-import { emptyGuidedProgress, nextRequiredGuidedLesson } from "../src/guidance/progress";
+import {
+  emptyGuidedProgress,
+  GuidedProgressStore,
+  guidedJourneyCompleted,
+  nextRequiredGuidedLesson,
+} from "../src/guidance/progress";
 import { GuidedSessionStore } from "../src/guidance/sessionStore";
 
 test("How to Play catalogs the main journey before optional Preparation", () => {
@@ -40,6 +45,15 @@ test("How to Play catalogs the main journey before optional Preparation", () => 
   assert.equal(HOW_TO_PLAY_CATALOG[1].launcher.kind, "guided-lesson");
   assert.equal(FIRST_SEED_LESSON.mode, "optional");
   assert.equal(nextRequiredGuidedLesson([FIRST_SEED_LESSON], emptyGuidedProgress()), undefined);
+});
+
+test("contemplating another future records Learn to Play completion once", () => {
+  const progress = new GuidedProgressStore();
+  assert.equal(guidedJourneyCompleted(progress.snapshot(), { id: LEARN_TO_PLAY_JOURNEY_ID, revision: 1 }), false);
+  assert.equal(progress.markJourneyCompleted(LEARN_TO_PLAY_JOURNEY_ID, 1, "2026-08-17T00:00:00.000Z"), true);
+  assert.equal(guidedJourneyCompleted(progress.snapshot(), { id: LEARN_TO_PLAY_JOURNEY_ID, revision: 1 }), true);
+  assert.equal(progress.markJourneyCompleted(LEARN_TO_PLAY_JOURNEY_ID, 1, "2026-08-17T01:00:00.000Z"), false);
+  assert.equal(progress.snapshot().journeys.length, 1);
 });
 
 test("board session policies isolate persistence, outcomes, and guided controls", () => {
@@ -271,6 +285,10 @@ test("journey-authored milestones ignore global contextual progress and remain f
   assert.equal(learnToPlayFirstDefenseReady(firstDefense, true, false), false);
   assert.equal(learnToPlayFirstDefenseReady(firstDefense, false, true), false);
   assert.equal(learnToPlayHarvesterInspectionReady(beforeSurge, bindings, false), true);
+  assert.equal(learnToPlayHarvesterInspectionReady({
+    ...beforeSurge,
+    host: { field: [{ instanceId: "harvester:1" }, { instanceId: "unexpected-survivor:1" }] },
+  }, bindings, false), true);
   assert.equal(learnToPlayHarvesterInspectionReady(beforeSurge, bindings, true), false);
   assert.equal(learnToPlayHarvesterInspectionReady({
     ...beforeSurge,
@@ -365,7 +383,7 @@ test("authored Host-turn policies are scoped and reject invalid reveal plans", (
   assert.throws(() => gate.plan({}), /Invalid authored Host reveal count/u);
 });
 
-test("App exposes both launchers, disables Continue, and keys autosave from policy", async () => {
+test("App exposes both launchers, disables Continue, and hands the journey to a random normal future", async () => {
   const [app, menu, board] = await Promise.all([
     readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8"),
@@ -376,9 +394,12 @@ test("App exposes both launchers, disables Continue, and keys autosave from poli
   assert.match(app, /howToPlayEntries=\{howToPlayEntries\}/u);
   assert.match(app, /continueDisabled/u);
   assert.match(app, /if \(!boardSessionPolicy\.autosave \|\| screen !== "game"\) return;/u);
+  assert.match(app, /guidedProgressStore\.markJourneyCompleted\(LEARN_TO_PLAY_JOURNEY\.id, LEARN_TO_PLAY_JOURNEY\.revision\)/u);
+  assert.match(app, /generateRandomFutureSeed\(\)[\s\S]*?DEFAULT_PLAYER_DECK_ID[\s\S]*?DEFAULT_HOST_DECK_ID[\s\S]*?"normal"[\s\S]*?"standard"/u);
+  assert.match(app, /screen === "journey"[\s\S]*?continueLearnToPlayIntoRandomFuture/u);
   assert.match(menu, /howToPlayEntries\.map/u);
   assert.match(menu, /disabled=\{continueDisabled \|\| !onContinue\}/u);
   assert.match(board, /sessionPolicy\.showStandardOutcome && defeatReady/u);
-  assert.match(board, /sessionPolicy\.showJourneyDefeat && defeatReady/u);
+  assert.match(board, /sessionPolicy\.showJourneyDefeat && defeatReady && onContemplateFuture/u);
   assert.match(board, /!sessionPolicy\.showPhaseBanner/u);
 });

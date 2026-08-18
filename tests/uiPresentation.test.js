@@ -292,6 +292,8 @@ test("the Host attack preview shows cards going to Memory and keeps the math in 
   assert.match(phaseOrbSource, /contextualTutorialBlocksPhase/u);
   assert.match(phaseOrbSource, /\.\.\.contextualTutorial\.queue/u);
   assert.match(phaseOrbSource, /learnToPlayDefenseLeadIn/u);
+  assert.match(phaseOrbSource, /learnToPlayOpeningEndLeadIn/u);
+  assert.match(phaseOrbSource, /learnToPlay\.stage === "defense-intro"/u);
   assert.match(phaseOrbSource, /learnToPlayRenewalLeadIn/u);
   assert.match(phaseOrbSource, /guidedSpotlightPending/u);
   assert.equal(translate("es", "orb.chooseAttackers"), "Elegir atacantes");
@@ -1202,9 +1204,10 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(journeyModal, /guided\.learnToPlay\.defeatBody/u);
   assert.match(journeyModal, /guided\.continue/u);
   assert.match(journeyModal, /guided\.learnToPlay\.defeatCta/u);
-  assert.match(journeyModal, /disabled/u);
-  assert.match(journeyModal, /game-result-action-primary/u);
-  assert.doesNotMatch(journeyModal, /onRewriteFuture|onContemplateFuture|defeat-future-plate/u);
+  assert.match(journeyModal, /onContemplateFuture/u);
+  assert.match(journeyModal, /destiny-command-button learn-to-play-contemplate-button/u);
+  assert.doesNotMatch(journeyModal, /disabled/u);
+  assert.doesNotMatch(journeyModal, /onRewriteFuture|defeat-future-plate|destiny-command-glyph/u);
   // El vidrio se lee aunque no haya nada impreso: alfa de la captura con suelo de Fresnel.
   assert.match(glassShader, /float printed = middle\.a/u);
   assert.match(glassShader, /vFade \* max\(printed, glassEdge\)/u);
