@@ -1,5 +1,6 @@
 import {
   Activity,
+  BookOpenCheck,
   Gamepad2,
   Home,
   Layers3,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Board } from "../components/Board";
+import { contentCatalog } from "../content/bootstrap";
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
 import { ActionsPanel } from "./panels/ActionsPanel";
@@ -20,6 +22,9 @@ import { BoardPanel } from "./panels/BoardPanel";
 import { CardsPanel } from "./panels/CardsPanel";
 import { ScenarioPanel } from "./panels/ScenarioPanel";
 import { TimelinePanel } from "./panels/TimelinePanel";
+import { GuidanceLabPanel } from "./panels/GuidanceLabPanel";
+import { GUIDANCE_LAB_LESSON, GUIDANCE_LAB_REGISTRY } from "./guidanceLabDefinition";
+import { createGameStoreGuidedLessonHost, GuidedLessonOrchestrator, guidedSessionStore } from "../guidance";
 import {
   deleteStoredBoard,
   deleteStoredReplay,
@@ -43,7 +48,14 @@ import {
 } from "./scenario";
 import { executeStep, isPlaygroundBusy, isWaitingForInput, type TimelineStep } from "./timeline";
 
-type PlaygroundTab = "scenario" | "cards" | "board" | "actions" | "timeline";
+const guidanceLabOrchestrator = new GuidedLessonOrchestrator(
+  contentCatalog,
+  GUIDANCE_LAB_REGISTRY,
+  guidedSessionStore,
+  createGameStoreGuidedLessonHost(useGameStore),
+);
+
+type PlaygroundTab = "scenario" | "cards" | "board" | "actions" | "timeline" | "guidance";
 
 const TABS: Array<{ id: PlaygroundTab; label: string; description: string; icon: LucideIcon }> = [
   { id: "scenario", label: "Setup", description: "Seed, decks and Host queue", icon: SlidersHorizontal },
@@ -51,6 +63,7 @@ const TABS: Array<{ id: PlaygroundTab; label: string; description: string; icon:
   { id: "board", label: "Board", description: "Selection and saved states", icon: Layers3 },
   { id: "actions", label: "Actions", description: "Turn flow and energy", icon: Gamepad2 },
   { id: "timeline", label: "Replay", description: "Record and replay sequences", icon: ListVideo },
+  { id: "guidance", label: "Guide", description: "Pause and checkpoint laboratory", icon: BookOpenCheck },
 ];
 
 const REPLAY_POLL_MS = 120;
@@ -263,6 +276,27 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
 
   const activeTab = TABS.find((entry) => entry.id === tab) ?? TABS[0];
 
+  function startGuidanceLab() {
+    try {
+      const session = guidedSessionStore.snapshot();
+      if (session.lessonId === GUIDANCE_LAB_LESSON.id && session.status !== "inactive") {
+        guidanceLabOrchestrator.restart();
+      } else {
+        guidanceLabOrchestrator.start(GUIDANCE_LAB_LESSON.id);
+      }
+      setReplayCursor(undefined);
+      setAutoPlaying(false);
+    } catch (error) {
+      guidedSessionStore.fail(error);
+      reportError(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  function returnToMenu() {
+    guidanceLabOrchestrator.stop();
+    onReturnToMenu();
+  }
+
   const tools = (
     <aside className="playground-dock" aria-label="Playground tools">
       <div className="playground-tools-layout">
@@ -276,7 +310,7 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
           </div>
 
           <div className="playground-tools-topbar-actions">
-            <button className="playground-rail-button" type="button" title="Return to main menu" onClick={onReturnToMenu}>
+            <button className="playground-rail-button" type="button" title="Return to main menu" onClick={returnToMenu}>
               <Home size={15} />
               <span>Menu</span>
             </button>
@@ -294,7 +328,12 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
             </div>
 
             <div className="playground-launch" role="group" aria-label="Board controls">
-              <button className="playground-launch-button is-active" type="button" disabled={!launch} onClick={() => launch && buildBoard(launch)}>
+              <button
+                className="playground-launch-button is-active"
+                type="button"
+                disabled={tab !== "guidance" && !launch}
+                onClick={() => tab === "guidance" ? startGuidanceLab() : launch && buildBoard(launch)}
+              >
                 <RotateCcw size={14} />
                 <span>Restart</span>
               </button>
@@ -371,6 +410,9 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
                 onDeleteReplay={removeReplay}
               />
             )}
+            {tab === "guidance" && (
+              <GuidanceLabPanel onStart={startGuidanceLab} onStop={() => guidanceLabOrchestrator.stop()} />
+            )}
           </div>
         </section>
       </div>
@@ -380,7 +422,7 @@ export function PlaygroundScreen({ onReturnToMenu }: PlaygroundScreenProps) {
   return (
     <div className={`playground-shell ${toolsOpen ? "is-tools-open" : ""}`}>
       <div className="playground-stage">
-        <Board key={gameSessionId} playerName="Playground" setupTurns={0} onReturnToMenu={onReturnToMenu} />
+        <Board key={gameSessionId} playerName="Playground" setupTurns={0} onReturnToMenu={returnToMenu} />
       </div>
 
       <div className="playground-dock-host" aria-hidden={!toolsOpen} inert={!toolsOpen}>

@@ -5,7 +5,7 @@ import { useGameStore, type BurnAnimationState } from "../store/useGameStore";
 import { burnPathCurvature } from "../store/burnAnimation";
 import { ClassicBurnAnimator } from "./ClassicBurnAnimator";
 import { burnProjectileOriginRatios, BURN_DURATION_MS } from "./burnPresentation";
-import { renderSharedVfxFrame } from "./sharedVfxRenderer";
+import { boundedVfxPixelRatio, renderSharedVfxFrame } from "./sharedVfxRenderer";
 import {
   BURN_FIREBALL_FRAGMENT_SHADER,
   BURN_FIREBALL_VERTEX_SHADER,
@@ -22,13 +22,16 @@ type BurnGeometry = {
   endY: number;
 };
 
-/** El lienzo cubre la pantalla, así que se limita la resolución antes que el número de rutas. */
-const MAX_PIXEL_RATIO = 1.35;
+/** El shader y la copia WebGL→2D no ganan detalle por encima de 60 entregas por segundo. */
+const FRAME_INTERVAL_MS = 1000 / 60;
 
-function clearBurnCanvas(canvas: HTMLCanvasElement | null): void {
+/** Libera el backing store fullscreen: ocultar o limpiar el canvas no devuelve esa memoria. */
+function releaseBurnCanvas(canvas: HTMLCanvasElement | null): void {
   if (!canvas) return;
   const context = canvas.getContext("2d");
   context?.clearRect(0, 0, canvas.width, canvas.height);
+  canvas.width = 1;
+  canvas.height = 1;
 }
 
 export function BurnAnimator() {
@@ -116,12 +119,16 @@ function ProceduralBurnAnimator({ burn }: { burn: BurnAnimationState | undefined
   useEffect(() => {
     if (!burn || geometries.length === 0) {
       if (canvasRef.current) canvasRef.current.style.opacity = "0";
-      clearBurnCanvas(canvasRef.current);
+      releaseBurnCanvas(canvasRef.current);
       return;
     }
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
+    let pixelRatio = boundedVfxPixelRatio(
+      window.innerWidth,
+      window.innerHeight,
+      window.devicePixelRatio || 1,
+    );
 
     const colors = burnMaterialColors(burn.variant);
     const scale = Math.max(0.5, Math.min(3, burn.scale ?? 1));
@@ -186,7 +193,11 @@ function ProceduralBurnAnimator({ burn }: { burn: BurnAnimationState | undefined
     const resize = () => {
       width = Math.max(1, window.innerWidth);
       height = Math.max(1, window.innerHeight);
-      for (const pass of passes) pass.uniforms.uRes.value.set(width, height);
+      pixelRatio = boundedVfxPixelRatio(width, height, window.devicePixelRatio || 1);
+      for (const pass of passes) {
+        pass.uniforms.uRes.value.set(width, height);
+        pass.uniforms.uPixelRatio.value = pixelRatio;
+      }
     };
     resize();
     window.addEventListener("resize", resize);
@@ -214,8 +225,17 @@ function ProceduralBurnAnimator({ burn }: { burn: BurnAnimationState | undefined
     const start = performance.now();
     let frame = 0;
     let firstFramePresented = false;
+    let lastRenderedAt = Number.NEGATIVE_INFINITY;
     const tick = (now: number) => {
       const elapsed = now - start;
+      if (now - lastRenderedAt < FRAME_INTERVAL_MS && elapsed <= totalMs) {
+        frame = requestAnimationFrame(tick);
+        return;
+      }
+      const sinceLastRender = now - lastRenderedAt;
+      lastRenderedAt = Number.isFinite(sinceLastRender)
+        ? now - (sinceLastRender % FRAME_INTERVAL_MS)
+        : now;
       for (const pass of passes) {
         pass.uniforms.uTime.value = now / 1000;
         pass.uniforms.uT.value = elapsed / BURN_DURATION_MS;
@@ -243,7 +263,7 @@ function ProceduralBurnAnimator({ burn }: { burn: BurnAnimationState | undefined
       cancelAnimationFrame(frame);
       shakeAnimation?.cancel();
       window.removeEventListener("resize", resize);
-      clearBurnCanvas(canvas);
+      releaseBurnCanvas(canvas);
       planeGeometry.dispose();
       for (const pass of passes) pass.material.dispose();
     };

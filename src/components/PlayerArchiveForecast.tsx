@@ -5,6 +5,7 @@ import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { useSourceActionUiStore } from "../store/useSourceActionUiStore";
 import { GameTooltip } from "./GameTooltip";
+import { guidedAnchorRegistry, guidedSurfaceAnchorKey } from "../guidance";
 
 const REASON_KEY: Partial<Record<PlayerDrawReason, "game.drawReasonEasy" | "game.drawReasonChaos">> = {
   easy: "game.drawReasonEasy",
@@ -40,6 +41,11 @@ export function PlayerArchiveForecast({ game }: { game: GameState }) {
 
   return (
     <section
+      ref={(element) => guidedAnchorRegistry.set(
+        guidedSurfaceAnchorKey("player.archive"),
+        "player-archive:surface",
+        element,
+      )}
       data-player-archive-origin="true"
       data-energy-recycle-target="true"
       data-draw-reason={forecast.reason}

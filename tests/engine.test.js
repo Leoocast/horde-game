@@ -8,7 +8,7 @@ import { canonicalizeRulesText } from "../src/i18n/rulesText";
 import { buildHostRules } from "../src/engine/HostRules";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
 import { chaosTraitPool, prepareChaosDeck } from "../src/engine/ChaosMode";
-import { applyHostAttackEvent, buildHostAttackEvents, isHostAttackEventCurrent, prepareHostAttackers, previewPlayerAttackDrain, refreshHostAttackEvent, resolveHostCombat, resolvePlayerAttackerDrain, resolvePlayerAttackerPoison, resolvePlayerCombat } from "../src/engine/CombatResolver";
+import { applyHostAttackEvent, buildHostAttackEvents, isHostAttackEventCurrent, prepareHostAttackers, previewPlayerCombatArchiveDiscards, previewPlayerAttackDrain, refreshHostAttackEvent, resolveHostCombat, resolvePlayerAttackerDrain, resolvePlayerAttackerPoison, resolvePlayerCombat } from "../src/engine/CombatResolver";
 import { destroyMarkedCreatures, destroyPermanent, findManualInvokedTargetTrigger, manualInvokedTargetRequirement, pendingTriggerSources, resolveEffect, resolveEffects, resolveTriggeredEvent, runInvokedTriggers } from "../src/engine/EffectResolver";
 import { drainEventQueue, enqueue } from "../src/engine/EventQueue";
 import { collectStaticAuras, newlyCoveredAuras, snapshotStaticAuras } from "../src/engine/StaticAuras";
@@ -144,6 +144,59 @@ test("Developer Mode uses the selected player deck's own Energy cards", () => {
       .some((card) => card.definitionId === "river_of_elarion" || card.definitionId === "the_judgment_of_elarion"),
     false,
   );
+});
+
+test("authored combat discards can spare the next Host reveal", () => {
+  const game = createTestGame("authored-combat-discard");
+  game.activeSide = "player";
+  game.phase = "combat";
+  const attacker = addCard(game, customCard("three-power-attacker", "player", { power: 3, endurance: 3 }));
+  const nextReveal = addCard(game, cardFromDeck("winged_stalker_of_the_crypt", "host", "archive"));
+  const expendable = addCard(game, cardFromDeck("graveless_soldier", "host", "archive"));
+  expendable.flags.playerCombatArchiveDiscardPriority = true;
+  game.combat.playerAttackers = [attacker.instanceId];
+
+  assert.deepEqual(
+    previewPlayerCombatArchiveDiscards(game, game.combat.playerAttackers).map(({ card }) => card.instanceId),
+    [expendable.instanceId],
+  );
+  const resolved = resolvePlayerCombat(game);
+  assert.equal(resolved.host.memory.at(-1).instanceId, expendable.instanceId);
+  assert.equal(resolved.host.archive[0].instanceId, nextReveal.instanceId);
+});
+
+test("devlost starts at 15 Life without enabling the Developer Mode setup", () => {
+  const game = createInitialGame(playerDeck, hostDeck, "devlost", 3);
+
+  assert.equal(game.player.life, 15);
+  assert.equal(game.player.hand.length, 7);
+  assert.equal(game.player.field.length, 0);
+  assert.equal(game.setupTurnsRemaining, 3);
+});
+
+test("devwin starts with only two basic Zombies and otherwise uses the normal setup", () => {
+  const reorderedHostDeck = {
+    ...hostDeck,
+    cards: [...hostDeck.cards].reverse(),
+  };
+  const game = createInitialGame(playerDeck, reorderedHostDeck, "devwin", 3);
+  const hostCardCount = game.host.archive.length
+    + game.host.field.length
+    + game.host.memory.length
+    + game.host.oblivion.length;
+
+  assert.equal(hostCardCount, 2);
+  assert.equal(game.host.archive.length, 2);
+  assert.deepEqual(
+    game.host.archive.map((card) => card.definitionId),
+    ["graveless_soldier", "graveless_soldier"],
+  );
+  assert.equal(new Set(game.host.archive.map((card) => card.instanceId)).size, 2);
+  assert.equal(game.hostDeckOrderHash, "graveless_soldier|graveless_soldier");
+  assert.equal(game.player.life, 50);
+  assert.equal(game.player.hand.length, 7);
+  assert.equal(game.player.field.length, 0);
+  assert.equal(game.setupTurnsRemaining, 3);
 });
 
 test("every expanded card copy has a unique instance id", () => {

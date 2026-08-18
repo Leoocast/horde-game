@@ -1,111 +1,92 @@
-import { Copy, Crown, Home, RefreshCcw, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { Copy, RefreshCcw } from "lucide-react";
 import type { GameState } from "../engine/GameTypes";
-import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
-import { useAudioStore } from "../store/useAudioStore";
 import { useTranslation } from "../i18n/useTranslation";
+import { futureCodeFromSeed } from "../utils/futureIdentity";
+import { VictoryConstellationAnimator } from "./VictoryConstellationAnimator";
 
 type Props = {
   game: GameState;
-  setupTurns: number;
-  onReturnToMenu: () => void;
+  onRewriteFuture: () => void;
+  onContemplateFuture: () => void;
 };
 
-export function VictoryModal({ game, setupTurns, onReturnToMenu }: Props) {
+export function VictoryModal({ game, onRewriteFuture, onContemplateFuture }: Props) {
   const t = useTranslation();
-  const reset = useGameStore((state) => state.reset);
-  const setSeed = useGameStore((state) => state.setSeed);
   const pushToast = useToastStore((state) => state.pushToast);
-  const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
-  const resetSfx = useAudioStore((state) => state.resetSfx);
-  const [seedInput, setSeedInput] = useState(game.seed);
-
-  function restart() {
-    const nextSeed = seedInput.trim() || game.seed;
-    resetSfx();
-    setSeed(nextSeed);
-    reset(nextSeed, setupTurns);
-    startBattleMusic(true);
-  }
+  const futureCode = futureCodeFromSeed(game.seed);
+  const [sequenceStarted, setSequenceStarted] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const startSequence = useCallback(() => setSequenceStarted(true), []);
+  // El desenlace se nombra cuando la figura ya cerró, no en un reloj propio.
+  const revealOutcome = useCallback(() => setRevealed(true), []);
 
   async function copySeed() {
     try {
-      await navigator.clipboard.writeText(seedInput);
-      pushToast({ title: t("toast.seedCopied"), message: seedInput, tone: "success" });
+      await navigator.clipboard.writeText(game.seed);
+      pushToast({ title: t("destiny.identityCopied"), message: t("destiny.future", { code: futureCode }), tone: "success" });
     } catch {
-      pushToast({ title: t("toast.seedCopyFailed"), message: seedInput, tone: "warning" });
+      pushToast({ title: t("destiny.identityCopyFailed"), message: t("destiny.future", { code: futureCode }), tone: "warning" });
     }
   }
 
-  function regenerateSeed() {
-    setSeedInput(generateRandomSeed());
-  }
-
   return (
-    <div className="game-result-overlay game-result-victory fixed inset-0 z-[140] flex flex-col items-center justify-center">
-      <div className="game-result-atmosphere" />
-      <div className="game-result-banner" aria-hidden="true">
-        <span className="game-result-line" />
-        <span className="game-result-crest"><Crown size={32} strokeWidth={1.7} /></span>
-        <h1>{t("result.victory")}</h1>
-        <span className="game-result-line game-result-line-right" />
-      </div>
+    <div className={`game-result-overlay game-result-victory fixed inset-0 z-[140] ${sequenceStarted ? "is-sequence-running" : ""}`}>
+      <VictoryConstellationAnimator seed={game.seed} onSequenceStart={startSequence} onVerdict={revealOutcome} />
 
-      <section className="game-result-panel old-panel w-full max-w-md p-6 text-center" role="dialog" aria-modal="true" aria-labelledby="victory-result-title">
-        <span className="game-result-panel-mark" />
-        <p id="victory-result-title" className="game-result-message">
-          {t("result.hostDefeated")}
-        </p>
+      {/* El bloque se centra con una capa a pantalla completa, no con un `translate` propio: la
+          succión del vórtice anima `transform` sobre cada pieza de la escena y borraría ese
+          desplazamiento, dejando el desenlace descolgado hacia abajo y a la derecha. */}
+      {revealed && (
+        <div className="victory-outcome">
+          <div
+            className="victory-outcome-inner"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="victory-result-title"
+            aria-describedby="victory-result-description"
+          >
+            <span className="victory-kicker">{t("result.victory")}</span>
+            <strong className="victory-title" id="victory-result-title">
+              <span className="line">{t("destiny.futurePreservedLineOne")}</span>
+              <span className="line">{t("destiny.futurePreservedLineTwo")}</span>
+            </strong>
+            <span className="victory-subtitle" id="victory-result-description">
+              {t("result.chapterEnduresInChronicle")}
+            </span>
 
-        <>
-            <label className="game-result-seed-label mt-6 block text-left" htmlFor="victory-seed">
-              {t("result.chronicleSeed")}
-            </label>
-            <div className="game-result-seed mt-2 flex gap-2">
-              <input
-                id="victory-seed"
-                value={seedInput}
-                onChange={(event) => setSeedInput(event.target.value)}
-                className="old-input h-11 w-full px-3 outline-none transition placeholder:text-[#85633b] focus:border-[#f4cc74]"
-              />
-              <button className="old-button flex h-11 w-11 items-center justify-center" type="button" onClick={copySeed} title={t("result.copySeed")}>
-                <Copy size={17} />
+            <span className="victory-future-plate">
+              <span>{t("destiny.futureWord")}</span>
+              <b>{futureCode}</b>
+              <button
+                type="button"
+                onClick={copySeed}
+                title={t("destiny.copyIdentity")}
+                aria-label={t("destiny.copyIdentity")}
+              >
+                <Copy size={14} />
               </button>
-              <button className="old-button flex h-11 w-11 items-center justify-center" type="button" onClick={regenerateSeed} title={t("result.regenerateSeed")}>
-                <RefreshCw size={17} />
+            </span>
+
+            <div className="victory-outcome-actions">
+              <button
+                className="game-result-action game-result-action-secondary flex h-12 w-full min-w-0 items-center justify-center"
+                onClick={onContemplateFuture}
+              >
+                <span>{t("destiny.contemplateAnother")}</span>
+              </button>
+              <button
+                className="game-result-action game-result-action-primary flex h-12 w-full min-w-0 items-center justify-center gap-2"
+                onClick={onRewriteFuture}
+              >
+                <RefreshCcw size={18} aria-hidden="true" />
+                <span>{t("destiny.rewriteThis")}</span>
               </button>
             </div>
-        </>
-
-        <div className="game-result-actions mt-5 grid grid-cols-2 gap-3">
-          <button
-            className="game-result-action game-result-action-secondary flex h-12 w-full items-center justify-center gap-2"
-            onClick={onReturnToMenu}
-          >
-            <Home size={18} />
-            {t("common.menu")}
-          </button>
-          <button
-            className="game-result-action game-result-action-primary flex h-12 w-full items-center justify-center gap-2"
-            onClick={restart}
-          >
-            <RefreshCcw size={18} />
-            {t("common.restart")}
-          </button>
+          </div>
         </div>
-      </section>
+      )}
     </div>
   );
-}
-
-function generateRandomSeed(): string {
-  const cryptoRandom = new Uint32Array(2);
-  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
-    crypto.getRandomValues(cryptoRandom);
-  } else {
-    cryptoRandom[0] = Math.floor(Math.random() * 0xffffffff);
-    cryptoRandom[1] = Math.floor(Math.random() * 0xffffffff);
-  }
-  return `hostfall-${Date.now().toString(36)}-${cryptoRandom[0].toString(36)}${cryptoRandom[1].toString(36)}`;
 }

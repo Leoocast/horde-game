@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowLeft, AudioLines, ChevronLeft, ChevronRight, Construction, Copy, Dices, Eye, Feather, Github, Play, RefreshCw, RotateCcw, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, AudioLines, BookOpen, ChevronLeft, ChevronRight, Construction, Copy, Dices, Eye, Feather, Github, Play, RefreshCw, RotateCcw, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
 import { AnimatePresence, motion, useIsPresent } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { findDeckKeyCard, type InspectableDeck } from "../data/deckCatalog";
@@ -10,13 +10,20 @@ import { useAudioStore } from "../store/useAudioStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { useToastStore } from "../store/useToastStore";
 import { useDeckCardDetails } from "../utils/deckCardImages";
+import { futureCodeFromSeed } from "../utils/futureIdentity";
 import { clearAppAssetCache, completeOnboarding, persistDeveloperMode, readStoredDeveloperMode, readStoredPlayerName, resetOnboarding } from "../utils/appPersistence";
 import { APP_VERSION } from "../version";
 import { AudioControls } from "./AudioControls";
 import { DeckKeyCard, DecksView } from "./DecksView";
 import { DisplayControls } from "./DisplayControls";
 import { LanguageSelector } from "./LanguageSelector";
+import { TemporalBackdrop } from "./TemporalBackdrop";
 import { ToastStack } from "./ToastStack";
+import type { HowToPlayCatalogEntry } from "../guidance/howToPlayCatalog";
+
+export type HowToPlayMenuEntry = HowToPlayCatalogEntry & Readonly<{
+  onLaunch?: () => void;
+}>;
 
 type Props = {
   decks: InspectableDeck[];
@@ -37,14 +44,16 @@ type Props = {
   onOpenPlayground?: () => void;
   /** Only provided in development builds; edits the checked-in per-file audio mix. */
   onOpenAudioLab?: () => void;
+  howToPlayEntries: readonly HowToPlayMenuEntry[];
   resumeStatus?: "none" | "available" | "recovered" | "corrupt";
   onContinue?: () => void;
+  continueDisabled?: boolean;
   onDiscardResume?: () => void;
   onStart: (options: { playerName: string; mode: DifficultyMode; gameMode: GameMode; setupTurns: number; seed: string }) => void;
 };
 
-type MenuScreen = "home" | "setup" | "chaos" | "chronicles" | "hosts" | "settings";
-type ClosingMenuScreen = Extract<MenuScreen, "chronicles" | "hosts" | "settings">;
+type MenuScreen = "home" | "setup" | "chaos" | "chronicles" | "hosts" | "howToPlay" | "settings";
+type ClosingMenuScreen = Extract<MenuScreen, "chronicles" | "hosts" | "howToPlay" | "settings">;
 
 const modes: Array<{ id: DifficultyMode; setupTurns: number }> = [
   { id: "easy", setupTurns: 4 },
@@ -52,7 +61,7 @@ const modes: Array<{ id: DifficultyMode; setupTurns: number }> = [
   { id: "hard", setupTurns: 2 },
 ];
 
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, resumeStatus = "none", onContinue, onDiscardResume, onStart }: Props) {
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, howToPlayEntries, resumeStatus = "none", onContinue, continueDisabled = false, onDiscardResume, onStart }: Props) {
   const t = useTranslation();
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [mode, setMode] = useState<DifficultyMode>("easy");
@@ -170,7 +179,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   }
 
   function closeMenuPanel() {
-    if (menuScreen === "chronicles" || menuScreen === "hosts" || menuScreen === "settings") setClosingMenuScreen(menuScreen);
+    if (menuScreen === "chronicles" || menuScreen === "hosts" || menuScreen === "howToPlay" || menuScreen === "settings") setClosingMenuScreen(menuScreen);
   }
 
   async function copySeed() {
@@ -222,7 +231,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
 
   return (
     <main className={`main-menu-shell h-screen overflow-hidden text-[#f6e6b8] ${menuScreen === "setup" || menuScreen === "chaos" ? "expedition-active" : ""} ${menuScreen === "chaos" ? "chaos-active" : ""}`}>
-      <MenuFireflies />
+      <TemporalBackdrop />
       {menuScreen !== "setup" && menuScreen !== "chaos" ? (
         <div className="main-menu-stage">
         {menuScreen === "home" && (
@@ -261,8 +270,14 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           </div>
 
           <nav className="main-menu-nav" aria-label={t("menu.mainAria")}>
-            {(resumeStatus === "available" || resumeStatus === "recovered") && onContinue && (
-              <button className="main-menu-entry group" type="button" onClick={onContinue}>
+            {(resumeStatus === "available" || resumeStatus === "recovered") && (
+              <button
+                className={`main-menu-entry group ${continueDisabled || !onContinue ? "is-disabled" : ""}`}
+                type="button"
+                onClick={continueDisabled ? undefined : onContinue}
+                disabled={continueDisabled || !onContinue}
+                title={continueDisabled ? t("menu.continueUnavailable") : undefined}
+              >
                 <span className="main-menu-entry-mark" />
                 <span>{resumeStatus === "recovered" ? t("menu.continueRecovered") : t("menu.continue")}</span>
               </button>
@@ -285,7 +300,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
               <span className="main-menu-entry-mark" />
               <span>{t("menu.hosts")}</span>
             </button>
-            <button className="main-menu-entry is-disabled group" type="button" disabled title={t("menu.howToPlayUnavailable")}>
+            <button className={`main-menu-entry group ${menuScreen === "howToPlay" ? "is-active" : ""}`} type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("howToPlay"); }}>
               <span className="main-menu-entry-mark" />
               <span>{t("menu.howToPlay")}</span>
             </button>
@@ -366,6 +381,43 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
                     </button>
                   </div>
                 )}
+              </section>
+            </div>
+          </section>
+        )}
+        {menuScreen === "howToPlay" && (
+          <section className={`main-settings-screen how-to-play-screen ${closingMenuScreen === "howToPlay" ? "is-closing" : ""}`} aria-label={t("menu.howToPlay")}>
+            <header className="main-settings-header">
+              <button className="menu-screen-back" type="button" onClick={closeMenuPanel}><ArrowLeft size={16} /> {t("common.back")}</button>
+              <h2>{t("menu.howToPlay")}</h2>
+              <span>{t("howToPlay.description")}</span>
+            </header>
+
+            <div className="main-settings-content old-scrollbar">
+              <section className="main-settings-section how-to-play-lessons">
+                <div className="main-settings-section-title">{t("howToPlay.tutorials")}</div>
+                {howToPlayEntries.map((entry) => {
+                  const Icon = entry.icon === "learn" ? Sparkles : BookOpen;
+                  return (
+                    <button
+                      key={entry.id}
+                      className="how-to-play-lesson"
+                      type="button"
+                      disabled={!entry.onLaunch}
+                      onClick={entry.onLaunch}
+                    >
+                      <span className="how-to-play-lesson-icon" aria-hidden="true"><Icon size={25} /></span>
+                      <span className="how-to-play-lesson-copy">
+                        <small>{t(entry.kickerKey)}</small>
+                        <strong>{t(entry.titleKey)}</strong>
+                        <span>{t(entry.descriptionKey)}</span>
+                      </span>
+                      <span className={`how-to-play-lesson-status ${entry.onLaunch ? "is-ready" : ""}`}>
+                        {t(entry.onLaunch ? "howToPlay.start" : "howToPlay.comingSoon")}
+                      </span>
+                    </button>
+                  );
+                })}
               </section>
             </div>
           </section>
@@ -492,33 +544,6 @@ function ChroniclerNameModal({ value, onChange, onClose, onSave, closing, requir
   );
 }
 
-function MenuFireflies() {
-  return (
-    <div className="menu-fireflies" aria-hidden="true">
-      {Array.from({ length: 34 }, (_, index) => <span key={index} style={fireflyStyle(index)} />)}
-    </div>
-  );
-}
-
-function fireflyStyle(index: number): React.CSSProperties {
-  const random = (salt: number) => {
-    const value = Math.sin((index + 1) * (12.9898 + salt * 17.13)) * 43758.5453;
-    return value - Math.floor(value);
-  };
-  const driftX = -45 + random(6) * 90;
-  const driftY = -60 + random(7) * 80;
-  return {
-    "--firefly-left": `${3 + random(1) * 94}%`,
-    "--firefly-top": `${5 + random(2) * 88}%`,
-    "--firefly-size": `${1.5 + random(3) * 3}px`,
-    "--firefly-duration": `${7 + random(4) * 8}s`,
-    "--firefly-delay": `${-random(5) * 13}s`,
-    "--firefly-mid-x": `${driftX * 0.55}px`,
-    "--firefly-mid-y": `${driftY * 0.72}px`,
-    "--firefly-drift-x": `${driftX}px`,
-    "--firefly-drift-y": `${driftY}px`,
-  } as React.CSSProperties;
-}
 
 /** Ambient motes that rise inside the setup screen; the menu fireflies stay behind its blur. */
 function SetupEmbers() {
@@ -579,6 +604,7 @@ type ExpeditionSetupProps = {
 function ExpeditionSetup(props: ExpeditionSetupProps) {
   const t = useTranslation();
   const [openDeckSide, setOpenDeckSide] = useState<"player" | "host" | null>(null);
+  const futureCode = futureCodeFromSeed(props.seed);
 
   const closeDeckDrawer = () => {
     const closingSide = openDeckSide;
@@ -612,6 +638,9 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
         <div>
           {props.chaos && <p className="chaos-header-kicker">{t("setup.chaosKicker")}</p>}
           <h1>{props.chaos ? t("setup.invokeChaos") : t("setup.prepare")}</h1>
+          {!props.chaos && !props.developerMode && (
+            <p className="expedition-future-identity"><Sparkles size={13} aria-hidden="true" /> {t("destiny.future", { code: futureCode })}</p>
+          )}
         </div>
       </header>
 

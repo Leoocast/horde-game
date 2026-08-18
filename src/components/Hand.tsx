@@ -19,14 +19,24 @@ import {
   HAND_HOVER_CARD_DISPLAY_WIDTH,
 } from "./cardDisplayGeometry";
 import { getHandCardPresentationState, handArchiveEntryOffset } from "./handCardPresentation";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { energyRecycleDropZoneContains, type EnergyRecycleDropBounds } from "./energyRecycleDropTarget";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion, motionValue, type MotionValue, type PanInfo, type Variants } from "framer-motion";
+import {
+  guidedAnchorRegistry,
+  guidedCardAnchorKey,
+  guidedPresentationActivity,
+  guidedSessionStore,
+  guidedSurfaceAnchorKey,
+  type GuidedPresentationActivityToken,
+} from "../guidance";
 
 const DRAG_PLAY_SCREEN_RATIO = 0.7;
-const ENERGY_RECYCLE_SCREEN_RATIO = 0.82;
 const ENERGY_RECYCLE_MIN_HORIZONTAL_DRAG = 48;
 const HAND_ENTRY_STAGGER = 0.07;
 const HAND_BASE_OVERLAP_RATIO = 0.12;
+const subscribeGuidedSession = (listener: () => void) => guidedSessionStore.subscribe(listener);
+const readGuidedSession = () => guidedSessionStore.snapshot();
 type HandCardMotionContext = {
   entryOrder: number;
   stagger: boolean;
@@ -63,6 +73,11 @@ const handCardMotion: Variants = {
 
 export function Hand({ game }: { game: GameState }) {
   const t = useTranslation();
+  const guidedSession = useSyncExternalStore(subscribeGuidedSession, readGuidedSession, readGuidedSession);
+  const guidedCostCardId = guidedSession.status === "running"
+    && guidedSession.currentStep?.id === "invoke-aelyra"
+    ? guidedSession.bindings.aelyra
+    : undefined;
   const selectedHandId = useGameStore((state) => state.selectedHandId);
   const selectedPlayerCreatureId = useGameStore((state) => state.selectedPlayerCreatureId);
   const selectedHostCreatureId = useGameStore((state) => state.selectedHostCreatureId);
@@ -124,6 +139,8 @@ export function Hand({ game }: { game: GameState }) {
   const handSize = visibleHand.length;
   const handLayoutSignature = visibleHand.map((card) => card.instanceId).join("|");
   const previousVisibleHandIds = useRef(new Set(visibleHand.map((card) => card.instanceId)));
+  const animatedHandIds = useRef(new Set<string>());
+  const handEntryActivities = useRef(new Map<string, GuidedPresentationActivityToken>());
   const enteringHandIds = visibleHand
     .filter((card) => !previousVisibleHandIds.current.has(card.instanceId))
     .map((card) => card.instanceId);
@@ -132,11 +149,30 @@ export function Hand({ game }: { game: GameState }) {
   useEffect(() => () => {
     setEnergyRecycleDragActive(false);
     setDraggingRecyclableSourceId(undefined);
+    for (const token of handEntryActivities.current.values()) token.end();
+    handEntryActivities.current.clear();
   }, [setDraggingRecyclableSourceId, setEnergyRecycleDragActive]);
 
   useLayoutEffect(() => {
+    const visibleIds = new Set(visibleHand.map((card) => card.instanceId));
+    for (const id of animatedHandIds.current) {
+      if (visibleIds.has(id)) continue;
+      animatedHandIds.current.delete(id);
+      handEntryActivities.current.get(id)?.end();
+      handEntryActivities.current.delete(id);
+    }
+    for (const id of visibleIds) {
+      if (animatedHandIds.current.has(id)) continue;
+      animatedHandIds.current.add(id);
+      handEntryActivities.current.set(id, guidedPresentationActivity.begin("hand.entry", id));
+    }
     previousVisibleHandIds.current = new Set(visibleHand.map((card) => card.instanceId));
   }, [handLayoutSignature]);
+
+  function completeHandEntry(id: string) {
+    handEntryActivities.current.get(id)?.end();
+    handEntryActivities.current.delete(id);
+  }
 
   useLayoutEffect(() => {
     const region = handRegionRef.current;
@@ -237,8 +273,11 @@ export function Hand({ game }: { game: GameState }) {
     return (
       card.kinds.includes("SOURCE") &&
       isEnergyRecyclable(game, card, unresolvedTriggerCount) &&
-      pointerY <= window.innerHeight * DRAG_PLAY_SCREEN_RATIO &&
-      pointerX >= window.innerWidth * ENERGY_RECYCLE_SCREEN_RATIO &&
+      energyRecycleDropZoneContains(
+        { x: pointerX, y: pointerY },
+        { width: window.innerWidth, height: window.innerHeight },
+        readEnergyRecycleTargetBounds(),
+      ) &&
       Boolean(dragStart && pointerX - dragStart.x >= ENERGY_RECYCLE_MIN_HORIZONTAL_DRAG)
     );
   }
@@ -297,6 +336,12 @@ export function Hand({ game }: { game: GameState }) {
       return;
     }
     if (releasedInPlayZone && !playable) {
+      // Sources rejected by a known rule still cross the engine/store boundary. Contextual help
+      // needs the typed reason (especially the four-Source limit) instead of an inert disabled UI.
+      if (card.kinds.includes("SOURCE")) {
+        playLand(card.instanceId);
+        return;
+      }
       pushToast({
         title: t("error.cannotPlay"),
         message: getUnplayableReason(game, card, unresolvedTriggerCount, t),
@@ -353,14 +398,20 @@ export function Hand({ game }: { game: GameState }) {
   return (
     <>
       {energyRecycleHint && <EnergyRecycleDragHint hint={energyRecycleHint} recycleLabel={t("hand.recycle")} hintLabel={t("hand.recycleHint")} />}
-      <div className="hand-atmosphere-shell pointer-events-none fixed inset-x-0 bottom-0 z-[70] h-40 overflow-hidden">
+      <div className="hand-atmosphere-shell pointer-events-none fixed inset-x-0 bottom-0 z-[70] h-64 overflow-hidden">
         <div className="hand-atmosphere absolute inset-0" />
       </div>
       <section className={[
         "player-hand-shell pointer-events-none fixed inset-x-0 bottom-0 h-56 overflow-visible",
         draggingCardId ? "z-[150]" : tribute_of_the_four_sorrowsDiscardMode || handLimitDiscardActive ? "z-[110]" : "z-[70]",
       ].join(" ")}>
-        <div ref={handRegionRef} className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}>
+        <div
+          ref={(element) => {
+            handRegionRef.current = element;
+            guidedAnchorRegistry.set(guidedSurfaceAnchorKey("player.hand"), "hand:surface", element);
+          }}
+          className={[handInteractionBlocked ? "pointer-events-none" : "pointer-events-auto", "player-hand-region absolute bottom-0 flex h-56 items-end justify-center overflow-visible"].join(" ")}
+        >
           <div
             ref={handCardsRef}
             className="player-hand-cards flex items-end justify-center overflow-visible"
@@ -433,6 +484,7 @@ export function Hand({ game }: { game: GameState }) {
                 transition={{
                   layout: { type: "spring", stiffness: 420, damping: 38, mass: 0.55 },
                 }}
+                onAnimationComplete={() => completeHandEntry(card.instanceId)}
                 className="hand-card-slot"
                 style={{ position: "relative", zIndex: handZIndex }}
               >
@@ -470,6 +522,7 @@ export function Hand({ game }: { game: GameState }) {
                   ref={(el) => {
                     if (el) innerCardRefs.current.set(card.instanceId, el);
                     else innerCardRefs.current.delete(card.instanceId);
+                    guidedAnchorRegistry.set(guidedCardAnchorKey(card.instanceId), `hand:${card.instanceId}`, el);
                   }}
                   className={[
                     "hand-card",
@@ -510,6 +563,7 @@ export function Hand({ game }: { game: GameState }) {
                       sharpImageOverlay={!useNativeHdRendering}
                       showFullImage={showFullImage}
                       showCostBadge={showFullImage}
+                      emphasizeCost={guidedCostCardId === card.instanceId}
                       clipActionSweep={showFullImage && UI_FEATURE_FLAGS.alignHdHandActionSweep}
                       preferNativeImageRendering={useNativeHdRendering}
                       hideStats={!UI_FEATURE_FLAGS.showDynamicHandCardStats}
@@ -523,6 +577,29 @@ export function Hand({ game }: { game: GameState }) {
                           return;
                         }
                         selectHand(card.instanceId);
+                      }}
+                      onKeyboardActivate={() => {
+                        if (handLimitDiscardActive) {
+                          selectHandLimitDiscard(handLimitTargetLocked ? undefined : card.instanceId);
+                          return;
+                        }
+                        if (tributeOfTheFourSorrowsSelectionActive) {
+                          if (discardTargetable) lockTributeOfTheFourSorrowsSelectionTarget(card.instanceId);
+                          return;
+                        }
+                        if (playable) {
+                          playCard(card);
+                          return;
+                        }
+                        if (card.kinds.includes("SOURCE")) {
+                          playLand(card.instanceId);
+                          return;
+                        }
+                        pushToast({
+                          title: t("error.cannotPlay"),
+                          message: getUnplayableReason(game, card, unresolvedTriggerCount, t),
+                          tone: "warning",
+                        });
                       }}
                       onLeave={() => {
                         if (selectedHandId === card.instanceId) selectHand(undefined);
@@ -645,10 +722,17 @@ function EnergyRecycleDragHint({ hint, recycleLabel, hintLabel }: { hint: Energy
 }
 
 function readEnergyRecycleTarget(): { x: number; y: number } {
-  const rect = document.querySelector<HTMLElement>("[data-energy-recycle-target='true']")?.getBoundingClientRect();
+  const rect = readEnergyRecycleTargetBounds();
   return rect
     ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
     : { x: window.innerWidth - 72, y: window.innerHeight - 64 };
+}
+
+function readEnergyRecycleTargetBounds(): EnergyRecycleDropBounds | undefined {
+  const rect = document.querySelector<HTMLElement>("[data-energy-recycle-target='true']")?.getBoundingClientRect();
+  return rect
+    ? { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
+    : undefined;
 }
 
 function canPlayCardAtCurrentTiming(game: GameState, card: CardInstance): boolean {

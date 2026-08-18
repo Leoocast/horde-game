@@ -129,8 +129,10 @@ Contratos desktop vigentes:
   `extraResources`, Card Studio/Playground no se empaquetan y los gates automáticos son
   `electron:verify` + `electron:smoke`.
 - La carga llama `prewarmGameVfx`: crea el único renderer WebGL, reserva el framebuffer y compila
-  Burn, Phong, Basic, Sprite y Line antes del primer efecto visible. Sus escenas mínimas quedan
-  retenidas para conservar los programas GPU; no crear renderers nuevos en los animadores.
+  Burn, el vórtice del Destino, el vidrio y la onda de la derrota, Phong, Basic, Sprite y Line antes
+  del primer efecto visible. El vidrio se monta justo cuando la Vida llega a 0, así que compilarlo
+  entonces costaría un tirón en el peor momento. Sus escenas mínimas quedan retenidas para conservar
+  los programas GPU; no crear renderers nuevos en los animadores.
 - Fase 4 separa `profile/preferences-v1.json`, `profile/saves/resume-v1.json` y el local-only
   `local/window-state-v1.json`. El contrato, backups, recuperación, Cloud-worthy data y checkpoints
   seguros están en `docs/electron/persistence.md`.
@@ -339,6 +341,106 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   consecutivos, incluidas varias Varkas apiladas, no deben forzar su pérdida ni recrearlo entre
   beats. Su canvas 2D de destino debe permanecer oculto mientras no exista un Burn activo y durante
   cada handoff hasta que el nuevo efecto haya copiado su primer frame WebGL válido.
+- La derrota normal rompe la pantalla con `DefeatShatterAnimator.tsx` y su referencia canónica es la
+  maqueta `dev/mockups/vfx/future-shattered-3d.html`. Cada triángulo del plan estable por seed de
+  `defeatShatterGeometry.ts` es un **prisma extruido** —cara frontal, trasera y tres muros—, y toda
+  la animación vive en el vertex shader de `defeatGlassShader.ts`: una malla y una llamada de dibujo.
+  Cada cara recibe mediante UV globales el recorte exacto del último frame visible.
+- `Board` no inicia la derrota sólo porque `resolvingHostCombat` volvió a `false`: drena toda la
+  presentación finita que ya estaba en curso. La barrera incluye ataques, habilidades de entrada,
+  muertes, invocaciones, colas, buffs y VFX locales registrados (impacto de Vida y aterrizaje
+  pesado); el disco de grados hace snap bajo epsilon y confirma la revisión monotónica exacta de su
+  objetivo, de modo que `0 → 7 → 0` no puede confundirse con un disco que nunca se movió. Después espera dos
+  paints consecutivos sin una animación finita del documento, ejecuta una única limpieza global y
+  vuelve a comprobar el compositor. Recién entonces pide una captura nativa mediante
+  `webContents.capturePage()`, limitada en el proceso main a
+  2560×1440 y decodificada de forma asíncrona. Es una captura de los píxeles ya pintados: no clona
+  el DOM, no recalcula estilos y no vuelve a resolver URLs de cartas, fuentes ni portales. La placa
+  es deliberadamente opaca e incluye la composición completa de ese instante; la transparencia la
+  abren después los huecos entre los prismas. En web o si falla el bridge se usa vidrio limpio, sin
+  serializador DOM ni color opaco de reserva. Un watchdog de 15 s existe sólo como salida de
+  emergencia para un token defectuoso: invalida la presentación huérfana y fuerza el frame exacto
+  del disco; no acorta ningún beat de la ruta normal.
+- El overlay sólo se monta cuando esa preparación termina. Antes de arrancar el reloj visible, el
+  animador hace un render oculto que crea/reutiliza el contexto, sube la textura fullscreen y
+  completa la primera copia WebGL→2D. Así ningún coste de captura, decodificación o primera subida
+  cae dentro del cuarteado. Tras pintar la placa, el frame siguiente aplica
+  `body.is-defeat-plated`: retira el tablero vivo, pero conserva `TemporalBackdrop` y
+  `.game-screen-ambience` renderizando debajo. Los trozos llevan el espacio congelado del instante
+  capturado y los huecos revelan inmediatamente el espacio vivo; no hay handoff a negro. Si no hay
+  captura nativa, el tablero permanece visible hasta el golpe.
+- Nada cambia de color antes de que el vidrio se rompa. No hay sello frío sobre la captura, ni capa
+  de hielo en el DOM, ni viñeta encendida de salida: la pantalla se ve igual que un instante antes
+  y lo primero que ocurre es el cuarteado. Reintroducir un tinte previo es una regresión.
+- El reloj de la derrota conserva el ritmo de la maqueta salvo por el anclaje a la presentación:
+  el cuarteado empieza en el primer frame visible tras terminar todos los beats anteriores, la onda y el impulso
+  llegan en el golpe, y el desenlace se nombra 1340 ms después. El desenlace se cuelga
+  del golpe real mediante `onBurst`, no de un reloj propio del modal. La lámina entera tiene
+  espesor cero —los muros vecinos coinciden y en escorzo asomarían como aristas doradas en
+  z-fighting— y sólo gana grosor al separarse. Las magnitudes del diseño se dieron sobre un plano de
+  alto 1 y llegan al shader escaladas por `uScale`; no reajustarlas convierte la tensión del
+  cuarteado en un salto visible.
+- Lo que se rompe es el último frame visible y lo que queda detrás es el **espacio exterior del
+  propio juego**, no un fondo aparte. La escena de la derrota no dibuja fondo: su lienzo queda
+  transparente fuera de los prismas y lo que asoma por cada hueco es el `TemporalBackdrop` vivo,
+  sin teñir. El espacio ya no se enrojece al perder: ese intento quedó retirado y no debe
+  reintroducirse. `body.is-defeat-plated` retira el tablero vivo y el retículo; sólo el cielo y la
+  capa de ambiente permanecen animados debajo. No existe un abismo procedural ni un oscurecimiento
+  de CSS detrás del vidrio. El golpe
+  tampoco monta destello DOM ni temblor de pantalla: lo cuenta la onda WebGL aditiva. En el DOM sólo
+  quedan el hielo, las quebraduras SVG, la viñeta y el texto. Vidrio y onda comparten escena porque
+  `renderSharedVfxFrame` dibuja una escena con una cámara, y el fotograma se pide en
+  `LinearEncoding`: la conversión sRGB aclara la captura y enfría mal el Fresnel. Reutiliza el
+  renderer WebGL compartido y conserva una fractura SVG quieta para movimiento reducido o falta de
+  WebGL; ese respaldo también retira el tablero y deja ver el espacio.
+- El desenlace no lleva mancha propia detrás y la viñeta cierra a 0.42, no a 0.72: ahora cae sobre
+  el espacio real y apretarla más lo deja negro por los bordes.
+- El desenlace se centra con una capa a pantalla completa y su bloque no lleva `transform` propio.
+  Dos cosas lo pisarían: la regla genérica `.game-screen [role="dialog"]`, que impone
+  `game-surface-in` y termina en `translateY(0) scale(1)`, y la succión del vórtice al Reescribir,
+  que anima `transform` sobre cada pieza de la escena. Con un `translate` propio, el texto se
+  descuelga hacia abajo y a la derecha justo antes de la transición.
+- El desenlace es el bloque de la maqueta, ampliado un paso: etiqueta **Derrota** con reglas
+  laterales, título en dos líneas que se abren desde el centro con su corte de luz, subtítulo y
+  placa de **Futuro**. Copiar identidad vive en el canto de la placa. **Contemplar otro futuro** no
+  lleva icono y comparte una única fila, sin partir texto, con **Reescribir este futuro**; no vuelve
+  a envolverse en un panel de resultado genérico.
+- La victoria normal no rompe nada: su referencia canónica es `dev/mockups/vfx/destiny-constellation.html`
+  y la resuelven `VictoryConstellationAnimator.tsx`, `destinyConstellationGeometry.ts` y
+  `destinyConstellationShader.ts`. Motas de luz entran desde puntos deterministas fuera de los
+  cuatro bordes, encienden el corazón y una a una las ocho puntas, y el contorno se traza detrás;
+  cada hilo espera a sus **dos** extremos. Al cerrarse, el corazón suelta una única onda circular y
+  la figura se queda encendida: no se desvanece.
+- La constelación **no tiene geometría propia**. Es la misma rosa cardinal de
+  `chronicleSigilGeometry.ts` construida sobre el radio del aro del disco de grados, así que se
+  enciende exactamente encima del instrumento que ya está en el tablero. Darle un tamaño propio la
+  convierte en otra estrella pegada sobre la pantalla. La semilla cambia el reparto y el fraseo de
+  las motas, nunca el giro. Lo único que añade la victoria es el reloj de construcción.
+- Como la rosa es cardinal y fija, el disco vuelve a **000°·N arriba** mientras las motas todavía
+  viajan: `northUprightDialDegrees` da el múltiplo de 360 más cercano, de modo que el recorrido es
+  el mínimo y no se lee como un aparato reiniciándose. Es sólo presentación —`Board` pasa el ángulo
+  recolocado a `TemporalBackdrop`— y no toca el ángulo acumulado del store ni la revisión, así que
+  la barrera del desenlace no se reabre.
+- El interior de la rosa se dibuja con las **incisiones sin área** del signo (`axis * 0.24` a
+  `axis * 0.68`), no con cuñas rellenas. Las cuñas se ensanchaban hacia el centro y sus ocho áreas
+  se sumaban ahí, dibujando una segunda estrella dentro de la rosa que le quitaba el protagonismo
+  al corazón y a las puntas. Volver a rellenar el interior es una regresión, y el guard cubre
+  también la maqueta.
+- La construcción es muda: no lleva un cue por punta. La acompaña el tema de victoria.
+- No hay captura, ni placa, ni tinte: `body.is-victory-clearing` retira el HUD y las cartas con el
+  espejo de su propia entrada —arriba hacia arriba, abajo hacia abajo, el Campo creciendo un
+  punto— y conserva `TemporalBackdrop` completo, incluido el retículo, más `.game-screen-ambience`.
+  Cada salida termina en `visibility: hidden`: la succión del vórtice al Reescribir anima
+  `transform` y `opacity` con la API de animaciones y devolvería el tablero ya retirado a la vista.
+- La barrera de presentación es común a los dos desenlaces (`outcomePresentationActive`,
+  `outcomeOutroReady` y el watchdog de 15 s en `Board`): la derrota la drena para capturar su frame
+  exacto y la victoria para no empezar a retirar el tablero encima de un beat en curso. El tema de
+  victoria entra con el desenlace, no con el último golpe.
+- El desenlace reutiliza la estructura de la derrota con la paleta dorada: etiqueta **Victoria** con
+  reglas laterales, título en dos líneas que se abren desde el centro con su corte de luz, subtítulo
+  y placa de **Futuro** con los dos rombos del canto. Copiar identidad vive en el canto de la placa
+  y las dos salidas son las mismas. El estandarte y el panel genéricos de resultado quedaron
+  retirados: sólo la Oleada los conserva.
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado
   aunque los impactos visuales se escalonen.
 
@@ -376,6 +478,9 @@ antes de crear otra implementación.
 - `CardPreview` y Details deben reflejar reglas, Rasgos, stats y estados reales.
 - Badges de Rasgo y Estado no comparten semántica visual.
 - Overlays y previews deben respetar los z-index documentados en los propios componentes/CSS.
+- Los botones contextuales de Acción de una carta conservan el contenido semántico propio de su
+  coste y efecto; sólo su placa e interacción reutilizan el material del botón **Continuar** del
+  tutorial, sin volver a la placa recortada legacy.
 - El audio pasa por el sistema central y respeta mute/volumen. No crear `Audio` dispersos en
   componentes.
 - Los SFX del pase nuevo permanecen registrados en el Taller de Sonidos y se activan de forma
@@ -388,13 +493,54 @@ El seed literal `developer` activa una preparación determinista para probar car
 Es una herramienta, no parte del lore. Si se añade una carta que necesita setup especial, preferir
 preparación genérica por tipos/efectos antes que un puente permanente por `definitionId`.
 
-## Dirección narrativa futura
+El Playground incluye una pestaña dev-only **Guide**. Monta un fixture exacto de Elarion sobre el
+Board real y diagnostica el ciclo de pausa, la intención autorizada, receipts, tokens visuales y
+beats retenidos. No es el guion ni el copy de la Primera Semilla y no entra al bundle de release.
 
-Las seeds podrán presentarse dentro del mundo como **Semillas del Destino**: líneas temporales que
-el Cronista contempla, reescribe y finalmente preserva. El tutorial, el historial de intentos y la
-posible opción de menú asociada están bosquejados en `docs/plans/seeds_of_destiny.md`. Es una dirección de
-diseño pendiente, no una funcionalidad implementada. El seed `developer` queda expresamente fuera
-de esta narrativa.
+## Semillas del Destino
+
+Las seeds normales se presentan dentro del mundo como **Semillas del Destino**: líneas temporales
+que el Cronista contempla, reescribe y finalmente preserva. Cada seed recibe una identidad
+cosmética determinista **Futuro `NNN·NNN`**; ese código compacto puede colisionar y nunca reemplaza
+la seed real. **Copiar identidad** copia la seed completa aunque la UI sólo muestre el Futuro.
+
+Durante una partida normal, la barra superior coloca **Reescribir** antes de Música y Ajustes. Su
+acción principal vuelve al origen de la misma seed, con los mismos decks, dificultad y modo;
+**Contemplar otro futuro** abandona el intento y abre la preparación con los decks actuales y una
+seed nueva. Ajustes in-game no vuelve a mostrar, editar ni regenerar la seed. Victoria y derrota
+reutilizan la misma identidad y las mismas dos salidas. El reset o cambio de pantalla ocurre cuando
+el vórtice global ya cubrió el tablero; la transición vive sobre `App` para sobrevivir al remount de
+`Board` y tiene fallback de movimiento reducido.
+
+El vórtice es un agujero negro dibujado por el renderer WebGL compartido: `destinyVortexShader.ts`
+resuelve en un solo plano el horizonte, el disco de acreción, el anillo de fotones, la materia que
+cae en espiral y la descarga de brasas de la liberación. Su reloj llega en dos tiempos separados,
+`uCollapse` y `uBurst`, para que cubrir, reescribir y liberar sigan siendo momentos distintos. El
+lienzo permanece oculto hasta copiar su primer frame válido. `uSeed` recibe una firma normalizada de
+la seed: materia, brasas y quiralidad se repiten al reescribir el mismo Futuro y cambian entre
+Futuros. Con movimiento reducido o sin un canvas utilizable queda la silueta quieta
+`.destiny-vortex-still`. El velo de cobertura es radial: no debe añadir `repeating-conic-gradient`
+ni haces que nazcan artificialmente desde el centro.
+
+La escena no se traga como un bloque rígido y tampoco gira entera. `destinyShardSuction.ts` da la
+geometría pura y la transición recorre el DOM para repartir la escena en piezas: cada una cae hacia
+el centro por una curva propia, se estira en el eje que apunta al horizonte y arranca más tarde
+cuanto más lejos estaba, de modo que todas terminan en el mismo instante. Su avance sale de una
+sola función continua ya muestreada, y las animaciones se reproducen `linear`: repartir la caída en
+tramos con easing propio deja uno terminando lanzado y el siguiente arrancando parado, y esa
+costura se ve como un frenazo a mitad de la succión. El recorrido es genérico
+—reparte por área, no por nombres de clase del tablero— y las animaciones se cancelan al pasar a
+revelar. `destiny-scene-collapse` y `destiny-scene-return` sólo apagan y devuelven el fondo, y
+animan únicamente `transform` y `opacity` sobre una capa promocionada. La escena nueva llega pasada
+de tamaño y se asienta; hacerla crecer desde una miniatura la devuelve a leerse como un bloque
+rígido. Volver a animar
+`filter: blur()` o `saturate()` sobre la pantalla completa es una regresión de rendimiento, porque
+obliga a repintar todo el árbol en cada frame.
+
+El historial de intentos y la futura biblioteca de Semillas siguen bosquejados en
+`docs/plans/seeds_of_destiny.md`; no están implementados. El seed literal `developer` queda
+expresamente fuera de esta narrativa: oculta el control de Futuro y conserva su reinicio técnico
+dentro de las opciones de desarrollo.
 
 Antes de implementar el tutorial obligatorio, la claridad permanente de Preparación, robo, Acción de
 Fuente, Reserva y ataque al Archivo debe seguir el plan de diseño e implementación de
@@ -414,6 +560,250 @@ izquierda y desplaza Memoria; durante la resolución es el origen de cada carta,
 salida y conserva `1` durante el último vuelo. Al aterrizar la última carta se retrae sin mostrar `0`
 y Memoria vuelve junto al Archivo. Los CTA son **Elegir atacantes**, **Atacar el Archivo** y
 **Pasar el combate**.
+
+La infraestructura del tutorial obligatorio se gobierna por
+`docs/plans/guided_tutorial_system_plan.md`, que sigue abierta y no autoriza implementar fases en
+bloque. Antes de cada fase se explica al usuario qué experiencia se construirá y para qué le sirve;
+sólo se implementa tras su aprobación explícita. El sistema debe ser independiente de nombres e IDs
+de decks en su núcleo: las lecciones declaran recetas exactas, aliases de copias y referencias
+calificadas de `ContentCatalog`. Añadir un deck no debe exigir ramas nuevas en el
+overlay, el gate de acciones ni el orquestador. La sesión activa nunca se reanuda a mitad: sólo se
+persiste la finalización versionada; cerrar o salir obliga a empezar el recorrido desde el primer
+paso.
+
+El contenido futuro del onboarding se diseña en
+`docs/plans/learn_to_play_tutorial.md`. La decisión de producto vigente es conservar la lección
+guiada actual como tutorial específico **Preparación** y crear un tutorial principal
+**Aprender a jugar**: un prólogo determinista semi-guiado, seguido más adelante por una partida real
+de Elarion contra los Sinsepulcro con seed preparada y ayudas contextuales. **Aprender a jugar** será
+el tutorial obligatorio y **Preparación** será opcional; ambos podrán repetirse desde **Cómo jugar**.
+El recorrido authored todavía no está completo y no se activará como gate de primera apertura
+hasta completar su handoff. Las Fases técnicas 1 a 3 y la implementación de la Fase 4 hasta el
+comienzo real de la primera Oleada quedaron entregadas el 2026-08-17:
+existe un stream semántico pasivo por sesión que observa también
+partidas normales, y el motor tipa los rechazos necesarios para límite de Fuentes, Acción de Fuente
+usada, Estabilizándose, Agotado, Volar/Guardia aérea, Furtivo, defensor ya asignado y fase
+incorrecta. El
+prólogo queda diseñado desde el cold open hasta una derrota predeterminada: la primera Oleada usa
+ramas equivalentes de Ladrones, Titán y Soldado; el turno posterior enseña Mano vacía y Devolver
+Fuente; y el cierre authored calcula el mejor resultado defensivo antes de Invocar un Titán y los
+Soldados necesarios para que el ataque sea letal. Tres Soldados dentro del Archivo protegen al Titán
+terminal de los descartes opcionales; Choque conserva su ventana legal y la posición del Titán puede
+variar. Esa Invocación terminal no redefine la regla normal de Oleada y cada llegada se presenta una
+a una mediante el revelado normal, sin agrupación visual. El CTA único se llama **Contemplar otro
+futuro**. El corte provisional actual registra la finalización al activarlo y carga una partida
+normal aleatoria de Elarion contra los Sinsepulcro. El vórtice y la seed real preparada pertenecen
+a una fase posterior. La
+relación exacta entre buena Mano y mulligan sigue abierta. Si no queda un atacante
+estabilizado, la enseñanza del ataque no bloquea el flujo, permanece como no vista y reaparece en
+una partida posterior. La preferencia global de no repetir ayudas sólo suprime conceptos ya
+mostrados: un concepto no visto conserva siempre su primera aparición. Está activa por defecto, se
+marca al cerrar/aceptar la ayuda y las repeticiones se limitan a una por concepto y partida.
+**Continuar** permanece deshabilitado globalmente por ahora. No traducir escenas aisladas a código
+fuera de las fases aprobadas.
+
+La auditoría y el plan técnico de esa extensión viven en
+`docs/plans/learn_to_play_implementation_plan.md`. La decisión arquitectónica vigente es conservar
+el schema guiado v1 para **Preparación** y separar: observaciones semánticas siempre activas,
+runtime/progreso por concepto, director efímero de **Aprender a jugar** y catálogo de producto. El
+builder exacto, anchors, barrera de presentación y overlay estricto se reutilizan. Los receipts
+guiados ahora alimentan el stream mediante un adaptador y las transiciones comprometidas proyectan
+turno, robo, Reserva, Fuentes preparadas, revelados, Oleada, orden de ataque, Vida y resultado sin
+leer el log. `ContextualTutorialRuntime` evalúa un registro de conceptos, ordena por prioridad,
+deduplica por partida y revalida el contexto antes de presentar. Su callout reutiliza anchors,
+geometría y glosario sin instalar el escudo global; las ayudas informativas y reactivas no bloquean,
+las preventivas interceptan sólo la acción relevante y nunca compiten con una sesión guiada
+estricta. El progreso `hostfall-guided-progress` v2 migra v1, conserva finalizaciones de lecciones y
+añade conceptos, recorridos y la preferencia global de repetición. En partidas normales el concepto
+se confirma al cerrar la ayuda; el modo provisional permite commit atómico o rollback total para el
+futuro prólogo. El registro de producto contiene ya los conceptos contextuales del primer tramo:
+defensa y orden de izquierda a derecha, Volar/Guardia aérea, Vida, Reserva y Fuentes preparadas,
+Estabilizándose, ataque al Archivo, agotamiento del atacante y Oleada. Las ayudas no vistas pueden
+aparecer en una partida normal compatible y se confirman globalmente; los fixtures sintéticos del
+Playground siguen aislados en development. Las acciones estructurales imprescindibles reutilizan la
+guía actual. El plan se ejecuta fase por fase con
+aprobación explícita. **Cómo jugar** ya consume un catálogo y presenta **Aprender a jugar** antes de
+**Preparación**; `first-seed` conserva su ID pero ahora es opcional. El recorrido tiene lifecycle
+efímero independiente, rollback de conceptos provisionales, reinicio total, autosave apagado,
+políticas explícitas de tablero e intervenciones estrictas adjuntas al `GameState` vivo. Su launcher
+está activo desde **Cómo jugar** y carga el snapshot avanzado exacto: Vida 31, Maela y tres Fuentes,
+Río/Aelyra/Vaelor en Mano, Flor como próximo robo, Retorno/Acechador/Engendro/Cosechadora en ese
+orden y la segunda copia de Acechador como siguiente revelado. La guía exige la cuarta Fuente y
+Aelyra con objetivo libre; el director deja defensa libre, exige Vaelor, hace obligatoria una única
+inspección de la Cosechadora y permite Flor antes, después o nunca. Las pruebas enumeran todas las
+defensas legales y esas ramas, que convergen en Cosechadora 7/9, y certifican cero o un descarte
+opcional antes de la primera Oleada. El recorrido ya continúa después de `host.surgeStarted`: los
+Ladrones vacían la Mano, la regla real roba Río + Choque, y jugar la quinta Fuente o intentar
+avanzar activa una intervención estricta breve para **Devolver Fuente**. Ciudad, Choque, Flor y el
+ataque posterior permanecen libres. Tres Soldados authored absorben los descartes opcionales antes
+del Titán terminal.
+
+El cierre terminal calcula desde el tablero vivo el mínimo de llegadas que vuelve inevitable la
+derrota, verifica la mejor defensa con el resolutor real y presenta cada carta mediante su llegada
+normal, una a una. La Vida llega a 0 por el combate real; `learn-to-play` reutiliza el quiebre de
+derrota y muestra sólo **Contemplar otro futuro** con copy narrativo propio. Tras aceptar la
+narración, el botón registra el recorrido como completado y abre provisionalmente una partida
+normal con seed aleatoria; ejecutar el vórtice y cargar la partida preparada pertenecen a la Fase
+6B aplazada. **Continuar** está deshabilitado globalmente. Para una fase
+posterior siguen pendientes
+la Mano/mulligan, seed, dificultad y
+Preparación de la partida real; el comportamiento de primera apertura y perfiles existentes; y la
+persistencia exacta si la aplicación se cierra durante el vórtice.
+
+La Fase 0 quedó cerrada el 2026-08-11. La Primera Semilla obligatoria será canónica y usará **El
+Pacto de Elarion** como deck del Cronista; la Hueste y el escenario pertenecen al futuro diseño de
+contenido. El ciclo aprobado es **Explicar → Actuar → Observar → checkpoint estable**. Sólo la
+intención solicitada puede llegar al engine; una animación iniciada termina durante Observar y nunca
+se congela a mitad. Se permiten ajustes prácticos menores de layout, intensidad, copy y timing
+durante QA, pero cambiar deck canónico, política sin resume, acciones permitidas o pausa entre beats
+requiere nueva aprobación. El framework quedó cerrado con las Fases 0 a 5 y 7; las antiguas Fases 6
+y 8 fueron eliminadas por decisión explícita del usuario. La Primera Semilla tiene ya una primera
+versión jugable registrada; su ritmo y contenido siguen abiertos a QA e iteración con el usuario.
+
+La Fase 1 quedó cerrada el 2026-08-11 y fija que **cada tutorial es un escenario completamente
+predefinido**: decks, copias exactas, Mano o reparto inicial, Archivo del Cronista en orden,
+apariciones de la Hueste, Campos, Memorias, Fuentes y Reserva. El runtime no busca cartas por
+capacidades, no rellena el resto del deck y no baraja una receta. Las claves calificadas de
+`ContentCatalog` viven en la receta; cada copia recibe un alias semántico que se enlaza a su
+`instanceId`, y los pasos apuntan a ese alias. El reparto inicial puede contener dos, siete o la
+  cantidad que diseñe la lección. Los contratos, validador, registro release y builder puro viven
+  en `src/guidance/`; no importan Playground y no contienen lógica particular de una lección. Una
+  receta
+inválida falla antes de crear el `GameState`, y el builder descarta todo el reparto normal para dejar
+únicamente las cartas declaradas en el orden `topToBottom` authored.
+Mulligan no es una intención authorable en schema v1: una lección puede pedir aceptar su Mano exacta,
+pero enseñar a reescribirla requerirá una versión que predefina también cada Mano de reemplazo.
+
+La Fase 2 quedó cerrada el 2026-08-11. `src/guidance/interactionGate.ts` es la frontera semántica
+única para las acciones deliberadas del jugador: recibe `GameplayIntent` tipados, compara aliases
+contra `instanceId`, bloquea todo durante pasos Explicar/Observar y deja pasar sólo la carta,
+objetivo, habilidad, selección o asignación authored durante Actuar. Fuera de una guía es un no-op.
+Cada entrada pública clasificada en `GUIDED_GAMEPLAY_ENTRY_POINTS` debe llamar
+`gameplayIntentAllowed`; una regresión estática lo exige. Un receipt aceptado consume el compromiso
+del paso y evita dobles clics, mientras que un rechazo del engine no publica receipt y permite
+reintentar. `runGuidedSystemAction` es la excepción acotada para terminar continuaciones automáticas
+ya autorizadas; nunca debe envolver el primer compromiso de un handler ni autorizar input nuevo.
+
+Los receipts son efímeros, tienen cursor monotónico y conservan `sessionId`/`stepId`. El store los
+emite por resultados semánticos reales —incluidos targeting multietapa, fin de Preparación, robo con
+cantidad y motivo, Reserva liberada y descartes del Archivo de la Hueste— sin leer logs. El registro
+de rechazos tipados será la fuente del futuro pulso visual. El runtime de sesión existe desde la
+Fase 3; el overlay comienza en la Fase 4.
+
+La Fase 3 quedó cerrada con QA manual aprobada por el usuario el 2026-08-11. `GuidedSessionStore`
+vive fuera de `GameState` y coordina
+**Explicar → Actuar → Observar → checkpoint** usando los receipts del gate y el estado real de
+presentación. `GuidedBeatBarrier` sólo retiene el inicio del siguiente beat automático: nunca
+congela una animación o un commit ya iniciado. `GuidedPresentationActivityRegistry` usa tokens con
+epoch para las entradas de Mano, la transferencia a Reserva y los beats de reacciones; junto con
+los flags del store forma `isGuidedPresentationSettled`. Reset, carga y salida invalidan callbacks,
+tokens y continuaciones retenidas.
+
+La Fase 4 del framework quedó cerrada con QA manual aprobada por el usuario el 2026-08-11.
+`GuidedAnchorRegistry` enlaza superficies
+semánticas y aliases resueltos a refs reales, con varios propietarios durante transiciones de zona;
+el overlay no consulta selectores ni identidades de deck. `GuidedTutorialOverlay` vive en un portal
+de capa 20000, mide con `ResizeObserver` y seguimiento por frame, admite varios recortes y roles
+`focus`/`origin`/`destination`, coloca el cuadro evitando objetivos y falla cerrado si falta una
+ancla. Su escudo capture bloquea pointer, clic, contexto, drag y teclado antes del handler; durante
+Actuar sólo atraviesan las anclas authored y el gate semántico vuelve a validar el compromiso.
+Tooltips/previews quedan suprimidos, los intentos incorrectos producen feedback visual y textual,
+el foco queda contenido y las cartas admiten Enter/Espacio. La pestaña dev **Guide** es la vertical
+de QA; no es contenido de release ni el guion de la Primera Semilla. El QA final fijó el dimmer en
+55%, alineó el cuadro al azul carbón de Settings y bloqueó también el hover del tablero durante
+Explicar y Observar.
+
+La Fase 5 quedó cerrada con QA manual aprobada por el usuario el 2026-08-11.
+`GuidedLessonOrchestrator` inicia una lección
+registrada por ID, construye y carga su receta exacta, entrega aliases al `GuidedSessionStore`, y
+ofrece reinicio total y salida segura sin conocer decks o cartas. Las precondiciones declarativas
+`card.inZone`, `phase.is`, `side.isActive`, `setup.remaining`, `energy.available` y `energy.stored`
+se validan en autoría y se comprueban contra el `GameState` real al entrar a cada paso; un fallo
+aborta cerrado sin propagarse por el handler de gameplay. Sus eventos efímeros de inicio, reinicio,
+salida y error son observables, pero nunca determinan progreso. Guidance Lab usa ya este orquestador
+en lugar de construir y arrancar la sesión manualmente; sigue siendo sólo una fixture dev.
+
+La antigua Fase 6 de herramientas de autoría fue eliminada por decisión explícita del usuario; no
+queda como mejora futura. La Fase 7 usa `GuidedProductLifecycle` y una pantalla `tutorial` separada:
+sólo las políticas de sesión normal activan autosave. Web persiste el envelope
+`hostfall-guided-progress:v2`; desktop lo guarda dentro de `profile/preferences-v1.json`. El registro
+contiene finalizaciones de lecciones y recorridos, conceptos vistos y la preferencia contextual;
+nunca paso, escenario, bindings, timers o `GameState`. Entrar, reiniciar, salir o completar una
+lección preserva cualquier resume normal. Onboarding de
+nombre y tutorial completado son estados independientes. Settings en tutorial conserva idioma,
+audio, pantalla, reinicio total y salida, y oculta toda mutación o inspección del escenario. El
+registro release contiene la revisión jugable de `first-seed`, presentada como **Preparación** y
+marcada opcional. El menú **Cómo jugar** lista además **Aprender a jugar** con identidad propia. No
+hay un gate tutorial activo mientras ese recorrido principal siga incompleto.
+
+La revisión 4 de **La Primera Semilla** usa **El Pacto de Elarion** contra **El Alzamiento de los
+Sinsepulcro** y empieza al inicio de Preparación 1/3. Su Mano inicial exacta contiene dos Fuentes,
+Liora y Vaelor. En 1/3 juega una Fuente, enseña la Acción de Fuente y su límite por turno, y compara
+Liora y Vaelor en grande para mostrar que ninguno puede Invocarse con una sola Energía. En 2/3 roba
+a Maela, nombra el robo de cada turno, juega la segunda Fuente e Invoca a Liora; un solo checkpoint
+explica que las Fuentes quedaron Agotadas y que Liora está Estabilizándose. En 3/3 roba Escudo de la
+Heredera, muestra Fuentes listas y Liora ya estabilizada, usa su Acción para añadir Energía a la
+Reserva y canaliza hacia Maela esa Reserva más la Energía de las dos Fuentes. Cierra con Guardia aérea y la defensa
+terminada. La lección se detiene ahí, antes de terminar el turno: su cierre no debe prometer el
+despertar de la Hueste mientras no exista contenido posterior.
+
+El ritmo es parte del contrato de esta revisión: 15 pasos visibles, nunca más de dos explicaciones
+seguidas, y los pares de acciones que forman una sola idea —colocar Fuente e Invocar a Liora, crear
+Reserva e Invocar a Maela— encadenados con un checkpoint `callout: "hidden"` en medio, nunca con
+texto. Las explicaciones dicen por qué importa la regla, no sólo qué ocurrió. Sigue abierta a QA de
+copy y ritmo, pero volver a intercalar un cuadro de texto entre acciones encadenadas o superar esos
+límites es una regresión: `tests/guidedLesson.test.js` los verifica.
+
+La revisión 4 mantiene cada cuadro visible en un solo párrafo breve y traslada las definiciones a
+un glosario contextual authored por paso. Los términos indicados aparecen en dorado y subrayados;
+hover o foco de teclado muestra una explicación localizada sin desbloquear el tablero. El renderer
+sólo enriquece los términos que declara la lección, una vez por párrafo, y no infiere vocabulario a
+partir de nombres de cartas o del estado del juego.
+El copy pedagógico habla de **reunir, canalizar, liberar y consumir Energía**, no de pagarla. Este
+tramo tampoco formula una regla general sobre Energía que pasa de turno: los pasos tempranos de
+Preparación son la excepción y el comportamiento normal de Fuentes sin usar se enseñará en su
+contexto correspondiente.
+
+Un paso `observe` se entra en cuanto llega el receipt de la acción, así que sus preconditions se
+evalúan **antes** de que su propio beat resuelva. No puede afirmar estado que produce ese beat —la
+Energía llega con `energy.flow`, no con el receipt—; eso pertenece al siguiente paso authored, que
+sólo se entra tras el settle. Un paso `explain` no tiene ese problema porque siempre espera.
+
+La Preparación tiene un solo nombre por idioma en toda la superficie visible: `phase.setup` y su
+banner, el botón `orb.extraTurn` y el copy de la lección deben coincidir. El inglés ya no mezcla
+*Setup*, *Preparation* y *Extra Turn*. La lección tampoco puede enseñar que la Energía sin gastar se
+pierde como regla general: durante la Preparación se pierde, pero en turno normal una Fuente sin usar
+se convierte en Reserva, y el texto debe distinguirlo.
+
+Las comparaciones grandes de cartas son una presentación genérica declarada por alias mediante
+`presentation.cardComparison`; el runtime resuelve las instancias predefinidas y enfatiza su coste
+sin conocer nombres de cartas ni selectores de la UI. La comparación se centra en pantalla y el
+énfasis reutiliza directamente `CardCostBadge`, el orbe azul que la Mano y el preview superponen en
+la esquina superior izquierda; no se mantiene una representación paralela de Energía. Las cartas
+se muestran al 80 % del tamaño de la primera versión, sin repetir sus nombres debajo; el recuadro se
+ensancha para quedar claramente por encima y las cartas se elevan bajo él. El coste conserva su
+opacidad mientras pulsa y brilla. Cuando `player.reserve` y `player.sources` producen spotlights
+anidados, sólo el marco exterior conserva el ornamento superior.
+Durante una
+lección, `PhaseBanner` permanece suspendido para no destellar entre checkpoints del guion.
+
+En los pasos de Fuente, la acción apunta de la carta en Mano a `player.field`; sólo después de que
+termine su entrada se ilumina `player.sources` para explicar la Energía obtenida. Una Fuente en
+Campo se representa como orbe y ya no conserva una carta individual visible, por lo que ningún paso
+posterior debe intentar iluminar su alias. Las Invocaciones de Liora y Maela incluyen además un paso
+`observe` explícito sobre `player.field` antes de cambiar de explicación. El ancla visual
+`player.sources` mide la unión real de las dos pistas de orbes, no el panel decorativo de la esquina.
+Los checkpoints `observe` breves pueden declarar `callout: "hidden"`: conservan la espera estable
+entre acciones, pero no renderizan texto, fade, spotlight, anclas ni conectores y tampoco cuentan en
+la numeración visible. Las anclas de carta ocultan el marco dorado del spotlight y conservan la
+indicación propia de la carta; si aparece
+una acción contextual fuera de sus límites, el descendiente marcado con
+`data-guided-anchor-extension="true"` amplía el hueco interactivo y la zona evitada por el recuadro.
+Al activar `phase.continueSetup`, el overlay retira el recuadro del paso de Acción desde el
+`pointerdown` o teclado aceptado; así no sobrevive un frame mientras comienza el robo automático.
+El oscurecimiento del tutorial usa 35 % de opacidad y el texto admite párrafos separados para evitar
+bloques densos.
+
 `playerDrawForecast` en
 `src/engine/TurnManager.ts` es la fuente única para el robo real y su previsión. La devolución
 conserva el gesto amplio hacia la derecha y sólo expande visualmente el Archivo durante un arrastre

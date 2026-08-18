@@ -21,6 +21,7 @@ import {
 import { playerAttackHostHitDelay } from "./playerAttackPresentation";
 import { PlayerArchiveForecast } from "./PlayerArchiveForecast";
 import { setupProgress } from "./setupPresentation";
+import { guidedAnchorRegistry, guidedPresentationActivity, guidedSurfaceAnchorKey } from "../guidance";
 
 export function DuelHud({ game }: { game: GameState }) {
   const t = useTranslation();
@@ -114,7 +115,7 @@ export function DuelHud({ game }: { game: GameState }) {
   }, [playerAttackAnimation]);
 
   return (
-    <div className={["fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : tributeOfTheFourSorrowsCard || deathRevealCard || hostSpellCard ? "z-[117]" : "z-50"].join(" ")}>
+    <div className={["game-hud-host fixed right-4 top-[4.5rem] space-y-2 text-[#f6e6b8]", graveyardOpen ? "z-[220]" : tributeOfTheFourSorrowsCard || deathRevealCard || hostSpellCard ? "z-[117]" : "z-50"].join(" ")}>
       <div className="flex items-start justify-end gap-2">
         <AnimatePresence>
         {deathRevealCard && (
@@ -244,11 +245,26 @@ export function DuelHud({ game }: { game: GameState }) {
                 </span>
                 <div className="counter-target-actions">
                   {tributeOfTheFourSorrowsSelectionTargetId && (
-                    <button data-audio-click="valid" className="counter-target-button counter-target-cancel" onClick={deselectTributeOfTheFourSorrowsSelectionTarget} title={t("common.cancel")}>
+                    <button
+                      ref={(element) => guidedAnchorRegistry.set(
+                        guidedSurfaceAnchorKey("selection.cancelAction"),
+                        "tribute-selection:cancel",
+                        element,
+                      )}
+                      data-audio-click="valid"
+                      className="counter-target-button counter-target-cancel"
+                      onClick={deselectTributeOfTheFourSorrowsSelectionTarget}
+                      title={t("common.cancel")}
+                    >
                       {t("common.cancel")}
                     </button>
                   )}
                   <button
+                    ref={(element) => guidedAnchorRegistry.set(
+                      guidedSurfaceAnchorKey("selection.primaryAction"),
+                      "tribute-selection:confirm",
+                      element,
+                    )}
                     data-audio-click={tributeOfTheFourSorrowsSelectionTargetId ? "valid" : undefined}
                     className="counter-target-button counter-target-confirm"
                     disabled={!tributeOfTheFourSorrowsSelectionTargetId}
@@ -265,6 +281,11 @@ export function DuelHud({ game }: { game: GameState }) {
         </AnimatePresence>
         <div className={["host-deck-counter-cluster", attackCounterVisible ? "is-attack-counter-open" : ""].join(" ")}>
           <div
+            ref={(element) => guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey("host.archive"),
+              "duel-hud:host-archive",
+              element,
+            )}
             data-player-attack-target="host-deck"
             data-host-life-panel="true"
             className={[
@@ -352,6 +373,11 @@ export function DuelHud({ game }: { game: GameState }) {
           {/* Misma caja de Memoria que el Cronista, en fila con el panel de la Hueste. */}
           <GameTooltip content={t("game.viewGraveyard")} side="bottom" className="card-pile-host host-memory-pile-host">
             <button
+              ref={(element) => guidedAnchorRegistry.set(
+                guidedSurfaceAnchorKey("host.memory"),
+                "duel-hud:host-memory",
+                element,
+              )}
               data-host-mill-target="true"
               data-audio-click="valid"
               className="card-pile card-pile-memory"
@@ -492,7 +518,14 @@ export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameSt
     lastEventId.current = hostAttackAnimation.eventId;
     const hitDelay = hostAttackPlayerHitDelay(hostAttackAnimation.customAnimation);
     let frame: number | undefined;
+    let impactStarted = false;
+    let damageActivity: ReturnType<typeof guidedPresentationActivity.begin> | undefined;
     const impact = () => {
+      impactStarted = true;
+      damageActivity = guidedPresentationActivity.begin(
+        "life.damage",
+        `host-attack:${hostAttackAnimation.eventId}`,
+      );
       if (hitDelay === 0) {
         setVisualLife((life) => Math.max(0, life - hostAttackAnimation.playerDamage));
       }
@@ -500,23 +533,40 @@ export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameSt
       frame = window.requestAnimationFrame(() => setTakingDamage(true));
     };
     const impactTimeout = window.setTimeout(impact, hitDelay);
-    const clearTimeout = window.setTimeout(() => setTakingDamage(false), hitDelay + 430);
+    const clearTimeout = window.setTimeout(() => {
+      setTakingDamage(false);
+      damageActivity?.end();
+    }, hitDelay + 430);
     return () => {
+      // El store puede retirar `hostAttackAnimation` apenas vuelve el atacante. Si el impacto ya
+      // empezó, su reacción de Vida conserva su propio reloj y token hasta el último frame.
+      if (impactStarted) return;
       if (frame !== undefined) window.cancelAnimationFrame(frame);
       window.clearTimeout(impactTimeout);
       window.clearTimeout(clearTimeout);
+      damageActivity?.end();
+      setTakingDamage(false);
     };
   }, [hostAttackAnimation]);
 
   useEffect(() => {
     if (!lifeDamageAnimationId || lifeDamageAnimationId === lastLifeDamageAnimationId.current) return;
     lastLifeDamageAnimationId.current = lifeDamageAnimationId;
+    const damageActivity = guidedPresentationActivity.begin(
+      "life.damage",
+      `effect:${lifeDamageAnimationId}`,
+    );
     setTakingDamage(false);
     const frame = window.requestAnimationFrame(() => setTakingDamage(true));
-    const timeout = window.setTimeout(() => setTakingDamage(false), 430);
+    const timeout = window.setTimeout(() => {
+      setTakingDamage(false);
+      damageActivity.end();
+    }, 430);
     return () => {
       window.cancelAnimationFrame(frame);
       window.clearTimeout(timeout);
+      damageActivity.end();
+      setTakingDamage(false);
     };
   }, [lifeDamageAnimationId]);
 
@@ -524,7 +574,7 @@ export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameSt
     <>
       <div
         className={[
-          "player-life-dock fixed bottom-4 right-4 flex items-end justify-end overflow-visible",
+          "player-life-dock game-hud-player fixed bottom-4 right-4 flex items-end justify-end overflow-visible",
           finalBanquetAnimation
             ? "pointer-events-none z-[205]"
             : bloodPactAnimation
@@ -560,6 +610,11 @@ export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameSt
           <div className="player-vitals-row">
             <GameTooltip content={t("game.viewGraveyard")} side="top" className="card-pile-host">
               <button
+                ref={(element) => guidedAnchorRegistry.set(
+                  guidedSurfaceAnchorKey("player.memory"),
+                  "duel-hud:player-memory",
+                  element,
+                )}
                 data-player-discard-target="true"
                 data-audio-click="valid"
                 className="card-pile card-pile-memory"
@@ -575,6 +630,11 @@ export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameSt
             </GameTooltip>
             <PlayerArchiveForecast game={game} />
           <div
+            ref={(element) => guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey("player.life"),
+              "duel-hud:player-life",
+              element,
+            )}
             data-player-life-panel="true"
             className="energy-recycle-life-target"
           >

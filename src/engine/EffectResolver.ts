@@ -732,11 +732,33 @@ function inspectTopEcho(game: GameState, sourceName = "Host effect"): void {
   runInvokedTriggers(game, card, undefined, { deferSelfTriggers: true });
 }
 
-export function discardHostArchiveToMemory(game: GameState, amount: number): void {
+export function selectHostArchiveDiscardCards(
+  game: GameState,
+  amount: number,
+  preferredCardIds: readonly string[] = [],
+): CardInstance[] {
+  const byId = new Map(game.host.archive.map((card) => [card.instanceId, card]));
+  const preferred = preferredCardIds.flatMap((instanceId) => {
+    const card = byId.get(instanceId);
+    if (!card) return [];
+    byId.delete(instanceId);
+    return [card];
+  });
+  const remaining = game.host.archive.filter((card) => byId.has(card.instanceId));
+  return [...preferred, ...remaining].slice(0, Math.max(0, amount));
+}
+
+export function discardHostArchiveToMemory(
+  game: GameState,
+  amount: number,
+  options: Readonly<{ preferredCardIds?: readonly string[] }> = {},
+): void {
   let discarded = 0;
-  for (let i = 0; i < amount; i += 1) {
-    const card = game.host.archive.shift();
-    if (!card) break;
+  const selected = selectHostArchiveDiscardCards(game, amount, options.preferredCardIds);
+  for (const card of selected) {
+    const archiveIndex = game.host.archive.findIndex((candidate) => candidate.instanceId === card.instanceId);
+    if (archiveIndex < 0) continue;
+    game.host.archive.splice(archiveIndex, 1);
     card.zone = "memory";
     game.host.memory.push(card);
     discarded += 1;

@@ -15,7 +15,9 @@ import {
   burnMaterialColors,
   burnRenderBatches,
 } from "../src/components/burnFireball";
-import { grownVfxSurface, sharedVfxSourceTop } from "../src/components/sharedVfxRenderer";
+import { shardPath, shardSuction, shardTiming } from "../src/components/destinyShardSuction";
+import { buildDefeatShatterPlan } from "../src/components/defeatShatterGeometry";
+import { boundedVfxPixelRatio, grownVfxSurface, sharedVfxSourceTop } from "../src/components/sharedVfxRenderer";
 import { frameLeafRootIndex, frameRootPathSpecs } from "../src/components/GrowthBuffAnimator";
 import { buildStorm, stormBoltTones } from "../src/components/StormBuffAnimator";
 import {
@@ -52,13 +54,33 @@ test("Preparation progress preserves the original total across normal play and r
   assert.deepEqual(setupProgress(2, 0), undefined);
   assert.deepEqual(setupProgress(0, 2), { completed: 1, current: 1, total: 2 });
   assert.equal(translate("es", "phase.setupStepBanner", { current: 1, total: 3 }), "Preparación 1/3");
-  assert.equal(translate("en", "phase.setupStepBanner", { current: 1, total: 3 }), "Setup 1/3");
+  assert.equal(translate("en", "phase.setupStepBanner", { current: 1, total: 3 }), "Preparation 1/3");
   assert.deepEqual(
     [1, 2, 3].map((current) => translate("es", "phase.setupStepShort", { current })),
     ["Prep. 1", "Prep. 2", "Prep. 3"],
   );
-  assert.equal(translate("es", "orb.extraTurn"), "Turno extra");
+  assert.equal(translate("es", "orb.extraTurn"), "Siguiente paso");
   assert.equal(translate("es", "orb.endTurn"), "Terminar turno");
+});
+
+// Preparation is taught by the tutorial and labelled by the permanent HUD, so both languages must
+// keep a single name for it. English previously mixed "Setup" and "Extra Turn" with the lesson copy.
+test("Preparation keeps one name per language across HUD, orb and guided copy", () => {
+  for (const language of ["en", "es"]) {
+    const setupName = translate(language, "phase.setup");
+    assert.ok(
+      translate(language, "phase.setupStepBanner", { current: 1, total: 3 }).startsWith(setupName),
+      `${language} setup banner must reuse "${setupName}".`,
+    );
+    assert.doesNotMatch(translate(language, "orb.extraTurn"), /extra/iu);
+    assert.match(
+      translate(language, "guided.firstSeed.preparationBody"),
+      new RegExp(setupName, "iu"),
+      `${language} guided copy must reuse "${setupName}".`,
+    );
+  }
+  assert.match(translate("en", "guided.firstSeed.continueFirstBody"), /Press Next Step\./u);
+  assert.match(translate("es", "guided.firstSeed.continueFirstBody"), /Pulsa Siguiente paso\./u);
 });
 
 test("phase banners use content-sized plaques with tone-matched accents", () => {
@@ -139,13 +161,17 @@ test("Memory, Archive and Life share one row of equal boxes and the Archive owns
 
 test("a recyclable Source keeps the broad right-side gesture while lighting up the Archive box", () => {
   const handSource = readFileSync(new URL("../src/components/Hand.tsx", import.meta.url), "utf8");
+  const dropTargetSource = readFileSync(new URL("../src/components/energyRecycleDropTarget.ts", import.meta.url), "utf8");
   const forecastSource = readFileSync(new URL("../src/components/PlayerArchiveForecast.tsx", import.meta.url), "utf8");
   const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.doesNotMatch(handSource, /SourceActionMenu/u);
   assert.match(handSource, /useSourceActionUiStore/u);
-  assert.match(handSource, /ENERGY_RECYCLE_SCREEN_RATIO = 0\.82/u);
+  assert.match(handSource, /energyRecycleDropZoneContains/u);
   assert.match(handSource, /ENERGY_RECYCLE_MIN_HORIZONTAL_DRAG = 48/u);
+  assert.match(dropTargetSource, /target\.top - 96/u);
+  assert.match(dropTargetSource, /bottom \+ 120/u);
+  assert.match(dropTargetSource, /viewport\.width \* 0\.78/u);
   assert.match(handSource, /setDraggingRecyclableSourceId\(energyRecyclable \? card\.instanceId : undefined\)/u);
   assert.match(handSource, /<EnergyRecycleDragHint/u);
   assert.match(handSource, /className="energy-recycle-drag-path"/u);
@@ -209,6 +235,18 @@ test("committed hand cards yield to their specialized play animation without sna
   assert.doesNotMatch(handSource, /exit:\s*\{[^}]*y:\s*-34/su);
 });
 
+test("contextual card Actions use the current battlefield CTA treatment", () => {
+  const battlefieldSource = readFileSync(new URL("../src/components/Battlefield.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(battlefieldSource, /aria-label=\{abilityButtonText\(primaryAbility\)\}/u);
+  assert.match(battlefieldSource, /effect-action-symbol-tap[\s\S]*?effect-action-mana-colon[\s\S]*?effect-action-mana-label[\s\S]*?effect-action-symbol-energy/u);
+  assert.match(stylesSource, /\.effect-action-button\s*\{[^}]*border:\s*1px solid rgb\(178 158 92 \/ 0\.58\);[^}]*linear-gradient\(110deg, #3a4240, #1c2828 66%, #2e3836\);/su);
+  assert.match(stylesSource, /\.guided-tutorial-continue\s*\{[^}]*border:\s*1px solid rgb\(178 158 92 \/ 0\.58\);[^}]*linear-gradient\(110deg, #3a4240, #1c2828 66%, #2e3836\);/su);
+  assert.match(stylesSource, /\.effect-action-button:hover,[\s\S]*?transform:\s*translateY\(calc\(-50% - 1px\)\);/u);
+  assert.doesNotMatch(stylesSource, /\.effect-action-button\s*\{[^}]*clip-path:/su);
+});
+
 test("the Host Archive attack preview shows the physical result and caps it to the Archive", () => {
   assert.deepEqual(hostArchiveAttackPreview(42, 7, 3), {
     conversionCount: 2,
@@ -251,6 +289,17 @@ test("the Host attack preview shows cards going to Memory and keeps the math in 
   assert.match(phaseOrbSource, /t\("orb\.chooseAttackers"\)/u);
   assert.match(phaseOrbSource, /t\("orb\.attackArchive"\)/u);
   assert.match(phaseOrbSource, /t\("orb\.passCombat"\)/u);
+  assert.match(phaseOrbSource, /PHASE_BLOCKING_CONTEXTUAL_CONCEPTS/u);
+  for (const conceptId of ["assign-defenders", "chronicler-life", "host-surge", "attack-exhausts-echo"]) {
+    assert.match(phaseOrbSource, new RegExp(`"${conceptId}"`, "u"));
+  }
+  assert.match(phaseOrbSource, /contextualTutorialBlocksPhase/u);
+  assert.match(phaseOrbSource, /\.\.\.contextualTutorial\.queue/u);
+  assert.match(phaseOrbSource, /learnToPlayDefenseLeadIn/u);
+  assert.match(phaseOrbSource, /learnToPlayOpeningEndLeadIn/u);
+  assert.match(phaseOrbSource, /learnToPlay\.stage === "defense-intro"/u);
+  assert.match(phaseOrbSource, /learnToPlayRenewalLeadIn/u);
+  assert.match(phaseOrbSource, /guidedSpotlightPending/u);
   assert.equal(translate("es", "orb.chooseAttackers"), "Elegir atacantes");
   assert.equal(translate("es", "orb.attackArchive"), "Atacar el Archivo");
   assert.equal(translate("es", "orb.passCombat"), "Pasar el combate");
@@ -477,7 +526,24 @@ test("procedural Burn hides the WebGL buffer until its first rendered frame", ()
   assert.ok(revealIndex > renderIndex);
   assert.match(animator, /if \(drawn && !firstFramePresented\)/u);
   assert.match(animator, /canvas\.style\.opacity = "0";\s*cancelAnimationFrame/u);
+  assert.match(animator, /boundedVfxPixelRatio\(/u);
+  assert.match(animator, /const FRAME_INTERVAL_MS = 1000 \/ 60/u);
+  assert.match(animator, /if \(now - lastRenderedAt < FRAME_INTERVAL_MS/u);
+  assert.match(animator, /canvas\.width = 1;\s*canvas\.height = 1;/u);
   assert.match(styles, /\.burn-canvas\s*\{[^}]*opacity:\s*0;/u);
+});
+
+test("the permanent temporal sky stays inside the fullscreen GPU budget", () => {
+  const backdrop = readFileSync(new URL("../src/components/TemporalBackdrop.tsx", import.meta.url), "utf8");
+  const vortex = readFileSync(new URL("../src/components/DestinyRewriteTransition.tsx", import.meta.url), "utf8");
+
+  assert.match(backdrop, /boundedVfxPixelRatio\(cssWidth, cssHeight, window\.devicePixelRatio \|\| 1\)/u);
+  assert.match(backdrop, /const FRAME_INTERVAL_MS = 1000 \/ 60/u);
+  assert.match(backdrop, /if \(now - lastRenderedAt < FRAME_INTERVAL_MS\)/u);
+  assert.match(backdrop, /if \(dialMix !== lastPositionedDial\)/u);
+  assert.match(vortex, /boundedVfxPixelRatio\(width, height, window\.devicePixelRatio \|\| 1\)/u);
+  assert.match(vortex, /const FRAME_INTERVAL_MS = 1000 \/ 60/u);
+  assert.match(vortex, /canvas\.width = 1;\s*canvas\.height = 1;/u);
 });
 
 // Migración a un único contexto WebGL: ver docs/plans/webgl_context_budget.md.
@@ -485,6 +551,7 @@ const SHARED_RENDERER_ANIMATORS = [
   "BloodSiphonAnimator",
   "BuffSurgeAnimator",
   "BurnAnimator",
+  "DestinyRewriteTransition",
   "DrainEssenceAnimator",
   "FinalBanquetAnimator",
   "GrowthBuffAnimator",
@@ -534,6 +601,11 @@ test("the shared VFX surface only grows and its crop reads from the buffer top",
   assert.equal(sharedVfxSourceTop(300, 120), 180);
   assert.equal(sharedVfxSourceTop(120, 120), 0);
   assert.equal(sharedVfxSourceTop(100, 120), 0);
+
+  // Los efectos fullscreen conservan detalle a 1080p y no reservan un framebuffer 4K/5K.
+  assert.equal(boundedVfxPixelRatio(1920, 1080, 1), 1);
+  assert.equal(boundedVfxPixelRatio(1920, 1080, 2), 4 / 3);
+  assert.equal(boundedVfxPixelRatio(3840, 2160, 2), 2 / 3);
 });
 
 test("the shared VFX renderer restores global state for every frame", () => {
@@ -568,6 +640,7 @@ test("the loading pipeline warms the shared renderer and representative VFX prog
   assert.match(warmup, /new THREE\.MeshPhongMaterial/u);
   assert.match(warmup, /new THREE\.SpriteMaterial/u);
   assert.match(warmup, /new THREE\.LineBasicMaterial/u);
+  assert.match(warmup, /boundedVfxPixelRatio\(width, height, window\.devicePixelRatio \|\| 1\)/u);
   assert.match(sharedRenderer, /active\.compile\(frame\.scene, frame\.camera\)/u);
   assert.match(sharedRenderer, /active\.getContext\(\)\.finish\(\)/u);
 });
@@ -586,7 +659,7 @@ test("production resume checkpoints exclude Playground and presentation state", 
   assert.doesNotMatch(service, /playground/iu);
   assert.doesNotMatch(schema, /playground/iu);
   assert.match(schema, /checkpoint:\s*Object\.freeze\(\{ game:/u);
-  assert.match(app, /if \(screen !== "game"\) return;/u);
+  assert.match(app, /if \(!boardSessionPolicy\.autosave \|\| screen !== "game"\) return;/u);
 });
 
 test("procedural Burn never mounts the legacy full-screen white flash", () => {
@@ -826,6 +899,11 @@ test("main menu reserves enough width and breathing room for the Hostfall title"
   assert.match(styles, /\.main-menu-title\s*\{[^}]*margin:\s*16px 0 0;/u);
 });
 
+test("deck inspection keeps the same temporal sky as the main menu", () => {
+  const deckInspector = readFileSync(new URL("../src/components/DeckInspector.tsx", import.meta.url), "utf8");
+  assert.match(deckInspector, /<main className=\{`deck-detail-screen[\s\S]*?<TemporalBackdrop \/>/u);
+});
+
 test("the Hostfall wordmark and Chronicler name use the bundled decorative face", () => {
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
@@ -844,6 +922,18 @@ test("deck setup panels and deck cards opt into shared click audio", () => {
   assert.match(startMenu, /<article\s+data-audio-click="valid"\s+className=\{`expedition-combatant/u);
   assert.match(decksView, /<button\s+data-audio-click="off"\s+className=\{`deck-key-card/u);
   assert.match(decksView, /onClick=\{\(\) => \{\s*playSfx\("click"\);\s*onOpen\(\);/u);
+});
+
+test("How to Play opens a right-side data-driven tutorial catalog", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(startMenu, /type MenuScreen = [^;]*"howToPlay"/u);
+  assert.match(startMenu, /setMenuScreen\("howToPlay"\)/u);
+  assert.match(startMenu, /main-settings-screen how-to-play-screen/u);
+  assert.match(startMenu, /howToPlayEntries\.map/u);
+  assert.match(startMenu, /disabled=\{!entry\.onLaunch\}/u);
+  assert.match(styles, /\.how-to-play-lesson\s*\{[^}]*grid-template-columns:/u);
 });
 
 test("deck detail close buttons inherit their deck palette", () => {
@@ -942,6 +1032,289 @@ test("Kaelor's sky bolts converge on the upper-left marked point without base or
     assert.equal("ground" in storm, false);
     assert.equal("flecks" in storm, false);
   }
+});
+
+test("the rewrite suction pulls every piece to the vortex and lands them at the same instant", () => {
+  const viewport = { width: 1600, height: 900 };
+  const middle = shardSuction({ left: 780, top: 430, width: 40, height: 40 }, viewport);
+  const corner = shardSuction({ left: 0, top: 0, width: 40, height: 40 }, viewport);
+
+  // La pieza del centro ya está en el horizonte: no viaja y no espera.
+  assert.equal(Math.round(middle.dx), 0);
+  assert.equal(Math.round(middle.dy), 0);
+  assert.equal(middle.reach, 0);
+  // La esquina viaja hacia adentro y hacia abajo, y es la última en ser alcanzada.
+  assert.ok(corner.dx > 0 && corner.dy > 0);
+  assert.ok(corner.reach > 0.95 && corner.reach <= 1);
+  // El desvío es perpendicular al tirón: la pieza entra curvándose, no en línea recta.
+  assert.equal(Math.round(corner.dx * corner.swirlX + corner.dy * corner.swirlY), 0);
+
+  const first = shardTiming(middle.reach, 980);
+  const last = shardTiming(corner.reach, 980);
+  assert.equal(first.delayMs, 0);
+  assert.ok(last.delayMs > first.delayMs);
+  assert.equal(first.delayMs + first.durationMs, 980);
+  assert.equal(last.delayMs + last.durationMs, 980);
+});
+
+test("the rewrite suction resists once and then accelerates without ever stalling", () => {
+  // Un tramo que termina lanzado seguido de otro que arranca parado se ve como un frenazo a mitad
+  // de la caída. La trayectoria tiene que salir de una sola función continua.
+  const suction = shardSuction({ left: 0, top: 0, width: 40, height: 40 }, { width: 1600, height: 900 });
+  const path = shardPath(suction);
+
+  assert.equal(path[0].offset, 0);
+  assert.equal(path[0].progress, 0);
+  assert.equal(path[path.length - 1].offset, 1);
+  assert.equal(path[path.length - 1].progress, 1);
+
+  // Primero se resiste: hay un tramo que retrocede antes del tirón.
+  assert.ok(path.some((step) => step.progress < 0));
+
+  // Y a partir de ahí no vuelve a frenar nunca: cada paso avanza más que el anterior.
+  for (let index = 1; index < path.length - 1; index++) {
+    const previous = path[index].progress - path[index - 1].progress;
+    const next = path[index + 1].progress - path[index].progress;
+    assert.ok(next >= previous - 1e-9, `la succión frena en el paso ${index}`);
+  }
+
+  // La pieza se estira hacia el horizonte y termina convertida en un hilo que ya no se ve.
+  const landing = path[path.length - 1];
+  assert.ok(landing.along > landing.across * 5);
+  assert.equal(landing.opacity, 0);
+  assert.equal(path[0].along, 1);
+  assert.equal(path[0].across, 1);
+});
+
+test("defeat glass tiles the viewport deterministically and leaves broken edge shards behind", () => {
+  const plan = buildDefeatShatterPlan(16 / 9, 0.314159);
+  const repeated = buildDefeatShatterPlan(16 / 9, 0.314159);
+  const anotherFuture = buildDefeatShatterPlan(16 / 9, 0.731);
+
+  assert.deepEqual(plan, repeated);
+  assert.notDeepEqual(plan.positions, anotherFuture.positions);
+
+  // Cada triángulo es un prisma: 3 cara frontal + 3 trasera + 18 de los tres muros.
+  const VERTICES_PER_SHARD = 24;
+  assert.equal(plan.vertexCount % VERTICES_PER_SHARD, 0);
+  const shardCount = plan.vertexCount / VERTICES_PER_SHARD;
+  // 20 puntos de borde: 20 triángulos en el abanico central y 2 por celda en las
+  // tres coronas restantes.
+  assert.equal(shardCount, 140);
+
+  // Todos los atributos describen los mismos vértices.
+  assert.equal(plan.centroids.length, plan.vertexCount * 3);
+  assert.equal(plan.uvs.length, plan.vertexCount * 2);
+  assert.equal(plan.motions.length, plan.vertexCount * 4);
+  assert.equal(plan.dynamics.length, plan.vertexCount * 3);
+  assert.equal(plan.infos.length, plan.vertexCount * 4);
+
+  // Las tres clases de cara existen: frontal, trasera y muro.
+  const kinds = new Set();
+  for (let i = 1; i < plan.infos.length; i += 4) kinds.add(plan.infos[i]);
+  assert.deepEqual([...kinds].sort(), [0, 1, 2]);
+
+  // Quedan restos y se va la mayoría, y los que se quedan viajan menos.
+  const retained = [];
+  const escaped = [];
+  for (let shard = 0; shard < shardCount; shard += 1) {
+    const vertex = shard * VERTICES_PER_SHARD;
+    const speed = Math.hypot(plan.motions[vertex * 4], plan.motions[vertex * 4 + 1]);
+    (plan.infos[vertex * 4 + 2] > 0.5 ? retained : escaped).push(speed);
+  }
+  assert.ok(retained.length > 0);
+  assert.ok(escaped.length > retained.length);
+  assert.ok(Math.max(...retained) < Math.min(...escaped));
+});
+
+test("the defeat shatter reuses the shared WebGL renderer and provides reduced-motion glass", () => {
+  const animator = readFileSync(new URL("../src/components/DefeatShatterAnimator.tsx", import.meta.url), "utf8");
+  const glassShader = readFileSync(new URL("../src/components/defeatGlassShader.ts", import.meta.url), "utf8");
+  const modal = readFileSync(new URL("../src/components/DefeatModal.tsx", import.meta.url), "utf8");
+  const journeyModal = readFileSync(new URL("../src/components/LearnToPlayDefeatModal.tsx", import.meta.url), "utf8");
+  const board = readFileSync(new URL("../src/components/Board.tsx", import.meta.url), "utf8");
+  const desktopMain = readFileSync(new URL("../electron/main.ts", import.meta.url), "utf8");
+  const backdrop = readFileSync(new URL("../src/components/TemporalBackdrop.tsx", import.meta.url), "utf8");
+  const heavyLanding = readFileSync(new URL("../src/components/HeavyCreatureLanding.tsx", import.meta.url), "utf8");
+  const duelHud = readFileSync(new URL("../src/components/DuelHud.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(animator, /renderSharedVfxFrame/u);
+  assert.match(board, /captureDesktopViewport\(\)/u);
+  // The native capture happens after every finite store/local/DOM presentation settles and
+  // before the overlay mounts. Electron copies painted pixels, so it never reloads card URLs.
+  // La barrera es común a los dos desenlaces: la derrota la drena para capturar el frame exacto
+  // que va a romperse y la victoria para no retirar el tablero encima de un beat en curso.
+  assert.match(board, /function outcomePresentationActive\(state: GameStore\)/u);
+  assert.match(board, /guidedPresentationActivity\.snapshot\(\)\.activeCount === 0/u);
+  assert.match(board, /await waitForFiniteDocumentAnimations\(\)/u);
+  assert.match(board, /stopGamePresentation\(\);\s*await waitForFiniteDocumentAnimations\(\)/u);
+  assert.match(board, /image\.decoding = "async"/u);
+  assert.match(board, /await image\.decode\(\)/u);
+  assert.match(board, /const destinyDialSettled = settledDestinyDialRevision === destinyDialRevision/u);
+  assert.match(board, /const outcomeOutroReady = Boolean\(game\.winner\)[\s\S]*?destinyDialSettled[\s\S]*?!storePresentationActive[\s\S]*?localPresentation\.activeCount === 0/u);
+  assert.match(board, /const outcomeEnabled = sessionPolicy\.showStandardOutcome[\s\S]*?sessionPolicy\.showJourneyDefeat && game\.winner === "host"/u);
+  assert.match(board, /const defeatOutcomeReady = outcomeEnabled && outcomeOutroReady && game\.winner === "host"/u);
+  assert.match(board, /const OUTCOME_DRAIN_WATCHDOG_MS = 15000/u);
+  assert.match(board, /if \(outcomeOutroReady\) return;/u);
+  assert.match(board, /stopGamePresentation\(\);[\s\S]*?setForcedOutcomeDrainSessionId\(watchedSessionId\)/u);
+  assert.match(board, /settleDialImmediately=\{forcedOutcomeDrain\}/u);
+  assert.match(board, /const defeatReady = defeatOutcomeReady && defeatSnapshot !== undefined/u);
+  assert.match(board, /const outcomePresentationPending = outcomeEnabled && Boolean\(game\.winner\) && !defeatReady && !victoryReady/u);
+  assert.match(board, /presentationInputBlocked && \(!tributeOfTheFourSorrowsSelectionActive \|\| outcomePresentationPending\)/u);
+  assert.match(board, /snapshotImage=\{defeatSnapshot \?\? undefined\}/u);
+  assert.match(board, /settleDefeatCapture\(capturePaintedDefeatFrame\(\)\)/u);
+  assert.match(backdrop, /const DIAL_SETTLE_EPSILON = 0\.05/u);
+  assert.match(backdrop, /lastReportedDialRevision !== targetRevision/u);
+  assert.match(backdrop, /onDialSettledRef\.current\?\.\(targetRevision\)/u);
+  assert.match(heavyLanding, /guidedPresentationActivity\.begin\(\s*"battlefield\.heavy-landing"/u);
+  assert.match(duelHud, /guidedPresentationActivity\.begin\(\s*"life\.damage"/u);
+  assert.match(desktopMain, /const DEFEAT_CAPTURE_MAX_WIDTH = 2560/u);
+  assert.match(desktopMain, /const DEFEAT_CAPTURE_MAX_HEIGHT = 1440/u);
+  assert.match(desktopMain, /capture\.resize\(\{/u);
+  assert.doesNotMatch(animator, /html-to-image|toCanvas\(document\.body|snapshotHasVisualDetail/u);
+  assert.doesNotMatch(board, /html-to-image|toCanvas\(document\.body/u);
+  // The native plate contains the exact final compositor frame, including portal content.
+  assert.match(animator, /snapshotImage\?: HTMLImageElement/u);
+  assert.match(animator, /screenTexture\.image = snapshotImage/u);
+  // The opaque screenshot colors the shards; transparency comes from the gaps in their geometry.
+  // Capture, decode, and upload settle before the visible sequence clock begins.
+  assert.match(animator, /function createClearGlassTexture\(\)/u);
+  // Once the preflight succeeds, timing is deterministic.
+  assert.match(animator, /const preflightDrew = renderShatterFrame\(\);/u);
+  assert.ok(animator.indexOf("const preflightDrew = renderShatterFrame();") < animator.lastIndexOf("onSequenceStart();"));
+  assert.match(animator, /const CRACK_AT_MS = 0/u);
+  assert.match(animator, /const CRACK_SPAN_MS = 900/u);
+  assert.match(animator, /const BURST_SETTLE_MS = 40/u);
+  assert.match(animator, /const BURST_AT_MS = CRACK_AT_MS \+ CRACK_SPAN_MS \+ BURST_SETTLE_MS/u);
+  assert.match(animator, /elapsed >= BURST_AT_MS/u);
+  // The live board is hidden only after the captured plate has painted.
+  assert.match(animator, /coverAfterPaint = Boolean\(snapshotImage\);/u);
+  assert.match(animator, /if \(coverAfterPaint\) \{[\s\S]*?coverBoard\(\);/u);
+  // El render/copy fullscreen no corre a 120/144 Hz ni excede el presupuesto 2560x1440.
+  assert.match(animator, /const FRAME_INTERVAL_MS = 1000 \/ 60/u);
+  assert.match(animator, /boundedVfxPixelRatio\(width, height, window\.devicePixelRatio \|\| 1\)/u);
+  // El desenlace se nombra respecto del golpe real, no de un reloj propio del modal.
+  assert.match(modal, /onBurst=\{revealOutcome\}/u);
+  assert.doesNotMatch(modal, /REVEAL_AT_MS/u);
+  assert.match(animator, /const REVEAL_AFTER_BURST_MS = 1340/u);
+  // Nada tiñe la pantalla antes de que el vidrio se rompa: ni sello frío en el shader, ni capa
+  // de hielo en el DOM, ni viñeta encendida de salida.
+  assert.doesNotMatch(glassShader, /uFreeze/u);
+  assert.doesNotMatch(animator, /uFreeze|defeat-shatter-freeze/u);
+  assert.doesNotMatch(styles, /defeat-shatter-freeze/u);
+  assert.match(styles, /\.defeat-shatter-vignette \{[\s\S]*?opacity: 0;\s*\}/u);
+  // El desenlace se centra con una capa a pantalla completa: la succión del vórtice anima
+  // `transform` sobre cada pieza y borraría un `translate` propio del bloque.
+  assert.match(styles, /\.defeat-outcome \{\s*position: absolute;[\s\S]*?place-items: center;/u);
+  assert.match(styles, /@keyframes defeat-outcome-in \{\s*from \{ opacity: 0; transform: translateY\(10px\); \}/u);
+  assert.match(modal, /className="defeat-outcome-inner"/u);
+  // TemporalBackdrop and ambience remain alive below the opaque shard geometry.
+  assert.match(styles, /\.game-screen-ambience \{/u);
+  assert.doesNotMatch(styles, /\.game-screen::before/u);
+  assert.match(board, /className="game-screen-ambience"/u);
+  assert.match(board, /sessionPolicy\.showStandardOutcome && defeatReady/u);
+  assert.match(board, /sessionPolicy\.showJourneyDefeat && defeatReady/u);
+  assert.match(journeyModal, /<DefeatShatterAnimator/u);
+  assert.match(journeyModal, /destiny\.futureLostLineOne/u);
+  assert.match(journeyModal, /destiny\.futureLostLineTwo/u);
+  assert.match(journeyModal, /result\.chapterLostAmongShards/u);
+  assert.match(journeyModal, /LEARN_TO_PLAY_NARRATIVE_DELAY_MS\s*=\s*1_000/u);
+  assert.match(journeyModal, /guided\.learnToPlay\.defeatLineOne/u);
+  assert.match(journeyModal, /guided\.learnToPlay\.defeatLineTwo/u);
+  assert.match(journeyModal, /guided\.learnToPlay\.defeatBody/u);
+  assert.match(journeyModal, /guided\.continue/u);
+  assert.match(journeyModal, /guided\.learnToPlay\.defeatCta/u);
+  assert.match(journeyModal, /onContemplateFuture/u);
+  assert.match(journeyModal, /destiny-command-button learn-to-play-contemplate-button/u);
+  assert.doesNotMatch(journeyModal, /disabled/u);
+  assert.doesNotMatch(journeyModal, /onRewriteFuture|defeat-future-plate|destiny-command-glyph/u);
+  assert.match(styles, /\.learn-to-play-contemplate-button::before \{[\s\S]*?width: 180%;[\s\S]*?aspect-ratio: 1;/u);
+  // El vidrio se lee aunque no haya nada impreso: alfa de la captura con suelo de Fresnel.
+  assert.match(glassShader, /float printed = middle\.a/u);
+  assert.match(glassShader, /vFade \* max\(printed, glassEdge\)/u);
+  assert.doesNotMatch(animator, /new THREE\.DataTexture/u);
+  assert.match(animator, /createDefeatGlassMaterial/u);
+  // Una sola malla con atributos por trozo: ni una geometría por fragmento ni luces
+  // de escena. El brillo depende de la orientación real, no de un Phong iluminado.
+  assert.match(animator, /new THREE\.BufferAttribute\(plan\.motions, 4\)/u);
+  assert.match(animator, /new THREE\.BufferAttribute\(plan\.dynamics, 3\)/u);
+  assert.doesNotMatch(animator, /ExtrudeGeometry|MeshPhongMaterial|PointLight|DirectionalLight/u);
+  assert.match(animator, /material\.uniforms\.uShock\.value/u);
+  // Prismas con espesor, Fresnel y canto biselado.
+  assert.match(glassShader, /float expand = clamp\(max\(wave \* 0\.25, flying\)/u);
+  assert.match(glassShader, /float fresnel = pow\(1\.0 - ndv, 3\.0\)/u);
+  assert.match(glassShader, /N \*= sign\(dot\(N, V\)/u);
+  assert.match(glassShader, /if \(vKind > 1\.5\)/u);
+  // La onda es transparente fuera de su frente; alfa 1 convertiría el cielo en negro.
+  assert.match(glassShader, /float coverage = clamp\(max\(emitted\.r, max\(emitted\.g, emitted\.b\)\)/u);
+  assert.match(glassShader, /if \(coverage < 0\.001\) discard;/u);
+  assert.match(glassShader, /gl_FragColor = vec4\(emitted, coverage\)/u);
+  assert.match(glassShader, /blending: THREE\.AdditiveBlending,[\s\S]*?premultipliedAlpha: true,/u);
+  assert.doesNotMatch(glassShader, /gl_FragColor = vec4\(color \* fade, 1\.0\)/u);
+  assert.doesNotMatch(animator, /new THREE\.WebGLRenderer|forceContextLoss/u);
+  assert.match(animator, /prefers-reduced-motion:\s*reduce/u);
+  assert.match(modal, /<DefeatShatterAnimator seed=\{game\.seed\} snapshotImage=\{snapshotImage\} onSequenceStart=\{startSequence\}/u);
+  assert.match(modal, /t\("destiny\.futureLostLineOne"\)/u);
+  assert.match(modal, /t\("destiny\.futureLostLineTwo"\)/u);
+  // Detrás del vidrio no se dibuja ningún fondo propio: el lienzo queda transparente y lo
+  // que asoma es el espacio permanente del juego, con el tablero vivo ya retirado.
+  assert.doesNotMatch(animator, /Abyss/u);
+  assert.doesNotMatch(glassShader, /Abyss|ABYSS/u);
+  assert.match(animator, /const PLATED_BODY_CLASS = "is-defeat-plated"/u);
+  // El espacio del juego no se enrojece en la derrota: ese intento quedo retirado.
+  assert.doesNotMatch(backdrop, /defeat/u);
+  assert.doesNotMatch(readFileSync(new URL("../src/components/temporalBackdropShader.ts", import.meta.url), "utf8"), /uDefeat/u);
+  assert.match(styles, /body\.is-defeat-plated \.game-screen > \*:not\(\.temporal-backdrop\):not\(\.game-screen-ambience\):not\(\.game-result-overlay\)/u);
+  assert.match(styles, /body\.is-defeat-plated[\s\S]*?\.temporal-backdrop-grid \{ visibility: hidden; \}/u);
+  // No opaque placeholder is used when the desktop bridge is unavailable.
+  assert.doesNotMatch(animator, /backgroundColor: "#07100f"/u);
+  // En lineal: la conversión sRGB del renderer compartido aclara la captura y el Fresnel
+  // deja de leerse frío.
+  assert.match(animator, /outputEncoding: THREE\.LinearEncoding/u);
+  // El desenlace tiene que ganarle a `.game-screen [role="dialog"]`, que impone
+  // `game-surface-in` y borra el centrado con su transform final.
+  // Las magnitudes del cuarteado se dieron sobre un plano de alto 1: escalar sin
+  // reajustarlas convierte la tensión en un salto visible.
+  assert.match(glassShader, /dir \* wave \* 0\.004 \* uScale/u);
+  // Sin rastro del montaje anterior: ni destello DOM, ni oscurecimiento propio, ni
+  // temblor de pantalla. El golpe lo cuenta la onda WebGL.
+  assert.doesNotMatch(animator, /defeat-shatter-impact/u);
+  assert.doesNotMatch(styles, /defeat-screen-tremor|defeat-result-darkness|defeat-shatter-impact/u);
+  assert.match(styles, /animation:\s*defeat-crack-grow 520ms 0ms/u);
+  assert.match(styles, /path:nth-child\(3n\) \{ animation-delay: 240ms; \}/u);
+  assert.match(styles, /\.is-bursting \.defeat-shatter-fractures \{\s*animation: defeat-cracks-away 280ms ease-out both;/u);
+  assert.match(styles, /\.is-bursting \.defeat-shatter-vignette \{\s*animation: defeat-vignette-close 700ms ease both;/u);
+  assert.match(styles, /\.defeat-shatter\.is-fallback \{\s*background: transparent;/u);
+  assert.doesNotMatch(styles, /\.defeat-shatter-fractures \{[^}]*filter:/u);
+  assert.doesNotMatch(styles, /\.defeat-outcome-inner::before/u);
+  assert.match(styles, /@keyframes defeat-vignette-close \{\s*from \{ opacity: 0; \}\s*to \{ opacity: 0\.42; \}/u);
+  // Todo el bloque de derrota sube un paso de tamaño sin tocar la victoria. Las dos acciones
+  // permanecen en una sola fila y ninguna etiqueta se parte en dos líneas.
+  const defeatKicker = styles.match(/\.defeat-kicker \{[\s\S]*?\n\}/u)?.[0] ?? "";
+  const defeatTitle = styles.match(/\.defeat-title \{[\s\S]*?\n\}/u)?.[0] ?? "";
+  const defeatSubtitle = styles.match(/\.defeat-subtitle \{[\s\S]*?\n\}/u)?.[0] ?? "";
+  const defeatFutureLabel = styles.match(/\.defeat-future-plate span \{[\s\S]*?\n\}/u)?.[0] ?? "";
+  const defeatFutureCode = styles.match(/\.defeat-future-plate b \{[\s\S]*?\n\}/u)?.[0] ?? "";
+  assert.match(defeatKicker, /font: 800 16px\/1 "Cinzel"/u);
+  assert.match(defeatTitle, /font: 700 clamp\(48px, 8\.4vw, 96px\)\/0\.9 "Cinzel"/u);
+  assert.match(defeatSubtitle, /font: 600 clamp\(12px, 1\.45vw, 16px\)\/1\.4 "Cinzel"/u);
+  assert.match(defeatFutureLabel, /font: 800 14px\/1\.2 "Cinzel"/u);
+  assert.match(defeatFutureCode, /font: 800 clamp\(23px, 2\.8vw, 33px\)\/1\.2 "Cinzel"/u);
+  assert.match(styles, /grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/u);
+  assert.match(styles, /\.game-result-defeat \.game-result-action \{[\s\S]*?font-size: clamp\(8px, 2\.1vw, 13px\);[\s\S]*?white-space: nowrap;/u);
+  const contemplateHandlerAt = modal.indexOf("onClick={onContemplateFuture}");
+  const contemplateButton = modal.slice(
+    modal.lastIndexOf("<button", contemplateHandlerAt),
+    modal.indexOf("</button>", contemplateHandlerAt) + "</button>".length,
+  );
+  assert.ok(contemplateHandlerAt >= 0);
+  assert.doesNotMatch(contemplateButton, /<(?:svg|[A-Z][A-Za-z0-9]*)\b/u);
+  assert.doesNotMatch(modal, /Sparkles/u);
+  assert.doesNotMatch(styles, /@media \(max-width: 520px\) \{[\s\S]*?\.defeat-outcome-actions \{ grid-template-columns: 1fr; \}/u);
+  const vortexVeil = styles.match(/\.destiny-vortex-veil \{[\s\S]*?\n\}/u)?.[0] ?? "";
+  assert.doesNotMatch(vortexVeil, /repeating-conic-gradient/u);
+  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.defeat-shatter-canvas \{ display:\s*none; \}/u);
 });
 
 test("developer tools keep their development imports without a release URL escape hatch", () => {

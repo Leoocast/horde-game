@@ -1,0 +1,966 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hostfall — Marca cardinal partida</title>
+    <style>
+      @font-face {
+        font-family: "Cinzel Decorative";
+        font-style: normal;
+        font-weight: 400;
+        font-display: block;
+        src: url("../assets/fonts/cinzel-decorative-latin.woff2") format("woff2");
+      }
+      @font-face {
+        font-family: "Cinzel";
+        font-style: normal;
+        font-weight: 500 900;
+        font-display: block;
+        src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+      }
+      @font-face {
+        font-family: "Outfit";
+        font-style: normal;
+        font-weight: 400 800;
+        font-display: block;
+        src: url("../assets/fonts/outfit-latin.woff2") format("woff2");
+      }
+
+      :root {
+        color-scheme: dark;
+        --night: #030812;
+        --parchment: #e8dec0;
+        --gold: #c7aa69;
+        --gold-bright: #eadba8;
+        --steel: #8da19f;
+        --rule: rgb(163 145 94 / 0.24);
+        --serif: Georgia, "Times New Roman", serif;
+        --sans: "Outfit", "Segoe UI", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        padding: 0 0 72px;
+        background:
+          radial-gradient(ellipse at 50% -10%, rgb(34 64 61 / 0.2), transparent 54%),
+          var(--night);
+        color: var(--steel);
+        font-family: var(--sans);
+        font-size: 15px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      main {
+        width: min(1220px, 100%);
+        margin: 0 auto;
+        padding: 0 28px;
+      }
+
+      .mockup-header {
+        border-bottom: 1px solid var(--rule);
+        padding: 48px 0 28px;
+      }
+
+      .back {
+        display: inline-block;
+        margin-bottom: 8px;
+        color: #738481;
+        font-size: 12px;
+        text-decoration: none;
+      }
+
+      .back:hover { color: var(--gold-bright); }
+
+      .eyebrow {
+        color: #8db1a9;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 11px 0 0;
+        color: var(--parchment);
+        font-family: var(--serif);
+        font-size: clamp(30px, 4vw, 46px);
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        line-height: 1.08;
+      }
+
+      .mockup-header p {
+        max-width: 72ch;
+        margin: 15px 0 0;
+        color: #91a09d;
+      }
+
+      .mockup-header strong {
+        color: var(--gold-bright);
+        font-weight: 600;
+      }
+
+      .stage {
+        position: relative;
+        aspect-ratio: 16 / 9;
+        min-height: 590px;
+        margin-top: 30px;
+        overflow: hidden;
+        border: 1px solid rgb(153 139 91 / 0.28);
+        background: #02050b;
+        box-shadow: 0 30px 90px rgb(0 0 0 / 0.42);
+      }
+
+      .main-screen {
+        position: absolute;
+        isolation: isolate;
+        inset: 0;
+        overflow: hidden;
+        background: #02050b;
+      }
+
+      #temporalMark {
+        position: absolute;
+        z-index: 0;
+        inset: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .screen-ambience {
+        position: absolute;
+        z-index: 1;
+        inset: 0;
+        background:
+          radial-gradient(circle at 72% 47%, transparent 0 24%, rgb(2 7 10 / 0.12) 49%, rgb(1 4 7 / 0.54) 100%),
+          linear-gradient(180deg, rgb(0 0 0 / 0.65), transparent 21% 67%, rgb(0 0 0 / 0.72));
+        pointer-events: none;
+      }
+
+      .menu-panel {
+        position: relative;
+        z-index: 5;
+        display: grid;
+        width: 38%;
+        height: 100%;
+        grid-template-rows: auto 1fr;
+        padding: clamp(52px, 7vh, 78px) clamp(38px, 4vw, 66px) 36px;
+        border-right: 1px solid rgb(156 137 89 / 0.21);
+        background: linear-gradient(115deg, rgb(5 10 13 / 0.9), rgb(8 15 18 / 0.54));
+        box-shadow: 14px 0 36px rgb(0 0 0 / 0.3);
+        backdrop-filter: blur(7px) saturate(0.88);
+      }
+
+      .brand {
+        border-bottom: 1px solid var(--rule);
+        padding-bottom: clamp(24px, 3vh, 38px);
+      }
+
+      .brand-kicker {
+        color: #879397;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.27em;
+        text-transform: uppercase;
+      }
+
+      .wordmark {
+        margin: 16px 0 0;
+        color: #d8c99f;
+        font-family: "Cinzel Decorative", Georgia, serif;
+        font-size: clamp(48px, 5.6vw, 76px);
+        font-weight: 400;
+        letter-spacing: -0.035em;
+        line-height: 0.95;
+        text-shadow: 0 4px 22px rgb(0 0 0 / 0.85);
+      }
+
+      .act {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 12px;
+        color: #7f8d91;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.34em;
+        text-transform: uppercase;
+      }
+
+      .act::before {
+        width: 30px;
+        height: 1px;
+        background: #8b7443;
+        content: "";
+      }
+
+      nav {
+        align-self: center;
+        width: min(100%, 330px);
+      }
+
+      nav button {
+        position: relative;
+        display: flex;
+        width: 100%;
+        min-height: 55px;
+        align-items: center;
+        gap: 15px;
+        border: 0;
+        border-bottom: 1px solid rgb(145 154 157 / 0.15);
+        background: transparent;
+        color: #abb4b6;
+        font-family: var(--serif);
+        font-size: clamp(17px, 1.45vw, 22px);
+        letter-spacing: 0.075em;
+        text-align: left;
+        text-transform: uppercase;
+      }
+
+      nav button:first-child {
+        padding-left: 8px;
+        background: linear-gradient(90deg, rgb(111 124 128 / 0.13), transparent 82%);
+        color: #f0e5c4;
+      }
+
+      nav button:first-child::after {
+        position: absolute;
+        right: 0;
+        bottom: -1px;
+        left: 0;
+        height: 1px;
+        background: linear-gradient(90deg, #a38c54, transparent 76%);
+        content: "";
+      }
+
+      .nav-mark {
+        width: 5px;
+        height: 5px;
+        flex: 0 0 auto;
+        border: 1px solid #877849;
+        background: #1a2225;
+        transform: rotate(45deg);
+      }
+
+      nav button:first-child .nav-mark {
+        background: #b9a46a;
+        box-shadow: 0 0 12px rgb(185 164 106 / 0.55);
+      }
+
+      .profile {
+        position: absolute;
+        z-index: 6;
+        top: 26px;
+        right: 34px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #919e9d;
+        font-size: 9px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .profile-mark {
+        width: 22px;
+        height: 22px;
+        border: 1px solid rgb(190 165 101 / 0.45);
+        background: rgb(11 20 21 / 0.7);
+        box-shadow: inset 0 0 0 4px rgb(179 156 94 / 0.05);
+        transform: rotate(45deg);
+      }
+
+      .profile strong {
+        display: block;
+        color: #d8cba9;
+        font-family: var(--serif);
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: none;
+      }
+
+      .webgl-fallback {
+        position: absolute;
+        z-index: 3;
+        top: 50%;
+        right: 8%;
+        display: none;
+        width: 42%;
+        color: rgb(172 190 184 / 0.46);
+        font-family: "Cinzel", var(--serif);
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-align: center;
+        text-transform: uppercase;
+      }
+
+      .main-screen.no-webgl .webgl-fallback { display: block; }
+
+      .notes {
+        display: grid;
+        grid-template-columns: 180px minmax(0, 1fr);
+        gap: 34px;
+        border-top: 1px solid var(--rule);
+        margin-top: 32px;
+        padding-top: 26px;
+      }
+
+      .notes h2 {
+        margin: 0;
+        color: var(--gold-bright);
+        font-family: "Cinzel", var(--serif);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+
+      .notes ul {
+        max-width: 80ch;
+        margin: 0;
+        padding-left: 20px;
+      }
+
+      .notes li { margin-bottom: 8px; }
+      .notes b { color: #d9ca97; font-weight: 600; }
+      code { color: #9ec9c2; }
+
+      @media (max-width: 900px) {
+        .stage { min-height: 540px; }
+        .menu-panel { width: 45%; padding-inline: 32px; }
+        .profile { display: none; }
+      }
+
+      @media (max-width: 680px) {
+        main { padding-inline: 16px; }
+        .stage { aspect-ratio: 10 / 16; min-height: 720px; }
+        .menu-panel {
+          width: 100%;
+          padding: 54px 34px 30px;
+          border-right: 0;
+          background: linear-gradient(180deg, rgb(5 10 13 / 0.93) 0 54%, rgb(5 10 13 / 0.46));
+        }
+        .brand { width: 82%; }
+        nav { align-self: end; }
+        #temporalMark { opacity: 0.66; }
+        .notes { grid-template-columns: 1fr; gap: 14px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="mockup-header">
+        <a class="back" href="../index.html">← Maquetas</a>
+        <div class="eyebrow">Identidad · pantalla principal · WebGL</div>
+        <h1>Marca cardinal partida</h1>
+        <p>
+          El cielo usa el mismo shader temporal vigente del juego. Sobre él, la
+          <strong>Estrella cardinal</strong> aparece como un emblema antiguo de oro y bronce: el sector
+          superior-izquierdo permanece íntegro; al otro lado de la fisura diagonal, la materia se desplaza,
+          se quiebra en placas y termina dispersándose hacia el vacío.
+        </p>
+      </header>
+
+      <div class="stage" id="stage">
+        <section class="main-screen" id="screen" aria-label="Propuesta WebGL de pantalla principal de Hostfall">
+          <canvas id="temporalMark" aria-hidden="true"></canvas>
+          <div class="screen-ambience" aria-hidden="true"></div>
+
+          <aside class="menu-panel">
+            <div class="brand">
+              <div class="brand-kicker">Crónicas de los Reinos Quebrados</div>
+              <h2 class="wordmark">HOstfAll</h2>
+              <div class="act">Acto I — Coronas sobre cenizas</div>
+            </div>
+
+            <nav aria-label="Menú principal de muestra">
+              <button type="button"><span class="nav-mark" aria-hidden="true"></span>Jugar</button>
+              <button type="button"><span class="nav-mark" aria-hidden="true"></span>Crónicas</button>
+              <button type="button"><span class="nav-mark" aria-hidden="true"></span>Huestes</button>
+              <button type="button"><span class="nav-mark" aria-hidden="true"></span>Cómo jugar</button>
+              <button type="button"><span class="nav-mark" aria-hidden="true"></span>Ajustes</button>
+            </nav>
+          </aside>
+
+          <div class="profile" aria-label="Perfil del Cronista">
+            <span class="profile-mark" aria-hidden="true"></span>
+            <span><strong>Arky</strong>Cronista</span>
+          </div>
+
+          <div class="webgl-fallback">WebGL no está disponible en este navegador</div>
+        </section>
+      </div>
+
+      <section class="notes">
+        <h2>Lectura</h2>
+        <ul>
+          <li><b>No hay imagen de fondo:</b> nubes advectadas, tres capas de estrellas y motas nacen del shader de <code>TemporalBackdrop</code>.</li>
+          <li><b>La estrella conserva la geometría original:</b> cuatro cardinales largas, cuatro diagonales amplias y valles profundos, ahora convertidos en dieciséis facetas metálicas sólidas.</li>
+          <li><b>El sector inferior-derecho sí está destruido:</b> se evalúa desde coordenadas desplazadas, pierde placas por una fractura tipo Voronoi y expulsa esquirlas geométricas.</li>
+          <li><b>La marca sigue apagada respecto de la victoria:</b> el desenlace preservado conserva el derecho a construirla, encender todas sus puntas y hacerla florecer.</li>
+        </ul>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        "use strict";
+
+        var canvas = document.getElementById("temporalMark");
+        var stage = document.getElementById("stage");
+        var screen = document.getElementById("screen");
+        var gl = canvas.getContext("webgl", {
+          alpha: false,
+          antialias: false,
+          depth: false,
+          stencil: false,
+          premultipliedAlpha: false,
+          powerPreference: "low-power"
+        });
+
+        if (!gl) {
+          screen.classList.add("no-webgl");
+          return;
+        }
+
+        var TIPS = 8;
+        var NODES = 17;
+        var EDGES = 16;
+
+        var VERTEX = String.raw`
+          attribute vec2 aPosition;
+          void main() {
+            gl_Position = vec4(aPosition, 0.0, 1.0);
+          }
+        `;
+
+        var FRAGMENT = String.raw`
+          precision highp float;
+
+          #define NODES 17
+          #define EDGES 16
+
+          uniform vec2 uRes;
+          uniform float uPR;
+          uniform float uTime;
+          uniform float uClimax;
+          uniform vec2 uCenter;
+          uniform float uUnit;
+          uniform float uSeed;
+          uniform vec2 uBreakOffset;
+          uniform vec4 uNode[NODES];
+          uniform vec4 uEdge[EDGES];
+
+          float hash21(vec2 p) {
+            p = fract(p * vec2(123.34, 345.45));
+            p += dot(p, p + 34.345);
+            return fract(p.x * p.y);
+          }
+
+          vec2 hash22(vec2 p) {
+            float n = hash21(p);
+            return vec2(n, hash21(p + n + 19.19));
+          }
+
+          float vnoise(vec2 p) {
+            vec2 i = floor(p);
+            vec2 f = fract(p);
+            f = f * f * (3.0 - 2.0 * f);
+            float a = hash21(i);
+            float b = hash21(i + vec2(1.0, 0.0));
+            float c = hash21(i + vec2(0.0, 1.0));
+            float d = hash21(i + vec2(1.0, 1.0));
+            return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+          }
+
+          float fbm(vec2 p) {
+            float value = 0.0;
+            float amplitude = 0.55;
+            mat2 turn = mat2(0.82, -0.57, 0.57, 0.82);
+            for (int i = 0; i < 4; i++) {
+              value += amplitude * vnoise(p);
+              p = turn * p * 2.05 + vec2(17.13, 9.71);
+              amplitude *= 0.49;
+            }
+            return value;
+          }
+
+          mat2 rot(float a) {
+            float c = cos(a);
+            float s = sin(a);
+            return mat2(c, -s, s, c);
+          }
+
+          float starLayer(vec2 p, float scale, float gate, float speed) {
+            vec2 grid = p * scale;
+            vec2 id = floor(grid);
+            vec2 cell = fract(grid) - 0.5;
+            float seed = hash21(id);
+            if (seed < gate) return 0.0;
+            vec2 shift = (hash22(id + 7.31) - 0.5) * 0.7;
+            float d = length(cell - shift);
+            float cellPx = max(1.0, uRes.y / scale);
+            float radius = max(0.045, 1.35 / cellPx);
+            float core = exp(-pow(d / radius, 2.0) * 1.6);
+            float halo = exp(-pow(d / (radius * 3.2), 2.0)) * step(0.994, seed) * 0.22;
+            return (core + halo) * (0.94 + 0.06 * sin(uTime * speed + seed * 6.2831));
+          }
+
+          float firefly(vec2 rel, vec2 id, float speed, float off) {
+            float seed = hash21(id + off);
+            if (seed < 0.93) return 0.0;
+            float k = 0.5 + seed;
+            vec2 wander = 0.30 * vec2(
+              sin(uTime * speed * k + seed * 31.0),
+              cos(uTime * speed * (k * 0.82) + seed * 17.0)
+            );
+            vec2 offset = (hash22(id + 5.13) - 0.5) * 0.40 + wander;
+            float d = length(rel - offset);
+            float core = exp(-d * d * 320.0);
+            float halo = exp(-d * d * 30.0) * 0.22;
+            float breath = 0.30 + 0.70 * pow(0.5 + 0.5 * sin(uTime * (0.28 + seed * 0.4) + seed * 44.0), 2.2);
+            return (core + halo) * breath;
+          }
+
+          float fireflies(vec2 p, float scale, float speed, float off) {
+            vec2 g = p * scale;
+            vec2 id = floor(g);
+            vec2 cell = fract(g) - 0.5;
+            float sum = 0.0;
+            for (int j = -1; j <= 1; j++) {
+              for (int i = -1; i <= 1; i++) {
+                vec2 nb = vec2(float(i), float(j));
+                sum += firefly(cell - nb, id + nb, speed, off);
+              }
+            }
+            return sum;
+          }
+
+          float segSD(vec2 p, vec2 a, vec2 b) {
+            vec2 pa = p - a;
+            vec2 ba = b - a;
+            float h = clamp(dot(pa, ba) / max(dot(ba, ba), 0.0001), 0.0, 1.0);
+            return length(pa - ba * h);
+          }
+
+          void addLight(inout vec3 col, vec3 tone, float amount) {
+            if (amount > 0.001) col += tone * amount;
+          }
+
+          float cutField(vec2 q) {
+            float irregular = sin(q.y / max(uUnit, 1.0) * 5.7 + uSeed * 19.0) * uUnit * 0.018;
+            irregular += sin(q.y / max(uUnit, 1.0) * 13.1 - uSeed * 7.0) * uUnit * 0.007;
+            return dot(q, normalize(vec2(0.93, 0.36))) - irregular;
+          }
+
+          float cross2(vec2 a, vec2 b) {
+            return a.x * b.y - a.y * b.x;
+          }
+
+          float triangleMask(vec2 p, vec2 a, vec2 b, vec2 c) {
+            float sa = cross2(b - a, p - a);
+            float sb = cross2(c - b, p - b);
+            float sc = cross2(a - c, p - c);
+            float allPositive = step(0.0, min(sa, min(sb, sc)));
+            float allNegative = step(max(sa, max(sb, sc)), 0.0);
+            return clamp(allPositive + allNegative, 0.0, 1.0);
+          }
+
+          vec3 voronoiCell(vec2 p) {
+            vec2 cell = floor(p);
+            vec2 local = fract(p);
+            float nearest = 10.0;
+            float second = 10.0;
+            float identity = 0.0;
+
+            for (int y = -1; y <= 1; y++) {
+              for (int x = -1; x <= 1; x++) {
+                vec2 neighbor = vec2(float(x), float(y));
+                vec2 jitter = 0.18 + hash22(cell + neighbor + uSeed * 7.3) * 0.64;
+                vec2 delta = neighbor + jitter - local;
+                float distanceSquared = dot(delta, delta);
+                if (distanceSquared < nearest) {
+                  second = nearest;
+                  nearest = distanceSquared;
+                  identity = hash21(cell + neighbor + uSeed * 13.7);
+                } else if (distanceSquared < second) {
+                  second = distanceSquared;
+                }
+              }
+            }
+
+            return vec3(sqrt(nearest), sqrt(second), identity);
+          }
+
+          float brokenIntegrity(vec2 q, out float crack) {
+            float depth = smoothstep(-uUnit * 0.03, uUnit * 2.35, cutField(q));
+            vec3 cell = voronoiCell(q / max(uUnit, 1.0) * 2.65 + vec2(4.7, 8.1));
+            float cellBody = smoothstep(0.018, 0.078, cell.y - cell.x);
+            float keepCell = step(depth * 0.78, cell.z);
+            float farFade = 1.0 - smoothstep(uUnit * 1.85, uUnit * 2.95, length(q));
+            crack = (1.0 - cellBody) * keepCell * mix(0.42, 1.0, depth);
+            return cellBody * keepCell * mix(1.0, farFade, depth * 0.42);
+          }
+
+          float starInterior(vec2 q) {
+            float inside = 0.0;
+            for (int edge = 0; edge < EDGES; edge++) {
+              vec4 segment = uEdge[edge];
+              inside = max(inside, triangleMask(q, vec2(0.0), segment.xy, segment.zw));
+            }
+            return inside;
+          }
+
+          void renderInstrument(vec2 q, inout vec3 col) {
+            float radius = length(q);
+            float angle = atan(q.y, q.x);
+            float ticks = step(0.84, fract((angle + 3.14159265) / 6.28318531 * 32.0));
+            float outer = exp(-abs(radius - uUnit * 2.73) / 1.05) * (0.018 + ticks * 0.034);
+            float inner = exp(-abs(radius - uUnit * 2.52) / 0.95) * 0.024;
+            addLight(col, vec3(0.78, 0.67, 0.39), outer + inner);
+          }
+
+          void renderSolidStar(vec2 q, float presence, float visibility, float broken, inout vec3 col) {
+            const vec3 SHADOW = vec3(0.080, 0.066, 0.046);
+            const vec3 BRONZE = vec3(0.34, 0.25, 0.12);
+            const vec3 GOLD = vec3(0.82, 0.63, 0.29);
+            const vec3 PARCHMENT = vec3(0.96, 0.86, 0.62);
+            const vec3 OBSIDIAN = vec3(0.055, 0.075, 0.074);
+
+            float edgeDistance = 9999.0;
+            float facetDistance = 9999.0;
+            float inside = 0.0;
+            vec3 material = vec3(0.0);
+
+            for (int edge = 0; edge < EDGES; edge++) {
+              vec4 segment = uEdge[edge];
+              float facet = triangleMask(q, vec2(0.0), segment.xy, segment.zw);
+              float seed = hash21(vec2(float(edge) * 4.17 + 0.8, uSeed * 19.0));
+              float centerLift = 1.0 - smoothstep(0.0, uUnit * 2.35, length(q));
+              float light = 0.18 + seed * 0.48 + centerLift * 0.30;
+              vec3 tone = mix(SHADOW, mix(BRONZE, GOLD, light), 0.82);
+              tone = mix(tone, PARCHMENT, pow(max(light - 0.58, 0.0), 1.6) * 0.56);
+              tone = mix(tone, OBSIDIAN, broken * (0.28 + seed * 0.24));
+              material += tone * facet;
+              inside = max(inside, facet);
+              edgeDistance = min(edgeDistance, segSD(q, segment.xy, segment.zw));
+              facetDistance = min(facetDistance, segSD(q, vec2(0.0), segment.xy));
+            }
+
+            float body = inside * presence * visibility;
+            float bevel = exp(-edgeDistance / max(uUnit * 0.042, 1.0)) * body;
+            float outerEdge = exp(-edgeDistance / max(uUnit * 0.010, 0.8)) * body;
+            float facetEdge = exp(-facetDistance / max(uUnit * 0.010, 0.8)) * body;
+            float heart = exp(-length(q) / max(uUnit * 0.42, 1.0)) * body;
+
+            addLight(col, material, body * 0.94);
+            addLight(col, mix(BRONZE, GOLD, 0.72), bevel * 0.28);
+            addLight(col, mix(GOLD, PARCHMENT, 0.60), outerEdge * 0.48);
+            addLight(col, mix(OBSIDIAN, GOLD, 0.36), facetEdge * 0.12);
+            addLight(col, PARCHMENT, heart * 0.22 * (1.0 - broken * 0.72));
+          }
+
+          void renderDebris(vec2 p, inout vec3 col) {
+            const vec3 BRONZE = vec3(0.34, 0.25, 0.12);
+            const vec3 GOLD = vec3(0.82, 0.63, 0.29);
+            const vec3 PARCHMENT = vec3(0.96, 0.86, 0.62);
+            const vec3 OBSIDIAN = vec3(0.055, 0.075, 0.074);
+
+            for (int i = 0; i < 30; i++) {
+              float fi = float(i);
+              float seedA = hash21(vec2(fi * 7.17, uSeed * 31.0 + 3.4));
+              float seedB = hash21(vec2(fi * 4.91 + 11.0, uSeed * 17.0));
+              float seedC = hash21(vec2(fi * 9.43 + 5.0, uSeed * 23.0));
+              float angle = mix(-1.22, 1.20, seedB);
+              vec2 radial = vec2(cos(angle), sin(angle));
+              vec2 origin = uCenter + uBreakOffset + radial * uUnit * mix(0.42, 1.92, seedA);
+              vec2 blast = normalize(vec2(0.93, 0.36) + radial * 0.34);
+              float distance = uUnit * mix(0.20, 2.35, seedC * seedC);
+              vec2 drift = vec2(
+                sin(uTime * 0.11 + seedA * 13.0) * uUnit * 0.018,
+                cos(uTime * 0.09 + seedB * 17.0) * uUnit * 0.015
+              );
+              vec2 center = origin + blast * distance + drift;
+              float size = uUnit * mix(0.032, 0.245, seedB * seedB);
+              float rotation = seedA * 6.28318531;
+              vec2 axis = vec2(cos(rotation), sin(rotation));
+              vec2 side = vec2(-axis.y, axis.x);
+              vec2 a = center + axis * size;
+              vec2 b = center - axis * size * mix(0.34, 0.72, seedC) + side * size * mix(0.28, 0.68, seedA);
+              vec2 c = center - axis * size * mix(0.22, 0.64, seedA) - side * size * mix(0.24, 0.58, seedB);
+              float shard = triangleMask(p, a, b, c);
+              float rimDistance = min(segSD(p, a, b), min(segSD(p, b, c), segSD(p, c, a)));
+              float rim = exp(-rimDistance / max(size * 0.09, 0.7)) * shard;
+              vec3 tone = mix(OBSIDIAN, mix(BRONZE, GOLD, seedA), 0.58 + seedC * 0.32);
+              addLight(col, tone, shard * mix(0.32, 0.66, seedC));
+              addLight(col, mix(GOLD, PARCHMENT, 0.45), rim * 0.17);
+            }
+
+            for (int i = 0; i < 18; i++) {
+              float fi = float(i);
+              float seedA = hash21(vec2(fi * 5.31 + 2.0, uSeed * 27.0));
+              float seedB = hash21(vec2(fi * 8.17 + 9.0, uSeed * 11.0));
+              vec2 pos = uCenter + uBreakOffset
+                + vec2(uUnit * mix(0.55, 3.35, seedA), uUnit * mix(-1.55, 2.15, seedB));
+              float d = length(p - pos);
+              float mote = exp(-d / max(uUnit * mix(0.007, 0.021, seedB), 0.55));
+              addLight(col, mix(GOLD, PARCHMENT, seedA), mote * 0.14);
+            }
+          }
+
+          void main() {
+            vec2 uv = gl_FragCoord.xy / uRes;
+            float aspect = uRes.x / uRes.y;
+            vec2 p = (uv - 0.5) * vec2(aspect, 1.0);
+            p = rot(uTime * 0.0055) * p;
+
+            vec2 flow = vec2(uTime * 0.020, -uTime * 0.014) * (1.0 + uClimax * 0.8);
+            vec2 warp = vec2(
+              fbm(p * 1.32 + vec2(0.0, uTime * 0.022) + 3.7),
+              fbm(p * 1.32 + vec2(uTime * 0.018, 0.0) + 11.9)
+            ) - 0.5;
+            vec2 q = p + warp * 0.36 + flow * 0.4;
+            q += 0.12 * (vec2(fbm(q * 2.3 - flow), fbm(q * 2.3 + flow + 6.1)) - 0.5);
+
+            float broad = fbm(q * 1.62);
+            float folds = fbm(q * 3.70 + 23.4);
+            float edgeBias = smoothstep(0.10, 0.74, length(p - vec2(-0.08, 0.02)));
+            float breathe = 0.92 + 0.08 * sin(uTime * 0.10);
+            float nebula = smoothstep(0.49, 0.87, broad + folds * 0.23) * mix(0.24, 1.0, edgeBias) * breathe;
+            float vein = smoothstep(0.60, 0.90, folds) * nebula;
+            float dust = smoothstep(0.70, 0.95, fbm(q * 5.8 + vec2(31.2, 15.7))) * edgeBias;
+
+            vec3 teal = mix(vec3(0.026, 0.20, 0.24), vec3(0.16, 0.09, 0.09), uClimax);
+            vec3 gold = mix(vec3(0.72, 0.50, 0.18), vec3(0.78, 0.31, 0.14), uClimax);
+            vec3 color = vec3(0.0024, 0.0062, 0.017);
+            color += vec3(0.006, 0.024, 0.058) * (0.22 + broad * 0.62);
+            color += teal * nebula * 0.92;
+            color += vec3(0.036, 0.34, 0.36) * vein * 0.38;
+            color += gold * dust * 0.26;
+
+            vec2 nearLayer = rot(uTime * 0.012) * p + vec2(uTime * 0.0040, -uTime * 0.0015);
+            vec2 midLayer = rot(uTime * 0.007) * p * 1.02 + 5.3;
+            vec2 farLayer = rot(uTime * 0.003) * p + 13.7;
+            color += vec3(0.92, 0.86, 0.68) * starLayer(nearLayer, 74.0, 0.9979, 0.055) * 0.40;
+            color += vec3(0.78, 0.70, 0.46) * starLayer(midLayer, 142.0, 0.99945, 0.038) * 0.28;
+            color += vec3(1.00, 0.72, 0.34) * starLayer(farLayer, 97.0, 0.99935, 0.026) * 0.28;
+
+            float glow = fireflies(p + warp * 0.05, 9.0, 0.10, 0.0)
+                       + fireflies(p * 1.7 - warp * 0.04 + 8.2, 15.0, 0.07, 21.3) * 0.7;
+            color += mix(vec3(1.0, 0.80, 0.36), vec3(0.55, 0.95, 0.78), 0.35) * glow * 0.95;
+
+            float vig = 1.0 - smoothstep(0.40, 1.0, length(p * vec2(0.76, 1.0)));
+            color *= mix(0.62, 1.0, vig);
+
+            vec2 screenP = vec2(gl_FragCoord.x / uPR, (uRes.y - gl_FragCoord.y) / uPR);
+            vec2 intactQ = screenP - uCenter;
+            vec2 brokenQ = screenP - uCenter - uBreakOffset;
+            float intactGate = 1.0 - smoothstep(-1.6, 1.6, cutField(intactQ));
+            float brokenGate = smoothstep(-1.6, 1.6, cutField(brokenQ));
+            float crack = 0.0;
+            float integrity = brokenIntegrity(brokenQ, crack);
+            float intactFill = starInterior(intactQ);
+            float brokenFill = starInterior(brokenQ);
+            vec2 middleQ = screenP - uCenter - uBreakOffset * 0.50;
+            float middleFill = starInterior(middleQ);
+
+            vec3 mark = vec3(0.0);
+            float aura = exp(-length(intactQ) / max(uUnit * 2.45, 1.0));
+            addLight(mark, vec3(0.34, 0.25, 0.12), aura * 0.022);
+            renderInstrument(intactQ, mark);
+            renderSolidStar(intactQ, 0.90, intactGate, 0.0, mark);
+            renderSolidStar(brokenQ, 0.82, brokenGate * integrity, 1.0, mark);
+
+            float intactRift = exp(-abs(cutField(intactQ)) / max(uUnit * 0.020, 1.0))
+              * intactGate * intactFill;
+            float brokenRift = exp(-abs(cutField(brokenQ)) / max(uUnit * 0.026, 1.0))
+              * brokenGate * brokenFill * integrity;
+            float riftHalo = exp(-abs(cutField(intactQ)) / max(uUnit * 0.085, 1.0))
+              * intactFill * 0.12;
+            float riftBridge = exp(-abs(cutField(middleQ)) / max(uUnit * 0.034, 1.0))
+              * middleFill;
+            addLight(mark, vec3(0.06, 0.42, 0.43), riftHalo * 0.58);
+            addLight(mark, vec3(0.18, 0.68, 0.65), intactRift * 0.62 + brokenRift * 0.48);
+            addLight(mark, vec3(0.21, 0.56, 0.55), riftBridge * 0.48);
+            addLight(mark, vec3(0.96, 0.81, 0.48), intactRift * 0.24 + riftBridge * 0.10);
+            addLight(mark, vec3(0.10, 0.46, 0.44), brokenFill * brokenGate * crack * 0.32);
+            renderDebris(screenP, mark);
+
+            mark = mark / (1.0 + mark * 0.72);
+            color += mark;
+            gl_FragColor = vec4(pow(max(color, 0.0), vec3(0.92)), 1.0);
+          }
+        `;
+
+        function compile(type, source) {
+          var shader = gl.createShader(type);
+          gl.shaderSource(shader, source);
+          gl.compileShader(shader);
+          if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            console.error(gl.getShaderInfoLog(shader));
+            gl.deleteShader(shader);
+            return null;
+          }
+          return shader;
+        }
+
+        var vertex = compile(gl.VERTEX_SHADER, VERTEX);
+        var fragment = compile(gl.FRAGMENT_SHADER, FRAGMENT);
+        var program = vertex && fragment ? gl.createProgram() : null;
+
+        if (!vertex || !fragment || !program) {
+          screen.classList.add("no-webgl");
+          return;
+        }
+
+        gl.attachShader(program, vertex);
+        gl.attachShader(program, fragment);
+        gl.linkProgram(program);
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+          console.error(gl.getProgramInfoLog(program));
+          screen.classList.add("no-webgl");
+          return;
+        }
+
+        gl.useProgram(program);
+        var buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+        var position = gl.getAttribLocation(program, "aPosition");
+        gl.enableVertexAttribArray(position);
+        gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+        gl.disable(gl.DEPTH_TEST);
+
+        var U = {};
+        ["uRes", "uPR", "uTime", "uClimax", "uCenter", "uUnit", "uSeed", "uBreakOffset", "uNode", "uEdge"].forEach(function (name) {
+          U[name] = gl.getUniformLocation(program, name);
+        });
+
+        var nodeBuf = new Float32Array(NODES * 4);
+        var edgeBuf = new Float32Array(EDGES * 4);
+        var width = 1;
+        var height = 1;
+        var ratio = 1;
+        var unit = 1;
+        var center = [1, 1];
+        var breakOffset = [1, 1];
+        var signature = 0.3187;
+        var frame = 0;
+        var disposed = false;
+
+        function hashSeed(seed) {
+          var hash = 2166136261;
+          for (var i = 0; i < seed.length; i += 1) {
+            hash ^= seed.charCodeAt(i);
+            hash = Math.imul(hash, 16777619);
+          }
+          return (hash >>> 0) || 1;
+        }
+
+        function polar(degrees, radius) {
+          var angle = degrees * Math.PI / 180;
+          return [Math.cos(angle) * radius, Math.sin(angle) * radius];
+        }
+
+        function buildStar() {
+          var tipLong = unit * 2.24;
+          var tipShort = unit * 1.74;
+          var valley = unit * 0.94;
+          var points = [];
+
+          for (var index = 0; index < TIPS; index += 1) {
+            var tipAngle = index * 360 / TIPS - 90;
+            var tipRadius = index % 2 === 0 ? tipLong : tipShort;
+            points.push(polar(tipAngle, tipRadius));
+            points.push(polar(tipAngle + 360 / (TIPS * 2), valley));
+          }
+
+          nodeBuf[64] = 0;
+          nodeBuf[65] = 0;
+          nodeBuf[66] = 0;
+          nodeBuf[67] = signature * 10;
+
+          for (var i = 0; i < 16; i += 1) {
+            nodeBuf[i * 4] = points[i][0];
+            nodeBuf[i * 4 + 1] = points[i][1];
+            nodeBuf[i * 4 + 2] = 0;
+            nodeBuf[i * 4 + 3] = signature * 10 + i * 3.7;
+          }
+
+          for (var edge = 0; edge < 16; edge += 1) {
+            var from = points[edge];
+            var to = points[(edge + 1) % 16];
+            edgeBuf[edge * 4] = from[0];
+            edgeBuf[edge * 4 + 1] = from[1];
+            edgeBuf[edge * 4 + 2] = to[0];
+            edgeBuf[edge * 4 + 3] = to[1];
+          }
+        }
+
+        function layout() {
+          var rect = stage.getBoundingClientRect();
+          ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+          width = Math.max(2, Math.round(rect.width));
+          height = Math.max(2, Math.round(rect.height));
+          canvas.width = Math.round(width * ratio);
+          canvas.height = Math.round(height * ratio);
+          gl.viewport(0, 0, canvas.width, canvas.height);
+
+          var compact = width < 680;
+          center[0] = width * (compact ? 0.61 : 0.70);
+          center[1] = height * (compact ? 0.43 : 0.50);
+          unit = Math.min(height * (compact ? 0.125 : 0.145), width * 0.132);
+          breakOffset[0] = unit * 0.125;
+          breakOffset[1] = unit * 0.090;
+          buildStar();
+        }
+
+        signature = hashSeed("hostfall-cardinal-mark:destiny-vortex") / 4294967296;
+        layout();
+
+        var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var startedAt = performance.now();
+
+        function draw(now) {
+          var rect = stage.getBoundingClientRect();
+          if (Math.abs(rect.width - width) > 0.5 || Math.abs(rect.height - height) > 0.5) layout();
+
+          gl.useProgram(program);
+          gl.uniform2f(U.uRes, canvas.width, canvas.height);
+          gl.uniform1f(U.uPR, ratio);
+          gl.uniform1f(U.uTime, reducedMotion ? 9.0 : (now - startedAt) / 1000);
+          gl.uniform1f(U.uClimax, 0);
+          gl.uniform2f(U.uCenter, center[0], center[1]);
+          gl.uniform1f(U.uUnit, unit);
+          gl.uniform1f(U.uSeed, signature);
+          gl.uniform2f(U.uBreakOffset, breakOffset[0], breakOffset[1]);
+          gl.uniform4fv(U.uNode, nodeBuf);
+          gl.uniform4fv(U.uEdge, edgeBuf);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+        }
+
+        function loop(now) {
+          if (disposed) return;
+          draw(now);
+          frame = requestAnimationFrame(loop);
+        }
+
+        if (reducedMotion) draw(startedAt);
+        else frame = requestAnimationFrame(loop);
+
+        window.addEventListener("resize", layout);
+        document.addEventListener("visibilitychange", function () {
+          if (reducedMotion || disposed) return;
+          cancelAnimationFrame(frame);
+          if (!document.hidden) frame = requestAnimationFrame(loop);
+        });
+      }());
+    </script>
+  </body>
+</html>

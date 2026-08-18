@@ -1,4 +1,5 @@
 import { Check, FastForward, Shield, Swords, X } from "lucide-react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { canAttack, hasTrait } from "../engine/Traits";
 import { useAudioStore } from "../store/useAudioStore";
@@ -6,9 +7,46 @@ import { useGameStore } from "../store/useGameStore";
 import { useTranslation } from "../i18n/useTranslation";
 import { GameTooltip } from "./GameTooltip";
 import { setupPrimaryAction } from "./setupPresentation";
+import { runGuidedSystemAction } from "../guidance/interactionGate";
+import { guidedAnchorRegistry, guidedSurfaceAnchorKey } from "../guidance/anchorRegistry";
+import { contextualTutorialRuntime } from "../guidance/contextualProductRuntime";
+import { journeyIntentGate } from "../guidance/journeyIntentGate";
+import { guidedSessionStore } from "../guidance/runtime";
+import { learnToPlayDirector } from "../guidance/learnToPlayJourney";
 
-export function PhaseOrb({ game }: { game: GameState }) {
+const subscribeContextualTutorial = (listener: () => void) => contextualTutorialRuntime.subscribe(listener);
+const readContextualTutorial = () => contextualTutorialRuntime.snapshot();
+const subscribeGuidedSession = (listener: () => void) => guidedSessionStore.subscribe(listener);
+const readGuidedSession = () => guidedSessionStore.snapshot();
+const subscribeLearnToPlayDirector = (listener: () => void) => learnToPlayDirector.subscribe(listener);
+const readLearnToPlayDirector = () => learnToPlayDirector.snapshot();
+const PHASE_BLOCKING_CONTEXTUAL_CONCEPTS = new Set([
+  "assign-defenders",
+  "chronicler-life",
+  "reserve-and-ready",
+  "host-surge",
+  "attack-exhausts-echo",
+  "empty-hand-draw",
+  "return-source",
+]);
+
+export function PhaseOrb({ game, hostStartDelayMs = 0 }: { game: GameState; hostStartDelayMs?: number }) {
   const t = useTranslation();
+  const contextualTutorial = useSyncExternalStore(
+    subscribeContextualTutorial,
+    readContextualTutorial,
+    readContextualTutorial,
+  );
+  const guidedSession = useSyncExternalStore(
+    subscribeGuidedSession,
+    readGuidedSession,
+    readGuidedSession,
+  );
+  const learnToPlay = useSyncExternalStore(
+    subscribeLearnToPlayDirector,
+    readLearnToPlayDirector,
+    readLearnToPlayDirector,
+  );
   const playSfx = useAudioStore((state) => state.playSfx);
   const advancePhase = useGameStore((state) => state.advancePhase);
   const endPlayerTurn = useGameStore((state) => state.endPlayerTurn);
@@ -33,6 +71,8 @@ export function PhaseOrb({ game }: { game: GameState }) {
   const pendingTriggeredEffectCount = useGameStore((state) => state.pendingTriggeredEffectCount);
   const hostAutoTriggerCount = useGameStore((state) => state.hostAutoTriggerCount);
   const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
+  const [hostStartPending, setHostStartPending] = useState(false);
+  const hostStartTimerRef = useRef<number | undefined>(undefined);
   const targetingActive = useGameStore((state) => Boolean(state.counterTargeting || state.spellTargeting || state.tributeOfTheFourSorrowsSelection));
   const attackAnimating = hostAttackAnimating || playerAttackAnimating || hostMillAnimating || playerDiscardAnimating || burnAnimating || lifePaymentAnimating || bloodPactAnimating || drainEssenceAnimating || energyFlowAnimating || resolvingHostCombat;
   const defendBlockedReason = getDefendBlockedReason(game, t);
@@ -43,23 +83,71 @@ export function PhaseOrb({ game }: { game: GameState }) {
     playerAutoTriggerCount,
     t,
   );
-  const orbDisabled = Boolean(game.winner) || attackAnimating || Boolean(actionBlockedReason);
+  const contextualTutorialBlocksPhase = [
+    contextualTutorial.active?.conceptId,
+    ...contextualTutorial.queue,
+  ].some((conceptId) => PHASE_BLOCKING_CONTEXTUAL_CONCEPTS.has(conceptId ?? ""));
+  const learnToPlayActive = journeyIntentGate.activeJourneyId() === "learn-to-play";
+  const reserveHelpStarted = contextualTutorial.shownThisMatch.includes("reserve-and-ready");
+  const learnToPlayOpeningEndLeadIn = learnToPlayActive
+    && game.activeSide === "player"
+    && game.phase === "end"
+    && learnToPlay.stage === "opening-attack";
+  const learnToPlayDefenseLeadIn = learnToPlayActive
+    && game.activeSide === "host"
+    && game.hostTurnNumber <= 9
+    && (learnToPlay.stage === "awaiting-defense" || learnToPlay.stage === "defense-intro");
+  const learnToPlayRenewalLeadIn = learnToPlayActive
+    && game.activeSide === "player"
+    && game.hostTurnNumber === 9
+    && !reserveHelpStarted;
+  const guidedSpotlightPending = guidedSession.status === "running"
+    && guidedSession.currentStep?.callout === "hidden"
+    && guidedSession.currentStep.presentation?.kind === "spotlight"
+    && !guidedSession.presentationSettled;
+  const orbDisabled = Boolean(game.winner)
+    || attackAnimating
+    || hostStartPending
+    || Boolean(actionBlockedReason)
+    || contextualTutorialBlocksPhase
+    || learnToPlayOpeningEndLeadIn
+    || learnToPlayDefenseLeadIn
+    || learnToPlayRenewalLeadIn
+    || guidedSpotlightPending;
   const hasAssignedBlocks = Object.values(game.combat.blockers).some((blockerIds) => blockerIds.length > 0);
   const showCancelDefense = game.activeSide === "host" && game.combat.hostAttackers.length > 0 && hasAssignedBlocks;
   const showCancelAttack = game.activeSide === "player" && game.phase === "combat" && game.combat.playerAttackers.length > 0;
   const showAttackAll = game.activeSide === "player" && game.phase === "combat" && hasAvailableAttackers(game);
+  useEffect(() => () => window.clearTimeout(hostStartTimerRef.current), []);
+
+  const beginHostAfterAuthoredPause = () => {
+    const begin = () => {
+      setHostStartPending(false);
+      const latest = useGameStore.getState().game;
+      if (latest.activeSide === "host" && latest.phase === "host") {
+        runGuidedSystemAction(() => useGameStore.getState().runHostMain());
+      }
+    };
+    if (hostStartDelayMs <= 0) {
+      begin();
+      return;
+    }
+    setHostStartPending(true);
+    window.clearTimeout(hostStartTimerRef.current);
+    hostStartTimerRef.current = window.setTimeout(begin, hostStartDelayMs);
+  };
   const finishPlayerTurnAndRunHost = () => {
     endPlayerTurn({ runHostAfter: true });
     const latest = useGameStore.getState().game;
     if (latest.activeSide === "host" && latest.phase === "host") {
-      useGameStore.getState().runHostMain();
+      beginHostAfterAuthoredPause();
     }
   };
   const finishSetupAndRunHost = () => {
     endPlayerTurn({ runHostAfter: true });
     const latest = useGameStore.getState().game;
     if (latest.activeSide === "host" && latest.phase === "host") {
-      useGameStore.getState().runHostMain();
+      beginHostAfterAuthoredPause();
     }
   };
 
@@ -85,6 +173,11 @@ export function PhaseOrb({ game }: { game: GameState }) {
       <div className={["game-phase-orb fixed right-4 top-[46%] z-[80] -translate-y-1/2", game.gameMode === "chaos" ? "is-chaos" : ""].join(" ")}>
         <GameTooltip content={orbTooltip} visible={Boolean(orbTooltip)}>
           <button
+            ref={(element) => guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey("phase.primaryAction"),
+              "phase-orb:primary-action",
+              element,
+            )}
             data-audio-click="off"
             data-tone={state.tone}
             onClick={runOrbAction}
@@ -102,18 +195,50 @@ export function PhaseOrb({ game }: { game: GameState }) {
           <div className="game-phase-secondary">
             {showAttackAll && (
               <GameTooltip content={t("orb.allTooltip")} className="game-phase-secondary-tooltip">
-                <button data-audio-click="valid" onClick={attackAll} disabled={Boolean(game.winner) || attackAnimating} className="game-phase-secondary-button is-all">
+                <button
+                  ref={(element) => guidedAnchorRegistry.set(
+                    guidedSurfaceAnchorKey("phase.selectAllAction"),
+                    "phase-orb:select-all",
+                    element,
+                  )}
+                  data-audio-click="valid"
+                  onClick={attackAll}
+                  disabled={Boolean(game.winner) || attackAnimating}
+                  className="game-phase-secondary-button is-all"
+                >
                   <Swords size={17} /> <span>{t("orb.all")}</span>
                 </button>
               </GameTooltip>
             )}
             {showCancelDefense && (
-              <button data-audio-click="valid" onClick={cancelBlocks} disabled={Boolean(game.winner) || attackAnimating} className="game-phase-secondary-button is-cancel" title={t("orb.cancelBlocks")}>
+                <button
+                  ref={(element) => guidedAnchorRegistry.set(
+                    guidedSurfaceAnchorKey("phase.cancelAction"),
+                    "phase-orb:cancel-defense",
+                    element,
+                  )}
+                  data-audio-click="valid"
+                  onClick={cancelBlocks}
+                  disabled={Boolean(game.winner) || attackAnimating}
+                  className="game-phase-secondary-button is-cancel"
+                  title={t("orb.cancelBlocks")}
+                >
                 <X size={17} /> <span>{t("common.cancel")}</span>
               </button>
             )}
             {showCancelAttack && (
-              <button data-audio-click="valid" onClick={cancelPlayerAttackers} disabled={Boolean(game.winner) || attackAnimating} className="game-phase-secondary-button is-cancel" title={t("orb.cancelAttackers")}>
+                <button
+                  ref={(element) => guidedAnchorRegistry.set(
+                    guidedSurfaceAnchorKey("phase.cancelAction"),
+                    "phase-orb:cancel-attack",
+                    element,
+                  )}
+                  data-audio-click="valid"
+                  onClick={cancelPlayerAttackers}
+                  disabled={Boolean(game.winner) || attackAnimating}
+                  className="game-phase-secondary-button is-cancel"
+                  title={t("orb.cancelAttackers")}
+                >
                 <X size={17} /> <span>{t("common.cancel")}</span>
               </button>
             )}

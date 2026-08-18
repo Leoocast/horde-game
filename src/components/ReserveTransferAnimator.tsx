@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { useRef, type CSSProperties } from "react";
+import { useLayoutEffect, useRef, type CSSProperties } from "react";
+import { guidedPresentationActivity } from "../guidance";
 import type { ReserveTransferPresentation } from "./reserveTransferPresentation";
 import {
   EnergyFlowImpact,
@@ -68,6 +69,13 @@ export function ReserveTransferAnimator({
   const reduceMotion = animation.reduceMotion;
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
+
+  useLayoutEffect(() => {
+    const token = guidedPresentationActivity.begin("reserve.transfer", String(animation.id));
+    return () => {
+      token.end();
+    };
+  }, [animation.id]);
 
   return (
     <div className="reserve-transfer-vfx" aria-hidden="true">

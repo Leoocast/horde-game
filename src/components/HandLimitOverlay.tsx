@@ -6,6 +6,7 @@ import { localizedCardName } from "../i18n/cardLocalization";
 import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { useTranslation } from "../i18n/useTranslation";
+import { guidedAnchorRegistry, guidedSurfaceAnchorKey } from "../guidance";
 
 export function HandLimitOverlay({ game }: { game: GameState }) {
   const t = useTranslation();
@@ -38,10 +39,31 @@ export function HandLimitOverlay({ game }: { game: GameState }) {
             <h2 id="hand-limit-title" className="old-title mt-1 text-lg uppercase tracking-[0.09em]">{t("hand.discardToSeven")}</h2>
             <p className="mt-2 text-sm text-[#a9aaa0]">{t(overflow === 1 ? "hand.chooseBeforeEnd" : "hand.chooseMultipleBeforeEnd", { count: overflow })}</p>
             <div className="mt-3 flex items-center gap-2">
-              <button className="counter-target-button counter-target-cancel" type="button" disabled={!selectedId} onClick={() => selectDiscard(undefined)}>
+              <button
+                ref={(element) => guidedAnchorRegistry.set(
+                  guidedSurfaceAnchorKey("selection.cancelAction"),
+                  "hand-limit:cancel",
+                  element,
+                )}
+                className="counter-target-button counter-target-cancel"
+                type="button"
+                disabled={!selectedId}
+                onClick={() => selectDiscard(undefined)}
+              >
                 {selected ? localizedCardName(selected, language) : t("hand.chooseCard")}
               </button>
-              <button className="counter-target-button counter-target-confirm !flex-none !px-5" type="button" disabled={!selectedId} onClick={confirmDiscard} title={t("hand.discardSelected")}>
+              <button
+                ref={(element) => guidedAnchorRegistry.set(
+                  guidedSurfaceAnchorKey("selection.primaryAction"),
+                  "hand-limit:confirm",
+                  element,
+                )}
+                className="counter-target-button counter-target-confirm !flex-none !px-5"
+                type="button"
+                disabled={!selectedId}
+                onClick={confirmDiscard}
+                title={t("hand.discardSelected")}
+              >
                 <Check size={20} /> {t("hand.discard")}
               </button>
             </div>

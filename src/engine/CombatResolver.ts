@@ -1,8 +1,14 @@
-import type { GameState } from "./GameTypes";
+import type { ActionFailureCode, GameState } from "./GameTypes";
 import type { CardInstance } from "./GameTypes";
-import { blockRestrictionReason, canAttack, canBlockAttacker, getPoisonAmount, hasTrait } from "./Traits";
-import { destroyPermanent, discardHostArchiveToMemory, enqueueSurvivedDamageEvent, losePlayerLife } from "./EffectResolver";
-import { getPowerEndurance } from "./StaticEffects";
+import { attackRestriction, blockRestriction, canAttack, getPoisonAmount, hasTrait } from "./Traits";
+import {
+  destroyPermanent,
+  discardHostArchiveToMemory,
+  enqueueSurvivedDamageEvent,
+  losePlayerLife,
+  selectHostArchiveDiscardCards,
+} from "./EffectResolver";
+import { getPowerEndurance, hostInSurge } from "./StaticEffects";
 import { drainEventQueue } from "./EventQueue";
 import { enqueue } from "./EventQueue";
 
@@ -17,29 +23,72 @@ export type HostAttackEvent = {
   blockerDamageMarked?: number;
 };
 
+const PLAYER_COMBAT_DISCARD_PRIORITY_FLAG = "playerCombatArchiveDiscardPriority";
+const PLAYER_COMBAT_SURGE_DISCARD_PRIORITY_FLAG = "playerCombatArchiveDiscardPriorityInSurge";
+
+export type PlayerCombatArchiveDiscardPreview = Readonly<{
+  attackerIndex: number;
+  cardIndexInHit: number;
+  card: CardInstance;
+}>;
+
+/** Mirrors the exact Archive cards combat will discard, including authored expendable cards. */
+export function previewPlayerCombatArchiveDiscards(
+  game: GameState,
+  attackers: readonly string[],
+): PlayerCombatArchiveDiscardPreview[] {
+  const previews: PlayerCombatArchiveDiscardPreview[] = [];
+  const preferredCardIds = playerCombatDiscardPriorityIds(game);
+  let totalDamage = 0;
+  let previousDiscardCount = 0;
+
+  attackers.forEach((attackerId, attackerIndex) => {
+    const attacker = game.player.field.find((card) => card.instanceId === attackerId);
+    if (!attacker) return;
+    totalDamage += getPowerEndurance(game, attacker).power;
+    const nextDiscardCount = Math.floor(totalDamage / game.hostRules.damagePerArchiveDiscard);
+    const planned = selectHostArchiveDiscardCards(game, nextDiscardCount, preferredCardIds);
+    planned.slice(previousDiscardCount).forEach((card, cardIndexInHit) => {
+      previews.push({ attackerIndex, cardIndexInHit, card });
+    });
+    previousDiscardCount = nextDiscardCount;
+  });
+
+  return previews;
+}
+
 export function togglePlayerAttacker(game: GameState, id: string): GameState {
   const next = structuredClone(game) as GameState;
   const card = next.player.field.find((item) => item.instanceId === id);
-  if (!card) return log(next, "That creature cannot attack.");
+  if (next.winner || next.activeSide !== "player" || next.phase !== "combat") {
+    return failAction(next, "Attackers can only be chosen during your Combat phase.", "WRONG_PHASE");
+  }
+  if (!card) return failAction(next, "That creature cannot attack.");
   const selected = next.combat.playerAttackers.includes(id);
   if (selected) {
     next.combat.playerAttackers = next.combat.playerAttackers.filter((item) => item !== id);
     if (!hasTrait(next, card, "ALERT")) card.exhausted = false;
+    next.lastActionResult = { ok: true };
     return log(next, `${card.name} stops attacking.`);
   }
-  if (!canAttack(next, card)) return log(next, "That creature cannot attack.");
+  const restriction = attackRestriction(next, card);
+  if (restriction) return failAction(next, restriction.reason, restriction.code);
   next.combat.playerAttackers = [...next.combat.playerAttackers, id];
   if (!hasTrait(next, card, "ALERT")) card.exhausted = true;
+  next.lastActionResult = { ok: true };
   return log(next, `${card.name} ${selected ? "stops attacking" : "attacks the Host"}.`);
 }
 
 export function declareBlocker(game: GameState, blockerId: string, attackerId: string): GameState {
   const next = structuredClone(game) as GameState;
+  if (next.winner || next.activeSide !== "host" || next.phase !== "combat" || !next.combat.hostAttackers.includes(attackerId)) {
+    return failAction(next, "Defenders can only be assigned during Host combat.", "WRONG_PHASE");
+  }
   const blocker = next.player.field.find((card) => card.instanceId === blockerId);
   const attacker = next.host.field.find((card) => card.instanceId === attackerId);
   if (!blocker || !attacker) return failAction(next, "Illegal block.");
-  const restriction = blockRestrictionReason(next, blocker, attacker);
-  if (restriction) return failAction(next, restriction);
+  const restriction = blockRestriction(next, blocker, attacker);
+  if (restriction) return failAction(next, restriction.reason, restriction.code);
   const current = next.combat.blockers[attackerId] ?? [];
   if (current.includes(blockerId)) {
     next.combat.blockers[attackerId] = current.filter((id) => id !== blockerId);
@@ -49,15 +98,15 @@ export function declareBlocker(game: GameState, blockerId: string, attackerId: s
   const alreadyBlocking = Object.entries(next.combat.blockers).find(([otherAttackerId, blockerIds]) => otherAttackerId !== attackerId && blockerIds.includes(blockerId));
   if (alreadyBlocking) {
     const blockedAttacker = next.host.field.find((card) => card.instanceId === alreadyBlocking[0]);
-    return failAction(next, `${blocker.name} is already blocking ${blockedAttacker?.name ?? "another attacker"}.`);
+    return failAction(next, `${blocker.name} is already blocking ${blockedAttacker?.name ?? "another attacker"}.`, "ALREADY_BLOCKING");
   }
   next.combat.blockers[attackerId] = [...current, blockerId];
   next.lastActionResult = { ok: true };
   return log(next, `${blocker.name} blocks ${attacker.name}.`);
 }
 
-function failAction(game: GameState, reason: string): GameState {
-  game.lastActionResult = { ok: false, reason };
+function failAction(game: GameState, reason: string, code?: ActionFailureCode): GameState {
+  game.lastActionResult = { ok: false, reason, ...(code ? { code } : {}) };
   return log(game, reason);
 }
 
@@ -83,11 +132,22 @@ export function resolvePlayerCombat(
     next.host.poisonCounters += poisonCounters;
     log(next, `Host gets ${poisonCounters} poison counter(s).`);
   }
-  if (archiveDiscards > 0) discardHostArchiveToMemory(next, archiveDiscards);
+  if (archiveDiscards > 0) {
+    discardHostArchiveToMemory(next, archiveDiscards, {
+      preferredCardIds: playerCombatDiscardPriorityIds(next),
+    });
+  }
   next.combat.playerAttackers = [];
   drainEventQueue(next);
   checkWinLoss(next);
   return next;
+}
+
+function playerCombatDiscardPriorityIds(game: GameState): string[] {
+  return game.host.archive
+    .filter((card) => card.flags[PLAYER_COMBAT_DISCARD_PRIORITY_FLAG]
+      || (hostInSurge(game) && card.flags[PLAYER_COMBAT_SURGE_DISCARD_PRIORITY_FLAG]))
+    .map((card) => card.instanceId);
 }
 
 export function beginHostCombat(game: GameState, options: { deferTriggeredEvents?: boolean } = {}): GameState {

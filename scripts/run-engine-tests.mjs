@@ -22,6 +22,18 @@ try {
   await server.ssrLoadModule("/tests/playgroundScenario.test.js");
   await server.ssrLoadModule("/tests/playgroundActions.test.js");
   await server.ssrLoadModule("/tests/playgroundStorage.test.js");
+  await server.ssrLoadModule("/tests/guidedLesson.test.js");
+  await server.ssrLoadModule("/tests/guidedInteractionGate.test.js");
+  await server.ssrLoadModule("/tests/gameplaySignals.test.js");
+  await server.ssrLoadModule("/tests/contextualGuidance.test.js");
+  await server.ssrLoadModule("/tests/guidedSession.test.js");
+  await server.ssrLoadModule("/tests/guidedLifecycle.test.js");
+  await server.ssrLoadModule("/tests/learnToPlayInfrastructure.test.js");
+  await server.ssrLoadModule("/tests/learnToPlayPrologue.test.js");
+  await server.ssrLoadModule("/tests/guidedOverlay.test.js");
+  await server.ssrLoadModule("/tests/destinyFuture.test.js");
+  await server.ssrLoadModule("/tests/chronicleSigilGeometry.test.js");
+  await server.ssrLoadModule("/tests/destinyConstellationGeometry.test.js");
   await server.ssrLoadModule("/tests/audioMix.test.js");
   await server.ssrLoadModule("/tests/vocabulary.test.js");
   await server.ssrLoadModule("/tests/uiPresentation.test.js");

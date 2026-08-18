@@ -136,7 +136,21 @@ export type HostRulesProfile = {
   swarmTokenSubtypes: string[];
 };
 
-export type ActionFailureCode = "NOT_ENOUGH_ENERGY";
+export type ActionFailureCode =
+  | "NOT_ENOUGH_ENERGY"
+  | "WRONG_PHASE"
+  | "SOURCE_LIMIT_REACHED"
+  | "SOURCE_ACTION_ALREADY_USED"
+  | "STABILIZING"
+  | "EXHAUSTED"
+  | "BLOCK_REQUIRES_FLYING_OR_SKYGUARD"
+  | "FURTIVE_BLOCK_RESTRICTION"
+  | "ALREADY_BLOCKING";
+
+export type ActionFailure = Readonly<{
+  reason: string;
+  code?: ActionFailureCode;
+}>;
 
 export type CardInstance = {
   instanceId: string;

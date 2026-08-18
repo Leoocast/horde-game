@@ -10,6 +10,7 @@ import { cardThemeForDefinition, shouldShowFullCardImage, useCardDetails, usesFu
 import { cardStatFrameCssVariables } from "../utils/cardStatFrame";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardTraits, cardStatState } from "../utils/selectors";
+import { guidedAnchorRegistry, guidedSurfaceAnchorKey } from "../guidance";
 import { CardCostBadge, CardStatsBadge } from "./Card";
 import { CardTraitIcon } from "./CardTraitIcon";
 import { GameTooltip } from "./GameTooltip";
@@ -179,6 +180,11 @@ export function CardPreview() {
       <>
         <div className="card-preview-dismiss-layer pointer-events-none fixed inset-0 z-[179]" aria-hidden="true" />
         <aside
+          ref={(element) => guidedAnchorRegistry.set(
+            guidedSurfaceAnchorKey("card.preview"),
+            "card-preview:locked",
+            element,
+          )}
           className="fixed left-4 top-[6rem] z-[180] flex max-h-[calc(100vh-7rem)] items-start gap-3 text-[#f6e6b8]"
           onContextMenu={(event) => event.preventDefault()}
         >

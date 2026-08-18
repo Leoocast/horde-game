@@ -1,111 +1,93 @@
-import { Copy, Home, RefreshCcw, RefreshCw, Skull } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { Copy, RefreshCcw } from "lucide-react";
 import type { GameState } from "../engine/GameTypes";
-import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
-import { useAudioStore } from "../store/useAudioStore";
 import { useTranslation } from "../i18n/useTranslation";
+import { futureCodeFromSeed } from "../utils/futureIdentity";
+import { DefeatShatterAnimator } from "./DefeatShatterAnimator";
 
 type Props = {
   game: GameState;
-  setupTurns: number;
-  onReturnToMenu: () => void;
+  snapshotImage?: HTMLImageElement;
+  onRewriteFuture: () => void;
+  onContemplateFuture: () => void;
 };
 
-export function DefeatModal({ game, setupTurns, onReturnToMenu }: Props) {
+export function DefeatModal({ game, snapshotImage, onRewriteFuture, onContemplateFuture }: Props) {
   const t = useTranslation();
-  const reset = useGameStore((state) => state.reset);
-  const setSeed = useGameStore((state) => state.setSeed);
   const pushToast = useToastStore((state) => state.pushToast);
-  const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
-  const resetSfx = useAudioStore((state) => state.resetSfx);
-  const [seedInput, setSeedInput] = useState(game.seed);
-
-  function restart() {
-    const nextSeed = seedInput.trim() || game.seed;
-    resetSfx();
-    setSeed(nextSeed);
-    reset(nextSeed, setupTurns);
-    startBattleMusic(true);
-  }
+  const futureCode = futureCodeFromSeed(game.seed);
+  const [sequenceStarted, setSequenceStarted] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const startSequence = useCallback(() => setSequenceStarted(true), []);
+  // El desenlace se nombra cuando el vidrio ya reventó, no en un reloj propio.
+  const revealOutcome = useCallback(() => setRevealed(true), []);
 
   async function copySeed() {
     try {
-      await navigator.clipboard.writeText(seedInput);
-      pushToast({ title: t("toast.seedCopied"), message: seedInput, tone: "success" });
+      await navigator.clipboard.writeText(game.seed);
+      pushToast({ title: t("destiny.identityCopied"), message: t("destiny.future", { code: futureCode }), tone: "success" });
     } catch {
-      pushToast({ title: t("toast.seedCopyFailed"), message: seedInput, tone: "warning" });
+      pushToast({ title: t("destiny.identityCopyFailed"), message: t("destiny.future", { code: futureCode }), tone: "warning" });
     }
   }
 
-  function regenerateSeed() {
-    setSeedInput(generateRandomSeed());
-  }
-
   return (
-    <div className="game-result-overlay game-result-defeat fixed inset-0 z-[140] flex flex-col items-center justify-center">
-      <div className="game-result-atmosphere" />
-      <div className="game-result-banner" aria-hidden="true">
-        <span className="game-result-line" />
-        <span className="game-result-crest"><Skull size={32} strokeWidth={1.7} /></span>
-        <h1>{t("result.defeat")}</h1>
-        <span className="game-result-line game-result-line-right" />
-      </div>
+    <div className={`game-result-overlay game-result-defeat fixed inset-0 z-[140] ${sequenceStarted ? "is-sequence-running" : ""}`}>
+      <DefeatShatterAnimator seed={game.seed} snapshotImage={snapshotImage} onSequenceStart={startSequence} onBurst={revealOutcome} />
 
-      <section className="game-result-panel old-panel w-full max-w-md p-6 text-center" role="dialog" aria-modal="true" aria-labelledby="defeat-result-title">
-        <span className="game-result-panel-mark" />
-        <p id="defeat-result-title" className="game-result-message">
-          {t("result.expeditionDark")}
-        </p>
+      {/* El bloque se centra con una capa a pantalla completa, no con un `translate` propio:
+          la succión del vórtice anima `transform` sobre cada pieza de la escena y borraría
+          ese desplazamiento, dejando el desenlace descolgado hacia abajo y a la derecha. */}
+      {revealed && (
+        <div className="defeat-outcome">
+        <div
+          className="defeat-outcome-inner"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="defeat-result-title"
+          aria-describedby="defeat-result-description"
+        >
+          <span className="defeat-kicker">{t("result.defeat")}</span>
+          <strong className="defeat-title" id="defeat-result-title">
+            <span className="line">{t("destiny.futureLostLineOne")}</span>
+            <span className="line">{t("destiny.futureLostLineTwo")}</span>
+          </strong>
+          <span className="defeat-subtitle" id="defeat-result-description">
+            {t("result.chapterLostAmongShards")}
+          </span>
 
-        <>
-            <label className="game-result-seed-label mt-6 block text-left" htmlFor="defeat-seed">
-              {t("result.chronicleSeed")}
-            </label>
-            <div className="game-result-seed mt-2 flex gap-2">
-              <input
-                id="defeat-seed"
-                value={seedInput}
-                onChange={(event) => setSeedInput(event.target.value)}
-                className="old-input h-11 w-full px-3 outline-none transition placeholder:text-[#85633b] focus:border-[#f4cc74]"
-              />
-              <button className="old-button flex h-11 w-11 items-center justify-center" type="button" onClick={copySeed} title={t("result.copySeed")}>
-                <Copy size={17} />
-              </button>
-              <button className="old-button flex h-11 w-11 items-center justify-center" type="button" onClick={regenerateSeed} title={t("result.regenerateSeed")}>
-                <RefreshCw size={17} />
-              </button>
-            </div>
-        </>
+          <span className="defeat-future-plate">
+            <span>{t("destiny.futureWord")}</span>
+            <b>{futureCode}</b>
+            <button
+              type="button"
+              onClick={copySeed}
+              title={t("destiny.copyIdentity")}
+              aria-label={t("destiny.copyIdentity")}
+            >
+              <Copy size={14} />
+            </button>
+          </span>
 
-        <div className="game-result-actions mt-5 grid grid-cols-2 gap-3">
-          <button
-            className="game-result-action game-result-action-secondary flex h-12 w-full items-center justify-center gap-2"
-            onClick={onReturnToMenu}
-          >
-            <Home size={18} />
-            {t("common.menu")}
-          </button>
-          <button
-            className="game-result-action game-result-action-primary flex h-12 w-full items-center justify-center gap-2"
-            onClick={restart}
-          >
-            <RefreshCcw size={18} />
-            {t("common.restart")}
-          </button>
+          <div className="defeat-outcome-actions">
+            <button
+              className="game-result-action game-result-action-secondary flex h-12 w-full min-w-0 items-center justify-center"
+              onClick={onContemplateFuture}
+            >
+              <span>{t("destiny.contemplateAnother")}</span>
+            </button>
+            <button
+              className="game-result-action game-result-action-primary flex h-12 w-full min-w-0 items-center justify-center gap-2"
+              onClick={onRewriteFuture}
+            >
+              <RefreshCcw size={18} aria-hidden="true" />
+              <span>{t("destiny.rewriteThis")}</span>
+            </button>
+          </div>
         </div>
-      </section>
+        </div>
+      )}
     </div>
   );
-}
-
-function generateRandomSeed(): string {
-  const cryptoRandom = new Uint32Array(2);
-  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
-    crypto.getRandomValues(cryptoRandom);
-  } else {
-    cryptoRandom[0] = Math.floor(Math.random() * 0xffffffff);
-    cryptoRandom[1] = Math.floor(Math.random() * 0xffffffff);
-  }
-  return `hostfall-${Date.now().toString(36)}-${cryptoRandom[0].toString(36)}${cryptoRandom[1].toString(36)}`;
 }

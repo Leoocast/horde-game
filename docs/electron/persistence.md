@@ -48,6 +48,14 @@ deck predeterminado.
 
 La primera vez que Electron no encuentra `preferences-v1.json`, importa idioma y audio desde los
 namespaces `localStorage` vigentes y crea el archivo. La web sigue usando esos adapters sin IPC.
+El mismo envelope de preferencias contiene el progreso mínimo de lecciones guiadas:
+`lessonId`, `completedRevision` y `completedAt`. Nunca contiene el paso activo, el escenario,
+bindings, timers o `GameState`. Los `preferences-v1.json` anteriores siguen siendo válidos y añaden
+este campo de forma aditiva; la clave de onboarding del nombre no equivale a completar un tutorial.
+
+Una pantalla `tutorial` no inicia checkpointing de resume. Entrar, salir o completar una lección no
+lee, reemplaza ni elimina `profile/saves/resume-v1.json`; un resume normal existente sólo se oculta
+mientras haya una lección obligatoria pendiente.
 
 F11 y los controles de Pantalla alternan fullscreen; coordenadas, tamaño, maximizado y fullscreen
 se guardan localmente. Al minimizar, perder foco o suspender el sistema se detienen SFX y se pausa

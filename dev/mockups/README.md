@@ -14,9 +14,44 @@ Sirve esta carpeta en `http://127.0.0.1:4321`. También hay una entrada `mockups
 `.claude/launch.json`. Los archivos se pueden abrir directamente con doble clic, pero el servidor
 evita las restricciones de `file://`.
 
+Las maquetas que suben una imagen como textura WebGL **sólo funcionan servidas**: una imagen cargada
+desde `file://` tiene origen opaco y `texImage2D` la rechaza. Por eso `serve.mjs` expone además el
+alias de sólo lectura `/vendor/three.min.js`, que resuelve al Three.js de `node_modules`: la ruta
+relativa `../../../node_modules/...` sirve al abrir con doble clic, pero cae fuera de la raíz del
+servidor. Las maquetas WebGL prueban las dos rutas en ese orden.
+
+## Estructura
+
+```text
+index.html          hub con todas las maquetas
+serve.mjs           servidor estático
+assets/fonts/       woff2 usados por las maquetas (subsets latin)
+assets/ui_references/  capturas de referencia visual aportadas por el usuario
+ui/                 exploraciones de interfaz
+hud/                decisiones de HUD y disposición
+vfx/                exploraciones de efectos
+```
+
 ## Contenido
 
-- `main-menu.html` — tres direcciones para el menú principal, conmutables desde la barra superior.
+- `ui/ui-typography.html` — diez conjuntos tipográficos sobre la piel actual, con muestras EN/ES y una
+  prueba de encaje que mide cada cadena contra el ancho real de su hueco en `src/styles.css`.
+- `ui/ui-kit.html` — seis pieles completas (botones, modales, paneles, controles, HUD).
+- `ui/ui-actual-lacquer.html` — los componentes reales del juego en la piel actual y en laca azul.
+- `ui/keyword-icons.html` — los once Rasgos y el icono de reserva con SVG propios, comparados contra
+  el icono de `lucide-react` en uso, en tres familias de trazo y en el tamaño real de la insignia de
+  24 px y de la píldora del preview.
+
+### Fuentes
+
+`assets/fonts/` contiene dos grupos. Los `*-latin.woff2` son copias de
+`public/fonts/pact-of-elarion/`, las que el juego ya empaqueta. El resto son candidatas descargadas de
+Google Fonts, **todas OFL o Apache 2.0**, subset latin (cubre ñ, tildes, ¿ ¡ « »): Marcellus,
+Marcellus SC, Cormorant Garamond, Cormorant SC, Alegreya, Alegreya SC, EB Garamond, Spectral,
+Spectral SC, IM Fell English SC, Almendra SC, Cardo, Barlow Condensed, Archivo Narrow,
+Fira Sans Condensed y Bebas Neue. Si alguna se adopta, hay que copiar su woff2 a `public/fonts/` y
+añadir el `OFL.txt` correspondiente al paquete: la licencia exige distribuir su texto junto al
+archivo de fuente.
 
 ## Cómo están construidas
 

@@ -36,6 +36,15 @@ retirado. Su fuente de verdad es el JSON del deck.
 
 Estos documentos se conservan porque contienen decisiones o validaciones sin terminar:
 
+- [`plans/learn_to_play_tutorial.md`](plans/learn_to_play_tutorial.md) — documento vivo del nuevo
+  onboarding **Aprender a jugar**; fija el primer corte hasta su derrota predeterminada y la
+  aparición de **Contemplar otro futuro**, y aplaza el handoff a una partida real preparada.
+- [`plans/learn_to_play_implementation_plan.md`](plans/learn_to_play_implementation_plan.md) —
+  auditoría del framework, motor, producto y persistencia frente a ese flujo; las Fases 1 a 4 están
+  implementadas hasta el comienzo de la primera Oleada y las fases posteriores siguen abiertas.
+- [`plans/guided_tutorial_system_plan.md`](plans/guided_tutorial_system_plan.md) — framework escalable
+  de pausa, bloqueo, resaltado y explicación; sus fases están cerradas y la primera versión jugable
+  de la Primera Semilla se encuentra en QA e iteración pedagógica.
 - [`plans/generated_look_remediation_plan.md`](plans/generated_look_remediation_plan.md) — corrección
   de las señales visuales que hacen leer la UI como generada; no iniciado.
 - [`plans/seeds_of_destiny.md`](plans/seeds_of_destiny.md) — narrativa y persistencia futura.

@@ -1,0 +1,2178 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hostfall — Umbral de la Crónica</title>
+    <style>
+      @font-face {
+        font-family: "Cinzel";
+        font-style: normal;
+        font-weight: 500 900;
+        font-display: block;
+        src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+      }
+
+      @font-face {
+        font-family: "Lora";
+        font-style: normal;
+        font-weight: 400 700;
+        font-display: block;
+        src: url("../assets/fonts/lora-normal-latin.woff2") format("woff2");
+      }
+
+      :root {
+        --ink: #05090a;
+        --parchment: #e8dec0;
+        --gold: #c4a65f;
+        --gold-bright: #f0d998;
+        --verdant: #74aa81;
+        --verdant-bright: #c7e6b0;
+        --grave: #a2563f;
+        --grave-bright: #e0a17b;
+        --cold: #7ba6a5;
+        --muted: #91a09a;
+        --muted-dim: #6f817c;
+        --rule: rgb(162 145 89 / 0.23);
+        --serif: "Lora", Georgia, serif;
+        --display: "Cinzel", Georgia, serif;
+        --sans: "Segoe UI", system-ui, sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        padding: 0 0 72px;
+        background:
+          radial-gradient(ellipse at 50% -12%, rgb(37 75 69 / 0.2), transparent 52%),
+          #04090a;
+        color: var(--muted);
+        font: 15px/1.6 var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      main { width: min(1180px, 100%); margin: 0 auto; padding: 0 28px; }
+
+      header { border-bottom: 1px solid var(--rule); padding: 52px 0 29px; }
+      .back { display: inline-block; margin-bottom: 8px; color: var(--muted-dim); font-size: 12px; text-decoration: none; }
+      .back:hover { color: var(--gold-bright); }
+      .eyebrow { color: #8eb6ad; font-size: 10px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; }
+      h1 {
+        margin: 11px 0 0;
+        color: var(--parchment);
+        font: 500 clamp(31px, 4.4vw, 48px)/1.06 var(--serif);
+        letter-spacing: 0.015em;
+      }
+      header p { max-width: 72ch; margin: 15px 0 0; }
+      header strong { color: var(--gold-bright); font-weight: 600; }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin: 30px 0 14px;
+      }
+
+      button,
+      input {
+        height: 42px;
+        border: 1px solid rgb(159 143 91 / 0.38);
+        border-radius: 2px;
+        background: linear-gradient(180deg, rgb(25 34 35 / 0.96), rgb(8 14 16 / 0.98));
+        color: var(--muted);
+        font-family: var(--sans);
+      }
+
+      button {
+        padding: 0 20px;
+        cursor: pointer;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+      }
+      button:hover:not(:disabled) { border-color: rgb(225 199 119 / 0.72); color: var(--gold-bright); }
+      button:disabled { cursor: default; opacity: 0.4; }
+      button:focus-visible,
+      input:focus-visible { outline: 2px solid rgb(236 211 132 / 0.9); outline-offset: 2px; }
+      button[aria-pressed="true"] { border-color: rgb(225 199 119 / 0.62); color: var(--gold-bright); }
+      label { color: var(--muted-dim); font-size: 9px; font-weight: 900; letter-spacing: 0.22em; text-transform: uppercase; }
+      input { width: 152px; padding: 0 12px; color: var(--gold-bright); font-size: 12px; letter-spacing: 0.08em; }
+      .control-spacer { flex: 1; }
+      .phase-readout { min-width: 190px; color: #aebbb5; font: 600 11px/1.2 var(--display); letter-spacing: 0.14em; text-align: right; text-transform: uppercase; }
+
+      .stage {
+        --mx: 0;
+        --my: 0;
+        --d-selection: 1540ms;
+        --d-seal: 2260ms;
+        --delay-seal: 470ms;
+        --d-arrival: 1060ms;
+        --delay-arrival: 2430ms;
+        --d-combatant: 820ms;
+        --delay-combatant: 2740ms;
+        --d-impact: 920ms;
+        --delay-impact: 3060ms;
+        --d-rift: 980ms;
+        --delay-rift: 3540ms;
+        --d-release: 784ms;
+        --delay-release: 3820ms;
+        --d-gameplay: 1900ms;
+        --delay-gameplay: 2360ms;
+        --d-instrument: 820ms;
+        --delay-instrument: 4700ms;
+        --delay-phase: 5300ms;
+        --encounter-cut-angle: 29.3578deg;
+        position: relative;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        border: 1px solid rgb(158 142 90 / 0.3);
+        border-radius: 2px;
+        background: #020607;
+        box-shadow: 0 32px 80px rgb(0 0 0 / 0.32);
+        isolation: isolate;
+      }
+
+      .stage::before,
+      .stage::after {
+        position: absolute;
+        z-index: 40;
+        inset: 0;
+        content: "";
+        pointer-events: none;
+      }
+
+      .stage::before {
+        background:
+          linear-gradient(90deg, rgb(0 0 0 / 0.7), transparent 11% 89%, rgb(0 0 0 / 0.7)),
+          radial-gradient(ellipse at center, transparent 40%, rgb(0 3 4 / 0.76) 100%);
+        opacity: 0.68;
+      }
+
+      .stage::after {
+        z-index: 41;
+        background:
+          repeating-linear-gradient(0deg, transparent 0 3px, rgb(226 215 171 / 0.012) 3px 4px),
+          linear-gradient(110deg, transparent 42%, rgb(255 246 204 / 0.035) 50%, transparent 58%);
+        mix-blend-mode: screen;
+      }
+
+      .scene { position: absolute; inset: 0; }
+
+      .selection-scene {
+        z-index: 4;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        background:
+          radial-gradient(ellipse 38% 52% at 16% 50%, rgb(40 109 71 / 0.18), transparent 72%),
+          radial-gradient(ellipse 38% 52% at 84% 50%, rgb(126 49 37 / 0.2), transparent 72%),
+          linear-gradient(112deg, rgb(7 17 15 / 0.8), rgb(3 7 8 / 0.74) 48%, rgb(17 9 9 / 0.8));
+        transform: translate3d(calc(var(--mx) * -4px), calc(var(--my) * -3px), 0) scale(1.01);
+      }
+
+      .selection-scene::before {
+        position: absolute;
+        inset: 0;
+        background:
+          repeating-linear-gradient(90deg, transparent 0 74px, rgb(214 194 126 / 0.025) 74px 75px),
+          repeating-linear-gradient(0deg, transparent 0 60px, rgb(214 194 126 / 0.02) 60px 61px),
+          radial-gradient(circle at center, transparent 0 14%, rgb(0 0 0 / 0.24) 44%, transparent 74%);
+        content: "";
+        mask-image: linear-gradient(90deg, transparent, black 12% 88%, transparent);
+        pointer-events: none;
+      }
+
+      .selection-topbar {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        min-height: 64px;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        border-bottom: 1px solid rgb(176 157 96 / 0.19);
+        padding: 10px 28px;
+        background: linear-gradient(180deg, rgb(4 9 10 / 0.96), rgb(5 11 12 / 0.72));
+      }
+
+      .selection-back,
+      .future-code,
+      .selection-kicker { font-size: 8px; font-weight: 900; letter-spacing: 0.24em; text-transform: uppercase; }
+      .selection-back { color: #72837e; }
+      .selection-title { text-align: center; }
+      .selection-title strong { display: block; color: #ddd2b1; font: 500 clamp(17px, 2.3vw, 25px)/1 var(--display); letter-spacing: 0.1em; text-transform: uppercase; }
+      .selection-kicker { display: block; margin-bottom: 4px; color: #8d7b4c; }
+      .future-code { justify-self: end; color: #90aaa2; }
+      .future-code b { color: #d9c88d; font-weight: 900; }
+
+      .selection-body {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        min-height: 0;
+        grid-template-columns: minmax(0, 1fr) 78px minmax(0, 1fr);
+        align-items: center;
+        gap: 17px;
+        padding: clamp(18px, 4vh, 34px) clamp(24px, 4vw, 58px);
+      }
+
+      .choice-panel {
+        --side: var(--verdant);
+        --side-bright: var(--verdant-bright);
+        --side-soft: rgb(64 134 80 / 0.22);
+        position: relative;
+        display: grid;
+        min-width: 0;
+        min-height: min(308px, 39vw);
+        grid-template-columns: minmax(108px, 0.72fr) minmax(140px, 1.28fr);
+        align-items: center;
+        gap: clamp(14px, 2.2vw, 30px);
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--side) 55%, #586360);
+        background:
+          radial-gradient(circle at 12% 16%, var(--side-soft), transparent 48%),
+          linear-gradient(135deg, rgb(20 30 29 / 0.88), rgb(4 9 10 / 0.92));
+        padding: clamp(18px, 2.6vw, 30px);
+        box-shadow: inset 0 1px rgb(239 230 194 / 0.05), 0 20px 40px rgb(0 0 0 / 0.32), 0 0 28px var(--side-soft);
+      }
+
+      .choice-panel.host {
+        --side: var(--grave);
+        --side-bright: var(--grave-bright);
+        --side-soft: rgb(142 62 42 / 0.23);
+        grid-template-columns: minmax(140px, 1.28fr) minmax(108px, 0.72fr);
+        background:
+          radial-gradient(circle at 88% 16%, var(--side-soft), transparent 48%),
+          linear-gradient(225deg, rgb(27 21 20 / 0.9), rgb(5 9 10 / 0.94));
+      }
+
+      .choice-panel::before,
+      .choice-panel::after {
+        position: absolute;
+        content: "";
+        pointer-events: none;
+      }
+
+      .choice-panel::before {
+        top: 0;
+        right: 10%;
+        left: 10%;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--side-bright), transparent);
+        box-shadow: 0 0 15px var(--side);
+      }
+
+      .choice-panel::after { inset: 5px; border: 1px solid color-mix(in srgb, var(--side) 17%, transparent); }
+
+      .identity-card {
+        position: relative;
+        z-index: 1;
+        width: min(100%, 166px);
+        aspect-ratio: 0.718;
+        justify-self: center;
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--side-bright) 64%, #79725d);
+        border-radius: 5px;
+        background:
+          radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--side) 48%, transparent), transparent 32%),
+          linear-gradient(155deg, #17221d, #07100f 52%, #030707);
+        box-shadow: 8px 13px 25px rgb(0 0 0 / 0.58), 0 0 28px var(--side-soft);
+        transform: rotate(-2.5deg);
+      }
+
+      .host .identity-card { order: 2; transform: rotate(2.5deg); }
+      .identity-card::before {
+        position: absolute;
+        inset: 7px;
+        border: 1px solid color-mix(in srgb, var(--side-bright) 38%, transparent);
+        border-radius: 50% 50% 4px 4px;
+        content: "";
+      }
+      .identity-card::after {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(116deg, transparent 34%, rgb(255 245 208 / 0.18) 47%, transparent 58%),
+          linear-gradient(180deg, transparent 48%, rgb(0 4 4 / 0.86));
+        content: "";
+        transform: translateX(-118%);
+        animation: card-sheen 7s 1.2s ease-in-out infinite;
+      }
+
+      .identity-card svg { position: absolute; inset: 12% 10% 14%; width: 80%; height: 74%; color: var(--side-bright); filter: drop-shadow(0 0 12px var(--side)); opacity: 0.86; }
+      .identity-card-label { position: absolute; z-index: 2; right: 9px; bottom: 8px; left: 9px; color: #ece0bd; font: 700 clamp(8px, 0.9vw, 11px)/1.25 var(--display); letter-spacing: 0.05em; text-align: center; text-transform: uppercase; }
+
+      .choice-copy { position: relative; z-index: 2; min-width: 0; }
+      .host .choice-copy { order: 1; text-align: right; }
+      .choice-copy small { color: color-mix(in srgb, var(--side-bright) 58%, #869590); font-size: 8px; font-weight: 900; letter-spacing: 0.24em; text-transform: uppercase; }
+      .choice-copy h2 { margin: 6px 0 8px; color: var(--side-bright); font: 500 clamp(18px, 2.2vw, 31px)/1.05 var(--serif); text-shadow: 0 2px 12px #000, 0 0 20px var(--side-soft); }
+      .choice-copy p { max-width: 28ch; margin: 0; color: #899993; font: 400 clamp(10px, 1.18vw, 14px)/1.45 var(--serif); }
+      .host .choice-copy p { margin-left: auto; }
+      .choice-tag { display: inline-block; margin-top: 15px; border-top: 1px solid color-mix(in srgb, var(--side) 35%, transparent); padding-top: 8px; color: #9fa9a3; font-size: 8px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; }
+
+      .choice-versus { position: relative; display: grid; align-content: center; justify-items: center; gap: 7px; color: #c9b77d; }
+      .choice-versus::before {
+        position: absolute;
+        width: 84px;
+        height: 84px;
+        border: 1px solid rgb(205 184 117 / 0.2);
+        border-radius: 50%;
+        background: radial-gradient(circle, rgb(195 168 86 / 0.15), transparent 68%);
+        content: "";
+        animation: versus-breathe 3.8s ease-in-out infinite;
+      }
+      .choice-versus span { width: 1px; height: 34px; background: linear-gradient(transparent, rgb(181 158 88 / 0.5)); }
+      .choice-versus span:last-child { background: linear-gradient(rgb(181 158 88 / 0.5), transparent); }
+      .choice-versus svg { position: relative; z-index: 1; width: 25px; filter: drop-shadow(0 0 8px rgb(206 179 94 / 0.42)); }
+      .choice-versus b { position: relative; z-index: 1; font: 700 10px/1 var(--display); letter-spacing: 0.16em; }
+
+      .selection-footer {
+        position: relative;
+        z-index: 3;
+        display: flex;
+        min-height: 64px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        border-top: 1px solid rgb(172 153 91 / 0.2);
+        padding: 10px 27px;
+        background: linear-gradient(180deg, rgb(5 11 12 / 0.76), rgb(3 7 8 / 0.98));
+      }
+      .selection-summary { display: flex; align-items: center; gap: 10px; color: #7e8e89; font-size: 8px; font-weight: 900; letter-spacing: 0.18em; text-transform: uppercase; }
+      .selection-summary strong { color: #c1b891; font: 600 10px/1 var(--display); letter-spacing: 0.09em; }
+      .selection-summary i { color: #8b7743; font-style: normal; }
+
+      .begin-button {
+        position: relative;
+        min-width: 238px;
+        height: 43px;
+        overflow: hidden;
+        border-color: rgb(217 190 106 / 0.62);
+        background: linear-gradient(180deg, rgb(78 65 31 / 0.68), rgb(22 24 17 / 0.92));
+        color: #f0dfaa;
+        box-shadow: inset 0 0 0 1px rgb(255 236 167 / 0.08), 0 0 22px rgb(190 158 66 / 0.13);
+      }
+      .begin-button::before {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(104deg, transparent 36%, rgb(255 241 191 / 0.23) 49%, transparent 62%);
+        content: "";
+        transform: translateX(-120%);
+        animation: begin-sheen 3.8s 1s ease-in-out infinite;
+      }
+      .begin-button span { position: relative; z-index: 1; }
+      .begin-button:hover { background: linear-gradient(180deg, rgb(105 86 37 / 0.72), rgb(29 30 18 / 0.94)); box-shadow: inset 0 0 0 1px rgb(255 236 167 / 0.13), 0 0 30px rgb(203 170 76 / 0.22); }
+
+      /* El espacio no es el fondo de la maqueta: es el fondo del juego, y está detrás de
+         las dos pantallas durante toda la transición. Lo que se ve por el corazón abierto
+         de la estrella es este mismo cielo, dibujado por el mismo shader. */
+      #spaceCanvas { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+      #travelCanvas,
+      #thresholdWebgl { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+      #travelCanvas { z-index: 15; }
+      #thresholdWebgl { z-index: 19; display: block; opacity: 0; transition: opacity 120ms linear; }
+      .stage.has-webgl #thresholdWebgl { opacity: 1; }
+      .stage.has-webgl #travelCanvas { opacity: 0; }
+      .stage.has-webgl .threshold-seal,
+      .stage.has-webgl .impact-cross,
+      .stage.has-webgl .ingame-rift,
+      .stage.has-webgl .stage-flash { display: none; }
+
+      .threshold-seal {
+        position: absolute;
+        z-index: 18;
+        top: 50%;
+        left: 50%;
+        width: clamp(150px, 24vw, 250px);
+        aspect-ratio: 1;
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(-50%, -50%) scale(0.18) rotate(-28deg);
+      }
+      .threshold-seal::before,
+      .threshold-seal::after {
+        position: absolute;
+        inset: 8%;
+        border: 1px solid rgb(235 210 132 / 0.58);
+        border-radius: 50%;
+        content: "";
+        box-shadow: 0 0 14px rgb(216 185 92 / 0.24), inset 0 0 20px rgb(194 159 64 / 0.12);
+      }
+      .threshold-seal::after { inset: 22%; border-style: dashed; border-color: rgb(167 213 183 / 0.55); }
+      .threshold-seal svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 8px rgb(229 200 111 / 0.52)); }
+      .threshold-seal .seal-orbit { transform-origin: center; animation: seal-orbit 9s linear infinite; }
+      .threshold-seal .seal-orbit.reverse { animation-direction: reverse; animation-duration: 13s; }
+      .threshold-seal .seal-mark { transform-origin: center; }
+
+      .gameplay-scene {
+        z-index: 1;
+        overflow: hidden;
+        opacity: 0;
+        background: #030708;
+        transform: scale(1.16);
+        transform-origin: 50% 50%;
+      }
+
+      .gameplay-board {
+        position: absolute;
+        inset: -3%;
+        background:
+          linear-gradient(180deg, rgb(2 7 8 / 0.12), rgb(0 3 4 / 0.28)),
+          url("assets/defeat-board-reference.png") center / cover no-repeat;
+        filter: brightness(0.7) saturate(0.76) contrast(1.04);
+        transform: translate3d(calc(var(--mx) * 4px), calc(var(--my) * 3px), 0) scale(1.025);
+      }
+
+      /* Instrumento de grados. Valores calcados de src/styles.css: si se retocan aquí,
+         la maqueta deja de estar prometiendo el aparato que el tablero tiene de verdad.
+         Aparece cuando la estrella se planta, no antes. */
+      .board-instrument {
+        position: absolute;
+        z-index: 2;
+        inset: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .board-instrument .cell { fill: none; stroke: rgb(150 198 190 / 0.055); stroke-width: 1; }
+      .board-instrument .frame { fill: none; stroke: rgb(199 170 105 / 0.2); stroke-width: 1.1; }
+      .board-instrument .edge-tick { stroke: rgb(180 205 198 / 0.26); stroke-width: 0.9; }
+      .board-instrument .glass-lip { fill: none; stroke: rgb(226 240 246 / 0.11); stroke-width: 1; vector-effect: non-scaling-stroke; }
+      .board-instrument .dial-ring,
+      .board-instrument .dial-arc { fill: none; vector-effect: non-scaling-stroke; stroke-width: 1; }
+      .board-instrument .dial-ring { stroke: rgb(199 170 105 / 0.16); }
+      .board-instrument .dial-arc { stroke: rgb(199 170 105 / 0.12); }
+      .board-instrument .dial-tick { fill: none; stroke: rgb(214 192 122 / 0.24); stroke-width: 1; vector-effect: non-scaling-stroke; }
+      .board-instrument .dial-label { fill: rgb(210 188 125 / 0.3); font: 500 9px/1 Consolas, "Courier New", monospace; letter-spacing: 0.12em; }
+
+      .gameplay-atmosphere {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 50% 22% at 50% 4%, rgb(215 188 108 / 0.09), transparent 74%),
+          radial-gradient(ellipse at center, transparent 34%, rgb(0 3 4 / 0.42) 100%),
+          linear-gradient(90deg, rgb(10 45 30 / 0.13), transparent 36% 64%, rgb(68 22 17 / 0.14));
+        pointer-events: none;
+      }
+
+      .gameplay-topline {
+        position: absolute;
+        z-index: 3;
+        top: 0;
+        right: 0;
+        left: 0;
+        display: grid;
+        min-height: 39px;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        border-bottom: 1px solid rgb(193 173 106 / 0.24);
+        padding: 0 24px;
+        background: linear-gradient(180deg, rgb(2 7 8 / 0.91), rgb(3 9 10 / 0.58));
+        color: #879892;
+        font: 800 clamp(6px, 0.8vw, 9px)/1 var(--display);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+      .gameplay-topline span:nth-child(2) { color: #dfcc92; }
+      .gameplay-topline span:last-child { justify-self: end; }
+      .gameplay-topline b { color: #c5b476; font-weight: 800; }
+
+      .gameplay-phase-banner {
+        position: absolute;
+        z-index: 5;
+        top: 50%;
+        left: 50%;
+        display: grid;
+        width: auto;
+        min-width: min(330px, 62%);
+        min-height: 82px;
+        align-content: center;
+        justify-items: center;
+        opacity: 0;
+        border-top: 1px solid rgb(223 199 124 / 0.54);
+        border-bottom: 1px solid rgb(223 199 124 / 0.34);
+        background: radial-gradient(ellipse at center, rgb(16 22 20 / 0.94), rgb(3 9 10 / 0.88) 66%, transparent 72%);
+        color: #eee1bc;
+        text-align: center;
+        text-shadow: 0 2px 10px #000;
+        transform: translate(-50%, -44%) scaleX(0.68);
+      }
+      .gameplay-phase-banner::before,
+      .gameplay-phase-banner::after {
+        position: absolute;
+        top: -3px;
+        width: 6px;
+        height: 6px;
+        border: 1px solid rgb(230 204 126 / 0.72);
+        content: "";
+        transform: rotate(45deg);
+      }
+      .gameplay-phase-banner::before { left: 16%; }
+      .gameplay-phase-banner::after { right: 16%; }
+      .gameplay-phase-banner small { color: #8da099; font: 800 8px/1 var(--display); letter-spacing: 0.3em; text-transform: uppercase; }
+      .gameplay-phase-banner strong { margin-top: 7px; font: 600 clamp(24px, 3.8vw, 43px)/1 var(--serif); letter-spacing: 0.08em; text-transform: uppercase; }
+      .gameplay-phase-banner span { margin-top: 5px; color: #c5b16f; font: 800 9px/1 var(--display); letter-spacing: 0.24em; text-transform: uppercase; }
+
+      .gameplay-handoff {
+        position: absolute;
+        z-index: 4;
+        right: 26%;
+        bottom: 4.5%;
+        left: 26%;
+        opacity: 0;
+        color: #9caaa4;
+        font: 700 clamp(7px, 0.82vw, 9px)/1 var(--display);
+        letter-spacing: 0.27em;
+        text-align: center;
+        text-shadow: 0 2px 8px #000;
+        text-transform: uppercase;
+      }
+
+      .arrival-scene {
+        z-index: 2;
+        overflow: hidden;
+        opacity: 0;
+        background: transparent;
+        transform: scale(1);
+        transform-origin: 50% 50%;
+      }
+
+      .arrival-board {
+        position: absolute;
+        z-index: 1;
+        inset: 0;
+        pointer-events: none;
+      }
+      .arrival-board::before,
+      .arrival-board::after {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, rgb(4 22 15 / 0.82), transparent 40% 60%, rgb(52 16 12 / 0.82)),
+          radial-gradient(ellipse 44% 80% at 18% 52%, rgb(51 132 80 / 0.18), transparent 70%),
+          radial-gradient(ellipse 44% 80% at 82% 52%, rgb(155 62 39 / 0.2), transparent 70%),
+          linear-gradient(105deg, rgb(5 13 11 / 0.8), rgb(1 4 3 / 0.84));
+          content: "";
+        will-change: transform;
+      }
+      .arrival-board::before { clip-path: polygon(0 0, 0 100%, 100% 100%); }
+      .arrival-board::after { clip-path: polygon(0 0, 100% 0, 100% 100%); }
+
+      .arena-lines {
+        position: absolute;
+        inset: 0;
+        opacity: 0.56;
+        background:
+          linear-gradient(90deg, transparent 49.9%, rgb(229 208 137 / 0.28) 50%, transparent 50.1%),
+          linear-gradient(12deg, transparent 49.85%, rgb(125 165 151 / 0.14) 50%, transparent 50.15%),
+          linear-gradient(-12deg, transparent 49.85%, rgb(166 91 66 / 0.14) 50%, transparent 50.15%);
+        mask-image: radial-gradient(ellipse at center, black, transparent 76%);
+      }
+
+      .arrival-kicker {
+        position: absolute;
+        z-index: 4;
+        top: 6.5%;
+        left: 50%;
+        color: #a9b7af;
+        font: 700 clamp(8px, 1vw, 11px)/1 var(--display);
+        letter-spacing: 0.32em;
+        text-shadow: 0 2px 8px #000;
+        text-transform: uppercase;
+        transform: translateX(-50%);
+        white-space: nowrap;
+      }
+      .arrival-kicker::before,
+      .arrival-kicker::after { position: absolute; top: 50%; width: 70px; height: 1px; background: linear-gradient(90deg, transparent, rgb(207 186 118 / 0.5)); content: ""; }
+      .arrival-kicker::before { right: calc(100% + 17px); }
+      .arrival-kicker::after { left: calc(100% + 13px); transform: rotate(180deg); }
+
+      .arrival-combatant {
+        --side: var(--verdant);
+        --side-bright: var(--verdant-bright);
+        --side-soft: rgb(65 141 82 / 0.28);
+        position: absolute;
+        z-index: 4;
+        top: 17%;
+        bottom: 14%;
+        left: 5%;
+        display: grid;
+        width: 42%;
+        grid-template-columns: minmax(118px, 0.62fr) minmax(150px, 1.38fr);
+        align-items: center;
+        gap: clamp(14px, 2vw, 28px);
+        opacity: 0;
+        transform: translate3d(-28%, 0, 0);
+      }
+      .arrival-combatant.host {
+        --side: var(--grave);
+        --side-bright: var(--grave-bright);
+        --side-soft: rgb(151 62 40 / 0.29);
+        right: 5%;
+        left: auto;
+        grid-template-columns: minmax(150px, 1.38fr) minmax(118px, 0.62fr);
+        transform: translate3d(28%, 0, 0);
+      }
+
+      .arrival-card {
+        position: relative;
+        width: min(100%, 175px);
+        aspect-ratio: 0.718;
+        justify-self: center;
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--side-bright) 72%, #8a7d55);
+        border-radius: 6px;
+        background:
+          radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--side) 52%, transparent), transparent 32%),
+          linear-gradient(160deg, color-mix(in srgb, var(--side) 15%, #101816), #030707 66%);
+        box-shadow: 10px 18px 34px rgb(0 0 0 / 0.66), 0 0 46px var(--side-soft);
+        transform: perspective(700px) rotateY(8deg) rotate(-3deg);
+      }
+      .host .arrival-card { order: 2; transform: perspective(700px) rotateY(-8deg) rotate(3deg); }
+      .arrival-card::before { position: absolute; inset: 7px; border: 1px solid color-mix(in srgb, var(--side-bright) 38%, transparent); border-radius: 50% 50% 3px 3px; content: ""; }
+      .arrival-card::after { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 48%, rgb(0 2 3 / 0.9)); content: ""; }
+      .arrival-card svg { position: absolute; inset: 10% 8% 14%; width: 84%; height: 76%; color: var(--side-bright); filter: drop-shadow(0 0 18px var(--side)); opacity: 0.9; }
+
+      .arrival-copy { min-width: 0; text-shadow: 0 3px 14px #000; }
+      .host .arrival-copy { order: 1; text-align: right; }
+      .arrival-copy small { color: color-mix(in srgb, var(--side-bright) 56%, #9aa7a0); font-size: 8px; font-weight: 900; letter-spacing: 0.3em; text-transform: uppercase; }
+      .arrival-copy h2 { margin: 8px 0 9px; color: var(--side-bright); font: 600 clamp(19px, 2.6vw, 39px)/1.02 var(--serif); text-transform: uppercase; text-wrap: balance; }
+      .arrival-copy p { margin: 0; color: #abb4ad; font: 500 clamp(9px, 1.15vw, 14px)/1.35 var(--display); letter-spacing: 0.1em; text-transform: uppercase; }
+
+      .arrival-versus {
+        position: absolute;
+        z-index: 7;
+        top: 50%;
+        left: 50%;
+        display: grid;
+        width: clamp(100px, 13vw, 150px);
+        aspect-ratio: 1;
+        place-items: center;
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.3) rotate(-12deg);
+      }
+      .arrival-versus::before,
+      .arrival-versus::after { position: absolute; border-radius: 50%; content: ""; }
+      .arrival-versus::before { inset: 2%; border: 1px solid rgb(234 215 151 / 0.56); box-shadow: 0 0 32px rgb(229 202 124 / 0.34), inset 0 0 30px rgb(207 175 84 / 0.13); }
+      .arrival-versus::after { inset: 17%; border: 1px dashed rgb(154 187 163 / 0.46); }
+      .arrival-versus b { color: #f4e7bf; font: 700 clamp(25px, 4.2vw, 52px)/1 var(--display); letter-spacing: 0.05em; text-shadow: 0 2px 4px #000, 0 0 18px rgb(238 213 137 / 0.62); }
+
+      .impact-cross {
+        position: absolute;
+        z-index: 6;
+        top: 50%;
+        left: 50%;
+        width: 142vmax;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, #8cb68d 34%, #fffbd9 50%, #ce7658 66%, transparent);
+        box-shadow: 0 0 18px #fffbd9, 0 0 44px rgb(216 183 95 / 0.66);
+        opacity: 0;
+        pointer-events: none;
+        transform: rotate(var(--encounter-cut-angle)) scaleX(0.04);
+        transform-origin: center;
+        translate: -50% -50%;
+      }
+
+      .ingame-rift {
+        position: absolute;
+        z-index: 9;
+        top: 50%;
+        left: 50%;
+        width: 3px;
+        height: 150vmax;
+        background: linear-gradient(180deg, transparent, #d7bd73 22%, #fffbd9 50%, #d7bd73 78%, transparent);
+        box-shadow: 0 0 12px #ecd78e, 0 0 45px rgb(177 143 60 / 0.72), 0 0 100px rgb(177 143 60 / 0.42);
+        opacity: 0;
+        pointer-events: none;
+        transform: rotate(calc(var(--encounter-cut-angle) - 90deg)) scaleY(0.04);
+        transform-origin: center;
+        translate: -50% -50%;
+      }
+
+      .chapter-plate {
+        position: absolute;
+        z-index: 6;
+        right: 19%;
+        bottom: 5.5%;
+        left: 19%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        opacity: 0;
+        border-top: 1px solid rgb(201 178 107 / 0.36);
+        border-bottom: 1px solid rgb(201 178 107 / 0.23);
+        padding: 8px 18px;
+        background: linear-gradient(90deg, transparent, rgb(3 9 10 / 0.86) 16% 84%, transparent);
+        color: #b7c0b8;
+        font: 700 clamp(7px, 0.9vw, 10px)/1 var(--display);
+        letter-spacing: 0.23em;
+        text-transform: uppercase;
+      }
+      .chapter-plate i { color: #9a8148; font-style: normal; }
+      .chapter-plate b { color: #ebd79d; font-weight: 800; }
+
+      .stage-flash {
+        position: absolute;
+        z-index: 30;
+        inset: 0;
+        opacity: 0;
+        background:
+          radial-gradient(circle at 50% 50%, #fffbe5 0 2%, rgb(240 219 152 / 0.88) 5%, rgb(123 171 146 / 0.34) 16%, transparent 38%),
+          #edf1d6;
+        mix-blend-mode: screen;
+        pointer-events: none;
+      }
+
+      .stage.is-playing .selection-scene {
+        animation: selection-plunge var(--d-selection) linear both;
+      }
+      .stage.is-playing .choice-panel.player { animation: panel-left-plunge var(--d-selection) linear both; }
+      .stage.is-playing .choice-panel.host { animation: panel-right-plunge var(--d-selection) linear both; }
+      .stage.is-playing .choice-versus::before { animation: none; }
+      .stage.is-playing .threshold-seal { animation: threshold-open var(--d-seal) var(--delay-seal) linear both; }
+      .stage.is-playing .gameplay-scene { animation: gameplay-arrival var(--d-gameplay) var(--delay-gameplay) linear both; }
+      .stage.is-playing .gameplay-atmosphere { animation: gameplay-lighting var(--d-gameplay) var(--delay-gameplay) linear both; }
+      /* El aparato no se desvanece nunca: la estrella se lo entrega y se queda. */
+      .stage.is-playing .board-instrument { animation: instrument-settle var(--d-instrument) var(--delay-instrument) ease-out both; }
+      .stage.is-playing .gameplay-phase-banner { animation: gameplay-phase 820ms var(--delay-phase) cubic-bezier(0.16, 1, 0.3, 1) both; }
+      .stage.is-playing .gameplay-handoff { animation: gameplay-handoff 480ms var(--delay-phase) ease-out both; animation-delay: calc(var(--delay-phase) + 500ms); }
+      .stage.is-playing .arrival-scene {
+        animation: arena-arrival var(--d-arrival) var(--delay-arrival) cubic-bezier(0.2, 0.82, 0.2, 1) both;
+      }
+      .stage.is-playing .arrival-board::before { animation: encounter-curtain-player-release var(--d-release) var(--delay-release) cubic-bezier(0.72, 0, 0.22, 1) forwards; }
+      .stage.is-playing .arrival-board::after { animation: encounter-curtain-host-release var(--d-release) var(--delay-release) cubic-bezier(0.72, 0, 0.22, 1) forwards; }
+      .stage.is-playing .arrival-kicker { animation: kicker-release 686ms calc(var(--delay-release) + 98ms) ease-in forwards; }
+      .stage.is-playing .arrival-combatant.player {
+        animation:
+          combatant-left-in var(--d-combatant) var(--delay-combatant) cubic-bezier(0.14, 0.9, 0.2, 1.08) both,
+          combatant-left-release var(--d-release) var(--delay-release) cubic-bezier(0.72, 0, 0.22, 1) forwards;
+      }
+      .stage.is-playing .arrival-combatant.host {
+        animation:
+          combatant-right-in var(--d-combatant) var(--delay-combatant) cubic-bezier(0.14, 0.9, 0.2, 1.08) both,
+          combatant-right-release var(--d-release) var(--delay-release) cubic-bezier(0.72, 0, 0.22, 1) forwards;
+      }
+      .stage.is-playing .arrival-versus {
+        animation:
+          versus-impact var(--d-impact) var(--delay-impact) cubic-bezier(0.12, 0.9, 0.2, 1.18) both,
+          versus-release 686ms calc(var(--delay-release) + 98ms) ease-in forwards;
+      }
+      .stage.is-playing .impact-cross { animation: impact-cross var(--d-impact) var(--delay-impact) ease-out both; }
+      .stage.is-playing .ingame-rift { animation: encounter-rift var(--d-rift) var(--delay-rift) cubic-bezier(0.22, 0.76, 0.18, 1) both; }
+      .stage.is-playing .chapter-plate {
+        animation:
+          chapter-plate-in 720ms calc(var(--delay-impact) + 380ms) ease-out both,
+          chapter-plate-out 686ms calc(var(--delay-release) + 98ms) ease-in forwards;
+      }
+      .stage.is-playing .stage-flash { animation: threshold-flash 760ms var(--delay-arrival) ease-out both; }
+
+      .stage.is-arrived .selection-scene,
+      .stage.is-arrived .threshold-seal { display: none; }
+      .stage.is-arrived .arrival-scene { visibility: hidden; opacity: 0; }
+      .stage.is-arrived .gameplay-scene { opacity: 1; transform: scale(1); }
+      .stage.is-arrived .board-instrument { opacity: 1; }
+      .stage.is-arrived .gameplay-phase-banner { opacity: 0; }
+      .stage.is-arrived .gameplay-handoff { opacity: 1; }
+
+      .scrub { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
+      .track { position: relative; height: 3px; flex: 1; background: rgb(146 133 88 / 0.18); }
+      .fill { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, #6eaa7d, #d4bd78 52%, #b65c43); box-shadow: 0 0 10px rgb(207 178 92 / 0.35); }
+      .clock { min-width: 48px; color: var(--muted-dim); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
+
+      .notes { margin-top: 46px; border-top: 1px solid var(--rule); padding-top: 26px; }
+      .notes h2 { margin: 0 0 12px; color: var(--parchment); font: 500 23px/1.2 var(--serif); }
+      .notes h3 { margin: 22px 0 5px; color: var(--gold-bright); font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+      .notes ul { max-width: 76ch; margin: 0; padding-left: 20px; }
+      .notes li { margin-bottom: 9px; }
+      .notes b { color: var(--gold-bright); font-weight: 600; }
+      .notes code { color: #9ec9c2; font-size: 13px; }
+
+      @keyframes selection-plunge {
+        0% { opacity: 1; transform: translate3d(calc(var(--mx) * -4px), calc(var(--my) * -3px), 0) scale(1.01); }
+        12% { opacity: 1; transform: translate3d(0, 0, 0) scale(1.04); }
+        26% { opacity: 1; transform: translate3d(0, 0, 0) scale(1.1); }
+        42% { opacity: 1; transform: translate3d(0, 0, 0) scale(1.22); }
+        58% { opacity: 0.99; transform: translate3d(0, 0, 0) scale(1.47); }
+        72% { opacity: 0.94; transform: translate3d(0, 0, 0) scale(1.9); }
+        84% { opacity: 0.78; transform: translate3d(0, 0, 0) scale(2.6); }
+        93% { opacity: 0.42; transform: translate3d(0, 0, 0) scale(3.35); }
+        100% { opacity: 0; transform: translate3d(0, 0, 0) scale(4.2); }
+      }
+      @keyframes panel-left-plunge { 0% { transform: translateX(0) rotate(0); } 100% { transform: translateX(-34%) rotate(-5deg); } }
+      @keyframes panel-right-plunge { 0% { transform: translateX(0) rotate(0); } 100% { transform: translateX(34%) rotate(5deg); } }
+      @keyframes threshold-open {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.34) rotate(-34deg); }
+        8% { opacity: 0.92; transform: translate(-50%, -50%) scale(0.38) rotate(-29deg); }
+        20% { opacity: 1; transform: translate(-50%, -50%) scale(0.47) rotate(-21deg); }
+        34% { opacity: 1; transform: translate(-50%, -50%) scale(0.62) rotate(-12deg); }
+        48% { opacity: 1; transform: translate(-50%, -50%) scale(0.85) rotate(-3deg); }
+        62% { opacity: 1; transform: translate(-50%, -50%) scale(1.2) rotate(7deg); }
+        75% { opacity: 1; transform: translate(-50%, -50%) scale(1.72) rotate(16deg); }
+        86% { opacity: 0.96; transform: translate(-50%, -50%) scale(2.46) rotate(23deg); }
+        94% { opacity: 0.68; transform: translate(-50%, -50%) scale(3.55) rotate(29deg); }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(5.8) rotate(35deg); }
+      }
+      @keyframes arena-arrival {
+        0% { opacity: 0; transform: scale(1.42); }
+        18% { opacity: 1; }
+        66% { opacity: 1; transform: scale(1.055); }
+        100% { opacity: 1; transform: scale(1); }
+      }
+      @keyframes combatant-left-in { 0% { opacity: 0; transform: translate3d(-30%, 1%, 0); } 62% { opacity: 1; transform: translate3d(2.5%, 0, 0); } 100% { opacity: 1; transform: translate3d(0, 0, 0); } }
+      @keyframes combatant-right-in { 0% { opacity: 0; transform: translate3d(30%, 1%, 0); } 62% { opacity: 1; transform: translate3d(-2.5%, 0, 0); } 100% { opacity: 1; transform: translate3d(0, 0, 0); } }
+      @keyframes versus-impact { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.25) rotate(-16deg); } 34% { opacity: 1; transform: translate(-50%, -50%) scale(1.28) rotate(3deg); } 62% { transform: translate(-50%, -50%) scale(0.92) rotate(-1deg); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); } }
+      @keyframes impact-cross {
+        0% { opacity: 0; transform: rotate(var(--encounter-cut-angle)) scaleX(0.04); }
+        18% { opacity: 0.95; transform: rotate(var(--encounter-cut-angle)) scaleX(1); }
+        56%, 100% { opacity: 0; transform: rotate(var(--encounter-cut-angle)) scaleX(1.18); }
+      }
+      @keyframes chapter-plate-in { from { opacity: 0; transform: translateY(9px) scaleX(0.72); } to { opacity: 1; transform: translateY(0) scaleX(1); } }
+      @keyframes gameplay-arrival {
+        0% { opacity: 0; transform: scale(1.16); }
+        8% { opacity: 1; transform: scale(1.1472); }
+        100% { opacity: 1; transform: scale(1); }
+      }
+      @keyframes gameplay-lighting { from { opacity: 0.82; } to { opacity: 0.34; } }
+      @keyframes encounter-curtain-player-release { from { transform: translateY(0); } to { transform: translateY(104%); } }
+      @keyframes encounter-curtain-host-release { from { transform: translateY(0); } to { transform: translateY(-104%); } }
+      @keyframes encounter-rift {
+        0%, 8% { opacity: 0; transform: rotate(calc(var(--encounter-cut-angle) - 90deg)) scaleY(0.04); }
+        24% { opacity: 1; transform: rotate(calc(var(--encounter-cut-angle) - 90deg)) scaleY(1); }
+        46% { opacity: 0.9; transform: rotate(calc(var(--encounter-cut-angle) - 90deg)) scaleY(1); }
+        82%, 100% { opacity: 0; transform: rotate(calc(var(--encounter-cut-angle) - 90deg)) scaleX(110) scaleY(1); }
+      }
+      @keyframes combatant-left-release { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, 104vh, 0); } }
+      @keyframes combatant-right-release { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, -104vh, 0); } }
+      @keyframes versus-release { from { opacity: 1; transform: translate(-50%, -50%) scale(1); } to { opacity: 0; transform: translate(-50%, -50%) scale(1); } }
+      @keyframes kicker-release { to { opacity: 0; transform: translate(-50%, -9px); } }
+      @keyframes chapter-plate-out { to { opacity: 0; transform: translateY(8px) scaleX(0.8); } }
+      @keyframes gameplay-phase {
+        0% { opacity: 0; transform: translate(-50%, -44%) scaleX(0.68); }
+        24% { opacity: 1; transform: translate(-50%, -50%) scaleX(1.04); }
+        40%, 72% { opacity: 1; transform: translate(-50%, -50%) scaleX(1); }
+        100% { opacity: 0; transform: translate(-50%, -58%) scaleX(0.94); }
+      }
+      @keyframes gameplay-handoff { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes instrument-settle { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes threshold-flash { 0%, 18% { opacity: 0; } 28% { opacity: 0.96; } 43% { opacity: 0.12; } 100% { opacity: 0; } }
+      @keyframes seal-orbit { to { transform: rotate(360deg); } }
+      @keyframes card-sheen { 0%, 68% { transform: translateX(-118%); } 83%, 100% { transform: translateX(118%); } }
+      @keyframes begin-sheen { 0%, 62% { transform: translateX(-120%); } 83%, 100% { transform: translateX(120%); } }
+      @keyframes versus-breathe { 50% { border-color: rgb(229 205 132 / 0.44); box-shadow: 0 0 26px rgb(202 170 83 / 0.2); transform: scale(1.08); } }
+
+      @media (max-width: 760px) {
+        main { padding: 0 14px; }
+        .stage { aspect-ratio: 4 / 3; }
+        .selection-body { grid-template-columns: 1fr 36px 1fr; gap: 7px; padding: 14px; }
+        .choice-panel,
+        .choice-panel.host { min-height: 0; grid-template-columns: 1fr; padding: 12px; }
+        .choice-copy { display: none; }
+        .host .identity-card { order: initial; }
+        .selection-summary { display: none; }
+        .selection-footer { justify-content: center; }
+        .arrival-copy p { display: none; }
+        .arrival-combatant { left: 2%; width: 45%; grid-template-columns: 0.85fr 1.15fr; gap: 8px; }
+        .arrival-combatant.host { right: 2%; grid-template-columns: 1.15fr 0.85fr; }
+        .chapter-plate { right: 10%; left: 10%; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .identity-card::after,
+        .begin-button::before,
+        .choice-versus::before,
+        .threshold-seal .seal-orbit,
+        .threshold-seal .seal-mark { animation: none; }
+        .stage.is-playing .selection-scene,
+        .stage.is-playing .choice-panel,
+        .stage.is-playing .threshold-seal,
+        .stage.is-playing .gameplay-scene,
+        .stage.is-playing .gameplay-atmosphere,
+        .stage.is-playing .gameplay-phase-banner,
+        .stage.is-playing .gameplay-handoff,
+        .stage.is-playing .arrival-scene,
+        .stage.is-playing .arrival-combatant,
+        .stage.is-playing .arrival-versus,
+        .stage.is-playing .impact-cross,
+        .stage.is-playing .ingame-rift,
+        .stage.is-playing .chapter-plate,
+        .stage.is-playing .stage-flash,
+        .stage.is-playing .arrival-board::before,
+        .stage.is-playing .arrival-board::after { animation-duration: 1ms; animation-delay: 0ms; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <a class="back" href="../index.html">← Maquetas</a>
+        <div class="eyebrow">Inicio de Crónica · transición de encuentro</div>
+        <h1>Umbral de la Crónica</h1>
+        <p>
+          <strong>Begin Chronicle</strong> deja de cortar entre dos pantallas: las dos identidades encienden la rosa
+          cardinal del Futuro —la misma estrella que sella la Victoria—, el signo cede el paso al encuentro y al final
+          <strong>se planta en el Campo</strong> y desaparece dejando el instrumento de grados del tablero, que es esa
+          misma estrella quieta.
+        </p>
+      </header>
+
+      <div class="controls">
+        <button id="replay" type="button" disabled>Repetir</button>
+        <button id="slow" type="button" aria-pressed="false">Cámara lenta</button>
+        <label for="seed">Semilla</label>
+        <input id="seed" type="text" value="748-203" spellcheck="false" />
+        <span class="control-spacer"></span>
+        <span class="phase-readout" id="phaseReadout">Preparación dispuesta</span>
+      </div>
+
+      <div class="stage" id="stage">
+        <canvas id="spaceCanvas" aria-hidden="true"></canvas>
+
+        <section class="scene gameplay-scene" aria-label="Tablero ingame">
+          <div class="gameplay-board"></div>
+          <div class="gameplay-atmosphere"></div>
+
+          <!-- El instrumento de grados, copiado de src/components/TemporalBackdrop.tsx con
+               sus radios y colores exactos. No es decoración de la transición: es el aparato
+               permanente del tablero, y es lo que la estrella deja al plantarse. Sus ocho
+               marcas caen justo donde caen las ocho puntas. -->
+          <svg class="board-instrument" viewBox="0 0 1000 562" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs>
+              <pattern id="thresholdCells" width="78" height="78" patternUnits="userSpaceOnUse" patternTransform="translate(26 20)">
+                <path class="cell" d="M78 0H0V78" />
+              </pattern>
+              <radialGradient id="thresholdGlassEdge" cx="0.5" cy="0.5" r="0.74">
+                <stop offset="0.52" stop-color="#020a0c" stop-opacity="0" />
+                <stop offset="1" stop-color="#020a0c" stop-opacity="0.42" />
+              </radialGradient>
+              <radialGradient id="thresholdFade" cx="0.5" cy="0.5" r="0.62">
+                <stop offset="0" stop-color="#0b0b0b" />
+                <stop offset="0.34" stop-color="#2a2a2a" />
+                <stop offset="0.72" stop-color="#c8c8c8" />
+                <stop offset="1" stop-color="#ffffff" />
+              </radialGradient>
+              <mask id="thresholdCellMask"><rect width="1000" height="562" fill="url(#thresholdFade)" /></mask>
+            </defs>
+            <rect width="1000" height="562" fill="url(#thresholdCells)" mask="url(#thresholdCellMask)" />
+            <rect x="26" y="20" width="948" height="522" fill="url(#thresholdGlassEdge)" />
+            <rect class="frame" x="26" y="20" width="948" height="522" />
+            <path class="glass-lip" d="M27 541 V21 H973" />
+
+            <g class="dial" transform="translate(500 281)">
+              <circle class="dial-ring" r="196" pathLength="360" stroke-dasharray="1 14" />
+              <circle class="dial-arc" r="183" pathLength="360" stroke-dasharray="34 18 5 33" />
+              <path class="dial-tick" d="M0 -208 V-195 M147 -147 L138 -138 M208 0 H195 M147 147 L138 138" />
+              <path class="dial-tick" d="M0 208 V195 M-147 147 L-138 138 M-208 0 H-195 M-147 -147 L-138 -138" />
+              <text class="dial-label" x="0" y="-215" text-anchor="middle">000° · N</text>
+              <text class="dial-label" x="160" y="-155">045°</text>
+              <text class="dial-label" x="217" y="4">090° · E</text>
+              <text class="dial-label" x="160" y="163">135°</text>
+              <text class="dial-label" x="0" y="228" text-anchor="middle">180° · S</text>
+              <text class="dial-label" x="-160" y="163" text-anchor="end">225°</text>
+              <text class="dial-label" x="-217" y="4" text-anchor="end">270° · O</text>
+              <text class="dial-label" x="-160" y="-155" text-anchor="end">315°</text>
+            </g>
+
+            <g class="edge-tick">
+              <path d="M260 20 V32 M494 20 V32 M728 20 V32" />
+              <path d="M260 542 V530 M494 542 V530 M728 542 V530" />
+              <path d="M26 176 H38 M26 332 H38 M26 488 H38" />
+              <path d="M974 176 H962 M974 332 H962 M974 488 H962" />
+            </g>
+          </svg>
+
+          <div class="gameplay-topline">
+            <span>Futuro <b id="gameFuture">975·034</b></span>
+            <span>Preparación · 1 / 3</span>
+            <span>Crónica en curso</span>
+          </div>
+          <div class="gameplay-phase-banner" role="status">
+            <small>Capítulo I</small>
+            <strong>Preparación</strong>
+            <span>1 / 3</span>
+          </div>
+          <div class="gameplay-handoff">El control vuelve al Cronista</div>
+        </section>
+
+        <section class="scene arrival-scene" aria-label="Escenario VS">
+          <div class="arrival-board"></div>
+          <div class="arena-lines"></div>
+          <div class="arrival-kicker">Capítulo I · El Futuro elegido</div>
+
+          <article class="arrival-combatant player">
+            <div class="arrival-card" aria-hidden="true">
+              <svg viewBox="0 0 140 210" fill="none">
+                <path d="M70 22C44 50 35 83 38 122c3 32 15 52 32 69 17-17 29-37 32-69 3-39-6-72-32-100Z" fill="currentColor" opacity=".12"/>
+                <path d="M70 27v151M70 70 43 52M70 93 101 68M70 118 36 102M70 139l36-28M70 158l-23 18" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                <path d="M45 51c-17-7-25 4-23 20 15 2 25-4 23-20Zm55 16c19-6 27 7 22 23-16 0-25-7-22-23ZM37 101c-18-4-25 9-19 25 15-2 23-10 19-25Zm68 9c18-4 25 9 19 25-15-2-23-10-19-25ZM47 174c-12 6-14 17-7 27 12-4 17-13 7-27Z" fill="currentColor" opacity=".72"/>
+                <circle cx="70" cy="58" r="7" fill="#f2df9f"/>
+              </svg>
+            </div>
+            <div class="arrival-copy">
+              <small>Crónica</small>
+              <h2>El Pacto de Elarion</h2>
+              <p>La memoria echa raíces</p>
+            </div>
+          </article>
+
+          <article class="arrival-combatant host">
+            <div class="arrival-card" aria-hidden="true">
+              <svg viewBox="0 0 140 210" fill="none">
+                <path d="M70 25c-34 0-51 27-49 63 1 23 12 37 26 47v33l23 20 23-20v-33c14-10 25-24 26-47 2-36-15-63-49-63Z" fill="currentColor" opacity=".13"/>
+                <path d="M70 27c-30 0-45 25-43 58 1 25 14 38 30 47v23l13 13 13-13v-23c16-9 29-22 30-47 2-33-13-58-43-58Z" stroke="currentColor" stroke-width="3"/>
+                <path d="m38 79 22-11 8 24-20 14-14-11Zm64 0L80 68l-8 24 20 14 14-11Z" fill="currentColor" opacity=".72"/>
+                <path d="M55 121h30M58 134h24M64 146h12M42 49 28 32M98 49l14-17M70 47V22" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="49" cy="86" r="5" fill="#f1bb83"/><circle cx="91" cy="86" r="5" fill="#f1bb83"/>
+              </svg>
+            </div>
+            <div class="arrival-copy">
+              <small>Hueste</small>
+              <h2>El Alzamiento de los Sinsepulcro</h2>
+              <p>La tumba recuerda tu nombre</p>
+            </div>
+          </article>
+
+          <div class="impact-cross"></div>
+          <div class="ingame-rift" aria-hidden="true"></div>
+          <div class="arrival-versus"><b>VS</b></div>
+          <div class="chapter-plate"><span>Futuro <b id="futureCode">975·034</b></span><i>◆</i><span>Veterano</span><i>◆</i><span>Preparación 1 / 3</span></div>
+        </section>
+
+        <section class="scene selection-scene" aria-label="Preparar Crónica">
+          <div class="selection-topbar">
+            <span class="selection-back">← Menú principal</span>
+            <div class="selection-title"><span class="selection-kicker">Expedición</span><strong>Preparar Crónica</strong></div>
+            <span class="future-code">Futuro <b id="selectionFuture">975·034</b></span>
+          </div>
+
+          <div class="selection-body">
+            <article class="choice-panel player">
+              <div class="identity-card" aria-hidden="true">
+                <svg viewBox="0 0 140 210" fill="none">
+                  <path d="M70 22C44 50 35 83 38 122c3 32 15 52 32 69 17-17 29-37 32-69 3-39-6-72-32-100Z" fill="currentColor" opacity=".12"/>
+                  <path d="M70 27v151M70 70 43 52M70 93 101 68M70 118 36 102M70 139l36-28M70 158l-23 18" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                  <path d="M45 51c-17-7-25 4-23 20 15 2 25-4 23-20Zm55 16c19-6 27 7 22 23-16 0-25-7-22-23ZM37 101c-18-4-25 9-19 25 15-2 23-10 19-25Zm68 9c18-4 25 9 19 25-15-2-23-10-19-25ZM47 174c-12 6-14 17-7 27 12-4 17-13 7-27Z" fill="currentColor" opacity=".72"/>
+                  <circle cx="70" cy="58" r="7" fill="#f2df9f"/>
+                </svg>
+                <span class="identity-card-label">Aelyra, heredera de Elarion</span>
+              </div>
+              <div class="choice-copy"><small>Tu Crónica</small><h2>El Pacto de Elarion</h2><p>Haz crecer tu Campo y convierte la memoria del bosque en Fuerza.</p><span class="choice-tag">Crecimiento · Energía · Legado</span></div>
+            </article>
+
+            <div class="choice-versus" aria-hidden="true">
+              <span></span>
+              <svg viewBox="0 0 32 32" fill="none"><path d="m7 5 19 21M25 5 6 26M5 7l4-3 2 5-3 3m19-5-4-3-2 5 3 3M4 25l3 3 5-5m16 2-3 3-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <b>VS</b>
+              <span></span>
+            </div>
+
+            <article class="choice-panel host">
+              <div class="identity-card" aria-hidden="true">
+                <svg viewBox="0 0 140 210" fill="none">
+                  <path d="M70 25c-34 0-51 27-49 63 1 23 12 37 26 47v33l23 20 23-20v-33c14-10 25-24 26-47 2-36-15-63-49-63Z" fill="currentColor" opacity=".13"/>
+                  <path d="M70 27c-30 0-45 25-43 58 1 25 14 38 30 47v23l13 13 13-13v-23c16-9 29-22 30-47 2-33-13-58-43-58Z" stroke="currentColor" stroke-width="3"/>
+                  <path d="m38 79 22-11 8 24-20 14-14-11Zm64 0L80 68l-8 24 20 14 14-11Z" fill="currentColor" opacity=".72"/>
+                  <path d="M55 121h30M58 134h24M64 146h12M42 49 28 32M98 49l14-17M70 47V22" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                  <circle cx="49" cy="86" r="5" fill="#f1bb83"/><circle cx="91" cy="86" r="5" fill="#f1bb83"/>
+                </svg>
+                <span class="identity-card-label">Nerezh, matriarca sinsepulcro</span>
+              </div>
+              <div class="choice-copy"><small>La Hueste</small><h2>El Alzamiento de los Sinsepulcro</h2><p>Una marea de cuerpos recompone aquello que la Crónica olvidó.</p><span class="choice-tag">Desgaste · Memoria · Oleadas</span></div>
+            </article>
+          </div>
+
+          <div class="selection-footer">
+            <div class="selection-summary"><span>Crónica</span><strong>Elarion</strong><i>◆</i><span>Hueste</span><strong>Sinsepulcro</strong><i>◆</i><span>Dificultad</span><strong>Veterano</strong></div>
+            <button class="begin-button" id="begin" type="button"><span>Begin Chronicle&nbsp;&nbsp; ▶</span></button>
+          </div>
+        </section>
+
+        <canvas id="travelCanvas" aria-hidden="true"></canvas>
+        <canvas id="thresholdWebgl" aria-hidden="true"></canvas>
+
+        <div class="threshold-seal" aria-hidden="true">
+          <svg viewBox="0 0 240 240" fill="none">
+            <g class="seal-orbit" stroke="#d9bd73" stroke-width="1">
+              <circle cx="120" cy="120" r="108" stroke-dasharray="2 9" opacity=".72"/>
+              <path d="M120 5v18M120 217v18M5 120h18M217 120h18M38 38l13 13M189 189l13 13M202 38l-13 13M51 189l-13 13"/>
+            </g>
+            <g class="seal-orbit reverse" stroke="#8fc1ac" stroke-width="1" opacity=".72">
+              <ellipse cx="120" cy="120" rx="105" ry="48" transform="rotate(24 120 120)"/>
+              <ellipse cx="120" cy="120" rx="105" ry="48" transform="rotate(112 120 120)"/>
+            </g>
+            <g class="seal-mark" stroke="#f0d998" stroke-linejoin="round">
+              <path d="m120 30 16 68 74 22-74 22-16 68-16-68-74-22 74-22 16-68Z" fill="#d7b863" fill-opacity=".08" stroke-width="2"/>
+              <path d="m120 61 9 48 50 11-50 11-9 48-9-48-50-11 50-11 9-48Z" stroke-width="1.4"/>
+              <circle cx="120" cy="120" r="12" fill="#fff1bd" fill-opacity=".18" stroke-width="2"/>
+            </g>
+          </svg>
+        </div>
+        <div class="stage-flash"></div>
+      </div>
+
+      <div class="scrub"><span class="clock" id="clock">0.00 s</span><span class="track"><span class="fill" id="fill"></span></span></div>
+
+      <section class="notes">
+        <h2>Notas</h2>
+        <h3>La estrella es el umbral</h3>
+        <h3>La estrella se planta y deja el aparato</h3>
+        <ul>
+          <li>Es <b>la misma rosa cardinal de la Victoria</b>: puntas pares en Norte, Este, Sur y Oeste, diagonales más cortas, facetas apenas legibles y brillo sólo en el corazón y las ocho puntas. La semilla cambia el fraseo de las motas, nunca el giro.</li>
+          <li>Los dos bandos <b>construyen</b> el signo: cada mota llega con el color de su lado —verdín a la izquierda, hierro caliente a la derecha— y sólo se vuelve oro al quedar fija.</li>
+          <li>El signo no se traga la cámara: <b>se planta en el Campo y desaparece dejando el instrumento de grados</b>. El aparato no aparece de la nada ni se parece a la estrella: <b>es</b> la estrella, quieta.</li>
+          <li>No es una metáfora. Las ocho marcas del instrumento caen en 000°·N, 045°, 090°·E, 135°, 180°·S, 225°, 270°·O y 315°, que son exactamente los ocho ángulos de las puntas. Y su aro mide <code>r=196</code> sobre un viewBox de 562, o sea <b>0.349·H</b>, contra <b>0.347·H</b> de la punta larga. Es el mismo círculo.</li>
+          <li>Por eso <code>unit</code> se deriva del radio del aro en vez de un número redondo: la estrella nace ya del tamaño del aparato. Medido sobre el lienzo, la punta Norte cae a 208.0 px y el aro del SVG a 208.2 px. El aterrizaje es una <b>entrega de geometría</b>, no un encogimiento.</li>
+          <li>Al sentarse, las puntas avanzan un 2.8 % hasta el centro de sus marcas: 214.0 px medidos, contra 214.0 px del punto medio de la marca, que va de 207.1 a 220.9. Cada punta se clava en la suya y devuelve un golpe breve.</li>
+          <li>La entrega es una sola luz que recorre el aro <b>desde el Norte en sentido horario</b>, igual que se cerró el contorno al construirse. Cuando termina la vuelta, el SVG del aparato ya está encendido debajo con los mismos radios y el signo se apaga.</li>
+        </ul>
+        <h3>Detrás nunca hay un fondo aparte</h3>
+        <ul>
+          <li>El cielo es <code>TEMPORAL_BACKDROP_FRAGMENT</code> tal cual, no una imitación: el mismo espacio del menú y del tablero, vivo durante toda la transición y detrás de las dos pantallas.</li>
+          <li>Es la misma regla que la derrota. Allí se rompe el tablero y lo que queda detrás es el espacio exterior del propio juego. Ninguna de las dos dibuja un fondo propio.</li>
+          <li>La Preparación y las cortinas del VS dejaron de ser opacas para que el cielo se lea a través de ellas desde el primer fotograma.</li>
+          <li>El instrumento del tablero está calcado de <code>TemporalBackdrop.tsx</code> y <code>styles.css</code> con sus radios, sus discontinuidades y sus colores exactos. Si se retocan aquí, la maqueta deja de prometer el aparato que el tablero tiene de verdad.</li>
+        </ul>
+        <h3>Que no duela a oscuras</h3>
+        <ul>
+          <li><b>Ya no hay cobertura de ningún tipo.</b> La versión anterior tapaba el corte con luz y la siguiente con sombra; ahora el signo se posa y se apaga, y no hace falta tapar nada porque el espacio es continuo entre las dos pantallas.</li>
+          <li>No queda un solo blanco puro en la paleta: el punto más caliente es pergamino tibio y el material principal es oro envejecido.</li>
+          <li>Hay una <b>rodilla filmica</b>: por encima de 1.0 la suma aditiva se convierte en pantalla blanca. Medido fotograma a fotograma sobre los 6.4 s, la luminancia media máxima de toda la secuencia es <b>1.3</b> sobre 255, y el área quemada máxima es el <b>0.04 %</b> —el filamento de la grieta—. La primera versión llegaba a cubrir el cuadro entero cerca de 250.</li>
+          <li>El signo conserva presencia sin quemar: picos de 208–214 sobre un 5–10 % del cuadro cuando está entero, y 43 durante el encuentro, donde es sólo una marca de agua.</li>
+        </ul>
+        <h3>Ritmo propuesto</h3>
+        <ul>
+          <li><b>Alimentar, 0.00–0.52 s:</b> el botón responde, la Preparación se hunde y las dos identidades empujan su color hacia el centro.</li>
+          <li><b>Fijar, 0.10–1.15 s:</b> el corazón queda fijo primero; después las motas caen desde los cuatro bordes y el contorno se cierra en sentido horario desde el Norte.</li>
+          <li><b>Tensar, 1.00–1.46 s:</b> el signo carga una vez: el Futuro queda elegido.</li>
+          <li><b>Ceder, 1.74–2.24 s:</b> el signo baja a marca de agua y deja pasar el encuentro. El escenario VS llega pasado de tamaño sobre el mismo espacio.</li>
+          <li><b>Impactar, 3.06–3.78 s:</b> un fotograma luminoso une ambos lados y los combatientes chocan en el VS.</li>
+          <li><b>Abrir, 3.54–4.35 s:</b> la grieta diagonal corta el VS con la geometría y el ritmo de la transición vigente, y el tablero termina de asentarse.</li>
+          <li><b>Plantar, 4.35–5.05 s:</b> el signo vuelve entero sobre el Campo y las ocho puntas se clavan en sus marcas.</li>
+          <li><b>Entregar, 4.52–5.75 s:</b> la luz recorre el aro, el aparato se enciende debajo y el signo se apaga.</li>
+          <li><b>Entrar, 5.30–6.40 s:</b> queda el instrumento de grados. El tablero declara Preparación 1/3 y devuelve el control al Cronista.</li>
+        </ul>
+        <h3>Si se lleva al juego</h3>
+        <ul>
+          <li>Es una escena y un plano: entra por <code>renderSharedVfxFrame</code> sin abrir otro contexto WebGL. Aquí uso WebGL crudo sólo porque esta carpeta no carga Three.js.</li>
+          <li>El tablero <b>manda sobre el tamaño del signo</b>, no al revés. Con un número redondo el aterrizaje quedaba desalineado por unos píxeles y se leía como dos figuras parecidas en vez de una sola entregándose.</li>
+          <li>La llegada del tablero se acortó de 3.2 s a 1.9 s a propósito: si sigue escalando mientras el signo se planta, el aro del aparato es un 6 % más grande que las puntas justo en el momento del relevo.</li>
+          <li>La firma de la semilla usa <code>futureVisualSignature</code>, la misma de <code>src/utils/futureIdentity.ts</code>: el mismo Futuro dibuja siempre el mismo signo.</li>
+          <li>En runtime el cielo y el signo ya viven separados —<code>TemporalBackdrop</code> por un lado y <code>renderSharedVfxFrame</code> por otro—, así que el umbral no abre ningún contexto nuevo.</li>
+          <li>La transición presenta una decisión ya tomada; no modifica decks, seed ni dificultad.</li>
+          <li>El modo de movimiento reducido salta directamente al tablero con el instrumento ya puesto, sin construcción ni aterrizaje. El cielo permanece, porque el cielo no es la transición.</li>
+          <li>Falta audio: con lo que ya existe, <code>buff</code> subiendo de tono con cada punta que se fija, y un golpe seco por cada punta que se clava en su marca.</li>
+        </ul>
+      </section>
+    </main>
+
+    <script>
+      /* Umbral de la Crónica.
+
+         Tres ideas gobiernan el efecto:
+
+         1. La estrella cardinal es el signo del Futuro. Es la misma rosa de
+            destiny-constellation y de la Victoria —puntas pares en N, E, S y O— y la
+            construyen las dos identidades: cada mota llega con el color de su bando y
+            sólo se vuelve oro al quedar fija.
+
+         2. La estrella no se traga la cámara: se PLANTA en el Campo y desaparece dejando
+            el instrumento de grados. No es una metáfora ni un parecido: las ocho marcas
+            del instrumento caen en 000°·N, 045°, 090°·E, 135°, 180°·S, 225°, 270°·O y
+            315°, que son exactamente los ocho ángulos de las puntas, y su aro tiene
+            r=196 sobre un viewBox de 562, es decir 0.349·H, contra 0.347·H que mide la
+            punta larga. Es el mismo círculo. Por eso `unit` se deriva del radio del aro
+            en vez de un número redondo: la estrella nace ya del tamaño del aparato y el
+            aterrizaje es una ENTREGA DE GEOMETRÍA, no un encogimiento.
+
+         3. Detrás nunca hay un fondo aparte: hay el espacio del propio juego, el mismo
+            `TEMPORAL_BACKDROP_FRAGMENT`, vivo durante toda la transición. Igual que la
+            derrota, que rompe el tablero y deja ver el espacio exterior.
+
+         Sin abertura, sin túnel y sin destello: la única cobertura que hubo era luz, y a
+         oscuras eso duele. Aquí el signo se posa y se apaga. */
+      (function () {
+        "use strict";
+
+        var stage = document.getElementById("stage");
+        var skyCanvas = document.getElementById("spaceCanvas");
+        var canvas = document.getElementById("thresholdWebgl");
+        var seedInput = document.getElementById("seed");
+
+        var TIPS = 8;
+        var NODES = 17;
+        var EDGES = 16;
+
+        // Instrumento de grados, en unidades del viewBox 1000x562 de TemporalBackdrop.
+        var DIAL_VIEW_H = 562;
+        var DIAL_RING = 196;   // aro punteado
+        var DIAL_SEAT = 201.5; // centro de las marcas (195 → 208): donde se sientan las puntas
+
+        var VERT = "attribute vec2 aPos; void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }";
+
+        /* El cielo, portado literal desde src/components/temporalBackdropShader.ts.
+           uClimax queda en 0: el clímax pertenece a la partida, no a la transición. */
+        var SKY = [
+          "float sHash21(vec2 p){ p=fract(p*vec2(123.34,345.45)); p+=dot(p,p+34.345); return fract(p.x*p.y); }",
+          "vec2 sHash22(vec2 p){ float n=sHash21(p); return vec2(n, sHash21(p+n+19.19)); }",
+          "float sNoise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.0-2.0*f);",
+          "  float a=sHash21(i),b=sHash21(i+vec2(1,0)),c=sHash21(i+vec2(0,1)),d=sHash21(i+vec2(1,1));",
+          "  return mix(mix(a,b,f.x),mix(c,d,f.x),f.y); }",
+          "float sFbm(vec2 p){ float v=0.0,a=0.55; mat2 t=mat2(0.82,-0.57,0.57,0.82);",
+          "  for(int i=0;i<4;i++){ v+=a*sNoise(p); p=t*p*2.05+vec2(17.13,9.71); a*=0.49; } return v; }",
+          "mat2 sRot(float a){ float c=cos(a),s=sin(a); return mat2(c,-s,s,c); }",
+          "float sStar(vec2 p, float scale, float gate, float speed, float resY){",
+          "  vec2 g=p*scale; vec2 id=floor(g); vec2 cell=fract(g)-0.5;",
+          "  float seed=sHash21(id); if(seed<gate) return 0.0;",
+          "  vec2 shift=(sHash22(id+7.31)-0.5)*0.7;",
+          "  float d=length(cell-shift);",
+          "  float cellPx=max(1.0, resY/scale);",
+          "  float radius=max(0.045, 1.35/cellPx);",
+          "  float core=exp(-pow(d/radius,2.0)*1.6);",
+          "  float halo=exp(-pow(d/(radius*3.2),2.0))*step(0.994,seed)*0.22;",
+          "  return (core+halo)*(0.94+0.06*sin(uTime*speed+seed*6.2831)); }",
+          "float sFly(vec2 rel, vec2 id, float speed, float off){",
+          "  float seed=sHash21(id+off); if(seed<0.93) return 0.0;",
+          "  float k=0.5+seed;",
+          "  vec2 wander=0.30*vec2(sin(uTime*speed*k+seed*31.0), cos(uTime*speed*(k*0.82)+seed*17.0));",
+          "  vec2 offset=(sHash22(id+5.13)-0.5)*0.40+wander;",
+          "  float d=length(rel-offset);",
+          "  float core=exp(-d*d*320.0); float halo=exp(-d*d*30.0)*0.22;",
+          "  float breath=0.30+0.70*pow(0.5+0.5*sin(uTime*(0.28+seed*0.4)+seed*44.0),2.2);",
+          "  return (core+halo)*breath; }",
+          "float sFlies(vec2 p, float scale, float speed, float off){",
+          "  vec2 g=p*scale; vec2 id=floor(g); vec2 cell=fract(g)-0.5; float sum=0.0;",
+          "  for(int j=-1;j<=1;j++){ for(int i=-1;i<=1;i++){ vec2 nb=vec2(float(i),float(j));",
+          "    sum+=sFly(cell-nb, id+nb, speed, off); } }",
+          "  return sum; }",
+          "vec3 temporalSky(vec2 res){",
+          "  vec2 uv=gl_FragCoord.xy/res;",
+          "  float aspect=res.x/res.y;",
+          "  vec2 p=(uv-0.5)*vec2(aspect,1.0);",
+          "  p=sRot(uTime*0.0055)*p;",
+          "  vec2 flow=vec2(uTime*0.020,-uTime*0.014);",
+          "  vec2 warp=vec2(sFbm(p*1.32+vec2(0.0,uTime*0.022)+3.7), sFbm(p*1.32+vec2(uTime*0.018,0.0)+11.9))-0.5;",
+          "  vec2 q=p+warp*0.36+flow*0.4;",
+          "  q+=0.12*(vec2(sFbm(q*2.3-flow), sFbm(q*2.3+flow+6.1))-0.5);",
+          "  float broad=sFbm(q*1.62);",
+          "  float folds=sFbm(q*3.70+23.4);",
+          "  float edgeBias=smoothstep(0.10,0.74,length(p-vec2(-0.08,0.02)));",
+          "  float breathe=0.92+0.08*sin(uTime*0.10);",
+          "  float nebula=smoothstep(0.49,0.87,broad+folds*0.23)*mix(0.24,1.0,edgeBias)*breathe;",
+          "  float vein=smoothstep(0.60,0.90,folds)*nebula;",
+          "  float dust=smoothstep(0.70,0.95,sFbm(q*5.8+vec2(31.2,15.7)))*edgeBias;",
+          "  vec3 color=vec3(0.0024,0.0062,0.017);",
+          "  color+=vec3(0.006,0.024,0.058)*(0.22+broad*0.62);",
+          "  color+=vec3(0.026,0.20,0.24)*nebula*0.92;",
+          "  color+=vec3(0.036,0.34,0.36)*vein*0.38;",
+          "  color+=vec3(0.72,0.50,0.18)*dust*0.26;",
+          "  vec2 near=sRot(uTime*0.012)*p+vec2(uTime*0.0040,-uTime*0.0015);",
+          "  vec2 mid=sRot(uTime*0.007)*p*1.02+5.3;",
+          "  vec2 far=sRot(uTime*0.003)*p+13.7;",
+          "  color+=vec3(0.92,0.86,0.68)*sStar(near,74.0,0.9979,0.055,res.y)*0.40;",
+          "  color+=vec3(0.78,0.70,0.46)*sStar(mid,142.0,0.99945,0.038,res.y)*0.28;",
+          "  color+=vec3(1.00,0.72,0.34)*sStar(far,97.0,0.99935,0.026,res.y)*0.28;",
+          "  float glow=sFlies(p+warp*0.05,9.0,0.10,0.0)+sFlies(p*1.7-warp*0.04+8.2,15.0,0.07,21.3)*0.7;",
+          "  color+=mix(vec3(1.0,0.80,0.36),vec3(0.55,0.95,0.78),0.35)*glow*0.95;",
+          "  float vig=1.0-smoothstep(0.40,1.0,length(p*vec2(0.76,1.0)));",
+          "  color*=mix(0.62,1.0,vig);",
+          "  return pow(max(color,0.0),vec3(0.92)); }"
+        ].join("\n");
+
+        function makeContext(target) {
+          return target.getContext("webgl", { alpha: true, premultipliedAlpha: true, antialias: true });
+        }
+
+        function compile(ctx, type, src) {
+          var sh = ctx.createShader(type);
+          ctx.shaderSource(sh, src);
+          ctx.compileShader(sh);
+          if (!ctx.getShaderParameter(sh, ctx.COMPILE_STATUS)) { console.error(ctx.getShaderInfoLog(sh)); return null; }
+          return sh;
+        }
+
+        function buildProgram(ctx, fragSrc, names) {
+          var vs = compile(ctx, ctx.VERTEX_SHADER, VERT);
+          var fs = compile(ctx, ctx.FRAGMENT_SHADER, fragSrc);
+          if (!vs || !fs) return null;
+          var prog = ctx.createProgram();
+          ctx.attachShader(prog, vs);
+          ctx.attachShader(prog, fs);
+          ctx.bindAttribLocation(prog, 0, "aPos");
+          ctx.linkProgram(prog);
+          if (!ctx.getProgramParameter(prog, ctx.LINK_STATUS)) { console.error(ctx.getProgramInfoLog(prog)); return null; }
+          var buffer = ctx.createBuffer();
+          ctx.bindBuffer(ctx.ARRAY_BUFFER, buffer);
+          ctx.bufferData(ctx.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), ctx.STATIC_DRAW);
+          ctx.enableVertexAttribArray(0);
+          ctx.vertexAttribPointer(0, 2, ctx.FLOAT, false, 0, 0);
+          ctx.disable(ctx.DEPTH_TEST);
+          ctx.enable(ctx.BLEND);
+          ctx.blendFunc(ctx.ONE, ctx.ONE_MINUS_SRC_ALPHA);
+          var U = {};
+          names.forEach(function (n) { U[n] = ctx.getUniformLocation(prog, n); });
+          return { program: prog, uniforms: U };
+        }
+
+        // ── El espacio, siempre presente detrás de las dos pantallas ──────────────────
+        var skyGl = makeContext(skyCanvas);
+        var sky = null;
+        if (skyGl) {
+          sky = buildProgram(skyGl, [
+            "precision highp float;",
+            "uniform vec2 uRes; uniform float uPR; uniform float uTime;",
+            SKY,
+            "void main(){ gl_FragColor = vec4(temporalSky(uRes*uPR), 1.0); }"
+          ].join("\n"), ["uRes", "uPR", "uTime"]);
+        }
+
+        // ── El signo del Futuro ──────────────────────────────────────────────────────
+        var gl = makeContext(canvas);
+        if (!gl) return;
+
+        var FRAG = [
+          "precision highp float;",
+          "#define NODES " + NODES,
+          "#define EDGES " + EDGES,
+          "uniform vec2 uRes; uniform float uPR; uniform float uTime; uniform float uT;",
+          "uniform vec2 uCenter; uniform float uUnit; uniform float uSeed; uniform float uDialR;",
+          "uniform float uScale; uniform float uPresence; uniform float uMotes; uniform float uCharge;",
+          "uniform float uSeat; uniform float uSweep; uniform float uImpact; uniform float uRift;",
+          // xy = desplazamiento respecto al centro, z = instante en que queda fijo, w = semilla propia
+          "uniform vec4 uNode[NODES];",
+          // xy/zw = extremos, también relativos al centro
+          "uniform vec4 uEdge[EDGES];",
+          "uniform float uEdgeT[EDGES];",
+
+          "float h11(float n){ return fract(sin(n*78.233)*43758.5453123); }",
+          "float segSD(vec2 p, vec2 a, vec2 b){ vec2 pa=p-a, ba=b-a;",
+          "  float h=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0); return length(pa-ba*h); }",
+          "void add(inout vec3 col, inout float al, vec3 c, float amt){",
+          "  if(amt<=0.0015) return; col += c*amt; al = al + (1.0-al)*clamp(amt,0.0,1.0); }",
+
+          // Ni un solo blanco puro. El punto más caliente es pergamino tibio; el material
+          // principal es oro envejecido y los bandos entran como color, no como luz.
+          "const vec3 VERD  = vec3(0.29,0.66,0.46);",
+          "const vec3 EMBER = vec3(0.78,0.35,0.19);",
+          "const vec3 GOLD  = vec3(0.86,0.68,0.34);",
+          "const vec3 CORE  = vec3(0.98,0.90,0.72);",
+
+          "void main(){",
+          "  vec2 p = vec2(gl_FragCoord.x/uPR, uRes.y - gl_FragCoord.y/uPR);",
+          "  vec2 q = p - uCenter;",
+          "  float r = length(q);",
+          "  vec3 col = vec3(0.0); float al = 0.0;",
+          "  float unit = uUnit * uScale;",
+          "  float pres = uPresence;",
+
+          // 1. las dos Crónicas empujan su color hacia el centro mientras la elección se hunde
+          "  float feed = smoothstep(0.02,0.52,uT) * (1.0 - smoothstep(1.16,1.66,uT));",
+          "  if (feed > 0.001) {",
+          "    float band = exp(-abs(q.y)/(uUnit*0.62));",
+          "    float pull = 0.30 + 0.70*smoothstep(uUnit*4.6, uUnit*0.9, abs(q.x));",
+          "    add(col, al, VERD,  band*pull*smoothstep(-uUnit*0.8,-uUnit*3.4,q.x)*feed*0.13);",
+          "    add(col, al, EMBER, band*pull*smoothstep( uUnit*0.8, uUnit*3.4,q.x)*feed*0.13);",
+          "  }",
+
+          // 2. motas que entran desde los cuatro bordes y se fijan en las puntas.
+          //    Llegan con el color de su bando y sólo se vuelven oro al quedar fijas.
+          "  if (uMotes > 0.001) {",
+          "    for (int i = 0; i < NODES; i++) {",
+          "      vec4 nd = uNode[i];",
+          "      if (i != 16 && mod(float(i), 2.0) > 0.5) continue;",
+          "      vec2 target = uCenter + nd.xy*uScale;",
+          "      vec3 origin = nd.x < 0.0 ? VERD : EMBER;",
+          "      if (i == 16) origin = mix(VERD, EMBER, 0.5);",
+          "      float lock = nd.z;",
+          "      for (int j = 0; j < 5; j++) {",
+          "        float sd = nd.w + float(j)*13.7;",
+          "        float born = max(0.0, lock - 0.40 - h11(sd)*0.20);",
+          "        float k = (uT - born) / max(lock - born, 0.001);",
+          "        if (k <= 0.0 || k >= 1.08) continue;",
+          "        float e = clamp(k,0.0,1.0);",
+          "        float ease = e*e*(3.0-2.0*e);",
+          "        float sidePick = floor(h11(sd*2.1)*4.0);",
+          "        float lane = 0.025 + h11(sd*4.7)*0.95;",
+          "        float outside = uUnit*(0.65 + h11(sd*5.3)*0.65);",
+          "        vec2 from = vec2(-outside, lane*uRes.y);",
+          "        if (sidePick >= 1.0 && sidePick < 2.0) from = vec2(uRes.x + outside, lane*uRes.y);",
+          "        else if (sidePick >= 2.0 && sidePick < 3.0) from = vec2(lane*uRes.x, -outside);",
+          "        else if (sidePick >= 3.0) from = vec2(lane*uRes.x, uRes.y + outside);",
+          "        vec2 travel = target - from;",
+          "        vec2 bend = normalize(vec2(-travel.y, travel.x) + vec2(1e-5));",
+          "        vec2 ctrl = mix(from, target, 0.5) + bend*(h11(sd*3.3)-0.5)*uUnit*2.8;",
+          "        float iv = 1.0-ease;",
+          "        vec2 pos = iv*iv*from + 2.0*iv*ease*ctrl + ease*ease*target;",
+          "        vec2 delta = p - pos;",
+          "        float sz = uUnit*(0.055 + h11(sd*5.9)*0.05)*(1.0-0.35*ease);",
+          "        vec2 dir = normalize(target - from + vec2(1e-5));",
+          "        vec2 nm = vec2(-dir.y, dir.x);",
+          "        float along = dot(delta,dir);",
+          "        float ahead = max(along,0.0)/(sz*0.92);",
+          "        float behind = max(-along,0.0)/(sz*(2.8 + 5.2*(1.0-ease)));",
+          "        float across = abs(dot(delta,nm))/(sz*0.96);",
+          "        float field = sqrt((ahead+behind)*(ahead+behind) + across*across);",
+          "        float glow = exp(-field*2.35) + exp(-field*0.92)*0.20;",
+          "        float amt = glow * smoothstep(0.0,0.12,e) * (1.0-smoothstep(0.94,1.06,k));",
+          "        add(col, al, mix(origin, GOLD, ease*ease), amt*0.95*uMotes);",
+          "      }",
+          "    }",
+          "  }",
+
+          // 3. facetas apenas visibles: dan cuerpo sin convertir la estrella en una red de líneas
+          "  for (int i = 0; i < NODES; i++) {",
+          "    if (i == 16 || mod(float(i), 2.0) > 0.5) continue;",
+          "    vec4 nd = uNode[i];",
+          "    if (uT < nd.z) continue;",
+          "    vec2 axis = nd.xy * uScale;",
+          "    float reach = length(axis);",
+          "    vec2 dir = axis / max(reach, 0.001);",
+          "    vec2 side = vec2(-dir.y, dir.x);",
+          "    float along = dot(q, dir);",
+          "    float across = abs(dot(q, side));",
+          "    float along01 = clamp(along / max(reach, 0.001), 0.0, 1.0);",
+          "    float halfWidth = unit*mix(0.54, 0.07, pow(along01, 0.72));",
+          "    float facet = smoothstep(halfWidth + 1.4, halfWidth - 1.4, across)",
+          "                * smoothstep(-1.5, 2.0, along) * smoothstep(-1.5, 2.0, reach - along);",
+          "    float reveal = smoothstep(nd.z, nd.z + 0.13, uT);",
+          "    vec3 tone = mix(mix(VERD, EMBER, step(0.0, nd.x)), GOLD, 0.62);",
+          "    add(col, al, tone, facet*reveal*pres*(0.032 + uCharge*0.040));",
+          "  }",
+
+          // 4. contorno tenue, sin halo; la luz pertenece a las puntas y al corazón
+          "  for (int e = 0; e < EDGES; e++) {",
+          "    float t0 = uEdgeT[e];",
+          "    if (uT < t0) continue;",
+          "    vec4 seg = uEdge[e];",
+          "    vec2 a = uCenter + seg.xy*uScale;",
+          "    vec2 b = uCenter + seg.zw*uScale;",
+          "    float draw = clamp((uT - t0)/0.14, 0.0, 1.0);",
+          "    float d = segSD(p, a, mix(a, b, draw));",
+          "    float hw = uUnit*0.030;",
+          "    float ink = smoothstep(hw, hw*0.24, d);",
+          "    float settle = 0.22 + 0.12*(1.0-exp(-(uT-t0)*12.0)) + uCharge*0.22;",
+          "    add(col, al, mix(GOLD, CORE, 0.28), ink*settle*pres);",
+          "  }",
+
+          // 5. sólo las ocho puntas y el corazón conservan brillo
+          "  for (int i = 0; i < NODES; i++) {",
+          "    vec4 nd = uNode[i];",
+          "    if (uT < nd.z) continue;",
+          "    bool centerNode = i == 16;",
+          "    bool tipNode = !centerNode && mod(float(i), 2.0) < 0.5;",
+          "    float age = uT - nd.z;",
+          "    vec2 at = uCenter + nd.xy*uScale;",
+          "    float d = length(p - at);",
+          "    float pop = exp(-age*11.0);",
+          "    float breathe = 0.86 + 0.14*sin(uTime*2.1 + nd.w*6.0);",
+          "    float charge = 1.0 + uCharge*0.55;",
+          "    if (centerNode) {",
+          "      add(col, al, CORE, exp(-d/(uUnit*0.10))*(0.62 + 1.7*pop)*breathe*charge*pres);",
+          "      add(col, al, GOLD, exp(-d/(uUnit*0.34))*(0.16 + 0.7*pop)*charge*pres);",
+          "      vec2 rr = p - at;",
+          "      float star = exp(-abs(rr.x)/(uUnit*0.40))*exp(-abs(rr.y)/(uUnit*0.030))",
+          "                 + exp(-abs(rr.y)/(uUnit*0.40))*exp(-abs(rr.x)/(uUnit*0.030));",
+          "      add(col, al, CORE, star*(0.16 + pop*0.46 + uCharge*0.22)*pres);",
+          "    } else if (tipNode) {",
+          "      float cardinal = 1.0-step(0.5, mod(float(i), 4.0));",
+          "      float coreSize = mix(0.060, 0.075, cardinal);",
+          "      vec3 faction = nd.x < 0.0 ? VERD : EMBER;",
+          // El asiento: la punta se clava en su marca y devuelve un golpe breve.
+          "      float seatPop = exp(-max(uSeat - 0.55 - h11(nd.w)*0.18, 0.0)*9.0) * step(0.55 + h11(nd.w)*0.18, uSeat);",
+          "      add(col, al, CORE, exp(-d/(uUnit*coreSize))*(0.46 + 1.5*pop + 1.1*seatPop)*breathe*charge*pres);",
+          "      add(col, al, mix(GOLD, faction, 0.40), exp(-d/(uUnit*mix(0.17,0.21,cardinal)))*(0.13 + 0.60*pop + 0.5*seatPop)*charge*pres);",
+          "      vec2 radial = normalize(nd.xy + vec2(1e-5));",
+          "      vec2 tangent = vec2(-radial.y,radial.x);",
+          "      vec2 rr = p-at;",
+          "      float flare = exp(-abs(dot(rr,radial))/(uUnit*mix(0.34,0.46,cardinal)))",
+          "                  * exp(-abs(dot(rr,tangent))/(uUnit*mix(0.032,0.042,cardinal)));",
+          "      float cross = exp(-abs(dot(rr,tangent))/(uUnit*mix(0.16,0.21,cardinal)))",
+          "                  * exp(-abs(dot(rr,radial))/(uUnit*0.022));",
+          "      add(col, al, mix(CORE, GOLD, 0.30), (flare*0.34 + cross*0.16)*(0.52 + pop*0.55 + uCharge*0.30 + seatPop*0.7)*pres);",
+          "    } else {",
+          "      add(col, al, CORE, exp(-d/(uUnit*0.044))*(0.22 + 0.52*pop)*breathe*pres);",
+          "      add(col, al, GOLD, exp(-d/(uUnit*0.12))*(0.045 + 0.19*pop)*pres);",
+          "    }",
+          "  }",
+
+          // 6. la entrega: una luz recorre el aro desde el Norte en sentido horario y deja
+          //    encendido el radio exacto del instrumento. Es el único gesto del aterrizaje,
+          //    y termina donde el SVG del aparato ya está esperando con los mismos radios.
+          "  if (uSweep > 0.001) {",
+          "    float ang = atan(q.y, q.x) + 1.57079633;",
+          "    float turn = fract(ang / 6.28318531);",
+          "    float ringD = abs(r - uDialR);",
+          "    float body = exp(-ringD/max(1.4, uDialR*0.0075));",
+          "    float drawn = step(turn, uSweep);",
+          "    float lead  = exp(-max(uSweep - turn, 0.0)*7.0);",
+          "    add(col, al, GOLD, body*drawn*(0.16 + lead*0.62)*pres);",
+          "    add(col, al, CORE, body*drawn*lead*0.34*pres);",
+          "  }",
+
+          // Rodilla filmica: por encima de 1 la suma aditiva se convierte en pantalla
+          // blanca, y a oscuras eso es exactamente lo que hace daño.
+          "  col = col / (1.0 + col*0.62);",
+
+          // 7. el fotograma que une los dos bandos y la grieta diagonal del encuentro
+          "  vec2 pn = (p - uRes*0.5) / uRes.y;",
+          "  float angle = 0.512394;",
+          "  vec2 dir = vec2(cos(angle), sin(angle));",
+          "  vec2 nrm = vec2(-dir.y, dir.x);",
+          "  float dd = abs(dot(pn,nrm));",
+          "  float along = abs(dot(pn,dir));",
+          "  vec3 sideColor = mix(VERD, EMBER, smoothstep(-0.65,0.65,dot(pn,dir)));",
+          "  float impactLife = smoothstep(0.0,0.07,uImpact)*(1.0-smoothstep(0.2,0.72,uImpact));",
+          "  if (impactLife > 0.001) {",
+          "    add(col, al, CORE, exp(-dd*920.0)*impactLife*0.78*(1.0-smoothstep(0.1,1.12,along)));",
+          "    add(col, al, sideColor, exp(-dd*74.0)*impactLife*(1.0-smoothstep(0.45,1.3,along))*0.30);",
+          "  }",
+          "  float riftLife = smoothstep(0.0,0.16,uRift)*(1.0-smoothstep(0.44,0.96,uRift));",
+          "  if (riftLife > 0.001) {",
+          "    add(col, al, CORE, exp(-dd*1080.0)*riftLife*0.82);",
+          "    add(col, al, GOLD, exp(-dd*88.0)*riftLife*0.44);",
+          "    add(col, al, sideColor, exp(-pow((uRift-0.34)*7.0,2.0))*exp(-dd*18.0)*0.13);",
+          "  }",
+
+          "  gl_FragColor = vec4(min(col, vec3(1.0)), clamp(al,0.0,1.0));",
+          "}"
+        ].join("\n");
+
+        var threshold = buildProgram(gl, FRAG,
+          ["uRes","uPR","uTime","uT","uCenter","uUnit","uSeed","uDialR","uScale","uPresence",
+           "uMotes","uCharge","uSeat","uSweep","uImpact","uRift","uNode","uEdge","uEdgeT"]);
+        if (!threshold) return;
+        var U = threshold.uniforms;
+
+        var nodeBuf = new Float32Array(NODES * 4);
+        var edgeBuf = new Float32Array(EDGES * 4);
+        var edgeTBuf = new Float32Array(EDGES);
+        var W = 1, H = 1, unit = 1, dialR = 1, PR = 1, signature = 0.3187;
+
+        // Mismas funciones que src/utils/futureIdentity.ts, para que la semilla case con el juego.
+        function hashSeed(seed) {
+          var h = 2166136261;
+          for (var i = 0; i < seed.length; i++) {
+            h ^= seed.charCodeAt(i);
+            h = Math.imul(h, 16777619);
+          }
+          return (h >>> 0) || 1;
+        }
+        function futureVisualSignature(seed) { return hashSeed(seed + ":destiny-vortex") / 4294967296; }
+
+        function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+        function smooth(a, b, v) { var t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); }
+        function pulse(v, a, b, c) { return smooth(a, b, v) * (1 - smooth(b, c, v)); }
+
+        function polar(degrees, radius) {
+          var a = (degrees * Math.PI) / 180;
+          return [Math.cos(a) * radius, Math.sin(a) * radius];
+        }
+
+        /* Rosa cardinal, idéntica a la de la Victoria: puntas pares en N, E, S y O.
+           La semilla cambia el fraseo de las motas, nunca el giro; una estrella cardinal
+           girada deja de apuntar a ninguna parte. Los nodos se guardan como desplazamiento
+           respecto al centro, así el asiento final es un cambio de escala mínimo y exacto. */
+        function buildStar() {
+          var tipLong = unit * 2.24;
+          var tipShort = unit * 1.74;
+          var valley = unit * 0.94;
+          var pts = [];
+
+          for (var k = 0; k < TIPS; k++) {
+            var tipAngle = (k * 360) / TIPS - 90;
+            var tipR = k % 2 === 0 ? tipLong : tipShort;
+            pts.push(polar(tipAngle, tipR));
+            pts.push(polar(tipAngle + 360 / (TIPS * 2), valley));
+          }
+
+          // El corazón se fija primero: es el origen de la luz.
+          nodeBuf[64] = 0; nodeBuf[65] = 0;
+          nodeBuf[66] = 0.10; nodeBuf[67] = signature * 10;
+          for (var i = 0; i < 16; i++) {
+            nodeBuf[i * 4] = pts[i][0];
+            nodeBuf[i * 4 + 1] = pts[i][1];
+            nodeBuf[i * 4 + 2] = 0.30 + (i / 16) * 0.70;
+            nodeBuf[i * 4 + 3] = signature * 10 + i * 3.7;
+          }
+
+          for (var j = 0; j < 16; j++) {
+            var a = pts[j], b = pts[(j + 1) % 16];
+            edgeBuf[j * 4] = a[0]; edgeBuf[j * 4 + 1] = a[1];
+            edgeBuf[j * 4 + 2] = b[0]; edgeBuf[j * 4 + 3] = b[1];
+            // El hilo espera a que estén fijos SUS DOS extremos.
+            edgeTBuf[j] = Math.max(nodeBuf[j * 4 + 2], nodeBuf[((j + 1) % 16) * 4 + 2]);
+          }
+        }
+
+        function layout() {
+          var rect = stage.getBoundingClientRect();
+          PR = Math.min(window.devicePixelRatio || 1, 1.5);
+          W = Math.max(1, Math.round(rect.width));
+          H = Math.max(1, Math.round(rect.height));
+          var pxW = Math.round(W * PR);
+          var pxH = Math.round(H * PR);
+          canvas.width = pxW;
+          canvas.height = pxH;
+          /* El aparato manda sobre el tamaño de la estrella, no al revés: `unit` sale del
+             radio del aro para que la punta larga (2.24 · unit) caiga EXACTAMENTE sobre él.
+             Con un número redondo el aterrizaje quedaba desalineado por unos píxeles y se
+             veía como dos figuras parecidas en vez de una sola entregándose. */
+          dialR = H * (DIAL_RING / DIAL_VIEW_H);
+          unit = dialR / 2.24;
+          gl.viewport(0, 0, pxW, pxH);
+          // El cielo del marco y el del hueco comparten resolución y reloj.
+          if (sky) {
+            skyCanvas.width = pxW;
+            skyCanvas.height = pxH;
+            skyGl.viewport(0, 0, pxW, pxH);
+          }
+          buildStar();
+        }
+
+        function setSeed(seed) {
+          signature = futureVisualSignature(seed || "748-203");
+          buildStar();
+        }
+
+        function renderSky(now) {
+          if (!sky) return;
+          skyGl.clearColor(0, 0, 0, 1);
+          skyGl.clear(skyGl.COLOR_BUFFER_BIT);
+          skyGl.useProgram(sky.program);
+          skyGl.uniform2f(sky.uniforms.uRes, W, H);
+          skyGl.uniform1f(sky.uniforms.uPR, PR);
+          skyGl.uniform1f(sky.uniforms.uTime, now);
+          skyGl.drawArrays(skyGl.TRIANGLES, 0, 3);
+        }
+
+        /* Reloj del umbral, en segundos:
+             0.00–0.52  las dos identidades empujan su color al centro
+             0.10–1.15  el corazón y luego las dieciséis marcas quedan fijas
+             1.00–1.46  el sello se tensa: el Futuro queda elegido
+             1.70–2.20  el signo baja a marca de agua y deja pasar el encuentro
+             3.06       el fotograma que une los dos bandos en el VS
+             3.54       la grieta diagonal del encuentro
+             4.35–5.05  PLANTAR: el signo vuelve entero sobre el Campo, las ocho puntas se
+                        clavan en sus marcas y una luz recorre el aro desde el Norte
+             5.05–5.75  el signo se apaga; queda el instrumento de grados */
+        function render(timeMs) {
+          var t = timeMs / 1000;
+          var now = performance.now() / 1000;
+
+          // La estrella nace en el radio del aro y sólo se asienta hacia fuera, hasta el
+          // centro de las marcas. Es un 2.8 %: se lee como posarse, no como encogerse.
+          var seat = smooth(4.35, 5.05, t);
+          var scale = 1 + (DIAL_SEAT / DIAL_RING - 1) * seat;
+
+          // Presencia: entera mientras se construye, marca de agua durante el encuentro,
+          // entera otra vez para plantarse, y apagada al entregar el aparato.
+          var presence = (1 - 0.84 * smooth(1.74, 2.24, t))
+            + 0.84 * smooth(4.30, 4.62, t);
+          presence *= 1 - smooth(5.08, 5.78, t);
+
+          var mx = Number(stage.style.getPropertyValue("--mx")) || 0;
+          var my = Number(stage.style.getPropertyValue("--my")) || 0;
+          var sway = 1 - smooth(1.2, 1.9, t);
+
+          renderSky(now);
+
+          gl.clearColor(0, 0, 0, 0);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+          gl.useProgram(threshold.program);
+          gl.uniform2f(U.uRes, W, H);
+          gl.uniform1f(U.uPR, PR);
+          gl.uniform1f(U.uTime, now);
+          gl.uniform1f(U.uT, t);
+          gl.uniform2f(U.uCenter, W * 0.5 - mx * W * 0.022 * sway, H * 0.5 - my * H * 0.03 * sway);
+          gl.uniform1f(U.uUnit, unit);
+          gl.uniform1f(U.uSeed, signature);
+          gl.uniform1f(U.uDialR, dialR);
+          gl.uniform1f(U.uScale, scale);
+          gl.uniform1f(U.uPresence, clamp(presence, 0, 1));
+          gl.uniform1f(U.uMotes, 1 - smooth(1.06, 1.30, t));
+          gl.uniform1f(U.uCharge, pulse(t, 0.96, 1.42, 1.70));
+          gl.uniform1f(U.uSeat, seat);
+          gl.uniform1f(U.uSweep, smooth(4.52, 5.20, t) * (1 - smooth(5.30, 5.90, t)));
+          gl.uniform1f(U.uImpact, t - 3.06);
+          gl.uniform1f(U.uRift, t - 3.54);
+          gl.uniform4fv(U.uNode, nodeBuf);
+          gl.uniform4fv(U.uEdge, edgeBuf);
+          gl.uniform1fv(U.uEdgeT, edgeTBuf);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+        }
+
+        setSeed(seedInput.value.trim() || "748-203");
+        layout();
+        render(0);
+        // El cielo respira aunque nadie haya pulsado nada: es el espacio, no un efecto.
+        // La condición mira las dos clases porque al terminar el estado es
+        // `is-playing is-arrived` y el cielo se quedaría congelado en su último fotograma.
+        (function idle() {
+          var running = stage.classList.contains("is-playing") && !stage.classList.contains("is-arrived");
+          if (!running) renderSky(performance.now() / 1000);
+          requestAnimationFrame(idle);
+        })();
+        stage.classList.add("has-webgl");
+        window.chronicleThreshold3d = { render: render, resize: layout, setSeed: setSeed };
+      })();
+    </script>
+
+    <script>
+      (function () {
+        "use strict";
+
+        var stage = document.getElementById("stage");
+        var canvas = document.getElementById("travelCanvas");
+        var context = canvas.getContext("2d", { alpha: true });
+        var begin = document.getElementById("begin");
+        var replay = document.getElementById("replay");
+        var slow = document.getElementById("slow");
+        var seedInput = document.getElementById("seed");
+        var phaseReadout = document.getElementById("phaseReadout");
+        var clock = document.getElementById("clock");
+        var fill = document.getElementById("fill");
+        var selectionFuture = document.getElementById("selectionFuture");
+        var futureCode = document.getElementById("futureCode");
+        var gameFuture = document.getElementById("gameFuture");
+        var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+        // Se alarga respecto a la versión anterior para que el aterrizaje del signo y la
+        // entrega del instrumento tengan sitio propio en lugar de pisar el banner de fase.
+        var BASE_TOTAL = 6400;
+        var timeScale = 1;
+        var state = "idle";
+        var startTime = 0;
+        var raf = 0;
+        var width = 0;
+        var height = 0;
+        var dpr = 1;
+        var stars = [];
+        var fragments = [];
+        var motes = [];
+        var signature = 0;
+
+        function hashSeed(value) {
+          var hash = 2166136261;
+          for (var index = 0; index < value.length; index += 1) {
+            hash ^= value.charCodeAt(index);
+            hash = Math.imul(hash, 16777619);
+          }
+          return (hash >>> 0) || 1;
+        }
+
+        function randomAt(index) {
+          var value = Math.sin((signature + index * 104729) * 0.0000137) * 43758.5453123;
+          return value - Math.floor(value);
+        }
+
+        function futureIdentity(seed) {
+          var value = (hashSeed(seed) % 999999) + 1;
+          var digits = String(value).padStart(6, "0");
+          return digits.slice(0, 3) + "·" + digits.slice(3);
+        }
+
+        function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+        function smooth(min, max, value) {
+          var t = clamp((value - min) / (max - min), 0, 1);
+          return t * t * (3 - 2 * t);
+        }
+        function easeOut(value) { return 1 - Math.pow(1 - clamp(value, 0, 1), 3); }
+
+        function rebuildParticles() {
+          signature = hashSeed(seedInput.value.trim() || "748-203");
+          stars = [];
+          fragments = [];
+          motes = [];
+
+          for (var index = 0; index < 250; index += 1) {
+            var angle = randomAt(index * 7 + 1) * Math.PI * 2;
+            var radius = 0.12 + Math.pow(randomAt(index * 7 + 2), 0.58) * 1.34;
+            stars.push({
+              x: Math.cos(angle) * radius,
+              y: Math.sin(angle) * radius * 0.64,
+              z: 0.08 + randomAt(index * 7 + 3) * 0.94,
+              speed: 0.72 + randomAt(index * 7 + 4) * 1.35,
+              size: 0.42 + randomAt(index * 7 + 5) * 1.5,
+              side: Math.cos(angle) < 0 ? 0 : 1,
+              glint: randomAt(index * 7 + 6)
+            });
+          }
+
+          for (var shard = 0; shard < 34; shard += 1) {
+            var shardAngle = randomAt(3000 + shard * 8) * Math.PI * 2;
+            var shardRadius = 0.28 + randomAt(3001 + shard * 8) * 1.08;
+            fragments.push({
+              x: Math.cos(shardAngle) * shardRadius,
+              y: Math.sin(shardAngle) * shardRadius * 0.62,
+              z: 0.13 + randomAt(3002 + shard * 8) * 0.92,
+              speed: 0.52 + randomAt(3003 + shard * 8) * 0.9,
+              size: 3 + randomAt(3004 + shard * 8) * 7,
+              rotation: randomAt(3005 + shard * 8) * Math.PI,
+              spin: (randomAt(3006 + shard * 8) - 0.5) * 2.4,
+              side: Math.cos(shardAngle) < 0 ? 0 : 1
+            });
+          }
+
+          for (var mote = 0; mote < 70; mote += 1) {
+            motes.push({
+              angle: randomAt(5000 + mote * 5) * Math.PI * 2,
+              radius: randomAt(5001 + mote * 5),
+              phase: randomAt(5002 + mote * 5) * Math.PI * 2,
+              size: 0.5 + randomAt(5003 + mote * 5) * 1.8,
+              side: randomAt(5004 + mote * 5) < 0.5 ? 0 : 1
+            });
+          }
+
+          var code = futureIdentity(seedInput.value.trim() || "748-203");
+          selectionFuture.textContent = code;
+          futureCode.textContent = code;
+          gameFuture.textContent = code;
+          if (window.chronicleThreshold3d) window.chronicleThreshold3d.setSeed(seedInput.value.trim() || "748-203");
+        }
+
+        function resize() {
+          var rect = stage.getBoundingClientRect();
+          width = rect.width;
+          height = rect.height;
+          dpr = Math.min(window.devicePixelRatio || 1, 2);
+          canvas.width = Math.max(1, Math.round(width * dpr));
+          canvas.height = Math.max(1, Math.round(height * dpr));
+          context.setTransform(dpr, 0, 0, dpr, 0, 0);
+          if (window.chronicleThreshold3d) window.chronicleThreshold3d.resize();
+        }
+
+        function setTimings() {
+          var values = {
+            "--d-selection": 1540,
+            "--d-seal": 2260,
+            "--delay-seal": 470,
+            "--d-arrival": 1060,
+            "--delay-arrival": 2430,
+            "--d-combatant": 820,
+            "--delay-combatant": 2740,
+            "--d-impact": 920,
+            "--delay-impact": 3060,
+            "--d-rift": 980,
+            "--delay-rift": 3540,
+            "--d-release": 784,
+            "--delay-release": 3820,
+            "--d-gameplay": 1900,
+            "--delay-gameplay": 2360,
+            "--d-instrument": 820,
+            "--delay-instrument": 4700,
+            "--delay-phase": 5300
+          };
+          Object.keys(values).forEach(function (name) {
+            stage.style.setProperty(name, Math.round(values[name] * timeScale) + "ms");
+          });
+        }
+
+        function phaseAt(time) {
+          if (time < 520) return "Las dos Crónicas convergen";
+          if (time < 1180) return "El signo se fija";
+          if (time < 1740) return "El Futuro queda elegido";
+          if (time < 3060) return "El encuentro se abre";
+          if (time < 3780) return "El encuentro se fija";
+          if (time < 4350) return "El VS cede al tablero";
+          if (time < 5080) return "El signo se planta";
+          if (time < 5800) return "Queda el instrumento";
+          if (time < BASE_TOTAL) return "Entregando el control";
+          return "Crónica en marcha";
+        }
+
+        function drawThreads(time, alpha) {
+          var centerX = width * 0.5;
+          var centerY = height * 0.5;
+          var gather = easeOut((time - 260) / 980);
+          var spread = width * (0.42 - gather * 0.33);
+          context.save();
+          context.globalCompositeOperation = "lighter";
+          context.lineCap = "round";
+
+          for (var side = 0; side < 2; side += 1) {
+            var direction = side === 0 ? -1 : 1;
+            var color = side === 0 ? "112, 190, 127" : "207, 101, 69";
+            for (var line = 0; line < 7; line += 1) {
+              var offset = (line - 3) * height * 0.045;
+              var wave = Math.sin(time * 0.004 + line * 1.7 + side) * height * 0.025;
+              context.beginPath();
+              context.moveTo(centerX + direction * (spread + width * 0.2), centerY + offset * 1.9);
+              context.bezierCurveTo(
+                centerX + direction * spread,
+                centerY + offset + wave,
+                centerX + direction * width * 0.08,
+                centerY - offset * 0.35,
+                centerX,
+                centerY
+              );
+              context.strokeStyle = "rgba(" + color + "," + (alpha * (0.06 + line * 0.012)) + ")";
+              context.lineWidth = 0.7 + (line % 3) * 0.45;
+              context.shadowColor = "rgba(" + color + ",.72)";
+              context.shadowBlur = 8;
+              context.stroke();
+            }
+          }
+          context.restore();
+        }
+
+        function drawStarTunnel(time, flight) {
+          if (flight <= 0.001) return;
+          var centerX = width * (0.5 + Math.sin(time * 0.0012) * 0.008 * flight);
+          var centerY = height * (0.5 + Math.cos(time * 0.0015) * 0.006 * flight);
+          var travel = Math.pow(Math.max(0, time - 360) / 1000, 1.32) * 0.62;
+          var focus = Math.min(width, height) * 0.42;
+          context.save();
+          context.globalCompositeOperation = "lighter";
+          context.lineCap = "round";
+
+          stars.forEach(function (star) {
+            var z = star.z - travel * star.speed;
+            z = ((z % 1) + 1) % 1;
+            z = 0.045 + z * 0.96;
+            var previousZ = Math.min(1.02, z + (0.018 + flight * 0.065) * star.speed);
+            var x = centerX + (star.x / z) * focus;
+            var y = centerY + (star.y / z) * focus;
+            var px = centerX + (star.x / previousZ) * focus;
+            var py = centerY + (star.y / previousZ) * focus;
+            if (x < -90 || x > width + 90 || y < -90 || y > height + 90) return;
+            var near = 1 - z;
+            var color = star.side === 0 ? (star.glint > 0.78 ? "226, 211, 147" : "112, 193, 139") : (star.glint > 0.78 ? "222, 185, 123" : "207, 100, 72");
+            context.beginPath();
+            context.moveTo(px, py);
+            context.lineTo(x, y);
+            context.strokeStyle = "rgba(" + color + "," + (flight * (0.12 + near * 0.68)) + ")";
+            context.lineWidth = star.size * (0.35 + near * 1.35);
+            context.shadowColor = "rgba(" + color + ",.72)";
+            context.shadowBlur = 4 + near * 10;
+            context.stroke();
+          });
+          context.restore();
+        }
+
+        function drawFragments(time, flight) {
+          if (flight <= 0.01) return;
+          var centerX = width * 0.5;
+          var centerY = height * 0.5;
+          var travel = Math.pow(Math.max(0, time - 520) / 1000, 1.25) * 0.52;
+          var focus = Math.min(width, height) * 0.38;
+          context.save();
+          context.globalCompositeOperation = "lighter";
+          fragments.forEach(function (fragment) {
+            var z = fragment.z - travel * fragment.speed;
+            z = ((z % 1) + 1) % 1;
+            z = 0.075 + z * 0.94;
+            var x = centerX + (fragment.x / z) * focus;
+            var y = centerY + (fragment.y / z) * focus;
+            if (x < -120 || x > width + 120 || y < -120 || y > height + 120) return;
+            var near = 1 - z;
+            var size = fragment.size * (0.5 + near * 2.8);
+            var rotation = fragment.rotation + time * 0.001 * fragment.spin;
+            var color = fragment.side === 0 ? "157, 206, 150" : "211, 133, 91";
+            context.save();
+            context.translate(x, y);
+            context.rotate(rotation);
+            context.beginPath();
+            context.moveTo(-size * 0.7, -size * 0.28);
+            context.lineTo(size, -size * 0.15);
+            context.lineTo(size * 0.46, size * 0.34);
+            context.lineTo(-size * 0.35, size * 0.2);
+            context.closePath();
+            context.fillStyle = "rgba(" + color + "," + (flight * (0.035 + near * 0.13)) + ")";
+            context.strokeStyle = "rgba(232,214,157," + (flight * (0.08 + near * 0.24)) + ")";
+            context.lineWidth = Math.max(0.6, near * 1.25);
+            context.shadowColor = "rgba(" + color + ",.5)";
+            context.shadowBlur = near * 8;
+            context.fill();
+            context.stroke();
+            context.restore();
+          });
+          context.restore();
+        }
+
+        function drawMotes(time, alpha) {
+          if (alpha <= 0.001) return;
+          var centerX = width * 0.5;
+          var centerY = height * 0.5;
+          var radiusMax = Math.min(width, height) * 0.48;
+          context.save();
+          context.globalCompositeOperation = "lighter";
+          motes.forEach(function (mote) {
+            var orbit = mote.angle + time * (mote.side === 0 ? -0.00042 : 0.00048) + Math.sin(time * 0.001 + mote.phase) * 0.08;
+            var radius = radiusMax * (0.18 + mote.radius * 0.82);
+            var x = centerX + Math.cos(orbit) * radius;
+            var y = centerY + Math.sin(orbit) * radius * 0.57;
+            var color = mote.side === 0 ? "128,207,150" : "218,121,83";
+            context.beginPath();
+            context.arc(x, y, mote.size, 0, Math.PI * 2);
+            context.fillStyle = "rgba(" + color + "," + alpha * (0.18 + 0.42 * Math.sin(mote.phase + time * 0.004) ** 2) + ")";
+            context.shadowColor = "rgba(" + color + ",.7)";
+            context.shadowBlur = 8;
+            context.fill();
+          });
+          context.restore();
+        }
+
+        function drawThreshold(time) {
+          var open = smooth(1640, 2290, time);
+          var vanish = 1 - smooth(2460, 2860, time);
+          var alpha = open * vanish;
+          if (alpha <= 0.001) return;
+          var centerX = width * 0.5;
+          var centerY = height * 0.5;
+          var base = Math.min(width, height);
+          var radius = base * (0.055 + easeOut(open) * 0.34);
+          context.save();
+          context.globalCompositeOperation = "lighter";
+          for (var ring = 0; ring < 4; ring += 1) {
+            context.beginPath();
+            context.ellipse(centerX, centerY, radius * (1 + ring * 0.16), radius * (0.55 + ring * 0.07), time * 0.00022 * (ring % 2 ? -1 : 1), 0, Math.PI * 2);
+            context.strokeStyle = ring % 2 ? "rgba(124,195,153," + alpha * (0.26 - ring * 0.035) + ")" : "rgba(226,194,109," + alpha * (0.34 - ring * 0.045) + ")";
+            context.lineWidth = ring === 0 ? 1.4 : 0.8;
+            context.shadowColor = ring % 2 ? "#7dc39a" : "#dfbd6c";
+            context.shadowBlur = 10;
+            context.stroke();
+          }
+          context.restore();
+        }
+
+        function drawImpact(time) {
+          var progress = clamp((time - 2820) / 720, 0, 1);
+          if (progress <= 0 || progress >= 1) return;
+          var centerX = width * 0.5;
+          var centerY = height * 0.5;
+          var radius = easeOut(progress) * Math.min(width, height) * 0.75;
+          context.save();
+          context.globalCompositeOperation = "lighter";
+          context.beginPath();
+          context.ellipse(centerX, centerY, radius, radius * 0.48, 0, 0, Math.PI * 2);
+          context.strokeStyle = "rgba(247,226,166," + (1 - progress) * 0.62 + ")";
+          context.lineWidth = 1 + (1 - progress) * 4;
+          context.shadowColor = "#efd492";
+          context.shadowBlur = 18;
+          context.stroke();
+          context.restore();
+        }
+
+        function draw(time) {
+          context.clearRect(0, 0, width, height);
+          if (state === "idle" || state === "done") return;
+          if (window.chronicleThreshold3d) {
+            window.chronicleThreshold3d.render(time);
+            return;
+          }
+          var flightIn = smooth(320, 970, time);
+          var flightOut = 1 - smooth(2520, 3090, time);
+          var flight = flightIn * flightOut;
+          var threadAlpha = smooth(130, 600, time) * (1 - smooth(1760, 2440, time));
+          var moteAlpha = smooth(450, 1120, time) * (1 - smooth(2680, 3180, time));
+          drawThreads(time, threadAlpha);
+          drawStarTunnel(time, flight);
+          drawFragments(time, flight);
+          drawMotes(time, moteAlpha);
+          drawThreshold(time);
+          drawImpact(time);
+        }
+
+        function reset() {
+          cancelAnimationFrame(raf);
+          state = "idle";
+          stage.classList.remove("is-playing", "is-arrived");
+          begin.disabled = false;
+          begin.querySelector("span").innerHTML = "Begin Chronicle&nbsp;&nbsp; ▶";
+          replay.disabled = true;
+          slow.disabled = false;
+          seedInput.disabled = false;
+          phaseReadout.textContent = "Preparación dispuesta";
+          clock.textContent = "0.00 s";
+          fill.style.width = "0%";
+          context.clearRect(0, 0, width, height);
+          if (window.chronicleThreshold3d) window.chronicleThreshold3d.render(0);
+          rebuildParticles();
+        }
+
+        function play() {
+          if (state === "playing") return;
+          rebuildParticles();
+          setTimings();
+          state = "playing";
+          begin.disabled = true;
+          slow.disabled = true;
+          seedInput.disabled = true;
+          replay.disabled = true;
+          stage.classList.remove("is-playing", "is-arrived");
+          void stage.offsetWidth;
+          stage.classList.add("is-playing");
+          startTime = performance.now();
+
+          if (reducedMotion.matches) {
+            state = "done";
+            stage.classList.add("is-arrived");
+            phaseReadout.textContent = "Crónica en marcha";
+            clock.textContent = (BASE_TOTAL / 1000).toFixed(2) + " s";
+            fill.style.width = "100%";
+            replay.disabled = false;
+            seedInput.disabled = false;
+            if (window.chronicleThreshold3d) window.chronicleThreshold3d.render(BASE_TOTAL);
+            return;
+          }
+          raf = requestAnimationFrame(frame);
+        }
+
+        function frame(now) {
+          var raw = now - startTime;
+          var time = raw / timeScale;
+          var progress = clamp(time / BASE_TOTAL, 0, 1);
+          draw(time);
+          phaseReadout.textContent = phaseAt(time);
+          clock.textContent = (time / 1000).toFixed(2) + " s";
+          fill.style.width = (progress * 100).toFixed(2) + "%";
+
+          if (time >= BASE_TOTAL) {
+            state = "done";
+            stage.classList.add("is-arrived");
+            context.clearRect(0, 0, width, height);
+            begin.querySelector("span").textContent = "Crónica iniciada";
+            replay.disabled = false;
+            slow.disabled = false;
+            seedInput.disabled = false;
+            return;
+          }
+          raf = requestAnimationFrame(frame);
+        }
+
+        begin.addEventListener("click", play);
+        replay.addEventListener("click", function () {
+          reset();
+          requestAnimationFrame(play);
+        });
+        slow.addEventListener("click", function () {
+          timeScale = timeScale === 1 ? 1.85 : 1;
+          slow.setAttribute("aria-pressed", String(timeScale !== 1));
+          slow.textContent = timeScale === 1 ? "Cámara lenta" : "Velocidad normal";
+          setTimings();
+        });
+        seedInput.addEventListener("change", rebuildParticles);
+        seedInput.addEventListener("keydown", function (event) { if (event.key === "Enter") rebuildParticles(); });
+        stage.addEventListener("pointermove", function (event) {
+          var rect = stage.getBoundingClientRect();
+          stage.style.setProperty("--mx", ((event.clientX - rect.left) / rect.width - 0.5).toFixed(3));
+          stage.style.setProperty("--my", ((event.clientY - rect.top) / rect.height - 0.5).toFixed(3));
+        });
+        stage.addEventListener("pointerleave", function () {
+          stage.style.setProperty("--mx", "0");
+          stage.style.setProperty("--my", "0");
+        });
+        window.addEventListener("resize", resize);
+
+        resize();
+        rebuildParticles();
+        setTimings();
+      })();
+    </script>
+  </body>
+</html>

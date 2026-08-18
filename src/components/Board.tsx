@@ -1,10 +1,11 @@
-import { AlertTriangle, Home } from "lucide-react";
-import { useEffect, useLayoutEffect, useState, type CSSProperties } from "react";
+import { AlertTriangle, Home, RotateCcw } from "lucide-react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
-import { useGameStore } from "../store/useGameStore";
+import { useGameStore, type GameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
 import { hostInSurge } from "../engine/StaticEffects";
 import { useTranslation } from "../i18n/useTranslation";
+import { captureDesktopViewport } from "../platform/desktopBridge";
 import { AppHeader } from "./AppHeader";
 import { Battlefield } from "./Battlefield";
 import { CardPreview } from "./CardPreview";
@@ -25,9 +26,12 @@ import { EnergyRecycleAnimator } from "./EnergyRecycleAnimator";
 import { TributeOfTheFourSorrowsSelectionOverlay } from "./TributeOfTheFourSorrowsSelectionOverlay";
 import { SpellFightAnimator } from "./SpellFightAnimator";
 import { SpellTargetingOverlay } from "./SpellTargetingOverlay";
+import { TemporalBackdrop } from "./TemporalBackdrop";
+import { northUprightDialDegrees } from "./temporalDialPresentation";
 import { ToastStack } from "./ToastStack";
 import { TurnPhaseHud } from "./TurnPhaseHud";
 import { DefeatModal } from "./DefeatModal";
+import { LearnToPlayDefeatModal } from "./LearnToPlayDefeatModal";
 import { VictoryModal } from "./VictoryModal";
 import { SurgeTransition } from "./SurgeTransition";
 import { BurnAnimator } from "./BurnAnimator";
@@ -40,31 +44,184 @@ import { DrainEssenceSmokeAnimator } from "./DrainEssenceAnimator";
 import { FinalBanquetAnimator } from "./FinalBanquetAnimator";
 import { RootsTouchedSkyAnimator } from "./RootsTouchedSkyAnimator";
 import { EnergyFlowAnimator } from "./EnergyFlowAnimator";
+import { GuidedTutorialOverlay } from "./GuidedTutorialOverlay";
+import { ContextualTutorialCallout } from "./ContextualTutorialCallout";
+import { LearnToPlayJourneyCues } from "./LearnToPlayJourneyCues";
+import { NORMAL_BOARD_SESSION, type BoardSessionPolicy } from "./boardSessionPolicies";
 import { useHiddenDefenseLinkIds } from "./useDefenseLinkVisibility";
+import { IS_DEV } from "../utils/devMode";
+import { guidedPresentationActivity } from "../guidance";
 
 type Props = {
   playerName: string;
   setupTurns: number;
   encounterEntering?: boolean;
+  /** El signo del Futuro se está trazando sobre el Campo: el tablero llega desnudo. */
+  overtureActive?: boolean;
+  /** El signo entregó el aro y se está apagando mientras entra el HUD. */
+  overtureSettling?: boolean;
+  /** El HUD todavía no abrió espacio suficiente para presentar la Mano. */
+  overtureHandPending?: boolean;
+  /** El disco de grados todavía no fue entregado por el signo. */
+  overtureDialPending?: boolean;
+  sessionPolicy?: BoardSessionPolicy;
+  tutorialInterrupted?: boolean;
+  tutorialErrorMessage?: string;
+  onRestartTutorial?: () => void;
+  onRewriteFuture?: () => void;
+  onContemplateFuture?: () => void;
   onReturnToMenu: () => void;
 };
 
-export function Board({ playerName, setupTurns, encounterEntering = false, onReturnToMenu }: Props) {
+const OUTCOME_PRESENTATION_SETTLE_TIMEOUT_MS = 6000;
+// No beat normal se acerca a este presupuesto. Es solamente una salida de emergencia para que un
+// token o callback defectuoso no deje la partida terminada bloqueada para siempre.
+const OUTCOME_DRAIN_WATCHDOG_MS = 15000;
+
+const subscribeToPresentationActivity = (listener: () => void) =>
+  guidedPresentationActivity.subscribe(listener);
+const readPresentationActivity = () => guidedPresentationActivity.snapshot();
+
+/** Trabajo visual finito que todavía debe completar su último frame. Se ignoran los idles
+ * infinitos del tablero (vuelo, agua, energía y ambiente), porque nunca forman parte de un beat. */
+function runningFiniteDocumentAnimations(): Animation[] {
+  return document.getAnimations().filter((animation) => {
+    if (animation.playState !== "running" && !animation.pending) return false;
+    const endTime = animation.effect?.getComputedTiming().endTime;
+    return typeof endTime === "number" && Number.isFinite(endTime);
+  });
+}
+
+function waitForAnimationFrame(): Promise<void> {
+  return new Promise((resolve) => {
+    window.requestAnimationFrame(() => resolve());
+  });
+}
+
+/** Espera dos paints consecutivos sin animación finita. El reescaneo importa: soltar una baja
+ * puede crear un reflow en el frame posterior al que terminó su efecto. */
+async function waitForFiniteDocumentAnimations(
+  timeoutMs = OUTCOME_PRESENTATION_SETTLE_TIMEOUT_MS,
+): Promise<void> {
+  const deadline = performance.now() + timeoutMs;
+  let quietFrames = 0;
+  while (performance.now() < deadline && quietFrames < 2) {
+    await waitForAnimationFrame();
+    const animations = runningFiniteDocumentAnimations();
+    if (animations.length === 0) {
+      quietFrames += 1;
+      continue;
+    }
+    quietFrames = 0;
+    const remaining = Math.max(0, deadline - performance.now());
+    await Promise.race([
+      Promise.allSettled(animations.map((animation) => animation.finished)),
+      new Promise<void>((resolve) => window.setTimeout(resolve, Math.min(250, remaining))),
+    ]);
+  }
+}
+
+/** Todo trabajo de presentación observable desde Zustand que tiene un final automático. Los
+ * estados que requieren input no entran aquí: con la partida terminada ya no pueden resolverse y
+ * la limpieza final los cierra justo antes de la captura.
+ *
+ * La barrera es común a los dos desenlaces: la derrota necesita drenarla para capturar el frame
+ * exacto que va a romperse, y la victoria para que el tablero no empiece a retirarse encima de
+ * un beat todavía en curso. */
+function outcomePresentationActive(state: GameStore): boolean {
+  return Boolean(
+    state.hostAttackAnimation
+    || state.burnAnimation
+    || state.lifePaymentAnimation
+    || state.lifestealAttackAnimations.length > 0
+    || state.poisonAttackAnimation
+    || state.poisonConsumeAnimation
+    || state.bloodPactAnimation
+    || state.drainEssenceAnimation
+    || state.finalBanquetAnimation
+    || state.energyFlowAnimation
+    || state.deathRevealCard
+    || state.hostSpellCard
+    || state.pendingStaticAuras.length > 0
+    || state.playerAttackAnimation
+    || state.resolvingHostCombat
+    || state.summoningAnimationCount > 0
+    || state.hostAutoTriggerCount > 0
+    || state.playerAutoTriggerCount > 0
+    || state.surgeTransitionActive
+    || state.hostCombatDeadCardIds.length > 0
+    || state.specialDeadCardIds.length > 0
+    || state.hostMillAnimationQueue.length > 0
+    || state.hostMillPreviewCards.length > 0
+    || state.playerDiscardAnimationQueue.length > 0
+    || state.landPlayAnimationQueue.length > 0
+    || state.energyRecycleAnimation
+    || state.autoPaidLandAnimation
+    || state.spellFightAnimation
+    || state.rootsTouchedSkyAnimation
+    || state.buffAnimationCardIds.length > 0
+    || state.lifeBuffAnimationId
+    || state.activatingEffectCardId
+    || state.closingEffectCardId
+  );
+}
+
+/**
+ * Copia píxeles ya pintados. No clona cartas ni vuelve a resolver sus URLs, de modo que repetir
+ * una derrota no puede convertir sus imágenes en recursos rotos.
+ */
+async function capturePaintedDefeatFrame(): Promise<HTMLImageElement | null> {
+  try {
+    const dataUrl = await captureDesktopViewport();
+    if (!dataUrl) return null;
+    const image = new Image();
+    image.decoding = "async";
+    image.src = dataUrl;
+    await image.decode();
+    return image.naturalWidth > 0 && image.naturalHeight > 0 ? image : null;
+  } catch {
+    return null;
+  }
+}
+
+function settleDefeatCapture(
+  task: Promise<HTMLImageElement | null>,
+  timeoutMs = 1800,
+): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (snapshot: HTMLImageElement | null) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timer);
+      resolve(snapshot);
+    };
+    const timer = window.setTimeout(() => finish(null), timeoutMs);
+    task.then(finish).catch(() => finish(null));
+  });
+}
+
+export function Board({
+  playerName,
+  setupTurns,
+  encounterEntering = false,
+  overtureActive = false,
+  overtureSettling = false,
+  overtureHandPending = false,
+  overtureDialPending = false,
+  sessionPolicy = NORMAL_BOARD_SESSION,
+  tutorialInterrupted = false,
+  tutorialErrorMessage,
+  onRestartTutorial,
+  onRewriteFuture,
+  onContemplateFuture,
+  onReturnToMenu,
+}: Props) {
   const t = useTranslation();
   const game = useGameStore((state) => state.game);
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
-  const hostAutoTriggerCount = useGameStore((state) => state.hostAutoTriggerCount);
-  const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
-  const burnAnimationActive = useGameStore((state) => Boolean(state.burnAnimation));
-  const lifePaymentAnimationActive = useGameStore((state) => Boolean(state.lifePaymentAnimation));
-  const bloodPactAnimationActive = useGameStore((state) => Boolean(state.bloodPactAnimation));
-  const drainEssenceAnimationActive = useGameStore((state) => Boolean(state.drainEssenceAnimation));
-  const finalBanquetAnimationActive = useGameStore((state) => Boolean(state.finalBanquetAnimation));
-  const rootsTouchedSkyAnimationActive = useGameStore((state) => Boolean(state.rootsTouchedSkyAnimation));
-  const energyFlowAnimationActive = useGameStore((state) => Boolean(state.energyFlowAnimation));
-  const poisonConsumeAnimationActive = useGameStore((state) => Boolean(state.poisonConsumeAnimation));
-  const resolvingHostCombat = useGameStore((state) => state.resolvingHostCombat);
+  const storePresentationActive = useGameStore(outcomePresentationActive);
   // Tribute of the Four Sorrows turns the Host's auto-trigger against the player, so hostAutoTriggerCount stays > 0
   // while they must pick a card to discard / creatures & lands to sacrifice. The board-wide input
   // blocker below would swallow those clicks, so drop it while a Tribute of the Four Sorrows selection is pending — the
@@ -79,40 +236,196 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
   const playCollection = useAudioStore((state) => state.playCollection);
   const playSfx = useAudioStore((state) => state.playSfx);
   const [showHomeConfirmation, setShowHomeConfirmation] = useState(false);
+  // undefined = preparando el frame final; null = la captura nativa no está disponible.
+  const [defeatSnapshot, setDefeatSnapshot] = useState<HTMLImageElement | null | undefined>(undefined);
+  const [forcedOutcomeDrainSessionId, setForcedOutcomeDrainSessionId] = useState<number>();
+  const defeatCaptureTaskRef = useRef<Promise<HTMLImageElement | null> | null>(null);
+  const defeatCaptureGenerationRef = useRef(0);
   const homeConfirmationPresence = useAnimatedPresence(showHomeConfirmation, 210);
   const surgeReached = surgeTransitionShown || hostInSurge(game);
   const hiddenDefenseLinkIds = useHiddenDefenseLinkIds(game);
+  // El fondo reacciona al mismo umbral que lleva la música a clímax, sin estado propio.
+  const climaxReached = game.player.life <= 10 || surgeReached;
+
+  // El disco de grados mide cómo se mueve el futuro. Lo acumula el store impacto a
+  // impacto, que es quien conoce cada golpe y cada baja; aquí sólo se lee.
+  const destinyDial = useGameStore((state) => state.destinyDial);
+  const destinyDialRevision = useGameStore((state) => state.destinyDialRevision);
+  const gameSessionId = useGameStore((state) => state.gameSessionId);
+  const [settledDestinyDialRevision, setSettledDestinyDialRevision] = useState(destinyDialRevision);
+  const localPresentation = useSyncExternalStore(
+    subscribeToPresentationActivity,
+    readPresentationActivity,
+    readPresentationActivity,
+  );
+  const destinyDialSettled = settledDestinyDialRevision === destinyDialRevision;
+  const forcedOutcomeDrain = Boolean(game.winner)
+    && forcedOutcomeDrainSessionId === gameSessionId;
+  // La barrera se abre igual para los dos desenlaces: sólo lo que ocurre después difiere.
+  const outcomeOutroReady = Boolean(game.winner)
+    && destinyDialSettled
+    && (
+      forcedOutcomeDrain
+      || (!storePresentationActive && localPresentation.activeCount === 0)
+    );
+  // Aprender a jugar sólo tiene un desenlace authored de derrota. Si una regresión llegara a
+  // producir una victoria, no debe instalar una barrera de resultado que nunca podrá resolverse.
+  const outcomeEnabled = sessionPolicy.showStandardOutcome
+    || (sessionPolicy.showJourneyDefeat && game.winner === "host");
+  const defeatOutcomeReady = outcomeEnabled && outcomeOutroReady && game.winner === "host";
+  const defeatReady = defeatOutcomeReady && defeatSnapshot !== undefined;
+  // La victoria no captura nada: en cuanto la presentación se asienta, el tablero puede retirarse.
+  const victoryReady = sessionPolicy.showStandardOutcome && outcomeOutroReady && game.winner === "player";
+  const outcomePresentationPending = outcomeEnabled && Boolean(game.winner) && !defeatReady && !victoryReady;
+  /* Al preservarse el Futuro el instrumento vuelve a su Norte mientras las motas todavía viajan:
+     la constelación es cardinal y sus puntas tienen que clavarse sobre las marcas, no al lado.
+     Es sólo presentación, así que el ángulo acumulado del store no se toca. */
+  const presentedDestinyDial = victoryReady
+    ? northUprightDialDegrees(destinyDial)
+    : destinyDial;
+  const presentationInputBlocked = (
+    (!game.winner && storePresentationActive)
+    || outcomePresentationPending
+  );
 
   useEffect(() => {
-    if (game.player.life <= 10 || surgeReached) setMusicVariant("climax");
-  }, [game.player.life, setMusicVariant, surgeReached]);
+    if (!outcomeEnabled) {
+      setForcedOutcomeDrainSessionId(undefined);
+      return;
+    }
+    if (!game.winner) {
+      setForcedOutcomeDrainSessionId(undefined);
+      return;
+    }
+    // Once the real barrier opened, capture has its own bounded timeout; do not let the emergency
+    // timer fire later while the already-correct shatter/result screen is playing.
+    if (outcomeOutroReady) return;
+    const watchedSessionId = gameSessionId;
+    const timer = window.setTimeout(() => {
+      const current = useGameStore.getState();
+      if (current.gameSessionId !== watchedSessionId || !current.game.winner) return;
+      // La ruta normal espera todos los finales observables. El watchdog sólo invalida trabajo
+      // huérfano después de 15 s y pide al dial su frame exacto antes de abrir el desenlace.
+      stopGamePresentation();
+      setForcedOutcomeDrainSessionId(watchedSessionId);
+    }, OUTCOME_DRAIN_WATCHDOG_MS);
+    return () => window.clearTimeout(timer);
+  }, [outcomeEnabled, outcomeOutroReady, game.winner, gameSessionId, stopGamePresentation]);
 
   useEffect(() => {
-    if (game.winner === "player") playCollection("winTheme");
-    else if (game.winner === "host") playCollection("lossTheme");
-  }, [game.winner, playCollection]);
+    if (!defeatOutcomeReady) {
+      defeatCaptureGenerationRef.current += 1;
+      defeatCaptureTaskRef.current = null;
+      setDefeatSnapshot(undefined);
+      return;
+    }
 
-  useLayoutEffect(() => {
-    if (game.winner === "host") stopGamePresentation();
-  }, [game.winner, stopGamePresentation]);
+    let active = true;
+    let task = defeatCaptureTaskRef.current;
+    if (!task) {
+      const generation = ++defeatCaptureGenerationRef.current;
+      const prepareSnapshot = async () => {
+        const sessionId = useGameStore.getState().gameSessionId;
+        const dialTarget = destinyDial;
+        const dialTargetRevision = destinyDialRevision;
+        const canCleanDefeat = () => {
+          const current = useGameStore.getState();
+          return active
+            && defeatCaptureGenerationRef.current === generation
+            && current.gameSessionId === sessionId
+            && current.game.winner === "host"
+            && current.destinyDial === dialTarget
+            && current.destinyDialRevision === dialTargetRevision
+            && !outcomePresentationActive(current)
+            && guidedPresentationActivity.snapshot().activeCount === 0;
+        };
+
+        await waitForFiniteDocumentAnimations();
+        if (!canCleanDefeat()) return null;
+        // Una sola autoridad cierra selecciones y timers: sólo después de drenar cada beat visible.
+        stopGamePresentation();
+        await waitForFiniteDocumentAnimations();
+        if (!canCleanDefeat()) return null;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
+        return settleDefeatCapture(capturePaintedDefeatFrame());
+      };
+      task = prepareSnapshot();
+      defeatCaptureTaskRef.current = task;
+    }
+    void task.then((snapshot) => {
+      if (active) setDefeatSnapshot(snapshot);
+    });
+    return () => {
+      active = false;
+    };
+  }, [defeatOutcomeReady, destinyDial, destinyDialRevision, stopGamePresentation]);
+
+  useEffect(() => {
+    if (climaxReached) setMusicVariant("climax");
+  }, [climaxReached, setMusicVariant]);
+
+  // El tema entra con el desenlace, no con el último golpe: así la música cambia en el mismo
+  // instante en que el tablero empieza a retirarse.
+  useEffect(() => {
+    if (victoryReady) playCollection("winTheme");
+    else if (defeatOutcomeReady) playCollection("lossTheme");
+  }, [defeatOutcomeReady, playCollection, victoryReady]);
 
   useEffect(() => {
     if (!game.openingHandAccepted || encounterEntering) return;
     playSfx("skipNextBattle");
   }, [encounterEntering, game.openingHandAccepted, playSfx]);
 
+  /* El panel de Energía se renderiza mediante portal bajo document.body, fuera de <main>.
+     Reflejamos la fase antes del paint para que no aparezca un fotograma antes que el HUD. */
+  useLayoutEffect(() => {
+    document.body.classList.toggle("board-overture-active", overtureActive);
+    document.body.classList.toggle("board-overture-settling", overtureSettling);
+    return () => {
+      document.body.classList.remove("board-overture-active", "board-overture-settling");
+    };
+  }, [overtureActive, overtureSettling]);
+
   return (
-    <main className={`duel-table game-screen h-screen overflow-hidden ${encounterEntering ? "is-encounter-entering" : ""}`}>
-      <GameFireflies chaos={game.gameMode === "chaos"} />
+    <main
+      className={[
+        "duel-table game-screen h-screen overflow-hidden",
+        encounterEntering ? "is-encounter-entering" : "",
+        overtureActive ? "is-overture" : "",
+        overtureSettling ? "is-overture-settling" : "",
+      ].filter(Boolean).join(" ")}
+    >
+      <TemporalBackdrop
+        grid
+        dialHidden={overtureDialPending}
+        climax={climaxReached ? 1 : 0}
+        dial={presentedDestinyDial}
+        dialRevision={destinyDialRevision}
+        settleDialImmediately={forcedOutcomeDrain}
+        onDialSettled={setSettledDestinyDialRevision}
+      />
+      {/* El fondo permanece vivo bajo la placa capturada y aparece entre los trozos. */}
+      <div className="game-screen-ambience" aria-hidden="true" />
       <AppHeader
         left={game.openingHandAccepted ? <TurnPhaseHud game={game} setupTurns={setupTurns} /> : undefined}
         setupTurns={setupTurns}
         elevated={!game.openingHandAccepted}
+        sessionKind={sessionPolicy.id === "normal" ? "normal" : sessionPolicy.id === "learn-to-play" ? "journey" : "tutorial"}
+        settingsRestricted={sessionPolicy.restrictedSettings}
+        onRestartTutorial={onRestartTutorial}
+        onRewriteFuture={sessionPolicy.showFutureControls ? onRewriteFuture : undefined}
+        onContemplateFuture={sessionPolicy.showFutureControls ? onContemplateFuture : undefined}
+        futureSeed={game.seed}
         onReturnToMenu={() => setShowHomeConfirmation(true)}
       />
       <DuelHud game={game} />
-      <PhaseBanner game={game} setupTurns={setupTurns} suspended={encounterEntering || !game.openingHandAccepted} />
-      {game.openingHandAccepted && <PhaseOrb game={game} />}
+      <PhaseBanner
+        game={game}
+        setupTurns={setupTurns}
+        suspended={encounterEntering || overtureActive || !game.openingHandAccepted || !sessionPolicy.showPhaseBanner}
+      />
+      {sessionPolicy.id === "learn-to-play" && <LearnToPlayJourneyCues />}
+      {game.openingHandAccepted && <PhaseOrb game={game} hostStartDelayMs={sessionPolicy.hostStartDelayMs} />}
       <CombatArrows game={game} hiddenDefenseLinkIds={hiddenDefenseLinkIds} />
       <CounterTargetingOverlay game={game} />
       <TributeOfTheFourSorrowsSelectionOverlay game={game} />
@@ -135,7 +448,9 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
       <FinalBanquetAnimator />
       <RootsTouchedSkyAnimator />
       <EnergyFlowAnimator />
-      {!game.winner && (hostAutoTriggerCount > 0 || playerAutoTriggerCount > 0 || burnAnimationActive || lifePaymentAnimationActive || bloodPactAnimationActive || drainEssenceAnimationActive || finalBanquetAnimationActive || rootsTouchedSkyAnimationActive || energyFlowAnimationActive || poisonConsumeAnimationActive || resolvingHostCombat) && !tributeOfTheFourSorrowsSelectionActive && <div data-audio-click="off" className="fixed inset-0 z-[189]" />}
+      {presentationInputBlocked && (!tributeOfTheFourSorrowsSelectionActive || outcomePresentationPending) && (
+        <div data-audio-click="off" className="fixed inset-0 z-[189]" />
+      )}
       {(activeEffectCardId || closingEffectCardId) && (
         <div data-audio-click="off" className={["effect-focus-backdrop", closingEffectCardId ? "effect-focus-backdrop-closing" : ""].join(" ")} onClick={() => selectActiveEffectCard(undefined)} />
       )}
@@ -154,24 +469,72 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
         </section>
       </div>
       {game.openingHandAccepted && <Hand game={game} />}
-      <OpeningHandOverlay game={game} />
+      {/* La Mano entra durante el fundido final del signo, después de que el HUD ya empezó
+          a ocupar los bordes. La espera es independiente del final completo del shader. */}
+      {!overtureHandPending && <OpeningHandOverlay game={game} />}
+      <GuidedTutorialOverlay />
+      <ContextualTutorialCallout />
 
-      {game.winner === "host" && <DefeatModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}
-      {game.winner === "player" && <VictoryModal game={game} setupTurns={setupTurns} onReturnToMenu={onReturnToMenu} />}
+      {sessionPolicy.showStandardOutcome && defeatReady && onRewriteFuture && onContemplateFuture && (
+        <DefeatModal
+          game={game}
+          snapshotImage={defeatSnapshot ?? undefined}
+          onRewriteFuture={onRewriteFuture}
+          onContemplateFuture={onContemplateFuture}
+        />
+      )}
+      {sessionPolicy.showJourneyDefeat && defeatReady && onContemplateFuture && (
+        <LearnToPlayDefeatModal
+          game={game}
+          snapshotImage={defeatSnapshot ?? undefined}
+          onContemplateFuture={onContemplateFuture}
+        />
+      )}
+      {sessionPolicy.showStandardOutcome && victoryReady && onRewriteFuture && onContemplateFuture && (
+        <VictoryModal game={game} onRewriteFuture={onRewriteFuture} onContemplateFuture={onContemplateFuture} />
+      )}
+
+      {sessionPolicy.showGuidedInterruption && tutorialInterrupted && (
+        <div data-guided-system-control="true" className="game-home-backdrop fixed inset-0 z-[20040] flex items-center justify-center p-6 text-[#e4ddc2]" role="presentation">
+          <section className="old-panel game-dialog game-home-dialog w-full max-w-md p-6" role="dialog" aria-modal="true" aria-labelledby="tutorial-interrupted-title">
+            <div className="flex items-start gap-3">
+              <div className="game-dialog-icon flex h-10 w-10 shrink-0 items-center justify-center"><AlertTriangle size={20} /></div>
+              <div>
+                <div className="game-dialog-kicker">{t("guided.lifecycle.interruptedKicker")}</div>
+                <h2 id="tutorial-interrupted-title" className="old-title mt-1 text-xl font-medium uppercase tracking-[0.08em]">{t("guided.lifecycle.interruptedTitle")}</h2>
+                <p className="mt-2 text-sm text-[#8d9a94]">{t("guided.lifecycle.interruptedBody")}</p>
+                {IS_DEV && tutorialErrorMessage && <pre className="mt-3 max-h-24 overflow-auto whitespace-pre-wrap text-xs text-[#c8a985]">{tutorialErrorMessage}</pre>}
+              </div>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button className="game-dialog-action flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onReturnToMenu}>
+                <Home size={16} /> {t("guided.lifecycle.exit")}
+              </button>
+              <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onRestartTutorial}>
+                <RotateCcw size={16} /> {t("guided.lifecycle.restart")}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       {homeConfirmationPresence.mounted && (
-        <div className={["game-home-backdrop fixed inset-0 z-[450] flex items-center justify-center p-6 text-[#e4ddc2]", homeConfirmationPresence.closing ? "is-closing" : ""].join(" ")} role="presentation">
+        <div
+          {...(sessionPolicy.guidedSystemControls ? { "data-guided-system-control": "true" } : {})}
+          className={[`game-home-backdrop fixed inset-0 ${sessionPolicy.guidedSystemControls ? "z-[20040]" : "z-[450]"} flex items-center justify-center p-6 text-[#e4ddc2]`, homeConfirmationPresence.closing ? "is-closing" : ""].join(" ")}
+          role="presentation"
+        >
           <section className={["old-panel game-dialog game-home-dialog w-full max-w-md p-6", homeConfirmationPresence.closing ? "is-closing" : ""].join(" ")} role="dialog" aria-modal="true" aria-labelledby="return-home-title">
             <div className="flex items-start gap-3">
               <div className="game-dialog-icon flex h-10 w-10 shrink-0 items-center justify-center">
                 <AlertTriangle size={20} />
               </div>
               <div>
-                <div className="game-dialog-kicker">{t("game.leaveBattlefield")}</div>
+                <div className="game-dialog-kicker">{t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveKicker" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveKicker" : "game.leaveBattlefield")}</div>
                 <h2 id="return-home-title" className="old-title mt-1 text-xl font-medium uppercase tracking-[0.08em]">
-                  {t("game.returnHomeQuestion")}
+                  {t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveTitle" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveTitle" : "game.returnHomeQuestion")}
                 </h2>
-                <p className="mt-2 text-sm text-[#8d9a94]">{t("game.progressLost")}</p>
+                <p className="mt-2 text-sm text-[#8d9a94]">{t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveBody" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveBody" : "game.progressLost")}</p>
               </div>
             </div>
 
@@ -181,32 +544,12 @@ export function Board({ playerName, setupTurns, encounterEntering = false, onRet
               </button>
               <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onReturnToMenu}>
                 <Home size={16} />
-                {t("game.returnHome")}
+                {t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.exit" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.exit" : "game.returnHome")}
               </button>
             </div>
           </section>
         </div>
       )}
     </main>
-  );
-}
-
-function GameFireflies({ chaos }: { chaos: boolean }) {
-  return (
-    <div className={["game-ambient-fireflies", chaos ? "is-chaos" : ""].join(" ")} aria-hidden="true">
-      {Array.from({ length: 10 }, (_, index) => {
-        const left = 6 + ((index * 37 + 11) % 87);
-        const top = 8 + ((index * 53 + 17) % 69);
-        const style = {
-          left: `${left}%`,
-          top: `${top}%`,
-          "--battlefly-delay": `${-(index * 1.37)}s`,
-          "--battlefly-duration": `${7.5 + (index % 4) * 1.45}s`,
-          "--battlefly-x": `${index % 2 === 0 ? 22 + index * 2 : -18 - index * 2}px`,
-          "--battlefly-y": `${index % 3 === 0 ? -34 : 24 + index}px`,
-        } as CSSProperties;
-        return <span key={index} style={style} />;
-      })}
-    </div>
   );
 }

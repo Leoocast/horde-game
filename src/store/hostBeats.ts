@@ -21,6 +21,7 @@ import {
 import { useToastStore } from "./useToastStore";
 import { useGameStore, type BurnAnimationTarget } from "./useGameStore";
 import { hasQueuedPlayerTriggers, scheduleQueuedPlayerTriggers } from "./playerBeats";
+import { guidedBeatBarrier, guidedPresentationActivity, guidedSessionStore } from "../guidance/runtime";
 import {
   BUFF_ANIMATION_MS,
   appendHostMillAnimations,
@@ -112,9 +113,15 @@ export function scheduleHostInvokedTriggers(
   const sequenceId = ++hostAutoTriggerSequenceId;
   const runNext = (index: number) => {
     if (sequenceId !== hostAutoTriggerSequenceId) return;
+    if (useGameStore.getState().game.winner) {
+      useGameStore.setState({ hostAutoTriggerCount: 0 });
+      return;
+    }
+    if (!guidedBeatBarrier.request("host.invoked-trigger", () => runNext(index))) return;
     const card = cards[index];
     if (!card) {
       useGameStore.setState({ hostAutoTriggerCount: 0 });
+      if (onComplete && !guidedBeatBarrier.request("host.invoked-trigger", onComplete)) return;
       onComplete?.();
       return;
     }
@@ -143,6 +150,7 @@ export function scheduleHostInvokedTriggers(
     const triggerStartMs = activationAlreadyShown ? 40 : HOST_ENTER_TRIGGER_START_MS;
     const triggerResolveMs = activationAlreadyShown ? 80 : HOST_ENTER_TRIGGER_RESOLVE_MS;
     const triggerHandoffMs = activationAlreadyShown ? 40 : 180;
+    const activity = guidedPresentationActivity.begin("host.invoked-trigger", card.instanceId);
     useGameStore.setState({ hostAutoTriggerCount: 1 });
     window.setTimeout(() => {
       if (sequenceId !== hostAutoTriggerSequenceId) return;
@@ -177,7 +185,10 @@ export function scheduleHostInvokedTriggers(
       captureStaticAuraBeats();
       window.setTimeout(() => {
         if (sequenceId === hostAutoTriggerSequenceId) {
-          scheduleQueuedHostTriggers(() => runNext(index + 1));
+          scheduleQueuedHostTriggers(() => {
+            activity.end();
+            runNext(index + 1);
+          });
         }
       }, triggerHandoffMs);
     }, triggerStartMs + triggerResolveMs);
@@ -189,6 +200,10 @@ export function scheduleHostInvokedTriggers(
  * arrivals without a self trigger still broadcast ECHO_INVOKED silently, while a card whose aura
  * already supplied the activation pulse keeps its ETB as a separate beat without glowing twice. */
 export function scheduleHostArrivalEffects(cards: CardInstance[], onComplete?: () => void): void {
+  if (useGameStore.getState().game.winner) {
+    useGameStore.setState({ hostAutoTriggerCount: 0 });
+    return;
+  }
   const waitingSequenceId = hostAutoTriggerSequenceId;
   if (useGameStore.getState().summoningAnimationCount > 0) {
     window.setTimeout(() => {
@@ -196,6 +211,7 @@ export function scheduleHostArrivalEffects(cards: CardInstance[], onComplete?: (
     }, HOST_ENTRY_WAIT_POLL_MS);
     return;
   }
+  if (!guidedBeatBarrier.request("host.arrival", () => scheduleHostArrivalEffects(cards, onComplete))) return;
   const auraSourceIds = [
     ...new Set(useGameStore.getState().pendingStaticAuras.map((aura) => aura.sourceId)),
   ];
@@ -211,6 +227,10 @@ export function scheduleHostArrivalEffects(cards: CardInstance[], onComplete?: (
 }
 
 export function startHostCombatSequence(): void {
+  if (useGameStore.getState().game.winner) {
+    useGameStore.setState({ hostAutoTriggerCount: 0 });
+    return;
+  }
   if (useGameStore.getState().summoningAnimationCount > 0) {
     const waitingSequenceId = hostAutoTriggerSequenceId;
     window.setTimeout(() => {
@@ -218,16 +238,19 @@ export function startHostCombatSequence(): void {
     }, HOST_ENTRY_WAIT_POLL_MS);
     return;
   }
+  if (!guidedBeatBarrier.request("host.combat", startHostCombatSequence)) return;
   captureStaticAuraBeats();
   flushStaticAuraBeats();
   const begun = beginHostCombat(useGameStore.getState().game, { deferTriggeredEvents: true });
   useGameStore.setState({ game: begun });
   scheduleQueuedHostTriggers(() => {
+    if (useGameStore.getState().game.winner) return;
     const declared = declareHostAttackers(useGameStore.getState().game, { deferTriggeredEvents: true });
     useGameStore.setState({ game: declared });
     // Attack triggers can add creatures (Vardek, Marshal of the Wave), so re-check aura coverage
     // once they settled instead of before they existed.
     scheduleQueuedHostTriggers(() => {
+      if (useGameStore.getState().game.winner) return;
       captureStaticAuraBeats();
       flushStaticAuraBeats();
       scheduleQueuedHostTriggers();
@@ -330,6 +353,18 @@ type HostBeatHandler = {
 };
 
 export function scheduleQueuedHostTriggers(onComplete?: () => void): void {
+  if (useGameStore.getState().game.winner) {
+    // The game is already terminal: discard bookkeeping events that no longer own a rules beat,
+    // but still run the caller's terminal cleanup (combat release / Tribute finalization).
+    useGameStore.setState((state) => {
+      if (state.game.eventQueue.length === 0) return { hostAutoTriggerCount: 0 };
+      const game = structuredClone(state.game) as GameState;
+      game.eventQueue = [];
+      return { game, hostAutoTriggerCount: 0 };
+    });
+    onComplete?.();
+    return;
+  }
   if (useGameStore.getState().summoningAnimationCount > 0) {
     const waitingSequenceId = hostAutoTriggerSequenceId;
     window.setTimeout(() => {
@@ -338,13 +373,23 @@ export function scheduleQueuedHostTriggers(onComplete?: () => void): void {
     return;
   }
   if (discardPauseInProgress(useGameStore.getState())) {
-    window.setTimeout(() => scheduleQueuedHostTriggers(onComplete), 120);
+    const waitingSequenceId = hostAutoTriggerSequenceId;
+    const waitingSessionId = useGameStore.getState().gameSessionId;
+    window.setTimeout(() => {
+      const current = useGameStore.getState();
+      if (
+        waitingSequenceId === hostAutoTriggerSequenceId
+        && waitingSessionId === current.gameSessionId
+      ) scheduleQueuedHostTriggers(onComplete);
+    }, 120);
     return;
   }
+  if (!guidedBeatBarrier.request("host.trigger", () => scheduleQueuedHostTriggers(onComplete))) return;
   const sequenceId = hostAutoTriggerSequenceId;
   let event: EventItem | undefined;
   let sources: CardInstance[] = [];
   let handler: HostBeatHandler | undefined;
+  let yieldedToPlayer = false;
 
   useGameStore.setState((state) => {
     const previous = state.game;
@@ -362,11 +407,16 @@ export function scheduleQueuedHostTriggers(onComplete?: () => void): void {
       }
       // A shared queue can park a player reaction in front of Host work during combat. Yield
       // without resolving it so the player beat can announce the source and land its animation.
-      if (pendingSources.some((source) => source.controller === "player")) break;
+      if (pendingSources.some((source) => source.controller === "player")) {
+        yieldedToPlayer = true;
+        break;
+      }
       next.eventQueue.shift();
       resolveTriggeredEvent(next, candidate);
     }
-    if (!event) checkWinLoss(next);
+    // A player reaction in front of us still owns a visible beat and may change the terminal
+    // result (for example, Guardian recovering Life). Do not declare a winner underneath it.
+    if (!event && !yieldedToPlayer) checkWinLoss(next);
     return {
       game: next,
       hostAutoTriggerCount: event ? 1 : 0,
@@ -381,6 +431,7 @@ export function scheduleQueuedHostTriggers(onComplete?: () => void): void {
       scheduleQueuedPlayerTriggers(() => scheduleQueuedHostTriggers(onComplete));
       return;
     }
+    if (onComplete && !guidedBeatBarrier.request("host.trigger", onComplete)) return;
     onComplete?.();
     return;
   }
@@ -389,28 +440,42 @@ export function scheduleQueuedHostTriggers(onComplete?: () => void): void {
   // already outlasted the reflow (the burn resolves at 500ms and runs to 1180ms) sit through a
   // second full settle of dead air. Only ever wait for what is actually left.
   let boardChangedAt: number | undefined;
-  claimedHandler.run({
-    event: claimedEvent,
-    sources,
-    sequenceId,
-    resolve: () => {
-      const changed = resolveBeatEvent(claimedEvent, sources[0]?.instanceId);
-      if (changed) boardChangedAt = performance.now();
-      return changed;
-    },
-    done: () => {
-      if (sequenceId !== hostAutoTriggerSequenceId) return;
-      const settled = boardChangedAt === undefined ? BOARD_SETTLE_MS : performance.now() - boardChangedAt;
-      const remaining = Math.max(0, BOARD_SETTLE_MS - settled);
-      if (remaining === 0) {
-        scheduleQueuedHostTriggers(onComplete);
-        return;
-      }
-      window.setTimeout(() => {
-        if (sequenceId === hostAutoTriggerSequenceId) scheduleQueuedHostTriggers(onComplete);
-      }, remaining);
-    },
-  });
+  let beatFinished = false;
+  const activity = guidedPresentationActivity.begin("host.trigger-beat", claimedHandler.id);
+  const finishBeat = () => {
+    if (beatFinished) return;
+    beatFinished = true;
+    activity.end();
+    scheduleQueuedHostTriggers(onComplete);
+  };
+  try {
+    claimedHandler.run({
+      event: claimedEvent,
+      sources,
+      sequenceId,
+      resolve: () => {
+        const changed = resolveBeatEvent(claimedEvent, sources[0]?.instanceId);
+        if (changed) boardChangedAt = performance.now();
+        return changed;
+      },
+      done: () => {
+        if (sequenceId !== hostAutoTriggerSequenceId) return;
+        const settled = boardChangedAt === undefined ? BOARD_SETTLE_MS : performance.now() - boardChangedAt;
+        const remaining = Math.max(0, BOARD_SETTLE_MS - settled);
+        if (remaining === 0) {
+          finishBeat();
+          return;
+        }
+        window.setTimeout(() => {
+          if (sequenceId === hostAutoTriggerSequenceId) finishBeat();
+        }, remaining);
+      },
+    });
+  } catch (error) {
+    activity.end();
+    guidedSessionStore.fail(error);
+    throw error;
+  }
 }
 
 // Commits one beat's engine effect. With `sourceId`, only that card's triggers resolve and the

@@ -52,6 +52,57 @@ Implementaciones utiles como referencia:
   `ClassicBurnAnimator.tsx` conserva el renderer DOM/CSS anterior como referencia legada, pero
   ninguna carta registrada lo selecciona. Detalles de forma y estela en
   `docs/reference/animation_contracts.md`.
+- `DestinyRewriteTransition.tsx`: el vortice de las Semillas del Destino es un agujero negro
+  dibujado por el mismo renderer compartido. Un unico plano a pantalla completa resuelve horizonte
+  opaco, disco de acrecion con giro kepleriano y brillo Doppler, arco lensado, anillo de fotones,
+  materia que cae en espiral estirandose al filo, y la descarga final de brasas con destello y onda
+  de choque. El GLSL vive aparte en `destinyVortexShader.ts` y recibe dos relojes separados,
+  `uCollapse` y `uBurst`, para no mezclar cubrir la escena con liberar el nuevo futuro; el giro se
+  acumula por delta time. No es un animador de carta: no consulta store ni engine, solo presenta la
+  transicion que `App` ya decidio. El velo de cobertura conserva sólo su caída radial; no usa
+  godrays ni un `repeating-conic-gradient` desde el centro.
+- `DefeatShatterAnimator.tsx`: al perder una partida normal rompe la pantalla en vidrio con espesor
+  real. Su referencia canonica es `dev/mockups/vfx/future-shattered-3d.html`. La teselacion estable
+  por seed vive en `defeatShatterGeometry.ts` y cada triangulo sale como prisma extruido —cara
+  frontal, trasera y tres muros con normal propia— dentro de un unico `BufferGeometry`: toda la
+  animacion ocurre en el vertex shader a partir de atributos por trozo, no hay una malla por
+  fragmento. Cada cara recibe mediante UV globales su recorte exacto del ultimo frame visible.
+- La captura ocurre en `Board`, antes de montar el overlay y después de drenar toda presentación
+  finita: ataques, ETB, muertes, invocaciones, colas y buffs del store; VFX locales registrados como
+  impacto de Vida y aterrizaje pesado; la revisión monotónica exacta del objetivo del disco de grados
+  (incluido un recorrido que vuelva al mismo ángulo); y dos paints consecutivos
+  sin animaciones finitas del documento. Sólo entonces limpia selecciones/timers y usa el bridge Electron
+  hacia `webContents.capturePage()`: copia los pixeles ya compuestos y no clona el DOM, recalcula
+  estilos ni reabre las URLs de las cartas. Main reduce capturas mayores al presupuesto 2560x1440
+  antes de codificarlas; renderer las decodifica antes de montar el efecto. La imagen es opaca e
+  incluye la composicion completa del instante. Los huecos entre prismas, no el PNG, aportan la
+  transparencia final. En web o ante un fallo se usa vidrio limpio y nunca un color de reserva. Un
+  watchdog de 15 s sólo recupera tokens huérfanos: limpia esa presentación defectuosa y fuerza el
+  frame exacto del disco, sin intervenir en el recorrido normal.
+- Antes de arrancar el reloj visible, el animador fuerza un render oculto para crear/reutilizar el
+  contexto, subir la textura fullscreen y completar la primera copia WebGL→2D. El cuarteado empieza
+  en el primer frame visible despues de ese preflight, de modo que captura, decode y upload no
+  bloquean una grieta en movimiento. Un frame despues de pintar la placa se aplica
+  `body.is-defeat-plated`: el tablero vivo se retira, pero `TemporalBackdrop` y
+  `.game-screen-ambience` siguen renderizando debajo. Sin captura, el tablero permanece hasta el
+  golpe. El desenlace se cuelga de ese golpe real con `onBurst`, 1340 ms despues.
+- La escena de la derrota son dos capas en una sola escena, porque `renderSharedVfxFrame` dibuja
+  una escena con una camara: el vidrio y la onda expansiva aditiva por encima. No dibuja fondo: el
+  lienzo queda transparente fuera de los prismas y lo que asoma por cada hueco es el
+  `TemporalBackdrop` vivo, el mismo espacio exterior del juego y sin tenir: el fondo ya no se
+  enrojece al perder. Los trozos llevan el espacio congelado del ultimo frame, mientras el cielo
+  vivo permanece debajo. `body.is-defeat-plated` retira el tablero y el reticulo vivos. Mientras la lamina esta entera su espesor es
+  cero —los muros vecinos coinciden en el espacio y asomarian como aristas en z-fighting— y solo
+  gana grosor al separarse cada trozo. `defeatGlassShader.ts` resuelve refraccion con dispersion
+  cromatica, Fresnel azul grisaceo/dorado y especular contra la normal real de cada trozo; solo los
+  cantos biselados conservan oro mas denso. El area hace de masa: la esquirla sale disparada y
+  voltea rapido mientras la placa grande apenas se mueve, y los pocos restos que se quedan se
+  eligen uno por sector angular para no apelotonarse.
+- El fotograma se pide en `LinearEncoding`: con la conversion sRGB del renderer compartido la
+  captura se aclara y el Fresnel deja de leerse frio. No hay destello DOM, oscurecimiento propio ni
+  temblor de pantalla; el golpe lo cuenta la onda. Queda una fractura SVG quieta para movimiento
+  reducido o falta de WebGL, y en ese caso el respaldo tambien retira el tablero vivo y oscurece sin
+  tapar el espacio.
 
 Para cualquier efecto nuevo:
 

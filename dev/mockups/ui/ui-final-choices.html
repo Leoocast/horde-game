@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hostfall — Selección tipográfica final</title>
+    <link rel="stylesheet" href="ui-final-choices.css" />
+  </head>
+  <body data-mode="mine">
+    <header class="topbar">
+      <span class="topbar__brand">Hostfall · Selección final</span>
+      <nav class="bar" id="langbar" aria-label="Idioma">
+        <button class="chip chip--lang" data-lang="en" aria-pressed="true">EN</button>
+        <button class="chip chip--lang" data-lang="es" aria-pressed="false">ES</button>
+      </nav>
+      <span class="topbar__spacer"></span>
+      <nav class="bar" id="modebar" aria-label="Modo">
+        <button class="chip" data-mode="mine" aria-pressed="true">Tu selección</button>
+        <button class="chip" data-mode="tidy" aria-pressed="false">Consolidada</button>
+      </nav>
+    </header>
+
+    <main class="page">
+      <p class="intro">
+        <b>Tu selección</b> aplica lo que elegiste, superficie por superficie: HUD y menú en
+        <b>Inscripción</b>, botones, diálogo y tutorial en <b>Grimorio</b>, texto de carta en
+        <b>Imprenta</b>. <b>Consolidada</b> es la misma intención reducida a cuatro familias. El logo no
+        cambia en ningún modo: es <code>Cinzel Decorative</code> con la cadena literal
+        <code>HOstfAll</code> y tracking −0.035em, tal como está en <code>.hostfall-wordmark</code>.
+      </p>
+
+      <section class="bay">
+        <h2 class="bay__title">Censo de familias</h2>
+        <p class="bay__note">
+          Leído del DOM, no escrito a mano: se consulta la familia que resuelve cada superficie. Una
+          interfaz suele sostener tres o cuatro; a partir de seis, el ojo deja de leerlas como un sistema
+          y empieza a leerlas como piezas pegadas.
+        </p>
+        <div class="census" id="census"></div>
+        <div class="census__count" id="census-count"></div>
+      </section>
+
+      <section class="bay">
+        <h2 class="bay__title">Pantalla completa</h2>
+        <div class="grid">
+          <div>
+            <div class="tag"><strong>Menú principal</strong><span id="tag-menu"></span></div>
+            <div class="surface s-menu">
+              <div class="menu">
+                <h1 class="wordmark">HOstfAll</h1>
+                <p class="menu__subtitle" id="menu-act"></p>
+                <div class="menu__items">
+                  <button class="menu__item" data-copy="play"></button>
+                  <button class="menu__item menu__item--ghost" data-copy="continue"></button>
+                  <button class="menu__item menu__item--ghost" data-copy="howToPlay"></button>
+                  <button class="menu__item menu__item--ghost" data-copy="settings"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="tag"><strong>HUD</strong><span id="tag-hud"></span></div>
+            <div class="surface s-hud">
+              <div class="hud">
+                <div class="pile pile--memory">
+                  <span class="pile__count">4</span><span class="pile__label" data-copy="memory"></span>
+                </div>
+                <div class="pile">
+                  <span class="pile__count">23</span><span class="pile__label" data-copy="archive"></span>
+                </div>
+                <div class="vital">
+                  <div>
+                    <div class="vital__title" data-copy="life"></div>
+                    <div class="vital__count">24</div>
+                  </div>
+                  <div class="vital__emblem">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                      <path d="M12 20s-7-4.4-7-9a4 4 0 017-2.6A4 4 0 0119 11c0 4.6-7 9-7 9z" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="vital vital--host">
+                  <div>
+                    <div class="vital__title" data-copy="hostArchive"></div>
+                    <div class="vital__count">18<span class="vital__projection">→ 15</span></div>
+                  </div>
+                </div>
+                <div class="phase-strip" id="phase-strip"></div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="tag"><strong>Botones</strong><span id="tag-buttons"></span></div>
+            <div class="surface s-buttons">
+              <div class="buttons">
+                <button class="btn-phase">
+                  <span data-copy="hostTurn"></span>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M5 12h13M13 6l6 6-6 6" />
+                  </svg>
+                </button>
+                <button class="btn-control" data-copy="endTurn"></button>
+                <button class="btn-control" data-copy="chooseAttackers"></button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="tag"><strong>Diálogo</strong><span id="tag-dialog"></span></div>
+            <div class="surface s-dialog">
+              <div class="dialog">
+                <div class="dialog__kicker" data-copy="leaveKicker"></div>
+                <h3 class="dialog__title" data-copy="leaveTitle"></h3>
+                <p class="dialog__body" data-copy="leaveBody"></p>
+                <div class="dialog__actions">
+                  <button class="btn-action" data-copy="keep"></button>
+                  <button class="btn-action btn-action--primary" data-copy="returnHome"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="tag"><strong>Overlay del tutorial</strong><span id="tag-tutorial"></span></div>
+            <div class="surface s-tutorial">
+              <div class="tutorial">
+                <div class="tutorial__step" data-copy="tutorialStep"></div>
+                <h3 class="tutorial__title" data-copy="tutorialTitle"></h3>
+                <p class="tutorial__body" data-copy="tutorialBody"></p>
+                <p class="tutorial__body" data-copy="tutorialBody2"></p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="tag"><strong>Texto de carta</strong><span id="tag-card"></span></div>
+            <div class="surface s-card">
+              <div class="card-text">
+                <h3 class="card-text__name" data-copy="cardName"></h3>
+                <div class="card-text__stats"><span>3</span>/<span>4</span></div>
+                <p class="card-text__rules" data-copy="cardRules"></p>
+                <p class="card-text__flavor" data-copy="cardFlavor"></p>
+                <p class="card-note" id="card-note"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const COPY = {
+        en: {
+          act: "Act I — Crowns upon Ashes",
+          play: "Play",
+          continue: "Continue",
+          howToPlay: "How to Play",
+          settings: "Settings",
+          life: "Life",
+          memory: "Memory",
+          archive: "Archive",
+          hostArchive: "Host Archive",
+          phases: ["Main", "Battle", "End"],
+          hostTurn: "Host Turn",
+          endTurn: "End Turn",
+          chooseAttackers: "Choose attackers",
+          leaveKicker: "Leave the Field",
+          leaveTitle: "Return home?",
+          leaveBody: "Your current game progress will be lost.",
+          keep: "Keep playing",
+          returnHome: "Return home",
+          tutorialStep: "Step 3 of 12",
+          tutorialTitle: "Choose attackers",
+          tutorialBody: "Enter combat to see which Echoes can attack.",
+          tutorialBody2: "End the turn. The one unused Source will become 1 Reserve after the Host acts.",
+          cardName: "Liora, Warden of the Threshold",
+          cardRules:
+            "<b>Summon:</b> put a +1/+1 counter on another allied Echo. While Liora is Stabilizing she cannot attack or use her Action.",
+          cardFlavor: "“Remember for us, Chronicler. We no longer can.”",
+        },
+        es: {
+          act: "Acto I — Coronas sobre cenizas",
+          play: "Jugar",
+          continue: "Continuar",
+          howToPlay: "Cómo jugar",
+          settings: "Ajustes",
+          life: "Vida",
+          memory: "Memoria",
+          archive: "Archivo",
+          hostArchive: "Archivo de la Hueste",
+          phases: ["Principal", "Batalla", "Final"],
+          hostTurn: "Turno de la Hueste",
+          endTurn: "Terminar turno",
+          chooseAttackers: "Elegir atacantes",
+          leaveKicker: "Abandonar el Campo",
+          leaveTitle: "¿Volver al inicio?",
+          leaveBody: "Perderás el progreso de la partida actual.",
+          keep: "Seguir jugando",
+          returnHome: "Volver al inicio",
+          tutorialStep: "Paso 3 de 12",
+          tutorialTitle: "Elige atacantes",
+          tutorialBody: "Entra al combate para comprobar qué Ecos pueden atacar.",
+          tutorialBody2:
+            "Termina el turno. La única Fuente sin usar se convertirá en 1 de Reserva después de que actúe la Hueste.",
+          cardName: "Liora, Guardiana del Umbral",
+          cardRules:
+            "<b>Invocación:</b> añade un contador +1/+1 a otro Eco aliado. Mientras Liora esté Estabilizándose, no puede atacar ni usar su Acción.",
+          cardFlavor: "«Recuerda por nosotros, Cronista. Nosotros ya no podemos.»",
+        },
+      };
+
+      const TAGS = {
+        mine: {
+          menu: "Inscripción · Marcellus SC",
+          hud: "Inscripción · Marcellus SC + Barlow Condensed",
+          buttons: "Grimorio · Cinzel",
+          dialog: "Grimorio · Cinzel + Cardo + Bebas Neue",
+          tutorial: "Grimorio · Cinzel + Cardo + Bebas Neue",
+          card: "Imprenta · IM Fell English SC + Spectral",
+        },
+        tidy: {
+          menu: "Marcellus SC",
+          hud: "Marcellus SC + Barlow Condensed",
+          buttons: "Marcellus SC",
+          dialog: "Marcellus SC + Cardo + Barlow Condensed",
+          tutorial: "Marcellus SC + Cardo + Barlow Condensed",
+          card: "Cinzel + Lora (como hoy)",
+        },
+      };
+
+      const CARD_NOTE = {
+        mine:
+          "Aviso: los 61 PNG de carta ya están impresos en Cinzel y Lora. Cambiar aquí la tipografía sólo " +
+          "afecta a la vista previa de la UI, así que la carta de la Mano y su imagen dejarían de coincidir. " +
+          "Para que casen hay que reexportar los 61 PNG desde Card Studio y rehacer la huella de " +
+          "check-card-assets.mjs.",
+        tidy:
+          "Las cartas se quedan como están: Cinzel y Lora, exactamente lo que ya está horneado en los 61 PNG. " +
+          "Cero reexportación, cero huella nueva.",
+      };
+
+      let lang = "en";
+      let mode = "mine";
+
+      function render() {
+        const copy = COPY[lang];
+        document.body.dataset.mode = mode;
+        document.documentElement.lang = lang;
+
+        for (const node of document.querySelectorAll("[data-copy]")) {
+          node.innerHTML = copy[node.dataset.copy];
+        }
+        document.getElementById("menu-act").textContent = copy.act;
+        document.getElementById("phase-strip").innerHTML = copy.phases
+          .map((p, i) => `<span class="${i === 0 ? "is-active" : ""}">${p}</span>`)
+          .join("");
+        document.getElementById("card-note").textContent = CARD_NOTE[mode];
+
+        for (const [key, text] of Object.entries(TAGS[mode])) {
+          document.getElementById(`tag-${key}`).textContent = text;
+        }
+
+        for (const chip of document.querySelectorAll("#modebar .chip")) {
+          chip.setAttribute("aria-pressed", String(chip.dataset.mode === mode));
+        }
+        for (const chip of document.querySelectorAll(".chip--lang")) {
+          chip.setAttribute("aria-pressed", String(chip.dataset.lang === lang));
+        }
+
+        renderCensus();
+        try {
+          localStorage.setItem("hostfall-final-choices", JSON.stringify({ lang, mode }));
+        } catch {}
+      }
+
+      // Censo leído del DOM: primera familia declarada de cada rol en cada superficie.
+      function renderCensus() {
+        const surfaces = [
+          ["Menú principal", ".s-menu"],
+          ["HUD", ".s-hud"],
+          ["Botones", ".s-buttons"],
+          ["Diálogo", ".s-dialog"],
+          ["Tutorial", ".s-tutorial"],
+          ["Carta", ".s-card"],
+        ];
+        const first = (value) => (value.split(",")[0] ?? "").replace(/["']/g, "").trim();
+        const host = document.getElementById("census");
+        host.innerHTML = "";
+        const used = new Set(["Cinzel Decorative"]); // el wordmark siempre cuenta
+
+        for (const [name, selector] of surfaces) {
+          const cs = getComputedStyle(document.querySelector(selector));
+          const head = first(cs.getPropertyValue("--f-head"));
+          const num = first(cs.getPropertyValue("--f-num"));
+          const body = first(cs.getPropertyValue("--f-body"));
+          for (const f of [head, num, body]) if (f) used.add(f);
+          const cell = document.createElement("div");
+          cell.className = "census__cell";
+          cell.innerHTML = `<div class="census__role">${name}</div>
+            <div class="census__font">Títulos · ${head}</div>
+            <div class="census__font">Números · ${num}</div>
+            <div class="census__font">Texto · ${body}</div>`;
+          host.append(cell);
+        }
+
+        const list = [...used].sort();
+        const count = document.getElementById("census-count");
+        count.className = `census__count${list.length > 5 ? " is-many" : ""}`;
+        count.innerHTML = `<b>${list.length}</b><span>familias distintas en pantalla — ${list.join(
+          " · ",
+        )}</span>`;
+      }
+
+      document.getElementById("modebar").addEventListener("click", (event) => {
+        const chip = event.target.closest(".chip");
+        if (!chip) return;
+        mode = chip.dataset.mode;
+        render();
+      });
+
+      document.getElementById("langbar").addEventListener("click", (event) => {
+        const chip = event.target.closest(".chip");
+        if (!chip) return;
+        lang = chip.dataset.lang;
+        render();
+      });
+
+      try {
+        const saved = JSON.parse(localStorage.getItem("hostfall-final-choices") ?? "null");
+        if (saved) {
+          lang = saved.lang ?? "en";
+          mode = saved.mode ?? "mine";
+        }
+      } catch {}
+      render();
+    </script>
+  </body>
+</html>

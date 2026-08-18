@@ -1,0 +1,845 @@
+/* ============================================================================
+   Hostfall — Selección tipográfica final
+   Dos modos sobre las mismas superficies:
+     mine  = las elecciones del usuario, superficie por superficie
+     tidy  = la misma intención reducida a cuatro familias
+   El wordmark del menú no participa: se reproduce tal cual está en el juego
+   (Cinzel Decorative, cadena "HOstfAll", tracking -0.035em, sin uppercase).
+   Maqueta suelta: no se importa desde src/.
+   ========================================================================== */
+
+@font-face {
+  font-family: "Cinzel";
+  font-weight: 500 900;
+  font-display: block;
+  src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cinzel Decorative";
+  font-weight: 400 700;
+  font-display: block;
+  src: url("../assets/fonts/cinzel-decorative-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Lora";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: block;
+  src: url("../assets/fonts/lora-normal-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Lora";
+  font-style: italic;
+  font-weight: 400 700;
+  font-display: block;
+  src: url("../assets/fonts/lora-italic-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Marcellus SC";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/marcellus-sc-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Marcellus";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/marcellus-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Barlow Condensed";
+  font-weight: 500;
+  font-display: block;
+  src: url("../assets/fonts/barlow-condensed-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Barlow Condensed";
+  font-weight: 700;
+  font-display: block;
+  src: url("../assets/fonts/barlow-condensed-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "EB Garamond";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/eb-garamond-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Bebas Neue";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/bebas-neue-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cardo";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/cardo-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cardo";
+  font-weight: 700;
+  font-display: block;
+  src: url("../assets/fonts/cardo-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IM Fell English SC";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/im-fell-english-sc-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Archivo Narrow";
+  font-weight: 500;
+  font-display: block;
+  src: url("../assets/fonts/archivo-narrow-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Archivo Narrow";
+  font-weight: 700;
+  font-display: block;
+  src: url("../assets/fonts/archivo-narrow-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Spectral";
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/spectral-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Spectral";
+  font-weight: 600;
+  font-display: block;
+  src: url("../assets/fonts/spectral-600.woff2") format("woff2");
+}
+
+/* ==========================================================================
+   MODO 1 — Tu selección, superficie por superficie
+   ========================================================================== */
+[data-mode="mine"] .s-menu,
+[data-mode="mine"] .s-hud {
+  /* Inscripción */
+  --f-head: "Marcellus SC", Georgia, serif;
+  --f-num: "Barlow Condensed", sans-serif;
+  --f-body: "EB Garamond", Georgia, serif;
+  --head-weight: 400;
+  --num-weight: 700;
+  --head-track: 0.1em;
+}
+
+[data-mode="mine"] .s-buttons,
+[data-mode="mine"] .s-dialog,
+[data-mode="mine"] .s-tutorial {
+  /* Grimorio */
+  --f-head: "Cinzel", Georgia, serif;
+  --f-num: "Bebas Neue", sans-serif;
+  --f-body: "Cardo", Georgia, serif;
+  --head-weight: 700;
+  --num-weight: 400;
+  --head-track: 0.14em;
+}
+
+[data-mode="mine"] .s-card {
+  /* Imprenta */
+  --f-head: "IM Fell English SC", Georgia, serif;
+  --f-num: "Archivo Narrow", sans-serif;
+  --f-body: "Spectral", Georgia, serif;
+  --head-weight: 400;
+  --num-weight: 700;
+  --head-track: 0.08em;
+}
+
+/* ==========================================================================
+   MODO 2 — Consolidada: la misma intención con cuatro familias
+     Cinzel Decorative  → wordmark (intacto)
+     Marcellus SC       → todo título y botón de la interfaz
+     Barlow Condensed   → todo número y micro-etiqueta
+     Cardo              → todo texto corrido
+     Cinzel + Lora      → cartas (como hoy, para no reexportar los 61 PNG)
+   ========================================================================== */
+[data-mode="tidy"] .s-menu,
+[data-mode="tidy"] .s-hud,
+[data-mode="tidy"] .s-buttons,
+[data-mode="tidy"] .s-dialog,
+[data-mode="tidy"] .s-tutorial {
+  --f-head: "Marcellus SC", Georgia, serif;
+  --f-num: "Barlow Condensed", sans-serif;
+  --f-body: "Cardo", Georgia, serif;
+  --head-weight: 400;
+  --num-weight: 700;
+  --head-track: 0.1em;
+}
+
+[data-mode="tidy"] .s-card {
+  --f-head: "Cinzel", Georgia, serif;
+  --f-num: "Barlow Condensed", sans-serif;
+  --f-body: "Lora", Georgia, serif;
+  --head-weight: 700;
+  --num-weight: 700;
+  --head-track: 0.12em;
+}
+
+/* ==========================================================================
+   Chrome de la maqueta
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(120% 80% at 50% 0%, #1d1c17 0%, #08090a 62%);
+  color: #cbbfa6;
+  font-family: "Lora", Georgia, serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.2rem;
+  align-items: center;
+  padding: 0.7rem 1.5rem;
+  background: rgb(8 7 6 / 0.97);
+  border-bottom: 1px solid rgb(255 255 255 / 0.09);
+}
+
+.topbar__brand {
+  font-family: "Cinzel", serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: #b9a67f;
+}
+
+.topbar__spacer {
+  flex: 1;
+}
+
+.bar {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.chip {
+  appearance: none;
+  cursor: pointer;
+  padding: 0.4rem 0.85rem;
+  font-family: "Cinzel", serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #cbbfa6;
+  background: rgb(255 255 255 / 0.04);
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 2px;
+}
+
+.chip:hover {
+  color: #fff;
+  border-color: rgb(255 255 255 / 0.32);
+}
+
+.chip[aria-pressed="true"] {
+  color: #f4e6c4;
+  background: rgb(220 180 95 / 0.16);
+  border-color: rgb(220 180 95 / 0.6);
+}
+
+.chip--lang[aria-pressed="true"] {
+  color: #d6ecff;
+  background: rgb(47 124 176 / 0.22);
+  border-color: rgb(120 180 224 / 0.7);
+}
+
+.page {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 5rem;
+}
+
+.intro {
+  max-width: 96ch;
+  margin: 0 0 1.5rem;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #9a8f79;
+}
+
+.intro b {
+  color: #d3c6a8;
+}
+
+.intro code {
+  font-family: Consolas, monospace;
+  font-size: 0.85em;
+  color: #c8a985;
+}
+
+.bay {
+  margin: 0 0 2.5rem;
+}
+
+.bay__title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 0.9rem;
+  font-family: "Cinzel", serif;
+  font-size: 0.76rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #c9a24a;
+}
+
+.bay__title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, currentColor, transparent);
+  opacity: 0.4;
+}
+
+.bay__note {
+  margin: -0.4rem 0 1.1rem;
+  max-width: 96ch;
+  font-size: 0.86rem;
+  color: #877d6a;
+}
+
+/* --- Censo de familias -------------------------------------------------------- */
+.census {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1px;
+  background: rgb(255 255 255 / 0.06);
+  border: 1px solid rgb(255 255 255 / 0.06);
+}
+
+.census__cell {
+  padding: 0.8rem 1rem;
+  background: #12130f;
+}
+
+.census__role {
+  font-family: "Cinzel", serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #8a7f6a;
+}
+
+.census__font {
+  margin-top: 0.3rem;
+  font-size: 0.95rem;
+  color: #e2d6b8;
+}
+
+.census__count {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #9a8f79;
+}
+
+.census__count b {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #e0c98f;
+}
+
+.census__count.is-many b {
+  color: #e07a5a;
+}
+
+/* ==========================================================================
+   Superficies del juego
+   ========================================================================== */
+.surface {
+  --gold: #d6c58f;
+  --olive: #bccc91;
+  border: 1px solid rgb(183 164 102 / 0.38);
+  border-radius: 2px;
+  background: linear-gradient(145deg, rgb(22 29 30 / 0.96), rgb(7 13 15 / 0.98)),
+    radial-gradient(circle at 18% 0%, rgb(221 199 130 / 0.08), transparent 42%);
+  box-shadow: inset 0 1px 0 rgb(238 223 174 / 0.07), inset 0 0 32px rgb(0 0 0 / 0.22),
+    0 18px 36px rgb(0 0 0 / 0.42);
+}
+
+.grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  align-items: start;
+}
+
+.tag {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+  padding: 0.28rem 0.65rem;
+  background: rgb(0 0 0 / 0.55);
+  border: 1px solid rgb(255 255 255 / 0.14);
+}
+
+.tag strong {
+  font-family: "Cinzel", serif;
+  font-size: 0.64rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #e6dcc2;
+}
+
+.tag span {
+  font-size: 0.72rem;
+  color: #8a7f6a;
+}
+
+/* --- Menú principal ------------------------------------------------------------ */
+.menu {
+  display: grid;
+  gap: 1rem;
+  padding: 2rem;
+  min-height: 340px;
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+}
+
+/* Wordmark reproducido literalmente desde .hostfall-wordmark / .main-menu-title */
+.wordmark {
+  margin: 0;
+  font-family: "Cinzel Decorative", Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  font-size: clamp(48px, 6vw, 72px);
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+  text-transform: none;
+  color: #d8c99f;
+  text-shadow: 0 4px 22px rgb(0 0 0 / 0.85);
+}
+
+.menu__subtitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-family: var(--f-num);
+  font-size: 11px;
+  font-weight: var(--num-weight);
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: #7f8d91;
+}
+
+.menu__subtitle::before {
+  content: "";
+  width: 30px;
+  height: 1px;
+  background: #8b7443;
+}
+
+.menu__items {
+  display: grid;
+  gap: 0.45rem;
+  width: min(280px, 100%);
+  margin-top: 0.5rem;
+}
+
+.menu__item {
+  appearance: none;
+  cursor: pointer;
+  padding: 0.65rem 1rem;
+  font-family: var(--f-head);
+  font-size: 0.9rem;
+  font-weight: var(--head-weight);
+  letter-spacing: var(--head-track);
+  text-transform: uppercase;
+  color: #f7d996;
+  background: linear-gradient(180deg, #51311b, #21130b);
+  border: 1px solid rgb(179 128 59 / 0.8);
+  border-radius: 2px;
+  box-shadow: inset 0 1px 0 rgb(255 239 190 / 0.2);
+}
+
+.menu__item:hover {
+  filter: brightness(1.14);
+}
+
+.menu__item--ghost {
+  color: #cbbfa6;
+  background: linear-gradient(180deg, rgb(36 44 45 / 0.94), rgb(12 18 20 / 0.98));
+  border-color: rgb(126 139 135 / 0.36);
+}
+
+/* --- HUD (medidas reales) ------------------------------------------------------ */
+.hud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
+  padding: 1.5rem;
+}
+
+.pile {
+  position: relative;
+  display: grid;
+  width: 62px;
+  min-height: 75px;
+  margin-top: 7px;
+  align-content: end;
+  justify-items: center;
+  gap: 4px;
+  border: 1px solid rgb(150 168 120 / 0.45);
+  padding: 0 4px 8px;
+  background: radial-gradient(circle at 50% 36%, rgb(120 165 112 / 0.16), transparent 66%),
+    linear-gradient(162deg, #23382e, #0f1c1d);
+  box-shadow: inset 0 0 0 2px rgb(6 12 12 / 0.45), 0 10px 22px rgb(0 0 0 / 0.5);
+}
+
+.pile::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  right: 6px;
+  left: 6px;
+  height: 8px;
+  border: 1px solid rgb(150 168 120 / 0.34);
+  border-bottom: 0;
+  background: linear-gradient(180deg, #1b2c25, #16241f);
+}
+
+.pile--memory {
+  border-color: rgb(120 132 122 / 0.42);
+  background: linear-gradient(162deg, #1e2528, #0b1113);
+}
+
+.pile__count {
+  font-family: var(--f-num);
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--num-weight);
+  line-height: 1;
+  color: #e7f2c2;
+  text-shadow: 0 2px 5px rgb(0 0 0 / 0.7);
+}
+
+.pile__label {
+  max-width: 54px;
+  overflow: hidden;
+  font-family: var(--f-num);
+  font-size: 7px;
+  font-weight: var(--num-weight);
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgb(188 204 145 / 0.62);
+}
+
+.vital {
+  position: relative;
+  display: flex;
+  width: 180px;
+  min-height: 82px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid rgb(160 166 111 / 0.48);
+  border-top-color: rgb(196 211 135 / 0.7);
+  padding: 10px 14px 10px 16px;
+  background: linear-gradient(135deg, rgb(15 32 29 / 0.98), rgb(17 26 27 / 0.98) 48%, rgb(9 16 18 / 0.99));
+  box-shadow: inset 0 1px 0 rgb(229 246 184 / 0.08), 0 16px 36px rgb(0 0 0 / 0.48);
+}
+
+.vital--host {
+  width: 304px;
+  border-color: rgb(183 164 102 / 0.52);
+  border-top-color: rgb(224 203 135 / 0.78);
+  background: linear-gradient(135deg, rgb(40 25 22 / 0.98), rgb(19 23 25 / 0.98) 48%, rgb(10 16 18 / 0.99));
+}
+
+.vital__title {
+  font-family: var(--f-head);
+  font-size: 10px;
+  font-weight: var(--head-weight);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--olive);
+}
+
+.vital--host .vital__title {
+  color: #c9b980;
+}
+
+.vital__count {
+  margin-top: 3px;
+  font-family: var(--f-num);
+  font-size: 38px;
+  font-weight: var(--num-weight);
+  font-variant-numeric: tabular-nums;
+  line-height: 0.86;
+  color: #e9f5ba;
+  text-shadow: 0 0 18px rgb(119 180 94 / 0.22), 0 2px 6px rgb(0 0 0 / 0.7);
+}
+
+.vital--host .vital__count {
+  color: #fff0b2;
+  text-shadow: 0 0 18px rgb(218 153 88 / 0.28), 0 2px 6px rgb(0 0 0 / 0.7);
+}
+
+.vital__projection {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  margin-left: 8px;
+  font-family: var(--f-num);
+  font-size: 19px;
+  font-weight: var(--num-weight);
+  color: #c9b980;
+}
+
+.vital__emblem {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  place-items: center;
+  border: 2px solid rgb(136 179 98 / 0.68);
+  background: linear-gradient(145deg, #31532b, #17271a);
+  color: #d8ffae;
+  box-shadow: inset 0 0 0 3px rgb(7 12 14 / 0.26);
+  transform: rotate(45deg);
+}
+
+.vital__emblem svg {
+  transform: rotate(-45deg);
+}
+
+.phase-strip {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  font-family: var(--f-num);
+  font-size: 8px;
+  font-weight: var(--num-weight);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: rgb(207 136 86 / 0.58);
+}
+
+.phase-strip span {
+  width: 52px;
+  overflow: hidden;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.phase-strip span:first-child {
+  text-align: left;
+}
+
+.phase-strip span:last-child {
+  text-align: right;
+}
+
+.phase-strip .is-active {
+  color: #ffc27b;
+  text-shadow: 0 0 9px rgb(239 104 35 / 0.82);
+}
+
+/* --- Botones -------------------------------------------------------------------- */
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 1.35rem;
+}
+
+.btn-control,
+.btn-phase,
+.btn-action {
+  cursor: pointer;
+  font-family: var(--f-head);
+  font-weight: var(--head-weight);
+  letter-spacing: var(--head-track);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.btn-control {
+  height: 36px;
+  padding: 0 12px;
+  font-size: 12px;
+  color: #f7d996;
+  background: linear-gradient(180deg, #51311b, #21130b);
+  border: 1px solid rgb(179 128 59 / 0.8);
+  border-radius: 2px;
+  box-shadow: inset 0 1px 0 rgb(255 239 190 / 0.2);
+}
+
+.btn-phase {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px;
+  font-size: 12px;
+  color: #ffe3bb;
+  background: linear-gradient(110deg, #9b4b1d, #54220f 66%, #743515);
+  border: 1px solid rgb(236 165 78 / 0.82);
+  box-shadow: inset 0 0 0 4px rgb(52 15 6 / 0.28), 0 18px 40px rgb(0 0 0 / 0.54);
+}
+
+.btn-action {
+  height: 44px;
+  width: 186px;
+  padding: 0 0.8rem;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  overflow: hidden;
+  color: #aeb9b3;
+  background: linear-gradient(180deg, rgb(36 44 45 / 0.94), rgb(12 18 20 / 0.98));
+  border: 1px solid rgb(126 139 135 / 0.36);
+}
+
+.btn-action--primary {
+  color: #e3d8b5;
+  border-color: rgb(178 158 92 / 0.6);
+  background: linear-gradient(110deg, #3a4240, #1c2828 66%, #2e3836);
+}
+
+/* --- Diálogo y tutorial ---------------------------------------------------------- */
+.dialog {
+  padding: 1.35rem;
+}
+
+.dialog__kicker {
+  font-family: var(--f-num);
+  font-size: 8px;
+  font-weight: var(--num-weight);
+  letter-spacing: 0.23em;
+  text-transform: uppercase;
+  color: #7f8c87;
+}
+
+.dialog__title {
+  margin: 0.3rem 0 0;
+  font-family: var(--f-head);
+  font-size: 1.2rem;
+  font-weight: var(--head-weight);
+  letter-spacing: var(--head-track);
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.dialog__body {
+  margin: 0.6rem 0 0;
+  font-family: var(--f-body);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #8d9a94;
+}
+
+.dialog__actions {
+  display: flex;
+  gap: 0.7rem;
+  margin-top: 1.1rem;
+}
+
+.tutorial {
+  padding: 1.35rem;
+  border-left: 3px solid rgb(224 113 47 / 0.6);
+}
+
+.tutorial__step {
+  font-family: var(--f-num);
+  font-size: 9px;
+  font-weight: var(--num-weight);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #a4907a;
+}
+
+.tutorial__title {
+  margin: 0.3rem 0 0.5rem;
+  font-family: var(--f-head);
+  font-size: 1.05rem;
+  font-weight: var(--head-weight);
+  letter-spacing: var(--head-track);
+  text-transform: uppercase;
+  color: #e7d9b4;
+}
+
+.tutorial__body {
+  margin: 0;
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.5;
+  color: #b8c0bf;
+}
+
+.tutorial__body + .tutorial__body {
+  margin-top: 0.6rem;
+}
+
+/* --- Texto de carta --------------------------------------------------------------- */
+.card-text {
+  padding: 1.2rem 1.35rem;
+}
+
+.card-text__name {
+  margin: 0;
+  font-family: var(--f-head);
+  font-size: 1.05rem;
+  font-weight: var(--head-weight);
+  letter-spacing: var(--head-track);
+  color: var(--gold);
+}
+
+.card-text__stats {
+  display: inline-flex;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+  font-family: var(--f-num);
+  font-size: 1.1rem;
+  font-weight: var(--num-weight);
+  color: #e9f5ba;
+}
+
+.card-text__rules {
+  margin: 0.5rem 0 0;
+  font-family: var(--f-body);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #d3c9ae;
+}
+
+.card-text__flavor {
+  margin: 0.5rem 0 0;
+  font-family: var(--f-body);
+  font-size: 0.88rem;
+  font-style: italic;
+  color: #938972;
+}
+
+.card-note {
+  margin: 0.75rem 0 0;
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid rgb(224 113 47 / 0.6);
+  background: rgb(224 113 47 / 0.07);
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: #c2a98d;
+}

@@ -1,0 +1,856 @@
+# Plan por fases — Sistema de guía, pausa y resaltado
+
+Estado: **cerrado; Fases 0 a 5 y 7 completadas. Las antiguas Fases 6 y 8 fueron eliminadas por decisión del usuario.**
+
+Última actualización: **2026-08-11**.
+
+## Objetivo
+
+Construir la infraestructura reutilizable con la que Hostfall podrá detener una partida en puntos
+seguros, explicar una idea, resaltar uno o varios elementos y permitir únicamente la acción que se
+está enseñando.
+
+Este plan prepara el sistema. **No escribe todavía el recorrido de la Primera Semilla ni decide el
+texto final del tutorial obligatorio.** Ese contenido se diseñará después, sobre una infraestructura
+ya probada.
+
+Las decisiones de producto ya fijadas por el usuario son:
+
+- el tutorial obligatorio no se puede omitir la primera vez;
+- cada acción exigida al jugador debe estar resaltada;
+- las demás acciones de gameplay deben quedar bloqueadas;
+- un cuadro debe explicar qué ocurre y por qué;
+- el tutorial **no se reanuda a mitad**: si se abandona o se cierra, el próximo intento comienza
+  desde el principio;
+- el sistema debe servir para todos los decks actuales y futuros sin añadir condiciones especiales
+  al controlador por cada deck;
+- la Primera Semilla obligatoria será canónica y usará **El Pacto de Elarion** como deck del
+  Cronista;
+- cada tutorial predefine todas sus cartas, zonas y órdenes de aparición; el runtime nunca elige
+  una carta «parecida» o rellena el escenario con el resto del deck;
+- antes de implementar cada fase hay que explicar y revisar qué se hará, por qué se hará y qué
+  gana el jugador con ello.
+
+## Cómo se debe usar este documento
+
+Este documento no autoriza a implementar todas las fases de una vez. Para **cada fase**, el chat de
+implementación debe seguir este ciclo:
+
+1. Explicar en lenguaje de jugador qué experiencia se va a conseguir y qué problema resuelve.
+2. Mostrar la propuesta concreta de comportamiento, interfaz y límites de esa fase.
+3. Resolver dudas y registrar cualquier cambio pedido por el usuario en este documento.
+4. Esperar una aprobación explícita.
+5. Implementar sólo la fase aprobada.
+6. Ejecutar sus pruebas automáticas y entregar al usuario una lista breve de casos para QA visual.
+7. Registrar el resultado, cerrar la fase y sólo entonces presentar la siguiente.
+
+Una aprobación de una fase **no aprueba automáticamente la siguiente**. Si durante la implementación
+aparece una decisión que cambia la experiencia del jugador, se pausa el trabajo y se vuelve a
+conversar antes de asumirla.
+
+## Qué significa «escalable para todos los decks»
+
+Escalabilidad no significa ejecutar el mismo guion sobre cualquier deck ni elegir cartas al azar o
+por semejanza. Cada tutorial es una receta concreta y reproducible. Significa que:
+
+- el motor de guía, la pausa, el bloqueo de acciones, el resaltado y el cuadro explicativo son
+  completamente independientes de los decks;
+- una lección declara exactamente sus decks, cartas, copias, zonas y orden mediante claves
+  calificadas y aliases semánticos, no mediante preguntas en código como `if deckId === ...`;
+- al añadir un deck, no se editan el overlay, el orquestador ni el store de guía;
+- para enseñar con un deck nuevo se registra otra receta determinista, traducciones y escenario, no
+  una rama nueva dentro del framework;
+- una referencia rota, una copia imposible o un orden incompleto se detecta al validar contenido,
+  nunca a mitad de una partida guiada.
+
+El sistema admitirá dos clases de contenido, ambas deterministas:
+
+| Tipo de lección | Uso | Contrato |
+| --- | --- | --- |
+| Canónica | Tutorial obligatorio con una experiencia idéntica para todos | Usa **El Pacto de Elarion** y una receta completa fijada mediante claves calificadas del catálogo. No depende del deck que el jugador hubiera seleccionado. |
+| Opcional | Concepto común o mecánica particular de un deck | Declara decks y receta exactos. Si se quiere enseñar el mismo concepto con otro deck, se registra otra receta concreta que reutiliza el runtime y puede reutilizar copy. |
+
+La futura Primera Semilla queda fijada como **canónica** y utilizará El Pacto de Elarion como deck
+del Cronista. Así se puede enseñar siempre la misma secuencia y medir si el jugador la comprendió.
+Esta elección no limita el framework: las lecciones opcionales podrán usar cualquiera de los otros
+decks mediante su propia receta exacta.
+
+### Contrato para decks futuros
+
+Registrar un deck nuevo debe cumplir lo siguiente:
+
+1. El framework compila y sus pruebas base siguen pasando sin modificar código de guía.
+2. El deck nuevo no necesita un tutorial para seguir siendo jugable.
+3. Si se quiere enseñar con él, se añade una definición declarativa con receta exacta; no se
+   programan excepciones por nombre de carta o deck.
+4. El lint valida esa receta contra `ContentCatalog` antes de ofrecerla.
+5. Renombrar el texto visible de una carta no rompe una lección.
+
+Las claves de deck y carta aparecen sólo en la receta y siempre calificadas por `ContentCatalog`.
+Cada copia recibe un alias propio —aunque varias usen la misma definición— y los pasos apuntan a ese
+alias, que al construir el escenario se enlaza a un `instanceId`. Ningún paso busca texto visible,
+interpreta el log o decide por coordenadas del DOM.
+
+## Experiencia base del sistema
+
+La guía alternará tres estados claros:
+
+| Estado | Qué ocurre | Qué puede hacer el jugador |
+| --- | --- | --- |
+| **Explicar** | La partida está detenida, el tablero se oscurece, el objetivo se resalta y aparece el cuadro. | Leer, usar «Continuar» y los controles meta que se aprueben. |
+| **Actuar** | La partida continúa detenida excepto por la acción solicitada. El resaltado permanece. | Ejecutar únicamente la intención permitida; no hay botón «Continuar». |
+| **Observar** | Se bloquea todo input de gameplay y se reproduce completa la consecuencia real de la acción. | Observar; el sistema espera a que la presentación termine. |
+
+El ritmo recomendado es:
+
+`explicar → actuar → observar la resolución completa → detenerse en el siguiente punto seguro`.
+
+La primera versión no intentará congelar una carta a mitad de vuelo ni pausar un temporizador ya
+iniciado. Hostfall tiene presentaciones encadenadas; detenerlas arbitrariamente produciría estados
+visuales imposibles de reanudar con seguridad. La guía entrará en pausa total sólo en **checkpoints
+estables entre beats**. Durante «Observar», la animación iniciada termina y el siguiente beat no
+comienza hasta que la guía lo permita.
+
+Pausar exactamente a mitad de cualquier animación requeriría migrar todas las presentaciones a un
+reloj/scheduler unificado. Esa migración queda fuera de este plan mientras una lección no demuestre
+que es necesaria.
+
+## Límites arquitectónicos permanentes
+
+- `src/engine/` conserva las reglas reales. Una lección no puede falsear una acción para avanzar.
+- El límite de acciones se expresa como **intenciones semánticas** y se valida también en el store;
+  una capa visual que capture clics no es suficiente para bloquear teclado, drag-and-drop u otras
+  entradas.
+- La sesión activa de guía vive fuera de `GameState` y no entra en el resume normal de una partida.
+- La definición de una lección es contenido versionado, validable y traducible.
+- La receta contiene sólo las cartas necesarias para la lección y conserva explícitamente los
+  órdenes `topToBottom` y de aparición. El runtime no completa ni baraja el deck por su cuenta.
+- Los pasos observan resultados semánticos de acciones reales y la finalización de presentaciones;
+  no leen `game.log`, no esperan tiempos mágicos y no inspeccionan texto renderizado.
+- Los números que se explican se obtienen de las reglas y selectores reales —por ejemplo,
+  `hostRules.damagePerArchiveDiscard` y `playerDrawForecast`—, no de literales duplicados en el
+  guion.
+- Los componentes compartidos publican anclas semánticas. Las cartas reciben anclas por su
+  `instanceId` o por un rol resuelto, no por su imagen o nombre.
+- El runtime de release no importa código de Playground. Si hace falta reutilizar construcción de
+  escenarios, se extrae primero una utilidad pura y segura para runtime.
+- Si falta un ancla, un rol o una precondición, el sistema falla cerrado: mantiene el gameplay
+  bloqueado y ofrece reiniciar/salir con un diagnóstico visible sólo en developer mode.
+
+Los nombres de archivos que aparecen abajo son orientativos. La conversación previa de cada fase
+puede ajustarlos sin cambiar estos contratos.
+
+## Mapa resumido de fases
+
+| Fase | Resultado al cerrarla | Beneficio visible o futuro para el jugador |
+| --- | --- | --- |
+| 0. Decisiones | Comportamiento y límites aprobados antes de programar | La guía se sentirá como se espera y no tomará decisiones de producto a escondidas. |
+| 1. Definiciones | Formato validado para describir lecciones y escenarios exactos | Cada tutorial comenzará siempre con las cartas y órdenes diseñados por el autor. |
+| 2. Acciones | Gate semántico que permite una sola intención | No se podrá romper el recorrido con otra carta, botón, teclado o drag. |
+| 3. Pausa | Checkpoints seguros entre presentaciones | Habrá tiempo ilimitado para leer sin cortar consecuencias visuales. |
+| 4. Interfaz | Spotlight, cuadro, anclas y escudo accesible | Siempre será claro qué mirar y qué hacer. |
+| 5. Orquestación | Recorrido declarativo completo | Cada paso avanzará por una acción real confirmada. |
+| 7. Ciclo de vida | Primer arranque, salida, finalización y no-resume | Al interrumpir se volverá a un inicio comprensible; al completar no se repetirá por accidente. |
+
+---
+
+## Fase 0 — Cerrar la experiencia y las decisiones de arquitectura
+
+Estado: **cerrada el 2026-08-11.**
+
+### Antes de iniciar
+
+Se mostrará al usuario un recorrido conceptual corto de los tres estados —Explicar, Actuar y
+Observar— y un esquema de dónde aparecerían el resaltado y el cuadro. También se confirmarán las
+excepciones que no son gameplay.
+
+### Para qué le sirve al jugador
+
+Evita construir un sistema técnicamente correcto que se sienta invasivo, ambiguo o imposible de
+abandonar. También fija desde el principio qué significa «pausa total» durante una animación.
+
+### Decisiones aprobadas
+
+- Primera Semilla canónica con El Pacto de Elarion como deck del Cronista; la Hueste y el escenario
+  exactos se decidirán al diseñar el contenido del tutorial.
+- Pausa en checkpoints estables como alcance de la primera versión.
+- Estados Explicar, Actuar y Observar con el ritmo descrito en «Experiencia base del sistema».
+- Audio, idioma, accesibilidad, reiniciar el tutorial y salir siguen disponibles como controles
+  meta. Reiniciar o salir requiere confirmación.
+- Settings usa una variante restringida que oculta seed, deck, dificultad, restart normal,
+  developer tools y cualquier opción capaz de mutar o revelar el escenario guiado.
+- Al salir se advierte que el intento se perderá y la próxima vez comenzará desde el principio.
+- Persistencia de finalización: guardar `lessonId` y versión completada, nunca el paso actual.
+- Una versión nueva sólo obliga a repetir el tutorial si cambia un aprendizaje obligatorio, no por
+  correcciones de texto, arte o presentación.
+- Los nombres internos de referencia serán `GuidedLesson` y `GuidanceSession`; el nombre público
+  será **Primera Semilla** y posteriormente vivirá bajo **Cómo jugar**.
+
+### Contrato de estados
+
+```mermaid
+stateDiagram-v2
+    [*] --> Explicar
+    Explicar --> Actuar: Continuar
+    Actuar --> Actuar: intención incorrecta bloqueada
+    Actuar --> Observar: intención aceptada por las reglas
+    Observar --> Explicar: resultado esperado y presentación estable
+    Observar --> Completado: último resultado y presentación estable
+    Explicar --> Abortado: salir o cerrar
+    Actuar --> Abortado: salir o cerrar
+    Observar --> Abortado: salir o cerrar
+    Abortado --> [*]: descartar sesión
+    Completado --> [*]: persistir sólo finalización
+```
+
+Este diagrama representa el ciclo normal de una enseñanza. Una explicación puramente informativa
+puede continuar a otra explicación, pero nunca autoriza gameplay durante la transición. Reiniciar
+descarta la sesión actual y crea otra desde el primer paso.
+
+### Inventario inicial de entradas
+
+La Fase 2 convirtió estas familias en una unión tipada de intenciones. Este inventario evita cubrir
+sólo los botones usados por la Primera Semilla y dejar rutas laterales sin gate.
+
+| Familia | Entradas actuales que debe cubrir | Tratamiento durante una guía |
+| --- | --- | --- |
+| Mano inicial | aceptar y hacer mulligan | Aceptar cruza el gate; mulligan permanece siempre bloqueado en schema v1. |
+| Mano y Fuentes | inspeccionar carta, jugar Fuente, reciclar Fuente y jugar una carta | Inspeccionar sigue siendo preview; el rol resuelto limita cada compromiso real y su destino. |
+| Objetivos y elecciones | iniciar, fijar, deseleccionar, cancelar y confirmar targets; descartes obligatorios y elecciones especiales | El paso declara la secuencia completa; un target visualmente correcto no basta si el engine lo rechaza. |
+| Habilidades | seleccionar un permanente y activar una habilidad | Se autoriza por rol de instancia y habilidad semántica, no por nombre visible. |
+| Avance de fase | CTA de Preparación, iniciar/pasar combate, terminar turno y entregar el control a la Hueste | Cada CTA es una intención distinta aunque hoy comparta el mismo componente visual. |
+| Ataque del Cronista | elegir/quitar atacantes, elegir todos, cancelar y confirmar el ataque al Archivo | Selección y confirmación producen receipts separados. |
+| Defensa | iniciar drag, asignar/quitar bloqueadores, cancelar y confirmar defensa | El origen y el atacante destino forman parte de la intención permitida. |
+| UI no normativa | hover, foco, preview, context menu y selección visual | Se bloquea o restringe para no tapar la guía; nunca completa un paso. |
+| Controles meta | audio, idioma, accesibilidad, reiniciar tutorial y salir | Viven fuera de `GameplayIntent` y siguen la política restringida aprobada. |
+| Sistema automático | Hueste, triggers, commits de impacto y callbacks de animación | No son input del jugador: pueden terminar en Observar y cuentan para saber cuándo la presentación está estable. |
+
+### Inventario inicial de checkpoints
+
+Un checkpoint de guía exige reglas asentadas y presentación estable. `isSafeResumeCheckpoint` sirve
+como antecedente, pero no será la autoridad: hoy no conoce todas las animaciones locales y además es
+más estricto con selecciones que una lección puede controlar deliberadamente.
+
+| Punto candidato | Condición para considerarlo estable |
+| --- | --- |
+| Mano inicial lista | No hay entrada de encuentro pendiente ni cartas en transición; aceptar/mulligan puede recibirse. |
+| Inicio de Preparación o turno | Robo, entradas de Mano, banners y triggers automáticos terminaron; el CTA y las cartas ya coinciden con el estado real. |
+| Después de jugar o devolver una Fuente | El engine aceptó la acción y terminaron movimiento, robo derivado, pagos y triggers asociados. |
+| Después de jugar carta o activar habilidad | Llegó el receipt esperado; no quedan targets, commits, event queue, triggers ni presentaciones pendientes. |
+| Selección guiada | No corre ninguna resolución automática; el paso es dueño explícito de los atacantes, bloqueadores o targets pendientes. |
+| Antes de confirmar fase o combate | Preview y selección coinciden con reglas y no hay otro beat activo. |
+| Después del ataque al Archivo | Terminaron impactos, descartes al Archivo, vuelos a Memoria y cualquier reacción; el siguiente paso todavía no comenzó. |
+| Después del turno de la Hueste | Revelados, combate, triggers y transferencia a Reserva terminaron; el control volvió a un estado legible. |
+| Final de la lección | El último resultado y toda su presentación terminaron antes de persistir la finalización. |
+
+La implementación derivará `isPresentationSettled` de actividad registrada, no de un delay escrito
+en la lección. Un checkpoint puede conservar una selección sólo cuando el paso actual la posee; no
+puede heredar targeting o modales ajenos.
+
+### Criterio de cierre
+
+Cumplido el 2026-08-11. El usuario aprobó la propuesta como preview y pidió ajustar detalles al verla
+en práctica. Se permiten ajustes menores de posición, intensidad, tamaño, copy y timing durante QA.
+Cambiar el deck canónico, permitir gameplay adicional, reanudar a mitad o congelar animaciones en
+curso altera el contrato y requiere una nueva aprobación explícita.
+
+---
+
+## Fase 1 — Definiciones, recetas deterministas y aliases de cartas
+
+Estado: **cerrada el 2026-08-11.**
+
+### Antes de iniciar
+
+Se enseñará un ejemplo legible de una lección con tres pasos y aliases concretos, por ejemplo
+`fuente_inicial`, `eco_a_jugar` y `primer_robo`. Se explicará qué pertenece al runtime común y qué
+pertenece exclusivamente a la receta determinista de esa lección.
+
+### Para qué le sirve al jugador
+
+Hace que el tutorial empiece siempre con la Mano, Archivo, Hueste y orden de aparición diseñados. El
+autor puede entregar dos cartas iniciales, siete o cualquier cantidad validada sin introducir cartas
+que la lección no usará. También evita que una actualización cambie silenciosamente esa secuencia.
+
+### Modelo implementado para una receta
+
+La definición TypeScript implementada sigue este contrato conceptual abreviado; el schema real
+exige además los valores iniciales y todas las zonas, aunque estén vacías:
+
+```yaml
+schemaVersion: 1
+id: first-seed
+revision: 1
+mode: required
+startStepId: introduction
+scenario:
+  playerDeckKey: hostfall.core/pact_of_elarion
+  hostDeckKey: hostfall.core/<hueste-elegida>
+  setupTurnsTotal: 3
+  setupTurnsRemaining: 3
+  player:
+    storedEnergy: 0
+  zones:
+    openingDeal: [fuente_inicial, eco_a_jugar]
+    playerArchiveTopToBottom: [primer_robo, segundo_robo]
+    playerField: []
+    playerMemory: []
+    hostArchiveTopToBottom: [primera_aparicion, segunda_aparicion]
+    hostField: []
+    hostMemory: []
+cards:
+  fuente_inicial:
+    cardKey: hostfall.core/pact_of_elarion/<carta-exacta>
+  eco_a_jugar:
+    cardKey: hostfall.core/pact_of_elarion/<carta-exacta>
+```
+
+`openingDeal` define tanto la cantidad como el orden de entrada a la Mano. Puede contener dos,
+siete u otra cantidad definida por el tutorial. `playerArchiveTopToBottom[0]` será la próxima carta
+robada y `hostArchiveTopToBottom[0]` la próxima carta revelada por la Hueste. No se añadirán las
+cartas omitidas del deck completo.
+
+Dos copias de la misma carta usan aliases distintos. Los pasos nunca señalan la definición general:
+señalan la copia exacta, por ejemplo `fuente_inicial`.
+
+### Trabajo propuesto
+
+- Sustituir de forma intencional la prueba que hoy prohíbe cualquier aparición de `tutorial` dentro
+  de `src`: la nueva guarda seguirá rechazando los archivos, seed mágico y patrones hardcodeados de
+  la implementación retirada, pero permitirá el framework aprobado. Esto se hace antes de añadir
+  el primer módulo runtime, no para evadir la regresión después.
+- Definir un `GuidedLessonDefinition` versionado y una unión tipada de pasos:
+  `ExplainStep`, `ActStep` y `ObserveStep`.
+- Crear un registro de lecciones separado del registro de decks.
+- Definir una `ScenarioRecipe` exacta con decks, reglas iniciales, vida, fase, Mano, Archivo, Campo,
+  Memoria, Fuentes, Reserva y orden de la Hueste.
+- Permitir que `openingDeal` contenga la cantidad exacta diseñada, incluidas dos o siete cartas, sin
+  rellenar automáticamente desde el deck completo.
+- Definir de forma única la convención `topToBottom`: el primer alias siempre es el próximo robo o
+  revelado.
+- Resolver aliases de copias predefinidas a `instanceId` concretos; los pasos posteriores sólo
+  consumen esos bindings.
+- Referenciar todos los decks y cartas mediante claves calificadas de `ContentCatalog`.
+- Conservar un seed/RNG determinista para efectos que todavía utilicen azar; una lección debe
+  evitarlos o declarar y validar su resultado esperado.
+- Usar claves de i18n para títulos, explicaciones, ayudas de error y etiquetas de acción.
+- Implementar validación/lint para versiones, IDs únicos, claves de catálogo, aliases sin resolver,
+  aliases duplicados, copias imposibles, zonas, órdenes incompletos, pasos inalcanzables y
+  traducciones.
+- Construir un builder puro de escenarios guiados o extraer una base neutral. El registro de release
+  no puede importar `src/playground/`.
+
+Las cartas creadas como consecuencia de una regla —por ejemplo, un token Invocado por otra carta—
+las sigue produciendo el engine real. La receta predefine la carta que causa el efecto y puede
+declarar el resultado esperado para validarlo; el orquestador no inserta manualmente el resultado.
+
+### Pruebas mínimas
+
+- Definición válida e inválida para lección canónica y opcional.
+- Referencias calificadas existentes e inexistentes.
+- Aliases únicos resueltos a copias e `instanceId` deterministas.
+- `openingDeal` de dos y siete cartas conserva cantidad y orden exactos.
+- Mano, ambos Archivos, Campos y Memorias se reconstruyen sin cartas añadidas implícitamente.
+- Dos copias de la misma carta mantienen identidad y orden separados.
+- Una receta con carta inexistente, demasiadas copias u orden incompleto se rechaza antes de crear
+  la partida.
+- Renombrar texto visible no cambia la secuencia.
+
+### Implementación cerrada
+
+- `src/guidance/contracts.ts` define schema v1, pasos Explicar/Actuar/Observar, recetas exactas,
+  aliases, highlights y nombres authored de intenciones/receipts conectados al store por la Fase 2.
+- `src/guidance/validation.ts` valida claves calificadas de `ContentCatalog`, pertenencia al deck,
+  cantidades máximas reales, cada zona aunque esté vacía, aliases únicos, orden, combate, energía,
+  traducciones y grafo de pasos. Una definición inválida no puede construir una partida parcial.
+- `src/guidance/buildGuidedScenario.ts` elimina el reparto y barajado normales y reconstruye sólo las
+  copias declaradas. `openingDeal` conserva cantidad/orden, ambos Archivos usan `topToBottom` y el
+  seed sólo inicializa el RNG de efectos posteriores.
+- `GuidedLessonRegistry` congela y valida definiciones antes de registrarlas. El registro de release
+  queda deliberadamente vacío hasta aprobar el contenido real de la Primera Semilla.
+- Una receta puede mostrar una Mano inicial pendiente de aceptar, pero no puede autorizar mulligan
+  todavía: permitirlo sin un schema de Manos de reemplazo exactas reintroduciría un barajado no
+  authored. Si una lección futura enseña mulligan, ese schema se diseña y aprueba primero.
+- El runtime de guía no importa `src/playground/`; el builder de producción usa contratos del engine
+  y `ContentCatalog` directamente.
+- La regresión del tutorial retirado ahora bloquea sus archivos, seed mágico y cartas hardcodeadas,
+  sin prohibir la infraestructura nueva por su vocabulario.
+- `tests/guidedLesson.test.js` cubre repartos de dos y siete cartas, orden exacto, ausencia de relleno,
+  zonas/Reserva/combate, duplicados, cantidades imposibles, traducciones, grafo, registro, rename
+  visible y un catálogo sintético.
+
+### Criterio de cierre
+
+Cumplido el 2026-08-11. Se registran y reconstruyen dos recetas exactas —una con Elarion y otra con
+un deck sintético— sin cambiar builder o validador y sin que aparezca una carta no declarada. La
+suite confirma además copias separadas, orden estable y la independencia de nombres visibles.
+
+---
+
+## Fase 2 — Frontera semántica y bloqueo real de acciones
+
+Estado: **cerrada el 2026-08-11**.
+
+### Antes de iniciar
+
+Se presentará una tabla de las acciones que el jugador puede intentar —jugar carta, elegir objetivo,
+activar habilidad, devolver Fuente, elegir atacantes, confirmar combate, pasar fase— y cómo se verá
+una acción permitida frente a una bloqueada.
+
+### Para qué le sirve al jugador
+
+Garantiza que durante una instrucción no pueda avanzar por accidente, gastar otra carta ni romper el
+recorrido usando teclado, arrastre o un botón que no quedó cubierto por el oscurecimiento visual.
+
+### Trabajo propuesto
+
+- Introducir una unión `GameplayIntent` con las acciones públicas que llegan de la UI al store.
+- Añadir un gate central que, fuera de una guía activa, sea un no-op y preserve el juego actual.
+- Durante `ActStep`, permitir sólo la intención declarada y sus roles/objetivos resueltos.
+- Separar acciones del jugador de acciones automáticas del motor y de la Hueste; el gate no puede
+  bloquear por accidente una resolución ya autorizada.
+- Emitir receipts/eventos efímeros y tipados después de que el engine acepte de verdad la acción,
+  por ejemplo Fuente jugada/devuelta, carta jugada, paso terminado, robo con cantidad y motivo,
+  Reserva liberada, atacante elegido o carta retirada del Archivo de la Hueste.
+- Dar a esos receipts un cursor monotónico de sesión/paso para que un evento antiguo o duplicado no
+  complete una instrucción nueva. Un clic sobre el objetivo no completa un paso si la regla rechazó
+  la jugada.
+- Dar una razón tipada para cada rechazo de guía. La UI podrá convertirla en un pulso y una ayuda
+  breve sin ejecutar la acción equivocada.
+- Mantener el engine como autoridad de reglas y aprovechar sus resultados semánticos existentes;
+  no duplicar validaciones de cartas dentro de la guía.
+
+El escudo visual de la Fase 4 será una segunda defensa y una ayuda de comprensión. La autoridad de
+bloqueo estará aquí.
+
+### Pruebas mínimas
+
+- Cada intención pública atraviesa el gate.
+- Una intención autorizada llega exactamente una vez al engine.
+- Intenciones distintas, targets equivocados, teclado y drag-and-drop quedan bloqueados.
+- Un intento válido en apariencia pero rechazado por el engine no avanza el paso.
+- Sin sesión de guía, todas las rutas conservan el comportamiento actual.
+- Las acciones automáticas y animaciones autorizadas pueden terminar.
+
+### Resultado implementado
+
+- `src/guidance/interactionGate.ts` define `GameplayIntent`, el gate central, rechazos tipados,
+  receipts efímeros, bindings de alias a `instanceId`, cursor monotónico y comparación exacta de
+  cartas, objetivos, habilidades, selecciones y asignaciones de bloqueo.
+- El gate es un no-op sin una guía activa. En `explain` y `observe` bloquea toda intención del
+  jugador; en `act` acepta únicamente la intención authored. Un receipt aceptado consume la acción
+  del paso para impedir doble clic o doble compromiso, pero un rechazo real del engine no consume
+  el paso y permite reintentar.
+- `GUIDED_GAMEPLAY_ENTRY_POINTS` clasifica las entradas públicas de gameplay del store. Una prueba
+  de regresión exige que cada una cruce `gameplayIntentAllowed`; selecciones de preview, movimiento
+  del puntero y callbacks de animación no se disfrazan de gameplay.
+- `useGameStore` aplica la misma frontera a clic, teclado, menú contextual y drag-and-drop porque
+  todas esas rutas terminan en la misma mutación semántica. Las cartas con objetivos publican
+  primero `targeting.started`, luego `target.selected` y sólo publican `target.confirmed` /
+  `card.played` después de una confirmación válida.
+- Las continuaciones automáticas usan `runGuidedSystemAction`: pueden completar una animación o un
+  beat ya autorizado, pero la excepción existe sólo durante esa llamada y no abre el gate para el
+  siguiente input del jugador.
+- Los cambios reales de `GameState` producen receipts sin leer `game.log`: aceptación de Mano,
+  final de un paso de Preparación, cambio de fase, robo con cantidad/motivo, liberación de Reserva y
+  cartas efectivamente retiradas del Archivo de la Hueste. Los commits directos publican primero su
+  resultado de acción y las consecuencias automáticas se observan después.
+- El schema de pasos exige contexto para targeting/discard, `abilityId` para habilidades, aliases
+  exactos para cartas/objetivos y asignaciones completas para defensa. Mulligan continúa bloqueado
+  por el schema v1.
+- `tests/guidedInteractionGate.test.js` cubre modo inactivo, bloqueo en Explicar/Observar, matching
+  exacto, doble compromiso, rechazo del engine reintentable, flujo de targeting, automatismos,
+  robo doble por Mano vacía, Reserva, mill del Archivo y cobertura de cada entrada pública.
+
+### Límites cerrados de la fase
+
+- Todavía no existe máscara, spotlight, cuadro explicativo ni pulso visual de rechazo.
+- Todavía no existe el runtime que recorre los pasos; la Fase 3 consumirá estos receipts y políticas.
+- El bloqueo DOM en fase capture será una segunda defensa visual en la fase de overlay. La autoridad
+  de reglas ya está en el store y no depende de selectores CSS.
+
+### Criterio de cierre
+
+Cumplido el 2026-08-11. Las entradas públicas clasificadas no pueden saltarse el gate, los commits
+rechazados no emiten receipts y el juego normal conserva su comportamiento con la guía inactiva.
+
+---
+
+## Fase 3 — Ciclo de pausa y checkpoints de presentación
+
+Estado: **cerrada el 2026-08-11.**
+
+### Antes de iniciar
+
+Se explicará con una secuencia real dónde se detiene la partida y dónde se deja terminar una
+animación. Se confirmará que «pausa total» significa que no empieza otro beat ni corre gameplay en
+segundo plano, no que una carta quede congelada a mitad de vuelo.
+
+### Para qué le sirve al jugador
+
+Le da tiempo ilimitado para leer y actuar sin que la Hueste, un contador o una animación le quite el
+control. Al mismo tiempo, conserva consecuencias visuales completas y fáciles de entender.
+
+### Trabajo propuesto
+
+- Crear un store de sesión de guía separado de `GameState` con estado, paso, bindings y permiso de
+  avance.
+- Formalizar un registro de actividad de presentación con tokens `begin/end` y derivar de él
+  `isPresentationSettled`, incluyendo las animaciones relevantes que hoy viven localmente en
+  componentes.
+- Definir checkpoints estables entre beats a partir del estado semántico y de
+  `isPresentationSettled`.
+- Hacer que los programadores de secuencias consulten una barrera antes de iniciar el siguiente
+  beat; el beat en curso puede finalizar y publicar su resultado.
+- Modelar explícitamente las transiciones `explain → act → observe → checkpoint`.
+- Centralizar cancelación y limpieza al reiniciar o salir para que no queden timers ni callbacks de
+  una sesión anterior.
+- Definir el tratamiento de audio, voz y ambiente durante una pausa según lo aprobado en Fase 0.
+- Mantener el reloj del engine detenido: ningún turno o efecto de gameplay avanza sólo por tiempo de
+  lectura.
+
+### Límites de la fase
+
+- No congela animaciones a mitad de frame.
+- No migra todas las animaciones del juego a un scheduler nuevo.
+- No añade todavía spotlight ni cuadro final.
+
+### Implementación materializada
+
+- `GuidedSessionStore` mantiene sesión, paso, modo, bindings y permiso de avance fuera de
+  `GameState`. Consume los receipts reales del gate y recorre
+  `Explicar → Actuar → Observar → checkpoint` sin resolver reglas.
+- `GuidedBeatBarrier` retiene únicamente el inicio del siguiente beat automático. Los runners de
+  reacciones del Cronista y la Hueste, las llegadas y el inicio de combate consultan esta barrera;
+  el beat que ya empezó conserva su commit y termina completo.
+- `GuidedPresentationActivityRegistry` publica tokens con epoch para presentaciones locales y beats.
+  La Mano, la transferencia a la Reserva y los runners automáticos ya registran inicio/fin; un token
+  de un tablero abandonado no puede asentarse sobre el siguiente.
+- `isGuidedPresentationSettled` distingue presentación activa de trabajo meramente encolado o de
+  una selección estable. Así puede existir un checkpoint con reacciones pendientes detrás de la
+  barrera sin fingir que una animación en curso terminó.
+- Reset, carga de escenario, salida y fin de partida invalidan barrera, tokens, epochs de combate y
+  temporizadores compartidos. La secuencia de ataque del Cronista también quedó protegida contra
+  callbacks de una sesión anterior.
+- Developer Mode incorpora la pestaña **Guide** del Playground. Su fixture exacto de Elarion monta
+  el Board real y muestra modo, paso, receipts, tokens, blockers y beats retenidos. Este fixture es
+  tooling de desarrollo y no es el contenido de la Primera Semilla.
+- La comprobación posterior a un cambio de reglas ocurre en el siguiente frame de presentación, no
+  tras un número fijo de milisegundos. Esto da tiempo a React/Framer Motion para registrar una
+  animación local antes de declarar el checkpoint estable.
+
+### Pruebas mínimas
+
+- La espera de lectura puede durar indefinidamente sin cambiar `GameState`.
+- Un beat iniciado termina; el siguiente queda retenido hasta recibir permiso.
+- Reiniciar y salir invalidan callbacks antiguos mediante el mecanismo de epochs/cancelación vigente.
+- Una derrota, victoria o error no deja la guía en un estado imposible.
+- Reducir movimiento conserva el mismo orden semántico y los mismos checkpoints.
+
+### Criterio de cierre
+
+Cumplido el 2026-08-11 y aprobado en QA manual por el usuario. La vertical del Guidance Lab se
+detiene, acepta únicamente la Fuente exacta, observa su entrada real al Campo y vuelve a detenerse.
+Las regresiones cubren espera indefinida, tokens visuales, barrera entre beats, movimiento reducido
+por finalización semántica e invalidación de callbacks al abandonar.
+
+---
+
+## Fase 4 — Anclas, spotlight, cuadro explicativo y escudo de input
+
+Estado: **cerrada el 2026-08-11 tras QA visual del usuario.**
+
+### Antes de iniciar
+
+Se mostrará un mockup sobre la UI real para aprobar oscurecimiento, borde del highlight, flecha,
+posición del cuadro, feedback de clic incorrecto y comportamiento cuando hay dos objetivos. No se
+decidirá esta apariencia únicamente desde código.
+
+### Para qué le sirve al jugador
+
+Convierte una explicación abstracta en una instrucción inequívoca: muestra qué mirar, qué tocar y,
+cuando aplica, desde dónde arrastrar y dónde soltar.
+
+### Trabajo propuesto
+
+- Crear un registro de anclas semánticas compartidas para Preparación, CTA de fase, Mano, Campo,
+  Reserva, Fuentes, Archivo del Cronista, Archivo de la Hueste, Memoria y paneles relevantes.
+- Dar anclas dinámicas a cartas por `instanceId`; un rol de lección se traduce a esa ancla sin saber
+  a qué deck pertenece.
+- Renderizar el overlay en un portal fijo con contrato de `z-index` documentado frente a previews,
+  modales, settings y animaciones.
+- Medir objetivos con `ResizeObserver` y recalcular en resize, cambio de idioma y movimiento del
+  layout. No clonar el DOM objetivo.
+- Admitir uno o varios recortes de spotlight, unión visual origen/destino para drag y colocación
+  automática del cuadro sin tapar el objetivo.
+- Capturar pointer, click, context menu, teclado y drag en la frontera superior; en modo Actuar sólo
+  se deja llegar el evento al objetivo permitido, y el gate semántico de la Fase 2 vuelve a validarlo.
+- Suprimir previews y tooltips no autorizados durante la guía para que sus capas no cubran el cuadro
+  ni revelen controles bloqueados.
+- Cuando se pulse un lugar bloqueado, mantener la acción bloqueada y responder con un pulso y una
+  frase corta; evitar abrir una cascada de tooltips.
+- Gestionar foco, lectura por screen reader, orden de tabulación y teclado. `Escape` no puede omitir
+  el tutorial obligatorio.
+- Respetar `prefers-reduced-motion` y conservar contraste legible en ambos idiomas.
+
+### Pruebas mínimas
+
+- Anclas estáticas y cartas dinámicas se registran y limpian correctamente.
+- Overlay correcto tras resize, reflow e idioma ES/EN.
+- Múltiples spotlights y drag origen/destino dejan sólo las áreas aprobadas interactivas.
+- Focus trap y restauración de foco no permiten escapar a una acción bloqueada.
+- Un ancla ausente activa la recuperación segura, no desbloquea el tablero.
+- El orden de capas funciona con preview de carta, animaciones y modales aprobados.
+
+### Implementación materializada
+
+- `GuidedAnchorRegistry` recibe anclas desde los componentes mediante refs reales. Las lecciones
+  resuelven aliases a `instanceId` y luego a una ancla `card:*`; nunca consultan nombres de cartas
+  ni selectores CSS. El registro conserva propietarios simultáneos para que una carta pueda pasar
+  de Mano a Campo sin perder el spotlight durante el relevo visual.
+- La UI registra las superficies compartidas de reparto inicial, Preparación, acciones primaria y
+  secundarias, selecciones, Mano, Campo, Fuentes, Reserva, Archivos, Memorias y Vida. Una
+  presentación futura sólo debe registrar su ref en la misma API; no modifica el overlay.
+- Los highlights aceptan los roles opcionales `focus`, `origin` y `destination`. El overlay admite
+  varios recortes y dibuja una conexión direccional únicamente cuando la receta declara ambos
+  extremos, sin inferir qué significa una carta o una zona.
+- `GuidedTutorialOverlay` se monta una sola vez sobre el Board y se proyecta en `document.body` en
+  la capa `z-index: 20000`. Usa una máscara SVG, mide los refs con `ResizeObserver` y sigue su
+  posición por frame mientras la guía está activa; el cuadro elige la ubicación con menor
+  solapamiento y se vuelve a medir ante reflow, resize o cambio de idioma.
+- El escudo DOM captura pointer, clic, doble clic, menú contextual, drag/drop y teclado. Explicar y
+  Observar bloquean gameplay completo; Actuar sólo deja atravesar los highlights del paso. Un gesto
+  de pointer que comenzó en el origen permitido puede terminar su drag, pero el gate semántico de
+  la Fase 2 vuelve a comprobar la intención exacta antes del commit.
+- Un intento fuera del objetivo no llega al handler: muestra una frase breve y convierte el borde
+  dorado en un pulso rojo. Los rechazos semánticos del store alimentan el mismo feedback.
+- El cuadro administra foco, `aria-labelledby`/`aria-describedby`, lectura de estado y ciclo de
+  tabulación. Las cartas reales ahora admiten activación por teclado; en Mano, Enter/Espacio ejecuta
+  la misma ruta de juego que el drag. `Escape` no atraviesa el escudo.
+- Tooltips y previews se suprimen mientras el overlay está activo. Movimiento reducido conserva
+  contraste y feedback mediante un borde estático más grueso en lugar de sacudidas o pulsos.
+- Si falta una ancla, la máscara se cierra por completo y el cuadro informa que la lección debe
+  reiniciarse; no se desbloquea el tablero. La salida/reconstrucción de producto se conectará en la
+  Fase 7.
+- La pestaña **Guide** usa copy propio ES/EN y prueba la vertical real: Explicar resalta la Fuente,
+  Actuar muestra origen y Campo como destino, Observar sigue la entrada y el último checkpoint
+  enfoca las Fuentes. Reiniciar/Stop siguen disponibles sólo como controles del laboratorio dev.
+- El QA visual fijó el oscurecimiento general en 55%, adoptó el azul carbón y la tipografía legible
+  de Settings para el cuadro, y eliminó las reacciones hover del tablero durante Explicar y
+  Observar. El feedback bloqueado distingue entre leer, esperar y ejecutar la acción iluminada.
+
+### Límites cerrados de la fase
+
+- El overlay presenta y bloquea; no avanza pasos ni resuelve reglas. La Fase 5 construirá el
+  orquestador declarativo completo sobre estos contratos.
+- No existe todavía una lección registrada en release ni el copy de la Primera Semilla.
+- La confirmación de salida, el reinicio de producto y la política de tutorial obligatorio pertenecen
+  a la Fase 7. El mensaje de ancla ausente falla cerrado mientras tanto.
+- `z-index: 20000` es la capa de guía. Una futura superficie verdaderamente sistémica debe declarar
+  una capa superior; previews, tooltips, settings de partida y animaciones comunes permanecen debajo.
+
+### Criterio de cierre
+
+Cumplido el 2026-08-11 y aprobado en QA manual por el usuario. El spotlight conserva legibilidad del
+tablero, el cuadro pertenece al lenguaje visual de los menús y la única acción válida se distingue
+sin que los pasos de explicación aparenten ser interactivos.
+
+---
+
+## Fase 5 — Orquestador declarativo de lecciones
+
+Estado: **cerrada el 2026-08-11 tras QA funcional del usuario.**
+
+### Antes de iniciar
+
+Se recorrerá una lección mínima de extremo a extremo: explicación, acción correcta, consecuencia y
+siguiente explicación. Se mostrará también qué ocurre al elegir un target incorrecto o si falta una
+precondición.
+
+### Para qué le sirve al jugador
+
+Une todas las piezas en un recorrido consistente. El jugador avanza porque hizo y vio la acción
+correcta, no porque venció un temporizador oculto o cerró un mensaje por accidente.
+
+### Trabajo propuesto
+
+- Crear un orquestador que cargue una definición validada, construya su escenario y resuelva roles.
+- Evaluar precondiciones antes de cada paso.
+- En `ExplainStep`, adquirir la pausa, mostrar anclas y esperar una confirmación explícita.
+- En `ActStep`, configurar el gate, enfocar los objetivos y esperar el resultado semántico esperado.
+- En `ObserveStep`, bloquear input y esperar tanto el receipt requerido como
+  `isPresentationSettled`.
+- Avanzar de forma determinista y limpiar permisos/anclas del paso anterior.
+- Resolver copy exclusivamente mediante i18n.
+- Ofrecer reinicio y salida segura si una invariante falla; el detalle técnico sólo aparece en
+  developer mode.
+- Exponer eventos de telemetría local o futura sin convertirlos en condición de progreso.
+
+No se añadirán condicionales de orquestación por deck, definición de carta o texto visible.
+
+### Pruebas mínimas
+
+- Camino feliz completo y transiciones exactas.
+- Acción incorrecta, target incorrecto y acción rechazada por reglas.
+- Doble clic, eventos repetidos y resultado que llega después de abandonar la sesión.
+- Precondición o ancla ausente falla cerrado.
+- Dos recetas distintas ejecutan la misma secuencia de tipos de paso con decks/fixtures distintos.
+- Ningún paso avanza por texto del log, timeout o simple clic.
+
+### Implementación materializada
+
+- `GuidedLessonOrchestrator` es la entrada única para iniciar una lección registrada por ID,
+  construir su escenario exacto, cargarlo en el GameStore y comenzar la sesión con los aliases ya
+  resueltos. También reconstruye desde cero al reiniciar y coordina una salida segura.
+- El orquestador no conoce decks ni cartas. La misma clase fue probada con fixtures equivalentes de
+  El Pacto de Elarion y La Corte del Eclipse Carmesí; sólo cambian sus definiciones declarativas.
+- Los pasos pueden declarar precondiciones tipadas para zona de una copia, fase, bando activo,
+  Preparación y Energía. Se validan junto con la receta y se vuelven a evaluar contra el GameState
+  real antes de entrar al paso.
+- Una precondición rota falla cerrada: aborta la sesión, desactiva permisos, invalida beats retenidos
+  y conserva diagnóstico. Nunca lanza una excepción a través del handler de gameplay que produjo el
+  receipt.
+- Inicio, reinicio, salida y error publican eventos efímeros con cursor, lección, revisión y sesión;
+  son observables para telemetría futura, pero no participan en las condiciones de progreso.
+- Guidance Lab ya no construye ni arranca manualmente su sesión. Registra su fixture y usa el mismo
+  orquestador de producción; **Restart fixture** reconstruye todas las zonas y bindings desde la
+  receta, y **Stop** cancela la sesión y su presentación.
+- El state machine de la Fase 3 sigue siendo el único dueño de Explicar → Actuar → Observar. El
+  orquestador carga y recupera; no resuelve reglas, no interpreta logs y no duplica el engine.
+
+### Criterio de cierre
+
+Cumplido el 2026-08-11 y aprobado en QA manual por el usuario. La fixture se completa de extremo a
+extremo, reinicia desde un paso intermedio reconstruyendo su escenario exacto y se detiene sin dejar
+input bloqueado.
+
+---
+
+## Fase 7 — Ciclo de vida, finalización y entradas desde el producto
+
+Estado: **cerrada el 2026-08-11 tras revisión técnica general.**
+
+### Antes de iniciar
+
+Se revisarán los flujos de primer arranque, cierre a mitad, salida voluntaria, finalización y
+repetición desde «Cómo jugar». La conversación debe mostrar de forma explícita que **no existe
+«Continuar tutorial»**.
+
+### Para qué le sirve al jugador
+
+Evita regresar a mitad de una explicación olvidada. Quien interrumpe aprende de nuevo desde un
+inicio coherente; quien ya terminó puede jugar normalmente o repetir una lección cuando quiera.
+
+### Trabajo propuesto
+
+- Persistir sólo un registro versionado de finalización, por ejemplo `lessonId`, versión aprendida y
+  fecha opcional.
+- No persistir paso, escenario, bindings, timers ni sesión activa.
+- Ejecutar la guía como pantalla o tipo de sesión explícito y excluirla del autosave/checkpointing de
+  partidas normales.
+- No mezclar la sesión de guía con el resume de partidas normales ni restaurarla desde Steam Cloud.
+  Si ya existe un resume normal, se conserva intacto y simplemente no se ofrece mientras el gate
+  obligatorio corresponda; entrar o salir de la guía no lo borra.
+- Al cerrar o salir antes del final, descartar la sesión. El siguiente intento reconstruye el
+  escenario canónico desde el paso uno.
+- Mostrar confirmación al salir: se perderá el progreso de ese intento.
+- Añadir el gate de arranque que dirige al tutorial obligatorio mientras no esté completado.
+- Preparar el acceso para repetir lecciones desde «Cómo jugar», sin diseñar todavía el catálogo ni
+  el guion de la Primera Semilla.
+- Decidir y documentar si el registro de finalización vive en preferencias de perfil o en el adapter
+  de onboarding web/desktop, respetando el contrato de persistencia de Electron.
+- Definir una migración segura desde cualquier clave de onboarding anterior.
+
+Los hooks públicos pueden quedar conectados a una lección fixture sólo en developer mode hasta que
+el contenido real sea aprobado. No se debe hacer obligatorio un recorrido ficticio en release.
+
+### Resultado implementado
+
+- `GuidedProductLifecycle` enlaza el registro de lecciones, el orquestador y la sesión efímera sin
+  entrar en `GameState`.
+- `App` usa una pantalla explícita `tutorial`; únicamente `game` activa
+  `startDesktopResumeCheckpointing`.
+- Entrar, repetir, reiniciar, abandonar o completar una lección nunca elimina el resume normal. Si
+  existe una lección `required` pendiente, «Continuar» se oculta y «Jugar» abre esa lección.
+- Al completar se persisten sólo `lessonId`, `completedRevision` y `completedAt`. La revisión de la
+  definición es pedagógica: sólo se incrementa cuando el aprendizaje obligatorio debe repetirse.
+- Web usa `hostfall-guided-progress:v1`. Desktop guarda el mismo envelope dentro de
+  `profile/preferences-v1.json`; los archivos v1 anteriores lo incorporan de forma aditiva.
+- La clave de onboarding del nombre permanece independiente. Su ausencia o presencia nunca se
+  interpreta como una lección completada.
+- Ajustes tiene una variante de tutorial por encima del spotlight: conserva idioma, audio,
+  pantalla, reiniciar la lección y salir; oculta seed, RNG, zonas, log, reinicio normal y acciones de
+  developer mode.
+- Salir descarta la sesión y la siguiente entrada reconstruye la receta desde su primer paso.
+  Reiniciar usa también el orquestador, no un `reset` normal.
+- «Cómo jugar» abre la lección registrada disponible sin publicar todavía un catálogo. El registro
+  release contiene ya `first-seed`, por lo que **Tutorial básico** está habilitado sin introducir
+  lógica especial en el menú.
+- `setupTurnsTotal` forma parte de la receta exacta para que el HUD mantenga el total original aunque
+  una lección empiece en un punto posterior de Preparación.
+
+### Pruebas mínimas
+
+- Usuario nuevo entra al tutorial requerido; usuario que lo completó entra al menú normal.
+- Cerrar, salir o fallar a mitad nunca restaura el paso anterior.
+- El reinicio crea IDs y estado limpios y comienza en el paso uno.
+- Completar persiste una sola vez y permite repetición voluntaria sin borrar el logro.
+- Una versión compatible no obliga a repetir; una versión pedagógica mayor sí, según Fase 0.
+- Web y desktop conservan la misma semántica aunque usen adapters distintos.
+
+### Criterio de cierre
+
+Cumplido. La cobertura automática demuestra la regla «completado o desde el principio», el resume
+de partidas queda aislado y la revisión general supera typecheck, suite, build y auditoría offline.
+El recorrido humano de entrada, reinicio, salida y finalización se validará como aceptación de la
+Primera Semilla real; no es un pendiente del framework ni se distribuirá una fixture falsa para
+simularlo.
+
+---
+
+## Fuera de alcance de este plan
+
+- El texto, ritmo narrativo y secuencia pedagógica final de la Primera Semilla.
+- El catálogo completo de tutoriales opcionales.
+- Balancear o reescribir cartas para facilitar una lección.
+- Cambiar las reglas ya aprobadas de Preparación, Reserva, robo, Acción de Fuente o ataque al
+  Archivo.
+- Pausar cualquier animación en un frame arbitrario.
+- Telemetría remota o servicios online.
+- Publicar herramientas de autoría dentro del build para jugadores.
+
+## Contenido actual y siguiente trabajo
+
+El framework está cerrado. La revisión 4 de la Primera Semilla está registrada como lección
+obligatoria y también se abre desde **Cómo jugar → Tutorial básico**. Usa Elarion contra los
+Sinsepulcro y, por ahora, cubre solamente los tres turnos de Preparación. Su secuencia exacta:
+
+1. explica el objetivo de vaciar el Archivo de la Hueste y los tres turnos consecutivos que recibe
+   el jugador para prepararse;
+2. empieza Preparación 1/3 con dos Fuentes, Liora y Vaelor en Mano; juega una Fuente y explica qué
+   genera, para qué sirve y el límite de una Fuente por turno;
+3. presenta Liora y Vaelor juntos y en grande, enfatiza la Energía que requiere cada uno y muestra que una sola Energía
+   no alcanza para Invocar a ninguno;
+4. en Preparación 2/3 roba a Maela, juega la segunda Fuente e Invoca a Liora con ambas; distingue
+   entre Fuentes Agotadas y un Eco Estabilizándose que todavía no puede usar su Acción;
+5. en Preparación 3/3 roba Escudo de la Heredera, enfoca la Energía regenerada y aclara que la
+   Energía anterior no se acumuló durante Preparación;
+6. usa la Acción de Liora ya estabilizada: Liora queda Agotada y añade una Energía a la Reserva;
+   después Invoca a Maela canalizando esa Reserva y la Energía de las dos Fuentes;
+7. explica Skyguard, la defensa de Campo y Cielo, y que terminar el último turno despertaría a la
+   Hueste. La lección se detiene antes de ejecutar esa acción.
+
+La ampliación visual de Liora y Vaelor usa `presentation.cardComparison`, una extensión genérica
+del contrato que recibe alias predefinidos y el énfasis semántico `energyCost`; no introduce lógica
+por nombre de carta en la UI ni en el runtime.
+
+La revisión 4 reduce cada cuadro visible a un solo párrafo breve. Las definiciones de Archivo,
+Hueste, Fuente, Reserva y demás vocabulario nuevo se declaran por paso y aparecen como términos
+dorados subrayados con tooltip localizado en hover o foco de teclado. El texto principal conserva
+únicamente la idea y la acción necesarias para avanzar. La Energía se reúne, canaliza, libera o
+consume; el tutorial no usa lenguaje transaccional ni convierte la excepción de Preparación en una
+regla general sobre qué Energía permanece entre turnos.
+
+Esta secuencia es un borrador para QA dentro del juego, no el ritmo ni el copy definitivo. El
+siguiente trabajo es recorrer únicamente esta sección con el usuario y ajustar mensajes, pausas y
+presentación antes de diseñar el despertar de la Hueste o cualquier enseñanza de combate.

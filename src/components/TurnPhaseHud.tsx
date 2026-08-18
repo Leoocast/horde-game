@@ -3,6 +3,7 @@ import type { GameState } from "../engine/GameTypes";
 import { hostSurgeTurn } from "../engine/StaticEffects";
 import { useTranslation } from "../i18n/useTranslation";
 import { setupProgress } from "./setupPresentation";
+import { guidedAnchorRegistry, guidedSurfaceAnchorKey } from "../guidance";
 
 export function TurnPhaseHud({ game, setupTurns }: { game: GameState; setupTurns: number }) {
   const t = useTranslation();
@@ -19,6 +20,11 @@ export function TurnPhaseHud({ game, setupTurns }: { game: GameState; setupTurns
     const compactLabel = t("phase.setupStepBanner", { current: setup.current, total: setup.total });
     return (
       <div
+        ref={(element) => guidedAnchorRegistry.set(
+          guidedSurfaceAnchorKey("setup.progress"),
+          "turn-phase-hud:setup-progress",
+          element,
+        )}
         className="game-turn-hud is-setup flex h-10 items-center px-4 text-center text-[#f6e6b8]"
         aria-label={`${t("phase.setup")}. ${stepLabel}`}
       >

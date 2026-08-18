@@ -16,6 +16,7 @@ import {
   finishHostCombat,
   isHostAttackEventCurrent,
   pendingHostCombatDamageVolley,
+  previewPlayerCombatArchiveDiscards,
   refreshHostAttackEvent,
   resolvePendingHostCombatDamageVolleys,
   resolvePlayerAttackerDrain,
@@ -25,7 +26,7 @@ import {
   togglePlayerAttacker,
   type HostAttackEvent,
 } from "../engine/CombatResolver";
-import { finishHostTurn, revealHostCardFromTop, runHostMain as runHostMainPhase } from "../engine/HostController";
+import { beginHostMain, finishHostTurn, revealHostCardFromTop, runHostMain as runHostMainPhase } from "../engine/HostController";
 import { canAttack, hasTrait } from "../engine/Traits";
 import { getPowerEndurance, hostInSurge } from "../engine/StaticEffects";
 import { EFFECT_ANNOUNCEMENTS, destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, findManualInvokedTargetTrigger, hasEffectPresentation, manualInvokedTargetRequirement, resolveEffect, resolveEffects, triggerConditionMet } from "../engine/EffectResolver";
@@ -45,7 +46,11 @@ import {
   startHostCombatSequence,
 } from "./hostBeats";
 import { fireballCastSfx, fireballHitSfx, type SfxId } from "../audio/soundManifest";
-import { advanceTributeOfTheFourSorrowsSequence, runTributeOfTheFourSorrowsSequence } from "./tributeOfTheFourSorrowsSequence";
+import {
+  advanceTributeOfTheFourSorrowsSequence,
+  finishTributeOfTheFourSorrowsAfterDefeat,
+  runTributeOfTheFourSorrowsSequence,
+} from "./tributeOfTheFourSorrowsSequence";
 import {
   hasQueuedPlayerTriggers,
   resetPlayerTriggerSequence,
@@ -60,6 +65,7 @@ import {
   monsterSfx,
   notifyDiscardEffects,
   playDrawOneIfPlayerDrew,
+  resetPresentationEffectTimers,
   resumeAfterDiscardPause,
   showActionToast,
   startBuffBeat,
@@ -88,6 +94,28 @@ import {
   type PersonalCombatAnimationPlan,
 } from "./combatAnimation";
 import { resolveBurnRenderer, type BurnRenderer, type BurnTrajectory } from "./burnAnimation";
+import {
+  gameplayIntentAllowed,
+  guidedInteractionGate,
+  publishGameplayDenial,
+  publishGameplayReceipt,
+  runGuidedSystemAction,
+  type GameplayBlockAssignment,
+  type GameplayIntent,
+} from "../guidance/interactionGate";
+import {
+  gameplaySignalStream,
+  gameplaySignalsForTransition,
+  playerDrawReasonForTransition,
+} from "../guidance/gameplaySignals";
+import {
+  guidedPresentationActivity,
+  guidedSessionStore,
+  isGuidedPresentationSettled,
+  scheduleGuidedCheckpointEvaluation,
+} from "../guidance";
+import { authoredHostTurnGate, type AuthoredHostTurnPlan } from "../guidance/authoredHostTurn";
+import { DESTINY_DIAL_STEP, destinyDialDeathDelta } from "./destinyDial";
 
 export type GameStore = {
   game: GameState;
@@ -121,6 +149,14 @@ export type GameStore = {
   playerAutoTriggerCount: number;
   surgeTransitionActive: boolean;
   surgeTransitionShown: boolean;
+  /**
+   * Ángulo acumulado del disco de grados del fondo, en grados. Es presentación pura:
+   * no entra en `GameState`, no se persiste y no decide nada. Mide cómo se mueve el
+   * futuro impacto a impacto, no al cerrar la batalla.
+   */
+  destinyDial: number;
+  /** Revisión monotónica del objetivo del disco. Distingue 0 → 7 → 0 de un 0 que nunca se movió. */
+  destinyDialRevision: number;
   hostCombatVisualDamage?: Record<string, number>;
   hostCombatDeadCardIds: string[];
   specialDeadCardIds: string[];
@@ -297,7 +333,12 @@ let finalBanquetCommit: (() => Partial<GameStore>) | undefined;
 let energyFlowAnimationSafetyTimer: number | undefined;
 let energyFlowCommit: (() => Partial<GameStore>) | undefined;
 let energyFlowAfterCommit: (() => void) | undefined;
+const publishedGuidedTransitionStates = new WeakSet<GameState>();
 let hostCombatSequenceId = 0;
+let playerCombatSequenceId = 0;
+let defensePhaseBannerTimer: number | undefined;
+let defensePhaseBannerActivity: ReturnType<typeof guidedPresentationActivity.begin> | undefined;
+const DEFENSE_PHASE_BANNER_MS = 1320;
 
 export type HostAttackAnimation = {
   attackerId: string;
@@ -607,6 +648,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   playerAutoTriggerCount: 0,
   surgeTransitionActive: false,
   surgeTransitionShown: false,
+  destinyDial: 0,
+  destinyDialRevision: 0,
   hostCombatVisualDamage: undefined,
   hostCombatDeadCardIds: [],
   specialDeadCardIds: [],
@@ -638,6 +681,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hostDeckId: DEFAULT_HOST_DECK_ID,
   reset: (seed = get().seed, setupTurns = 3, playerDeckId = get().playerDeckId, hostDeckId = get().hostDeckId, difficulty = get().game.difficulty, gameMode = get().game.gameMode) => {
     cancelScheduledPresentation();
+    gameplaySignalStream.beginSession(`game:${get().gameSessionId + 1}`);
     set((state) => {
       persistSeed(seed);
       useAudioStore.getState().setMusicVariant("battle");
@@ -646,6 +690,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ...createCleanUiState(),
         game: next,
         gameSessionId: state.gameSessionId + 1,
+        destinyDial: 0,
+        destinyDialRevision: 0,
         seed,
         playerDeckId,
         hostDeckId,
@@ -654,12 +700,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   loadScenario: (game, deckIds) => {
     cancelScheduledPresentation();
+    gameplaySignalStream.beginSession(`game:${get().gameSessionId + 1}`);
     set((state) => {
       useAudioStore.getState().setMusicVariant("battle");
       return {
         ...createCleanUiState(),
         game,
         gameSessionId: state.gameSessionId + 1,
+        destinyDial: 0,
+        destinyDialRevision: 0,
         seed: game.seed,
         playerDeckId: deckIds.playerDeckId,
         hostDeckId: deckIds.hostDeckId,
@@ -670,14 +719,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
     persistSeed(seed);
     set({ seed });
   },
-  acceptOpeningHand: () =>
-    set(({ game }) => ({
-      game: acceptOpeningHand(game),
-      selectedHandId: undefined,
-      hoveredCardId: undefined,
-      focusedCardId: undefined,
-    })),
-  mulliganOpeningHand: () =>
+  acceptOpeningHand: () => {
+    if (!gameplayIntentAllowed({ kind: "opening.accept" })) return;
+    let transition: readonly [GameState, GameState] | undefined;
+    set(({ game }) => {
+      const next = acceptOpeningHand(game);
+      transition = [game, next];
+      return {
+        game: next,
+        selectedHandId: undefined,
+        hoveredCardId: undefined,
+        focusedCardId: undefined,
+      };
+    });
+    if (transition) publishGuidedTransitionReceipts(...transition);
+  },
+  mulliganOpeningHand: () => {
+    if (!gameplayIntentAllowed({ kind: "opening.mulligan" })) return;
     set(({ game }) => {
       const next = mulliganOpeningHand(game);
       if (next.mulligansTaken !== game.mulligansTaken) useAudioStore.getState().playSfx("draw");
@@ -687,7 +745,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hoveredCardId: undefined,
         focusedCardId: undefined,
       };
-    }),
+    });
+  },
   setEnergyRecycleDragActive: (active) => {
     if (get().energyRecycleDragActive === active) return;
     set({ energyRecycleDragActive: active });
@@ -724,23 +783,40 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(({ counterTargeting }) => ({
       counterTargeting: counterTargeting && !counterTargeting.targetId ? { ...counterTargeting, x, y } : counterTargeting,
     })),
-  lockCounterTarget: (targetId) =>
+  lockCounterTarget: (targetId) => {
+    if (!gameplayIntentAllowed({ kind: "target.choose", context: "trigger", targetId })) return;
     set(({ counterTargeting }) => {
       if (!counterTargeting) return {};
       useAudioStore.getState().playSfx("playLand");
       return { counterTargeting: { ...counterTargeting, targetId } };
-    }),
-  deselectCounterTarget: () =>
+    });
+    if (get().counterTargeting?.targetId === targetId) {
+      publishGameplayReceipt({ kind: "target.selected", targetId, reason: "trigger" });
+    }
+  },
+  deselectCounterTarget: () => {
+    if (!get().counterTargeting?.targetId) return;
+    if (!gameplayIntentAllowed({ kind: "target.deselect", context: "trigger" })) return;
     set(({ counterTargeting }) => ({
       counterTargeting: counterTargeting ? { ...counterTargeting, targetId: undefined } : undefined,
-    })),
-  cancelCounterTargeting: () =>
+    }));
+    publishGameplayReceipt({ kind: "target.deselected", reason: "trigger" });
+  },
+  cancelCounterTargeting: () => {
+    if (!get().counterTargeting) return;
+    if (!gameplayIntentAllowed({ kind: "target.cancel", context: "trigger" })) return;
     set((state) => ({
       counterTargeting: undefined,
       pendingTriggeredEffectCount: state.counterTargeting ? Math.max(0, state.pendingTriggeredEffectCount - 1) : state.pendingTriggeredEffectCount,
       pendingTriggeredEffectSourceId: state.counterTargeting ? undefined : state.pendingTriggeredEffectSourceId,
-    })),
-  confirmCounterTargeting: () =>
+    }));
+    publishGameplayReceipt({ kind: "target.cancelled", reason: "trigger" });
+  },
+  confirmCounterTargeting: () => {
+    const selectedTargetId = get().counterTargeting?.targetId;
+    if (!selectedTargetId) return;
+    if (!gameplayIntentAllowed({ kind: "target.confirm", context: "trigger", targetIds: [selectedTargetId] })) return;
+    let confirmed = false;
     set(({ game, counterTargeting }) => {
       if (!counterTargeting?.targetId) return {};
       const next = structuredClone(game) as GameState;
@@ -761,6 +837,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           pendingTriggeredEffectSourceId: undefined,
         };
       }
+      confirmed = true;
       const previousLife = next.player.life;
       const manualTrigger = findManualInvokedTargetTrigger(source);
       if (manualTrigger) {
@@ -787,53 +864,94 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ),
         lifeBuffAnimationId: next.player.life > previousLife ? lifeBeat.lifeBuffAnimationId : get().lifeBuffAnimationId,
       };
-    }),
+    });
+    if (confirmed) publishGameplayReceipt({ kind: "target.confirmed", targetIds: [selectedTargetId], reason: "trigger" });
+  },
   updateTributeOfTheFourSorrowsSelectionPointer: (x, y) =>
     set(({ tributeOfTheFourSorrowsSelection }) => ({
       tributeOfTheFourSorrowsSelection: tributeOfTheFourSorrowsSelection && !tributeOfTheFourSorrowsSelection.targetId ? { ...tributeOfTheFourSorrowsSelection, x, y } : tributeOfTheFourSorrowsSelection,
     })),
-  lockTributeOfTheFourSorrowsSelectionTarget: (targetId) =>
+  lockTributeOfTheFourSorrowsSelectionTarget: (targetId) => {
+    if (!gameplayIntentAllowed({ kind: "target.choose", context: "tribute", targetId })) return;
     set(({ tributeOfTheFourSorrowsSelection }) => {
       if (!tributeOfTheFourSorrowsSelection) return {};
       useAudioStore.getState().playSfx("playLand");
       return { tributeOfTheFourSorrowsSelection: { ...tributeOfTheFourSorrowsSelection, targetId } };
-    }),
-  deselectTributeOfTheFourSorrowsSelectionTarget: () =>
+    });
+    if (get().tributeOfTheFourSorrowsSelection?.targetId === targetId) {
+      publishGameplayReceipt({ kind: "target.selected", targetId, reason: "tribute" });
+    }
+  },
+  deselectTributeOfTheFourSorrowsSelectionTarget: () => {
+    if (!get().tributeOfTheFourSorrowsSelection?.targetId) return;
+    if (!gameplayIntentAllowed({ kind: "target.deselect", context: "tribute" })) return;
     set(({ tributeOfTheFourSorrowsSelection }) => ({
       tributeOfTheFourSorrowsSelection: tributeOfTheFourSorrowsSelection ? { ...tributeOfTheFourSorrowsSelection, targetId: undefined } : undefined,
-    })),
+    }));
+    publishGameplayReceipt({ kind: "target.deselected", reason: "tribute" });
+  },
   confirmTributeOfTheFourSorrowsSelection: () => {
-    const { game, tributeOfTheFourSorrowsSelection } = get();
+    const { game, gameSessionId, tributeOfTheFourSorrowsSelection } = get();
     if (!tributeOfTheFourSorrowsSelection?.targetId) return;
     const { kind, targetId } = tributeOfTheFourSorrowsSelection;
+    if (!gameplayIntentAllowed({ kind: "target.confirm", context: "tribute", targetIds: [targetId] })) return;
     if (kind === "discard") {
       const next = structuredClone(game) as GameState;
       discardChosenCard(next, targetId);
       notifyDiscardEffects(game, next);
       set({ game: next, tributeOfTheFourSorrowsSelection: undefined });
-      resumeAfterDiscardPause(() => advanceTributeOfTheFourSorrowsSequence("after-discard"));
+      publishGameplayReceipt({ kind: "target.confirmed", targetIds: [targetId], reason: "tribute" });
+      resumeAfterDiscardPause(
+        () => {
+          const current = get();
+          if (current.gameSessionId !== gameSessionId) return;
+          if (current.game.winner) {
+            finishTributeOfTheFourSorrowsAfterDefeat();
+            return;
+          }
+          advanceTributeOfTheFourSorrowsSequence("after-discard");
+        },
+        () => get().gameSessionId === gameSessionId,
+      );
       return;
     }
     set({ tributeOfTheFourSorrowsSelection: undefined, specialDeadCardIds: [targetId] });
+    publishGameplayReceipt({ kind: "target.confirmed", targetIds: [targetId], reason: "tribute" });
     useAudioStore.getState().playSfx("attack");
     window.setTimeout(() => {
+      if (get().gameSessionId !== gameSessionId) return;
       set((state) => {
+        if (state.gameSessionId !== gameSessionId) return {};
         const resolved = structuredClone(state.game) as GameState;
         const target = resolved.player.field.find((card) => card.instanceId === targetId);
         if (target) destroyPermanent(resolved, target);
         return { game: resolved, specialDeadCardIds: [] };
       });
-      window.setTimeout(() => advanceTributeOfTheFourSorrowsSequence(kind === "sacrifice-creature" ? "after-sacrifice-creature" : "after-sacrifice-land"), 320);
+      window.setTimeout(() => {
+        const current = get();
+        if (current.gameSessionId !== gameSessionId) return;
+        if (current.game.winner) {
+          finishTributeOfTheFourSorrowsAfterDefeat();
+          return;
+        }
+        advanceTributeOfTheFourSorrowsSequence(kind === "sacrifice-creature" ? "after-sacrifice-creature" : "after-sacrifice-land");
+      }, 320);
     }, 260);
   },
   selectHandLimitDiscard: (id) => {
+    if (id && !gameplayIntentAllowed({ kind: "discard.choose", context: "hand-limit", cardId: id })) return;
+    const deselecting = !id && Boolean(get().handLimitSelectionId);
+    if (deselecting && !gameplayIntentAllowed({ kind: "discard.deselect", context: "hand-limit" })) return;
     if (id) useAudioStore.getState().playSfx("playLand");
     set({ handLimitSelectionId: id, hoveredCardId: undefined, focusedCardId: undefined });
+    if (id) publishGameplayReceipt({ kind: "discard.selected", cardId: id, reason: "hand-limit" });
+    else if (deselecting) publishGameplayReceipt({ kind: "discard.deselected", reason: "hand-limit" });
   },
   confirmHandLimitDiscard: () => {
     const state = get();
     const { handLimitSelectionId, game } = state;
     if (!handLimitSelectionId || playerHandOverflow(game) <= 0) return;
+    if (!gameplayIntentAllowed({ kind: "discard.confirm", context: "hand-limit", cardId: handLimitSelectionId })) return;
     const next = structuredClone(game) as GameState;
     discardChosenCard(next, handLimitSelectionId);
     notifyDiscardEffects(game, next, { title: uiText("toast.handLimit"), tone: "warning" });
@@ -846,8 +964,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       hoveredCardId: undefined,
       focusedCardId: undefined,
     });
+    publishGameplayReceipt({ kind: "discard.completed", cardId: handLimitSelectionId, reason: "hand-limit" });
   },
-  startSpellTargeting: (handId, x, y) =>
+  startSpellTargeting: (handId, x, y) => {
+    if (!gameplayIntentAllowed({ kind: "card.play", cardId: handId })) return;
+    const previousTargeting = get().spellTargeting;
     set((state) =>
       combatResolutionInProgress(state)
         ? {}
@@ -859,12 +980,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
             activeEffectCardId: undefined,
             cardContextMenu: undefined,
           },
-    ),
+    );
+    const started = get().spellTargeting !== previousTargeting && get().spellTargeting?.handId === handId;
+    if (started) publishGameplayReceipt({ kind: "targeting.started", cardId: handId, reason: "spell" });
+  },
   updateSpellTargetPointer: (x, y) =>
     set(({ spellTargeting }) => ({
       spellTargeting: spellTargeting ? { ...spellTargeting, x, y } : undefined,
     })),
-  lockSpellTarget: (targetId) =>
+  lockSpellTarget: (targetId) => {
+    if (!gameplayIntentAllowed({ kind: "target.choose", context: "spell", targetId })) return;
+    let selected = false;
     set(({ game, spellTargeting }) => {
       if (!spellTargeting) return {};
       const card = game.player.hand.find((item) => item.instanceId === spellTargeting.handId);
@@ -873,6 +999,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const valid = targetCandidates(game, "player", req).some((candidate) => candidate.instanceId === targetId);
       if (!valid) return {};
       const targets = { ...spellTargeting.targets, [req.id]: targetId };
+      selected = true;
       const nextStep = spellTargeting.stepIndex + 1;
       useAudioStore.getState().playSfx("playLand");
       const targetIsBuff = targetRequirementIsBuff(card, req);
@@ -887,8 +1014,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
         spellTargeting: { ...spellTargeting, stepIndex: Math.min(nextStep, card.requiresTargets.length - 1), targets },
         ...(buffBeat ?? {}),
       };
-    }),
-  deselectSpellTarget: () =>
+    });
+    if (selected) publishGameplayReceipt({ kind: "target.selected", targetId, reason: "spell" });
+  },
+  deselectSpellTarget: () => {
+    const activeTargeting = get().spellTargeting;
+    if (!activeTargeting || Object.keys(activeTargeting.targets).length === 0) return;
+    if (!gameplayIntentAllowed({ kind: "target.deselect", context: "spell" })) return;
     set(({ game, spellTargeting }) => {
       if (!spellTargeting) return {};
       const card = game.player.hand.find((item) => item.instanceId === spellTargeting.handId);
@@ -905,22 +1037,52 @@ export const useGameStore = create<GameStore>((set, get) => ({
         buffAnimationCardIds: removedTargetWasBuff ? [] : get().buffAnimationCardIds,
         buffAnimationVariant: removedTargetWasBuff ? "default" : get().buffAnimationVariant,
       };
-    }),
-  cancelSpellTargeting: () => set({
-    spellTargeting: undefined,
-    selectedHandId: undefined,
-    focusedCardId: undefined,
-    buffAnimationCardIds: [],
-    buffAnimationVariant: "default",
-  }),
-  confirmSpellTargeting: () => set((state) => runConfirmSpellTargeting(state)),
+    });
+    publishGameplayReceipt({ kind: "target.deselected", reason: "spell" });
+  },
+  cancelSpellTargeting: () => {
+    if (!get().spellTargeting) return;
+    if (!gameplayIntentAllowed({ kind: "target.cancel", context: "spell" })) return;
+    set({
+      spellTargeting: undefined,
+      selectedHandId: undefined,
+      focusedCardId: undefined,
+      buffAnimationCardIds: [],
+      buffAnimationVariant: "default",
+    });
+    publishGameplayReceipt({ kind: "target.cancelled", reason: "spell" });
+  },
+  confirmSpellTargeting: () => {
+    const targeting = get().spellTargeting;
+    if (!targeting) return;
+    const targetIds = orderedTargetIds(get().game, targeting.handId, targeting.targets);
+    if (!gameplayIntentAllowed({ kind: "target.confirm", context: "spell", targetIds })) return;
+    let confirmed = false;
+    set((state) => {
+      const patch = runConfirmSpellTargeting(state);
+      confirmed = patch.game?.lastActionResult?.ok === true;
+      return patch;
+    });
+    if (confirmed) {
+      publishGameplayReceipt({ kind: "target.confirmed", targetIds, reason: "spell" });
+      publishGameplayReceipt({ kind: "card.played", cardId: targeting.handId, targetIds });
+    }
+  },
   setHoveredCardId: (id) => set({ hoveredCardId: id }),
-  setFocusedCardId: (id) => set({ focusedCardId: id }),
-  advancePhase: (phase) =>
+  setFocusedCardId: (id) => {
+    if (id && !gameplayIntentAllowed({ kind: "card.inspect", cardId: id })) return;
+    set({ focusedCardId: id });
+    if (id) publishGameplayReceipt({ kind: "card.inspected", cardId: id });
+  },
+  advancePhase: (phase) => {
+    const intent = phaseAdvanceIntent(get().game, phase);
+    if (!gameplayIntentAllowed(intent)) return;
+    let transition: readonly [GameState, GameState] | undefined;
     set((state) => {
       if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.energyFlowAnimation || state.pendingSpellHandId || state.spellFightAnimation || state.playerAutoTriggerCount > 0) return {};
       const { game } = state;
       const next = advancePhase(game, phase);
+      transition = [game, next];
       playDrawOneIfPlayerDrew(game, next);
       return {
         game: next,
@@ -930,8 +1092,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
         handLimitDiscardActive: false,
         handLimitSelectionId: undefined,
       };
-    }),
-  endPlayerTurn: (options) =>
+    });
+    if (transition) publishGuidedTransitionReceipts(...transition);
+  },
+  endPlayerTurn: (options) => {
+    if (!gameplayIntentAllowed(endPlayerTurnIntent(get().game))) return;
+    let transition: readonly [GameState, GameState] | undefined;
     set((state) => {
       if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.energyFlowAnimation || state.pendingSpellHandId || state.spellFightAnimation || state.poisonConsumeAnimation || state.playerAutoTriggerCount > 0) return {};
       const { game } = state;
@@ -957,10 +1123,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
         };
       }
       const next = endPlayerTurn(game);
+      transition = [game, next];
       playDrawOneIfPlayerDrew(game, next);
       return { game: next, handLimitDiscardActive: false, handLimitSelectionId: undefined, hostMillAnimationQueue: appendHostMillAnimations(state, game, next) };
-    }),
-  playLand: (id) =>
+    });
+    if (transition) publishGuidedTransitionReceipts(...transition);
+  },
+  playLand: (id) => {
+    const intent = { kind: "card.play", cardId: id } as const;
+    if (!gameplayIntentAllowed(intent)) return;
+    let succeeded = false;
+    let failure: GameState["lastActionResult"];
     set((state) => {
       if (combatResolutionInProgress(state)) return {};
       if (state.pendingTriggeredEffectCount > 0) {
@@ -975,6 +1148,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         : undefined;
       const next = playLand(game, id);
       const playSucceeded = next.lastActionResult?.ok === true;
+      succeeded = playSucceeded;
+      if (!playSucceeded) failure = next.lastActionResult;
       if (playSucceeded) useAudioStore.getState().playSfx("playLand");
       else if (card) showActionToast(next.lastActionResult?.reason);
       if (playSucceeded) scheduleLandPlaySummoningSafetyClear();
@@ -993,8 +1168,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
             }]
           : state.landPlayAnimationQueue,
       };
-    }),
-  startEnergyRecycle: (id, origin) =>
+    });
+    if (succeeded) {
+      publishGameplayReceipt({ kind: "card.played", cardId: id });
+      publishGameplayReceipt({ kind: "source.played", cardId: id });
+    }
+    else if (failure) publishGameplayDenial(intent, failure);
+  },
+  startEnergyRecycle: (id, origin) => {
+    if (!gameplayIntentAllowed({ kind: "source.recycle", cardId: id })) return;
     set((state) => {
       if (combatResolutionInProgress(state) || state.energyRecycleAnimation) return {};
       if (state.pendingTriggeredEffectCount > 0) {
@@ -1023,15 +1205,26 @@ export const useGameStore = create<GameStore>((set, get) => ({
         focusedCardId: undefined,
         activeEffectCardId: undefined,
       };
-    }),
-  completeEnergyRecycleAnimation: () =>
+    });
+  },
+  completeEnergyRecycleAnimation: () => {
+    let recycledCardId: string | undefined;
+    let failedCardId: string | undefined;
+    let failure: GameState["lastActionResult"];
     set((state) => {
       const active = state.energyRecycleAnimation;
       if (!active) return {};
       const next = recycleEnergy(state.game, active.card.instanceId);
       const succeeded = next.lastActionResult?.ok === true;
-      if (succeeded) useAudioStore.getState().playSfx("drawOne");
-      else showActionToast(next.lastActionResult?.reason);
+      if (succeeded) {
+        useAudioStore.getState().playSfx("drawOne");
+        recycledCardId = active.card.instanceId;
+      }
+      else {
+        failedCardId = active.card.instanceId;
+        failure = next.lastActionResult;
+        showActionToast(next.lastActionResult?.reason);
+      }
       return {
         game: next,
         energyRecycleAnimation: undefined,
@@ -1039,11 +1232,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hoveredCardId: undefined,
         focusedCardId: undefined,
       };
-    }),
+    });
+    if (recycledCardId) publishGameplayReceipt({ kind: "source.recycled", cardId: recycledCardId });
+    else if (failedCardId && failure) {
+      publishGameplayDenial({ kind: "source.recycle", cardId: failedCardId }, failure);
+    }
+  },
   castCard: (id, options) => {
+    const targetIds = orderedCastTargetIds(get().game, id, options?.targets);
+    const intent: GameplayIntent = { kind: "card.play", cardId: id, ...(targetIds.length > 0 ? { targetIds } : {}) };
+    if (!gameplayIntentAllowed(intent)) return;
     let afterCommit: (() => void) | undefined;
     let startedBloodPactAnimationId: string | undefined;
     let startedLifePaymentAnimationId: string | undefined;
+    let succeeded = false;
+    let failure: GameState["lastActionResult"];
     set((state) => {
       if (combatResolutionInProgress(state)) return {};
       if (state.pendingTriggeredEffectCount > 0) {
@@ -1057,6 +1260,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ? { left: handCardRect.left, top: handCardRect.top, width: handCardRect.width, height: handCardRect.height }
         : undefined;
       const result = buildCastCardPatch(state, id, options, animationOrigin);
+      succeeded = result.patch.game?.lastActionResult?.ok === true;
+      if (!succeeded) failure = result.patch.game?.lastActionResult;
       const bloodPactAnimation = result.patch.bloodPactAnimation;
       if (bloodPactAnimation) {
         bloodPactAfterCommit = result.afterCommit;
@@ -1070,6 +1275,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return result.patch;
     });
     afterCommit?.();
+    if (succeeded) publishGameplayReceipt({ kind: "card.played", cardId: id, targetIds });
+    else if (failure) publishGameplayDenial(intent, failure);
     if (startedBloodPactAnimationId) scheduleBloodPactAnimationSafetyClear(startedBloodPactAnimationId);
     if (startedLifePaymentAnimationId) scheduleLifePaymentAnimationSafetyClear(startedLifePaymentAnimationId);
   },
@@ -1165,7 +1372,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       window.setTimeout(() => {
         const latest = useGameStore.getState();
         if (latest.game.activeSide === "host" && latest.game.phase === "host") {
-          latest.runHostMain();
+          runGuidedSystemAction(() => latest.runHostMain());
         }
       }, 0);
     }
@@ -1288,9 +1495,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ energyFlowAnimation: undefined });
   },
   activateAbility: (id, abilityId, options) => {
+    const targetIds = flattenTargetIds(options?.targets);
+    const intent: GameplayIntent = {
+      kind: "ability.activate",
+      cardId: id,
+      abilityId,
+      ...(targetIds.length > 0 ? { targetIds } : {}),
+    };
+    if (!gameplayIntentAllowed(intent)) return;
     let shouldSchedulePlayerTriggers = false;
     let startedLifePaymentAnimationId: string | undefined;
     let startedEnergyFlowAnimationId: string | undefined;
+    let succeeded = false;
+    let failure: GameState["lastActionResult"];
     set((state) => {
       if (combatResolutionInProgress(state)) return {};
       const source = state.game.player.field.find((card) => card.instanceId === id);
@@ -1298,6 +1515,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ...options,
         deferReactiveTriggers: true,
       });
+      succeeded = next.lastActionResult?.ok === true;
+      if (!succeeded) failure = next.lastActionResult;
       const paidLife = next.lastActionResult?.ok === true
         ? Math.max(0, next.player.lifePaidThisTurn - state.game.player.lifePaidThisTurn)
         : 0;
@@ -1371,22 +1590,44 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } else if (!startedEnergyFlowAnimationId && shouldSchedulePlayerTriggers) {
       scheduleQueuedPlayerTriggers();
     }
+    if (succeeded) publishGameplayReceipt({ kind: "ability.activated", cardId: id, abilityId, targetIds });
+    else if (failure) publishGameplayDenial(intent, failure);
   },
-  toggleAttacker: (id) =>
+  toggleAttacker: (id) => {
+    const intendedSelected = !get().game.combat.playerAttackers.includes(id);
+    const intent = { kind: "combat.toggleAttacker", cardId: id, selected: intendedSelected } as const;
+    if (!gameplayIntentAllowed(intent)) return;
+    let selectionChanged = false;
+    let selected = false;
+    let failure: GameState["lastActionResult"];
     set(({ game }) => {
       const wasAttacking = game.combat.playerAttackers.includes(id);
       const next = togglePlayerAttacker(game, id);
       const isAttacking = next.combat.playerAttackers.includes(id);
+      selectionChanged = wasAttacking !== isAttacking;
+      selected = isAttacking;
+      if (next.lastActionResult?.ok === false) {
+        failure = next.lastActionResult;
+        showActionToast(next.lastActionResult.reason);
+      }
       if (!wasAttacking && isAttacking) {
         useAudioStore.getState().playSfx(AUDIO_FEATURE_FLAGS.selectAttacker ? "selectAttacker" : "playLand");
       } else if (wasAttacking && !isAttacking) {
         useAudioStore.getState().playSfx("playLand");
       }
       return { game: next };
-    }),
-  attackAll: () =>
+    });
+    if (selectionChanged) publishGameplayReceipt({ kind: "attacker.selected", cardId: id, reason: selected ? "selected" : "deselected" });
+    else if (failure) publishGameplayDenial(intent, failure);
+  },
+  attackAll: () => {
+    const targetIds = selectableAttackers(get().game);
+    if (!gameplayIntentAllowed({ kind: "combat.selectAllAttackers", targetIds })) return;
+    let selectedIds: string[] = [];
+    let accepted = false;
     set(({ game }) => {
       if (game.activeSide !== "player" || game.phase !== "combat") return {};
+      accepted = true;
       const next = structuredClone(game) as GameState;
       const selected = new Set(next.combat.playerAttackers);
       for (const card of next.player.field) {
@@ -1396,11 +1637,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
         if (!hasTrait(next, card, "ALERT")) card.exhausted = true;
       }
       next.combat.playerAttackers = sortPlayerAttackersLeftToRight(next, [...selected]);
+      selectedIds = [...next.combat.playerAttackers];
       next.log.unshift(`Player attacks with ${next.combat.playerAttackers.length} creature(s).`);
       if (next.combat.playerAttackers.length > game.combat.playerAttackers.length) useAudioStore.getState().playSfx("playLand");
       return { game: next };
-    }),
-  cancelPlayerAttackers: () =>
+    });
+    if (accepted) publishGameplayReceipt({ kind: "attackers.selected", targetIds: selectedIds });
+  },
+  cancelPlayerAttackers: () => {
+    const targetIds = [...get().game.combat.playerAttackers];
+    if (!gameplayIntentAllowed({ kind: "combat.cancelAttackers", targetIds })) return;
     set(({ game }) => {
       const next = structuredClone(game) as GameState;
       const attackers = new Set(next.combat.playerAttackers);
@@ -1410,7 +1656,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       next.combat.playerAttackers = [];
       next.log.unshift("Player cancels attackers.");
       return { game: next, selectedPlayerCreatureId: undefined, playerAttackDrag: undefined };
-    }),
+    });
+    publishGameplayReceipt({ kind: "attackers.cancelled", targetIds });
+  },
   beginSummoningAnimation: () => set((state) => ({ summoningAnimationCount: state.summoningAnimationCount + 1 })),
   endSummoningAnimation: () => set((state) => ({ summoningAnimationCount: Math.max(0, state.summoningAnimationCount - 1) })),
   resolvePlayerCombat: () => set((state) => {
@@ -1430,14 +1678,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (playerAttackAnimation) return;
 
     const attackers = sortPlayerAttackersLeftToRight(game, game.combat.playerAttackers);
+    if (!gameplayIntentAllowed({ kind: "combat.confirmArchiveAttack", targetIds: attackers })) return;
     if (attackers.length === 0) {
       const resolved = resolvePlayerCombat(game);
       const next = advancePhase(resolved, "end");
       set((state) => ({ game: next, selectedPlayerCreatureId: undefined, hostMillAnimationQueue: appendHostMillAnimations(state, game, next) }));
       return;
     }
+    const sequenceId = ++playerCombatSequenceId;
 
-    const previewMillCards = previewPlayerCombatMillCards(game, attackers);
+    const previewMillCards = previewPlayerCombatArchiveDiscards(game, attackers);
     const personalAttackAnimations = new Map<string, PersonalAttackAnimationPlan>(
       attackers.flatMap((attackerId) => {
         const attacker = game.player.field.find((candidate) => candidate.instanceId === attackerId);
@@ -1474,6 +1724,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         : undefined;
       const startAt = elapsed;
       window.setTimeout(() => {
+        if (sequenceId !== playerCombatSequenceId) return;
         if (!customAnimation || customAnimation.effect.type !== "fireball") {
           useAudioStore.getState().playSfx("attack");
         }
@@ -1505,12 +1756,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }, startAt);
       if (customAnimation?.effect.type === "fireball") {
         window.setTimeout(() => {
+          if (sequenceId !== playerCombatSequenceId) return;
           const active = useGameStore.getState().playerAttackAnimation;
           if (active?.attackerId !== attackerId || active.eventId !== index) return;
           useAudioStore.getState().playSfx(pickRandomSfx(fireballCastSfx));
         }, startAt + customAnimation.castMs);
       }
       window.setTimeout(() => {
+        if (sequenceId !== playerCombatSequenceId) return;
         const active = useGameStore.getState().playerAttackAnimation;
         if (
           customAnimation?.effect.type === "fireball" &&
@@ -1519,6 +1772,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ) {
           useAudioStore.getState().playSfx(fireballHitSfx);
         }
+        // Cada atacante mueve el disco en su propio impacto, no al cerrar la batalla.
+        useGameStore.setState((state) => {
+          const striker = state.game.player.field.find((card) => card.instanceId === attackerId);
+          const struck = striker ? getPowerEndurance(state.game, striker).power > 0 : false;
+          return struck
+            ? {
+                destinyDial: state.destinyDial + DESTINY_DIAL_STEP,
+                destinyDialRevision: state.destinyDialRevision + 1,
+              }
+            : {};
+        });
         useGameStore.setState((state) => {
           const afterLifesteal = resolvePlayerAttackerDrain(state.game, attackerId);
           const lifeGain = afterLifesteal.player.life - state.game.player.life;
@@ -1558,11 +1822,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }, startAt + impactOffset);
       for (const preview of attackerMillCards) {
         window.setTimeout(() => {
+          if (sequenceId !== playerCombatSequenceId) return;
           useGameStore.getState().queueHostMillPreview(preview.card);
         }, startAt + impactOffset + preview.cardIndexInHit * (HOST_MILL_ANIMATION_MS + PLAYER_ATTACK_MILL_GAP_MS));
       }
       if (burnAnimationId && customAnimation) {
         window.setTimeout(() => {
+          if (sequenceId !== playerCombatSequenceId) return;
           useGameStore.setState((state) =>
             state.burnAnimation?.id === burnAnimationId
               ? { burnAnimation: undefined }
@@ -1577,6 +1843,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
 
     window.setTimeout(() => {
+      if (sequenceId !== playerCombatSequenceId) return;
       const latest = get().game;
       const resolved = resolvePlayerCombat(latest, { skipDrain: true, skipPoison: true });
       const next = advancePhase(resolved, "end");
@@ -1590,12 +1857,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
         hostMillPreviewCards: [],
         hostMillAnimationQueue: previewMillCards.length > 0 ? state.hostMillAnimationQueue : appendHostMillAnimations(state, latest, next),
       }));
+      // The action is committed at confirmation, but contextual guidance must not speak over the
+      // attack, impact or Archive flights. Publish its semantic receipt only after that sequence
+      // has handed the board to End; any remaining mill queue is still covered by the shared
+      // presentation barrier.
+      publishGameplayReceipt({ kind: "archiveAttack.confirmed", targetIds: attackers });
     }, elapsed + 40);
   },
   runHostMain: () => {
     const state = get();
     if (discardPauseInProgress(state) || state.surgeTransitionActive) return;
     const { game } = state;
+    if (!gameplayIntentAllowed(runHostIntent(game))) return;
+    const authoredPlan = authoredHostTurnGate.plan(game);
+    if (authoredPlan) {
+      runAuthoredHostTurn(game, authoredPlan);
+      return;
+    }
     if (!state.surgeTransitionShown) {
       const preview = runHostMainPhase(game, { deferInvokedTriggers: true });
       if (hostInSurge(preview)) {
@@ -1624,6 +1902,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         summoningAnimationCount: state.summoningAnimationCount + enteredCards.length,
         hostMillAnimationQueue: appendHostMillAnimations(state, game, main),
       });
+      publishGameplayReceipt({ kind: "host.resolved" });
       captureStaticAuraBeats();
       scheduleHostArrivalEffects(enteredCards, () => runTributeOfTheFourSorrowsSequence(pendingCard));
       return;
@@ -1637,6 +1916,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       summoningAnimationCount: state.summoningAnimationCount + enteredCards.length,
       hostMillAnimationQueue: appendHostMillAnimations(state, game, main),
     });
+    publishGameplayReceipt({ kind: "host.resolved" });
     // Before any frame renders the new creatures: hold back the buffs they just gained so the
     // announcement beat still has something to reveal.
     captureStaticAuraBeats();
@@ -1682,27 +1962,57 @@ export const useGameStore = create<GameStore>((set, get) => ({
   completeSurgeTransition: () => {
     if (!get().surgeTransitionActive) return;
     set({ surgeTransitionActive: false });
-    get().runHostMain();
+    runGuidedSystemAction(() => get().runHostMain());
   },
   prepareHostAttackers: () => {
     if (discardPauseInProgress(get())) return;
     startHostCombatSequence();
   },
-  declareBlocker: (blockerId, attackerId) =>
+  declareBlocker: (blockerId, attackerId) => {
+    const intendedSelected = !(get().game.combat.blockers[attackerId] ?? []).includes(blockerId);
+    const intent = {
+      kind: "combat.assignBlocker",
+      cardId: blockerId,
+      targetId: attackerId,
+      selected: intendedSelected,
+    } as const;
+    if (!gameplayIntentAllowed(intent)) return;
+    let selectionChanged = false;
+    let selected = false;
+    let failure: GameState["lastActionResult"];
     set(({ game }) => {
       const wasBlocking = Object.values(game.combat.blockers).some((ids) => ids.includes(blockerId));
+      const wasBlockingTarget = game.combat.blockers[attackerId]?.includes(blockerId) ?? false;
       const next = declareBlocker(game, blockerId, attackerId);
       const isBlockingTarget = next.combat.blockers[attackerId]?.includes(blockerId) ?? false;
+      selectionChanged = wasBlockingTarget !== isBlockingTarget;
+      selected = isBlockingTarget;
       if (!wasBlocking && isBlockingTarget) useAudioStore.getState().playSfx("playLand");
-      else if (next.lastActionResult?.ok === false) showActionToast(next.lastActionResult.reason);
+      else if (next.lastActionResult?.ok === false) {
+        failure = next.lastActionResult;
+        showActionToast(next.lastActionResult.reason);
+      }
       return { game: next, blockDrag: undefined };
-    }),
-  cancelBlocks: () =>
+    });
+    if (selectionChanged) {
+      publishGameplayReceipt({
+        kind: selected ? "blocker.assigned" : "blocker.unassigned",
+        cardId: blockerId,
+        targetId: attackerId,
+      });
+    }
+    else if (failure) publishGameplayDenial(intent, failure);
+  },
+  cancelBlocks: () => {
+    const assignments = combatAssignments(get().game);
+    if (!gameplayIntentAllowed({ kind: "combat.cancelBlocks", assignments })) return;
     set(({ game }) => {
       const next = structuredClone(game) as GameState;
       next.combat.blockers = {};
       return { game: next, selectedHostCreatureId: undefined, selectedPlayerCreatureId: undefined, blockDrag: undefined };
-    }),
+    });
+    publishGameplayReceipt({ kind: "blocks.cancelled", assignments });
+  },
   startBlockDrag: (blockerId, x, y) => set({ blockDrag: { blockerId, startX: x, startY: y, x, y } }),
   updateBlockDrag: (x, y) =>
     set(({ blockDrag }) => ({
@@ -1758,7 +2068,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       window.setTimeout(() => {
         const latest = useGameStore.getState();
         if (latest.game.activeSide === "host" && latest.game.phase === "host") {
-          latest.runHostMain();
+          runGuidedSystemAction(() => latest.runHostMain());
         }
       }, 0);
     }
@@ -1768,6 +2078,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (discardPauseInProgress(state)) return;
     const { game, hostAttackAnimation, playerAttackAnimation, burnAnimation } = state;
     if (hostAttackAnimation || playerAttackAnimation || burnAnimation) return;
+    if (game.activeSide !== "host" || game.combat.hostAttackers.length === 0) return;
+    const assignments = combatAssignments(game);
+    if (!gameplayIntentAllowed({ kind: "combat.confirmDefense", assignments })) return;
+    publishGameplayReceipt({ kind: "defense.confirmed", assignments });
 
     const attackEvents = buildHostAttackEvents(game);
     const sequenceId = ++hostCombatSequenceId;
@@ -1778,14 +2092,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ resolvingHostCombat: true, selectedHostCreatureId: undefined, selectedPlayerCreatureId: undefined });
     runHostCombatEventSequence(attackEvents, 0, sequenceId);
   },
-  finishHostTurn: () =>
+  finishHostTurn: () => {
+    if (!gameplayIntentAllowed({ kind: "phase.startPlayerTurn" })) return;
+    let transition: readonly [GameState, GameState] | undefined;
     set((state) => {
       if (discardPauseInProgress(state)) return {};
       const { game } = state;
       const next = finishHostTurn(game);
+      transition = [game, next];
       playDrawOneIfPlayerDrew(game, next);
       return { game: next, hostAutoTriggerCount: 0 };
-    }),
+    });
+    if (transition) publishGuidedTransitionReceipts(...transition);
+  },
   triggerEndGame: (winner) => {
     set((state) => {
       const next = structuredClone(state.game) as GameState;
@@ -1801,8 +2120,292 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 }));
 
+function runAuthoredHostTurn(game: GameState, plan: AuthoredHostTurnPlan): void {
+  const begun = beginHostMain(game);
+  useGameStore.setState({
+    game: begun,
+    selectedHostCreatureId: undefined,
+    selectedPlayerCreatureId: undefined,
+    hoveredCardId: undefined,
+    focusedCardId: undefined,
+  });
+  revealAuthoredHostCards(plan.revealCount, () => {
+    publishGameplayReceipt({ kind: "host.resolved" });
+    startHostCombatSequence();
+  });
+}
+
+/** Every authored arrival owns the ordinary reveal, summon and Invoked-trigger presentation. */
+function revealAuthoredHostCards(remaining: number, onComplete: () => void): void {
+  if (remaining <= 0) {
+    onComplete();
+    return;
+  }
+  const state = useGameStore.getState();
+  if (state.game.winner || state.game.host.archive.length === 0) {
+    onComplete();
+    return;
+  }
+  const previous = state.game;
+  const previousIds = new Set(previous.host.field.map((card) => card.instanceId));
+  const next = revealHostCardFromTop(previous, { deferInvokedTriggers: true });
+  const entered = next.host.field.filter((card) => !previousIds.has(card.instanceId));
+  const triggerCards = entered.filter(hasInvokedTrigger);
+  if (entered.length > 0) useAudioStore.getState().playSfx("draw");
+  useGameStore.setState({
+    game: next,
+    selectedHostCreatureId: undefined,
+    selectedPlayerCreatureId: undefined,
+    hostAutoTriggerCount: triggerCards.length,
+    summoningAnimationCount: state.summoningAnimationCount + entered.length,
+    hostMillAnimationQueue: appendHostMillAnimations(state, previous, next),
+  });
+  captureStaticAuraBeats();
+  scheduleHostArrivalEffects(entered, () => revealAuthoredHostCards(remaining - 1, onComplete));
+}
+
+// Project every committed GameState transition into the passive semantic stream. Unlike guided
+// receipts, this remains active in normal matches and has no authority over the rules.
+useGameStore.subscribe((state, previousState) => {
+  if (
+    state.game === previousState.game
+    || state.gameSessionId !== previousState.gameSessionId
+  ) return;
+  const lifeLossSourceId = state.hostAttackAnimation?.attackerId
+    ?? previousState.hostAttackAnimation?.attackerId;
+  const defenseJustDeclared = state.game.activeSide === "host"
+    && state.game.combat.hostAttackers.length > 0
+    && (previousState.game.activeSide !== "host"
+      || previousState.game.combat.hostAttackers.length === 0);
+  if (defenseJustDeclared) {
+    defensePhaseBannerActivity?.end();
+    if (defensePhaseBannerTimer !== undefined && typeof window !== "undefined") {
+      window.clearTimeout(defensePhaseBannerTimer);
+    }
+    defensePhaseBannerActivity = guidedPresentationActivity.begin(
+      "phase.banner",
+      `host-defend-${state.game.turnNumber}`,
+    );
+    if (typeof window !== "undefined") {
+      defensePhaseBannerTimer = window.setTimeout(() => {
+        defensePhaseBannerActivity?.end();
+        defensePhaseBannerActivity = undefined;
+        defensePhaseBannerTimer = undefined;
+      }, DEFENSE_PHASE_BANNER_MS);
+    } else {
+      defensePhaseBannerActivity.end();
+      defensePhaseBannerActivity = undefined;
+    }
+  }
+  for (const signal of gameplaySignalsForTransition(previousState.game, state.game, { lifeLossSourceId })) {
+    gameplaySignalStream.publish(signal);
+  }
+});
+
+// Read card losses from committed zone transitions, not from individual combat or effect paths.
+// This remains presentation-only: it observes rules results and never changes them.
+useGameStore.subscribe((state, previousState) => {
+  if (
+    state.game === previousState.game ||
+    state.gameSessionId !== previousState.gameSessionId
+  ) return;
+  const delta = destinyDialDeathDelta(previousState.game, state.game);
+  if (delta === 0) return;
+  useGameStore.setState((current) => {
+    if (
+      current.game !== state.game ||
+      current.gameSessionId !== state.gameSessionId
+    ) return {};
+    return {
+      destinyDial: current.destinyDial + delta,
+      destinyDialRevision: current.destinyDialRevision + 1,
+    };
+  });
+});
+
+// Observe committed domain transitions, including those produced by Host/player beat schedulers.
+// This is intentionally receipt-only: it never authorizes or changes a rule resolution.
+useGameStore.subscribe((state, previousState) => {
+  if (state.game === previousState.game) return;
+  const sessionId = guidedInteractionGate.snapshot().policy?.sessionId;
+  if (!sessionId) return;
+  const previousGame = previousState.game;
+  const nextGame = state.game;
+  queueMicrotask(() => {
+    if (guidedInteractionGate.snapshot().policy?.sessionId !== sessionId) return;
+    publishGuidedTransitionReceipts(previousGame, nextGame);
+  });
+});
+
+function guidedCheckpointIsSettled(): boolean {
+  return isGuidedPresentationSettled(useGameStore.getState(), guidedPresentationActivity.snapshot());
+}
+
+guidedSessionStore.configureCheckpointProbe(guidedCheckpointIsSettled, scheduleGuidedCheckpointEvaluation);
+guidedPresentationActivity.subscribe(() => {
+  guidedSessionStore.notifyCheckpointState(guidedCheckpointIsSettled());
+});
+useGameStore.subscribe((state) => {
+  if (state.game.winner) {
+    guidedSessionStore.notifyGameEnded();
+    return;
+  }
+  guidedSessionStore.notifyCheckpointState(guidedCheckpointIsSettled());
+});
+
+function phaseAdvanceIntent(game: GameState, target?: Phase): GameplayIntent {
+  if (game.activeSide === "player" && target === "combat") return { kind: "phase.chooseAttackers" };
+  if (game.activeSide === "player" && game.phase === "combat" && target === "end") return { kind: "phase.passCombat" };
+  return { kind: "phase.advance", phase: target };
+}
+
+function endPlayerTurnIntent(game: GameState): GameplayIntent {
+  if (game.setupTurnsRemaining > 1) return { kind: "phase.continueSetup" };
+  if (game.setupTurnsRemaining === 1) return { kind: "phase.awakenHost" };
+  return { kind: "phase.endTurn" };
+}
+
+function runHostIntent(game: GameState): GameplayIntent {
+  return game.hostTurnNumber === 0 || game.setupCompletePendingHost
+    ? { kind: "phase.awakenHost" }
+    : { kind: "phase.resolveHost" };
+}
+
+function orderedCastTargetIds(
+  game: GameState,
+  handId: string,
+  targets?: Readonly<Record<string, string | string[]>>,
+): string[] {
+  const card = game.player.hand.find((candidate) => candidate.instanceId === handId);
+  if (!card || !targets) return [];
+  return card.requiresTargets.flatMap((requirement) => {
+    const selected = targets[requirement.id];
+    return Array.isArray(selected) ? selected.map(String) : selected ? [String(selected)] : [];
+  });
+}
+
+function orderedTargetIds(
+  game: GameState,
+  handId: string,
+  targets: Readonly<Record<string, string | string[]>>,
+): string[] {
+  return orderedCastTargetIds(game, handId, targets);
+}
+
+function flattenTargetIds(targets?: Readonly<Record<string, string | string[]>>): string[] {
+  if (!targets) return [];
+  return Object.values(targets).flatMap((selected) => Array.isArray(selected) ? selected.map(String) : [String(selected)]);
+}
+
+function selectableAttackers(game: GameState): string[] {
+  const selected = new Set(game.combat.playerAttackers);
+  for (const card of game.player.field) {
+    if (card.kinds.includes("ECHO") && canAttack(game, card)) selected.add(card.instanceId);
+  }
+  return sortPlayerAttackersLeftToRight(game, [...selected]);
+}
+
+function combatAssignments(game: GameState): GameplayBlockAssignment[] {
+  const attackerOrder = new Map(game.combat.hostAttackers.map((id, index) => [id, index]));
+  return Object.entries(game.combat.blockers)
+    .flatMap(([attackerId, blockerIds]) => blockerIds.map((blockerId) => ({ blockerId, attackerId })))
+    .sort((left, right) =>
+      (attackerOrder.get(left.attackerId) ?? Number.MAX_SAFE_INTEGER) -
+        (attackerOrder.get(right.attackerId) ?? Number.MAX_SAFE_INTEGER) ||
+      left.blockerId.localeCompare(right.blockerId),
+    );
+}
+
+function publishGuidedTransitionReceipts(previous: GameState, next: GameState): void {
+  if (publishedGuidedTransitionStates.has(next)) return;
+  publishedGuidedTransitionStates.add(next);
+  if (!previous.openingHandAccepted && next.openingHandAccepted) {
+    publishGameplayReceipt({ kind: "opening.accepted" }, { observe: false });
+  }
+  if (previous.activeSide !== next.activeSide || previous.phase !== next.phase) {
+    publishGameplayReceipt({ kind: "phase.changed", reason: `${next.activeSide}:${next.phase}` }, { observe: false });
+  }
+  if (next.setupTurnsRemaining < previous.setupTurnsRemaining) {
+    publishGameplayReceipt({
+      kind: "setup.stepEnded",
+      amount: next.setupTurnsRemaining,
+      reason: next.setupTurnsRemaining === 0 ? "complete" : "continue",
+    }, { observe: false });
+  }
+
+  const nextHandIds = new Set(next.player.hand.map((card) => card.instanceId));
+  const drawnCardIds = previous.player.archive
+    .filter((card) => nextHandIds.has(card.instanceId))
+    .map((card) => card.instanceId);
+  if (drawnCardIds.length > 0) {
+    publishGameplayReceipt({
+      kind: "player.drew",
+      targetIds: drawnCardIds,
+      amount: drawnCardIds.length,
+      reason: playerDrawReason(previous, next),
+    }, { observe: false });
+  }
+
+  const nextPlayerMemoryIds = new Set(next.player.memory.map((card) => card.instanceId));
+  const discardedPlayerCardIds = previous.player.hand
+    .filter((card) => nextPlayerMemoryIds.has(card.instanceId))
+    .map((card) => card.instanceId);
+  if (discardedPlayerCardIds.length > 0) {
+    publishGameplayReceipt({
+      kind: "player.discarded",
+      targetIds: discardedPlayerCardIds,
+      amount: discardedPlayerCardIds.length,
+      reason: "effect",
+    }, { observe: false });
+  }
+
+  const releasedReserve = Math.max(0, next.player.energyPool.stored - previous.player.energyPool.stored);
+  if (releasedReserve > 0 && previous.player.pendingStoredEnergy > next.player.pendingStoredEnergy) {
+    publishGameplayReceipt({ kind: "reserve.released", amount: releasedReserve }, { observe: false });
+  }
+
+  const nextHostMemoryIds = new Set(next.host.memory.map((card) => card.instanceId));
+  const discardedHostCardIds = previous.activeSide === "host" && previous.phase === "host"
+    ? []
+    : previous.host.archive
+        .filter((card) => nextHostMemoryIds.has(card.instanceId))
+        .map((card) => card.instanceId);
+  if (discardedHostCardIds.length > 0) {
+    publishGameplayReceipt({
+      kind: "hostArchive.discarded",
+      targetIds: discardedHostCardIds,
+      amount: discardedHostCardIds.length,
+    }, { observe: false });
+  }
+}
+
+function playerDrawReason(previous: GameState, next: GameState): string {
+  return playerDrawReasonForTransition(previous, next);
+}
+
+/** Libera solamente el beat de combate ya terminado. La limpieza global pertenece a Board y se
+ * ejecuta después de que el resto de la presentación de derrota haya quedado estable. */
+function releaseHostCombatPresentationAfterDefeat(): void {
+  useGameStore.setState({
+    hostAttackAnimation: undefined,
+    burnAnimation: undefined,
+    burnImpactCardId: undefined,
+    burnImpactCardIds: [],
+    resolvingHostCombat: false,
+    hostAutoTriggerCount: 0,
+    hostCombatVisualDamage: undefined,
+    hostCombatDeadCardIds: [],
+    selectedHostCreatureId: undefined,
+    selectedPlayerCreatureId: undefined,
+  });
+}
+
 function runHostCombatEventSequence(events: HostAttackEvent[], index: number, sequenceId: number): void {
-  if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
+  if (sequenceId !== hostCombatSequenceId) return;
+  if (useGameStore.getState().game.winner) {
+    releaseHostCombatPresentationAfterDefeat();
+    return;
+  }
   const plannedEvent = events[index];
   if (!plannedEvent) {
     runPendingHostCombatVolleyOrFinish(sequenceId);
@@ -1899,38 +2502,56 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
     if (customAnimation?.effect.type === "fireball") {
       useAudioStore.getState().playSfx(fireballHitSfx);
     }
-    let gameEnded = false;
     useGameStore.setState((state) => {
       const previous = state.game;
       const next = applyHostAttackEvent(previous, event);
-      // Combat is presented one impact at a time. Declare a lethal impact immediately instead of
-      // waiting for finishHostCombat after every remaining attacker has played its animation.
+      // La derrota ya es verdad en el impacto, pero la presentación del ataque conserva su beat
+      // completo. El callback de `durationMs` limpia la animación sólo después de que el atacante
+      // regresó a su slot; entonces `Board` puede montar el quiebre sin cortar el movimiento.
       checkWinLoss(next);
-      gameEnded = Boolean(next.winner);
       const gainedLife = next.player.life > previous.player.life;
       if (gainedLife) useAudioStore.getState().playSfx("buff");
       notifyDiscardEffects(previous, next);
-      if (gameEnded) return { ...createCleanUiState(), game: next };
+      // Field losses are observed centrally for combat and every effect path. Direct
+      // damage still tips the Future here because no card changes zones for that hit.
+      const dialTurn = event.playerDamage > 0 ? -DESTINY_DIAL_STEP : 0;
       return {
         game: next,
+        ...(dialTurn === 0
+          ? {}
+          : {
+              destinyDial: state.destinyDial + dialTurn,
+              destinyDialRevision: state.destinyDialRevision + 1,
+            }),
         hostCombatVisualDamage: nextVisualDamage(event),
         hostCombatDeadCardIds: nextDeadCardIds(event),
         ...(gainedLife ? startLifeBuffBeat() : {}),
       };
     });
-    if (gameEnded) useGameStore.getState().stopGamePresentation();
   }, impactMs);
 
   window.setTimeout(() => {
-    if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
+    if (sequenceId !== hostCombatSequenceId) return;
+    const gameEnded = Boolean(useGameStore.getState().game.winner);
     useGameStore.setState({
       hostAttackAnimation: undefined,
       burnAnimation: undefined,
       burnImpactCardId: undefined,
       burnImpactCardIds: [],
     });
+    if (gameEnded) {
+      // Board es la única autoridad que hace la limpieza global de una derrota. Aquí sólo se
+      // libera el combate que ya terminó; así la reacción de Vida, el dial y cualquier VFX local
+      // conservan sus propios finales antes de que se tome la captura.
+      releaseHostCombatPresentationAfterDefeat();
+      return;
+    }
     scheduleQueuedCombatReactions(() => {
-      if (sequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
+      if (sequenceId !== hostCombatSequenceId) return;
+      if (useGameStore.getState().game.winner) {
+        releaseHostCombatPresentationAfterDefeat();
+        return;
+      }
       useGameStore.setState({ hostCombatDeadCardIds: [] });
       runHostCombatEventSequence(events, index + 1, sequenceId);
     });
@@ -1938,6 +2559,10 @@ function runHostCombatEventSequence(events: HostAttackEvent[], index: number, se
 }
 
 function scheduleQueuedCombatReactions(onComplete: () => void): void {
+  if (useGameStore.getState().game.winner) {
+    onComplete();
+    return;
+  }
   if (hasQueuedPlayerTriggers(useGameStore.getState().game)) {
     scheduleQueuedPlayerTriggers(() => scheduleQueuedCombatReactions(onComplete));
     return;
@@ -1952,7 +2577,11 @@ function scheduleQueuedCombatReactions(onComplete: () => void): void {
 }
 
 function runPendingHostCombatVolleyOrFinish(combatSequenceId: number): void {
-  if (combatSequenceId !== hostCombatSequenceId || useGameStore.getState().game.winner) return;
+  if (combatSequenceId !== hostCombatSequenceId) return;
+  if (useGameStore.getState().game.winner) {
+    releaseHostCombatPresentationAfterDefeat();
+    return;
+  }
   const state = useGameStore.getState();
   const volley = pendingHostCombatDamageVolley(state.game);
   if (!volley || volley.damage <= 0) {
@@ -2002,21 +2631,20 @@ function runPendingHostCombatVolleyOrFinish(combatSequenceId: number): void {
         if (sequenceId !== hostSequenceEpoch() || combatSequenceId !== hostCombatSequenceId) return;
         useAudioStore.getState().playSfx(fireballHitSfx);
         if (projectileIndex !== projectileCount - 1) return;
-        let gameEnded = false;
         useGameStore.setState((current) => {
           const next = resolvePendingHostCombatDamageVolleys(current.game);
-          gameEnded = Boolean(next.winner);
-          return gameEnded
-            ? { ...createCleanUiState(), game: next }
-            : { game: next, lifeDamageAnimationId: Date.now() };
+          return { game: next, lifeDamageAnimationId: Date.now() };
         });
-        if (gameEnded) useGameStore.getState().stopGamePresentation();
       }, COMBAT_VOLLEY_IMPACT_MS + projectileDelay);
     }
 
     window.setTimeout(() => {
       if (sequenceId !== hostSequenceEpoch() || combatSequenceId !== hostCombatSequenceId) return;
       useGameStore.setState({ burnAnimation: undefined });
+      if (useGameStore.getState().game.winner) {
+        releaseHostCombatPresentationAfterDefeat();
+        return;
+      }
       finishAnimatedHostCombat();
     }, COMBAT_VOLLEY_ANIMATION_MS + volleyDelay);
   }, COMBAT_VOLLEY_LEAD_IN_MS);
@@ -2128,8 +2756,18 @@ function clearEnergyFlowPresentation(): void {
 
 function cancelScheduledPresentation(): void {
   hostCombatSequenceId += 1;
+  playerCombatSequenceId += 1;
   resetHostSequence();
   resetPlayerTriggerSequence();
+  resetPresentationEffectTimers();
+  guidedSessionStore.invalidate("presentation-reset");
+  guidedPresentationActivity.reset();
+
+  if (defensePhaseBannerTimer !== undefined && typeof window !== "undefined") {
+    window.clearTimeout(defensePhaseBannerTimer);
+  }
+  defensePhaseBannerTimer = undefined;
+  defensePhaseBannerActivity = undefined;
 
   if (typeof window !== "undefined") {
     if (activeEffectCloseTimer !== undefined) window.clearTimeout(activeEffectCloseTimer);
@@ -2270,27 +2908,6 @@ function scheduleLandPlaySummoningSafetyClear(): void {
   }, SUMMONING_ANIMATION_SAFETY_CLEAR_MS);
 }
 
-function previewPlayerCombatMillCards(game: GameState, attackers: string[]): Array<{ attackerIndex: number; cardIndexInHit: number; card: CardInstance }> {
-  const previews: Array<{ attackerIndex: number; cardIndexInHit: number; card: CardInstance }> = [];
-  let totalDamage = 0;
-  let previousMill = 0;
-
-  attackers.forEach((attackerId, attackerIndex) => {
-    const attacker = game.player.field.find((card) => card.instanceId === attackerId);
-    if (!attacker) return;
-    totalDamage += getPowerEndurance(game, attacker).power;
-    const nextMill = Math.floor(totalDamage / game.hostRules.damagePerArchiveDiscard);
-    const newMill = nextMill - previousMill;
-    previousMill = nextMill;
-    for (let index = 0; index < newMill; index += 1) {
-      const card = game.host.archive[previews.length];
-      if (card) previews.push({ attackerIndex, cardIndexInHit: index, card });
-    }
-  });
-
-  return previews;
-}
-
 function findMarkedCreatureIds(game: GameState): string[] {
   return [...game.player.field, ...game.host.field]
     .filter((card) => {
@@ -2352,7 +2969,8 @@ const MANUAL_TRIGGER_AFTER_REACTION_MS = 420;
 const MANUAL_TRIGGER_SUMMON_WAIT_POLL_MS = 60;
 
 function scheduleManualTriggerOverlay(manualTriggeredCard: CardInstance, startDelayMs: number): void {
-  window.setTimeout(() => fireManualTriggerOverlay(manualTriggeredCard), startDelayMs);
+  const sessionId = useGameStore.getState().gameSessionId;
+  window.setTimeout(() => fireManualTriggerOverlay(manualTriggeredCard, sessionId), startDelayMs);
 }
 
 // `.effect-card-lifted`/`.effect-card-activating` (the pulse this triggers) animate the same
@@ -2360,8 +2978,17 @@ function scheduleManualTriggerOverlay(manualTriggeredCard: CardInstance, startDe
 // The fixed delay callers pass is usually enough clearance, but under main-thread jank the pulse
 // can still start while the pop is mid-flight and cut it short. Wait for summoningAnimationCount
 // to actually drop to 0 (with a bounded safety clear already in the store) instead of guessing.
-function fireManualTriggerOverlay(manualTriggeredCard: CardInstance): void {
-  const latest = useGameStore.getState().game;
+function fireManualTriggerOverlay(manualTriggeredCard: CardInstance, sessionId: number): void {
+  const current = useGameStore.getState();
+  if (current.gameSessionId !== sessionId) return;
+  if (current.game.winner) {
+    useGameStore.setState((state) => ({
+      pendingTriggeredEffectCount: Math.max(0, state.pendingTriggeredEffectCount - 1),
+      pendingTriggeredEffectSourceId: undefined,
+    }));
+    return;
+  }
+  const latest = current.game;
   if (!findBattlefieldCard(latest, manualTriggeredCard.instanceId)) {
     useGameStore.setState((state) => ({
       pendingTriggeredEffectCount: Math.max(0, state.pendingTriggeredEffectCount - 1),
@@ -2369,13 +2996,18 @@ function fireManualTriggerOverlay(manualTriggeredCard: CardInstance): void {
     }));
     return;
   }
-  if (useGameStore.getState().summoningAnimationCount > 0) {
-    window.setTimeout(() => fireManualTriggerOverlay(manualTriggeredCard), MANUAL_TRIGGER_SUMMON_WAIT_POLL_MS);
+  if (current.summoningAnimationCount > 0) {
+    window.setTimeout(
+      () => fireManualTriggerOverlay(manualTriggeredCard, sessionId),
+      MANUAL_TRIGGER_SUMMON_WAIT_POLL_MS,
+    );
     return;
   }
   useAudioStore.getState().playSfx("activateEffect");
   useGameStore.getState().triggerEffectActivationPulse(manualTriggeredCard.instanceId);
   window.setTimeout(() => {
+    const latestStore = useGameStore.getState();
+    if (latestStore.gameSessionId !== sessionId || latestStore.game.winner) return;
     useGameStore.setState({
       counterTargeting: {
         sourceId: manualTriggeredCard.instanceId,
@@ -2393,6 +3025,9 @@ function fireManualTriggerOverlay(manualTriggeredCard: CardInstance): void {
 // *after* the card is already visible, without delaying the cast itself. Host resolves before
 // any manual trigger on the just-cast card (APNAP: non-active player's trigger goes on top of the stack).
 function scheduleCardPlayedReaction(sources: CardInstance[], manualTriggeredCard: CardInstance | undefined): void {
+  const initialState = useGameStore.getState();
+  if (initialState.game.winner) return;
+  const sessionId = initialState.gameSessionId;
   useGameStore.setState((state) => ({ hostAutoTriggerCount: state.hostAutoTriggerCount + 1 }));
   useAudioStore.getState().playSfx("activateEffect");
   for (const source of sources) useGameStore.getState().triggerEffectActivationPulse(source.instanceId);
@@ -2402,6 +3037,14 @@ function scheduleCardPlayedReaction(sources: CardInstance[], manualTriggeredCard
     tone: "host",
   });
   window.setTimeout(() => {
+    const latestStore = useGameStore.getState();
+    if (latestStore.gameSessionId !== sessionId) return;
+    if (latestStore.game.winner) {
+      useGameStore.setState((state) => ({
+        hostAutoTriggerCount: Math.max(0, state.hostAutoTriggerCount - 1),
+      }));
+      return;
+    }
     useGameStore.setState((state) => {
       const previous = state.game;
       const next = structuredClone(previous) as GameState;
@@ -2420,7 +3063,9 @@ function scheduleCardPlayedReaction(sources: CardInstance[], manualTriggeredCard
         ...(buffBeat ?? {}),
       };
     });
-    if (manualTriggeredCard) scheduleManualTriggerOverlay(manualTriggeredCard, MANUAL_TRIGGER_AFTER_REACTION_MS);
+    if (manualTriggeredCard && !useGameStore.getState().game.winner) {
+      scheduleManualTriggerOverlay(manualTriggeredCard, MANUAL_TRIGGER_AFTER_REACTION_MS);
+    }
   }, CARD_PLAYED_REACTION_RESOLVE_MS);
 }
 

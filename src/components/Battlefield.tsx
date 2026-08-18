@@ -40,6 +40,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
+import { guidedAnchorRegistry, guidedCardAnchorKey, guidedSurfaceAnchorKey } from "../guidance";
 
 type Props = {
   game: GameState;
@@ -627,7 +628,17 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
   return (
     <>
       <Zone title={`${side === "player" ? t("setup.playerSide") : t("setup.hostSide")} ${t("zones.field")}`} count={side === "player" ? creatures.length + others.length : cards.length} hideHeader>
-        <div ref={boardRef} className="battlefield-side-content">
+        <div
+          ref={(element) => {
+            boardRef.current = element;
+            guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey(side === "player" ? "player.field" : "host.field"),
+              `battlefield:${side}:surface`,
+              element,
+            );
+          }}
+          className="battlefield-side-content"
+        >
           <BattlefieldRowSurface
             cardsEmpty={creatures.length === 0}
             cropCreatureCards={cropCreatureCards}
@@ -656,7 +667,9 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
     return (
       <>
       <aside
-        ref={landDockRef}
+        ref={(element) => {
+          landDockRef.current = element;
+        }}
         data-player-mana-core="true"
         data-tribute-of-the-four-sorrows-mana-target={tributeOfTheFourSorrowsSourceSelectionActive ? "true" : undefined}
         data-audio-click={canSelectEnergyCore ? "valid" : undefined}
@@ -668,6 +681,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
         className={[
           "player-mana-core",
           "player-mana-corner",
+          "game-hud-energy",
           game.activeSide === "player" ? "is-player-turn" : "",
           tributeOfTheFourSorrowsSourceSelectionActive ? "is-targeting" : "",
         ].join(" ")}
@@ -683,6 +697,19 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
       >
         <div className="mana-corner-energy-layer" aria-hidden="true">
           <div
+            ref={(element) => guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey("player.sources"),
+              "battlefield:player:sources-visual",
+              element,
+            )}
+            className="guided-player-sources-anchor"
+          >
+          <div
+            ref={(element) => guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey("player.reserve"),
+              "battlefield:player:reserve",
+              element,
+            )}
             className="mana-energy-track mana-energy-track-yellow"
             data-energy-track="stored"
           >
@@ -759,6 +786,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
                 </span>
               );
             })}
+          </div>
           </div>
         </div>
         {reserveSetupActive && (
@@ -903,6 +931,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
     const playerCombat = game.activeSide === "player" && game.phase === "combat";
     const selectedPlayerAttacker = game.combat.playerAttackers.includes(card.instanceId);
     const legalAttacker = Boolean(playerCombat && side === "player" && card.kinds.includes("ECHO") && (selectedPlayerAttacker || canAttack(game, card)));
+    const attemptablePlayerAttacker = Boolean(playerCombat && side === "player" && card.kinds.includes("ECHO"));
     const availablePlayerAttacker = Boolean(playerCombat && side === "player" && card.kinds.includes("ECHO") && !selectedPlayerAttacker && canAttack(game, card));
     const legalBlocker = Boolean(
       hostCombat &&
@@ -915,14 +944,21 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
         }),
     );
     const legalBlockTarget = Boolean(hostCombat && side === "host" && selectedBlocker && !selectedBlockerAssigned && game.combat.hostAttackers.includes(card.instanceId) && canBlockAttacker(game, selectedBlocker, card));
-    const selectableBlocker = Boolean(hostCombat && side === "player" && card.kinds.includes("ECHO") && (legalBlocker || selected || blocking));
+    const selectableBlocker = Boolean(hostCombat && side === "player" && card.kinds.includes("ECHO") && !card.exhausted);
+    const attemptableBlockTarget = Boolean(
+      hostCombat
+        && side === "host"
+        && selectedBlocker
+        && !selectedBlockerAssigned
+        && game.combat.hostAttackers.includes(card.instanceId),
+    );
     const selectionDisabled =
       casualtyIds.has(card.instanceId) ||
       (isLand && !tributeOfTheFourSorrowsTargetable && !tributeOfTheFourSorrowsTargetLocked) ||
-      (playerCombat && side === "player" && !legalAttacker) ||
+      (playerCombat && side === "player" && !attemptablePlayerAttacker) ||
       (playerCombat && side === "host") ||
       (hostCombat && side === "player" && !selectableBlocker) ||
-      (hostCombat && side === "host" && !legalBlockTarget);
+      (hostCombat && side === "host" && !attemptableBlockTarget);
     const muted =
       (playerCombat && side === "player" && !legalAttacker && !selectedPlayerAttacker && !isLand) ||
       (playerCombat && side === "host") ||
@@ -1055,6 +1091,11 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
       >
       <div className="battlefield-card-reflow" data-card-reflow-id={card.instanceId}>
       <div
+        ref={(element) => guidedAnchorRegistry.set(
+          guidedCardAnchorKey(card.instanceId),
+          `battlefield:${side}:${card.instanceId}`,
+          element,
+        )}
         data-card-slot-id={card.instanceId}
         data-summoning={useNewSummoning && firstTimeOnThisBattlefield ? "true" : undefined}
         data-entry-delay={0}
@@ -1173,7 +1214,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
         suppressHoverOverlay={counterTargetingActive || spellTargetingActive || tributeOfTheFourSorrowsSelectionActive}
         visualDamageMarked={hostCombatVisualDamage?.[card.instanceId]}
         onPointerDown={(event) => {
-          if (legalAttacker && side === "player" && event.button === 0) {
+          if (attemptablePlayerAttacker && side === "player" && event.button === 0) {
             beginPlayerAttackDrag(card.instanceId, event);
             return;
           }
@@ -1288,7 +1329,9 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
       )}
       {effectActive && primaryAbility && (
         <button
+          aria-label={abilityButtonText(primaryAbility)}
           data-audio-click="off"
+          data-guided-anchor-extension="true"
           className="effect-action-button"
           onClick={(event) => {
             event.stopPropagation();
@@ -1400,7 +1443,10 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
       if (dragStarted) {
         suppressNextClickSelection();
         const dropResult = findDropBlockTarget(upEvent.clientX, upEvent.clientY, blockerId);
-        if (dropResult.attackerId) {
+        if (dropResult.attackerId && dropResult.reason) {
+          useGameStore.getState().declareBlocker(blockerId, dropResult.attackerId);
+          cancelBlockDrag();
+        } else if (dropResult.attackerId) {
           const latest = useGameStore.getState().game;
           const currentAttackerId = Object.entries(latest.combat.blockers).find(([, blockerIds]) => blockerIds.includes(blockerId))?.[0];
           if (currentAttackerId && currentAttackerId !== dropResult.attackerId) {
@@ -1409,7 +1455,6 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
           useGameStore.getState().declareBlocker(blockerId, dropResult.attackerId);
           useGameStore.getState().selectPlayerCreature(undefined);
         } else {
-          if (dropResult.reason) showBlockToast(dropResult.reason);
           cancelBlockDrag();
         }
       }
@@ -1568,25 +1613,11 @@ function findDropBlockTarget(x: number, y: number, blockerId: string): { attacke
     const attacker = latest.host.field.find((card) => card.instanceId === candidateId);
     if (!attacker) continue;
     const reason = blockRestrictionReason(latest, blocker, attacker);
-    return reason ? { reason } : { attackerId: candidateId };
+    // An invalid drop is still an attempted block. Keep the target so `declareBlocker` can
+    // publish the typed denial consumed by contextual guidance (Flying, Furtive, etc.).
+    return reason ? { attackerId: candidateId, reason } : { attackerId: candidateId };
   }
   return {};
-}
-
-function showBlockToast(message: string): void {
-  const language = useLanguageStore.getState().language;
-  const localizedMessage = message === "That Echo cannot defend." || message === "That creature cannot block."
-    ? translate(language, "error.creatureCannotBlock")
-    : message === "Echoes with Flying require Flying or Skyguard to defend against them." || message === "Flying attackers need flying or reach to block."
-      ? translate(language, "error.flyingBlock")
-      : message === "Furtive cannot be defended by Echoes with greater Power." || message === "Skulk cannot be blocked by creatures with greater power."
-        ? translate(language, "error.furtiveBlock")
-      : message;
-  useToastStore.getState().pushToast({
-    title: translate(language, "error.cannotBlock"),
-    message: localizedMessage,
-    tone: "warning",
-  });
 }
 
 function isPlayerAttackDropTarget(x: number, y: number): boolean {

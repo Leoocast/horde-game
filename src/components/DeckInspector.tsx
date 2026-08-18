@@ -10,6 +10,7 @@ import { useDeckCardDetails } from "../utils/deckCardImages";
 import { useAudioStore } from "../store/useAudioStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { PreviewStatsBadge, TraitPills } from "./CardPreview";
+import { TemporalBackdrop } from "./TemporalBackdrop";
 
 type Props = {
   deck: InspectableDeck;
@@ -83,6 +84,7 @@ export function DeckInspector({ deck, backLabel, onBack }: Props) {
 
   return (
     <main className={`deck-detail-screen main-menu-shell deck-theme-${theme} h-screen overflow-hidden text-[#f6e6b8] ${closing ? "is-closing" : ""}`}>
+      <TemporalBackdrop />
       <DeckFireflies />
       <header className="deck-detail-header">
         <button className="expedition-back" type="button" onClick={() => setClosing(true)} disabled={closing}>

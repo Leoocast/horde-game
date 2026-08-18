@@ -1,4 +1,4 @@
-import type { AbilityOptions, ActionCost, ActionFailureCode, ActivatedAbility, CardInstance, CastOptions, GameState, Side } from "./GameTypes";
+import type { AbilityOptions, ActionCost, ActionFailure, ActionFailureCode, ActivatedAbility, CardInstance, CastOptions, GameState, Side } from "./GameTypes";
 import { lifeCostAmount, lifeCostFailureReason } from "./ActionCosts";
 import { drawCards, recordFieldEntry } from "./GameState";
 import { drainEventQueue, enqueue } from "./EventQueue";
@@ -10,11 +10,11 @@ import { isQuickSpell } from "./hostfallVocabulary";
 
 export function playLand(game: GameState, handId: string): GameState {
   const next = structuredClone(game) as GameState;
-  if (next.winner || next.activeSide !== "player" || next.phase !== "main") return fail(next, "Sources can only be played during your Main phase.");
+  if (next.winner || next.activeSide !== "player" || next.phase !== "main") return fail(next, "Sources can only be played during your Main phase.", { code: "WRONG_PHASE" });
   const card = next.player.hand.find((item) => item.instanceId === handId);
   if (!card || !card.kinds.includes("SOURCE")) return fail(next, "Choose a Source to play.");
-  if (!canPlayerPutAnotherLand(next)) return fail(next, `The Chronicler cannot control more than ${MAX_PLAYER_LANDS} Sources.`);
-  if (next.player.energyActionUsedThisTurn) return fail(next, "The Chronicler already used their Energy Action this turn.");
+  if (!canPlayerPutAnotherLand(next)) return fail(next, `The Chronicler cannot control more than ${MAX_PLAYER_LANDS} Sources.`, { code: "SOURCE_LIMIT_REACHED" });
+  if (next.player.energyActionUsedThisTurn) return fail(next, "The Chronicler already used their Energy Action this turn.", { code: "SOURCE_ACTION_ALREADY_USED" });
   moveHandToBattlefield(next, card);
   next.player.energyActionUsedThisTurn = true;
   return succeed(log(next, `Player plays ${card.name}.`));
@@ -24,8 +24,11 @@ export function recycleEnergy(game: GameState, handId: string): GameState {
   const next = structuredClone(game) as GameState;
   const card = next.player.hand.find((item) => item.instanceId === handId);
   if (!card || !card.kinds.includes("SOURCE")) return fail(next, "Choose a Source to recycle.");
-  if (next.setupTurnsRemaining > 0) return fail(next, "A Source cannot be recycled during setup.");
-  if (!canPlayerRecycleEnergy(next)) return fail(next, "A Source can only be recycled once during your Main phase.");
+  if (next.setupTurnsRemaining > 0) return fail(next, "A Source cannot be recycled during setup.", { code: "WRONG_PHASE" });
+  if (!canPlayerRecycleEnergy(next)) {
+    const code: ActionFailureCode = next.player.energyActionUsedThisTurn ? "SOURCE_ACTION_ALREADY_USED" : "WRONG_PHASE";
+    return fail(next, "A Source can only be recycled once during your Main phase.", { code });
+  }
 
   next.player.hand = next.player.hand.filter((item) => item.instanceId !== handId);
   card.zone = "archive";
@@ -39,7 +42,7 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
   const next = structuredClone(game) as GameState;
   const card = next.player.hand.find((item) => item.instanceId === handId);
   if (!card) return fail(next, "That card is no longer in hand.", { silent: true });
-  if (!canCastAtCurrentTiming(next, card)) return fail(next, `${card.name} cannot be played right now.`);
+  if (!canCastAtCurrentTiming(next, card)) return fail(next, `${card.name} cannot be played right now.`, { code: "WRONG_PHASE" });
   if (card.kinds.includes("SOURCE")) return playLand(next, handId);
   const targetFailure = castTargetFailureReason(next, card, options.targets);
   if (targetFailure) return fail(next, targetFailure);
@@ -122,8 +125,8 @@ export function activateAbility(game: GameState, permanentId: string, abilityId:
   const card = next.player.field.find((item) => item.instanceId === permanentId);
   const ability = card?.activatedAbilities.find((item) => item.id === abilityId);
   if (!card || !ability) return fail(next, "That Action is not available.", { silent: true });
-  const failure = activatedAbilityFailureReason(next, card, ability);
-  if (failure) return fail(next, failure);
+  const failure = activatedAbilityFailure(next, card, ability);
+  if (failure) return fail(next, failure.reason, { code: failure.code });
   const cost = activatedAbilityEnergyCost(ability.cost);
   next.player.energyPool = payEnergy(next.player.energyPool, cost);
   payLifeCost(next, ability.cost, card.instanceId, card.name);
@@ -136,22 +139,33 @@ export function activateAbility(game: GameState, permanentId: string, abilityId:
 }
 
 export function activatedAbilityFailureReason(game: GameState, card: CardInstance, ability: ActivatedAbility): string | undefined {
-  if (game.winner || game.activeSide !== "player" || game.phase !== "main") return "Actions can only be used during your Main phase.";
-  if (card.controller !== "player" || card.zone !== "field") return "That Action is not available.";
-  if (card.activatedThisTurn) return `${card.name} has already used an Action this turn.`;
+  return activatedAbilityFailure(game, card, ability)?.reason;
+}
+
+export function activatedAbilityFailure(game: GameState, card: CardInstance, ability: ActivatedAbility): ActionFailure | undefined {
+  if (game.winner || game.activeSide !== "player" || game.phase !== "main") {
+    return { reason: "Actions can only be used during your Main phase.", code: "WRONG_PHASE" };
+  }
+  if (card.controller !== "player" || card.zone !== "field") return { reason: "That Action is not available." };
+  if (card.activatedThisTurn) return { reason: `${card.name} has already used an Action this turn.` };
   if (ability.requiresStabilized && card.kinds.includes("ECHO") && card.stabilizing) {
-    return `${card.name} cannot use this Action while Stabilizing.`;
+    return { reason: `${card.name} cannot use this Action while Stabilizing.`, code: "STABILIZING" };
   }
   if (card.kinds.includes("ECHO") && ability.effect.type === "GAIN_ENERGY" && storedEnergySpace(game) === 0) {
-    return "Stored Energy is already full.";
+    return { reason: "Stored Energy is already full." };
   }
   if (ability.cost?.exhaust) {
-    if (card.exhausted) return `${card.name} is already Exhausted.`;
-    if (card.stabilizing && card.kinds.includes("ECHO")) return `${card.name} is Stabilizing.`;
+    if (card.exhausted) return { reason: `${card.name} is already Exhausted.`, code: "EXHAUSTED" };
+    if (card.stabilizing && card.kinds.includes("ECHO")) {
+      return { reason: `${card.name} is Stabilizing.`, code: "STABILIZING" };
+    }
   }
   const cost = activatedAbilityEnergyCost(ability.cost);
-  if (!canPayEnergy(game.player.energyPool, cost)) return `Not enough Energy to use ${card.name}.`;
-  return lifeCostFailureReason(game, ability.cost, card.name);
+  if (!canPayEnergy(game.player.energyPool, cost)) {
+    return { reason: `Not enough Energy to use ${card.name}.`, code: "NOT_ENOUGH_ENERGY" };
+  }
+  const lifeFailure = lifeCostFailureReason(game, ability.cost, card.name);
+  return lifeFailure ? { reason: lifeFailure } : undefined;
 }
 
 function activatedAbilityEnergyCost(actionCost?: ActionCost): number {

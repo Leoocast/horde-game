@@ -24,6 +24,7 @@ export type RendererErrorReport = Readonly<{
 
 export type HostfallDesktopBridge = Readonly<{
   getBootstrap(): Promise<Readonly<{ version: string; platform: string }>>;
+  captureViewport(): Promise<string | undefined>;
   getWindowState(): Promise<DesktopWindowState>;
   setFullscreen(enabled: boolean): Promise<DesktopWindowState>;
   onWindowStateChanged(callback: (state: DesktopWindowState) => void): () => void;
@@ -41,6 +42,11 @@ declare global {
   interface Window {
     hostfallDesktop?: HostfallDesktopBridge;
   }
+}
+
+export function captureDesktopViewport(): Promise<string | undefined> {
+  const captureViewport = window.hostfallDesktop?.captureViewport;
+  return typeof captureViewport === "function" ? captureViewport() : Promise.resolve(undefined);
 }
 
 const WEB_EXTERNAL_LINKS: Readonly<Record<ExternalLinkId, string>> = Object.freeze({

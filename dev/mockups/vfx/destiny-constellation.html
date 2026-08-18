@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hostfall — Constelación cardinal</title>
+    <style>
+      @font-face {
+        font-family: "Cinzel";
+        font-style: normal;
+        font-weight: 500 900;
+        font-display: block;
+        src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+      }
+      :root {
+        --stage: #050d0e;
+        --gold: #c7aa69;
+        --gold-bright: #e6d59e;
+        --parchment: #e8dec0;
+        --teal-dim: #8db1a9;
+        --muted: #9ba69f;
+        --muted-dim: #7d8f88;
+        --rule: rgb(146 133 88 / 0.22);
+        --serif: Georgia, "Times New Roman", serif;
+        --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 0 0 70px;
+        background: radial-gradient(ellipse at 50% -8%, rgb(31 62 60 / 0.2), transparent 55%), var(--stage);
+        color: var(--muted);
+        font-family: var(--sans);
+        font-size: 15px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      main { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+
+      header { padding: 54px 0 30px; border-bottom: 1px solid var(--rule); }
+      .eyebrow { color: var(--teal-dim); font-size: 10px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; }
+      h1 {
+        margin: 12px 0 0; color: var(--parchment); font-family: var(--serif);
+        font-size: clamp(30px, 4.4vw, 46px); font-weight: 500; letter-spacing: 0.02em; line-height: 1.06;
+      }
+      header p { max-width: 66ch; margin: 16px 0 0; }
+      header strong { color: var(--gold-bright); font-weight: 600; }
+      .back { display: inline-block; margin-bottom: 8px; color: var(--muted-dim); font-size: 12px; text-decoration: none; }
+      .back:hover { color: var(--gold-bright); }
+
+      .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 30px 0 14px; }
+      button, input {
+        height: 42px; border: 1px solid rgb(146 133 88 / 0.36); border-radius: 2px;
+        background: linear-gradient(180deg, rgb(24 33 34 / 0.96), rgb(8 15 17 / 0.98));
+        color: var(--muted); font-family: var(--sans);
+      }
+      button {
+        padding: 0 20px; cursor: pointer;
+        font-size: 11px; font-weight: 900; letter-spacing: 0.15em; text-transform: uppercase;
+        transition: border-color 160ms ease, color 160ms ease;
+      }
+      button:hover { border-color: rgb(214 192 122 / 0.7); color: var(--gold-bright); }
+      button:focus-visible, input:focus-visible { outline: 2px solid rgb(234 210 133 / 0.9); outline-offset: 2px; }
+      input { width: 210px; padding: 0 12px; color: var(--gold-bright); font-size: 13px; letter-spacing: 0.06em; }
+      label { color: var(--muted-dim); font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+
+      .stage {
+        position: relative; overflow: hidden; aspect-ratio: 16 / 9;
+        border: 1px solid var(--rule); border-radius: 2px; background: #030708;
+      }
+      .stage .board {
+        position: absolute; inset: 0;
+        background:
+          radial-gradient(ellipse 44% 20% at 50% 24%, rgb(116 49 32 / 0.2), transparent 72%),
+          radial-gradient(ellipse 44% 20% at 50% 74%, rgb(41 108 111 / 0.2), transparent 72%),
+          linear-gradient(180deg, rgb(9 18 17), rgb(3 8 9));
+      }
+      .stage .board::after {
+        position: absolute; inset: 0; content: "";
+        background:
+          repeating-linear-gradient(90deg, transparent 0 78px, rgb(255 255 255 / 0.012) 78px 79px),
+          repeating-linear-gradient(0deg, transparent 0 62px, rgb(255 255 255 / 0.012) 62px 63px);
+      }
+      canvas { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+      .celestial-grid {
+        position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%;
+        overflow: visible; opacity: 0.68; pointer-events: none;
+      }
+      .celestial-grid .degree-ring,
+      .celestial-grid .orbit,
+      .celestial-grid .arc {
+        fill: none; vector-effect: non-scaling-stroke;
+      }
+      .celestial-grid .degree-ring { stroke: rgb(111 181 176 / 0.14); stroke-width: 1; }
+      .celestial-grid .arc { stroke: rgb(199 170 105 / 0.12); stroke-width: 1; }
+      .celestial-grid .orbit {
+        stroke: rgb(116 188 182 / 0.11); stroke-width: 1; stroke-dasharray: 3 11;
+        animation: orbit-drift 26s linear infinite;
+      }
+      .celestial-grid .tick { stroke: rgb(214 192 122 / 0.2); stroke-width: 1; vector-effect: non-scaling-stroke; }
+      .celestial-grid .dust { fill: rgb(191 224 216 / 0.24); }
+      .celestial-grid text {
+        fill: rgb(166 196 187 / 0.34); font-family: Consolas, "Courier New", monospace;
+        font-size: 10px; letter-spacing: 0.12em;
+      }
+      .celestial-grid .degree { fill: rgb(210 188 125 / 0.42); font-size: 9px; }
+      .celestial-grid .readout-strong { fill: rgb(210 188 125 / 0.5); }
+      @keyframes orbit-drift { to { stroke-dashoffset: -140; } }
+
+      .verdict {
+        position: absolute; z-index: 3; left: 50%; top: 50%; isolation: isolate;
+        display: grid; justify-items: center; gap: 8px; width: min(820px, 94%);
+        opacity: 0; text-align: center; transform: translate(-50%, -48%);
+      }
+      .verdict::before {
+        position: absolute; z-index: -1; inset: -30% -18%; content: ""; opacity: 0;
+        background: radial-gradient(ellipse at center, rgb(1 6 7 / 0.9) 0 30%, rgb(2 9 10 / 0.66) 48%, transparent 73%);
+        filter: blur(10px);
+      }
+      .verdict.on { animation: verdict-in 420ms ease-out both; }
+      .verdict.on::before { animation: verdict-backdrop 900ms ease-out both; }
+
+      .victory-kicker {
+        position: relative; color: #f5dda4; font-family: "Cinzel", var(--serif); font-size: 12px; font-weight: 800;
+        letter-spacing: 0.32em; text-transform: uppercase; opacity: 0;
+        text-shadow: 0 0 12px rgb(224 190 98 / 0.46);
+      }
+      .victory-kicker::before,
+      .victory-kicker::after {
+        position: absolute; top: 50%; width: 54px; height: 1px; content: "";
+        background: linear-gradient(90deg, transparent, rgb(224 197 122 / 0.68));
+      }
+      .victory-kicker::before { right: calc(100% + 16px); }
+      .victory-kicker::after { left: calc(100% + 12px); transform: rotate(180deg); }
+      .verdict.on .victory-kicker { animation: copy-rise 620ms 120ms ease-out both; }
+
+      .victory-title {
+        position: relative; display: grid; margin: 0; color: var(--parchment);
+        font-family: "Cinzel", var(--serif); font-size: clamp(38px, 7vw, 78px); font-weight: 700;
+        letter-spacing: 0.075em; line-height: 0.9; text-transform: uppercase;
+        text-shadow: 0 3px 7px #000, 0 0 16px rgb(239 215 151 / 0.28);
+      }
+      .victory-title .line {
+        display: block; opacity: 0; color: #f6ecd5;
+        clip-path: inset(0 50% 0 50%); transform: translateY(12px);
+      }
+      .victory-title .line:last-child { margin-top: 0.08em; }
+      .verdict.on .victory-title .line:first-child { animation: title-forge 1.05s 170ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+      .verdict.on .victory-title .line:last-child { animation: title-forge 1.12s 300ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+      .victory-title::after {
+        position: absolute; left: 50%; top: 52%; width: 12px; height: 2px; content: "";
+        opacity: 0; transform: translate(-50%, -50%);
+        background: #fff8de; box-shadow: 0 0 12px 4px rgb(255 239 184 / 0.9), 0 0 44px 16px rgb(197 165 85 / 0.5);
+      }
+      .verdict.on .victory-title::after { animation: title-flare 880ms 230ms ease-out both; }
+
+      .victory-subtitle {
+        margin-top: 7px; color: rgb(174 190 181 / 0.78); font-family: "Cinzel", var(--serif);
+        font-size: clamp(8px, 1.1vw, 11px); font-weight: 600; letter-spacing: 0.28em;
+        text-transform: uppercase; opacity: 0;
+      }
+      .verdict.on .victory-subtitle { animation: copy-rise 700ms 760ms ease-out both; }
+
+      .future-seal {
+        position: relative; display: grid; justify-items: center; gap: 2px;
+        min-width: min(380px, 86%); margin-top: 10px; padding: 10px 24px 9px;
+        border-top: 1px solid rgb(199 170 105 / 0.48); border-bottom: 1px solid rgb(199 170 105 / 0.32);
+        background: linear-gradient(90deg, transparent, rgb(4 14 15 / 0.88) 18% 82%, transparent);
+        opacity: 0; transform: translateY(10px);
+      }
+      .future-seal::before,
+      .future-seal::after {
+        position: absolute; top: -3px; width: 5px; height: 5px; content: "";
+        border: 1px solid rgb(224 201 132 / 0.72); transform: rotate(45deg);
+      }
+      .future-seal::before { left: 16%; }
+      .future-seal::after { right: 16%; }
+      .future-seal span {
+        color: #d8e9e3; font-family: "Cinzel", var(--serif); font-size: 11px; font-weight: 800;
+        letter-spacing: 0.26em; text-transform: uppercase; text-shadow: 0 1px 8px #000;
+      }
+      .future-seal b {
+        color: #fff0c4; font-family: "Cinzel", var(--serif); font-size: clamp(18px, 2.25vw, 25px);
+        font-weight: 800; letter-spacing: 0.13em; font-variant-numeric: tabular-nums;
+        text-shadow: 0 0 12px rgb(220 185 94 / 0.42);
+      }
+      .verdict.on .future-seal { animation: seal-rise 720ms 940ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+      @keyframes verdict-in {
+        from { opacity: 0; transform: translate(-50%, -46%) scale(0.98); }
+        to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      }
+      @keyframes verdict-backdrop { from { opacity: 0; transform: scale(0.72); } to { opacity: 1; transform: scale(1); } }
+      @keyframes title-forge {
+        0% { opacity: 0; clip-path: inset(0 50% 0 50%); transform: translateY(12px); }
+        38% { opacity: 1; }
+        100% { opacity: 1; clip-path: inset(0 0 0 0); transform: translateY(0); }
+      }
+      @keyframes title-flare {
+        0% { opacity: 0; width: 12px; }
+        32% { opacity: 1; }
+        100% { opacity: 0; width: 92%; }
+      }
+      @keyframes copy-rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes seal-rise { from { opacity: 0; transform: translateY(10px) scaleX(0.72); } to { opacity: 1; transform: translateY(0) scaleX(1); } }
+
+      .fallback { position: absolute; inset: 0; z-index: 4; display: none; place-items: center; padding: 30px; text-align: center; }
+      .stage.no-webgl .fallback { display: grid; }
+
+      .scrub { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
+      .track { position: relative; height: 3px; flex: 1; background: rgb(146 133 88 / 0.18); }
+      .fill { position: absolute; top: 0; bottom: 0; left: 0; width: 0; background: linear-gradient(90deg, rgb(146 133 88 / 0.5), var(--gold)); }
+      .clock { color: var(--muted-dim); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
+
+      .notes { margin-top: 46px; border-top: 1px solid var(--rule); padding-top: 26px; }
+      .notes h2 { margin: 0 0 12px; color: var(--parchment); font-family: var(--serif); font-size: 22px; font-weight: 500; }
+      .notes h3 {
+        margin: 22px 0 5px; color: var(--gold-bright); font-size: 10px; font-weight: 800;
+        letter-spacing: 0.2em; text-transform: uppercase;
+      }
+      .notes ul { max-width: 72ch; margin: 0; padding-left: 20px; }
+      .notes li { margin-bottom: 9px; }
+      .notes b { color: var(--gold-bright); font-weight: 600; }
+      code { color: #9ec9c2; font-size: 13px; }
+      @media (prefers-reduced-motion: reduce) {
+        .verdict.on { animation-duration: 1ms; }
+        .verdict.on::before,
+        .verdict.on .victory-kicker,
+        .verdict.on .victory-title .line,
+        .verdict.on .victory-title::after,
+        .verdict.on .victory-subtitle,
+        .verdict.on .future-seal { animation-delay: 0ms; animation-duration: 1ms; }
+        .celestial-grid .orbit { animation: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <a class="back" href="../index.html">← Maquetas</a>
+        <div class="eyebrow">Semillas del Destino · desenlace preservado</div>
+        <h1>Constelación cardinal</h1>
+        <p>
+          Motas de luz entran desde lugares distintos fuera del tablero. Cada encuentro <strong>enciende una punta</strong>
+          y revela una rosa cardinal de trazo contenido: cuatro puntas largas en Norte, Este, Sur y Oeste,
+          cuatro diagonales amplias y un corazón luminoso. Al cerrarse, florece.
+        </p>
+      </header>
+
+      <div class="controls">
+        <button id="replay" type="button">Repetir</button>
+        <label for="seed">Semilla</label>
+        <input id="seed" type="text" value="748-203" spellcheck="false" />
+      </div>
+
+      <div class="stage" id="stage">
+        <div class="board"></div>
+        <svg class="celestial-grid" viewBox="0 0 1000 562" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <g>
+            <circle class="dust" cx="72" cy="91" r="1.4" />
+            <circle class="dust" cx="159" cy="445" r="1" />
+            <circle class="dust" cx="250" cy="68" r="0.8" />
+            <circle class="dust" cx="790" cy="79" r="1.3" />
+            <circle class="dust" cx="902" cy="181" r="0.8" />
+            <circle class="dust" cx="857" cy="458" r="1.5" />
+            <circle class="dust" cx="664" cy="516" r="0.9" />
+            <circle class="dust" cx="944" cy="339" r="1.1" />
+          </g>
+
+          <g transform="translate(500 247)">
+            <circle class="degree-ring" r="226" pathLength="360" stroke-dasharray="1 14" />
+            <circle class="arc" r="212" pathLength="360" stroke-dasharray="34 18 5 33" />
+            <ellipse class="orbit" rx="332" ry="92" transform="rotate(-13)" />
+            <ellipse class="orbit" rx="298" ry="118" transform="rotate(31)" style="animation-duration:34s" />
+            <ellipse class="orbit" rx="272" ry="67" transform="rotate(72)" style="animation-duration:19s" />
+
+            <line class="tick" x1="0" y1="-239" x2="0" y2="-224" />
+            <line class="tick" x1="169" y1="-169" x2="158" y2="-158" />
+            <line class="tick" x1="239" y1="0" x2="224" y2="0" />
+            <line class="tick" x1="169" y1="169" x2="158" y2="158" />
+            <line class="tick" x1="0" y1="239" x2="0" y2="224" />
+            <line class="tick" x1="-169" y1="169" x2="-158" y2="158" />
+            <line class="tick" x1="-239" y1="0" x2="-224" y2="0" />
+            <line class="tick" x1="-169" y1="-169" x2="-158" y2="-158" />
+
+            <text class="degree" x="0" y="-233" text-anchor="middle">000° · N</text>
+            <text class="degree" x="182" y="-177" text-anchor="start">045°</text>
+            <text class="degree" x="248" y="4" text-anchor="start">090° · E</text>
+            <text class="degree" x="182" y="185" text-anchor="start">135°</text>
+            <text class="degree" x="0" y="249" text-anchor="middle">180° · S</text>
+            <text class="degree" x="-182" y="185" text-anchor="end">225°</text>
+            <text class="degree" x="-248" y="4" text-anchor="end">270° · O</text>
+            <text class="degree" x="-182" y="-177" text-anchor="end">315°</text>
+          </g>
+
+          <g>
+            <text x="30" y="32">VECTOR TEMPORAL</text>
+            <text id="instrumentTime" class="readout-strong" x="30" y="49">T+0.00 s</text>
+            <text x="970" y="32" text-anchor="end">ASCENSIÓN 18h 42m</text>
+            <text id="instrumentAzimuth" class="readout-strong" x="970" y="49" text-anchor="end">Ω 000°</text>
+            <text x="30" y="526">PLANO ECLÍPTICO · ERA IV</text>
+            <text id="instrumentFuture" class="readout-strong" x="970" y="526" text-anchor="end">FUTURO 000·000</text>
+          </g>
+        </svg>
+        <canvas id="gl"></canvas>
+        <div class="verdict" id="verdict">
+          <span class="victory-kicker">Victoria</span>
+          <strong class="victory-title">
+            <span class="line">Futuro</span>
+            <span class="line">Preservado</span>
+          </strong>
+          <span class="victory-subtitle">El Capítulo perdura en la Crónica</span>
+          <span class="future-seal">
+            <span>Futuro</span>
+            <b id="verdictFuture">000·000</b>
+          </span>
+        </div>
+        <div class="fallback">
+          Este navegador no dio contexto WebGL, así que la escena no puede dibujarse.
+        </div>
+      </div>
+
+      <div class="scrub">
+        <span class="clock" id="clock">0.00 s</span>
+        <span class="track"><span class="fill" id="fill"></span></span>
+      </div>
+
+      <section class="notes">
+        <h2>Notas</h2>
+
+        <h3>Por qué se construye a la vista</h3>
+        <ul>
+          <li>Las luces nacen fuera del encuadre, repartidas entre sus cuatro lados, y convergen sobre el centro y las ocho puntas. La semilla conserva exactamente el mismo reparto al repetir.</li>
+          <li>El contorno se revela desde el Norte en sentido horario, pero queda tenue y sin halo para que no compita con los puntos de luz.</li>
+          <li>Los grabados interiores no tienen área. Con cuñas rellenas, las ocho se sumaban cerca del centro y dibujaban una <b>segunda estrella</b> dentro de la rosa que le quitaba el protagonismo al corazón y a las puntas. Al cerrarse, una sola onda circular atraviesa el astrolabio del fondo.</li>
+        </ul>
+
+        <h3>La estrella es cardinal de verdad</h3>
+        <ul>
+          <li>Las cuatro puntas principales caen exactamente en <b>N, E, S y O</b>; son más largas y anchas. Las diagonales también ganan longitud y base para no leerse como agujas pequeñas.</li>
+          <li>La firma de la semilla cambia el origen, el fraseo de las luces y el azimut del instrumento, <b>nunca la rotación</b> de la estrella. El mismo Futuro dibuja siempre la misma constelación.</li>
+        </ul>
+
+        <h3>Si se lleva al juego</h3>
+        <ul>
+          <li>Es una escena y un plano, así que entra por <code>renderSharedVfxFrame</code> sin abrir otro contexto WebGL, igual que Burn y el vórtice. Aquí uso WebGL crudo sólo porque esta carpeta no carga Three.js.</li>
+          <li>La constelación queda <b>debajo</b> del resultado. El título de victoria entra en Cinzel desde el centro y la identidad completa del Futuro permanece legible en una placa independiente.</li>
+          <li>Falta audio: con lo que ya existe, <code>buff</code> subiendo de tono con cada nodo que se fija.</li>
+        </ul>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        "use strict";
+
+        var canvas = document.getElementById("gl");
+        var stage = document.getElementById("stage");
+        var verdict = document.getElementById("verdict");
+        var clock = document.getElementById("clock");
+        var fill = document.getElementById("fill");
+        var seedInput = document.getElementById("seed");
+        var verdictFuture = document.getElementById("verdictFuture");
+        var instrumentTime = document.getElementById("instrumentTime");
+        var instrumentAzimuth = document.getElementById("instrumentAzimuth");
+        var instrumentFuture = document.getElementById("instrumentFuture");
+
+        var gl = canvas.getContext("webgl", { alpha: true, premultipliedAlpha: true, antialias: true });
+        if (!gl) { stage.classList.add("no-webgl"); return; }
+
+        // 8 puntas + 8 valles del contorno, más el centro.
+        var TIPS = 8;
+        var NODES = 17;
+        var EDGES = 16;
+        var TOTAL_MS = 4400;
+
+        // Mismas funciones que src/utils/futureIdentity.ts, para que la semilla case con el juego.
+        function hashSeed(seed) {
+          var h = 2166136261;
+          for (var i = 0; i < seed.length; i++) {
+            h ^= seed.charCodeAt(i);
+            h = Math.imul(h, 16777619);
+          }
+          return (h >>> 0) || 1;
+        }
+        function futureVisualSignature(seed) { return hashSeed(seed + ":destiny-vortex") / 4294967296; }
+        function futureCode(seed) {
+          var v = (hashSeed(seed) % 999999) + 1;
+          var d = String(v).padStart(6, "0");
+          return d.slice(0, 3) + "·" + d.slice(3);
+        }
+
+        var VERT = "attribute vec2 aPos; void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }";
+
+        var FRAG = [
+          "precision highp float;",
+          "#define NODES " + NODES,
+          "#define EDGES " + EDGES,
+          "uniform vec2 uRes; uniform float uPR; uniform float uTime; uniform float uT;",
+          "uniform vec2 uCenter; uniform float uUnit; uniform float uBloom; uniform float uSeed;",
+          // xy = posición px, z = instante en que queda fijo, w = semilla propia
+          "uniform vec4 uNode[NODES];",
+          // xy/zw = extremos px
+          "uniform vec4 uEdge[EDGES];",
+          "uniform float uEdgeT[EDGES];",
+
+          "float h11(float n){ return fract(sin(n*78.233)*43758.5453123); }",
+          "float h13(vec3 p){ p = fract(p*0.3183099 + vec3(0.71,0.113,0.419)); p *= 17.0;",
+          "  return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }",
+          "float vn(vec3 x){ vec3 i=floor(x); vec3 f=fract(x); f=f*f*(3.0-2.0*f);",
+          "  return mix(mix(mix(h13(i),h13(i+vec3(1,0,0)),f.x),mix(h13(i+vec3(0,1,0)),h13(i+vec3(1,1,0)),f.x),f.y),",
+          "             mix(mix(h13(i+vec3(0,0,1)),h13(i+vec3(1,0,1)),f.x),mix(h13(i+vec3(0,1,1)),h13(i+vec3(1,1,1)),f.x),f.y),f.z); }",
+          "float fbm(vec3 p){ float s=0.0,a=0.55; for(int i=0;i<3;i++){ s+=a*vn(p); p*=2.13; a*=0.5; } return s; }",
+          "float segSD(vec2 p, vec2 a, vec2 b){ vec2 pa=p-a, ba=b-a;",
+          "  float h=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0); return length(pa-ba*h); }",
+          "void add(inout vec3 col, inout float al, vec3 c, float amt){",
+          "  if(amt<=0.0015) return; col += c*amt; al = al + (1.0-al)*clamp(amt,0.0,1.0); }",
+
+          "const vec3 COLD = vec3(0.42,0.86,0.82);",
+          "const vec3 WARM = vec3(1.0,0.82,0.42);",
+          "const vec3 CORE = vec3(1.0,0.97,0.88);",
+
+          "void main(){",
+          "  vec2 p = vec2(gl_FragCoord.x/uPR, uRes.y - gl_FragCoord.y/uPR);",
+          "  vec3 col = vec3(0.0); float al = 0.0;",
+
+          // 1. la luz del tablero empieza a subir
+          "  float lift = smoothstep(0.0,0.5,uT);",
+          "  float veil = fbm(vec3(p.x*0.004, p.y*0.003 - uTime*0.14, 4.0 + uSeed*3.0));",
+          "  add(col, al, COLD, smoothstep(0.45,0.85,veil) * lift * (1.0 - p.y/uRes.y) * 0.16);",
+
+          // 2. motas que entran desde puntos deterministas fuera de los cuatro bordes
+          "  for (int i = 0; i < NODES; i++) {",
+          "    vec4 nd = uNode[i];",
+          "    float role = 0.0;",
+          "    if (i == 16) role = 2.0;",
+          "    else if (mod(float(i), 2.0) < 0.5) role = 1.0;",
+          "    if (role < 0.5) continue;",
+          "    float lock = nd.z;",
+          "    for (int j = 0; j < 5; j++) {",
+          "      float sd = nd.w + float(j)*13.7;",
+          "      float born = max(0.0, lock - 0.34 - h11(sd)*0.18);",
+          "      float k = (uT - born) / max(lock - born, 0.001);",
+          "      if (k <= 0.0 || k >= 1.08) continue;",
+          "      float e = clamp(k,0.0,1.0);",
+          "      float ease = e*e*(3.0-2.0*e);",
+          "      float sidePick = floor(h11(sd*2.1)*4.0);",
+          "      float lane = 0.025 + h11(sd*4.7)*0.95;",
+          "      float outside = uUnit*(0.65 + h11(sd*5.3)*0.65);",
+          "      vec2 from = vec2(-outside, lane*uRes.y);",
+          "      if (sidePick >= 1.0 && sidePick < 2.0) from = vec2(uRes.x + outside, lane*uRes.y);",
+          "      else if (sidePick >= 2.0 && sidePick < 3.0) from = vec2(lane*uRes.x, -outside);",
+          "      else if (sidePick >= 3.0) from = vec2(lane*uRes.x, uRes.y + outside);",
+          "      vec2 travel = nd.xy - from;",
+          "      vec2 bend = normalize(vec2(-travel.y, travel.x) + vec2(1e-5));",
+          "      vec2 ctrl = mix(from, nd.xy, 0.5) + bend*(h11(sd*3.3)-0.5)*uUnit*2.8;",
+          "      float iv = 1.0-ease;",
+          "      vec2 pos = iv*iv*from + 2.0*iv*ease*ctrl + ease*ease*nd.xy;",
+          "      vec2 delta = p - pos;",
+          "      float sz = uUnit*(0.055 + h11(sd*5.9)*0.05)*(1.0-0.35*ease);",
+          "      vec2 dir = normalize(nd.xy - from + vec2(1e-5));",
+          "      vec2 nm = vec2(-dir.y, dir.x);",
+          "      float along = dot(delta,dir);",
+          "      float ahead = max(along,0.0)/(sz*0.92);",
+          "      float behind = max(-along,0.0)/(sz*(2.8 + 5.2*(1.0-ease)));",
+          "      float across = abs(dot(delta,nm))/(sz*0.96);",
+          "      float field = sqrt((ahead+behind)*(ahead+behind) + across*across);",
+          "      float glow = exp(-field*2.35) + exp(-field*0.92)*0.20;",
+          "      float amt = glow * smoothstep(0.0,0.12,e) * (1.0-smoothstep(0.94,1.06,k));",
+          "      add(col, al, mix(COLD, WARM, ease*ease), amt*1.35);",
+          "    }",
+          "  }",
+
+          // 3. grabados interiores, sin area: las cuñas se ensanchaban hacia el centro y sus ocho
+          //    areas se sumaban ahi, dibujando otra estrella dentro de la rosa
+          "  for (int i = 0; i < NODES; i++) {",
+          "    if (i == 16 || mod(float(i), 2.0) > 0.5) continue;",
+          "    vec4 nd = uNode[i];",
+          "    if (uT < nd.z) continue;",
+          "    vec2 axis = nd.xy - uCenter;",
+          "    vec2 innerA = uCenter + axis*0.24;",
+          "    vec2 innerB = uCenter + axis*0.68;",
+          "    float creaseD = segSD(p, innerA, innerB);",
+          "    float crease = smoothstep(0.90, 0.18, creaseD);",
+          "    float reveal = smoothstep(nd.z, nd.z + 0.13, uT);",
+          "    add(col, al, mix(COLD, WARM, 0.38), crease*reveal*0.14);",
+          "  }",
+
+          // 4. contorno tenue, sin halo; la luz pertenece a las puntas y al centro
+          "  for (int e = 0; e < EDGES; e++) {",
+          "    float t0 = uEdgeT[e];",
+          "    if (uT < t0) continue;",
+          "    vec4 seg = uEdge[e];",
+          "    float draw = clamp((uT - t0)/0.14, 0.0, 1.0);",
+          "    vec2 b = mix(seg.xy, seg.zw, draw);",
+          "    float d = segSD(p, seg.xy, b);",
+          "    float ink = smoothstep(uUnit*0.03, uUnit*0.007, d);",
+          "    float settle = 0.26 + 0.14*(1.0-exp(-(uT-t0)*12.0));",
+          "    add(col, al, mix(COLD, WARM, 0.58), ink*settle);",
+          "  }",
+
+          // 5. solo las ocho puntas y el centro conservan brillo
+          "  for (int i = 0; i < NODES; i++) {",
+          "    vec4 nd = uNode[i];",
+          "    if (uT < nd.z) continue;",
+          "    bool centerNode = i == 16;",
+          "    bool tipNode = !centerNode && mod(float(i), 2.0) < 0.5;",
+          "    float age = uT - nd.z;",
+          "    float d = length(p - nd.xy);",
+          "    float pop = exp(-age*11.0);",
+          "    float breathe = 0.86 + 0.14*sin(uTime*2.1 + nd.w*6.0);",
+          "    if (centerNode) {",
+          "      add(col, al, CORE, exp(-d/(uUnit*0.10))*(1.15 + 2.7*pop)*breathe);",
+          "      add(col, al, WARM, exp(-d/(uUnit*0.38))*(0.30 + 1.2*pop));",
+          "      vec2 r = p - nd.xy;",
+          "      float star = exp(-abs(r.x)/(uUnit*0.78))*exp(-abs(r.y)/(uUnit*0.034))",
+          "                 + exp(-abs(r.y)/(uUnit*0.78))*exp(-abs(r.x)/(uUnit*0.034));",
+          "      add(col, al, CORE, star*(0.28 + pop*0.85));",
+          "    } else if (tipNode) {",
+          "      float cardinal = 1.0-step(0.5, mod(float(i), 4.0));",
+          "      float coreSize = mix(0.065, 0.082, cardinal);",
+          "      add(col, al, CORE, exp(-d/(uUnit*coreSize))*(0.78 + 2.4*pop)*breathe);",
+          "      add(col, al, WARM, exp(-d/(uUnit*mix(0.19,0.24,cardinal)))*(0.18 + 0.92*pop));",
+          "      vec2 radial = normalize(nd.xy-uCenter);",
+          "      vec2 tangent = vec2(-radial.y,radial.x);",
+          "      vec2 r = p-nd.xy;",
+          "      float flare = exp(-abs(dot(r,radial))/(uUnit*mix(0.40,0.54,cardinal)))",
+          "                  * exp(-abs(dot(r,tangent))/(uUnit*mix(0.036,0.048,cardinal)));",
+          "      float cross = exp(-abs(dot(r,tangent))/(uUnit*mix(0.20,0.26,cardinal)))",
+          "                  * exp(-abs(dot(r,radial))/(uUnit*0.025));",
+          "      add(col, al, CORE, (flare*0.46 + cross*0.24)*(0.74 + pop*0.8 + uBloom*0.18));",
+          "    } else {",
+          "      add(col, al, CORE, exp(-d/(uUnit*0.047))*(0.32 + 0.72*pop)*breathe);",
+          "      add(col, al, WARM, exp(-d/(uUnit*0.13))*(0.065 + 0.26*pop));",
+          "    }",
+          "  }",
+
+          // 6. el corazon detona una unica onda circular que cruza el plano temporal
+          "  if (uBloom > 0.0) {",
+          "    float b = uBloom;",
+          "    float r = length(p - uCenter)/uUnit;",
+          "    float crown = exp(-pow((b-0.16)*4.2,2.0));",
+          "    add(col, al, CORE, exp(-r*r*0.42)*crown*0.92);",
+          "    add(col, al, WARM, exp(-r*1.7)*crown*0.65);",
+          "    float wave = 0.35 + 8.2*pow(b,0.58);",
+          "    float waveLife = smoothstep(0.0,0.045,b)*(1.0-smoothstep(0.48,0.88,b));",
+          "    float ringD = abs(r-wave);",
+          "    add(col, al, WARM, exp(-ringD*2.8)*waveLife*0.52);",
+          "    add(col, al, CORE, exp(-ringD*10.0)*waveLife*0.66);",
+          "  }",
+
+          "  gl_FragColor = vec4(col, clamp(al,0.0,1.0));",
+          "}"
+        ].join("\n");
+
+        function compile(type, src) {
+          var sh = gl.createShader(type);
+          gl.shaderSource(sh, src);
+          gl.compileShader(sh);
+          if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) { console.error(gl.getShaderInfoLog(sh)); return null; }
+          return sh;
+        }
+        var vs = compile(gl.VERTEX_SHADER, VERT);
+        var fs = compile(gl.FRAGMENT_SHADER, FRAG);
+        if (!vs || !fs) { stage.classList.add("no-webgl"); return; }
+        var prog = gl.createProgram();
+        gl.attachShader(prog, vs);
+        gl.attachShader(prog, fs);
+        gl.bindAttribLocation(prog, 0, "aPos");
+        gl.linkProgram(prog);
+        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { console.error(gl.getProgramInfoLog(prog)); stage.classList.add("no-webgl"); return; }
+
+        var quad = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+        gl.disable(gl.DEPTH_TEST);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+        var U = {};
+        ["uRes","uPR","uTime","uT","uCenter","uUnit","uBloom","uSeed","uNode","uEdge","uEdgeT"].forEach(function (n) {
+          U[n] = gl.getUniformLocation(prog, n);
+        });
+
+        var nodeBuf = new Float32Array(NODES * 4);
+        var edgeBuf = new Float32Array(EDGES * 4);
+        var edgeTBuf = new Float32Array(EDGES);
+        var W = 1, H = 1, unit = 1, PR = 1, signature = 0.3187;
+
+        function layout() {
+          var rect = stage.getBoundingClientRect();
+          PR = Math.min(window.devicePixelRatio || 1, 1.3);
+          W = Math.max(1, Math.round(rect.width));
+          H = Math.max(1, Math.round(rect.height));
+          canvas.width = Math.round(W * PR);
+          canvas.height = Math.round(H * PR);
+          unit = Math.min(W, H) * 0.16;
+          gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+
+        /* Rosa cardinal. El contorno alterna punta y valle; las puntas pares caen en N, E, S y O.
+           La orientación es fija a propósito: la semilla cambia color, motas y fraseo, nunca el giro,
+           porque una estrella cardinal girada deja de apuntar a ninguna parte. */
+        function buildConstellation() {
+          var cx = W * 0.5, cy = H * 0.44;
+          var tipLong = unit * 2.24;
+          var tipShort = unit * 1.74;
+          var valley = unit * 0.94;
+          var pts = [];
+
+          for (var k = 0; k < TIPS; k++) {
+            var tipAngle = (k * 360) / TIPS - 90;
+            var tipR = k % 2 === 0 ? tipLong : tipShort;
+            var valAngle = tipAngle + 360 / (TIPS * 2);
+            pts.push(polar(cx, cy, tipAngle, tipR));
+            pts.push(polar(cx, cy, valAngle, valley));
+          }
+          pts.push([cx, cy]); // el centro, nodo 16
+
+          // El centro se fija primero: es el origen de la luz. Después se traza el contorno.
+          nodeBuf[16 * 4] = cx; nodeBuf[16 * 4 + 1] = cy;
+          nodeBuf[16 * 4 + 2] = 0.12; nodeBuf[16 * 4 + 3] = signature * 10;
+          for (var i = 0; i < 16; i++) {
+            nodeBuf[i * 4] = pts[i][0];
+            nodeBuf[i * 4 + 1] = pts[i][1];
+            nodeBuf[i * 4 + 2] = 0.20 + (i / 16) * 0.50;
+            nodeBuf[i * 4 + 3] = signature * 10 + i * 3.7;
+          }
+
+          var e = 0;
+          for (var j = 0; j < 16; j++) {
+            var a = pts[j], b = pts[(j + 1) % 16];
+            edgeBuf[e * 4] = a[0]; edgeBuf[e * 4 + 1] = a[1];
+            edgeBuf[e * 4 + 2] = b[0]; edgeBuf[e * 4 + 3] = b[1];
+            // El hilo espera a que estén fijos SUS DOS extremos. Tomar sólo el destino hacía que el
+            // hilo de cierre (15 → 0) apareciera al principio, cuando su origen aún no existía.
+            edgeTBuf[e] = Math.max(nodeBuf[j * 4 + 2], nodeBuf[((j + 1) % 16) * 4 + 2]);
+            e++;
+          }
+        }
+
+        function polar(cx, cy, degrees, radius) {
+          var a = (degrees * Math.PI) / 180;
+          return [cx + Math.cos(a) * radius, cy + Math.sin(a) * radius];
+        }
+
+        var start = 0, raf = 0;
+
+        function play() {
+          cancelAnimationFrame(raf);
+          var seed = seedInput.value || "748-203";
+          signature = futureVisualSignature(seed);
+          var code = futureCode(seed);
+          layout();
+          buildConstellation();
+          verdict.className = "verdict";
+          verdictFuture.textContent = code;
+          instrumentAzimuth.textContent = "Ω " + String(Math.round(signature * 359)).padStart(3, "0") + "°";
+          instrumentFuture.textContent = "FUTURO " + code;
+          start = performance.now();
+          raf = requestAnimationFrame(frame);
+        }
+
+        function frame(now) {
+          var elapsed = now - start;
+          var t = Math.min(elapsed / TOTAL_MS, 1);
+
+          gl.clearColor(0, 0, 0, 0);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+          gl.useProgram(prog);
+          gl.uniform2f(U.uRes, W, H);
+          gl.uniform1f(U.uPR, PR);
+          gl.uniform1f(U.uTime, now / 1000);
+          gl.uniform1f(U.uT, t);
+          gl.uniform2f(U.uCenter, W * 0.5, H * 0.44);
+          gl.uniform1f(U.uUnit, unit);
+          gl.uniform1f(U.uSeed, signature);
+          gl.uniform1f(U.uBloom, Math.min(1, Math.max(0, (t - 0.78) / 0.22)));
+          gl.uniform4fv(U.uNode, nodeBuf);
+          gl.uniform4fv(U.uEdge, edgeBuf);
+          gl.uniform1fv(U.uEdgeT, edgeTBuf);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+          if (t >= 0.80 && !verdict.classList.contains("on")) verdict.classList.add("on");
+          clock.textContent = (elapsed / 1000).toFixed(2) + " s";
+          instrumentTime.textContent = "T+" + (elapsed / 1000).toFixed(2) + " s";
+          fill.style.width = (t * 100).toFixed(1) + "%";
+
+          // La figura se queda encendida: no se desvanece al terminar.
+          raf = requestAnimationFrame(frame);
+        }
+
+        document.getElementById("replay").addEventListener("click", play);
+        seedInput.addEventListener("change", play);
+        window.addEventListener("resize", function () { layout(); buildConstellation(); });
+        play();
+      })();
+    </script>
+  </body>
+</html>

@@ -172,6 +172,87 @@
     overflow: hidden;
   }
 
+  /* Va en z-index -2 para quedar por debajo de la capa de ambiente de la pantalla: ese
+     degradado mantiene legible el texto sobre el fondo y debe seguir encima. */
+  .temporal-backdrop {
+    pointer-events: none;
+    position: absolute;
+    z-index: -2;
+    inset: 0;
+  }
+
+  .temporal-backdrop-sky,
+  .temporal-backdrop-grid {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Celdas grandes, rectangulares y casi al límite de lo perceptible: apretarlas o
+     subirles el contraste las convierte en papel milimetrado. */
+  .temporal-backdrop-grid .cell {
+    fill: none;
+    stroke: rgb(150 198 190 / 0.055);
+    stroke-width: 1;
+  }
+
+  .temporal-backdrop-grid .frame {
+    fill: none;
+    stroke: rgb(199 170 105 / 0.2);
+    stroke-width: 1.1;
+  }
+
+  .temporal-backdrop-grid .edge-tick {
+    stroke: rgb(180 205 198 / 0.26);
+    stroke-width: 0.9;
+  }
+
+  .temporal-backdrop-grid .glass-lip {
+    fill: none;
+    stroke: rgb(226 240 246 / 0.11);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* Los grados, en el oro del HUD para que pertenezcan al mismo aparato. */
+  .temporal-backdrop-grid .dial-ring,
+  .temporal-backdrop-grid .dial-arc {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+    stroke-width: 1;
+  }
+
+  /* El disco entra encendiéndose cuando el signo del Futuro termina su vuelta al aro, no
+     con el resto del tablero. La transición es sólo de opacidad: animar el grupo entero
+     movería los grados y el aparato dejaría de leerse como un instrumento fijo. */
+  .temporal-backdrop-grid .dial {
+    opacity: 1;
+    transition: opacity 620ms ease-out;
+  }
+
+  .temporal-backdrop-grid .dial.is-dial-hidden {
+    opacity: 0;
+    transition: none;
+  }
+
+  .temporal-backdrop-grid .dial-ring { stroke: rgb(199 170 105 / 0.16); }
+  .temporal-backdrop-grid .dial-arc { stroke: rgb(199 170 105 / 0.12); }
+
+  .temporal-backdrop-grid .dial-tick {
+    fill: none;
+    stroke: rgb(214 192 122 / 0.24);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .temporal-backdrop-grid .dial-label {
+    fill: rgb(210 188 125 / 0.3);
+    font: 500 9px/1 Consolas, "Courier New", monospace;
+    letter-spacing: 0.12em;
+  }
+
   .menu-fireflies {
     pointer-events: none;
     position: absolute;
@@ -2222,20 +2303,81 @@
     55%, 100% { opacity: 0; transform: rotate(var(--encounter-cut-angle)) scaleX(1.18); }
   }
 
-  .game-screen.is-encounter-entering {
+  .game-screen.is-encounter-entering:not(.is-overture) {
     animation: encounter-board-background 1100ms ease-out both;
   }
 
-  .game-screen.is-encounter-entering .game-battlefield-stage {
+  /* ── Obertura del tablero ─────────────────────────────────────────────────────────
+     El corte y la apertura del encuentro no se tocan. Lo que cambia es lo que hay
+     DEBAJO cuando se abren: el Campo llega desnudo para que el signo del Futuro tenga
+     escenario propio; al recibir el instrumento, el HUD entra mientras el signo se apaga.
+     La maqueta de decisión es `dev/mockups/vfx/board-overture.html`. */
+
+  .chronicle-sigil-overture {
+    pointer-events: none;
+    /* Sobre el Campo y el HUD, pero bajo la Mano inicial (420) y las cortinas (1000).
+       Así el último rastro acompaña el relevo sin pintar encima de las cartas. */
+    position: fixed;
+    z-index: 410;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 120ms linear;
+  }
+
+  /* Se ocultan sin animación: la entrada tiene su propio beat al terminar la obertura. */
+  .game-screen.is-overture .game-command-bar,
+  .game-screen.is-overture .game-hud-host,
+  .game-screen.is-overture .game-hud-player,
+  .game-screen.is-overture .hand-atmosphere-shell,
+  .game-screen.is-overture .player-hand-region,
+  body.board-overture-active .game-hud-energy {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* La entrada legacy queda completamente fuera de esta ejecución. No sólo el HUD: animar
+     otra vez el escenario debajo de las cortinas se leía como una apertura vieja seguida
+     por la nueva. */
+  .game-screen.is-overture.is-encounter-entering,
+  .game-screen.is-overture.is-encounter-entering .game-battlefield-stage,
+  .game-screen.is-overture.is-encounter-entering .game-command-bar,
+  .game-screen.is-overture.is-encounter-entering .hand-atmosphere,
+  .game-screen.is-overture.is-encounter-entering .player-hand-region {
+    animation: none;
+  }
+
+  .game-screen.is-overture-settling .game-command-bar,
+  .game-screen.is-overture-settling .game-hud-host {
+    animation: encounter-board-ui-top 620ms ease-out both;
+  }
+
+  .game-screen.is-overture-settling .game-hud-player {
+    animation: encounter-board-ui-top 620ms 120ms ease-out both;
+  }
+
+  .game-screen.is-overture-settling .hand-atmosphere-shell,
+  .game-screen.is-overture-settling .player-hand-region {
+    animation: encounter-board-ui-bottom 680ms 200ms cubic-bezier(0.2, 0.82, 0.2, 1) both;
+  }
+
+  /* Energía vive en un portal; entra con el HUD, no con el Campo. */
+  body.board-overture-settling .game-hud-energy {
+    animation: encounter-board-ui-bottom 680ms 220ms cubic-bezier(0.2, 0.82, 0.2, 1) both;
+  }
+
+  .game-screen.is-encounter-entering:not(.is-overture) .game-battlefield-stage {
     animation: encounter-board-stage 900ms 430ms cubic-bezier(0.18, 0.8, 0.25, 1) both;
   }
 
-  .game-screen.is-encounter-entering .game-command-bar {
+  .game-screen.is-encounter-entering:not(.is-overture) .game-command-bar {
     animation: encounter-board-ui-top 680ms 650ms ease-out both;
   }
 
-  .game-screen.is-encounter-entering .hand-atmosphere,
-  .game-screen.is-encounter-entering .player-hand-region {
+  .game-screen.is-encounter-entering:not(.is-overture) .hand-atmosphere,
+  .game-screen.is-encounter-entering:not(.is-overture) .player-hand-region {
     animation: encounter-board-ui-bottom 720ms 760ms cubic-bezier(0.2, 0.82, 0.2, 1) both;
   }
 
@@ -2294,9 +2436,18 @@
     .encounter-transition,
     .encounter-transition *,
     .game-screen.is-encounter-entering,
-    .game-screen.is-encounter-entering * {
+    .game-screen.is-encounter-entering *,
+    .game-screen.is-overture-settling,
+    .game-screen.is-overture-settling *,
+    body.board-overture-settling .game-hud-energy {
       animation-duration: 1ms !important;
       animation-delay: 0ms !important;
+    }
+
+    /* Sin movimiento la obertura no llega a montarse, pero si el ajuste cambia a mitad el
+       disco debe aparecer de una vez en lugar de fundirse. */
+    .temporal-backdrop-grid .dial {
+      transition-duration: 1ms !important;
     }
 
     .expedition-deck-drawer,
@@ -3944,6 +4095,100 @@
     padding: 14px 2px;
   }
 
+  .how-to-play-lessons {
+    width: min(100%, 840px);
+  }
+
+  .how-to-play-lesson {
+    display: grid;
+    width: 100%;
+    min-height: 142px;
+    grid-template-columns: 68px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 22px;
+    border: 1px solid rgb(145 154 157 / 0.24);
+    border-left-color: rgb(174 151 87 / 0.54);
+    margin-top: 20px;
+    padding: 24px 26px;
+    background:
+      linear-gradient(100deg, rgb(52 65 68 / 0.22), transparent 68%),
+      rgb(7 13 15 / 0.48);
+    color: #c7c8c1;
+    text-align: left;
+    transition: border-color 170ms ease, background-color 170ms ease, transform 170ms ease;
+  }
+
+  .how-to-play-lesson:not(:disabled):hover,
+  .how-to-play-lesson:not(:disabled):focus-visible {
+    border-color: rgb(190 171 112 / 0.62);
+    background-color: rgb(31 42 44 / 0.46);
+    outline: none;
+    transform: translateX(4px);
+  }
+
+  .how-to-play-lesson:disabled {
+    cursor: default;
+  }
+
+  .how-to-play-lesson-icon {
+    display: inline-flex;
+    width: 58px;
+    height: 58px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgb(164 145 89 / 0.38);
+    background: rgb(12 21 23 / 0.8);
+    color: #b6a46f;
+    box-shadow: inset 0 0 22px rgb(174 151 87 / 0.06);
+  }
+
+  .how-to-play-lesson-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+  }
+
+  .how-to-play-lesson-copy small {
+    color: #8f7f53;
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+  }
+
+  .how-to-play-lesson-copy strong {
+    margin-top: 7px;
+    color: #d8d0b7;
+    font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+    font-size: 23px;
+    font-weight: 650;
+    letter-spacing: 0.05em;
+  }
+
+  .how-to-play-lesson-copy > span {
+    margin-top: 8px;
+    color: #758287;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .how-to-play-lesson-status {
+    min-width: 116px;
+    border: 1px solid rgb(126 138 141 / 0.22);
+    padding: 9px 13px;
+    color: #778488;
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: 0.15em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .how-to-play-lesson-status.is-ready {
+    border-color: rgb(180 158 91 / 0.52);
+    color: #d4bf82;
+  }
+
   .main-settings-label {
     color: #c7c8c1;
     font-size: 16px;
@@ -4220,6 +4465,22 @@
     .main-settings-control,
     .main-settings-seed-control {
       justify-content: flex-start;
+    }
+
+    .how-to-play-lesson {
+      grid-template-columns: 52px minmax(0, 1fr);
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .how-to-play-lesson-icon {
+      width: 48px;
+      height: 48px;
+    }
+
+    .how-to-play-lesson-status {
+      grid-column: 2;
+      justify-self: start;
     }
   }
 
@@ -5760,7 +6021,7 @@
       filter 150ms ease;
   }
 
-  .context-menu-item:hover:not(:disabled) {
+  .context-menu-item:hover:not(:disabled):not([aria-disabled="true"]) {
     border-color: rgb(214 163 76 / 0.72);
     background:
       linear-gradient(180deg, rgb(133 68 24 / 0.78), rgb(48 25 13 / 0.92));
@@ -5768,7 +6029,8 @@
     filter: brightness(1.08);
   }
 
-  .context-menu-item:disabled {
+  .context-menu-item:disabled,
+  .context-menu-item[aria-disabled="true"] {
     cursor: not-allowed;
     color: rgb(180 155 113 / 0.5);
     filter: saturate(0.6);
@@ -6610,31 +6872,38 @@
     z-index: 98;
     display: flex;
     min-width: 11rem;
+    height: 42px;
     align-items: center;
-    gap: 0.65rem;
+    justify-content: center;
     transform: translateY(-50%);
-    border: 1px solid rgb(177 158 101 / 0.7);
-    background:
-      linear-gradient(135deg, rgb(35 48 42 / 0.98), rgb(7 14 14 / 0.99)),
-      radial-gradient(circle at 12% 0%, rgb(181 201 126 / 0.16), transparent 58%);
-    padding: 0.7rem 0.85rem;
-    color: #e5ddbd;
-    text-align: left;
-    box-shadow:
-      inset 0 0 0 1px rgb(255 241 175 / 0.18),
-      0 0 14px rgb(255 168 55 / 0.34),
-      0 14px 22px rgb(0 0 0 / 0.42);
-    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+    border: 1px solid rgb(178 158 92 / 0.58);
+    background: linear-gradient(110deg, #3a4240, #1c2828 66%, #2e3836);
+    padding: 0 0.85rem;
+    color: #e3d8b5;
+    text-align: center;
+    box-shadow: inset 0 1px 0 rgb(228 220 182 / 0.07), 0 8px 18px rgb(0 0 0 / 0.28);
     white-space: nowrap;
     transition:
+      border-color 160ms ease,
+      color 150ms ease,
       filter 160ms ease,
-      transform 160ms ease;
+      transform 150ms ease;
     animation: effect-button-pop 220ms 110ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  .effect-action-button:hover {
-    filter: brightness(1.14);
-    transform: translateY(-50%) scale(1.04);
+  .effect-action-button:hover,
+  .effect-action-button:focus-visible {
+    border-color: rgb(205 185 120 / 0.78);
+    color: #fff0ca;
+    filter: brightness(1.08);
+    outline: none;
+    transform: translateY(calc(-50% - 1px));
+  }
+
+  .effect-action-button:active {
+    filter: brightness(1.12);
+    transform: translateY(calc(-50% + 1px)) scale(0.98);
+    transition-duration: 65ms;
   }
 
   .counter-target-backdrop {
@@ -8521,6 +8790,15 @@
     transform-origin: left bottom;
   }
 
+  .guided-player-sources-anchor {
+    position: absolute;
+    left: 6px;
+    bottom: 18px;
+    width: 174px;
+    height: 85px;
+    pointer-events: none;
+  }
+
   .mana-energy-track {
     position: absolute;
     z-index: 6;
@@ -8528,6 +8806,10 @@
     display: flex;
     align-items: center;
     gap: 6px;
+  }
+
+  .guided-player-sources-anchor .mana-energy-track {
+    left: 12px;
   }
 
   .mana-energy-track::before {
@@ -8563,6 +8845,14 @@
 
   .mana-energy-track-yellow {
     bottom: 64px;
+  }
+
+  .guided-player-sources-anchor .mana-energy-track-blue {
+    bottom: 2px;
+  }
+
+  .guided-player-sources-anchor .mana-energy-track-yellow {
+    bottom: 46px;
   }
 
   .mana-reserve-tooltip-host {
@@ -10514,6 +10804,173 @@
   }
 }
 
+/* Contextual guidance shares semantic anchors with strict lessons, but never installs a shield. */
+.contextual-tutorial-layer {
+  position: fixed;
+  z-index: 19940;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: rgb(1 3 4 / 0.18);
+  color: #d7d4c3;
+  font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+}
+
+.contextual-tutorial-connector-layer {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  inset: 0;
+  overflow: visible;
+}
+
+.contextual-tutorial-connector {
+  fill: none;
+  stroke: rgb(212 188 112 / 0.84);
+  stroke-width: 2;
+  stroke-dasharray: 7 7;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px rgb(207 176 82 / 0.48));
+}
+
+.contextual-tutorial-ring {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid rgb(228 204 132 / 0.8);
+  border-radius: 8px;
+  box-shadow: 0 0 0 3px rgb(215 185 97 / 0.07), 0 0 20px rgb(208 177 85 / 0.25);
+  animation: contextual-tutorial-ring-pulse 2.4s ease-in-out infinite;
+}
+
+.contextual-tutorial-callout {
+  position: absolute;
+  width: min(410px, calc(100vw - 32px));
+  box-sizing: border-box;
+  border: 1px solid rgb(206 180 101 / 0.68);
+  border-top-color: rgb(239 216 143 / 0.82);
+  border-radius: 2px;
+  padding: 17px 19px 16px;
+  background:
+    radial-gradient(circle at 15% 0%, rgb(166 185 158 / 0.08), transparent 42%),
+    linear-gradient(145deg, rgb(24 33 35 / 0.985), rgb(7 13 16 / 0.995));
+  box-shadow:
+    inset 0 1px 0 rgb(255 239 184 / 0.1),
+    0 0 0 1px rgb(120 91 29 / 0.18),
+    0 0 22px rgb(212 169 62 / 0.2),
+    0 20px 48px rgb(0 0 0 / 0.58);
+  pointer-events: auto;
+  animation: guided-tutorial-callout-in 190ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.contextual-tutorial-mark {
+  position: absolute;
+  top: -5px;
+  left: 20px;
+  width: 9px;
+  height: 9px;
+  border: 1px solid rgb(190 172 111 / 0.6);
+  background: #111b17;
+  transform: rotate(45deg);
+}
+
+.contextual-tutorial-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.contextual-tutorial-close {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid rgb(126 141 134 / 0.34);
+  background: rgb(10 18 20 / 0.76);
+  color: #9ca9a3;
+}
+
+.contextual-tutorial-close:hover,
+.contextual-tutorial-close:focus-visible {
+  border-color: rgb(204 184 119 / 0.7);
+  color: #eadcaf;
+  outline: none;
+}
+
+.contextual-tutorial-callout h2 {
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+  color: #e0d5b5;
+  overflow: visible;
+  overflow-wrap: normal;
+  font-size: clamp(12px, 2.8vw, 21px);
+  font-weight: 600;
+  line-height: 1.18;
+  text-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.contextual-tutorial-body { display: grid; gap: 8px; padding-top: 1px; }
+.contextual-tutorial-body p { margin: 0; color: #b4bfbb; font-size: 14px; line-height: 1.48; }
+.contextual-glossary-tooltip { z-index: 19970; }
+
+.contextual-tutorial-acknowledge {
+  display: block;
+  min-width: 126px;
+  height: 37px;
+  border: 1px solid rgb(159 151 98 / 0.5);
+  margin: 14px 0 0 auto;
+  padding: 0 17px;
+  background: linear-gradient(110deg, #34413e, #172323 68%, #293532);
+  color: #dbd1ae;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.contextual-tutorial-acknowledge:hover,
+.contextual-tutorial-acknowledge:focus-visible {
+  border-color: rgb(204 184 119 / 0.72);
+  color: #fff0c5;
+  outline: none;
+  filter: brightness(1.08);
+}
+
+.contextual-help-preference {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  color: #c5c9b9;
+  cursor: pointer;
+}
+
+.contextual-help-preference input { margin-top: 3px; accent-color: #a9965f; }
+.contextual-help-preference span { display: grid; gap: 4px; }
+.contextual-help-preference strong { font-size: 12px; font-weight: 750; line-height: 1.35; }
+.contextual-help-preference small { color: #7f8c87; font-size: 11px; line-height: 1.4; }
+
+@keyframes contextual-tutorial-ring-pulse {
+  0%, 100% { opacity: 0.72; filter: brightness(0.9); }
+  50% { opacity: 1; filter: brightness(1.16); }
+}
+
+@media (max-width: 560px) {
+  .contextual-tutorial-callout { padding: 14px 15px; }
+  .contextual-tutorial-acknowledge { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contextual-tutorial-ring,
+  .contextual-tutorial-callout { animation: none; }
+}
+
 @keyframes actionable-card-glow {
   0%,
   100% {
@@ -11082,14 +11539,28 @@
   --game-ink: #07100e;
   --game-panel: rgb(8 20 17 / 0.92);
   --game-line: rgb(197 177 111 / 0.34);
+  /* El lienzo del fondo va en z-index negativo, y un hijo negativo sólo queda por
+     encima del fondo de su padre si el padre crea contexto de apilamiento. Sin esto
+     el lienzo se iría detrás de este color y no se vería nada. */
+  position: relative;
+  isolation: isolate;
   background-color: #07110f;
-  background-image:
-    radial-gradient(ellipse at 50% 44%, transparent 12%, rgb(1 5 4 / 0.32) 70%, rgb(0 2 2 / 0.72) 100%),
-    linear-gradient(180deg, rgb(1 5 4 / 0.56), rgb(3 12 10 / 0.18) 44%, rgb(0 4 4 / 0.68)),
-    url("../assets/images/background.jpg");
-  background-position: center, center, calc(50% - 3.5rem) calc(50% + 20px + 3.1rem);
-  background-repeat: no-repeat;
-  background-size: 100% 100%, 100% 100%, 140% auto;
+  background-image: none;
+}
+
+/* Los degradados van en su propia capa porque el fondo del propio elemento se pinta por
+   debajo de los hijos negativos: dentro de `background-image` quedarían tapados por el
+   lienzo, y son los que asientan la legibilidad de las cartas. Es un elemento real y no un
+   pseudo porque la captura de la derrota tiene que poder descartarlo: pertenece al fondo,
+   no al tablero, y no debe viajar dentro del vidrio que se rompe. */
+.game-screen-ambience {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 44%, transparent 18%, rgb(1 5 4 / 0.14) 70%, rgb(0 2 2 / 0.38) 100%),
+    linear-gradient(180deg, rgb(1 5 4 / 0.30), rgb(3 12 10 / 0.06) 44%, rgb(0 4 4 / 0.34));
 }
 
 .game-command-bar {
@@ -12752,10 +13223,12 @@
   width: 100%;
 }
 
+/* El tinte de cada bando arranca y termina en transparente. Empezando a valor pleno
+   en el borde del contenedor dejaba una división visible justo bajo el header. */
 .game-screen .battlefield-board-grid {
   width: 100%;
   background:
-    linear-gradient(180deg, rgb(83 33 24 / 0.055), transparent 34%, transparent 66%, rgb(31 80 83 / 0.05)),
+    linear-gradient(180deg, transparent, rgb(83 33 24 / 0.05) 16%, transparent 40%, transparent 60%, rgb(31 80 83 / 0.045) 84%, transparent),
     linear-gradient(90deg, rgb(5 10 12 / 0.2), transparent 12%, transparent 88%, rgb(5 10 12 / 0.2));
 }
 
@@ -12851,12 +13324,17 @@
     repeating-linear-gradient(45deg, rgb(183 231 216 / 0.014) 0 1px, transparent 1px 9px);
 }
 
+/* El degradado arranca donde la mano y se apaga muy arriba. Concentrado en poca
+   altura se ve como una banda negra con borde; repartido, sólo se nota que abajo
+   hay más peso. */
 .hand-atmosphere {
   background:
-    radial-gradient(ellipse 48% 100% at 50% 100%, rgb(31 112 112 / 0.24), transparent 70%),
-    linear-gradient(to top, rgb(1 9 10 / 0.94), rgb(6 30 29 / 0.5) 44%, rgb(8 43 40 / 0.12) 76%, transparent);
-  -webkit-backdrop-filter: blur(2px) saturate(1.06);
-  backdrop-filter: blur(2px) saturate(1.06);
+    radial-gradient(ellipse 48% 100% at 50% 100%, rgb(31 112 112 / 0.20), transparent 70%),
+    linear-gradient(to top, rgb(1 9 10 / 0.80), rgb(4 20 20 / 0.42) 26%, rgb(6 30 29 / 0.18) 52%, rgb(8 43 40 / 0.05) 76%, transparent);
+  /* Nada de `backdrop-filter` aquí. Se aplica uniforme dentro de la caja y se corta en
+     seco en su borde, así que por muy suave que sea el degradado siempre queda una
+     línea nítida donde el fondo pasa de enfocado a borroso. Con estrellas detrás, esa
+     división se ve; contra la foto estática de antes no se notaba. */
 }
 
 .game-dialog {
@@ -13889,6 +14367,12 @@
   line-height: 1;
   pointer-events: none;
   text-shadow: none;
+}
+
+.card-cost-badge.is-guided-emphasis {
+  z-index: 70;
+  transform-origin: center;
+  animation: guided-card-cost-focus 1.35s ease-in-out infinite;
 }
 
 .hand-card-held .card-cost-badge,
@@ -16094,68 +16578,9 @@
   transform: translate(-50%, -50%);
 }
 
-.game-screen .game-result-panel {
-  position: relative;
-  width: min(470px, calc(100vw - 32px));
-  overflow: visible;
-  border: 1px solid color-mix(in srgb, var(--result-accent) 48%, transparent) !important;
-  border-top-color: color-mix(in srgb, var(--result-accent-bright) 62%, transparent) !important;
-  border-radius: 0;
-  background:
-    radial-gradient(circle at 50% 0%, var(--result-accent-soft), transparent 42%),
-    linear-gradient(145deg, rgb(23 31 28 / 0.98), rgb(6 13 12 / 0.99)) !important;
-  box-shadow:
-    inset 0 1px 0 rgb(238 229 190 / 0.08),
-    inset 0 -18px 38px rgb(0 0 0 / 0.18),
-    0 32px 80px rgb(0 0 0 / 0.58) !important;
-  animation: game-result-panel-in 800ms 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.game-result-panel::after {
-  position: absolute;
-  right: 18px;
-  bottom: -5px;
-  left: 18px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--result-accent) 65%, transparent), transparent);
-  content: "";
-}
-
-.game-result-panel-mark {
-  position: absolute;
-  top: -7px;
-  left: 50%;
-  width: 14px;
-  height: 14px;
-  border: 1px solid color-mix(in srgb, var(--result-accent) 68%, transparent);
-  background: #111b17;
-  box-shadow: 0 0 14px var(--result-accent-soft);
-  transform: translateX(-50%) rotate(45deg);
-}
-
-.game-result-message {
-  margin: 8px 0 0;
-  color: #d9d2b9;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 15px;
-  letter-spacing: 0.08em;
-  line-height: 1.45;
-  text-transform: uppercase;
-}
-
-.game-result-seed-label {
-  color: color-mix(in srgb, var(--result-accent-bright) 70%, #88938b);
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-
-.game-result-seed .old-input {
-  border-color: color-mix(in srgb, var(--result-accent) 38%, transparent);
-  background: rgb(3 10 9 / 0.76);
-}
-
+/* El panel genérico de resultado ya no existe: los dos desenlaces imprimen su propio bloque
+   —constelación y vidrio— y de esta familia sólo sobreviven el estandarte, que reutiliza la
+   Oleada, y los botones, que comparten los dos. */
 .game-result-action {
   border: 1px solid color-mix(in srgb, var(--result-accent) 44%, transparent);
   background: linear-gradient(180deg, rgb(34 43 40 / 0.96), rgb(9 17 16 / 0.99));
@@ -16219,30 +16644,8 @@
   42%, 100% { opacity: 1; filter: blur(0); transform: translateY(0); }
 }
 
-@keyframes game-result-panel-in {
-  from { opacity: 0; filter: blur(5px); transform: translateY(22px) scale(0.98); }
-  to { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
-}
-
-.game-result-victory {
-  animation-duration: 420ms;
-}
-
-.game-result-victory .game-result-atmosphere { animation-duration: 900ms; }
-.game-result-victory .game-result-banner { animation-duration: 780ms; }
-.game-result-victory .game-result-banner::before { animation-duration: 720ms; }
-.game-result-victory .game-result-line { animation-duration: 650ms; animation-delay: 35ms; }
-.game-result-victory .game-result-crest { animation-duration: 690ms; }
-.game-result-victory .game-result-banner h1 { animation-duration: 760ms; }
-.game-screen .game-result-victory .game-result-panel {
-  animation-duration: 620ms;
-  animation-delay: 1100ms;
-}
-
-.game-screen .game-result-defeat .game-result-panel {
-  animation-duration: 460ms;
-  animation-delay: 0ms;
-}
+/* La Victoria ya no usa el estandarte ni el panel genéricos: su desenlace vive con la
+   constelación, al final de esta hoja, junto al de la derrota. */
 
 /* One-shot warning shown before the first Host turn that resolves in Surge. */
 .surge-transition {
@@ -16361,8 +16764,6 @@
     letter-spacing: 0.07em;
   }
   .game-result-banner::before { width: 72vw; height: 92px; }
-  .game-result-panel { padding: 24px 18px 20px; }
-  .game-result-actions { grid-template-columns: 1fr; }
 }
 
 /* Deck collection themes — the same accent-driven language used by result dialogs. */
@@ -17308,9 +17709,6 @@
 .opening-hand-overlay {
   padding: clamp(12px, 2.5vh, 28px) 12px;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 50% 44%, rgb(92 74 41 / 0.14), transparent 58%),
-    rgb(5 5 4 / 0.3);
   color: #eadfbf;
 }
 
@@ -17344,6 +17742,14 @@
   width: 100%;
   max-width: 215px;
   aspect-ratio: 488 / 680;
+  animation: opening-hand-card-enter 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* CSS inicia una sola vez al insertar la nueva revisión de la carta. A diferencia del
+   controlador declarativo anterior, el remontaje de efectos de StrictMode no reinicia el beat. */
+@keyframes opening-hand-card-enter {
+  from { opacity: 0; transform: translateY(26px) scale(0.92); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .opening-hand-card {
@@ -17459,6 +17865,12 @@
   .opening-hand-cards { gap: 4px; }
   .opening-hand-actions { width: 100%; gap: 8px; }
   .opening-hand-button { min-height: 48px; font-size: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .opening-hand-card-entry {
+    animation: none;
+  }
 }
 
 /* Playground — developer-only tooling. Deliberately plainer than the game UI: it must never be
@@ -17758,6 +18170,24 @@
 .playground-field select:focus { border-color: rgba(224, 190, 116, 0.72); outline: none; }
 
 .playground-button-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.playground-guidance-readout {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+}
+
+.playground-guidance-readout > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  color: #aca386;
+  font-size: 11px;
+}
+
+.playground-guidance-readout dt { color: #756e5d; }
+.playground-guidance-readout dd { margin: 0; color: #ded2ad; text-align: right; }
 
 .playground-button {
   display: inline-flex;
@@ -20409,4 +20839,2043 @@ body.playground-active .phase-banner-shell {
   .audio-lab-main { min-height: 660px; }
   .audio-lab-controls { align-items: stretch; flex-direction: column; }
   .audio-lab-search { width: 100%; }
+}
+
+/* Guided lesson layer. It sits above gameplay/tooltips; system-level crash/result surfaces may use
+   a higher explicit layer. The actual highlighted nodes never move or change stacking context. */
+.guided-tutorial-overlay {
+  position: fixed;
+  z-index: 20000;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  color: #d7d4c3;
+  font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+}
+
+.guided-tutorial-mask {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.guided-tutorial-dimmer { fill: rgb(2 4 4 / 0.42); }
+
+.guided-tutorial-overlay[data-mode="explain"],
+.guided-tutorial-overlay[data-mode="observe"] {
+  pointer-events: auto;
+}
+
+.guided-tutorial-ring {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid rgb(236 210 129 / 0.92);
+  border-radius: 9px;
+  background:
+    linear-gradient(90deg, #f1d78b, transparent) left top / 24px 2px no-repeat,
+    linear-gradient(180deg, #f1d78b, transparent) left top / 2px 24px no-repeat,
+    linear-gradient(270deg, #f1d78b, transparent) right bottom / 24px 2px no-repeat,
+    linear-gradient(0deg, #f1d78b, transparent) right bottom / 2px 24px no-repeat;
+  box-shadow:
+    0 0 0 1px rgb(12 9 4 / 0.88),
+    0 0 0 4px rgb(225 196 108 / 0.08),
+    0 0 24px rgb(225 190 91 / 0.38),
+    inset 0 0 18px rgb(225 190 91 / 0.1);
+  pointer-events: none;
+}
+
+.guided-tutorial-ring::before {
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgb(255 235 170 / 0.16);
+  border-radius: 5px;
+  content: "";
+}
+
+.guided-tutorial-ring::after {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  border: 1px solid rgb(236 210 129 / 0.76);
+  background: #111b17;
+  box-shadow: 0 0 10px rgb(225 190 91 / 0.34);
+  content: "";
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.guided-tutorial-ring[data-anchor-key^="card:"] { display: none; }
+
+.guided-tutorial-overlay[data-mode="act"] .guided-tutorial-ring {
+  transform-origin: center;
+  will-change: filter, transform;
+  animation: guided-tutorial-ready 1.9s ease-in-out infinite;
+}
+
+.guided-tutorial-ring[data-tone="gold"] {
+  transform-origin: center;
+  will-change: opacity, transform;
+  animation:
+    guided-phase-frame-arrive 920ms 140ms cubic-bezier(0.12, 0.78, 0.16, 1) both,
+    guided-tutorial-ready 1.9s 1060ms ease-in-out infinite;
+}
+
+.guided-tutorial-overlay:has(.guided-tutorial-ring[data-anchor-key="surface:player.sources"])
+  .guided-tutorial-ring[data-anchor-key="surface:player.reserve"]::after {
+  display: none;
+}
+
+.guided-tutorial-connector {
+  fill: none;
+  stroke: #e4c66e;
+  stroke-width: 3;
+  stroke-dasharray: 8 7;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 5px rgb(228 198 110 / 0.75));
+  marker-end: url("#guided-tutorial-arrowhead");
+}
+
+#guided-tutorial-arrowhead path { fill: #e4c66e; }
+
+.guided-tutorial-directional-cue {
+  position: absolute;
+  z-index: 4;
+  /* El mismo azul del borde de una carta disponible en la Mano: la guía señala
+     con el color que el jugador ya asocia a «esto se puede jugar». */
+  --tutorial-cue-deep: #0f7eb5;
+  --tutorial-cue-mid: #27cff4;
+  --tutorial-cue-hot: #43e2ff;
+  --tutorial-cue-glint: #eaf9ff;
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.86)) drop-shadow(0 0 9px rgb(72 211 244 / 0.5));
+  pointer-events: none;
+}
+
+.guided-tutorial-directional-cue[data-tone="attack"] {
+  --tutorial-cue-deep: #7a2f05;
+  --tutorial-cue-mid: #f28a35;
+  --tutorial-cue-hot: #ffc98a;
+  --tutorial-cue-glint: #fff4e4;
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.86)) drop-shadow(0 0 9px rgb(188 83 38 / 0.5));
+}
+
+.learn-to-play-journey-cue { position: fixed; z-index: 19920; }
+
+.guided-tutorial-directional-cue svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: guided-directional-rise 1.8s cubic-bezier(0.2, 0.72, 0.18, 1) infinite;
+}
+
+.tutorial-directional-stop-deep { stop-color: var(--tutorial-cue-deep); stop-opacity: 0.2; }
+.tutorial-directional-stop-mid { stop-color: var(--tutorial-cue-mid); stop-opacity: 0.92; }
+.tutorial-directional-stop-hot { stop-color: var(--tutorial-cue-hot); }
+.tutorial-directional-stop-glint { stop-color: var(--tutorial-cue-glint); }
+
+/* El destello recorre la hoja de la base a la punta, recortado por su silueta:
+   es el mismo gesto de las flechas de combate, sin repetir su material. */
+.tutorial-directional-glint {
+  animation: guided-directional-glint 2.1s linear infinite;
+}
+
+.guided-tutorial-callout {
+  position: absolute;
+  width: min(430px, calc(100vw - 32px));
+  box-sizing: border-box;
+  overflow: visible;
+  border: 1px solid rgb(210 183 102 / 0.66);
+  border-top-color: rgb(241 218 146 / 0.84);
+  border-radius: 2px;
+  outline: none;
+  padding: 24px 25px 20px;
+  background:
+    radial-gradient(circle at 18% 0%, rgb(196 189 153 / 0.075), transparent 44%),
+    linear-gradient(145deg, rgb(28 35 38 / 0.985), rgb(7 12 15 / 0.995));
+  box-shadow:
+    inset 0 1px 0 rgb(238 223 174 / 0.08),
+    inset 0 -24px 40px rgb(0 0 0 / 0.18),
+    0 0 0 1px rgb(122 91 27 / 0.18),
+    0 0 26px rgb(216 172 61 / 0.22),
+    0 26px 64px rgb(0 0 0 / 0.68);
+  pointer-events: auto;
+  animation: guided-tutorial-callout-in 190ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.guided-tutorial-callout::before {
+  position: absolute;
+  top: 0;
+  right: 1px;
+  left: 1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(231 218 170 / 0.27), transparent);
+  content: "";
+}
+
+.guided-tutorial-callout::after {
+  position: absolute;
+  right: 18px;
+  bottom: -5px;
+  left: 18px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(182 166 105 / 0.48), transparent);
+  content: "";
+}
+
+.guided-tutorial-callout-mark {
+  position: absolute;
+  top: -6px;
+  left: 22px;
+  width: 11px;
+  height: 11px;
+  border: 1px solid rgb(190 172 111 / 0.64);
+  background: #111b17;
+  box-shadow: 0 0 12px rgb(176 157 92 / 0.2);
+  transform: rotate(45deg);
+}
+
+.guided-tutorial-callout:focus-visible {
+  outline: 1px solid rgb(224 204 140 / 0.9);
+  outline-offset: 3px;
+}
+
+.guided-tutorial-step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgb(166 154 104 / 0.2);
+  padding: 0 0 10px 13px;
+  color: #7f8c87;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.guided-tutorial-step b {
+  color: #a99a6d;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.16em;
+}
+
+.guided-tutorial-callout h2 {
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+  color: #e2d7b8;
+  font-family: inherit;
+  overflow: visible;
+  overflow-wrap: normal;
+  font-size: clamp(13px, 3vw, 25px);
+  font-weight: 600;
+  letter-spacing: 0.035em;
+  line-height: 1.14;
+  text-shadow: 0 3px 13px rgb(0 0 0 / 0.66);
+  text-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.tutorial-dialog-heading,
+.contextual-tutorial-heading {
+  display: flex;
+  min-height: 29px;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 1px solid rgb(145 156 125 / 0.28);
+  gap: 16px;
+  margin-bottom: 11px;
+  padding-bottom: 12px;
+}
+
+.tutorial-dialog-close,
+.contextual-tutorial-close {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  place-items: center;
+  border: 1px solid rgb(126 141 134 / 0.34);
+  background: rgb(10 18 20 / 0.76);
+  color: #9ca9a3;
+}
+
+.tutorial-dialog-close:hover,
+.tutorial-dialog-close:focus-visible,
+.contextual-tutorial-close:hover,
+.contextual-tutorial-close:focus-visible {
+  border-color: rgb(204 184 119 / 0.7);
+  color: #eadcaf;
+  outline: none;
+}
+
+.tutorial-dialog-close:disabled { cursor: wait; opacity: 0.45; }
+
+.guided-tutorial-body {
+  display: grid;
+  gap: 10px;
+  padding-top: 1px;
+}
+
+.guided-tutorial-body p {
+  margin: 0;
+  color: #b8c0bf;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.guided-glossary-tooltip-host {
+  display: inline;
+}
+
+.guided-glossary-term {
+  display: inline;
+  appearance: none;
+  border: 0;
+  border-radius: 2px;
+  margin: 0;
+  padding: 0 1px;
+  background: transparent;
+  color: #d9bd70;
+  cursor: help;
+  font: inherit;
+  line-height: inherit;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: rgb(225 197 113 / 0.78);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 120ms ease, background-color 120ms ease, text-shadow 120ms ease;
+}
+
+.guided-glossary-term:hover,
+.guided-glossary-term:focus-visible {
+  outline: none;
+  background: rgb(211 184 103 / 0.08);
+  color: #f0d98f;
+  text-shadow: 0 0 10px rgb(225 192 91 / 0.3);
+}
+
+.guided-glossary-tooltip {
+  z-index: 20020;
+  max-width: min(19rem, calc(100vw - 24px));
+  color: #e7dfc5;
+  font-size: 0.86rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  text-align: left;
+}
+
+.guided-tutorial-feedback {
+  min-height: 18px;
+  margin-top: 8px;
+  color: #d8c27f;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.025em;
+  line-height: 1.35;
+}
+
+.guided-tutorial-continue {
+  display: block;
+  width: auto;
+  min-width: 148px;
+  height: 42px;
+  border: 1px solid rgb(178 158 92 / 0.58);
+  margin: 7px 0 0 auto;
+  background: linear-gradient(110deg, #3a4240, #1c2828 66%, #2e3836);
+  color: #e3d8b5;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  padding: 0 22px;
+  text-transform: uppercase;
+  box-shadow: inset 0 1px 0 rgb(228 220 182 / 0.07), 0 8px 18px rgb(0 0 0 / 0.28);
+  transition: border-color 150ms ease, color 150ms ease, filter 150ms ease, transform 150ms ease;
+}
+
+.guided-tutorial-continue:hover:not(:disabled),
+.guided-tutorial-continue:focus-visible {
+  border-color: rgb(205 185 120 / 0.78);
+  color: #fff0ca;
+  filter: brightness(1.08);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.guided-tutorial-continue:disabled { cursor: wait; opacity: 0.48; }
+
+.guided-card-comparison {
+  position: absolute;
+  top: 56%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 2.2vw, 30px);
+  max-width: calc(100vw - 48px);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.guided-card-comparison-item {
+  width: clamp(260px, 26vw, 390px);
+  margin: 0;
+  color: #ddd2b5;
+  text-align: center;
+}
+
+.guided-card-comparison-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 488 / 680;
+  container-type: inline-size;
+  filter: drop-shadow(0 24px 26px rgb(0 0 0 / 0.72));
+}
+
+.guided-card-comparison-frame > .card-cost-badge {
+  transform-origin: center;
+  animation: guided-card-cost-focus 1.8s ease-in-out infinite;
+}
+
+.guided-card-comparison.is-combatStats .guided-card-comparison-frame > .card-stat-badge {
+  outline: 1px solid rgb(223 205 147 / 0.28);
+  outline-offset: 1cqw;
+  transform: scale(1.2);
+  transform-origin: center;
+  animation: guided-card-stats-focus 1.85s ease-in-out infinite;
+}
+
+.guided-card-comparison.is-combatStats .card-stat-attack {
+  border-radius: 2cqw 0 0 2cqw;
+  background: linear-gradient(90deg, rgb(185 75 43 / 0.32), transparent 92%);
+  color: #efaa78;
+  text-shadow: 0 0 2.4cqw rgb(208 95 45 / 0.72), 0 1px 3px #000;
+}
+
+.guided-card-comparison.is-combatStats .card-stat-life {
+  border-radius: 0 2cqw 2cqw 0;
+  background: linear-gradient(270deg, rgb(34 132 91 / 0.32), transparent 92%);
+  color: #91d9b6;
+  text-shadow: 0 0 2.4cqw rgb(47 155 117 / 0.72), 0 1px 3px #000;
+}
+
+/*
+ * Cartelas de Fuerza y Aguante. Son el cuadro de diálogo del tutorial en chico:
+ * mismo borde con la tapa clara arriba, mismos dos filetes horizontales y el mismo
+ * rombo girado de .guided-tutorial-callout-mark. El término ocupa el sitio del título
+ * y la cifra el del contador de paso.
+ *
+ * Se colocan en escalón alrededor del marcador —Fuerza arriba a la izquierda, Aguante
+ * abajo a la derecha— repitiendo el orden de las dos cifras dentro del marcador. Las
+ * dos quedan dentro de la silueta de la carta: la comparación muestra dos cartas
+ * juntas y salirse invadiría a la vecina.
+ *
+ * Las medidas son las del marcador ya escalado a 1.2: su canto izquierdo cae en
+ * 78.9cqw, el derecho en 98.3cqw, y su alto visible ocupa de 71.3cqw a 82.5cqw
+ * medidos desde el borde superior de la carta.
+ */
+.guided-stat-label {
+  position: absolute;
+  z-index: 45;
+  /* El hueco que queda a la izquierda del marcador: la cartela no puede salirse de
+     la carta porque la comparación muestra dos cartas juntas. */
+  max-width: 62cqw;
+  overflow: visible;
+  border: 1px solid rgb(160 148 102 / 0.46);
+  border-top-color: rgb(218 201 142 / 0.68);
+  border-radius: 2px;
+  padding: clamp(8px, 2.4cqw, 11px) clamp(11px, 3.2cqw, 14px) clamp(9px, 2.6cqw, 12px);
+  background:
+    radial-gradient(circle at 18% 0%, rgb(196 189 153 / 0.075), transparent 44%),
+    linear-gradient(145deg, rgb(28 35 38 / 0.985), rgb(7 12 15 / 0.995));
+  box-shadow:
+    inset 0 1px 0 rgb(238 223 174 / 0.08),
+    inset 0 -6cqw 10cqw rgb(0 0 0 / 0.18),
+    0 5cqw 12cqw rgb(0 0 0 / 0.62);
+  font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+  text-align: left;
+}
+
+.guided-stat-label::before {
+  position: absolute;
+  top: 0;
+  right: 1px;
+  left: 1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(231 218 170 / 0.27), transparent);
+  content: "";
+}
+
+.guided-stat-label::after {
+  position: absolute;
+  right: 3.2cqw;
+  bottom: -3px;
+  left: 3.2cqw;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(182 166 105 / 0.48), transparent);
+  content: "";
+}
+
+.guided-stat-label-mark {
+  position: absolute;
+  z-index: 2;
+  width: clamp(8px, 2.8cqw, 12px);
+  height: clamp(8px, 2.8cqw, 12px);
+  border: 1px solid rgb(190 172 111 / 0.64);
+  background: #111b17;
+  box-shadow: 0 0 12px rgb(176 157 92 / 0.2);
+  transform: rotate(45deg);
+}
+
+.guided-stat-label.is-power .guided-stat-label-mark { right: 4.6cqw; bottom: calc(clamp(8px, 2.8cqw, 12px) / -2 - 1px); }
+.guided-stat-label.is-endurance .guided-stat-label-mark { top: calc(clamp(8px, 2.8cqw, 12px) / -2 - 1px); right: 4.6cqw; }
+
+.guided-stat-label-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgb(166 154 104 / 0.2);
+  padding-bottom: 7px;
+}
+
+.guided-stat-label-term {
+  color: #e2d7b8;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-shadow: 0 3px 13px rgb(0 0 0 / 0.66);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.guided-stat-label-value {
+  color: #a99a6d;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+/* Mismo cuerpo que .guided-tutorial-body p: la cartela se lee como el cuadro grande. */
+.guided-stat-label-body {
+  margin: 7px 0 0;
+  color: #b8c0bf;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/*
+ * Escalón alrededor del marcador. Con la carta en su mínimo real de 260 px el cuerpo
+ * de 16 px parte en tres líneas, así que Aguante arranca en 92cqw: por debajo de esa
+ * marca la cartela se saldría por el pie de la carta.
+ */
+.guided-stat-label.is-power { right: 33.1cqw; bottom: 82cqw; }
+.guided-stat-label.is-endurance { top: 92cqw; right: 2cqw; }
+
+/* Las guías nacen del canto de la cartela y mueren sobre la mitad que nombra. */
+.guided-card-comparison-leaders {
+  position: absolute;
+  z-index: 44;
+  inset: 0;
+  overflow: visible;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.guided-card-comparison-leader {
+  fill: none;
+  stroke: rgb(216 192 133 / 0.9);
+  stroke-linecap: round;
+  stroke-width: 0.5cqw;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.9));
+}
+
+.guided-card-comparison-leader-dot {
+  fill: rgb(216 192 133 / 0.95);
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.9));
+}
+
+.guided-card-comparison-frame > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 4.918% / 3.529%;
+  object-fit: cover;
+}
+
+.guided-card-comparison-fallback {
+  display: grid;
+  height: 100%;
+  place-items: center;
+  border: 1px solid rgb(194 175 113 / 0.55);
+  border-radius: 8px;
+  background: #10191b;
+  padding: 20px;
+}
+
+.guided-card-comparison-cost-accessible {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.guided-tutorial-overlay.has-card-comparison .guided-tutorial-callout {
+  top: 20px !important;
+  right: auto;
+  left: 50% !important;
+  width: min(580px, calc(100vw - 48px));
+  animation: none;
+  transform: translateX(-50%);
+}
+
+@keyframes guided-card-cost-focus {
+  0%, 100% {
+    filter: brightness(1.02) drop-shadow(0 0 5px rgb(104 210 250 / 0.46));
+    transform: scale(0.96);
+  }
+  50% {
+    filter:
+      brightness(1.3)
+      drop-shadow(0 0 7px rgb(224 249 255 / 0.86))
+      drop-shadow(0 0 18px rgb(71 190 240 / 0.82));
+    transform: scale(1.12);
+  }
+}
+
+body:has(.guided-tutorial-overlay) .game-tooltip:not(.guided-glossary-tooltip),
+body:has(.guided-tutorial-overlay) .game-tooltip-portal:not(.guided-glossary-tooltip),
+body:has(.guided-tutorial-overlay) .card-preview-dismiss-layer {
+  display: none !important;
+}
+
+body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) .card-preview-cropped-frame,
+body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data-card-preview-locked="true"] {
+  display: none !important;
+}
+
+@keyframes guided-tutorial-ready {
+  0%, 100% { filter: brightness(0.92); transform: scale(0.985); }
+  50% { filter: brightness(1.22); transform: scale(1.045); }
+}
+
+@keyframes guided-phase-frame-arrive {
+  0% { opacity: 0; transform: scale(2.8); }
+  48% { opacity: 0.92; transform: scale(0.94); }
+  68% { opacity: 1; transform: scale(1.08); }
+  84% { transform: scale(0.985); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes guided-directional-rise {
+  0%, 100% { opacity: 0.72; transform: translateY(7px) scale(0.98); }
+  50% { opacity: 1; transform: translateY(-5px) scale(1.02); }
+}
+
+/* La banda nace bajo la base del glifo y sale por encima de la punta; el
+   recorrido está en unidades del viewBox, no en píxeles de pantalla. */
+@keyframes guided-directional-glint {
+  0% { transform: translateY(252px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes guided-card-stats-focus {
+  0%, 100% { filter: brightness(0.96); }
+  50% { filter: brightness(1.18); }
+}
+
+@keyframes guided-tutorial-callout-in {
+  from { opacity: 0; transform: translateY(9px) scale(0.975); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 560px) {
+  .guided-tutorial-callout { padding: 16px 17px 13px; }
+  .guided-tutorial-body p { font-size: 15px; }
+  .guided-tutorial-continue { width: 100%; }
+}
+
+@media (max-width: 900px) {
+  .guided-card-comparison {
+    top: 22px;
+    left: 50%;
+    max-width: calc(100vw - 24px);
+    transform: translateX(-50%);
+  }
+
+  .guided-card-comparison-item { width: min(33.6vw, 288px); }
+
+  .guided-tutorial-overlay.has-card-comparison .guided-tutorial-callout {
+    top: auto !important;
+    right: 16px;
+    bottom: 16px;
+    left: 16px !important;
+    width: auto;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guided-tutorial-overlay[data-mode="act"] .guided-tutorial-ring,
+  .guided-tutorial-callout,
+  .guided-tutorial-directional-cue svg,
+  .tutorial-directional-glint,
+  .guided-card-comparison.is-combatStats .guided-card-comparison-frame > .card-stat-badge {
+    animation: none;
+  }
+
+  .guided-card-comparison-frame > .card-cost-badge,
+  .card-cost-badge.is-guided-emphasis { animation: none; }
+}
+
+/* Semillas del Destino — the current deterministic seed is presented as a narrative Future. */
+.destiny-command-button {
+  position: relative;
+  display: flex;
+  min-width: 212px;
+  height: 42px;
+  align-items: center;
+  gap: 11px;
+  overflow: hidden;
+  border: 1px solid rgb(207 183 105 / 0.62);
+  border-radius: 2px;
+  padding: 0 17px 0 11px;
+  background:
+    linear-gradient(105deg, rgb(10 18 21 / 0.98), rgb(26 35 36 / 0.98) 52%, rgb(8 15 18 / 0.99)),
+    radial-gradient(circle at 18% 50%, rgb(89 146 147 / 0.2), transparent 42%);
+  color: #e6d59e;
+  box-shadow:
+    inset 0 1px 0 rgb(251 235 177 / 0.1),
+    inset 0 -1px 0 rgb(0 0 0 / 0.62),
+    0 8px 22px rgb(0 0 0 / 0.34),
+    0 0 18px rgb(67 124 124 / 0.07);
+  text-align: left;
+  transition: border-color 180ms ease, box-shadow 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.destiny-command-button::before {
+  position: absolute;
+  top: 50%;
+  left: 28px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: conic-gradient(from 20deg, transparent, rgb(108 180 178 / 0.18), transparent 34%, rgb(222 196 116 / 0.16), transparent 68%);
+  content: "";
+  opacity: 0.65;
+  transform: translate(-50%, -50%);
+  transition: opacity 220ms ease;
+  animation: destiny-command-orbit 8s linear infinite;
+}
+
+.destiny-command-button::after {
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgb(218 196 126 / 0.1);
+  content: "";
+  pointer-events: none;
+}
+
+.destiny-command-button:hover,
+.destiny-command-button:focus-visible {
+  border-color: rgb(234 210 133 / 0.92);
+  color: #fff0bc;
+  box-shadow:
+    inset 0 1px 0 rgb(255 239 184 / 0.14),
+    0 10px 26px rgb(0 0 0 / 0.42),
+    0 0 25px rgb(83 153 151 / 0.18);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.destiny-command-button:hover::before,
+.destiny-command-button:focus-visible::before {
+  opacity: 1;
+  animation-duration: 1.4s;
+}
+
+.destiny-command-glyph {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  color: #9ec9c2;
+  filter: drop-shadow(0 0 7px rgb(95 175 171 / 0.34));
+}
+
+.destiny-command-copy {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 2px;
+  line-height: 1;
+}
+
+.destiny-command-copy small {
+  color: #829f98;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+}
+
+.destiny-command-copy strong {
+  color: inherit;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.destiny-command-shimmer {
+  position: absolute;
+  z-index: 1;
+  top: -20%;
+  bottom: -20%;
+  left: -35%;
+  width: 24%;
+  background: linear-gradient(90deg, transparent, rgb(226 244 224 / 0.11), transparent);
+  opacity: 0;
+  pointer-events: none;
+  transform: skewX(-18deg);
+}
+
+.destiny-command-button:hover .destiny-command-shimmer,
+.destiny-command-button:focus-visible .destiny-command-shimmer {
+  animation: destiny-command-shimmer 900ms ease-out both;
+}
+
+.destiny-dialog-backdrop {
+  background:
+    radial-gradient(circle at 50% 42%, rgb(47 83 82 / 0.24), transparent 35%),
+    rgb(1 4 6 / 0.86);
+  -webkit-backdrop-filter: blur(13px) saturate(0.82);
+  backdrop-filter: blur(13px) saturate(0.82);
+  animation: destiny-dialog-backdrop-in 220ms ease-out both;
+}
+
+.destiny-dialog-backdrop.is-closing {
+  pointer-events: none;
+  animation: destiny-dialog-backdrop-out 220ms ease-in both;
+}
+
+.destiny-dialog {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgb(191 172 109 / 0.5) !important;
+  border-top-color: rgb(226 204 132 / 0.82) !important;
+  border-radius: 0 !important;
+  padding: 38px 42px 32px;
+  background:
+    radial-gradient(circle at 50% 0%, rgb(74 124 121 / 0.2), transparent 42%),
+    linear-gradient(145deg, rgb(23 32 34 / 0.99), rgb(5 11 14 / 0.99)) !important;
+  color: #dcd5ba;
+  box-shadow:
+    inset 0 1px 0 rgb(248 233 181 / 0.08),
+    inset 0 -35px 70px rgb(0 0 0 / 0.22),
+    0 42px 100px rgb(0 0 0 / 0.72) !important;
+  text-align: center;
+  animation: destiny-dialog-in 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.destiny-dialog::before,
+.destiny-dialog::after {
+  position: absolute;
+  right: 22px;
+  left: 22px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(211 191 125 / 0.54), transparent);
+  content: "";
+}
+
+.destiny-dialog::before { top: 7px; }
+.destiny-dialog::after { bottom: 7px; }
+
+.destiny-dialog.is-closing { animation: destiny-dialog-out 190ms ease-in both; }
+
+.destiny-dialog-close {
+  position: absolute;
+  z-index: 2;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgb(174 158 104 / 0.28);
+  background: rgb(6 12 14 / 0.66);
+  color: #999a86;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+
+.destiny-dialog-close:hover,
+.destiny-dialog-close:focus-visible { border-color: rgb(218 198 130 / 0.65); color: #eadcaf; outline: none; }
+
+.destiny-dialog-sigil {
+  position: relative;
+  display: grid;
+  width: 76px;
+  height: 76px;
+  place-items: center;
+  border: 1px solid rgb(192 172 105 / 0.52);
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  background:
+    radial-gradient(circle, rgb(59 104 102 / 0.2), transparent 56%),
+    conic-gradient(from 0deg, rgb(11 22 24 / 0.96), rgb(33 51 50 / 0.94), rgb(9 17 20 / 0.98));
+  color: #acd2ca;
+  box-shadow: inset 0 0 20px rgb(0 0 0 / 0.66), 0 0 28px rgb(75 145 141 / 0.16);
+}
+
+.destiny-dialog-sigil::before {
+  position: absolute;
+  inset: 7px;
+  border: 1px dashed rgb(217 193 118 / 0.37);
+  border-radius: 50%;
+  content: "";
+  animation: destiny-sigil-orbit 14s linear infinite reverse;
+}
+
+.destiny-dialog-kicker {
+  color: #8db1a9;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+
+.destiny-dialog h2 {
+  margin: 7px 0 0;
+  color: #e8dec0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(27px, 3vw, 35px);
+  font-weight: 500;
+  letter-spacing: 0.035em;
+}
+
+.destiny-dialog > p {
+  max-width: 430px;
+  margin: 14px auto 25px;
+  color: #9ba69f;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.destiny-dialog-primary,
+.destiny-dialog-secondary {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 1px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: border-color 160ms ease, color 160ms ease, filter 160ms ease, transform 160ms ease;
+}
+
+.destiny-dialog-primary {
+  height: 50px;
+  border: 1px solid rgb(214 190 112 / 0.7);
+  background:
+    linear-gradient(110deg, rgb(49 62 58 / 0.98), rgb(18 31 32 / 0.99) 64%, rgb(40 53 50 / 0.98));
+  color: #f0e2b6;
+  box-shadow: inset 0 1px 0 rgb(245 233 187 / 0.09), 0 10px 25px rgb(0 0 0 / 0.28);
+}
+
+.destiny-dialog-secondary {
+  height: 44px;
+  border: 1px solid rgb(116 151 146 / 0.4);
+  background: rgb(8 17 20 / 0.64);
+  color: #abc3bc;
+}
+
+.destiny-dialog-primary:hover,
+.destiny-dialog-primary:focus-visible,
+.destiny-dialog-secondary:hover,
+.destiny-dialog-secondary:focus-visible {
+  border-color: rgb(229 207 135 / 0.9);
+  color: #fff0c2;
+  filter: brightness(1.08);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.destiny-dialog-divider {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  margin: 15px 0;
+  color: rgb(176 161 108 / 0.45);
+  font-size: 7px;
+}
+
+.destiny-dialog-divider span { height: 1px; background: linear-gradient(90deg, transparent, rgb(164 151 101 / 0.32)); }
+.destiny-dialog-divider span:last-child { background: linear-gradient(90deg, rgb(164 151 101 / 0.32), transparent); }
+
+.destiny-dialog-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  margin-top: 18px;
+  background: transparent;
+  color: #6f8580;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 150ms ease;
+}
+
+.destiny-dialog-copy:hover,
+.destiny-dialog-copy:focus-visible { color: #cdbf96; outline: none; }
+
+.expedition-future-identity {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 7px 0 0;
+  color: #8fb0a9;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-shadow: 0 0 14px rgb(75 140 137 / 0.22);
+}
+
+/* Full-screen collapse/reveal. The overlay stays at App level so it survives a Board reset. */
+body.destiny-rewrite-active { overflow: hidden; }
+/* Sólo transform y opacity: la escena se promociona a una capa, se rasteriza una vez y el resto lo
+   resuelve la GPU. Animar `filter: blur()` sobre el árbol completo obligaba a repintarlo cada frame
+   y por eso la caída se arrastraba. */
+body.destiny-rewrite-active .game-screen,
+body.destiny-rewrite-active .main-menu-shell {
+  pointer-events: none;
+  transform-origin: 50% 50%;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+body.destiny-rewrite-absorbing .game-screen,
+body.destiny-rewrite-absorbing .main-menu-shell { animation: destiny-scene-collapse 980ms cubic-bezier(0.42, 0.02, 0.76, 0.2) both; }
+body.destiny-rewrite-revealing .game-screen,
+body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-return 860ms cubic-bezier(0.14, 0.78, 0.2, 1) both; }
+
+.destiny-vortex-overlay {
+  position: fixed;
+  z-index: 30000;
+  inset: 0;
+  overflow: hidden;
+  background: transparent;
+  color: #e5d9af;
+  isolation: isolate;
+  pointer-events: all;
+}
+
+.destiny-vortex-veil {
+  position: absolute;
+  z-index: -2;
+  inset: -15%;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0 7%, rgb(0 3 5 / 0.25) 23%, rgb(0 2 4 / 0.88) 62%, #000204 86%),
+    rgb(0 3 5 / 0.15);
+  opacity: 0;
+  transform: scale(1.2);
+  animation: destiny-veil-cover 980ms ease-in both;
+}
+
+/* El agujero negro entero vive en este lienzo: horizonte, disco, anillo de fotones, materia en
+   caída y las brasas de la liberación. Permanece invisible hasta que el shader copia su primer
+   frame válido, para no exponer el búfer recién limpiado. */
+.destiny-vortex-canvas {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+
+/* Silueta quieta para movimiento reducido o cuando el navegador no da contexto WebGL. */
+.destiny-vortex-still {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: 23vmin;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, #000 0 62%, rgb(216 199 126 / 0.5) 66%, rgb(52 131 124 / 0.24) 73%, transparent 78%);
+  box-shadow: 0 0 60px rgb(47 133 131 / 0.3);
+  transform: translate(-50%, -50%);
+}
+
+.destiny-vortex-caption {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  gap: 8px;
+  width: min(560px, 88vw);
+  /* El disco llega a ~13vmin por encima y por debajo del centro: el texto vive claramente debajo,
+     fuera del brillo, o se pierde contra el material caliente. */
+  padding-top: min(58vmin, 500px);
+  opacity: 0;
+  text-align: center;
+  text-shadow: 0 2px 10px #000, 0 0 30px rgb(0 0 0 / 0.85), 0 0 26px rgb(71 143 140 / 0.4);
+  transform: translate(-50%, -50%);
+  animation: destiny-caption-in 780ms 260ms ease-out both;
+}
+
+.destiny-vortex-caption small { color: #a6d0c6; font-size: 11px; font-weight: 900; letter-spacing: 0.27em; text-transform: uppercase; }
+.destiny-vortex-caption strong { font-family: Georgia, "Times New Roman", serif; font-size: clamp(21px, 3vw, 35px); font-weight: 500; letter-spacing: 0.13em; text-transform: uppercase; }
+
+/* La liberación dura 1040 ms: el velo se retira antes para que la escena vuelva bajo las brasas y
+   el overlay sólo se apaga al final, cuando el shader ya terminó su descarga. */
+.destiny-vortex-overlay.is-revealing { animation: destiny-overlay-release 1040ms ease-out both; }
+.destiny-vortex-overlay.is-revealing .destiny-vortex-veil { animation: destiny-veil-release 760ms ease-out both; }
+.destiny-vortex-overlay.is-revealing .destiny-vortex-still { animation: destiny-still-release 620ms ease-out both; }
+.destiny-vortex-overlay.is-revealing .destiny-vortex-caption { animation: destiny-caption-out 420ms ease-in both; }
+
+@keyframes destiny-command-orbit { to { transform: translate(-50%, -50%) rotate(1turn); } }
+@keyframes destiny-sigil-orbit { to { transform: rotate(1turn); } }
+@keyframes destiny-command-shimmer { 0% { left: -35%; opacity: 0; } 22% { opacity: 1; } 100% { left: 120%; opacity: 0; } }
+@keyframes destiny-dialog-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes destiny-dialog-backdrop-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes destiny-dialog-in { from { opacity: 0; filter: blur(7px); transform: translateY(18px) scale(0.97); } to { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); } }
+@keyframes destiny-dialog-out { from { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); } to { opacity: 0; filter: blur(5px); transform: translateY(10px) scale(0.985); } }
+/* La escena entera casi no se mueve: quien cae al horizonte es cada pieza por separado, con su
+   propio retraso y su propio estiramiento (`destinyShardSuction.ts`). Aquí sólo se apaga el fondo
+   del tablero, que no es una pieza y se quedaría flotando entero detrás del vórtice. */
+@keyframes destiny-scene-collapse {
+  0% { opacity: 1; transform: scale(1); }
+  58% { opacity: 0.9; transform: scale(0.97); }
+  100% { opacity: 0; transform: scale(0.86); }
+}
+/* La escena nueva no crece desde una miniatura —eso volvía a leerse como un bloque rígido—: llega
+   pasada de tamaño, empujada por la onda de choque, y se asienta bajo las brasas. */
+@keyframes destiny-scene-return {
+  0% { opacity: 0; transform: scale(1.07); }
+  46% { opacity: 1; }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes destiny-veil-cover { 0% { opacity: 0; transform: scale(1.2); } 45% { opacity: 0.55; } 100% { opacity: 1; transform: scale(1); } }
+@keyframes destiny-caption-in { from { opacity: 0; letter-spacing: 0.04em; } to { opacity: 1; letter-spacing: 0; } }
+@keyframes destiny-overlay-release { 0%, 79% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes destiny-veil-release { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.2); } }
+@keyframes destiny-still-release { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.6); } }
+@keyframes destiny-caption-out { from { opacity: 1; } to { opacity: 0; filter: blur(5px); } }
+
+@media (max-width: 1050px) {
+  .destiny-command-button { min-width: 158px; padding-right: 12px; }
+  .destiny-command-copy small { display: none; }
+}
+
+@media (max-width: 760px) {
+  .destiny-command-button { min-width: 42px; width: 42px; padding: 0 5px; justify-content: center; }
+  .destiny-command-copy { display: none; }
+  .destiny-dialog { padding: 34px 22px 26px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.destiny-rewrite-absorbing .game-screen,
+  body.destiny-rewrite-absorbing .main-menu-shell { animation: destiny-scene-fade-out 120ms linear both; }
+  body.destiny-rewrite-revealing .game-screen,
+  body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-fade-in 180ms linear both; }
+  .destiny-command-button::before,
+  .destiny-dialog-sigil::before,
+  .destiny-vortex-still { animation: none !important; }
+  .destiny-vortex-still { opacity: 0.75; }
+  .destiny-vortex-overlay.is-revealing { animation-duration: 180ms; }
+  .destiny-vortex-overlay.is-revealing .destiny-vortex-veil { animation-duration: 180ms; }
+}
+
+@keyframes destiny-scene-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes destiny-scene-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+
+/* Derrota: Electron captura una vez la composición ya pintada y la mapea sobre los prismas. El
+   DOM vivo se retira, pero TemporalBackdrop sigue renderizando debajo y aparece por los huecos
+   que abren los trozos. El vidrio y la onda son WebGL; aquí viven las quebraduras, la viñeta y
+   el texto. */
+.game-result-overlay.game-result-defeat {
+  --result-accent: #aa9455;
+  --result-accent-bright: #ddca84;
+  --result-accent-soft: rgb(86 112 116 / 0.28);
+  display: block;
+  padding: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  animation: none;
+}
+
+.defeat-shatter {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.defeat-shatter-canvas,
+.defeat-shatter-fractures,
+.defeat-shatter-vignette {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.defeat-shatter-canvas {
+  z-index: 1;
+  opacity: 0;
+  transform: translateZ(0);
+}
+
+.game-result-defeat .defeat-shatter-canvas.is-ready { opacity: 1; }
+
+/* La placa contiene el último frame completo, así que el DOM vivo se retira y detrás queda el
+   espacio todavía animado. La geometría transparente del canvas lo revela entre los trozos.
+   El retículo pertenece al cristal: se va con él y no sobrevive al estallido.
+   La regla de `body` alcanza los portales —la Reserva, los tooltips y el registro cuelgan de ahí,
+   fuera de `.game-screen`— sin tener que enumerar sus clases una por una. */
+body.is-defeat-plated > *:not(#root),
+body.is-defeat-plated .game-screen > *:not(.temporal-backdrop):not(.game-screen-ambience):not(.game-result-overlay),
+body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
+
+/* Las quebraduras crecen desde el impacto: los muros del prisma quedan casi de canto vistos de
+   frente, así que no sirven para enseñar la raja. El vidrio sí se tensa por debajo. */
+.defeat-shatter-fractures {
+  z-index: 3;
+  overflow: visible;
+}
+
+.defeat-shatter-fractures path {
+  fill: none;
+  stroke: rgb(225 237 229 / 0.78);
+  stroke-width: 0.12;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0;
+}
+
+.game-result-defeat.is-sequence-running .defeat-shatter-fractures path {
+  animation: defeat-crack-grow 520ms 0ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.game-result-defeat.is-sequence-running .defeat-shatter-fractures path:nth-child(2n) { animation-delay: 120ms; }
+.game-result-defeat.is-sequence-running .defeat-shatter-fractures path:nth-child(3n) { animation-delay: 240ms; }
+
+/* Se van con el golpe: a partir de ahí la raja ya no es una línea, son trozos separándose. El
+   golpe no está en un reloj de CSS: lo anuncia el mismo animador WebGL que mueve los prismas. */
+.game-result-defeat .defeat-shatter.is-bursting .defeat-shatter-fractures {
+  animation: defeat-cracks-away 280ms ease-out both;
+}
+
+.defeat-shatter-vignette {
+  z-index: 4;
+  background:
+    radial-gradient(ellipse at center, transparent 12%, rgb(1 5 6 / 0.16) 46%, rgb(0 2 3 / 0.78) 100%),
+    linear-gradient(180deg, rgb(3 8 9 / 0.12), rgb(0 3 4 / 0.46));
+  /* Nada cambia de color antes de que el vidrio se rompa: la viñeta entra con el golpe. */
+  opacity: 0;
+  will-change: opacity;
+}
+
+.game-result-defeat .defeat-shatter.is-bursting .defeat-shatter-vignette {
+  animation: defeat-vignette-close 700ms ease both;
+}
+
+/* Con movimiento reducido o sin WebGL queda la fractura quieta sobre el espacio. El
+   oscurecimiento deja respirar el fondo en vez de taparlo. */
+.defeat-shatter.is-fallback {
+  background: transparent;
+}
+
+.defeat-shatter.is-fallback .defeat-shatter-canvas { display: none; }
+.defeat-shatter.is-fallback .defeat-shatter-fractures path { opacity: 0.48; stroke-dashoffset: 0; }
+
+/* El desenlace se centra con una capa a pantalla completa y su bloque no lleva `transform`
+   propio. Dos cosas lo pisarían: la regla genérica `.game-screen [role="dialog"]`, que impone
+   `game-surface-in` y termina en `translateY(0) scale(1)`, y la succión del vórtice, que anima
+   `transform` sobre cada pieza de la escena. Con el centrado en el contenedor, ninguna de las
+   dos puede descolgar el texto hacia abajo y a la derecha. */
+.defeat-outcome {
+  position: absolute;
+  z-index: 8;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.defeat-outcome-inner {
+  position: relative;
+  display: grid;
+  width: min(820px, 94%);
+  justify-items: center;
+  gap: 8px;
+  isolation: isolate;
+  opacity: 0;
+  text-align: center;
+  animation: defeat-outcome-in 460ms ease-out both;
+}
+
+.defeat-outcome button { pointer-events: auto; }
+
+/* Derrota sube y respira: separada del título deja de leerse como su primera línea y pasa a ser
+   lo que es, una etiqueta por encima del desenlace. */
+.defeat-kicker {
+  position: relative;
+  margin-bottom: 18px;
+  color: #d5a67e;
+  font: 800 16px/1 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px rgb(154 71 42 / 0.48);
+  opacity: 0;
+  animation: defeat-copy-rise 620ms 100ms ease-out both;
+}
+
+.defeat-kicker::before,
+.defeat-kicker::after {
+  position: absolute;
+  top: 50%;
+  width: 56px;
+  height: 1px;
+  content: "";
+  background: linear-gradient(90deg, transparent, rgb(189 122 83 / 0.72));
+}
+
+.defeat-kicker::before { right: calc(100% + 16px); }
+.defeat-kicker::after { left: calc(100% + 12px); transform: rotate(180deg); }
+
+.defeat-title {
+  position: relative;
+  display: grid;
+  margin: 0;
+  color: #e9e6dc;
+  font: 700 clamp(48px, 8.4vw, 96px)/0.9 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.065em;
+  text-transform: uppercase;
+  text-shadow: 0 3px 8px #000, 0 0 18px rgb(151 190 192 / 0.24);
+}
+
+.defeat-title .line {
+  display: block;
+  opacity: 0;
+  clip-path: inset(0 50%);
+  transform: translateY(12px);
+}
+
+.defeat-title .line:last-child { margin-top: 0.08em; color: #c7ced0; }
+.defeat-title .line:first-child { animation: defeat-title-reveal 920ms 150ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.defeat-title .line:last-child { animation: defeat-title-reveal 980ms 270ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+.defeat-title::after {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 0;
+  height: 1px;
+  content: "";
+  background: #e9f3ef;
+  box-shadow: 0 0 11px 3px rgb(169 214 214 / 0.66);
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(-5deg);
+  animation: defeat-title-cut 760ms 230ms ease-out both;
+}
+
+.defeat-subtitle {
+  margin-top: 7px;
+  color: rgb(172 187 184 / 0.82);
+  font: 600 clamp(12px, 1.45vw, 16px)/1.4 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  opacity: 0;
+  animation: defeat-copy-rise 660ms 700ms ease-out both;
+}
+
+.defeat-future-plate {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: min(390px, 88%);
+  margin-top: 11px;
+  padding: 10px 24px 9px;
+  border-top: 1px solid rgb(172 119 84 / 0.52);
+  border-bottom: 1px solid rgb(109 145 146 / 0.34);
+  background: linear-gradient(90deg, transparent, rgb(4 11 13 / 0.92) 17% 83%, transparent);
+  opacity: 0;
+  animation: defeat-plate-rise 680ms 860ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.defeat-future-plate span {
+  color: #c8d9d5;
+  font: 800 14px/1.2 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+
+.defeat-future-plate b {
+  color: #e5c89e;
+  font: 800 clamp(23px, 2.8vw, 33px)/1.2 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.13em;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 12px rgb(159 100 62 / 0.36);
+}
+
+/* Copiar identidad vive en el canto de la placa: la placa se lee igual y el gesto sigue a mano. */
+.defeat-future-plate button {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid rgb(158 151 110 / 0.26);
+  background: rgb(4 11 13 / 0.7);
+  color: #9da28c;
+  transform: translateY(-50%);
+}
+
+.defeat-future-plate button:hover,
+.defeat-future-plate button:focus-visible {
+  border-color: rgb(214 192 122 / 0.7);
+  color: var(--result-accent-bright);
+  outline: none;
+}
+
+.defeat-outcome-actions {
+  display: grid;
+  width: min(620px, calc(100vw - 16px));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(6px, 1.5vw, 12px);
+  margin-top: 22px;
+  opacity: 0;
+  animation: defeat-copy-rise 620ms 1080ms ease-out both;
+}
+
+.defeat-outcome-actions.is-single-action {
+  width: min(420px, calc(100vw - 32px));
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.defeat-outcome-actions.is-single-action .game-result-action:disabled {
+  cursor: default;
+  filter: none;
+  opacity: 1;
+  transform: none;
+}
+
+.learn-to-play-defeat-cta {
+  animation: learn-to-play-defeat-cta-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.learn-to-play-contemplate-button {
+  width: 100%;
+  min-width: 0;
+  height: 50px;
+  justify-content: center;
+  padding: 0 22px;
+  text-align: center;
+}
+
+.learn-to-play-contemplate-button::before {
+  left: 50%;
+  width: 180%;
+  height: auto;
+  aspect-ratio: 1;
+  opacity: 0.46;
+}
+
+.learn-to-play-contemplate-button .destiny-command-copy strong {
+  font-size: clamp(11px, 2vw, 14px);
+  letter-spacing: 0.13em;
+  white-space: nowrap;
+}
+
+.learn-to-play-defeat-dialog-layer {
+  position: absolute;
+  z-index: 8;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(2 7 8 / 0.46);
+  animation: learn-to-play-defeat-dialog-layer-in 260ms ease-out both;
+}
+
+.learn-to-play-defeat-dialog {
+  position: relative;
+  width: min(590px, calc(100vw - 32px));
+  padding: 22px 24px 20px;
+  border: 1px solid rgb(181 158 89 / 0.52);
+  background:
+    linear-gradient(135deg, rgb(35 43 40 / 0.96), rgb(11 20 19 / 0.985) 58%, rgb(8 14 15 / 0.99));
+  color: #ded7bc;
+  box-shadow:
+    0 28px 80px rgb(0 0 0 / 0.72),
+    inset 0 1px 0 rgb(239 224 171 / 0.08);
+  animation: learn-to-play-defeat-dialog-in 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.learn-to-play-defeat-dialog::before {
+  position: absolute;
+  left: 18px;
+  top: -1px;
+  width: 62px;
+  height: 1px;
+  content: "";
+  background: linear-gradient(90deg, #e2c878, transparent);
+  box-shadow: 0 0 12px rgb(215 187 100 / 0.36);
+}
+
+.learn-to-play-defeat-dialog-header {
+  padding: 0 0 15px;
+  border-bottom: 1px solid rgb(160 163 143 / 0.22);
+}
+
+.learn-to-play-defeat-dialog-header h2 {
+  margin: 0;
+  color: #eee6ca;
+  font: 700 clamp(22px, 3vw, 30px)/1.18 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.025em;
+}
+
+.learn-to-play-defeat-dialog-body {
+  display: grid;
+  gap: 8px;
+  padding: 15px 0 19px;
+  color: #b8c1bc;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.learn-to-play-defeat-dialog-body p { margin: 0; }
+.learn-to-play-defeat-dialog .guided-tutorial-continue { margin-left: auto; }
+
+@keyframes learn-to-play-defeat-dialog-layer-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes learn-to-play-defeat-dialog-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.975); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes learn-to-play-defeat-cta-in {
+  from { opacity: 0; transform: translateY(9px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+
+.game-result-defeat .game-result-action {
+  min-width: 0;
+  padding-inline: clamp(4px, 1.2vw, 14px);
+  font-size: clamp(8px, 2.1vw, 13px);
+  letter-spacing: clamp(0.05em, 0.16vw, 0.12em);
+  white-space: nowrap;
+}
+
+.game-result-defeat .game-result-action svg { flex: 0 0 auto; }
+
+@keyframes defeat-crack-grow {
+  0% { opacity: 0; stroke-dashoffset: 1; }
+  18% { opacity: 1; }
+  100% { opacity: 0.9; stroke-dashoffset: 0; }
+}
+
+@keyframes defeat-cracks-away {
+  from { opacity: 1; }
+  to { opacity: 0; transform: scale(1.04); }
+}
+
+/* Sin abismo detrás, la viñeta cae sobre el espacio real: apretarla hasta 0.72 lo dejaba casi
+   negro por los bordes. Encuadra el desenlace sin tapar el fondo. */
+@keyframes defeat-vignette-close {
+  from { opacity: 0; }
+  to { opacity: 0.42; }
+}
+
+@keyframes defeat-outcome-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes defeat-title-reveal {
+  from { opacity: 0; clip-path: inset(0 50%); transform: translateY(12px); }
+  to { opacity: 1; clip-path: inset(0); transform: translateY(0); }
+}
+
+@keyframes defeat-title-cut {
+  0% { opacity: 0; width: 0; }
+  35% { opacity: 0.9; }
+  100% { opacity: 0; width: 92%; }
+}
+
+@keyframes defeat-copy-rise {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes defeat-plate-rise {
+  from { opacity: 0; transform: translateY(11px) scaleX(0.76); }
+  to { opacity: 1; transform: translateY(0) scaleX(1); }
+}
+
+@media (max-height: 720px) {
+  .defeat-outcome-inner { gap: 4px; }
+  .defeat-kicker { margin-bottom: 12px; }
+  .defeat-outcome-actions { margin-top: 16px; }
+}
+
+@media (max-width: 520px) {
+  .defeat-outcome-inner { width: calc(100% - 32px); }
+  .defeat-kicker { letter-spacing: 0.24em; }
+  .defeat-kicker::before, .defeat-kicker::after { width: 32px; }
+  .defeat-future-plate { min-width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .defeat-shatter-fractures,
+  .defeat-shatter-fractures path,
+  .defeat-shatter-vignette,
+  .defeat-outcome-inner,
+  .defeat-kicker,
+  .defeat-title .line,
+  .defeat-title::after,
+  .defeat-subtitle,
+  .defeat-future-plate,
+  .defeat-outcome-actions,
+  .learn-to-play-defeat-dialog-layer,
+  .learn-to-play-defeat-dialog { animation: none !important; }
+  .defeat-outcome-inner,
+  .defeat-kicker,
+  .defeat-subtitle,
+  .defeat-future-plate,
+  .defeat-outcome-actions,
+  .learn-to-play-defeat-dialog-layer,
+  .learn-to-play-defeat-dialog { opacity: 1; transform: none; }
+  .defeat-outcome-inner { transform: none; }
+  .defeat-title .line { opacity: 1; clip-path: inset(0); transform: none; }
+  .defeat-title::after { display: none; }
+  .defeat-shatter-vignette { opacity: 0.42; }
+  .defeat-shatter-canvas { display: none; }
+  .defeat-shatter-fractures path { opacity: 0.22; stroke-dashoffset: 0; }
+}
+
+
+/* Victoria: no hay captura, ni placa, ni nada que romper. El tablero vivo se retira solo y las
+   motas convergen sobre el disco de grados que ya estaba en pantalla. La figura que encienden es
+   la misma rosa cardinal del signo del Futuro, así que el instrumento y el cielo se quedan
+   animados debajo: lo que se preserva se ve preservado.
+   La maqueta de decisión es `dev/mockups/vfx/destiny-constellation.html`. */
+.game-result-overlay.game-result-victory {
+  --result-accent: #c7aa69;
+  --result-accent-bright: #e6d59e;
+  --result-accent-soft: rgb(116 152 146 / 0.26);
+  display: block;
+  padding: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  animation: none;
+}
+
+/* El tablero se va mientras las motas todavía viajan. Se conservan el cielo, la capa de ambiente
+   y el retículo completo: a diferencia de la derrota, aquí el instrumento es el sitio exacto
+   donde va a encenderse la figura y no puede irse con el HUD.
+   La regla de `body` alcanza los portales —la Reserva, los tooltips y el registro cuelgan de ahí,
+   fuera de `.game-screen`— sin enumerar sus clases una por una. Los avisos quedan fuera: copiar
+   la identidad del Futuro tiene que poder confirmarse.
+   Las exclusiones van en `:where()` para que no sumen especificidad: así las salidas dirigidas de
+   abajo empatan con este fundido genérico y ganan por orden en vez de por peso. */
+body.is-victory-clearing > *:not(:where(#root, .toast-stack)),
+body.is-victory-clearing .game-screen > *:not(:where(.temporal-backdrop, .game-screen-ambience, .game-result-overlay)) {
+  animation: victory-board-fade 620ms ease-in both;
+  pointer-events: none;
+}
+
+/* La salida es el espejo de la entrada del tablero: lo de arriba se va hacia arriba, lo de abajo
+   hacia abajo, y el Campo se disuelve creciendo un punto, como entró. */
+body.is-victory-clearing .game-command-bar,
+body.is-victory-clearing .game-hud-host {
+  animation: victory-board-out-top 560ms ease-in both;
+}
+
+body.is-victory-clearing .player-hand-shell,
+body.is-victory-clearing .hand-atmosphere-shell,
+body.is-victory-clearing .player-life-dock,
+body.is-victory-clearing .game-hud-energy {
+  animation: victory-board-out-bottom 600ms 60ms ease-in both;
+}
+
+body.is-victory-clearing .game-battlefield-stage {
+  animation: victory-board-out-stage 760ms 40ms cubic-bezier(0.4, 0, 0.6, 1) both;
+}
+
+.victory-constellation {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.victory-constellation-canvas,
+.victory-constellation-still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.victory-constellation-canvas {
+  z-index: 1;
+  opacity: 0;
+  transform: translateZ(0);
+}
+
+/* El lienzo sólo se revela cuando ya copió un fotograma válido del shader. */
+.game-result-victory .victory-constellation-canvas.is-ready { opacity: 1; }
+
+.victory-constellation.is-fallback .victory-constellation-canvas { display: none; }
+
+/* Con movimiento reducido o sin WebGL queda la figura quieta, sobre el mismo aro. */
+.victory-constellation-still {
+  z-index: 2;
+  overflow: visible;
+}
+
+.victory-constellation-still polygon {
+  fill: rgb(199 170 105 / 0.05);
+  stroke: rgb(214 192 122 / 0.5);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.victory-constellation-still circle { fill: rgb(255 244 214 / 0.85); }
+
+/* El desenlace se centra con una capa a pantalla completa y su bloque no lleva `transform`
+   propio, por la misma razón que en la derrota: la regla genérica `.game-screen [role="dialog"]`
+   y la succión del vórtice animan `transform` y lo descolgarían. */
+.victory-outcome {
+  position: absolute;
+  z-index: 8;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.victory-outcome-inner {
+  position: relative;
+  display: grid;
+  width: min(820px, 94%);
+  justify-items: center;
+  gap: 8px;
+  isolation: isolate;
+  opacity: 0;
+  text-align: center;
+  animation: victory-outcome-in 420ms ease-out both;
+}
+
+/* El corazón de la constelación cae justo detrás del título: sin este asiento el texto se lee
+   sobre el punto más brillante de la escena. */
+.victory-outcome-inner::before {
+  position: absolute;
+  z-index: -1;
+  inset: -30% -18%;
+  background: radial-gradient(ellipse at center, rgb(1 6 7 / 0.9) 0 30%, rgb(2 9 10 / 0.66) 48%, transparent 73%);
+  content: "";
+  opacity: 0;
+  animation: victory-backdrop-in 900ms ease-out both;
+}
+
+.victory-outcome button { pointer-events: auto; }
+
+.victory-kicker {
+  position: relative;
+  margin-bottom: 18px;
+  color: #f5dda4;
+  font: 800 16px/1 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px rgb(224 190 98 / 0.46);
+  opacity: 0;
+  animation: victory-copy-rise 620ms 120ms ease-out both;
+}
+
+.victory-kicker::before,
+.victory-kicker::after {
+  position: absolute;
+  top: 50%;
+  width: 56px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(224 197 122 / 0.72));
+  content: "";
+}
+
+.victory-kicker::before { right: calc(100% + 16px); }
+.victory-kicker::after { left: calc(100% + 12px); transform: rotate(180deg); }
+
+.victory-title {
+  position: relative;
+  display: grid;
+  margin: 0;
+  color: #f6ecd5;
+  font: 700 clamp(48px, 8.4vw, 96px)/0.9 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+  text-shadow: 0 3px 7px #000, 0 0 16px rgb(239 215 151 / 0.28);
+}
+
+.victory-title .line {
+  display: block;
+  opacity: 0;
+  clip-path: inset(0 50%);
+  transform: translateY(12px);
+}
+
+.victory-title .line:last-child { margin-top: 0.08em; }
+.victory-title .line:first-child { animation: victory-title-forge 1050ms 170ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.victory-title .line:last-child { animation: victory-title-forge 1120ms 300ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* El corte de luz se abre desde el centro, como la forja de cada línea. */
+.victory-title::after {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 12px;
+  height: 2px;
+  background: #fff8de;
+  box-shadow: 0 0 12px 4px rgb(255 239 184 / 0.9), 0 0 44px 16px rgb(197 165 85 / 0.5);
+  content: "";
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  animation: victory-title-flare 880ms 230ms ease-out both;
+}
+
+.victory-subtitle {
+  margin-top: 7px;
+  color: rgb(174 190 181 / 0.8);
+  font: 600 clamp(12px, 1.45vw, 16px)/1.4 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  opacity: 0;
+  animation: victory-copy-rise 700ms 760ms ease-out both;
+}
+
+.victory-future-plate {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: min(390px, 88%);
+  margin-top: 11px;
+  padding: 10px 24px 9px;
+  border-top: 1px solid rgb(199 170 105 / 0.48);
+  border-bottom: 1px solid rgb(199 170 105 / 0.32);
+  background: linear-gradient(90deg, transparent, rgb(4 14 15 / 0.9) 17% 83%, transparent);
+  opacity: 0;
+  animation: victory-plate-rise 720ms 940ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Los dos rombos del canto: la placa es un sello, no una barra. */
+.victory-future-plate::before,
+.victory-future-plate::after {
+  position: absolute;
+  top: -3px;
+  width: 5px;
+  height: 5px;
+  border: 1px solid rgb(224 201 132 / 0.72);
+  content: "";
+  transform: rotate(45deg);
+}
+
+.victory-future-plate::before { left: 16%; }
+.victory-future-plate::after { right: 16%; }
+
+.victory-future-plate span {
+  color: #d8e9e3;
+  font: 800 14px/1.2 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 8px #000;
+}
+
+.victory-future-plate b {
+  color: #fff0c4;
+  font: 800 clamp(23px, 2.8vw, 33px)/1.2 "Cinzel", Georgia, "Times New Roman", serif;
+  letter-spacing: 0.13em;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 12px rgb(220 185 94 / 0.42);
+}
+
+/* Copiar identidad vive en el canto de la placa, igual que en la derrota. */
+.victory-future-plate button {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid rgb(158 151 110 / 0.26);
+  background: rgb(4 14 15 / 0.7);
+  color: #9da28c;
+  transform: translateY(-50%);
+}
+
+.victory-future-plate button:hover,
+.victory-future-plate button:focus-visible {
+  border-color: rgb(214 192 122 / 0.7);
+  color: var(--result-accent-bright);
+  outline: none;
+}
+
+.victory-outcome-actions {
+  display: grid;
+  width: min(620px, calc(100vw - 16px));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(6px, 1.5vw, 12px);
+  margin-top: 22px;
+  opacity: 0;
+  animation: victory-copy-rise 620ms 1120ms ease-out both;
+}
+
+.game-result-victory .game-result-action {
+  min-width: 0;
+  padding-inline: clamp(4px, 1.2vw, 14px);
+  font-size: clamp(8px, 2.1vw, 13px);
+  letter-spacing: clamp(0.05em, 0.16vw, 0.12em);
+  white-space: nowrap;
+}
+
+.game-result-victory .game-result-action svg { flex: 0 0 auto; }
+
+/* Los cuatro terminan en `visibility: hidden`, y no es cosmético: al Reescribir, la succión del
+   vórtice anima `transform` y `opacity` sobre cada pieza de la escena con la API de animaciones,
+   que gana a estas reglas y devolvería el tablero ya retirado a la vista. `visibility` no está
+   entre las propiedades que anima, así que lo retirado sigue retirado. Se interpola en escalón:
+   la pieza sólo desaparece al terminar su propio recorrido. */
+@keyframes victory-board-fade {
+  from { opacity: 1; }
+  to { opacity: 0; visibility: hidden; }
+}
+
+@keyframes victory-board-out-top {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; visibility: hidden; transform: translateY(-18px); }
+}
+
+@keyframes victory-board-out-bottom {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; visibility: hidden; transform: translateY(24px); }
+}
+
+@keyframes victory-board-out-stage {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; visibility: hidden; transform: scale(1.035); }
+}
+
+@keyframes victory-outcome-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes victory-backdrop-in {
+  from { opacity: 0; transform: scale(0.72); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes victory-title-forge {
+  0% { opacity: 0; clip-path: inset(0 50%); transform: translateY(12px); }
+  38% { opacity: 1; }
+  100% { opacity: 1; clip-path: inset(0); transform: translateY(0); }
+}
+
+@keyframes victory-title-flare {
+  0% { opacity: 0; width: 12px; }
+  32% { opacity: 1; }
+  100% { opacity: 0; width: 92%; }
+}
+
+@keyframes victory-copy-rise {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes victory-plate-rise {
+  from { opacity: 0; transform: translateY(10px) scaleX(0.72); }
+  to { opacity: 1; transform: translateY(0) scaleX(1); }
+}
+
+@media (max-height: 720px) {
+  .victory-outcome-inner { gap: 4px; }
+  .victory-kicker { margin-bottom: 12px; }
+  .victory-outcome-actions { margin-top: 16px; }
+}
+
+@media (max-width: 520px) {
+  .victory-outcome-inner { width: calc(100% - 32px); }
+  .victory-kicker { letter-spacing: 0.24em; }
+  .victory-kicker::before, .victory-kicker::after { width: 32px; }
+  .victory-future-plate { min-width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .victory-outcome-inner,
+  .victory-outcome-inner::before,
+  .victory-kicker,
+  .victory-title .line,
+  .victory-title::after,
+  .victory-subtitle,
+  .victory-future-plate,
+  .victory-outcome-actions { animation: none !important; }
+  .victory-outcome-inner,
+  .victory-outcome-inner::before,
+  .victory-kicker,
+  .victory-subtitle,
+  .victory-future-plate,
+  .victory-outcome-actions { opacity: 1; }
+  .victory-outcome-inner { transform: none; }
+  .victory-title .line { opacity: 1; clip-path: inset(0); transform: none; }
+  .victory-title::after { display: none; }
+  /* El tablero se retira igual, pero sin recorrido: sólo deja de estar. */
+  body.is-victory-clearing > *:not(:where(#root, .toast-stack)),
+  body.is-victory-clearing .game-screen > *:not(:where(.temporal-backdrop, .game-screen-ambience, .game-result-overlay)) { animation: none !important; visibility: hidden; }
 }

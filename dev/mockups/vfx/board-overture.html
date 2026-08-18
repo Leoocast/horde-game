@@ -1,0 +1,1264 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hostfall — Obertura del Tablero</title>
+    <style>
+      @font-face {
+        font-family: "Cinzel";
+        font-style: normal;
+        font-weight: 500 900;
+        font-display: block;
+        src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+      }
+
+      @font-face {
+        font-family: "Lora";
+        font-style: normal;
+        font-weight: 400 700;
+        font-display: block;
+        src: url("../assets/fonts/lora-normal-latin.woff2") format("woff2");
+      }
+
+      :root {
+        --parchment: #e8dec0;
+        --gold: #c4a65f;
+        --gold-bright: #f0d998;
+        --verdant: #74aa81;
+        --grave: #a2563f;
+        --muted: #91a09a;
+        --muted-dim: #6f817c;
+        --rule: rgb(162 145 89 / 0.23);
+        --serif: "Lora", Georgia, serif;
+        --display: "Cinzel", Georgia, serif;
+        --sans: "Segoe UI", system-ui, sans-serif;
+        /* Tono `undead`, el que trae por defecto EncounterTransition. */
+        --encounter-accent: #8da96a;
+        --encounter-accent-bright: #d4dfa1;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        padding: 0 0 72px;
+        background:
+          radial-gradient(ellipse at 50% -12%, rgb(37 75 69 / 0.2), transparent 52%),
+          #04090a;
+        color: var(--muted);
+        font: 15px/1.6 var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      main { width: min(1180px, 100%); margin: 0 auto; padding: 0 28px; }
+
+      header { border-bottom: 1px solid var(--rule); padding: 52px 0 29px; }
+      .back { display: inline-block; margin-bottom: 8px; color: var(--muted-dim); font-size: 12px; text-decoration: none; }
+      .back:hover { color: var(--gold-bright); }
+      .eyebrow { color: #8eb6ad; font-size: 10px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; }
+      h1 { margin: 11px 0 0; color: var(--parchment); font: 500 clamp(31px, 4.4vw, 48px)/1.06 var(--serif); letter-spacing: 0.015em; }
+      header p { max-width: 74ch; margin: 15px 0 0; }
+      header strong { color: var(--gold-bright); font-weight: 600; }
+
+      .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 30px 0 14px; }
+
+      button,
+      input {
+        height: 42px;
+        border: 1px solid rgb(159 143 91 / 0.38);
+        border-radius: 2px;
+        background: linear-gradient(180deg, rgb(25 34 35 / 0.96), rgb(8 14 16 / 0.98));
+        color: var(--muted);
+        font-family: var(--sans);
+      }
+      button {
+        padding: 0 20px;
+        cursor: pointer;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+      }
+      button:hover:not(:disabled) { border-color: rgb(225 199 119 / 0.72); color: var(--gold-bright); }
+      button:disabled { cursor: default; opacity: 0.4; }
+      button:focus-visible,
+      input:focus-visible { outline: 2px solid rgb(236 211 132 / 0.9); outline-offset: 2px; }
+      button[aria-pressed="true"] { border-color: rgb(225 199 119 / 0.62); color: var(--gold-bright); }
+      label { color: var(--muted-dim); font-size: 9px; font-weight: 900; letter-spacing: 0.22em; text-transform: uppercase; }
+      input { width: 152px; padding: 0 12px; color: var(--gold-bright); font-size: 12px; letter-spacing: 0.08em; }
+      .control-spacer { flex: 1; }
+      .phase-readout { min-width: 210px; color: #aebbb5; font: 600 11px/1.2 var(--display); letter-spacing: 0.14em; text-align: right; text-transform: uppercase; }
+
+      /* ── Escenario ─────────────────────────────────────────────────────────────── */
+
+      .stage {
+        --encounter-cut-angle: 29.3578deg;
+        position: relative;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        border: 1px solid rgb(158 142 90 / 0.3);
+        border-radius: 2px;
+        background: #010405;
+        box-shadow: 0 32px 80px rgb(0 0 0 / 0.32);
+        isolation: isolate;
+      }
+
+      .stage::after {
+        position: absolute;
+        z-index: 40;
+        inset: 0;
+        background:
+          repeating-linear-gradient(0deg, transparent 0 3px, rgb(226 215 171 / 0.012) 3px 4px),
+          radial-gradient(ellipse at center, transparent 44%, rgb(0 3 4 / 0.6) 100%);
+        content: "";
+        pointer-events: none;
+      }
+
+      #spaceCanvas,
+      #starCanvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+      #spaceCanvas { z-index: 0; }
+      #starCanvas { z-index: 3; }
+
+      /* ── El tablero desnudo ────────────────────────────────────────────────────── */
+
+      /* Se revela debajo del VS a los 1050 ms, igual que en el juego, pero SIN HUD:
+         sólo el espacio, el cristal y la luz del Campo. El signo necesita escenario
+         propio; al recibir el instrumento, el HUD entra mientras el signo se apaga. */
+      .board-scene { position: absolute; z-index: 1; inset: 0; opacity: 0; }
+
+      .board-floor {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 62% 42% at 50% 50%, rgb(120 148 140 / 0.07), transparent 72%),
+          radial-gradient(ellipse 50% 22% at 50% 3%, rgb(215 188 108 / 0.07), transparent 74%),
+          linear-gradient(90deg, rgb(10 45 30 / 0.1), transparent 34% 66%, rgb(68 22 17 / 0.11));
+        pointer-events: none;
+      }
+
+      /* Franjas del Campo: las dos hileras donde se posan los Ecos. Sin cartas todavía. */
+      .board-rows { position: absolute; inset: 0; pointer-events: none; }
+      .board-rows span {
+        position: absolute;
+        left: 22%;
+        width: 56%;
+        height: 20.5%;
+        border: 1px solid rgb(186 200 190 / 0.05);
+        border-radius: 3px;
+        background: linear-gradient(180deg, rgb(190 210 200 / 0.018), transparent);
+      }
+      .board-rows span:first-child { top: 18%; }
+      .board-rows span:last-child { top: 54%; }
+
+      .board-glass,
+      .board-instrument { position: absolute; inset: 0; display: block; width: 100%; height: 100%; pointer-events: none; }
+      .board-glass { z-index: 1; }
+      .board-instrument { z-index: 2; opacity: 0; }
+
+      /* Valores calcados de src/styles.css. Si se retocan aquí, la maqueta deja de
+         prometer el aparato que el tablero tiene de verdad. */
+      .board-glass .cell { fill: none; stroke: rgb(150 198 190 / 0.055); stroke-width: 1; }
+      .board-glass .frame { fill: none; stroke: rgb(199 170 105 / 0.2); stroke-width: 1.1; }
+      .board-glass .edge-tick { stroke: rgb(180 205 198 / 0.26); stroke-width: 0.9; }
+      .board-glass .glass-lip { fill: none; stroke: rgb(226 240 246 / 0.11); stroke-width: 1; vector-effect: non-scaling-stroke; }
+      .board-instrument .dial-ring,
+      .board-instrument .dial-arc { fill: none; vector-effect: non-scaling-stroke; stroke-width: 1; }
+      .board-instrument .dial-ring { stroke: rgb(199 170 105 / 0.16); }
+      .board-instrument .dial-arc { stroke: rgb(199 170 105 / 0.12); }
+      .board-instrument .dial-tick { fill: none; stroke: rgb(214 192 122 / 0.24); stroke-width: 1; vector-effect: non-scaling-stroke; }
+      .board-instrument .dial-label { fill: rgb(210 188 125 / 0.3); font: 500 9px/1 Consolas, "Courier New", monospace; letter-spacing: 0.12em; }
+
+      /* ── HUD ───────────────────────────────────────────────────────────────────── */
+
+      .board-hud { position: absolute; z-index: 2; inset: 0; pointer-events: none; }
+      .board-hud > * { opacity: 0; }
+
+      .hud-plate {
+        position: absolute;
+        border: 1px solid rgb(193 173 106 / 0.26);
+        background: linear-gradient(180deg, rgb(4 10 11 / 0.92), rgb(3 8 9 / 0.72));
+        color: #8b9c96;
+        font: 800 clamp(6px, 0.72vw, 8px)/1 var(--display);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+      .hud-plate b { color: #dfcc92; font-weight: 800; }
+      .hud-plate i { color: #6d7d78; font-style: normal; }
+
+      .hud-turn { top: 3.2%; left: 2.2%; display: flex; align-items: center; gap: 10px; padding: 9px 14px; }
+      .hud-turn strong { color: var(--parchment); font: 600 clamp(8px, 0.95vw, 11px)/1 var(--serif); letter-spacing: 0.1em; }
+
+      /* `position: absolute` es obligatorio aquí: sin él el contenedor no es más que un
+         flex estático a lo ancho del tablero y el `translateX(-50%)` lo saca de cuadro por
+         la izquierda en vez de centrarlo. */
+      .hud-host { position: absolute; top: 0; left: 50%; display: flex; align-items: stretch; gap: 0; transform: translateX(-50%); }
+      .hud-host-memory {
+        display: grid;
+        min-width: 58px;
+        justify-items: center;
+        gap: 4px;
+        border: 1px solid rgb(193 173 106 / 0.26);
+        border-top: 0;
+        padding: 8px 10px 7px;
+        background: linear-gradient(180deg, rgb(4 10 11 / 0.94), rgb(3 8 9 / 0.76));
+      }
+      .hud-host-memory b { color: var(--parchment); font: 600 15px/1 var(--serif); }
+      .hud-host-memory span { color: #6d7d78; font: 800 6px/1 var(--display); letter-spacing: 0.2em; }
+      .hud-host-archive {
+        display: grid;
+        min-width: 232px;
+        justify-items: center;
+        gap: 3px;
+        border: 1px solid rgb(196 122 66 / 0.4);
+        border-top: 0;
+        padding: 8px 26px 8px;
+        background: linear-gradient(180deg, rgb(28 12 8 / 0.92), rgb(8 5 4 / 0.8));
+      }
+      .hud-host-archive span { color: #c69a72; font: 800 7px/1 var(--display); letter-spacing: 0.22em; }
+      .hud-host-archive b { color: #f0c98d; font: 600 21px/1 var(--serif); }
+
+      .hud-tools { top: 3.2%; right: 2.2%; display: flex; gap: 7px; }
+      .hud-tools i {
+        display: grid;
+        width: 27px;
+        height: 27px;
+        border: 1px solid rgb(193 173 106 / 0.26);
+        background: rgb(4 10 11 / 0.9);
+        color: #93a49e;
+        font-size: 11px;
+        font-style: normal;
+        place-items: center;
+      }
+
+      .hud-phases { right: 2.2%; bottom: 15.5%; display: flex; gap: 26px; padding: 8px 16px; }
+      .hud-phases em { font-style: normal; }
+      .hud-phases em.on { color: #dfcc92; }
+
+      .hud-vitals { right: 2.2%; bottom: 3.4%; display: flex; align-items: stretch; gap: 6px; border: 0; background: none; padding: 0; }
+      .hud-pile {
+        display: grid;
+        min-width: 52px;
+        justify-items: center;
+        gap: 4px;
+        border: 1px solid rgb(193 173 106 / 0.26);
+        padding: 9px 10px;
+        background: linear-gradient(180deg, rgb(4 10 11 / 0.92), rgb(3 8 9 / 0.72));
+      }
+      .hud-pile b { color: var(--parchment); font: 600 14px/1 var(--serif); }
+      .hud-pile span { color: #6d7d78; font: 800 6px/1 var(--display); letter-spacing: 0.18em; }
+      .hud-life {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid rgb(120 168 132 / 0.34);
+        padding: 9px 14px;
+        background: linear-gradient(180deg, rgb(8 20 14 / 0.92), rgb(3 9 7 / 0.76));
+      }
+      .hud-life u { color: #7f9289; font: 800 6px/1 var(--display); letter-spacing: 0.2em; text-decoration: none; }
+      .hud-life b { color: #eadfae; font: 600 22px/1 var(--serif); }
+      .hud-life em { color: #8fc79c; font-size: 15px; font-style: normal; }
+
+      .hud-energy { bottom: 4.5%; left: 2.2%; display: grid; gap: 6px; border: 0; background: none; padding: 0; }
+      .hud-energy div { display: flex; gap: 6px; }
+      .hud-energy i {
+        width: 17px;
+        height: 17px;
+        border: 1px solid rgb(150 178 190 / 0.3);
+        border-radius: 50%;
+        background: radial-gradient(circle at 34% 30%, rgb(120 170 195 / 0.3), rgb(6 16 20 / 0.9));
+      }
+      .hud-energy i.spent { border-color: rgb(120 134 130 / 0.22); background: rgb(6 12 14 / 0.85); }
+
+      /* ── VS: reproducción del EncounterTransition vigente ──────────────────────── */
+
+      .vs-scene { position: absolute; z-index: 5; inset: 0; opacity: 0; }
+      .vs-curtain { position: absolute; z-index: 1; inset: 0; }
+      .vs-curtain::before,
+      .vs-curtain::after {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(105deg, rgb(5 13 11 / 0.98), rgb(1 4 3 / 0.99)),
+          repeating-linear-gradient(90deg, transparent 0 23px, rgb(201 181 111 / 0.025) 24px);
+        content: "";
+      }
+      .vs-curtain::before { clip-path: polygon(0 0, 0 100%, 100% 100%); }
+      .vs-curtain::after { clip-path: polygon(0 0, 100% 0, 100% 100%); }
+
+      .vs-content {
+        position: absolute;
+        z-index: 2;
+        inset: 0;
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        gap: 26px;
+        opacity: 0;
+      }
+      .vs-kicker {
+        border-top: 1px solid color-mix(in srgb, var(--encounter-accent) 28%, transparent);
+        border-bottom: 1px solid color-mix(in srgb, var(--encounter-accent) 20%, transparent);
+        padding: 9px 30px;
+        background: radial-gradient(ellipse at center, color-mix(in srgb, var(--encounter-accent) 16%, transparent), transparent 68%);
+        color: var(--encounter-accent-bright);
+        font: 800 clamp(8px, 0.95vw, 11px)/1 var(--display);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+      }
+      .vs-matchup { display: grid; align-items: center; gap: clamp(18px, 3.4vw, 46px); grid-auto-flow: column; }
+      .vs-combatant { display: grid; align-items: center; gap: 16px; grid-auto-flow: column; }
+      .vs-side { display: grid; gap: 7px; }
+      .vs-side small { color: #93a89b; font: 800 7px/1 var(--display); letter-spacing: 0.28em; text-transform: uppercase; }
+      .vs-side strong { color: var(--parchment); font: 500 clamp(13px, 1.7vw, 21px)/1.1 var(--serif); letter-spacing: 0.03em; }
+      .vs-combatant.player .vs-side { justify-items: end; text-align: right; }
+      .vs-art { width: clamp(58px, 7vw, 92px); color: var(--verdant); filter: drop-shadow(0 0 16px rgb(0 0 0 / 0.6)); }
+      .vs-combatant.host .vs-art { color: var(--grave); }
+      .vs-art svg { display: block; width: 100%; height: auto; }
+      .vs-mark { position: relative; display: grid; color: var(--encounter-accent-bright); place-items: center; }
+      .vs-mark svg { position: relative; z-index: 1; width: 34px; filter: drop-shadow(0 0 15px color-mix(in srgb, var(--encounter-accent) 55%, transparent)); }
+      .vs-mark b { position: absolute; top: calc(100% + 6px); left: 50%; font: 700 12px/1 var(--display); letter-spacing: 0.14em; transform: translateX(-50%); }
+      .vs-rift {
+        position: absolute;
+        z-index: 0;
+        top: 50%;
+        left: 50%;
+        width: 3px;
+        height: 150vmax;
+        opacity: 0;
+        background: linear-gradient(180deg, transparent, var(--encounter-accent-bright) 22%, #fffbd9 50%, var(--encounter-accent-bright) 78%, transparent);
+        box-shadow: 0 0 12px var(--encounter-accent-bright), 0 0 45px var(--encounter-accent);
+        transform: rotate(calc(var(--encounter-cut-angle) - 90deg)) scaleY(0.04);
+        transform-origin: center;
+        translate: -50% -50%;
+      }
+
+      /* ── Mano inicial ──────────────────────────────────────────────────────────── */
+
+      .mulligan-scene {
+        position: absolute;
+        z-index: 6;
+        inset: 0;
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        gap: clamp(14px, 2vw, 24px);
+        opacity: 0;
+      }
+      .mulligan-title { color: #b9c6bf; font: 800 8px/1 var(--display); letter-spacing: 0.32em; text-transform: uppercase; }
+      .mulligan-cards { display: flex; gap: clamp(7px, 1vw, 13px); }
+      .mulligan-card {
+        width: clamp(56px, 7.4vw, 96px);
+        aspect-ratio: 2 / 3;
+        border: 1px solid rgb(150 130 78 / 0.5);
+        border-radius: 3px;
+        background:
+          linear-gradient(180deg, rgb(38 52 40 / 0.9), rgb(10 16 13 / 0.95)),
+          repeating-linear-gradient(0deg, transparent 0 7px, rgb(214 194 126 / 0.03) 7px 8px);
+        box-shadow: 0 10px 24px rgb(0 0 0 / 0.5), inset 0 0 0 1px rgb(226 205 138 / 0.06);
+        opacity: 0;
+      }
+      .mulligan-card::before {
+        display: block;
+        width: 62%;
+        height: 3px;
+        margin: 12% auto 0;
+        background: rgb(226 205 138 / 0.2);
+        content: "";
+      }
+      .mulligan-actions { display: flex; gap: 10px; }
+      .mulligan-actions span {
+        border: 1px solid rgb(193 173 106 / 0.34);
+        padding: 10px 22px;
+        background: linear-gradient(180deg, rgb(24 32 28 / 0.94), rgb(7 12 12 / 0.96));
+        color: #b7c3ba;
+        font: 900 8px/1 var(--display);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+      .mulligan-actions span.primary { border-color: rgb(225 199 119 / 0.6); color: var(--gold-bright); }
+
+      /* ── Coreografía ───────────────────────────────────────────────────────────── */
+
+      .stage {
+        --d-vs: 2450ms;
+        --delay-board: 1050ms;
+        --delay-instrument: 2686ms;
+        --d-instrument: 600ms;
+        --delay-hud: 2686ms;
+        --d-hud: 620ms;
+        --delay-mulligan: 3336ms;
+        --d-mulligan: 480ms;
+      }
+
+      .stage.is-playing .vs-scene { opacity: 1; }
+      .stage.is-playing .vs-curtain::before { animation: vs-curtain-player var(--d-vs) cubic-bezier(0.72, 0, 0.22, 1) both; }
+      .stage.is-playing .vs-curtain::after { animation: vs-curtain-host var(--d-vs) cubic-bezier(0.72, 0, 0.22, 1) both; }
+      .stage.is-playing .vs-content { animation: vs-content-life var(--d-vs) ease-in-out both; }
+      .stage.is-playing .vs-kicker { animation: vs-static-exit 686ms 1764ms ease-in forwards; }
+      .stage.is-playing .vs-combatant.player {
+        animation:
+          vs-combatant-left 890ms 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both,
+          vs-combatant-left-exit 784ms 1666ms cubic-bezier(0.72, 0, 0.22, 1) forwards;
+      }
+      .stage.is-playing .vs-combatant.host {
+        animation:
+          vs-combatant-right 890ms 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both,
+          vs-combatant-right-exit 784ms 1666ms cubic-bezier(0.72, 0, 0.22, 1) forwards;
+      }
+      .stage.is-playing .vs-mark {
+        animation:
+          vs-versus-impact 760ms 300ms cubic-bezier(0.18, 0.9, 0.25, 1.2) both,
+          vs-static-exit 686ms 1764ms ease-in forwards;
+      }
+      .stage.is-playing .vs-rift { animation: vs-rift var(--d-vs) cubic-bezier(0.22, 0.76, 0.18, 1) both; }
+
+      /* El tablero queda presente mientras las cortinas aún están cerradas. No tiene una
+         segunda entrada propia: la única apertura visible es la de las cortinas. */
+      .stage.is-playing .board-scene { animation: board-present 1ms var(--delay-board) steps(1, end) both; }
+      .stage.is-playing .board-instrument { animation: instrument-settle var(--d-instrument) var(--delay-instrument) ease-out both; }
+
+      .stage.is-playing .hud-turn { animation: hud-in var(--d-hud) var(--delay-hud) cubic-bezier(0.16, 1, 0.3, 1) both; }
+      .stage.is-playing .hud-host { animation: hud-drop var(--d-hud) calc(var(--delay-hud) + 90ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+      .stage.is-playing .hud-tools { animation: hud-in var(--d-hud) calc(var(--delay-hud) + 150ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+      .stage.is-playing .hud-energy { animation: hud-in var(--d-hud) calc(var(--delay-hud) + 220ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+      .stage.is-playing .hud-phases { animation: hud-in var(--d-hud) calc(var(--delay-hud) + 300ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+      .stage.is-playing .hud-vitals { animation: hud-in var(--d-hud) calc(var(--delay-hud) + 380ms) cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+      .stage.is-playing .mulligan-scene { animation: mulligan-in var(--d-mulligan) var(--delay-mulligan) ease-out both; }
+      .stage.is-playing .mulligan-card { animation: mulligan-card-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+      .stage.is-playing .mulligan-card:nth-child(1) { animation-delay: calc(var(--delay-mulligan) + 120ms); }
+      .stage.is-playing .mulligan-card:nth-child(2) { animation-delay: calc(var(--delay-mulligan) + 175ms); }
+      .stage.is-playing .mulligan-card:nth-child(3) { animation-delay: calc(var(--delay-mulligan) + 230ms); }
+      .stage.is-playing .mulligan-card:nth-child(4) { animation-delay: calc(var(--delay-mulligan) + 285ms); }
+      .stage.is-playing .mulligan-card:nth-child(5) { animation-delay: calc(var(--delay-mulligan) + 340ms); }
+
+      .stage.is-arrived .vs-scene { display: none; }
+      .stage.is-arrived .board-scene { opacity: 1; }
+      .stage.is-arrived .board-instrument { opacity: 1; }
+      .stage.is-arrived .board-hud > * { opacity: 1; }
+      .stage.is-arrived .mulligan-scene { opacity: 1; }
+      .stage.is-arrived .mulligan-card { opacity: 1; }
+
+      /* Curtinas: mismas keyframes que src/styles.css. Entran en horizontal, se
+         mantienen cerradas del 17 % al 68 % y se separan en diagonal. Ese 68 %
+         —1666 ms— es el instante en que aparece el sello completo. */
+      @keyframes vs-curtain-player {
+        0% { transform: translateX(-102%); }
+        17%, 68% { transform: translateX(0); }
+        100% { transform: translateY(104%); }
+      }
+      @keyframes vs-curtain-host {
+        0% { transform: translateX(102%); }
+        17%, 68% { transform: translateX(0); }
+        100% { transform: translateY(-104%); }
+      }
+      @keyframes vs-content-life { 0%, 7% { opacity: 0; } 18%, 100% { opacity: 1; } }
+      @keyframes vs-static-exit { from { opacity: 1; } to { opacity: 0; } }
+      @keyframes vs-versus-impact {
+        0% { opacity: 0; transform: scale(2.1) rotate(-8deg); }
+        56% { opacity: 1; transform: scale(0.88) rotate(1deg); }
+        72% { transform: scale(1.12) rotate(0); }
+        100% { opacity: 1; transform: scale(1); }
+      }
+      @keyframes vs-rift {
+        0%, 38% { opacity: 0; transform: rotate(calc(var(--encounter-cut-angle) - 90deg)) scaleY(0.04); }
+        47% { opacity: 1; transform: rotate(calc(var(--encounter-cut-angle) - 90deg)) scaleY(1); }
+        63% { opacity: 0.9; transform: rotate(calc(var(--encounter-cut-angle) - 90deg)) scaleY(1); }
+        100% { opacity: 0; transform: rotate(calc(var(--encounter-cut-angle) - 90deg)) scaleY(1); }
+      }
+      @keyframes vs-combatant-left { from { opacity: 0; transform: translateX(-46%); } to { opacity: 1; transform: translateX(0); } }
+      @keyframes vs-combatant-right { from { opacity: 0; transform: translateX(46%); } to { opacity: 1; transform: translateX(0); } }
+      @keyframes vs-combatant-left-exit { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(104%); } }
+      @keyframes vs-combatant-right-exit { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-104%); } }
+
+      @keyframes board-present { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes instrument-settle { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes hud-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes hud-drop { from { opacity: 0; transform: translate(-50%, -12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+      @keyframes mulligan-in { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes mulligan-card-in { from { opacity: 0; transform: translateY(26px) scale(0.92); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+      @media (prefers-reduced-motion: reduce) {
+        .stage.is-playing .vs-scene,
+        .stage.is-playing .vs-curtain::before,
+        .stage.is-playing .vs-curtain::after,
+        .stage.is-playing .vs-content,
+        .stage.is-playing .vs-combatant,
+        .stage.is-playing .vs-mark,
+        .stage.is-playing .vs-rift,
+        .stage.is-playing .board-scene,
+        .stage.is-playing .board-instrument,
+        .stage.is-playing .board-hud > *,
+        .stage.is-playing .mulligan-scene,
+        .stage.is-playing .mulligan-card { animation: none; }
+      }
+
+      .scrub { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
+      .track { position: relative; height: 3px; flex: 1; background: rgb(146 133 88 / 0.18); }
+      .fill { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, #6eaa7d, #d4bd78 52%, #b65c43); box-shadow: 0 0 10px rgb(207 178 92 / 0.35); }
+      .clock { min-width: 48px; color: var(--muted-dim); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
+
+      .notes { margin-top: 46px; border-top: 1px solid var(--rule); padding-top: 26px; }
+      .notes h2 { margin: 0 0 12px; color: var(--parchment); font: 500 23px/1.2 var(--serif); }
+      .notes h3 { margin: 22px 0 5px; color: var(--gold-bright); font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+      .notes ul { max-width: 78ch; margin: 0; padding-left: 20px; }
+      .notes li { margin-bottom: 9px; }
+      .notes b { color: var(--gold-bright); font-weight: 600; }
+      .notes code { color: #cbd8cf; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <a class="back" href="../index.html">← Maquetas</a>
+        <div class="eyebrow">Obertura · del VS al tablero</div>
+        <h1>Obertura del Tablero</h1>
+        <p>
+          El VS vigente no cambia. Cuando <strong>empieza a abrirse</strong>, el signo del Futuro aparece ya sellado sobre el
+          Campo desnudo, pulsa una vez, entrega su aro al <strong>instrumento de grados</strong> y
+          desaparece mientras el HUD y la mano inicial toman su lugar.
+        </p>
+      </header>
+
+      <div class="controls">
+        <button id="replay" type="button">Repetir</button>
+        <button id="slow" type="button" aria-pressed="false">Cámara lenta</button>
+        <label for="seed">Semilla</label>
+        <input id="seed" type="text" value="748-203" spellcheck="false" />
+        <span class="control-spacer"></span>
+        <span class="phase-readout" id="phaseReadout">Listo</span>
+      </div>
+
+      <div class="stage" id="stage">
+        <canvas id="spaceCanvas" aria-hidden="true"></canvas>
+
+        <!-- El tablero, sin HUD. Sólo el espacio, el cristal y la luz del Campo. -->
+        <section class="board-scene" aria-label="Tablero desnudo">
+          <div class="board-floor"></div>
+          <div class="board-rows"><span></span><span></span></div>
+
+          <!-- El cristal: rejilla, marco y cantos. Es la superficie a través de la que se
+               mira, así que está desde el principio. El aparato de grados NO: ese lo trae
+               el signo. -->
+          <svg class="board-glass" viewBox="0 0 1000 562" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs>
+              <pattern id="overtureCells" width="78" height="78" patternUnits="userSpaceOnUse" patternTransform="translate(26 20)">
+                <path class="cell" d="M78 0H0V78" />
+              </pattern>
+              <radialGradient id="overtureFade" cx="0.5" cy="0.5" r="0.62">
+                <stop offset="0" stop-color="#0b0b0b" />
+                <stop offset="0.34" stop-color="#2a2a2a" />
+                <stop offset="0.72" stop-color="#c8c8c8" />
+                <stop offset="1" stop-color="#ffffff" />
+              </radialGradient>
+              <mask id="overtureCellMask"><rect width="1000" height="562" fill="url(#overtureFade)" /></mask>
+            </defs>
+            <rect width="1000" height="562" fill="url(#overtureCells)" mask="url(#overtureCellMask)" />
+            <rect class="frame" x="26" y="20" width="948" height="522" />
+            <path class="glass-lip" d="M27 541 V21 H973" />
+            <g class="edge-tick">
+              <path d="M260 20 V32 M494 20 V32 M728 20 V32" />
+              <path d="M260 542 V530 M494 542 V530 M728 542 V530" />
+              <path d="M26 176 H38 M26 332 H38 M26 488 H38" />
+              <path d="M974 176 H962 M974 332 H962 M974 488 H962" />
+            </g>
+          </svg>
+
+          <!-- El instrumento de grados: lo que el signo deja al apagarse. -->
+          <svg class="board-instrument" viewBox="0 0 1000 562" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <g class="dial" transform="translate(500 281)">
+              <circle class="dial-ring" r="196" pathLength="360" stroke-dasharray="1 14" />
+              <circle class="dial-arc" r="183" pathLength="360" stroke-dasharray="34 18 5 33" />
+              <path class="dial-tick" d="M0 -208 V-195 M147 -147 L138 -138 M208 0 H195 M147 147 L138 138" />
+              <path class="dial-tick" d="M0 208 V195 M-147 147 L-138 138 M-208 0 H-195 M-147 -147 L-138 -138" />
+              <text class="dial-label" x="0" y="-215" text-anchor="middle">000° · N</text>
+              <text class="dial-label" x="160" y="-155">045°</text>
+              <text class="dial-label" x="217" y="4">090° · E</text>
+              <text class="dial-label" x="160" y="163">135°</text>
+              <text class="dial-label" x="0" y="228" text-anchor="middle">180° · S</text>
+              <text class="dial-label" x="-160" y="163" text-anchor="end">225°</text>
+              <text class="dial-label" x="-217" y="4" text-anchor="end">270° · O</text>
+              <text class="dial-label" x="-160" y="-155" text-anchor="end">315°</text>
+            </g>
+          </svg>
+        </section>
+
+        <!-- HUD. Entra después de la entrega, nunca antes. -->
+        <section class="board-hud" aria-label="HUD">
+          <div class="hud-plate hud-turn"><span>Turno del Cronista</span><i>·</i><strong>Preparación</strong><i>·</i><span>1 / 3</span></div>
+          <div class="hud-host">
+            <div class="hud-host-memory"><b>0</b><span>Memoria</span></div>
+            <div class="hud-host-archive"><span>Archivo de la Hueste</span><b>48</b></div>
+          </div>
+          <div class="hud-plate hud-tools" style="border: 0; background: none; padding: 0;"><i>♪</i><i>⚙</i></div>
+          <div class="hud-plate hud-phases"><em class="on">Principal</em><em>Batalla</em><em>Final</em></div>
+          <div class="hud-plate hud-vitals">
+            <div class="hud-pile"><b>0</b><span>Memoria</span></div>
+            <div class="hud-pile"><b>26</b><span>Archivo</span></div>
+            <div class="hud-life"><u>Leo</u><b>20</b><em>♡</em></div>
+          </div>
+          <div class="hud-plate hud-energy">
+            <div><i></i><i></i><i></i></div>
+            <div><i></i><i class="spent"></i><i class="spent"></i><i class="spent"></i></div>
+          </div>
+        </section>
+
+        <canvas id="starCanvas" aria-hidden="true"></canvas>
+
+        <!-- El VS vigente, reproducido con sus tiempos reales. -->
+        <section class="vs-scene" aria-label="Encuentro">
+          <div class="vs-curtain"></div>
+          <div class="vs-content">
+            <span class="vs-kicker">La crónica comienza</span>
+            <div class="vs-matchup">
+              <div class="vs-combatant player">
+                <div class="vs-side"><small>Cronista</small><strong>El Pacto de Elarion</strong></div>
+                <div class="vs-art">
+                  <svg viewBox="0 0 140 210" fill="none">
+                    <path d="M70 22C44 50 35 83 38 122c3 32 15 52 32 69 17-17 29-37 32-69 3-39-6-72-32-100Z" fill="currentColor" opacity=".14"/>
+                    <path d="M70 27v151M70 70 43 52M70 93 101 68M70 118 36 102M70 139l36-28M70 158l-23 18" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M45 51c-17-7-25 4-23 20 15 2 25-4 23-20Zm55 16c19-6 27 7 22 23-16 0-25-7-22-23ZM37 101c-18-4-25 9-19 25 15-2 23-10 19-25Zm68 9c18-4 25 9 19 25-15-2-23-10-19-25ZM47 174c-12 6-14 17-7 27 12-4 17-13 7-27Z" fill="currentColor" opacity=".72"/>
+                    <circle cx="70" cy="58" r="7" fill="#f2df9f"/>
+                  </svg>
+                </div>
+              </div>
+              <span class="vs-mark">
+                <span class="vs-rift"></span>
+                <svg viewBox="0 0 32 32" fill="none"><path d="m7 5 19 21M25 5 6 26M5 7l4-3 2 5-3 3m19-5-4-3-2 5 3 3M4 25l3 3 5-5m16 2-3 3-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <b>VS</b>
+              </span>
+              <div class="vs-combatant host">
+                <div class="vs-art">
+                  <svg viewBox="0 0 140 210" fill="none">
+                    <path d="M70 25c-34 0-51 27-49 63 1 23 12 37 26 47v33l23 20 23-20v-33c14-10 25-24 26-47 2-36-15-63-49-63Z" fill="currentColor" opacity=".15"/>
+                    <path d="M70 27c-30 0-45 25-43 58 1 25 14 38 30 47v23l13 13 13-13v-23c16-9 29-22 30-47 2-33-13-58-43-58Z" stroke="currentColor" stroke-width="3"/>
+                    <path d="m38 79 22-11 8 24-20 14-14-11Zm64 0L80 68l-8 24 20 14 14-11Z" fill="currentColor" opacity=".72"/>
+                    <path d="M55 121h30M58 134h24M64 146h12M42 49 28 32M98 49l14-17M70 47V22" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="49" cy="86" r="5" fill="#f1bb83"/><circle cx="91" cy="86" r="5" fill="#f1bb83"/>
+                  </svg>
+                </div>
+                <div class="vs-side"><small>Hueste</small><strong>El Alzamiento de los Sinsepulcro</strong></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="mulligan-scene" aria-label="Mano inicial">
+          <span class="mulligan-title">Mano inicial</span>
+          <div class="mulligan-cards">
+            <div class="mulligan-card"></div>
+            <div class="mulligan-card"></div>
+            <div class="mulligan-card"></div>
+            <div class="mulligan-card"></div>
+            <div class="mulligan-card"></div>
+          </div>
+          <div class="mulligan-actions"><span class="primary">Conservar</span><span>Reescribir</span></div>
+        </section>
+      </div>
+
+      <div class="scrub"><span class="clock" id="clock">0.00 s</span><span class="track"><span class="fill" id="fill"></span></span></div>
+
+      <section class="notes">
+        <h2>Notas</h2>
+
+        <h3>Qué cambia y qué no</h3>
+        <ul>
+          <li>El VS <b>no cambia</b>. Está reproducido con los tiempos reales de <code>EncounterTransition</code>: cortinas de 2450 ms con la misma curva y las mismas keyframes, combatientes entrando a 160 ms y saliendo a 1666 ms, la marca a 300 ms y el texto saliendo a 1764 ms. Las dos mitades son los mismos triángulos recortados con <code>clip-path</code>.</li>
+          <li>El tablero se revela debajo a los <b>1050 ms</b>, que es <code>ENCOUNTER_IMPACT_MS</code>, igual que en el juego.</li>
+          <li>Lo nuevo empieza en el <b>68 % de las cortinas: 1666 ms</b>, el fotograma exacto en que dejan de estar cerradas y arranca el corte diagonal. Ahí aparece el signo ya completo por el hueco y da un único pulso.</li>
+        </ul>
+
+        <h3>El tablero llega desnudo</h3>
+        <ul>
+          <li>Cuando las cortinas se abren no hay HUD: ni barra de turno, ni Archivo de la Hueste, ni pilas, ni Vida, ni orbes de Energía. Sólo el espacio, el cristal y la luz del Campo. El signo necesita escenario propio.</li>
+          <li>El cristal —rejilla, marco y cantos— sí está desde el principio: es la superficie a través de la que se mira, no un aparato. <b>El instrumento de grados no</b>: ese lo trae el signo, y es la única pieza del tablero que nace de la obertura.</li>
+        </ul>
+
+        <h3>El signo y el aparato son la misma figura</h3>
+        <ul>
+          <li>Las ocho marcas del instrumento caen en 000°·N, 045°, 090°·E, 135°, 180°·S, 225°, 270°·O y 315°, que son exactamente los ocho ángulos de las puntas. Su aro mide <code>r=196</code> sobre un viewBox de 562, o sea <b>0.349·H</b>, contra <b>0.347·H</b> de la punta larga. Es el mismo círculo.</li>
+          <li>Por eso <code>unit</code> se deriva del radio del aro en vez de un número redondo: el signo nace ya del tamaño del aparato y el relevo es una <b>entrega de geometría</b>. Al sentarse, las puntas avanzan un 2.8 % hasta el centro de sus marcas.</li>
+          <li>El círculo es una sola luz que recorre el aro <b>desde el Norte en sentido horario</b>. Cuando termina la vuelta, el SVG del aparato ya está encendido debajo con los mismos radios y el signo se apaga.</li>
+        </ul>
+
+        <h3>Ritmo propuesto</h3>
+        <ul>
+          <li><b>VS, 0.00–2.45 s:</b> el encuentro vigente, sin tocar.</li>
+          <li><b>Revelar, 1.05–1.90 s:</b> el tablero desnudo aparece debajo de las cortinas.</li>
+          <li><b>Pulso, 1.67–2.29 s:</b> el sello ya está completo y respira una sola vez.</li>
+          <li><b>Fijar, 2.05–2.57 s:</b> el signo se sienta en sus marcas.</li>
+          <li><b>El círculo, 2.49–3.09 s:</b> la luz recorre el aro.</li>
+          <li><b>Entregar, 2.69–3.59 s:</b> el instrumento y el HUD entran mientras el signo se apaga.</li>
+          <li><b>HUD, 2.69–3.69 s:</b> entran turno, Archivo de la Hueste, herramientas, Energía, fases y vitals, escalonados.</li>
+          <li><b>Mano inicial, 3.34–3.96 s:</b> las cartas suben escalonadas 55 ms durante el último fundido del signo, con Conservar y Reescribir.</li>
+        </ul>
+
+        <h3>Que no duela a oscuras</h3>
+        <ul>
+          <li>No hay cobertura de ningún tipo: ni destello, ni abertura, ni fundido a blanco. El sello pulsa, entrega el aro y se apaga.</li>
+          <li>Ni un blanco puro en la paleta y una <b>rodilla filmica</b> antes de componer: por encima de 1.0 la suma aditiva se convierte en pantalla blanca, y a oscuras eso es lo que hace daño.</li>
+        </ul>
+
+        <h3>Si se lleva al juego</h3>
+        <ul>
+          <li>El signo es una escena y un plano: entra por <code>renderSharedVfxFrame</code> sin abrir otro contexto WebGL. Aquí uso WebGL crudo sólo porque esta carpeta no carga Three.js.</li>
+          <li>El cielo es <code>TEMPORAL_BACKDROP_FRAGMENT</code> tal cual, vivo bajo las cortinas y bajo el tablero. En runtime ya existe como <code>TemporalBackdrop</code>.</li>
+          <li>El instrumento está calcado de <code>TemporalBackdrop.tsx</code> y <code>styles.css</code>. Si se retocan aquí, la maqueta deja de prometer el aparato de verdad. Llevarlo al juego significa poder montar el retículo <b>sin</b> su disco de grados durante la obertura.</li>
+          <li>La firma de la semilla usa <code>futureVisualSignature</code>, la misma de <code>src/utils/futureIdentity.ts</code>: el mismo Futuro dibuja siempre el mismo signo.</li>
+          <li>El modo de movimiento reducido salta al tablero con el instrumento y el HUD ya puestos, sin pulso ni entrega.</li>
+          <li>Falta audio: <code>buff</code> subiendo de tono con cada punta que se fija, un golpe seco por punta al sentarse, y el aro cerrando con un tono sostenido.</li>
+        </ul>
+      </section>
+    </main>
+
+    <script>
+      /* Obertura del Tablero.
+
+         El signo del Futuro es la misma rosa cardinal de destiny-constellation y de la
+           Victoria: puntas pares en N, E, S y O, y mezcla las dos identidades que
+           acaban de chocar en el VS. Después del pulso entrega su aro al instrumento de grados,
+         que no se le parece: ES la misma figura quieta.
+
+         El reloj interno del signo arranca a los 1666 ms del reloj de la maqueta —el
+         instante en que las cortinas del VS empiezan a abrirse—, así que aquí `uT` es
+         siempre tiempo del signo, no tiempo de la obertura. */
+      (function () {
+        "use strict";
+
+        var stage = document.getElementById("stage");
+        var skyCanvas = document.getElementById("spaceCanvas");
+        var canvas = document.getElementById("starCanvas");
+        var seedInput = document.getElementById("seed");
+
+        var TIPS = 8;
+        var NODES = 17;
+        var EDGES = 16;
+
+        // Instrumento de grados, en unidades del viewBox 1000x562 de TemporalBackdrop.
+        var DIAL_VIEW_H = 562;
+        var DIAL_RING = 196;   // aro punteado
+        var DIAL_SEAT = 201.5; // centro de las marcas (195 → 208): donde se sientan las puntas
+
+        var VERT = "attribute vec2 aPos; void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }";
+
+        /* El cielo, portado literal desde src/components/temporalBackdropShader.ts.
+           uClimax queda en 0: el clímax pertenece a la partida, no a la obertura. */
+        var SKY = [
+          "float sHash21(vec2 p){ p=fract(p*vec2(123.34,345.45)); p+=dot(p,p+34.345); return fract(p.x*p.y); }",
+          "vec2 sHash22(vec2 p){ float n=sHash21(p); return vec2(n, sHash21(p+n+19.19)); }",
+          "float sNoise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.0-2.0*f);",
+          "  float a=sHash21(i),b=sHash21(i+vec2(1,0)),c=sHash21(i+vec2(0,1)),d=sHash21(i+vec2(1,1));",
+          "  return mix(mix(a,b,f.x),mix(c,d,f.x),f.y); }",
+          "float sFbm(vec2 p){ float v=0.0,a=0.55; mat2 t=mat2(0.82,-0.57,0.57,0.82);",
+          "  for(int i=0;i<4;i++){ v+=a*sNoise(p); p=t*p*2.05+vec2(17.13,9.71); a*=0.49; } return v; }",
+          "mat2 sRot(float a){ float c=cos(a),s=sin(a); return mat2(c,-s,s,c); }",
+          "float sStar(vec2 p, float scale, float gate, float speed, float resY){",
+          "  vec2 g=p*scale; vec2 id=floor(g); vec2 cell=fract(g)-0.5;",
+          "  float seed=sHash21(id); if(seed<gate) return 0.0;",
+          "  vec2 shift=(sHash22(id+7.31)-0.5)*0.7;",
+          "  float d=length(cell-shift);",
+          "  float cellPx=max(1.0, resY/scale);",
+          "  float radius=max(0.045, 1.35/cellPx);",
+          "  float core=exp(-pow(d/radius,2.0)*1.6);",
+          "  float halo=exp(-pow(d/(radius*3.2),2.0))*step(0.994,seed)*0.22;",
+          "  return (core+halo)*(0.94+0.06*sin(uTime*speed+seed*6.2831)); }",
+          "float sFly(vec2 rel, vec2 id, float speed, float off){",
+          "  float seed=sHash21(id+off); if(seed<0.93) return 0.0;",
+          "  float k=0.5+seed;",
+          "  vec2 wander=0.30*vec2(sin(uTime*speed*k+seed*31.0), cos(uTime*speed*(k*0.82)+seed*17.0));",
+          "  vec2 offset=(sHash22(id+5.13)-0.5)*0.40+wander;",
+          "  float d=length(rel-offset);",
+          "  float core=exp(-d*d*320.0); float halo=exp(-d*d*30.0)*0.22;",
+          "  float breath=0.30+0.70*pow(0.5+0.5*sin(uTime*(0.28+seed*0.4)+seed*44.0),2.2);",
+          "  return (core+halo)*breath; }",
+          "float sFlies(vec2 p, float scale, float speed, float off){",
+          "  vec2 g=p*scale; vec2 id=floor(g); vec2 cell=fract(g)-0.5; float sum=0.0;",
+          "  for(int j=-1;j<=1;j++){ for(int i=-1;i<=1;i++){ vec2 nb=vec2(float(i),float(j));",
+          "    sum+=sFly(cell-nb, id+nb, speed, off); } }",
+          "  return sum; }",
+          "vec3 temporalSky(vec2 res){",
+          "  vec2 uv=gl_FragCoord.xy/res;",
+          "  float aspect=res.x/res.y;",
+          "  vec2 p=(uv-0.5)*vec2(aspect,1.0);",
+          "  p=sRot(uTime*0.0055)*p;",
+          "  vec2 flow=vec2(uTime*0.020,-uTime*0.014);",
+          "  vec2 warp=vec2(sFbm(p*1.32+vec2(0.0,uTime*0.022)+3.7), sFbm(p*1.32+vec2(uTime*0.018,0.0)+11.9))-0.5;",
+          "  vec2 q=p+warp*0.36+flow*0.4;",
+          "  q+=0.12*(vec2(sFbm(q*2.3-flow), sFbm(q*2.3+flow+6.1))-0.5);",
+          "  float broad=sFbm(q*1.62);",
+          "  float folds=sFbm(q*3.70+23.4);",
+          "  float edgeBias=smoothstep(0.10,0.74,length(p-vec2(-0.08,0.02)));",
+          "  float breathe=0.92+0.08*sin(uTime*0.10);",
+          "  float nebula=smoothstep(0.49,0.87,broad+folds*0.23)*mix(0.24,1.0,edgeBias)*breathe;",
+          "  float vein=smoothstep(0.60,0.90,folds)*nebula;",
+          "  float dust=smoothstep(0.70,0.95,sFbm(q*5.8+vec2(31.2,15.7)))*edgeBias;",
+          "  vec3 color=vec3(0.0024,0.0062,0.017);",
+          "  color+=vec3(0.006,0.024,0.058)*(0.22+broad*0.62);",
+          "  color+=vec3(0.026,0.20,0.24)*nebula*0.92;",
+          "  color+=vec3(0.036,0.34,0.36)*vein*0.38;",
+          "  color+=vec3(0.72,0.50,0.18)*dust*0.26;",
+          "  vec2 near=sRot(uTime*0.012)*p+vec2(uTime*0.0040,-uTime*0.0015);",
+          "  vec2 mid=sRot(uTime*0.007)*p*1.02+5.3;",
+          "  vec2 far=sRot(uTime*0.003)*p+13.7;",
+          "  color+=vec3(0.92,0.86,0.68)*sStar(near,74.0,0.9979,0.055,res.y)*0.40;",
+          "  color+=vec3(0.78,0.70,0.46)*sStar(mid,142.0,0.99945,0.038,res.y)*0.28;",
+          "  color+=vec3(1.00,0.72,0.34)*sStar(far,97.0,0.99935,0.026,res.y)*0.28;",
+          "  float glow=sFlies(p+warp*0.05,9.0,0.10,0.0)+sFlies(p*1.7-warp*0.04+8.2,15.0,0.07,21.3)*0.7;",
+          "  color+=mix(vec3(1.0,0.80,0.36),vec3(0.55,0.95,0.78),0.35)*glow*0.95;",
+          "  float vig=1.0-smoothstep(0.40,1.0,length(p*vec2(0.76,1.0)));",
+          "  color*=mix(0.62,1.0,vig);",
+          "  return pow(max(color,0.0),vec3(0.92)); }"
+        ].join("\n");
+
+        function makeContext(target) {
+          return target.getContext("webgl", { alpha: true, premultipliedAlpha: true, antialias: true });
+        }
+
+        function compile(ctx, type, src) {
+          var sh = ctx.createShader(type);
+          ctx.shaderSource(sh, src);
+          ctx.compileShader(sh);
+          if (!ctx.getShaderParameter(sh, ctx.COMPILE_STATUS)) { console.error(ctx.getShaderInfoLog(sh)); return null; }
+          return sh;
+        }
+
+        function buildProgram(ctx, fragSrc, names) {
+          var vs = compile(ctx, ctx.VERTEX_SHADER, VERT);
+          var fs = compile(ctx, ctx.FRAGMENT_SHADER, fragSrc);
+          if (!vs || !fs) return null;
+          var prog = ctx.createProgram();
+          ctx.attachShader(prog, vs);
+          ctx.attachShader(prog, fs);
+          ctx.bindAttribLocation(prog, 0, "aPos");
+          ctx.linkProgram(prog);
+          if (!ctx.getProgramParameter(prog, ctx.LINK_STATUS)) { console.error(ctx.getProgramInfoLog(prog)); return null; }
+          var buffer = ctx.createBuffer();
+          ctx.bindBuffer(ctx.ARRAY_BUFFER, buffer);
+          ctx.bufferData(ctx.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), ctx.STATIC_DRAW);
+          ctx.enableVertexAttribArray(0);
+          ctx.vertexAttribPointer(0, 2, ctx.FLOAT, false, 0, 0);
+          ctx.disable(ctx.DEPTH_TEST);
+          ctx.enable(ctx.BLEND);
+          ctx.blendFunc(ctx.ONE, ctx.ONE_MINUS_SRC_ALPHA);
+          var U = {};
+          names.forEach(function (n) { U[n] = ctx.getUniformLocation(prog, n); });
+          return { program: prog, uniforms: U };
+        }
+
+        var skyGl = makeContext(skyCanvas);
+        var sky = null;
+        if (skyGl) {
+          sky = buildProgram(skyGl, [
+            "precision highp float;",
+            "uniform vec2 uRes; uniform float uPR; uniform float uTime;",
+            SKY,
+            "void main(){ gl_FragColor = vec4(temporalSky(uRes*uPR), 1.0); }"
+          ].join("\n"), ["uRes", "uPR", "uTime"]);
+        }
+
+        var gl = makeContext(canvas);
+        if (!gl) return;
+
+        var FRAG = [
+          "precision highp float;",
+          "#define NODES " + NODES,
+          "#define EDGES " + EDGES,
+          "uniform vec2 uRes; uniform float uPR; uniform float uTime; uniform float uT;",
+          "uniform vec2 uCenter; uniform float uUnit; uniform float uSeed; uniform float uDialR;",
+          "uniform float uScale; uniform float uPresence; uniform float uCharge;",
+          "uniform float uSeat; uniform float uSweep; uniform float uSweepPresence;",
+          // xy = desplazamiento respecto al centro, z = reservado en cero, w = semilla propia
+          "uniform vec4 uNode[NODES];",
+          // xy/zw = extremos, también relativos al centro
+          "uniform vec4 uEdge[EDGES];",
+
+          "float h11(float n){ return fract(sin(n*78.233)*43758.5453123); }",
+          "float segSD(vec2 p, vec2 a, vec2 b){ vec2 pa=p-a, ba=b-a;",
+          "  float h=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0); return length(pa-ba*h); }",
+          "void add(inout vec3 col, inout float al, vec3 c, float amt){",
+          "  if(amt<=0.0015) return; col += c*amt; al = al + (1.0-al)*clamp(amt,0.0,1.0); }",
+
+          // Ni un solo blanco puro. El punto más caliente es pergamino tibio.
+          "const vec3 VERD  = vec3(0.29,0.66,0.46);",
+          "const vec3 EMBER = vec3(0.78,0.35,0.19);",
+          "const vec3 GOLD  = vec3(0.86,0.68,0.34);",
+          "const vec3 CORE  = vec3(0.98,0.90,0.72);",
+
+          "void main(){",
+          "  vec2 p = vec2(gl_FragCoord.x/uPR, uRes.y - gl_FragCoord.y/uPR);",
+          "  vec2 q = p - uCenter;",
+          "  float r = length(q);",
+          "  vec3 col = vec3(0.0); float al = 0.0;",
+          "  float pres = uPresence;",
+
+          // 1. grabados interiores separados del corazón. Antes cada punta era un triángulo
+          //    con alfa: sus ocho áreas se sumaban en el centro y dibujaban otra estrella.
+          "  for (int i = 0; i < NODES; i++) {",
+          "    if (i == 16 || mod(float(i), 2.0) > 0.5) continue;",
+          "    vec4 nd = uNode[i];",
+          "    vec2 axis = nd.xy * uScale;",
+          "    vec2 innerA = uCenter + axis*0.24;",
+          "    vec2 innerB = uCenter + axis*0.68;",
+          "    float creaseD = segSD(p, innerA, innerB);",
+          "    float crease = smoothstep(0.90, 0.18, creaseD);",
+          "    vec3 tone = mix(mix(VERD, EMBER, step(0.0, nd.x)), GOLD, 0.62);",
+          "    add(col, al, tone, crease*pres*(0.026 + uCharge*0.016));",
+          "  }",
+
+          // 2. contorno completo y tenue; la luz pertenece a las puntas y al corazón
+          "  for (int e = 0; e < EDGES; e++) {",
+          "    vec4 seg = uEdge[e];",
+          "    vec2 a = uCenter + seg.xy*uScale;",
+          "    vec2 b = uCenter + seg.zw*uScale;",
+          "    float d = segSD(p, a, b);",
+          "    float hw = max(0.75, uUnit*0.0085);",
+          "    float ink = smoothstep(hw, 0.22, d);",
+          "    float settle = 0.15 + uCharge*0.08;",
+          "    add(col, al, mix(GOLD, CORE, 0.28), ink*settle*pres);",
+          "  }",
+
+          // 3. sólo las ocho puntas y el corazón conservan brillo
+          "  for (int i = 0; i < NODES; i++) {",
+          "    vec4 nd = uNode[i];",
+          "    bool centerNode = i == 16;",
+          "    bool tipNode = !centerNode && mod(float(i), 2.0) < 0.5;",
+          "    vec2 at = uCenter + nd.xy*uScale;",
+          "    float d = length(p - at);",
+          "    float pop = uCharge;",
+          "    float breathe = 0.94 + 0.06*sin(uTime*1.7 + nd.w*6.0);",
+          "    float charge = 1.0 + uCharge*0.25;",
+          "    if (centerNode) {",
+          // Un punto de origen, no otra rosa dentro de la rosa.
+          "      add(col, al, CORE, exp(-d/(uUnit*0.055))*(0.30 + 1.05*pop)*breathe*charge*pres);",
+          "      add(col, al, GOLD, exp(-d/(uUnit*0.18))*(0.055 + 0.22*pop + uCharge*0.04)*pres);",
+          "    } else if (tipNode) {",
+          "      float cardinal = 1.0-step(0.5, mod(float(i), 4.0));",
+          "      float coreSize = mix(0.060, 0.075, cardinal);",
+          "      vec3 faction = nd.x < 0.0 ? VERD : EMBER;",
+          // El asiento: la punta se clava en su marca y devuelve un golpe breve.
+          "      float seatPop = exp(-max(uSeat - 0.55 - h11(nd.w)*0.18, 0.0)*9.0) * step(0.55 + h11(nd.w)*0.18, uSeat);",
+          "      add(col, al, CORE, exp(-d/(uUnit*coreSize))*(0.28 + 0.90*pop + 0.48*seatPop)*breathe*charge*pres);",
+          "      add(col, al, mix(GOLD, faction, 0.40), exp(-d/(uUnit*mix(0.14,0.17,cardinal)))*(0.065 + 0.25*pop + 0.16*seatPop)*charge*pres);",
+          "      vec2 radial = normalize(nd.xy + vec2(1e-5));",
+          "      vec2 tangent = vec2(-radial.y,radial.x);",
+          "      vec2 rr = p-at;",
+          "      float flare = exp(-abs(dot(rr,radial))/(uUnit*mix(0.34,0.46,cardinal)))",
+          "                  * exp(-abs(dot(rr,tangent))/(uUnit*mix(0.032,0.042,cardinal)));",
+          "      add(col, al, mix(CORE, GOLD, 0.30), flare*(0.08 + pop*0.12 + uCharge*0.06 + seatPop*0.16)*pres);",
+          "    } else {",
+          "      add(col, al, CORE, exp(-d/(uUnit*0.038))*(0.12 + 0.30*pop)*breathe*pres);",
+          "      add(col, al, GOLD, exp(-d/(uUnit*0.10))*(0.026 + 0.09*pop)*pres);",
+          "    }",
+          "  }",
+
+          // 4. el círculo: una luz recorre el aro desde el Norte en sentido horario y deja
+          //    encendido el radio exacto del instrumento, donde el SVG ya está esperando.
+          "  if (uSweep > 0.001) {",
+          "    float ang = atan(q.y, q.x) + 1.57079633;",
+          "    float turn = fract(ang / 6.28318531);",
+          "    float ringD = abs(r - uDialR);",
+          "    float body = smoothstep(1.10,0.18,ringD);",
+          "    float halo = exp(-ringD/1.8);",
+          "    float drawn = step(turn, uSweep);",
+          "    float lead  = exp(-max(uSweep - turn, 0.0)*7.0);",
+          "    float ringPresence = pres*uSweepPresence;",
+          "    add(col, al, GOLD, (body*(0.055 + lead*0.08) + halo*0.018)*drawn*ringPresence);",
+          "    add(col, al, CORE, body*drawn*lead*0.025*ringPresence);",
+          "  }",
+
+          // Rodilla filmica: por encima de 1 la suma aditiva se convierte en pantalla blanca.
+          "  col = col / (1.0 + col*0.62);",
+          "  gl_FragColor = vec4(min(col, vec3(1.0)), clamp(al,0.0,1.0));",
+          "}"
+        ].join("\n");
+
+        var star = buildProgram(gl, FRAG,
+          ["uRes","uPR","uTime","uT","uCenter","uUnit","uSeed","uDialR","uScale","uPresence",
+           "uCharge","uSeat","uSweep","uSweepPresence","uNode","uEdge"]);
+        if (!star) return;
+        var U = star.uniforms;
+
+        var nodeBuf = new Float32Array(NODES * 4);
+        var edgeBuf = new Float32Array(EDGES * 4);
+        var W = 1, H = 1, unit = 1, dialR = 1, PR = 1, signature = 0.3187;
+
+        // Mismas funciones que src/utils/futureIdentity.ts, para que la semilla case con el juego.
+        function hashSeed(seed) {
+          var h = 2166136261;
+          for (var i = 0; i < seed.length; i++) {
+            h ^= seed.charCodeAt(i);
+            h = Math.imul(h, 16777619);
+          }
+          return (h >>> 0) || 1;
+        }
+        function futureVisualSignature(seed) { return hashSeed(seed + ":destiny-vortex") / 4294967296; }
+
+        function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+        function smooth(a, b, v) { var t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); }
+        function pulse(v, a, b, c) { return smooth(a, b, v) * (1 - smooth(b, c, v)); }
+
+        function polar(degrees, radius) {
+          var a = (degrees * Math.PI) / 180;
+          return [Math.cos(a) * radius, Math.sin(a) * radius];
+        }
+
+        /* Rosa cardinal, idéntica a la de la Victoria: puntas pares en N, E, S y O.
+           La semilla cambia el fraseo del pulso, nunca el giro; una estrella cardinal
+           girada deja de apuntar a ninguna parte. */
+        function buildStar() {
+          var tipLong = unit * 2.24;
+          var tipShort = unit * 1.74;
+          var valley = unit * 0.94;
+          var pts = [];
+
+          for (var k = 0; k < TIPS; k++) {
+            var tipAngle = (k * 360) / TIPS - 90;
+            var tipR = k % 2 === 0 ? tipLong : tipShort;
+            pts.push(polar(tipAngle, tipR));
+            pts.push(polar(tipAngle + 360 / (TIPS * 2), valley));
+          }
+
+          nodeBuf[64] = 0; nodeBuf[65] = 0;
+          nodeBuf[66] = 0; nodeBuf[67] = signature * 10;
+          for (var i = 0; i < 16; i++) {
+            nodeBuf[i * 4] = pts[i][0];
+            nodeBuf[i * 4 + 1] = pts[i][1];
+            nodeBuf[i * 4 + 2] = 0;
+            nodeBuf[i * 4 + 3] = signature * 10 + i * 3.7;
+          }
+
+          for (var j = 0; j < 16; j++) {
+            var a = pts[j], b = pts[(j + 1) % 16];
+            edgeBuf[j * 4] = a[0]; edgeBuf[j * 4 + 1] = a[1];
+            edgeBuf[j * 4 + 2] = b[0]; edgeBuf[j * 4 + 3] = b[1];
+          }
+        }
+
+        function layout() {
+          var rect = stage.getBoundingClientRect();
+          PR = Math.min(window.devicePixelRatio || 1, 1.5);
+          W = Math.max(1, Math.round(rect.width));
+          H = Math.max(1, Math.round(rect.height));
+          var pxW = Math.round(W * PR);
+          var pxH = Math.round(H * PR);
+          canvas.width = pxW;
+          canvas.height = pxH;
+          /* El aparato manda sobre el tamaño del signo, no al revés: `unit` sale del radio
+             del aro para que la punta larga (2.24 · unit) caiga EXACTAMENTE sobre él. Con
+             un número redondo el relevo queda desalineado por unos píxeles y se lee como
+             dos figuras parecidas en vez de una sola entregándose. */
+          dialR = H * (DIAL_RING / DIAL_VIEW_H);
+          unit = dialR / 2.24;
+          gl.viewport(0, 0, pxW, pxH);
+          if (sky) {
+            skyCanvas.width = pxW;
+            skyCanvas.height = pxH;
+            skyGl.viewport(0, 0, pxW, pxH);
+          }
+          buildStar();
+        }
+
+        function setSeed(seed) {
+          signature = futureVisualSignature(seed || "748-203");
+          buildStar();
+        }
+
+        function renderSky(now) {
+          if (!sky) return;
+          skyGl.clearColor(0, 0, 0, 1);
+          skyGl.clear(skyGl.COLOR_BUFFER_BIT);
+          skyGl.useProgram(sky.program);
+          skyGl.uniform2f(sky.uniforms.uRes, W, H);
+          skyGl.uniform1f(sky.uniforms.uPR, PR);
+          skyGl.uniform1f(sky.uniforms.uTime, now);
+          skyGl.drawArrays(skyGl.TRIANGLES, 0, 3);
+        }
+
+        /* El signo arranca su propio reloj a los 1666 ms de la obertura, ya completo:
+             0.04–0.62  pulsa una vez
+             0.38–0.90  se sienta en sus marcas
+             0.82–1.42  el círculo recorre el aro
+             1.32–1.92  se apaga; queda el instrumento de grados */
+        var STAR_START = 1.666;
+
+        function render(timeMs) {
+          var now = performance.now() / 1000;
+          var t = timeMs / 1000 - STAR_START;
+          renderSky(now);
+
+          gl.clearColor(0, 0, 0, 0);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+          if (t < 0) return;
+
+          // El signo nace en el radio del aro y sólo se asienta hacia fuera, hasta el centro
+          // de las marcas. Es un 2.8 %: se lee como posarse, no como encogerse.
+          var seat = smooth(0.38, 0.90, t);
+          var scale = 1 + (DIAL_SEAT / DIAL_RING - 1) * seat;
+          var presence = 1 - smooth(1.32, 1.92, t);
+
+          gl.useProgram(star.program);
+          gl.uniform2f(U.uRes, W, H);
+          gl.uniform1f(U.uPR, PR);
+          gl.uniform1f(U.uTime, now);
+          gl.uniform1f(U.uT, t);
+          gl.uniform2f(U.uCenter, W * 0.5, H * 0.5);
+          gl.uniform1f(U.uUnit, unit);
+          gl.uniform1f(U.uSeed, signature);
+          gl.uniform1f(U.uDialR, dialR);
+          gl.uniform1f(U.uScale, scale);
+          gl.uniform1f(U.uPresence, clamp(presence, 0, 1));
+          gl.uniform1f(U.uCharge, pulse(t, 0.04, 0.28, 0.62));
+          gl.uniform1f(U.uSeat, seat);
+          /* El progreso sólo avanza. La retirada tiene otra opacidad para que la cabeza no
+             vuelva de 360° a 0° después de cerrar el aro. */
+          gl.uniform1f(U.uSweep, smooth(0.82, 1.42, t));
+          gl.uniform1f(U.uSweepPresence, 1 - smooth(1.42, 1.68, t));
+          gl.uniform4fv(U.uNode, nodeBuf);
+          gl.uniform4fv(U.uEdge, edgeBuf);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+        }
+
+        setSeed(seedInput.value.trim() || "748-203");
+        layout();
+        render(0);
+        (function idle() {
+          var running = stage.classList.contains("is-playing") && !stage.classList.contains("is-arrived");
+          if (!running) renderSky(performance.now() / 1000);
+          requestAnimationFrame(idle);
+        })();
+        window.boardOvertureStar = { render: render, resize: layout, setSeed: setSeed };
+      })();
+    </script>
+
+    <script>
+      (function () {
+        "use strict";
+
+        var stage = document.getElementById("stage");
+        var replay = document.getElementById("replay");
+        var slow = document.getElementById("slow");
+        var seedInput = document.getElementById("seed");
+        var phaseReadout = document.getElementById("phaseReadout");
+        var clock = document.getElementById("clock");
+        var fill = document.getElementById("fill");
+        var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+        var BASE_TOTAL = 4100;
+        var timeScale = 1;
+        var state = "idle";
+        var startTime = 0;
+        var raf = 0;
+
+        function setTimings() {
+          var values = {
+            "--d-vs": 2450,
+            "--delay-board": 1050,
+            "--delay-instrument": 2686,
+            "--d-instrument": 600,
+            "--delay-hud": 2686,
+            "--d-hud": 620,
+            "--delay-mulligan": 3336,
+            "--d-mulligan": 480
+          };
+          Object.keys(values).forEach(function (name) {
+            stage.style.setProperty(name, Math.round(values[name] * timeScale) + "ms");
+          });
+        }
+
+        function phaseAt(time) {
+          if (time < 1050) return "El encuentro choca";
+          if (time < 1666) return "El tablero espera debajo";
+          if (time < 2290) return "El sello palpita";
+          if (time < 2490) return "El signo se sienta";
+          if (time < 2686) return "El círculo recorre el aro";
+          if (time < 3336) return "El signo entrega el HUD";
+          if (time < BASE_TOTAL) return "Mano inicial";
+          return "Tablero listo";
+        }
+
+        function reset() {
+          cancelAnimationFrame(raf);
+          state = "idle";
+          stage.classList.remove("is-playing", "is-arrived");
+          replay.disabled = false;
+          slow.disabled = false;
+          seedInput.disabled = false;
+          phaseReadout.textContent = "Listo";
+          clock.textContent = "0.00 s";
+          fill.style.width = "0%";
+          if (window.boardOvertureStar) window.boardOvertureStar.render(0);
+        }
+
+        function play() {
+          if (state === "playing") return;
+          if (window.boardOvertureStar) window.boardOvertureStar.setSeed(seedInput.value.trim() || "748-203");
+          setTimings();
+          state = "playing";
+          replay.disabled = true;
+          slow.disabled = true;
+          seedInput.disabled = true;
+          stage.classList.remove("is-playing", "is-arrived");
+          void stage.offsetWidth;
+          stage.classList.add("is-playing");
+          startTime = performance.now();
+
+          if (reducedMotion.matches) {
+            state = "done";
+            stage.classList.add("is-arrived");
+            phaseReadout.textContent = "Tablero listo";
+            clock.textContent = (BASE_TOTAL / 1000).toFixed(2) + " s";
+            fill.style.width = "100%";
+            replay.disabled = false;
+            slow.disabled = false;
+            seedInput.disabled = false;
+            if (window.boardOvertureStar) window.boardOvertureStar.render(BASE_TOTAL);
+            return;
+          }
+          raf = requestAnimationFrame(frame);
+        }
+
+        function frame(now) {
+          var time = (now - startTime) / timeScale;
+          var progress = Math.max(0, Math.min(time / BASE_TOTAL, 1));
+          if (window.boardOvertureStar) window.boardOvertureStar.render(time);
+          phaseReadout.textContent = phaseAt(time);
+          clock.textContent = (time / 1000).toFixed(2) + " s";
+          fill.style.width = (progress * 100).toFixed(2) + "%";
+
+          if (time >= BASE_TOTAL) {
+            state = "done";
+            stage.classList.add("is-arrived");
+            replay.disabled = false;
+            slow.disabled = false;
+            seedInput.disabled = false;
+            return;
+          }
+          raf = requestAnimationFrame(frame);
+        }
+
+        replay.addEventListener("click", function () {
+          reset();
+          requestAnimationFrame(play);
+        });
+        slow.addEventListener("click", function () {
+          timeScale = timeScale === 1 ? 1.85 : 1;
+          slow.setAttribute("aria-pressed", String(timeScale !== 1));
+          slow.textContent = timeScale === 1 ? "Cámara lenta" : "Velocidad normal";
+          setTimings();
+        });
+        seedInput.addEventListener("change", function () {
+          if (window.boardOvertureStar) window.boardOvertureStar.setSeed(seedInput.value.trim() || "748-203");
+        });
+        window.addEventListener("resize", function () {
+          if (window.boardOvertureStar) window.boardOvertureStar.resize();
+        });
+
+        setTimings();
+        requestAnimationFrame(play);
+      })();
+    </script>
+  </body>
+</html>

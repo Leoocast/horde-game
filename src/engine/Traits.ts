@@ -1,4 +1,4 @@
-import type { CardFilter, CardInstance, GameState, Trait } from "./GameTypes";
+import type { ActionFailure, CardFilter, CardInstance, GameState, Trait } from "./GameTypes";
 import { isTrait } from "./hostfallVocabulary";
 import { matchesFilter, resolveAffectedController, staticConditionMet } from "./StaticEffects";
 
@@ -49,9 +49,19 @@ function parsePoisonTrait(trait: Trait): number {
 }
 
 export function canAttack(game: GameState, card: CardInstance): boolean {
-  if (!isCreature(card) || card.exhausted) return false;
-  if (card.controller === "player" && game.host.archive.length === 0) return false;
-  return !card.stabilizing || hasTrait(game, card, "IMPETUS");
+  return !attackRestriction(game, card);
+}
+
+export function attackRestriction(game: GameState, card: CardInstance): ActionFailure | undefined {
+  if (!isCreature(card)) return { reason: "That creature cannot attack." };
+  if (card.exhausted) return { reason: `${card.name} is already Exhausted.`, code: "EXHAUSTED" };
+  if (card.controller === "player" && game.host.archive.length === 0) {
+    return { reason: "The Host Archive is empty." };
+  }
+  if (card.stabilizing && !hasTrait(game, card, "IMPETUS")) {
+    return { reason: `${card.name} cannot attack while Stabilizing.`, code: "STABILIZING" };
+  }
+  return undefined;
 }
 
 export function canBlock(_game: GameState, card: CardInstance): boolean {
@@ -59,16 +69,31 @@ export function canBlock(_game: GameState, card: CardInstance): boolean {
 }
 
 export function canBlockAttacker(game: GameState, blocker: CardInstance, attacker: CardInstance): boolean {
-  return !blockRestrictionReason(game, blocker, attacker);
+  return !blockRestriction(game, blocker, attacker);
 }
 
 export function blockRestrictionReason(game: GameState, blocker: CardInstance, attacker: CardInstance): string | undefined {
-  if (!canBlock(game, blocker)) return "That Echo cannot defend.";
+  return blockRestriction(game, blocker, attacker)?.reason;
+}
+
+export function blockRestriction(game: GameState, blocker: CardInstance, attacker: CardInstance): ActionFailure | undefined {
+  if (!isCreature(blocker)) return { reason: "That Echo cannot defend." };
+  if (blocker.exhausted) return { reason: "That Echo cannot defend.", code: "EXHAUSTED" };
   const attackerTraits = getTraits(game, attacker);
   const blockerTraits = getTraits(game, blocker);
-  if (attackerTraits.includes("FLYING") && !blockerTraits.includes("FLYING") && !blockerTraits.includes("SKYGUARD")) return "Echoes with Flying require Flying or Skyguard to defend against them.";
+  if (attackerTraits.includes("FLYING") && !blockerTraits.includes("FLYING") && !blockerTraits.includes("SKYGUARD")) {
+    return {
+      reason: "Echoes with Flying require Flying or Skyguard to defend against them.",
+      code: "BLOCK_REQUIRES_FLYING_OR_SKYGUARD",
+    };
+  }
   const blockerCounterPower = blocker.basePower + (blocker.counters["+1/+1"] ?? 0) - (blocker.counters["-1/-1"] ?? 0);
   const attackerCounterPower = attacker.basePower + (attacker.counters["+1/+1"] ?? 0) - (attacker.counters["-1/-1"] ?? 0);
-  if (attackerTraits.includes("FURTIVE") && blockerCounterPower > attackerCounterPower) return "Furtive cannot be defended by Echoes with greater Power.";
+  if (attackerTraits.includes("FURTIVE") && blockerCounterPower > attackerCounterPower) {
+    return {
+      reason: "Furtive cannot be defended by Echoes with greater Power.",
+      code: "FURTIVE_BLOCK_RESTRICTION",
+    };
+  }
   return undefined;
 }

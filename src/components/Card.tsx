@@ -1,4 +1,4 @@
-import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from "react";
+import type { CSSProperties, KeyboardEvent, MouseEvent, PointerEvent, ReactNode, Ref } from "react";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { localizedCardName, localizedTraitLabel, localizedTraitTooltip, naturalCaseTraitLabel } from "../i18n/cardLocalization";
@@ -35,6 +35,7 @@ type Props = {
   suppressStabilizing?: boolean;
   suppressCardId?: boolean;
   onSelect?: () => void;
+  onKeyboardActivate?: () => void;
   onLeave?: () => void;
   onPointerDown?: (event: PointerEvent<HTMLElement>) => void;
   onContextMenu?: (event: MouseEvent<HTMLElement>) => void;
@@ -48,6 +49,7 @@ type Props = {
   sharpImageOverlay?: boolean;
   showFullImage?: boolean;
   showCostBadge?: boolean;
+  emphasizeCost?: boolean;
   showCroppedTitle?: boolean;
   clipActionSweep?: boolean;
   preferNativeImageRendering?: boolean;
@@ -57,7 +59,7 @@ type Props = {
   glowBorderWidth?: number;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressStabilizing, suppressCardId, onSelect, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, showCroppedTitle = false, clipActionSweep = false, preferNativeImageRendering = false, useBattlefieldArt = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressStabilizing, suppressCardId, onSelect, onKeyboardActivate, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, emphasizeCost = false, showCroppedTitle = false, clipActionSweep = false, preferNativeImageRendering = false, useBattlefieldArt = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
@@ -160,6 +162,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
       data-audio-click={selectionDisabled ? undefined : "valid"}
       draggable={false}
       role={selectionDisabled ? undefined : "button"}
+      tabIndex={selectionDisabled ? undefined : 0}
       aria-label={[
         localizedName,
         card.exhausted && !usesHostExhaustedStyle ? t("card.exhausted") : "",
@@ -186,6 +189,13 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         if (shouldSuppressClick?.()) return;
         setHoveredCardId(undefined);
         if (!selectionDisabled) onSelect?.();
+      }}
+      onKeyDown={(event: KeyboardEvent<HTMLElement>) => {
+        if (selectionDisabled || event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
+        event.preventDefault();
+        if (shouldSuppressClick?.()) return;
+        setHoveredCardId(undefined);
+        (onKeyboardActivate ?? onSelect)?.();
       }}
       style={style}
       className={[
@@ -268,7 +278,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
           <span>{localizedName}</span>
         </div>
       )}
-      {showCostBadge && <CardCostBadge card={card} />}
+      {showCostBadge && <CardCostBadge card={card} emphasized={emphasizeCost} />}
       {showActionGlow && !dragging && (
         clipActionSweep ? (
           <span className="card-actionable-sweep-clip" aria-hidden="true">
@@ -435,15 +445,17 @@ export type CardStatDisplay = ReturnType<typeof cardStatState>;
 
 export function CardCostBadge({
   card,
+  emphasized = false,
 }: {
   card: { energyCost?: number; variableCost?: { hasX?: boolean } };
+  emphasized?: boolean;
 }) {
   const printedCost = Math.max(0, Number(card.energyCost) || 0);
   const label = card.variableCost?.hasX ? "X" : printedCost;
   if (label === 0) return null;
 
   return (
-    <div className="card-cost-badge" aria-hidden="true">
+    <div className={`card-cost-badge${emphasized ? " is-guided-emphasis" : ""}`} aria-hidden="true">
       <span className="card-cost-energy-orb">
         <span className="card-cost-energy-liquid" />
       </span>
@@ -455,15 +467,18 @@ export function CardCostBadge({
 export function CardStatsBadge({
   stats,
   preferSingleSword = false,
+  ref,
 }: {
   stats: CardStatDisplay;
   preferSingleSword?: boolean;
+  ref?: Ref<HTMLDivElement>;
 }) {
   const language = useLanguageStore((state) => state.language);
   if (!stats.text) return null;
 
   return (
     <div
+      ref={ref}
       aria-label={language === "es" ? `${stats.power} de Fuerza, ${stats.endurance} de Aguante` : `${stats.power} Power, ${stats.endurance} Endurance`}
       className={[
         "card-stat-badge",
