@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -23,6 +23,19 @@ test("development CSP supports Vite React refresh without weakening production",
 
   assert.equal(developmentScriptPolicy, "script-src 'self' 'unsafe-eval' 'unsafe-inline'");
   assert.equal(productionScriptPolicy, "script-src 'self'");
+});
+
+test("clipboard writes cross the narrow trusted Electron bridge", async () => {
+  const [main, preload, rendererBridge] = await Promise.all([
+    readFile(new URL("../electron/main.ts", import.meta.url), "utf8"),
+    readFile(new URL("../electron/preload.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/platform/desktopBridge.ts", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(main, /ipcMain\.handle\("hostfall:write-clipboard-text"[\s\S]*?assertTrustedRenderer\(event\)[\s\S]*?clipboard\.writeText\(value\)/u);
+  assert.match(preload, /writeClipboardText:[\s\S]*?ipcRenderer\.invoke\("hostfall:write-clipboard-text", value\)/u);
+  assert.match(rendererBridge, /window\.hostfallDesktop\.writeClipboardText\(value\)/u);
+  assert.match(rendererBridge, /navigator\.clipboard\.writeText\(value\)/u);
 });
 
 test("hostfall protocol maps only registered app and content identities", () => {

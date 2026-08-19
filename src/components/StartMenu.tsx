@@ -5,7 +5,7 @@ import { findDeckKeyCard, type InspectableDeck } from "../data/deckCatalog";
 import type { DifficultyMode, GameMode } from "../engine/GameTypes";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
-import { openExternalLink } from "../platform/desktopBridge";
+import { openExternalLink, writeClipboardText } from "../platform/desktopBridge";
 import { useAudioStore } from "../store/useAudioStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { useToastStore } from "../store/useToastStore";
@@ -186,7 +186,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
 
   async function copySeed() {
     try {
-      await navigator.clipboard.writeText(effectiveSeed);
+      await writeClipboardText(effectiveSeed);
       pushToast({ title: t("toast.seedCopied"), message: effectiveSeed, tone: "success" });
     } catch {
       pushToast({ title: t("toast.seedCopyFailed"), message: effectiveSeed, tone: "warning" });

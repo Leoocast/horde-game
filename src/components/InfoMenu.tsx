@@ -1,6 +1,7 @@
 import { AlertTriangle, Copy, Menu, RefreshCcw, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
+import { writeClipboardText } from "../platform/desktopBridge";
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
 import { GameLog } from "./GameLog";
@@ -43,7 +44,7 @@ export function InfoMenu({ setupTurns }: { setupTurns: number }) {
 
   async function copySeed() {
     try {
-      await navigator.clipboard.writeText(nextSeed);
+      await writeClipboardText(nextSeed);
       pushToast({ title: "Seed copied", message: nextSeed, tone: "success" });
     } catch {
       pushToast({ title: "Could not copy seed", message: nextSeed, tone: "warning" });

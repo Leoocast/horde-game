@@ -27,6 +27,7 @@ const desktopBridge = Object.freeze({
   readResumeSave: () => ipcRenderer.invoke("hostfall:read-resume-save"),
   writeResumeSave: (value: unknown) => ipcRenderer.invoke("hostfall:write-resume-save", value) as Promise<void>,
   deleteResumeSave: () => ipcRenderer.invoke("hostfall:delete-resume-save") as Promise<void>,
+  writeClipboardText: (value: string) => ipcRenderer.invoke("hostfall:write-clipboard-text", value) as Promise<void>,
   openExternalLink: (linkId: ExternalLinkId) => ipcRenderer.invoke("hostfall:open-external", linkId) as Promise<boolean>,
   reportError: (report: Readonly<{ message: string; stack?: string; source: "boundary" | "window" | "promise" }>) =>
     ipcRenderer.invoke("hostfall:report-error", report) as Promise<void>,

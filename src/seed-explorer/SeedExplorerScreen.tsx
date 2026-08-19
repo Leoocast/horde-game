@@ -24,6 +24,7 @@ import {
 import { contentCatalog } from "../content/bootstrap";
 import { createInitialGame } from "../engine/GameState";
 import type { DifficultyMode } from "../engine/GameTypes";
+import { writeClipboardText } from "../platform/desktopBridge";
 import { useAudioStore } from "../store/useAudioStore";
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
@@ -357,7 +358,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
 
   async function copyCandidate(candidate: SeedAnalysisResult) {
     try {
-      await navigator.clipboard.writeText(candidate.identity.canonCode);
+      await writeClipboardText(candidate.identity.canonCode);
       report(`Canon Seed copiada: ${candidate.identity.canonCode}`);
     } catch {
       report("No se pudo copiar la Canon Seed al portapapeles.");

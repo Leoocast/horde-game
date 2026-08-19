@@ -90,7 +90,7 @@ test("the narrative Future control owns normal rewrites outside Settings", async
   assert.match(settings, /!guided && isDeveloperMode/u);
 
   assert.match(result, /futureCodeFromSeed\(game\.seed\)/u);
-  assert.match(result, /navigator\.clipboard\.writeText\(game\.seed\)/u);
+  assert.match(result, /writeClipboardText\(game\.seed\)/u);
   assert.doesNotMatch(result, /<input|generateRandomSeed/u);
 
   assert.match(transition, /prefers-reduced-motion: reduce/u);

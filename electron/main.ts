@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import {
   app,
   BrowserWindow,
+  clipboard,
   ipcMain,
   Menu,
   powerMonitor,
@@ -35,6 +36,7 @@ const CREDIT_URL = "https://github.com/Leoocast";
 const APP_ID = "com.hostfall.game";
 const DEFEAT_CAPTURE_MAX_WIDTH = 2560;
 const DEFEAT_CAPTURE_MAX_HEIGHT = 1440;
+const CLIPBOARD_TEXT_MAX_LENGTH = 16_384;
 const EXTERNAL_LINKS = Object.freeze({ credits: CREDIT_URL });
 const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
 const smokeMode = process.env.HOSTFALL_ELECTRON_SMOKE === "1";
@@ -378,6 +380,14 @@ function registerIpcHandlers(): void {
   ipcMain.handle("hostfall:delete-resume-save", async (event) => {
     assertTrustedRenderer(event);
     await desktopStore.delete(requireDataPaths().resumeSave);
+  });
+
+  ipcMain.handle("hostfall:write-clipboard-text", (event, value: unknown) => {
+    assertTrustedRenderer(event);
+    if (typeof value !== "string" || value.length > CLIPBOARD_TEXT_MAX_LENGTH) {
+      throw new Error("Clipboard text must be a bounded string.");
+    }
+    clipboard.writeText(value);
   });
 
   ipcMain.handle("hostfall:open-external", async (event, linkId: unknown) => {

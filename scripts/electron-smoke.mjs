@@ -91,6 +91,7 @@ try {
     "readResumeSave",
     "reportError",
     "setFullscreen",
+    "writeClipboardText",
     "writePreferences",
     "writeResumeSave",
   ]);

@@ -3,6 +3,7 @@ import { Copy, RefreshCcw } from "lucide-react";
 import type { GameState } from "../engine/GameTypes";
 import { useToastStore } from "../store/useToastStore";
 import { useTranslation } from "../i18n/useTranslation";
+import { writeClipboardText } from "../platform/desktopBridge";
 import { futureCodeFromSeed } from "../utils/futureIdentity";
 import { DefeatShatterAnimator } from "./DefeatShatterAnimator";
 
@@ -25,7 +26,7 @@ export function DefeatModal({ game, snapshotImage, onRewriteFuture, onContemplat
 
   async function copySeed() {
     try {
-      await navigator.clipboard.writeText(game.seed);
+      await writeClipboardText(game.seed);
       pushToast({ title: t("destiny.identityCopied"), message: t("destiny.future", { code: futureCode }), tone: "success" });
     } catch {
       pushToast({ title: t("destiny.identityCopyFailed"), message: t("destiny.future", { code: futureCode }), tone: "warning" });

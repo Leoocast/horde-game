@@ -2,6 +2,7 @@ import { Copy, Orbit, RefreshCcw, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useTranslation } from "../i18n/useTranslation";
+import { writeClipboardText } from "../platform/desktopBridge";
 import { useToastStore } from "../store/useToastStore";
 import { futureCodeFromSeed } from "../utils/futureIdentity";
 
@@ -73,7 +74,7 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother }:
 
   async function copyIdentity() {
     try {
-      await navigator.clipboard.writeText(seed);
+      await writeClipboardText(seed);
       pushToast({
         title: t("destiny.identityCopied"),
         message: t("destiny.future", { code: futureCode }),
