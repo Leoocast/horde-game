@@ -5,7 +5,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import * as THREE from "three";
 
-import { activeDefenseArrowLinks, isBehindInStackOrder, isFrontOfCardStack, visibleDefenseArrowLinks } from "../src/components/battlefieldLayout";
+import { activeDefenseArrowLinks, consumedDefenseArrowLinkIds, isBehindInStackOrder, isFrontOfCardStack, visibleDefenseArrowLinks } from "../src/components/battlefieldLayout";
 import {
   burnProjectileOriginRatios,
   burnProjectileParticleTimings,
@@ -820,6 +820,32 @@ test("hidden defense links disappear from every combat presentation while assign
 
   assert.deepEqual(visibleDefenseArrowLinks(game, new Set([linkId])), []);
   assert.deepEqual(game.combat.blockers, { [attacker.instanceId]: [blocker.instanceId] });
+});
+
+test("a defense arrow is consumed when its fight starts even if both Echoes survive", () => {
+  const game = createTestGame();
+  const attacker = addCard(game, customCard("surviving-arrow-attacker", "host"));
+  const blocker = addCard(game, customCard("surviving-arrow-blocker", "player"));
+  const laterBlocker = addCard(game, customCard("later-arrow-blocker", "player"));
+  game.combat.hostAttackers = [attacker.instanceId];
+  game.combat.blockers = { [attacker.instanceId]: [blocker.instanceId, laterBlocker.instanceId] };
+
+  assert.deepEqual(consumedDefenseArrowLinkIds(game, {
+    attackerId: attacker.instanceId,
+    blockerId: blocker.instanceId,
+    attackerDies: false,
+  }), [`${attacker.instanceId}-${blocker.instanceId}`]);
+  assert.deepEqual(consumedDefenseArrowLinkIds(game, {
+    attackerId: attacker.instanceId,
+    blockerId: blocker.instanceId,
+    attackerDies: true,
+  }), [
+    `${attacker.instanceId}-${blocker.instanceId}`,
+    `${attacker.instanceId}-${laterBlocker.instanceId}`,
+  ]);
+
+  const visibilitySource = readFileSync(new URL("../src/components/useDefenseLinkVisibility.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(visibilitySource, /HOST_ATTACK_LINK_CLEAR_MS|setTimeout/u);
 });
 
 test("Memory presents the most recently moved card first without mutating game state", () => {

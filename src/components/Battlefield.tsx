@@ -170,9 +170,6 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
   const resolvingHostCombat = useGameStore((state) => state.resolvingHostCombat);
   const hostAutoTriggerCount = useGameStore((state) => state.hostAutoTriggerCount);
   const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
-  const playerAttackAnimationId = useGameStore((state) => state.playerAttackAnimation?.attackerId);
-  const hostAttackAnimationAttackerId = useGameStore((state) => state.hostAttackAnimation?.attackerId);
-  const hostAttackAnimationBlockerId = useGameStore((state) => state.hostAttackAnimation?.blockerId);
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
@@ -1046,14 +1043,12 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
         spellTargetLocked,
     );
     const isFlying = card.kinds.includes("ECHO") && hasTrait(game, card, "FLYING");
-    const combatAnimationActive =
-      playerAttackAnimationId === card.instanceId ||
-      hostAttackAnimationAttackerId === card.instanceId ||
-      hostAttackAnimationBlockerId === card.instanceId;
+    // Flying owns the individual `translate` property while combat lunges own `top` or
+    // `transform`, so both motions can compose without dropping the Echo out of the air. The
+    // player attack state also spans the whole Archive-discard beat, not just the visible lunge.
     const flyingIdleActive = Boolean(
       isFlying &&
         !newlyArrived &&
-        !combatAnimationActive &&
         !interactionElevated &&
         !visuallyDead &&
         !speciallyDead,

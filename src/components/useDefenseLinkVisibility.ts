@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
-
-const HOST_ATTACK_LINK_CLEAR_MS = 470;
+import { consumedDefenseArrowLinkIds } from "./battlefieldLayout";
 
 export function useHiddenDefenseLinkIds(game: GameState): ReadonlySet<string> {
   const hostAttackAnimation = useGameStore((state) => state.hostAttackAnimation);
@@ -13,28 +12,15 @@ export function useHiddenDefenseLinkIds(game: GameState): ReadonlySet<string> {
   }, [game.combat.blockers]);
 
   useEffect(() => {
-    if (!hostAttackAnimation?.blockerId) return;
-    const currentLinkId = `${hostAttackAnimation.attackerId}-${hostAttackAnimation.blockerId}`;
-    const linkIds = hostAttackAnimation.attackerDies
-      ? (game.combat.blockers[hostAttackAnimation.attackerId] ?? []).map(
-          (blockerId) => `${hostAttackAnimation.attackerId}-${blockerId}`,
-        )
-      : hostAttackAnimation.blockerDies
-        ? [currentLinkId]
-        : [];
-
-    if (linkIds.length > 0) {
-      hideLinks(linkIds, setHiddenLinkIds);
-      return;
-    }
-
-    const timeout = window.setTimeout(() => {
-      hideLinks([currentLinkId], setHiddenLinkIds);
-    }, HOST_ATTACK_LINK_CLEAR_MS);
-    return () => window.clearTimeout(timeout);
+    const linkIds = consumedDefenseArrowLinkIds(game, hostAttackAnimation);
+    if (linkIds.length > 0) hideLinks(linkIds, setHiddenLinkIds);
   }, [game.combat.blockers, hostAttackAnimation]);
 
-  return hiddenLinkIds;
+  const activeFightLinkIds = consumedDefenseArrowLinkIds(game, hostAttackAnimation);
+  if (activeFightLinkIds.length === 0 || activeFightLinkIds.every((linkId) => hiddenLinkIds.has(linkId))) {
+    return hiddenLinkIds;
+  }
+  return new Set([...hiddenLinkIds, ...activeFightLinkIds]);
 }
 
 function hideLinks(linkIds: string[], setHiddenLinkIds: (updater: (current: Set<string>) => Set<string>) => void): void {
