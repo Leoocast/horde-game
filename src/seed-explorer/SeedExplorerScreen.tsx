@@ -1,6 +1,8 @@
 import {
   Activity,
   ArrowLeft,
+  Check,
+  ChevronDown,
   Copy,
   Download,
   FileSpreadsheet,
@@ -8,9 +10,10 @@ import {
   Play,
   Search,
   Star,
+  StickyNote,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Board } from "../components/Board";
 import { ToastStack } from "../components/ToastStack";
 import {
@@ -26,19 +29,24 @@ import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
 import { useCardImage } from "../utils/cardImages";
 import {
+  ANY_SEED_VARIATION_ID,
   BALANCED_PROFILE_ID,
   EXPERIENCED_PROFILE_ID,
   FIRST_APPROACH_PROFILE_ID,
   HIGH_PRESSURE_PROFILE_ID,
+  MULLIGAN_USEFUL_VARIATION_ID,
   PROGRESSIVE_PRESSURE_PROFILE_ID,
   SEED_SEARCH_PROFILES,
   analyzeSeedEntropy,
+  classifySeedVariation,
   createSeedAnalysisContext,
   selectDiverseSeedCandidates,
   verifySeedAnalysis,
   type SeedAnalysisResult,
   type SeedCardPreviewV1,
   type SeedSearchProfileId,
+  type SeedVariationFilterId,
+  type SeedVariationId,
 } from "../playground/seedExplorer";
 import {
   SeedExplorerRuntime,
@@ -48,9 +56,11 @@ import type { SeedSearchRequest, SeedSearchResult } from "../playground/seedExpl
 import {
   deleteStoredSeedFavorite,
   listStoredSeedFavorites,
+  MAX_SEED_FAVORITE_NOTE_LENGTH,
   saveStoredSeedFavorite,
   seedSearchResultToCsv,
   seedSearchResultToJson,
+  updateStoredSeedFavoriteNote,
   type StoredSeedFavorite,
 } from "../playground/seedExplorerStorage";
 import "./SeedExplorerScreen.css";
@@ -109,11 +119,25 @@ const SEARCH_PROFILE_OPTIONS: ReadonlyArray<{
   },
 ];
 
+const SEARCH_VARIATION_OPTIONS: ReadonlyArray<{
+  value: SeedVariationFilterId;
+  label: string;
+}> = [
+  { value: ANY_SEED_VARIATION_ID, label: "Cualquier variación" },
+  { value: MULLIGAN_USEFUL_VARIATION_ID, label: "Mulligan útil" },
+  { value: "stable", label: "Más estable" },
+  { value: "curve", label: "Mejor curva" },
+  { value: "gentle", label: "Inicio suave" },
+  { value: "escalation", label: "Mayor escalada" },
+  { value: "balanced", label: "Equilibrada" },
+];
+
 type ExplorerConfiguration = Readonly<{
   playerDeckKey: string;
   hostDeckKey: string;
   difficulty: DifficultyMode;
   profileId: SeedSearchProfileId;
+  variationId: SeedVariationFilterId;
   evaluateMulligan: boolean;
   avoidEarlySpikes: boolean;
   count: number;
@@ -137,6 +161,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
     hostDeckKey: HOST_DECK_OPTIONS[0].value,
     difficulty: "normal",
     profileId: FIRST_APPROACH_PROFILE_ID,
+    variationId: ANY_SEED_VARIATION_ID,
     evaluateMulligan: true,
     avoidEarlySpikes: true,
     count: 500_000,
@@ -149,6 +174,8 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
   const [boardCandidate, setBoardCandidate] = useState<SeedAnalysisResult>();
   const [finalistDraft, setFinalistDraft] = useState(() => String(configuration.top));
   const [detailsCode, setDetailsCode] = useState<string>();
+  const [noteEditorCode, setNoteEditorCode] = useState<string>();
+  const [noteDraft, setNoteDraft] = useState("");
 
   useEffect(() => () => {
     runtime.cancel();
@@ -162,6 +189,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
     configuration.hostDeckKey,
     configuration.difficulty,
     configuration.profileId,
+    configuration.variationId,
     configuration.evaluateMulligan,
     configuration.avoidEarlySpikes,
     configuration.count,
@@ -174,6 +202,10 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       event.preventDefault();
+      if (noteEditorCode) {
+        setNoteEditorCode(undefined);
+        return;
+      }
       if (detailsCode) {
         setDetailsCode(undefined);
         return;
@@ -182,7 +214,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [boardCandidate, detailsCode, onReturnToMenu]);
+  }, [boardCandidate, detailsCode, noteEditorCode, onReturnToMenu]);
 
   function report(message: string): void {
     pushToast({ title: "Seed Explorer", message, tone: "info" });
@@ -263,6 +295,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
       ? searchProgress.examined / searchProgress.total
       : 0;
   const favoriteCodes = useMemo(() => new Set(favorites.map(({ canonCode }) => canonCode)), [favorites]);
+  const favoritesByCode = useMemo(() => new Map(favorites.map((favorite) => [favorite.canonCode, favorite])), [favorites]);
   const preparationTurns = canonSeedPreparationTurns(configuration.difficulty);
   const selectedProfile = searchProfileOption(configuration.profileId);
 
@@ -280,6 +313,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
       hostDeckKey: configuration.hostDeckKey,
       difficulty: configuration.difficulty,
       profileId: configuration.profileId,
+      variationId: configuration.variationId,
       evaluateMulligan: configuration.evaluateMulligan,
       avoidEarlySpikes: configuration.avoidEarlySpikes,
       count: configuration.count,
@@ -293,6 +327,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
 
   function toggleFavorite(candidate: SeedAnalysisResult) {
     const exists = favoriteCodes.has(candidate.identity.canonCode);
+    if (exists && noteEditorCode === candidate.identity.canonCode) setNoteEditorCode(undefined);
     setFavorites(exists
       ? deleteStoredSeedFavorite(candidate.identity.canonCode)
       : saveStoredSeedFavorite(candidate, {
@@ -300,6 +335,24 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
         evaluateMulligan: configuration.evaluateMulligan,
         avoidEarlySpikes: configuration.avoidEarlySpikes,
       }));
+  }
+
+  function editFavoriteNote(canonCode: string): void {
+    const favorite = favoritesByCode.get(canonCode);
+    if (!favorite) return;
+    setNoteDraft(favorite.note ?? "");
+    setNoteEditorCode(canonCode);
+  }
+
+  function saveFavoriteNote(): void {
+    if (!noteEditorCode) return;
+    setFavorites(updateStoredSeedFavoriteNote(noteEditorCode, noteDraft));
+    pushToast({
+      title: "Nota guardada",
+      message: `La nota quedó vinculada a ${noteEditorCode}.`,
+      tone: "success",
+    });
+    setNoteEditorCode(undefined);
   }
 
   async function copyCandidate(candidate: SeedAnalysisResult) {
@@ -402,10 +455,24 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
               <p className="seed-explorer-profile-description">
                 {selectedProfile.description}
               </p>
+              <VariationSelectControl
+                value={configuration.variationId}
+                onChange={(variationId) => updateConfiguration({
+                  variationId,
+                  evaluateMulligan: variationId === MULLIGAN_USEFUL_VARIATION_ID
+                    ? true
+                    : configuration.evaluateMulligan,
+                })}
+              />
               <SwitchControl
                 label="Evaluar un mulligan"
                 checked={configuration.evaluateMulligan}
-                onChange={(evaluateMulligan) => updateConfiguration({ evaluateMulligan })}
+                onChange={(evaluateMulligan) => updateConfiguration({
+                  evaluateMulligan,
+                  variationId: !evaluateMulligan && configuration.variationId === MULLIGAN_USEFUL_VARIATION_ID
+                    ? ANY_SEED_VARIATION_ID
+                    : configuration.variationId,
+                })}
               />
               <SwitchControl
                 label="Evitar picos tempranos"
@@ -519,7 +586,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
                 rank={index + 1}
                 active={candidate.identity.canonCode === selectedCandidate?.identity.canonCode}
                 favorite={favoriteCodes.has(candidate.identity.canonCode)}
-                archetype={candidateArchetype(candidate, index, visibleCandidates)}
+                variationId={classifySeedVariation(candidate)}
                 onSelect={() => setSelectedCode(candidate.identity.canonCode)}
               />
             ))}
@@ -531,7 +598,9 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
             <CandidateInspector
               candidate={selectedCandidate}
               favorite={favoriteCodes.has(selectedCandidate.identity.canonCode)}
+              favoriteNote={favoritesByCode.get(selectedCandidate.identity.canonCode)?.note}
               onToggleFavorite={() => toggleFavorite(selectedCandidate)}
+              onEditNote={() => editFavoriteNote(selectedCandidate.identity.canonCode)}
               onCopy={() => void copyCandidate(selectedCandidate)}
               onTry={() => openCandidate(selectedCandidate)}
               onViewDetails={() => setDetailsCode(selectedCandidate.identity.canonCode)}
@@ -556,6 +625,15 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
           onTry={() => openCandidate(detailsCandidate)}
         />
       )}
+      {noteEditorCode && (
+        <FavoriteNoteModal
+          canonCode={noteEditorCode}
+          note={noteDraft}
+          onChange={setNoteDraft}
+          onClose={() => setNoteEditorCode(undefined)}
+          onSave={saveFavoriteNote}
+        />
+      )}
       <ToastStack variant="menu" />
     </section>
   );
@@ -566,14 +644,14 @@ function CandidateRow({
   rank,
   active,
   favorite,
-  archetype,
+  variationId,
   onSelect,
 }: Readonly<{
   candidate: SeedAnalysisResult;
   rank: number;
   active: boolean;
   favorite: boolean;
-  archetype: string;
+  variationId: SeedVariationId;
   onSelect: () => void;
 }>) {
   const tags = candidateTags(candidate);
@@ -583,7 +661,7 @@ function CandidateRow({
       <span className="seed-explorer-result-copy">
         <span className="seed-explorer-result-code">{candidate.identity.canonCode}{favorite ? " ★" : ""}</span>
         <span className="seed-explorer-result-tags">
-          <span className={`seed-explorer-archetype is-${archetypeTone(archetype)}`}>{archetype}</span>
+          <span className={`seed-explorer-archetype is-${variationTone(variationId)}`}>{variationLabel(variationId)}</span>
           {tags.slice(0, 2).map((tag) => <span className="seed-explorer-tag" key={tag}>{tag}</span>)}
         </span>
       </span>
@@ -599,14 +677,18 @@ function CandidateRow({
 function CandidateInspector({
   candidate,
   favorite,
+  favoriteNote,
   onToggleFavorite,
+  onEditNote,
   onCopy,
   onTry,
   onViewDetails,
 }: Readonly<{
   candidate: SeedAnalysisResult;
   favorite: boolean;
+  favoriteNote?: string;
   onToggleFavorite: () => void;
+  onEditNote: () => void;
   onCopy: () => void;
   onTry: () => void;
   onViewDetails: () => void;
@@ -642,6 +724,7 @@ function CandidateInspector({
         <div className="seed-explorer-result-tags">
           {candidateTags(candidate).map((tag) => <span className="seed-explorer-tag" key={tag}>{tag}</span>)}
         </div>
+        {favoriteNote && <p className="seed-explorer-favorite-note">{favoriteNote}</p>}
         <div className="seed-explorer-metric-grid">
           {ratings.map(([label, value]) => (
             <div className="seed-explorer-metric" key={label}>
@@ -671,11 +754,66 @@ function CandidateInspector({
       </section>
 
       <section className="seed-explorer-group">
+        {favorite && (
+          <button className="seed-explorer-button seed-explorer-note-button" type="button" onClick={onEditNote}>
+            <StickyNote size={15} />{favoriteNote ? "Editar nota" : "Agregar nota"}
+          </button>
+        )}
         <div className="seed-explorer-inspector-actions">
           <button className="seed-explorer-button" type="button" onClick={onCopy}><Copy size={15} />Copiar seed</button>
           <button className="seed-explorer-button is-primary" type="button" onClick={onTry}><Play size={15} />Probar</button>
         </div>
       </section>
+    </div>
+  );
+}
+
+function FavoriteNoteModal({
+  canonCode,
+  note,
+  onChange,
+  onClose,
+  onSave,
+}: Readonly<{
+  canonCode: string;
+  note: string;
+  onChange: (note: string) => void;
+  onClose: () => void;
+  onSave: () => void;
+}>) {
+  return (
+    <div className="seed-explorer-note-overlay" onMouseDown={(event) => {
+      if (event.target === event.currentTarget) onClose();
+    }}>
+      <form className="seed-explorer-note-modal" role="dialog" aria-modal="true" aria-labelledby="seed-favorite-note-title" onSubmit={(event) => {
+        event.preventDefault();
+        onSave();
+      }}>
+        <header>
+          <div>
+            <span className="seed-explorer-kicker">Futuro guardado</span>
+            <h2 id="seed-favorite-note-title">Nota de {canonCode}</h2>
+          </div>
+          <button className="seed-explorer-detail-close" type="button" aria-label="Cerrar nota" onClick={onClose}><X size={19} /></button>
+        </header>
+        <label>
+          <span>Nota personal</span>
+          <textarea
+            autoFocus
+            value={note}
+            maxLength={MAX_SEED_FAVORITE_NOTE_LENGTH}
+            placeholder="Por qué funciona esta seed, qué revisar o dónde usarla…"
+            onChange={(event) => onChange(event.target.value)}
+          />
+        </label>
+        <footer>
+          <span>{note.length}/{MAX_SEED_FAVORITE_NOTE_LENGTH}</span>
+          <div>
+            <button className="seed-explorer-button" type="button" onClick={onClose}>Cancelar</button>
+            <button className="seed-explorer-button is-primary" type="submit">Guardar nota</button>
+          </div>
+        </footer>
+      </form>
     </div>
   );
 }
@@ -708,6 +846,124 @@ function SelectControl<T extends string>({
       </select>
     </label>
   );
+}
+
+function VariationSelectControl({
+  value,
+  onChange,
+}: Readonly<{
+  value: SeedVariationFilterId;
+  onChange: (value: SeedVariationFilterId) => void;
+}>) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const selectedIndex = SEARCH_VARIATION_OPTIONS.findIndex((option) => option.value === value);
+  const selected = SEARCH_VARIATION_OPTIONS[selectedIndex] ?? SEARCH_VARIATION_OPTIONS[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setOpen(false);
+      triggerRef.current?.focus();
+    };
+    window.addEventListener("pointerdown", closeOutside);
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      window.removeEventListener("pointerdown", closeOutside);
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
+
+  function openAndFocusSelected(): void {
+    setOpen(true);
+    window.requestAnimationFrame(() => optionRefs.current[Math.max(0, selectedIndex)]?.focus());
+  }
+
+  function focusOption(index: number): void {
+    const bounded = (index + SEARCH_VARIATION_OPTIONS.length) % SEARCH_VARIATION_OPTIONS.length;
+    optionRefs.current[bounded]?.focus();
+  }
+
+  function choose(next: SeedVariationFilterId): void {
+    onChange(next);
+    setOpen(false);
+    triggerRef.current?.focus();
+  }
+
+  return (
+    <div className="seed-explorer-field seed-explorer-variation-control" ref={rootRef}>
+      <span>Variación buscada</span>
+      <button
+        ref={triggerRef}
+        className="seed-explorer-variation-trigger"
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => open ? setOpen(false) : openAndFocusSelected()}
+        onKeyDown={(event) => {
+          if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+          event.preventDefault();
+          openAndFocusSelected();
+        }}
+      >
+        <VariationDot variationId={selected.value} />
+        <span>{selected.label}</span>
+        <ChevronDown size={15} aria-hidden="true" />
+      </button>
+      {open && (
+        <div
+          className="seed-explorer-variation-menu"
+          role="listbox"
+          aria-label="Variación buscada"
+          onBlur={(event) => {
+            if (!rootRef.current?.contains(event.relatedTarget as Node | null)) setOpen(false);
+          }}
+        >
+          {SEARCH_VARIATION_OPTIONS.map((option, index) => (
+            <button
+              ref={(element) => { optionRefs.current[index] = element; }}
+              className={option.value === value ? "is-selected" : ""}
+              type="button"
+              role="option"
+              aria-selected={option.value === value}
+              key={option.value}
+              onClick={() => choose(option.value)}
+              onKeyDown={(event) => {
+                if (event.key === "ArrowDown") {
+                  event.preventDefault();
+                  focusOption(index + 1);
+                } else if (event.key === "ArrowUp") {
+                  event.preventDefault();
+                  focusOption(index - 1);
+                } else if (event.key === "Home") {
+                  event.preventDefault();
+                  focusOption(0);
+                } else if (event.key === "End") {
+                  event.preventDefault();
+                  focusOption(SEARCH_VARIATION_OPTIONS.length - 1);
+                }
+              }}
+            >
+              <VariationDot variationId={option.value} />
+              <span>{option.label}</span>
+              {option.value === value && <Check size={14} aria-hidden="true" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VariationDot({ variationId }: Readonly<{ variationId: SeedVariationFilterId }>) {
+  return <i className={`seed-explorer-variation-dot is-${variationTone(variationId)}`} aria-hidden="true" />;
 }
 
 function SwitchControl({
@@ -923,49 +1179,13 @@ function candidateTags(candidate: SeedAnalysisResult): readonly string[] {
   return Object.freeze(tags.slice(0, 3));
 }
 
-function candidateArchetype(
-  candidate: SeedAnalysisResult,
-  index: number,
-  pool: readonly SeedAnalysisResult[],
-): string {
-  if (index === 0) return "Mejor ajuste";
-  if (candidate.mulligan.recommendation === "mulligan" && candidate.mulligan.delta >= 3) return "Mulligan útil";
-  const ratings = candidate.metrics.ratings;
-  const values = [ratings.resources, ratings.curve, ratings.pressure, ratings.escalation];
-  if (Math.max(...values) - Math.min(...values) <= 8) return "Equilibrada";
-  const averages = {
-    resources: averageRating(pool, "resources"),
-    curve: averageRating(pool, "curve"),
-    pressure: averageRating(pool, "pressure"),
-    escalation: averageRating(pool, "escalation"),
-  };
-  const distinctions = [
-    ["Más estable", ratings.resources - averages.resources],
-    ["Mejor curva", ratings.curve - averages.curve],
-    ["Inicio suave", ratings.pressure - averages.pressure],
-    ["Mayor escalada", ratings.escalation - averages.escalation],
-  ] as const;
-  return [...distinctions].sort((left, right) => right[1] - left[1])[0][0];
+function variationLabel(variationId: SeedVariationFilterId): string {
+  return SEARCH_VARIATION_OPTIONS.find(({ value }) => value === variationId)?.label ?? "Cualquier variación";
 }
 
-function archetypeTone(archetype: string): string {
-  switch (archetype) {
-    case "Mejor ajuste": return "best";
-    case "Más estable": return "stable";
-    case "Mejor curva": return "curve";
-    case "Inicio suave": return "gentle";
-    case "Mayor escalada": return "escalation";
-    case "Mulligan útil": return "mulligan";
-    default: return "balanced";
-  }
-}
-
-function averageRating(
-  candidates: readonly SeedAnalysisResult[],
-  key: keyof SeedAnalysisResult["metrics"]["ratings"],
-): number {
-  if (candidates.length === 0) return 0;
-  return candidates.reduce((sum, candidate) => sum + candidate.metrics.ratings[key], 0) / candidates.length;
+function variationTone(variationId: SeedVariationFilterId): string {
+  if (variationId === MULLIGAN_USEFUL_VARIATION_ID) return "mulligan";
+  return variationId;
 }
 
 function resultSummary(
@@ -977,7 +1197,10 @@ function resultSummary(
     return `${formatInteger(snapshot.frame.search.examined)} examinados · ${formatInteger(snapshot.frame.search.passedFilters)} pasaron filtros · ${visibleCount} visibles`;
   }
   if (!result) return "Sin búsqueda todavía · perfil Primer acercamiento";
-  return `${formatInteger(result.examined)} examinados · ${formatInteger(result.passedFilters)} pasaron filtros · ${profileLabel(result.request.profileId)}`;
+  const variation = result.request.variationId === ANY_SEED_VARIATION_ID
+    ? ""
+    : ` · ${variationLabel(result.request.variationId)}`;
+  return `${formatInteger(result.examined)} examinados · ${formatInteger(result.passedFilters)} pasaron filtros · ${profileLabel(result.request.profileId)}${variation}`;
 }
 
 function searchProfileOption(profileId: SeedSearchProfileId) {

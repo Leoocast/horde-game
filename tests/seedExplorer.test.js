@@ -3,13 +3,16 @@ import { test } from "node:test";
 
 import { createInitialGame, mulliganOpeningHand } from "../src/engine/GameState";
 import {
+  ANY_SEED_VARIATION_ID,
   FIRST_APPROACH_PROFILE,
   FIRST_APPROACH_PROFILE_ID,
   HIGH_PRESSURE_PROFILE_ID,
+  MULLIGAN_USEFUL_VARIATION_ID,
   PROGRESSIVE_PRESSURE_PROFILE_ID,
   SEED_SEARCH_PROFILE_IDS,
   SEED_SEARCH_PROFILES,
   analyzeSeedEntropy,
+  classifySeedVariation,
   createSeedAnalysisContext,
   firstApproachFilterReasons,
   projectPotentialHostWindows,
@@ -36,6 +39,7 @@ import {
   seedSearchResultToCsv,
   seedSearchResultToJson,
   serializeStoredSeedFavorites,
+  setStoredSeedFavoriteNote,
 } from "../src/playground/seedExplorerStorage";
 
 const DEFAULT_CONFIG = Object.freeze({
@@ -292,6 +296,47 @@ test("diverse selection keeps the best result and reaches structurally different
   assert.equal(new Set(selected.map(({ identity }) => identity.canonCode)).size, selected.length);
 });
 
+test("variation classification is intrinsic, deterministic and gives useful mulligans priority", () => {
+  const base = analyzeSeedEntropy(createSeedAnalysisContext(DEFAULT_CONFIG), "LEGPT").result;
+  const candidate = (ratings, mulligan = { recommendation: "keep", delta: 0 }) => ({
+    ...base,
+    metrics: { ...base.metrics, ratings: { ...base.metrics.ratings, ...ratings } },
+    mulligan,
+  });
+
+  assert.equal(classifySeedVariation(candidate({ resources: 92, curve: 50, pressure: 50, escalation: 50 })), "stable");
+  assert.equal(classifySeedVariation(candidate({ resources: 50, curve: 92, pressure: 50, escalation: 50 })), "curve");
+  assert.equal(classifySeedVariation(candidate({ resources: 50, curve: 50, pressure: 8, escalation: 50 })), "gentle");
+  assert.equal(classifySeedVariation(candidate({ resources: 50, curve: 50, pressure: 50, escalation: 92 })), "escalation");
+  assert.equal(classifySeedVariation(candidate({ resources: 54, curve: 50, pressure: 48, escalation: 53 })), "balanced");
+  assert.equal(classifySeedVariation(candidate(
+    { resources: 92, curve: 50, pressure: 50, escalation: 50 },
+    { recommendation: "mulligan", delta: 4 },
+  )), MULLIGAN_USEFUL_VARIATION_ID);
+});
+
+test("a search variation filters the full enumeration before ranking", () => {
+  const request = {
+    ...DEFAULT_CONFIG,
+    variationId: MULLIGAN_USEFUL_VARIATION_ID,
+    startIndex: 0,
+    count: 2_000,
+    top: 8,
+  };
+  const result = searchSeedRange(request);
+
+  assert.equal(result.request.variationId, MULLIGAN_USEFUL_VARIATION_ID);
+  assert.equal(result.candidates.length, request.top);
+  assert.ok(result.candidates.every((candidate) => classifySeedVariation(candidate) === MULLIGAN_USEFUL_VARIATION_ID));
+  assert.ok(result.rejectedByReason["variation-mismatch"] > 0);
+  assert.deepEqual(searchSeedRange(request), result);
+  assert.equal(createSeedAnalysisContext(DEFAULT_CONFIG).config.variationId, ANY_SEED_VARIATION_ID);
+  assert.throws(
+    () => createSeedAnalysisContext({ ...DEFAULT_CONFIG, variationId: "unknown-variation" }),
+    /variation/u,
+  );
+});
+
 test("one search request is deterministic, bounded and fully verified", () => {
   const request = { ...DEFAULT_CONFIG, startIndex: 700, count: 1_500, top: 12 };
   const first = searchSeedRange(request);
@@ -507,6 +552,23 @@ test("favorite storage round-trips Canon identities and fails closed on stale da
   ]);
 });
 
+test("favorite notes round-trip, remain attached to their exact Canon Seed and can be cleared", () => {
+  const entries = [{
+    canonCode: "HF1-ELA-GRV-082-QC5",
+    savedAt: "2026-08-19T12:00:00.000Z",
+    profileId: FIRST_APPROACH_PROFILE_ID,
+    evaluateMulligan: true,
+    avoidEarlySpikes: true,
+  }];
+  const noted = setStoredSeedFavoriteNote(entries, entries[0].canonCode, "  Seed elegida para primer acercamiento.  ");
+
+  assert.equal(entries[0].note, undefined);
+  assert.equal(noted[0].note, "Seed elegida para primer acercamiento.");
+  assert.deepEqual(parseStoredSeedFavorites(serializeStoredSeedFavorites(noted)), noted);
+  assert.deepEqual(setStoredSeedFavoriteNote(noted, entries[0].canonCode, ""), entries);
+  assert.deepEqual(setStoredSeedFavoriteNote(noted, "HF1-ELA-GRV-LE2-GPT", "No corresponde"), noted);
+});
+
 test("JSON and CSV exports are stable, complete and solver-free", () => {
   const result = searchSeedRange({ ...DEFAULT_CONFIG, startIndex: 40_000, count: 240, top: 3 });
   const json = seedSearchResultToJson(result);
@@ -516,10 +578,10 @@ test("JSON and CSV exports are stable, complete and solver-free", () => {
   assert.equal(seedSearchResultToCsv(result), csv);
   const parsed = JSON.parse(json);
   assert.equal(parsed.exportedBy, "hostfall-seed-explorer");
-  assert.equal(parsed.version, 2);
+  assert.equal(parsed.version, 3);
   assert.deepEqual(parsed.result, result);
   assert.equal(csv.split("\n").length, result.candidates.length + 1);
-  assert.match(csv, /^rank,canonCode,score,profileId,/u);
+  assert.match(csv, /^rank,canonCode,score,profileId,variationId,/u);
   for (const candidate of result.candidates) assert.match(csv, new RegExp(candidate.identity.canonCode, "u"));
   assert.doesNotMatch(`${json}\n${csv}`, /winning-line-found|impossible/u);
 });

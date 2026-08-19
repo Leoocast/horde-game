@@ -16,10 +16,10 @@
 }
 
 .seed-explorer-board {
-  position: fixed;
-  inset: 0;
-  z-index: 10020;
+  /* Board owns the full viewport already. Keeping this wrapper out of a high stacking
+     context lets its document.body portals (notably the Energy HUD) remain visible. */
   min-width: 320px;
+  height: 100vh;
   min-height: 100vh;
   overflow: hidden;
   background: #070d0f;
@@ -212,6 +212,92 @@
   outline: none;
   box-shadow: 0 0 0 1px rgb(177 158 95 / 0.08), 0 0 18px rgb(177 136 57 / 0.06);
 }
+
+.seed-explorer-variation-control {
+  position: relative;
+  z-index: 30;
+}
+.seed-explorer-variation-trigger {
+  display: grid;
+  width: 100%;
+  height: 36px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgb(124 142 137 / 0.34);
+  border-radius: 2px;
+  padding: 0 10px;
+  background: rgb(4 10 12 / 0.82);
+  color: #d9d4bd;
+  font: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+}
+.seed-explorer-variation-trigger:hover,
+.seed-explorer-variation-trigger:focus-visible {
+  border-color: rgb(177 158 95 / 0.64);
+  outline: none;
+  box-shadow: 0 0 0 1px rgb(177 158 95 / 0.08), 0 0 18px rgb(177 136 57 / 0.06);
+}
+.seed-explorer-variation-trigger[aria-expanded="true"] svg { transform: rotate(180deg); }
+.seed-explorer-variation-menu {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 5px);
+  right: 0;
+  left: 0;
+  display: grid;
+  overflow: hidden;
+  border: 1px solid rgb(151 143 103 / 0.42);
+  border-radius: 2px;
+  padding: 4px;
+  background: linear-gradient(180deg, rgb(20 29 30 / 0.99), rgb(5 11 13 / 0.99));
+  box-shadow: 0 16px 34px rgb(0 0 0 / 0.58);
+}
+.seed-explorer-variation-menu button {
+  display: grid;
+  min-height: 34px;
+  grid-template-columns: auto minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  padding: 0 8px;
+  background: transparent;
+  color: #aeb6a9;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.seed-explorer-variation-menu button:hover,
+.seed-explorer-variation-menu button:focus-visible {
+  outline: none;
+  background: rgb(53 67 65 / 0.52);
+  color: #eee2c2;
+}
+.seed-explorer-variation-menu button.is-selected {
+  background: rgb(89 74 39 / 0.3);
+  color: #e3d7b7;
+}
+.seed-explorer-variation-menu button > svg { justify-self: end; color: #caaa63; }
+.seed-explorer-variation-dot {
+  --seed-variation-color: #71817c;
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border: 1px solid color-mix(in srgb, var(--seed-variation-color) 78%, white);
+  border-radius: 50%;
+  background: var(--seed-variation-color);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--seed-variation-color) 55%, transparent);
+}
+.seed-explorer-variation-dot.is-stable { --seed-variation-color: #9bc99c; }
+.seed-explorer-variation-dot.is-curve { --seed-variation-color: #9bbfe3; }
+.seed-explorer-variation-dot.is-gentle { --seed-variation-color: #91ced0; }
+.seed-explorer-variation-dot.is-escalation { --seed-variation-color: #d9a06f; }
+.seed-explorer-variation-dot.is-mulligan { --seed-variation-color: #bea0dc; }
+.seed-explorer-variation-dot.is-balanced { --seed-variation-color: #9cb9b0; }
 
 .seed-explorer-grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
 .seed-explorer-profile-description,
@@ -415,11 +501,6 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
-.seed-explorer-archetype.is-best {
-  border-color: rgb(208 187 119 / 0.56);
-  background: rgb(117 87 34 / 0.3);
-  color: #dec47d;
-}
 .seed-explorer-archetype.is-stable {
   border-color: rgb(103 157 105 / 0.55);
   background: rgb(42 91 55 / 0.3);
@@ -472,6 +553,16 @@
   cursor: pointer;
 }
 .seed-explorer-favorite.is-active { border-color: rgb(208 187 119 / 0.62); color: #d8bd7a; }
+.seed-explorer-favorite-note {
+  margin: 0;
+  border-left: 2px solid rgb(190 160 220 / 0.62);
+  padding: 8px 10px;
+  background: rgb(75 46 105 / 0.18);
+  color: #bdb8a8;
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
 
 .seed-explorer-metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .seed-explorer-metric {
@@ -547,6 +638,75 @@
 .seed-explorer-pressure-level { color: #71817c; font-size: 11px; text-align: right; text-transform: uppercase; }
 .seed-explorer-pressure-level.is-rising { color: #c69567; }
 .seed-explorer-inspector-actions { display: grid; grid-template-columns: 1fr 1.3fr; gap: 8px; }
+.seed-explorer-note-button { width: 100%; border-color: rgb(137 105 174 / 0.46); color: #c3a8dc; }
+
+.seed-explorer-note-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10045;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(1 6 8 / 0.78);
+  backdrop-filter: blur(7px);
+}
+.seed-explorer-note-modal {
+  display: grid;
+  width: min(620px, calc(100vw - 40px));
+  grid-template-rows: auto auto auto;
+  overflow: hidden;
+  border: 1px solid rgb(177 158 95 / 0.5);
+  border-radius: 3px;
+  background: linear-gradient(155deg, #162021, #070d0f 72%);
+  box-shadow: 0 26px 80px rgb(0 0 0 / 0.7), inset 0 1px rgb(242 220 155 / 0.05);
+}
+.seed-explorer-note-modal > header,
+.seed-explorer-note-modal > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 16px;
+  background: rgb(6 12 14 / 0.88);
+}
+.seed-explorer-note-modal > header { border-bottom: 1px solid rgb(151 143 103 / 0.24); }
+.seed-explorer-note-modal > header h2 {
+  margin: 4px 0 0;
+  color: #e4d8b6;
+  font: 600 18px/1.25 ui-monospace, "Cascadia Code", Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+.seed-explorer-note-modal > label {
+  display: grid;
+  gap: 7px;
+  padding: 16px;
+  color: #82908b;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.seed-explorer-note-modal textarea {
+  width: 100%;
+  min-height: 170px;
+  resize: vertical;
+  border: 1px solid rgb(124 142 137 / 0.34);
+  border-radius: 2px;
+  padding: 11px 12px;
+  background: rgb(4 10 12 / 0.82);
+  color: #d9d4bd;
+  font: 14px/1.5 "Trebuchet MS", Verdana, sans-serif;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.seed-explorer-note-modal textarea:focus {
+  border-color: rgb(177 158 95 / 0.64);
+  outline: none;
+  box-shadow: 0 0 0 1px rgb(177 158 95 / 0.08), 0 0 18px rgb(177 136 57 / 0.06);
+}
+.seed-explorer-note-modal > footer { border-top: 1px solid rgb(151 143 103 / 0.24); }
+.seed-explorer-note-modal > footer > span { color: #71817c; font-size: 11px; font-variant-numeric: tabular-nums; }
+.seed-explorer-note-modal > footer > div { display: flex; gap: 8px; }
 
 .seed-explorer-detail-overlay {
   position: fixed;

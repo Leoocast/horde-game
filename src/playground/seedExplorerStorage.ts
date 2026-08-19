@@ -1,6 +1,7 @@
 import { decodeCanonSeed } from "../content/CanonSeed";
 import {
   FIRST_APPROACH_PROFILE_ID,
+  classifySeedVariation,
   isSeedSearchProfileId,
   type SeedAnalysisResult,
   type SeedSearchProfileId,
@@ -9,8 +10,9 @@ import type { SeedSearchResult } from "./seedExplorerSearch";
 
 const SEED_FAVORITES_STORAGE_KEY = "hostfall-playground-seed-favorites:v1";
 const SEED_FAVORITES_VERSION = 1 as const;
-const SEED_EXPORT_VERSION = 2 as const;
+const SEED_EXPORT_VERSION = 3 as const;
 const MAX_STORED_FAVORITES = 100;
+export const MAX_SEED_FAVORITE_NOTE_LENGTH = 600;
 
 export type StoredSeedFavorite = Readonly<{
   canonCode: string;
@@ -18,6 +20,7 @@ export type StoredSeedFavorite = Readonly<{
   profileId: SeedSearchProfileId;
   evaluateMulligan: boolean;
   avoidEarlySpikes: boolean;
+  note?: string;
 }>;
 
 type StoredSeedFavoriteFile = Readonly<{
@@ -46,6 +49,7 @@ export function saveStoredSeedFavorite(
     profileId: config.profileId,
     evaluateMulligan: config.evaluateMulligan,
     avoidEarlySpikes: config.avoidEarlySpikes,
+    ...(existing?.note ? { note: existing.note } : {}),
   });
   const next = Object.freeze([
     saved,
@@ -59,6 +63,26 @@ export function deleteStoredSeedFavorite(canonCode: string): readonly StoredSeed
   const next = Object.freeze(listStoredSeedFavorites().filter((entry) => entry.canonCode !== canonCode));
   writeStoredSeedFavorites(next);
   return next;
+}
+
+export function updateStoredSeedFavoriteNote(canonCode: string, note: string): readonly StoredSeedFavorite[] {
+  const next = setStoredSeedFavoriteNote(listStoredSeedFavorites(), canonCode, note);
+  writeStoredSeedFavorites(next);
+  return next;
+}
+
+export function setStoredSeedFavoriteNote(
+  entries: readonly StoredSeedFavorite[],
+  canonCode: string,
+  note: string,
+): readonly StoredSeedFavorite[] {
+  if (!entries.some((entry) => entry.canonCode === canonCode)) return entries;
+  const normalizedNote = normalizeFavoriteNote(note);
+  return Object.freeze(entries.map((entry) => {
+    if (entry.canonCode !== canonCode) return entry;
+    const { note: _previousNote, ...favorite } = entry;
+    return Object.freeze(normalizedNote ? { ...favorite, note: normalizedNote } : favorite);
+  }));
 }
 
 export function parseStoredSeedFavorites(serialized: string | null): readonly StoredSeedFavorite[] {
@@ -101,6 +125,7 @@ export function seedSearchResultToCsv(result: SeedSearchResult): string {
     "canonCode",
     "score",
     "profileId",
+    "variationId",
     "playerDeckKey",
     "hostDeckKey",
     "difficulty",
@@ -119,6 +144,7 @@ export function seedSearchResultToCsv(result: SeedSearchResult): string {
     candidate.identity.canonCode,
     candidate.score,
     candidate.profileId,
+    classifySeedVariation(candidate),
     candidate.identity.playerDeckKey,
     candidate.identity.hostDeckKey,
     candidate.identity.difficulty,
@@ -162,16 +188,22 @@ function normalizeStoredSeedFavorite(value: unknown): StoredSeedFavorite | undef
   ) return undefined;
   try {
     if (decodeCanonSeed(entry.canonCode).canonCode !== entry.canonCode) return undefined;
+    const note = typeof entry.note === "string" ? normalizeFavoriteNote(entry.note) : "";
     return Object.freeze({
       canonCode: entry.canonCode,
       savedAt: entry.savedAt,
       profileId: isSeedSearchProfileId(entry.profileId) ? entry.profileId : FIRST_APPROACH_PROFILE_ID,
       evaluateMulligan: entry.evaluateMulligan,
       avoidEarlySpikes: entry.avoidEarlySpikes,
+      ...(note ? { note } : {}),
     });
   } catch {
     return undefined;
   }
+}
+
+function normalizeFavoriteNote(note: string): string {
+  return note.replaceAll("\r\n", "\n").trim().slice(0, MAX_SEED_FAVORITE_NOTE_LENGTH);
 }
 
 function csvCell(value: string | number): string {

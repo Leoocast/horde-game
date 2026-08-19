@@ -43,6 +43,7 @@ export type SeedSearchResult = Readonly<{
     hostDeckKey: string;
     difficulty: SeedAnalysisContext["config"]["difficulty"];
     profileId: SeedAnalysisContext["config"]["profileId"];
+    variationId: SeedAnalysisContext["config"]["variationId"];
     evaluateMulligan: boolean;
     avoidEarlySpikes: boolean;
     startIndex: number;
@@ -332,5 +333,6 @@ function emptyRejectionCounts(): Record<SeedFilterReason, number> {
     "early-host-spike": 0,
     "host-pressure-too-low": 0,
     "host-escalation-too-low": 0,
+    "variation-mismatch": 0,
   };
 }

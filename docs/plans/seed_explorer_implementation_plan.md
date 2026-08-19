@@ -490,7 +490,7 @@ visual si el usuario detecta diferencias en su resolución real.
 
 ### Fase 3.5 — Perfiles estructurales adicionales
 
-**Estado:** cerrada el 2026-08-18. El selector de **Perfil buscado** ejecuta cinco perfiles reales:
+**Estado:** cerrada el 2026-08-18 y ampliada el 2026-08-19. El selector de **Perfil buscado** ejecuta cinco perfiles reales:
 Primer acercamiento, Equilibrada, Hostfallero experimentado, Presión alta y Escalada progresiva.
 Todos reutilizan las métricas V1, mantienen ranking determinista y pasan por la misma verificación
 exacta. El perfil forma parte de request, resultado, favoritos y export, pero no de la Canon Seed.
@@ -501,11 +501,19 @@ exacta. El perfil forma parte de request, resultado, favoritos y export, pero no
 - aplicar defaults de picos tempranos explícitos por perfil;
 - migrar favoritos anteriores al perfil default;
 - comprobar con muestras locales que los cinco perfiles producen finalistas distinguibles.
+- clasificar cada candidata con una variación intrínseca y coloreada —Más estable, Mejor curva,
+  Inicio suave, Mayor escalada, Mulligan útil o Equilibrada— sin depender de su posición en el pool;
+- permitir filtrar esa variación durante el barrido completo; Mulligan útil fuerza la evaluación de
+  un mulligan y el filtro queda registrado en el request/export, no en la identidad Canon.
 
 **Salida:** el creador puede buscar tipos de futuro distintos antes de iniciar la calibración humana,
 sin IA jugadora ni nuevas métricas del engine.
 
 ### Fase 4 — Calibración y cierre
+
+**Candidata elegida por playtest del creador el 2026-08-19:** `HF1-ELA-GRV-082-QC5`. Se conserva
+como la Canon Seed de primer acercamiento aprobada mientras se corrigen bugs previos a continuar el
+flujo del tutorial.
 
 - ejecutar búsquedas del matchup de demo;
 - comparar finalistas de los perfiles relevantes con playtests humanos;

@@ -22,6 +22,18 @@ export const BALANCED_PROFILE_ID = "balanced-v1" as const;
 export const EXPERIENCED_PROFILE_ID = "experienced-v1" as const;
 export const HIGH_PRESSURE_PROFILE_ID = "high-pressure-v1" as const;
 export const PROGRESSIVE_PRESSURE_PROFILE_ID = "progressive-pressure-v1" as const;
+export const ANY_SEED_VARIATION_ID = "any" as const;
+export const MULLIGAN_USEFUL_VARIATION_ID = "mulligan-useful" as const;
+export const SEED_VARIATION_IDS = Object.freeze([
+  "stable",
+  "curve",
+  "gentle",
+  "escalation",
+  MULLIGAN_USEFUL_VARIATION_ID,
+  "balanced",
+] as const);
+export type SeedVariationId = (typeof SEED_VARIATION_IDS)[number];
+export type SeedVariationFilterId = typeof ANY_SEED_VARIATION_ID | SeedVariationId;
 export const SEED_SEARCH_PROFILE_IDS = Object.freeze([
   FIRST_APPROACH_PROFILE_ID,
   BALANCED_PROFILE_ID,
@@ -38,6 +50,7 @@ export type SeedExplorerConfig = Readonly<{
   hostDeckKey: string;
   difficulty: DifficultyMode;
   profileId?: SeedSearchProfileId;
+  variationId?: SeedVariationFilterId;
   evaluateMulligan?: boolean;
   avoidEarlySpikes?: boolean;
 }>;
@@ -143,6 +156,31 @@ export type SeedAnalysisResult = Readonly<{
 }>;
 
 /**
+ * Stable, pool-independent variation used both by the colored UI label and by search-time filters.
+ * Pressure is inverted for the "gentle" axis because a softer opening means less Host pressure.
+ */
+export function classifySeedVariation(candidate: SeedAnalysisResult): SeedVariationId {
+  if (candidate.mulligan.recommendation === "mulligan" && candidate.mulligan.delta >= 3) {
+    return MULLIGAN_USEFUL_VARIATION_ID;
+  }
+  const ratings = candidate.metrics.ratings;
+  const axes = [
+    ["stable", ratings.resources],
+    ["curve", ratings.curve],
+    ["gentle", 100 - ratings.pressure],
+    ["escalation", ratings.escalation],
+  ] as const satisfies readonly (readonly [Exclude<SeedVariationId, "balanced" | typeof MULLIGAN_USEFUL_VARIATION_ID>, number])[];
+  const values = axes.map(([, value]) => value);
+  if (Math.max(...values) - Math.min(...values) <= 8) return "balanced";
+  return axes.reduce((best, current) => current[1] > best[1] ? current : best)[0];
+}
+
+export function isSeedVariationFilterId(value: unknown): value is SeedVariationFilterId {
+  return value === ANY_SEED_VARIATION_ID
+    || (typeof value === "string" && (SEED_VARIATION_IDS as readonly string[]).includes(value));
+}
+
+/**
  * Greedy max-min selection over the verified top pool. The best score is always retained; each
  * following slot balances quality rank with distance from the candidates already selected.
  */
@@ -206,7 +244,8 @@ export type SeedFilterReason =
   | "too-few-accessible-cards"
   | "early-host-spike"
   | "host-pressure-too-low"
-  | "host-escalation-too-low";
+  | "host-escalation-too-low"
+  | "variation-mismatch";
 
 export type SeedCandidateEvaluation = Readonly<{
   accepted: boolean;
@@ -404,6 +443,10 @@ export type ProjectedHostWindow = Readonly<{
 
 export function createSeedAnalysisContext(config: SeedExplorerConfig): SeedAnalysisContext {
   const profile = seedSearchProfile(config.profileId ?? FIRST_APPROACH_PROFILE_ID);
+  const variationId = config.variationId ?? ANY_SEED_VARIATION_ID;
+  if (!isSeedVariationFilterId(variationId)) {
+    throw new Error(`Unknown Seed Explorer variation "${String(variationId)}".`);
+  }
   const canonCode = encodeCanonSeed({
     entropy: "00000",
     playerDeckKey: config.playerDeckKey,
@@ -421,6 +464,7 @@ export function createSeedAnalysisContext(config: SeedExplorerConfig): SeedAnaly
       hostDeckKey: identityTemplate.hostDeckKey,
       difficulty: identityTemplate.difficulty,
       profileId: profile.id,
+      variationId,
       evaluateMulligan: config.evaluateMulligan ?? true,
       avoidEarlySpikes: config.avoidEarlySpikes ?? profile.defaultAvoidEarlySpikes,
     }),
@@ -633,7 +677,11 @@ function analyzeOrderedFuture(
     mulligan: Object.freeze({ recommendation, delta: mulliganDelta }),
     solvability: Object.freeze({ status: solvabilityStatus }),
   });
-  const filterReasons = seedProfileFilterReasons(profile.id, metrics, context.config.avoidEarlySpikes);
+  const profileFilterReasons = seedProfileFilterReasons(profile.id, metrics, context.config.avoidEarlySpikes);
+  const filterReasons = context.config.variationId !== ANY_SEED_VARIATION_ID
+    && classifySeedVariation(result) !== context.config.variationId
+    ? Object.freeze([...profileFilterReasons, "variation-mismatch"] as SeedFilterReason[])
+    : profileFilterReasons;
   return Object.freeze({ accepted: filterReasons.length === 0, filterReasons, result });
 }
 

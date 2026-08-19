@@ -536,6 +536,13 @@ El resultado conserva un `candidatePool` verificado más ancho que el top visibl
 el ranking puro; **Variadas**, que es el default de UI, siempre conserva la primera y completa la
 lista con una selección greedy max-min sobre apertura, recursos, curva, presión, escalada y
 mulligan. Esta capa no modifica score, filtros ni identidad Canon.
+Las etiquetas de variación son una clasificación estable e independiente del pool: Más estable,
+Mejor curva, Inicio suave, Mayor escalada, Mulligan útil o Equilibrada. El dropdown **Variación
+buscada** aplica esa clasificación durante la enumeración completa, antes del heap y del ranking;
+no filtra únicamente el shortlist visible. Elegir Mulligan útil habilita la proyección de mulligan.
+El playtest del creador eligió `HF1-ELA-GRV-082-QC5` como Canon Seed de primer acercamiento el
+2026-08-19; conservarla como referencia aprobada mientras se corrigen bugs antes de retomar el
+tutorial.
 
 `src/playground/seedExplorerRuntime.ts` envuelve ese núcleo en slices cooperativos de renderer y
 parte también la verificación exacta final. Usa un scheduler, reloj y `AbortSignal` inyectables,
@@ -548,7 +555,8 @@ La UI vive en `src/seed-explorer/SeedExplorerScreen.tsx`: es una pantalla dev in
 hermana de Playground y Audio Lab, con acceso desde el dock dev abajo a la derecha del home.
 Playground no la importa ni la monta. Favoritos viven en `seedExplorerStorage.ts` como Canon Seeds
 versionadas junto con el perfil que produjo su score y se reconstruyen defensivamente; favoritos
-anteriores sin perfil migran a `first-approach-v1`. Los exports JSON/CSV no incluyen timestamps
+anteriores sin perfil migran a `first-approach-v1`. Cada favorito admite una nota local opcional,
+editable y vinculada al Canon Seed exacto. Los exports JSON/CSV no incluyen timestamps
 variables. **Probar en tablero** crea un juego nuevo con la entropía, decks, dificultad y
 Preparación de la identidad, llama `loadScenario` y alterna la propia herramienta al Board real.
 Volver desde el Board conserva shortlist, selección y último resultado. La búsqueda nunca muta
