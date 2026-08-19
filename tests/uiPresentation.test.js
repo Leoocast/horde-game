@@ -1352,8 +1352,13 @@ test("Seed Explorer is a standalone dev screen launched from the home tool dock"
   assert.match(globalStylesSource, /\.main-menu-developer-tools \{[\s\S]*?position: absolute;[\s\S]*?right:[\s\S]*?bottom:/u);
   assert.doesNotMatch(playgroundSource, /SeedExplorer|id: "seeds"/u);
   assert.match(explorerSource, /<strong>Aproximación:<\/strong>/u);
-  assert.match(explorerSource, /Preparación se deriva de dificultad/u);
+  assert.doesNotMatch(explorerSource, /Preparación se deriva de dificultad/u);
   assert.match(explorerSource, /Probar en tablero/u);
+  assert.match(explorerSource, /Ver detalles/u);
+  assert.match(explorerSource, /title="Mano inicial"[\s\S]*?candidate\.preview\.openingHand/u);
+  assert.match(explorerSource, /title="Mano tras mulligan"[\s\S]*?candidate\.preview\.mulliganHand/u);
+  assert.match(explorerSource, /const imageUrl = useCardImage\(card\.definitionId\)/u);
+  assert.match(explorerSource, /backgroundColor: ratingColor/u);
   assert.match(explorerSource, /createInitialGame\([\s\S]*?identity\.entropy,[\s\S]*?identity\.preparationTurns,[\s\S]*?identity\.difficulty,[\s\S]*?identity\.gameMode/u);
   assert.match(explorerSource, /loadScenario\([\s\S]*?createInitialGame/u);
   assert.match(explorerSource, /startBattleMusic\(true\);[\s\S]*?setBoardCandidate\(candidate\)/u);
@@ -1365,5 +1370,7 @@ test("Seed Explorer is a standalone dev screen launched from the home tool dock"
   assert.match(explorerSource, /value=\{finalistDraft\}[\s\S]*?onChange=\{\(event\) => updateFinalistDraft\(event\.target\.value\)\}[\s\S]*?onBlur=\{commitFinalistDraft\}/u);
   assert.match(explorerSource, /import "\.\/SeedExplorerScreen\.css"/u);
   assert.match(explorerStylesSource, /\.seed-explorer-workspace \{[\s\S]*?position: fixed;[\s\S]*?inset: 0;[\s\S]*?z-index: 10020;/u);
+  assert.match(explorerStylesSource, /\.seed-explorer-topbar \{[\s\S]*?min-height: 52px;/u);
+  assert.match(explorerStylesSource, /\.seed-explorer-detail-modal \{[\s\S]*?width: min\(1600px, calc\(100vw - 48px\)\);[\s\S]*?height: calc\(100vh - 36px\);/u);
   assert.doesNotMatch(appSource, /seedExplorerRuntime|seedExplorerSearch/u);
 });

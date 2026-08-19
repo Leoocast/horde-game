@@ -4,6 +4,7 @@ import {
   Copy,
   Download,
   FileSpreadsheet,
+  Maximize2,
   Play,
   Search,
   Star,
@@ -23,6 +24,7 @@ import type { DifficultyMode } from "../engine/GameTypes";
 import { useAudioStore } from "../store/useAudioStore";
 import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
+import { useCardImage } from "../utils/cardImages";
 import {
   analyzeSeedEntropy,
   createSeedAnalysisContext,
@@ -103,6 +105,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
   const [favorites, setFavorites] = useState<readonly StoredSeedFavorite[]>(() => listStoredSeedFavorites());
   const [boardCandidate, setBoardCandidate] = useState<SeedAnalysisResult>();
   const [finalistDraft, setFinalistDraft] = useState(() => String(configuration.top));
+  const [detailsCode, setDetailsCode] = useState<string>();
 
   useEffect(() => () => {
     runtime.cancel();
@@ -127,11 +130,15 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       event.preventDefault();
+      if (detailsCode) {
+        setDetailsCode(undefined);
+        return;
+      }
       onReturnToMenu();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [boardCandidate, onReturnToMenu]);
+  }, [boardCandidate, detailsCode, onReturnToMenu]);
 
   function report(message: string): void {
     pushToast({ title: "Seed Explorer", message, tone: "info" });
@@ -193,6 +200,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
     [finalistCandidates, savedCandidates],
   );
   const selectedCandidate = selectedCode ? candidatesByCode.get(selectedCode) : undefined;
+  const detailsCandidate = detailsCode ? candidatesByCode.get(detailsCode) : undefined;
 
   useEffect(() => {
     if (visibleCandidates.some((candidate) => candidate.identity.canonCode === selectedCode)) return;
@@ -328,7 +336,6 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
                   <output className="seed-explorer-readonly-field">{preparationTurns} turnos</output>
                 </div>
               </div>
-              <p className="seed-explorer-inline-note">Preparación se deriva de dificultad y forma parte de la Canon Seed.</p>
             </section>
 
             <section className="seed-explorer-group">
@@ -390,7 +397,13 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
                     : `${formatInteger(searchProgress?.examined ?? lastComplete?.examined ?? 0)} / ${formatInteger(searchProgress?.total ?? lastComplete?.request.count ?? configuration.count)}`}</span>
                 </div>
                 <div className="seed-explorer-progress-track">
-                  <i className="seed-explorer-progress-fill" style={{ width: `${Math.round(progress * 100)}%` }} />
+                  <i
+                    className="seed-explorer-progress-fill"
+                    style={{
+                      width: `${Math.round(progress * 100)}%`,
+                      backgroundColor: ratingColor(progress * 100),
+                    }}
+                  />
                 </div>
               </div>
             </section>
@@ -456,6 +469,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
               onToggleFavorite={() => toggleFavorite(selectedCandidate)}
               onCopy={() => void copyCandidate(selectedCandidate)}
               onTry={() => openCandidate(selectedCandidate)}
+              onViewDetails={() => setDetailsCode(selectedCandidate.identity.canonCode)}
             />
           ) : (
             <div className="seed-explorer-empty is-inspector">Selecciona una candidata para inspeccionar su futuro.</div>
@@ -467,6 +481,16 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
         <span><strong>{statusMessage}</strong> · análisis estático · sin solver</span>
         <span>RNG determinista · ruleset actual · herramienta dev-only</span>
       </footer>
+      {detailsCandidate && (
+        <SeedDetailsModal
+          candidate={detailsCandidate}
+          favorite={favoriteCodes.has(detailsCandidate.identity.canonCode)}
+          onClose={() => setDetailsCode(undefined)}
+          onToggleFavorite={() => toggleFavorite(detailsCandidate)}
+          onCopy={() => void copyCandidate(detailsCandidate)}
+          onTry={() => openCandidate(detailsCandidate)}
+        />
+      )}
       <ToastStack variant="menu" />
     </section>
   );
@@ -510,15 +534,19 @@ function CandidateInspector({
   onToggleFavorite,
   onCopy,
   onTry,
+  onViewDetails,
 }: Readonly<{
   candidate: SeedAnalysisResult;
   favorite: boolean;
   onToggleFavorite: () => void;
   onCopy: () => void;
   onTry: () => void;
+  onViewDetails: () => void;
 }>) {
-  const recommendedHand = candidate.preview.recommendedHand;
   const mulligan = candidate.mulligan.recommendation === "mulligan";
+  const selectedMetrics = candidate.metrics.selectedHand === "mulligan"
+    ? candidate.metrics.mulliganHand ?? candidate.metrics.openingHand
+    : candidate.metrics.openingHand;
   const ratings = [
     ["Apertura", candidate.metrics.ratings.opening],
     ["Recursos", candidate.metrics.ratings.resources],
@@ -548,50 +576,36 @@ function CandidateInspector({
         </div>
         <div className="seed-explorer-metric-grid">
           {ratings.map(([label, value]) => (
-            <div className={`seed-explorer-metric ${label === "Presión" ? "is-pressure" : ""}`} key={label}>
+            <div className="seed-explorer-metric" key={label}>
               <div><span>{label}</span><strong>{value}</strong></div>
-              <div className="seed-explorer-metric-track"><i style={{ width: `${value}%` }} /></div>
+              <div className="seed-explorer-metric-track">
+                <i style={{ width: `${value}%`, backgroundColor: ratingColor(value) }} />
+              </div>
             </div>
           ))}
         </div>
       </section>
 
       <section className="seed-explorer-group">
-        <GroupHeading
-          title={mulligan ? "Mano tras mulligan" : "Mano inicial"}
-          note={`${recommendedHand.length} cartas · ${mulligan ? "recomendado" : "keep"}`}
-        />
-        <div className="seed-explorer-card-row">
-          {recommendedHand.map((card) => <CardMini card={card} key={card.instanceId} />)}
-        </div>
-        <GroupHeading title="Próximos robos" note="Antes de decisiones" />
-        <div className="seed-explorer-card-row">
-          {candidate.preview.nextPlayerDraws.map((card) => <CardMini card={card} key={card.instanceId} />)}
-        </div>
-      </section>
-
-      <section className="seed-explorer-group">
-        <GroupHeading title="Hueste potencial" note="Primeros 5 tramos" />
-        <div className="seed-explorer-host-preview">
-          {candidate.preview.hostWindows.map((window) => (
-            <div className="seed-explorer-host-window" key={window.hostTurn}>
-              <b>T{window.hostTurn}</b>
-              <span>{window.cards.map(cardLabel).join(" + ") || "Sin cartas"}</span>
-              <span className={`seed-explorer-pressure-level ${window.pressure >= 16 ? "is-rising" : ""}`}>
-                {pressureLabel(window.pressure)} · {window.pressure}
-              </span>
-            </div>
-          ))}
-        </div>
+        <GroupHeading title="Resumen" note={mulligan ? "Mulligan sugerido" : "Conservar mano"} />
+        <dl className="seed-explorer-summary-list">
+          <div><dt>Mano inicial</dt><dd>{candidate.preview.openingHand.length} cartas</dd></div>
+          <div><dt>Después del mulligan</dt><dd>{candidate.preview.mulliganHand?.length ?? "No evaluado"}</dd></div>
+          <div><dt>Fuentes antes de Hueste</dt><dd>{selectedMetrics.sourcesSeenBeforeHost}</dd></div>
+          <div><dt>Presión inicial</dt><dd>{candidate.metrics.host.firstWindowPressure}</dd></div>
+        </dl>
+        <button className="seed-explorer-button is-block" type="button" onClick={onViewDetails}>
+          <Maximize2 size={16} />Ver detalles
+        </button>
         <p className="seed-explorer-disclaimer">
-          <strong>Aproximación:</strong> agrupa presión impresa desde el orden inicial. Efectos y decisiones pueden alterar el Archivo y los turnos reales.
+          Mano inicial, mulligan, robos y ventanas de Hueste se muestran con cartas en la vista amplia.
         </p>
       </section>
 
       <section className="seed-explorer-group">
         <div className="seed-explorer-inspector-actions">
           <button className="seed-explorer-button" type="button" onClick={onCopy}><Copy size={15} />Copiar seed</button>
-          <button className="seed-explorer-button is-primary" type="button" onClick={onTry}><Play size={15} />Probar en tablero</button>
+          <button className="seed-explorer-button is-primary" type="button" onClick={onTry}><Play size={15} />Probar</button>
         </div>
       </section>
     </div>
@@ -645,19 +659,166 @@ function MiniMetric({ label, value, pressure = false }: Readonly<{ label: string
   return (
     <span className={`seed-explorer-mini-line ${pressure ? "is-pressure" : ""}`}>
       <span>{label}</span>
-      <span className="seed-explorer-mini-track"><i style={{ width: `${value}%` }} /></span>
+      <span className="seed-explorer-mini-track">
+        <i style={{ width: `${value}%`, backgroundColor: ratingColor(value) }} />
+      </span>
     </span>
   );
 }
 
-function CardMini({ card }: Readonly<{ card: SeedCardPreviewV1 }>) {
-  const source = card.kinds.some((kind) => kind.toLowerCase() === "source");
-  const spell = card.kinds.some((kind) => kind.toLowerCase() === "spell");
+function SeedDetailsModal({
+  candidate,
+  favorite,
+  onClose,
+  onToggleFavorite,
+  onCopy,
+  onTry,
+}: Readonly<{
+  candidate: SeedAnalysisResult;
+  favorite: boolean;
+  onClose: () => void;
+  onToggleFavorite: () => void;
+  onCopy: () => void;
+  onTry: () => void;
+}>) {
+  const ratings = [
+    ["Apertura", candidate.metrics.ratings.opening],
+    ["Recursos", candidate.metrics.ratings.resources],
+    ["Curva", candidate.metrics.ratings.curve],
+    ["Presión", candidate.metrics.ratings.pressure],
+    ["Escalada", candidate.metrics.ratings.escalation],
+  ] as const;
+  const recommendsMulligan = candidate.mulligan.recommendation === "mulligan";
   return (
-    <div className={`seed-explorer-card-mini ${source ? "is-source" : spell ? "is-spell" : ""}`} title={cardLabel(card)}>
-      <span>{cardLabel(card)}</span>
-      {!source && <small>{card.energyCost}</small>}
+    <div className="seed-explorer-detail-overlay" role="presentation" onMouseDown={(event) => {
+      if (event.target === event.currentTarget) onClose();
+    }}>
+      <section className="seed-explorer-detail-modal" role="dialog" aria-modal="true" aria-labelledby="seed-explorer-detail-title">
+        <header className="seed-explorer-detail-header">
+          <div>
+            <div className="seed-explorer-kicker">Futuro completo</div>
+            <h2 id="seed-explorer-detail-title">{candidate.identity.canonCode}</h2>
+            <div className="seed-explorer-result-tags">
+              {candidateTags(candidate).map((tag) => <span className="seed-explorer-tag" key={tag}>{tag}</span>)}
+            </div>
+          </div>
+          <div className="seed-explorer-detail-header-actions">
+            <button
+              className={`seed-explorer-favorite ${favorite ? "is-active" : ""}`}
+              type="button"
+              aria-label={favorite ? "Quitar futuro de guardados" : "Guardar futuro"}
+              onClick={onToggleFavorite}
+            >
+              <Star size={18} fill={favorite ? "currentColor" : "none"} />
+            </button>
+            <button className="seed-explorer-detail-close" type="button" aria-label="Cerrar detalles" onClick={onClose}>
+              <X size={20} />
+            </button>
+          </div>
+        </header>
+
+        <div className="seed-explorer-detail-body old-scrollbar">
+          <section className="seed-explorer-detail-overview">
+            <div className="seed-explorer-detail-score"><strong>{candidate.score}</strong><span>Ajuste al perfil</span></div>
+            <div className="seed-explorer-metric-grid is-wide">
+              {ratings.map(([label, value]) => (
+                <div className="seed-explorer-metric" key={label}>
+                  <div><span>{label}</span><strong>{value}</strong></div>
+                  <div className="seed-explorer-metric-track">
+                    <i style={{ width: `${value}%`, backgroundColor: ratingColor(value) }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <CardCollection
+            title="Mano inicial"
+            note={`${candidate.preview.openingHand.length} cartas${recommendsMulligan ? " · se recomienda cambiarla" : " · recomendada"}`}
+            cards={candidate.preview.openingHand}
+            highlighted={!recommendsMulligan}
+          />
+
+          {candidate.preview.mulliganHand && (
+            <CardCollection
+              title="Mano tras mulligan"
+              note={`${candidate.preview.mulliganHand.length} cartas · ${recommendsMulligan ? "recomendada" : `mejora ${candidate.mulligan.delta}`}`}
+              cards={candidate.preview.mulliganHand}
+              highlighted={recommendsMulligan}
+            />
+          )}
+
+          <CardCollection title="Próximos robos" note="Antes de decisiones" cards={candidate.preview.nextPlayerDraws} compact />
+
+          <section className="seed-explorer-detail-section">
+            <GroupHeading title="Hueste potencial" note="Primeras 5 ventanas" />
+            <div className="seed-explorer-detail-host-windows">
+              {candidate.preview.hostWindows.map((window) => (
+                <article className="seed-explorer-detail-host-window" key={window.hostTurn}>
+                  <header>
+                    <strong>Turno {window.hostTurn}</strong>
+                    <span>{pressureLabel(window.pressure)} · presión {window.pressure}</span>
+                  </header>
+                  <div className="seed-explorer-card-gallery is-host">
+                    {window.cards.map((card) => <CardVisual card={card} compact key={card.instanceId} />)}
+                  </div>
+                </article>
+              ))}
+            </div>
+            <p className="seed-explorer-disclaimer">
+              <strong>Aproximación:</strong> las ventanas usan orden y presión impresa. Efectos y decisiones pueden alterar el Archivo y los turnos reales.
+            </p>
+          </section>
+        </div>
+
+        <footer className="seed-explorer-detail-footer">
+          <button className="seed-explorer-button" type="button" onClick={onCopy}><Copy size={15} />Copiar seed</button>
+          <button className="seed-explorer-button is-primary" type="button" onClick={onTry}><Play size={15} />Probar en tablero</button>
+        </footer>
+      </section>
     </div>
+  );
+}
+
+function CardCollection({
+  title,
+  note,
+  cards,
+  highlighted = false,
+  compact = false,
+}: Readonly<{
+  title: string;
+  note: string;
+  cards: readonly SeedCardPreviewV1[];
+  highlighted?: boolean;
+  compact?: boolean;
+}>) {
+  return (
+    <section className={`seed-explorer-detail-section ${highlighted ? "is-highlighted" : ""}`}>
+      <GroupHeading title={title} note={note} />
+      <div className={`seed-explorer-card-gallery ${compact ? "is-compact" : ""}`}>
+        {cards.map((card) => <CardVisual card={card} compact={compact} key={card.instanceId} />)}
+      </div>
+    </section>
+  );
+}
+
+function CardVisual({ card, compact = false }: Readonly<{ card: SeedCardPreviewV1; compact?: boolean }>) {
+  const imageUrl = useCardImage(card.definitionId);
+  const [imageFailed, setImageFailed] = useState(false);
+  const source = card.kinds.some((kind) => kind.toLowerCase() === "source");
+  return (
+    <article className={`seed-explorer-card-visual ${compact ? "is-compact" : ""} ${source ? "is-source" : ""}`} title={cardLabel(card)}>
+      <div className="seed-explorer-card-art">
+        {imageUrl && !imageFailed
+          ? <img src={imageUrl} alt={cardLabel(card)} loading="lazy" draggable={false} onError={() => setImageFailed(true)} />
+          : <span>{cardLabel(card).slice(0, 1)}</span>}
+      </div>
+      <div className="seed-explorer-card-caption">
+        <span>{cardLabel(card)}</span>
+        {!source && <small>{card.energyCost}</small>}
+      </div>
+    </article>
   );
 }
 
@@ -720,6 +881,12 @@ function pressureLabel(pressure: number): string {
   if (pressure <= 15) return "Media";
   if (pressure <= 22) return "Alta";
   return "Extrema";
+}
+
+function ratingColor(value: number): string {
+  const normalized = Math.max(0, Math.min(100, value));
+  const hue = Math.round(4 + normalized * 1.08);
+  return `hsl(${hue} 48% 49%)`;
 }
 
 function cardLabel(card: SeedCardPreviewV1): string {
