@@ -400,6 +400,8 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   `game-surface-in` y termina en `translateY(0) scale(1)`, y la succión del vórtice al Reescribir,
   que anima `transform` sobre cada pieza de la escena. Con un `translate` propio, el texto se
   descuelga hacia abajo y a la derecha justo antes de la transición.
+  Las líneas **Lost Future** y el CTA de `learn-to-play` compensan además el espacio terminal de su
+  `letter-spacing`, de modo que su centro óptico coincida con el centro geométrico.
 - El desenlace es el bloque de la maqueta, ampliado un paso: etiqueta **Derrota** con reglas
   laterales, título en dos líneas que se abren desde el centro con su corte de luz, subtítulo y
   placa de **Futuro**. Copiar identidad vive en el canto de la placa. **Contemplar otro futuro** no
@@ -633,7 +635,7 @@ Aelyra con objetivo libre; el director deja defensa libre, exige Vaelor, hace ob
 inspección de la Cosechadora y permite Flor antes, después o nunca. Las pruebas enumeran todas las
 defensas legales y esas ramas, que convergen en Cosechadora 7/9, y certifican cero o un descarte
 opcional antes de la primera Oleada. El recorrido ya continúa después de `host.surgeStarted`: los
-Ladrones vacían la Mano, la regla real roba Río + Choque, y jugar la quinta Fuente o intentar
+Ladrones vacían la Mano, la regla real roba Choque + Río —Río queda a la derecha—, y jugar la quinta Fuente o intentar
 avanzar activa una intervención estricta breve para **Devolver Fuente**. Ciudad, Choque, Flor y el
 ataque posterior permanecen libres. Tres Soldados authored absorben los descartes opcionales antes
 del Titán terminal.

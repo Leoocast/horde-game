@@ -42,8 +42,9 @@ export const LEARN_TO_PLAY_PROLOGUE_SCENARIO = Object.freeze({
       openingDeal: ["vaelor", "aelyra", "fourth_source"],
       playerArchiveTopToBottom: [
         "dawn_flower",
-        "post_surge_source",
+        // The empty-Hand draw appends in this order, leaving Río at the right edge of the Hand.
         "clash_of_echoes",
+        "post_surge_source",
         "forgotten_city",
       ],
       playerField: ["maela", "source_one", "source_two", "source_three"],

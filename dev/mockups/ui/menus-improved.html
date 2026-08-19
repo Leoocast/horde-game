@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hostfall — Menús: mejoras sobre el material vigente</title>
+<style>
+@font-face {
+  font-family: "Cinzel Decorative Local";
+  src: url("../assets/fonts/cinzel-decorative-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+/* Todos los valores vienen de src/styles.css. El cielo es el shader real del
+   TemporalBackdrop, copiado tal cual desde src/components/temporalBackdropShader.ts. */
+:root {
+  --hairline: rgb(145 154 157 / 0.16);
+  --hairline-soft: rgb(145 154 157 / 0.12);
+  --hairline-warm: rgb(166 151 105 / 0.26);
+  --brand-rule: rgb(163 145 94 / 0.24);
+
+  --gold-section: #a3905e;
+  --gold-bright: #d1bd7f;
+  --gold-rule: #8b7443;
+  --gold-mark: #877849;
+  --gold-mark-on: #b9a46a;
+
+  --parchment: #e0d3ad;
+  --parchment-warm: #d8c99f;
+  --text: #c7c8c1;
+  --steel: #abb4b6;
+  --steel-bright: #f0e5c4;
+  --muted: #879397;
+  --muted-2: #7d898d;
+  --muted-3: #6f7d81;
+  --credits: #6f7b7f;
+
+  --serif: Georgia, "Times New Roman", serif;
+  --display: "Cinzel Decorative Local", "Cinzel Decorative", Georgia, serif;
+  --ui: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+
+  --deck-accent: #78956e;
+  --deck-accent-bright: #c9dfad;
+  --deck-accent-soft: rgb(91 142 84 / 0.25);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #04070a;
+  color: var(--text);
+  font-family: var(--ui);
+}
+
+button, input { font: inherit; color: inherit; }
+button { cursor: default; }
+
+/* ───────────── documento ───────────── */
+
+.doc { width: min(1440px, calc(100% - 56px)); margin: 0 auto; padding: 48px 0 90px; }
+
+.doc-head { padding-bottom: 22px; border-bottom: 1px solid var(--hairline-warm); }
+
+.doc-head .kicker {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.doc-head h1 {
+  margin: 12px 0;
+  color: var(--parchment);
+  font-size: clamp(26px, 3vw, 40px);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.doc-head p { margin: 0; max-width: 840px; color: #7b878b; font-size: 14px; line-height: 1.65; }
+.doc-head code, .screen-head code { color: var(--muted); font-size: 12px; }
+
+.doc-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+
+.doc-nav a {
+  padding: 9px 14px;
+  border: 1px solid rgb(150 138 95 / 0.5);
+  background: linear-gradient(180deg, rgb(40 49 52 / 0.9), rgb(14 21 24 / 0.96));
+  color: #d9d0af;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.doc-nav a:hover { border-color: #ad9d69; color: #fff0ca; }
+
+.screen { padding-top: 54px; }
+.screen-head { margin-bottom: 14px; }
+
+.screen-head .num {
+  color: var(--gold-section);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.screen-head h2 {
+  margin: 8px 0 4px;
+  color: var(--parchment);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.screen-head p { margin: 0; color: var(--muted-3); font-size: 13px; }
+
+.changes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 0;
+  margin-top: 14px;
+  border-top: 1px solid var(--hairline-soft);
+}
+
+.changes > div { padding: 14px 22px 14px 0; }
+
+.changes h3 {
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--gold-bright);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.changes h3::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border: 1px solid var(--gold-mark);
+  background: var(--gold-mark-on);
+  transform: rotate(45deg);
+}
+
+.changes p { margin: 0; color: var(--muted-3); font-size: 12.5px; line-height: 1.55; }
+
+/* ───────────── marco ───────────── */
+
+.frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid var(--hairline-warm);
+  background: #010306;
+}
+
+.sky { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* .main-menu-shell::before */
+.shell-dim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 72% 43%, rgb(0 0 0 / 0.06) 0 17%, rgb(7 11 14 / 0.26) 42%, rgb(2 5 7 / 0.74) 100%),
+    linear-gradient(180deg, rgb(0 0 0 / 0.74), rgb(0 0 0 / 0.08) 20% 68%, rgb(0 0 0 / 0.8));
+}
+
+/* .main-menu-shell::after */
+.panel-rule {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 34%;
+  width: 1px;
+  background: linear-gradient(transparent 8%, rgb(156 137 89 / 0.3) 28%, rgb(156 137 89 / 0.15) 72%, transparent 94%);
+  box-shadow: 14px 0 36px rgb(0 0 0 / 0.35);
+}
+
+.stage { position: absolute; inset: 0; display: flex; }
+
+.panel {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  width: 34%;
+  flex: 0 0 34%;
+  padding: 40px 40px 24px;
+  background: linear-gradient(115deg, rgb(7 13 15 / 0.66), rgb(9 15 16 / 0.3));
+  backdrop-filter: blur(10px) saturate(0.9);
+}
+
+.pane {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  flex: 1;
+  min-width: 0;
+  padding: 40px 42px 26px 40px;
+}
+
+/* ───────────── marca y navegación ───────────── */
+
+.brand { border-bottom: 1px solid var(--brand-rule); padding-bottom: 24px; }
+
+.brand .kicker {
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.brand h1 {
+  margin: 13px 0 0;
+  color: var(--parchment-warm);
+  font-family: var(--display);
+  font-size: 52px;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+  text-shadow: 0 4px 22px rgb(0 0 0 / 0.85);
+}
+
+.brand .act {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  color: #7f8d91;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+
+.brand .act i { width: 30px; height: 1px; background: var(--gold-rule); }
+
+.nav { align-self: center; width: 100%; }
+
+.entry {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 46px;
+  border: 0;
+  border-bottom: 1px solid rgb(145 154 157 / 0.15);
+  background: transparent;
+  color: var(--steel);
+  font-family: var(--serif);
+  font-size: 18px;
+  letter-spacing: 0.075em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.entry::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, #a38c54, transparent 76%);
+  content: "";
+  opacity: 0;
+  transform: scaleX(0.45);
+  transform-origin: left;
+}
+
+.entry:hover, .entry.is-active {
+  padding-left: 8px;
+  background: linear-gradient(90deg, rgb(111 124 128 / 0.13), transparent 82%);
+  color: var(--steel-bright);
+}
+
+.entry:hover::after, .entry.is-active::after { opacity: 1; transform: scaleX(1); }
+
+.mark {
+  width: 5px;
+  height: 5px;
+  flex: 0 0 auto;
+  border: 1px solid var(--gold-mark);
+  background: #1a2225;
+  transform: rotate(45deg);
+}
+
+.entry:hover .mark, .entry.is-active .mark { background: var(--gold-mark-on); box-shadow: 0 0 12px rgb(185 164 106 / 0.55); }
+
+/* MEJORA · entrada primaria con contexto */
+.entry-primary {
+  display: grid;
+  grid-template-columns: 5px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 76px;
+  padding-left: 8px;
+  border-bottom: 1px solid rgb(163 145 94 / 0.34);
+  background: linear-gradient(90deg, rgb(111 124 128 / 0.16), transparent 86%);
+  color: var(--steel-bright);
+}
+
+.entry-primary .mark { background: var(--gold-mark-on); box-shadow: 0 0 12px rgb(185 164 106 / 0.55); }
+.entry-primary::after { opacity: 1; transform: scaleX(1); }
+
+.entry-primary .label { font-family: var(--serif); font-size: 23px; letter-spacing: 0.075em; text-transform: uppercase; }
+
+.entry-primary .context {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted-2);
+  font-family: var(--ui);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+
+.entry-primary .context b { color: #b3ab8d; font-weight: 700; }
+.entry-primary .go { color: var(--gold-bright); font-size: 15px; }
+
+/* MEJORA · Continuar con estado real */
+.entry-resume { min-height: 60px; }
+
+.entry-resume .state {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted-3);
+  font-family: var(--ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: none;
+}
+
+.entry-resume .state b { color: var(--gold-section); font-weight: 800; }
+
+/* MEJORA · pie del panel: identidad + versión */
+.panel-foot { border-top: 1px solid var(--brand-rule); padding-top: 14px; }
+
+.identity {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+}
+
+.identity-mark {
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--gold-mark);
+  background: var(--gold-mark-on);
+  transform: rotate(45deg);
+  box-shadow: 0 0 12px rgb(185 164 106 / 0.4);
+}
+
+.identity strong { display: block; color: #e6d9b1; font-family: var(--serif); font-size: 15px; font-weight: 500; }
+
+.identity em {
+  display: block;
+  color: var(--muted-3);
+  font-size: 8.5px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.identity button { width: 26px; height: 26px; border: 1px solid transparent; background: transparent; color: var(--muted-3); font-size: 12px; }
+.identity button:hover { border-color: rgb(150 138 95 / 0.4); color: #eadcb7; }
+
+.credits {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--credits);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.devtools { display: flex; gap: 6px; margin-bottom: 12px; }
+
+.devtools button {
+  padding: 6px 10px;
+  border: 1px dashed rgb(122 138 132 / 0.35);
+  background: rgb(6 11 13 / 0.5);
+  color: #7f8d91;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ───────────── panel derecho ───────────── */
+
+.pane-header { border-bottom: 1px solid var(--hairline-warm); padding-bottom: 18px; }
+
+.back {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 850;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.back:hover { color: #eadcb7; }
+
+.pane-header h2 {
+  margin: 0;
+  color: var(--parchment);
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.pane-header > p { margin: 10px 0 0; color: #7b878b; font-size: 13px; }
+
+.pane-body { min-height: 0; overflow: hidden; padding-top: 16px; }
+
+.section-title {
+  border-bottom: 1px solid var(--hairline);
+  padding: 0 0 9px;
+  color: var(--gold-section);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.section + .section { margin-top: 20px; }
+
+.srow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  min-height: 54px;
+  border-bottom: 1px solid var(--hairline-soft);
+  padding: 10px 2px;
+}
+
+.slabel { color: var(--text); font-size: 12.5px; font-weight: 700; letter-spacing: 0.045em; text-transform: uppercase; }
+.sdesc { margin-top: 4px; color: var(--muted-3); font-size: 11px; line-height: 1.4; }
+
+.control { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+
+.toggle { position: relative; width: 44px; height: 22px; flex: 0 0 auto; border: 1px solid #566368; background: #11181b; }
+.toggle i { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; background: #747f83; }
+.toggle.is-on { border-color: #9c8854; background: #343524; }
+.toggle.is-on i { left: 26px; background: var(--gold-bright); box-shadow: 0 0 8px rgb(209 189 127 / 0.35); }
+
+.range { position: relative; width: 150px; height: 18px; display: grid; align-items: center; }
+.range .track { height: 3px; background: linear-gradient(90deg, #1b2528, #405053 42%, #756b49); box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.62); }
+
+.range .thumb {
+  position: absolute;
+  top: 50%;
+  left: var(--v, 50%);
+  width: 12px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+  border: 1px solid #b4a36d;
+  background: linear-gradient(180deg, #d7c995, #82764d);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.52);
+}
+
+.percent {
+  display: inline-flex;
+  width: 50px;
+  height: 27px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  padding-right: 5px;
+  border-bottom: 1px solid rgb(162 149 99 / 0.52);
+  background: rgb(5 10 12 / 0.52);
+  color: #c8bc91;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.percent em { font-size: 10px; font-style: normal; opacity: 0.75; }
+
+.action {
+  min-width: 88px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid rgb(150 138 95 / 0.5);
+  background: linear-gradient(180deg, rgb(40 49 52 / 0.9), rgb(14 21 24 / 0.96));
+  color: #d9d0af;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  box-shadow: inset 0 1px 0 rgb(235 225 183 / 0.06);
+}
+
+.action:hover { border-color: #ad9d69; color: #fff0ca; filter: brightness(1.08); }
+.action.is-warm { border-color: rgb(183 133 73 / 0.68); color: #d8b579; box-shadow: inset 0 0 20px rgb(137 75 34 / 0.08); }
+
+.language-selector {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  width: 230px;
+  padding: 4px;
+  border: 1px solid rgb(143 106 54 / 0.56);
+  background: rgb(3 10 10 / 0.72);
+  box-shadow: inset 0 0 18px rgb(0 0 0 / 0.48);
+}
+
+.language-selector button {
+  min-height: 32px;
+  padding: 5px 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #8d9a94;
+  font-family: var(--serif);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.language-selector button.is-selected {
+  border-color: rgb(205 160 82 / 0.78);
+  color: #f3ddb0;
+  background: linear-gradient(180deg, rgb(111 78 35 / 0.42), rgb(42 30 18 / 0.54));
+  box-shadow: inset 0 0 14px rgb(197 144 61 / 0.1), 0 0 12px rgb(177 124 43 / 0.08);
+}
+
+.settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
+
+/* MEJORA · la semilla se presenta como Futuro */
+.future-row { display: grid; gap: 10px; padding: 12px 2px 14px; border-bottom: 1px solid var(--hairline-soft); }
+
+.future-head { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }
+
+.future-code {
+  color: var(--gold-bright);
+  font-family: var(--serif);
+  font-size: 19px;
+  letter-spacing: 0.12em;
+}
+
+.future-seed {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 34px;
+  padding: 0 12px;
+  border-bottom: 1px solid #647277;
+  background: rgb(6 10 13 / 0.62);
+  color: #8e979a;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.future-actions { display: flex; gap: 8px; }
+
+.warm-row { background: linear-gradient(90deg, rgb(128 73 34 / 0.08), transparent); }
+
+/* ───────────── crónicas ───────────── */
+
+.decks-layout { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 18px; height: 100%; min-height: 0; }
+
+.decks-row { display: flex; align-items: flex-start; gap: 34px; padding: 6px 2px 0; }
+
+.deck-key { width: 138px; border: 0; background: transparent; padding: 0; text-align: center; perspective: 1050px; }
+
+.deck-stage {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 488 / 680;
+  transform-style: preserve-3d;
+  filter: drop-shadow(16px 22px 18px rgb(0 0 0 / 0.58));
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.deck-key:hover .deck-stage { transform: translateY(-14px); }
+
+.deck-key.is-selected .deck-stage { filter: drop-shadow(0 16px 12px rgb(0 0 0 / 0.56)) drop-shadow(0 0 18px var(--deck-accent-soft)); }
+
+.deck-key.is-selected .deck-face {
+  border-color: var(--deck-accent-bright);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--deck-accent-bright) 34%, transparent), 0 0 24px var(--deck-accent-soft);
+}
+
+.deck-depth, .deck-face { position: absolute; inset: 0; display: block; overflow: hidden; border-radius: 4.6% / 3.4%; }
+.deck-depth { border: 1px solid #21140d; background: linear-gradient(135deg, #5b3a1f, #21140d 65%); }
+.deck-depth.back { transform: translate3d(7px, 8px, -12px); box-shadow: 8px 12px 22px rgb(0 0 0 / 0.65); }
+.deck-depth.mid { transform: translate3d(3px, 4px, -6px); background: #372214; }
+
+.deck-face {
+  z-index: 2;
+  border: 1px solid rgb(203 174 99 / 0.52);
+  background: #140e09;
+  transform: translateZ(4px);
+  box-shadow: inset 0 0 0 1px rgb(255 233 168 / 0.12);
+}
+
+.deck-face img { width: 100%; height: 100%; display: block; object-fit: fill; }
+
+.deck-sheen {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: linear-gradient(112deg, transparent 18%, rgb(255 244 203 / 0.14) 44%, transparent 58%);
+  opacity: 0.4;
+  transform: translateX(-62%);
+  transition: opacity 240ms ease, transform 460ms ease;
+}
+
+.deck-key:hover .deck-sheen { opacity: 0.76; transform: translateX(62%); }
+
+.deck-selection {
+  position: absolute;
+  z-index: 14;
+  top: -8px;
+  right: -8px;
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--deck-accent-bright) 68%, #8b7443);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--deck-accent) 68%, #17221b), #09100e);
+  color: #f0e4ba;
+  box-shadow: 0 0 18px var(--deck-accent-soft), inset 0 0 0 3px rgb(3 9 7 / 0.72);
+  transform: translateZ(16px) rotate(45deg);
+  font-size: 11px;
+}
+
+.deck-selection span { transform: rotate(-45deg); }
+
+.deck-fallback {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  background: radial-gradient(circle at 50% 36%, #3d4c31, #151b17 72%);
+  color: #d9c99f;
+}
+
+.deck-fallback small { font-size: 8px; letter-spacing: 0.24em; text-transform: uppercase; }
+.deck-fallback strong { font-family: var(--serif); font-size: 13px; font-weight: 500; line-height: 1.2; }
+
+.deck-key figcaption { display: block; margin-top: 12px; text-shadow: 0 2px 5px rgb(0 0 0 / 0.9); }
+
+.deck-key figcaption strong {
+  display: block;
+  color: #d9d0b4;
+  font-family: var(--serif);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.14;
+}
+
+.deck-key.is-selected figcaption strong { color: var(--deck-accent-bright); }
+
+/* MEJORA · panel de detalle del mazo elegido */
+.deck-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  gap: 28px;
+  align-content: start;
+  min-height: 0;
+  border-top: 1px solid var(--hairline-warm);
+  border-left: 2px solid var(--deck-accent);
+  padding: 18px 20px;
+  background: linear-gradient(100deg, rgb(10 17 15 / 0.62), rgb(7 12 13 / 0.28));
+}
+
+.deck-detail h3 {
+  margin: 0;
+  color: var(--parchment);
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.deck-detail .deck-eyebrow {
+  color: var(--deck-accent-bright);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.deck-detail p { margin: 10px 0 0; max-width: 62ch; color: #8b959a; font-size: 12.5px; line-height: 1.6; }
+
+.deck-stats { display: flex; gap: 26px; margin-top: 16px; }
+
+.deck-stat span {
+  display: block;
+  color: var(--muted-3);
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.deck-stat strong { display: block; margin-top: 4px; color: var(--parchment-warm); font-family: var(--serif); font-size: 19px; font-weight: 500; }
+
+.deck-mix { display: grid; gap: 9px; align-content: start; }
+
+.mix-row { display: grid; grid-template-columns: 62px minmax(0, 1fr) 26px; align-items: center; gap: 10px; }
+
+.mix-row span { color: var(--muted-3); font-size: 9px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
+.mix-row b { color: #b3ab8d; font-size: 11px; font-weight: 700; text-align: right; }
+
+.mix-bar { height: 4px; background: rgb(255 255 255 / 0.05); }
+.mix-bar i { display: block; height: 100%; width: var(--w, 50%); background: linear-gradient(90deg, var(--deck-accent), var(--deck-accent-bright)); opacity: 0.75; }
+
+.deck-cta { display: flex; gap: 10px; margin-top: 18px; }
+
+.action.is-deck {
+  border-color: color-mix(in srgb, var(--deck-accent-bright) 46%, transparent);
+  color: var(--deck-accent-bright);
+}
+
+@media (max-width: 1180px) {
+  .doc { width: calc(100% - 28px); }
+  .brand h1 { font-size: 38px; }
+  .pane-header h2 { font-size: 26px; }
+}
+</style>
+</head>
+
+<body>
+<main class="doc">
+  <header class="doc-head">
+    <span class="kicker">MAQUETA · MEJORAS SOBRE EL MATERIAL VIGENTE</span>
+    <h1>Menú, Ajustes y Crónicas</h1>
+    <p>
+      Fondo, paleta y componentes son los del juego: el cielo es el <b>shader real</b> del
+      <code>TemporalBackdrop</code> copiado desde <code>temporalBackdropShader.ts</code>, y encima van sus
+      degradados, el filete vertical dorado y el panel con desenfoque. La composición también es la real:
+      el panel de marca y navegación <b>no desaparece</b> al abrir Ajustes o Crónicas, se queda a la
+      izquierda. Lo que cambia son las decisiones de interfaz, listadas bajo cada pantalla.
+    </p>
+    <nav class="doc-nav">
+      <a href="#s1">I · Menú principal</a>
+      <a href="#s2">II · Ajustes</a>
+      <a href="#s3">III · Crónicas</a>
+    </nav>
+  </header>
+
+  <!-- ═══════════ I · MENÚ ═══════════ -->
+  <section class="screen" id="s1">
+    <div class="screen-head">
+      <span class="num">I</span>
+      <h2>Menú principal</h2>
+      <p><code>StartMenu</code> · pantalla <code>home</code></p>
+    </div>
+
+    <div class="frame">
+      <canvas class="sky" data-sky></canvas>
+      <div class="shell-dim"></div>
+      <div class="panel-rule"></div>
+
+      <div class="stage">
+        <div class="panel">
+          <div class="brand">
+            <div class="kicker">CRÓNICAS DE LOS REINOS QUEBRADOS</div>
+            <h1>HOstfAll</h1>
+            <div class="act"><i></i> ACTO I — CORONAS SOBRE CENIZAS</div>
+          </div>
+
+          <nav class="nav">
+            <button class="entry entry-primary">
+              <span class="mark"></span>
+              <span>
+                <span class="label">Jugar</span>
+                <span class="context"><b>El Pacto de Elarion</b> contra <b>los Sinsepulcro</b> · Aventurero</span>
+              </span>
+              <span class="go">▷</span>
+            </button>
+
+            <button class="entry entry-resume">
+              <span class="mark"></span>
+              <span>
+                Continuar
+                <span class="state">Turno 6 · <b>Futuro 482·117</b> · Vida 24</span>
+              </span>
+            </button>
+
+            <button class="entry"><span class="mark"></span><span>Crónicas</span></button>
+            <button class="entry"><span class="mark"></span><span>Huestes</span></button>
+            <button class="entry"><span class="mark"></span><span>Cómo jugar</span></button>
+            <button class="entry"><span class="mark"></span><span>Ajustes</span></button>
+          </nav>
+
+          <div class="panel-foot">
+            <div class="devtools">
+              <button>Playground</button>
+              <button>Audio Lab</button>
+            </div>
+            <div class="identity">
+              <span class="identity-mark"></span>
+              <div>
+                <strong>Leo</strong>
+                <em>Cronista</em>
+              </div>
+              <button title="Editar nombre del Cronista">✎</button>
+            </div>
+            <div class="credits">
+              <span>Versión 0.9.4</span>
+              <span>Leoocast</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="changes">
+      <div>
+        <h3>Jugar deja de ser una fila más</h3>
+        <p>
+          Hoy las seis entradas pesan lo mismo. Aquí <b>Jugar</b> es la única con cuerpo y arrastra el
+          contexto que ya está guardado: mazo, Hueste y dificultad de la última partida. Se ve qué va a
+          pasar antes de entrar a Prepartida, y la pantalla sigue estando ahí para cambiarlo.
+        </p>
+      </div>
+      <div>
+        <h3>Continuar dice qué se continúa</h3>
+        <p>
+          En vez de una fila apagada al 42 % que no explica nada, muestra turno, Futuro y Vida de la
+          partida guardada. Y cuando no hay partida, no se dibuja: una entrada muerta permanente enseña
+          al jugador a ignorar esa zona del menú.
+        </p>
+      </div>
+      <div>
+        <h3>El Cronista baja al pie del panel</h3>
+        <p>
+          El perfil deja de flotar sobre el cielo por encima de la marca —donde compite con el wordmark—
+          y se ancla al pie, con versión y créditos en la misma columna. El panel queda cerrado arriba
+          por la marca y abajo por la identidad.
+        </p>
+      </div>
+      <div>
+        <h3>El cielo se queda limpio</h3>
+        <p>
+          Sin retículo, sin disco de grados, sin sello: es contrato del <code>TemporalBackdrop</code> y la
+          diferencia entre menú y tablero. El vacío de la derecha es deliberado, así que las mejoras
+          ocurren dentro del panel.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ II · AJUSTES ═══════════ -->
+  <section class="screen" id="s2">
+    <div class="screen-head">
+      <span class="num">II</span>
+      <h2>Ajustes</h2>
+      <p><code>StartMenu</code> · <code>menuScreen "settings"</code> — el panel de navegación permanece a la izquierda</p>
+    </div>
+
+    <div class="frame">
+      <canvas class="sky" data-sky></canvas>
+      <div class="shell-dim"></div>
+      <div class="panel-rule"></div>
+
+      <div class="stage">
+        <div class="panel">
+          <div class="brand">
+            <div class="kicker">CRÓNICAS DE LOS REINOS QUEBRADOS</div>
+            <h1>HOstfAll</h1>
+            <div class="act"><i></i> ACTO I — CORONAS SOBRE CENIZAS</div>
+          </div>
+
+          <nav class="nav">
+            <button class="entry"><span class="mark"></span><span>Jugar</span></button>
+            <button class="entry"><span class="mark"></span><span>Crónicas</span></button>
+            <button class="entry"><span class="mark"></span><span>Huestes</span></button>
+            <button class="entry"><span class="mark"></span><span>Cómo jugar</span></button>
+            <button class="entry is-active"><span class="mark"></span><span>Ajustes</span></button>
+          </nav>
+
+          <div class="panel-foot">
+            <div class="identity">
+              <span class="identity-mark"></span>
+              <div><strong>Leo</strong><em>Cronista</em></div>
+              <button title="Editar nombre del Cronista">✎</button>
+            </div>
+            <div class="credits"><span>Versión 0.9.4</span><span>Leoocast</span></div>
+          </div>
+        </div>
+
+        <div class="pane">
+          <header class="pane-header">
+            <button class="back">← Volver</button>
+            <h2>Ajustes</h2>
+            <p>Personaliza el idioma, el audio y la configuración del juego.</p>
+          </header>
+
+          <div class="pane-body">
+            <div class="settings-grid">
+              <div>
+                <section class="section">
+                  <div class="section-title">Idioma</div>
+                  <div class="srow">
+                    <div>
+                      <div class="slabel">Idioma de la interfaz</div>
+                      <div class="sdesc">Nombres, reglas y textos impresos</div>
+                    </div>
+                    <div class="language-selector">
+                      <button class="is-selected">Español</button>
+                      <button>English</button>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="section">
+                  <div class="section-title">Audio</div>
+                  <div class="srow">
+                    <div>
+                      <div class="slabel">Efectos de sonido</div>
+                      <div class="sdesc">Acciones, cartas y respuestas de la interfaz</div>
+                    </div>
+                    <div class="control">
+                      <span class="toggle is-on"><i></i></span>
+                      <span class="range" style="--v: 72%"><span class="track"></span><span class="thumb"></span></span>
+                      <span class="percent">72<em>%</em></span>
+                    </div>
+                  </div>
+                  <div class="srow">
+                    <div>
+                      <div class="slabel">Música</div>
+                      <div class="sdesc">Música del menú y de las batallas</div>
+                    </div>
+                    <div class="control">
+                      <span class="toggle is-on"><i></i></span>
+                      <span class="range" style="--v: 44%"><span class="track"></span><span class="thumb"></span></span>
+                      <span class="percent">44<em>%</em></span>
+                    </div>
+                  </div>
+                  <div class="srow">
+                    <div>
+                      <div class="slabel">Probar sonido</div>
+                      <div class="sdesc">Reproduce el sonido de confirmación</div>
+                    </div>
+                    <div class="control"><button class="action">Probar</button></div>
+                  </div>
+                </section>
+              </div>
+
+              <div>
+                <section class="section">
+                  <div class="section-title">Pantalla</div>
+                  <div class="srow">
+                    <div>
+                      <div class="slabel">Pantalla completa</div>
+                      <div class="sdesc">Usa toda la pantalla. También puedes presionar F11.</div>
+                    </div>
+                    <div class="control"><button class="action">Activar</button></div>
+                  </div>
+                </section>
+
+                <section class="section">
+                  <div class="section-title">Semilla del Destino</div>
+                  <div class="future-row">
+                    <div class="future-head">
+                      <div>
+                        <div class="slabel">Futuro que se abrirá</div>
+                        <div class="sdesc">La próxima Crónica nace de esta línea temporal</div>
+                      </div>
+                      <span class="future-code">482·117</span>
+                    </div>
+                    <div class="future-seed">hostfall-m4k2xq-7f3a1c9d</div>
+                    <div class="future-actions">
+                      <button class="action">Copiar identidad</button>
+                      <button class="action">Otro futuro</button>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="section">
+                  <div class="section-title">Herramientas</div>
+                  <div class="srow warm-row">
+                    <div>
+                      <div class="slabel">Modo desarrollador</div>
+                      <div class="sdesc">Cartas y efectos sin terminar; oculta el Futuro</div>
+                    </div>
+                    <div class="control"><span class="toggle"><i></i></span></div>
+                  </div>
+                  <div class="srow">
+                    <div>
+                      <div class="slabel">Caché de recursos</div>
+                      <div class="sdesc">Vuelve a preparar imágenes y audio guardados</div>
+                    </div>
+                    <div class="control"><button class="action is-warm">Limpiar</button></div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="changes">
+      <div>
+        <h3>Cabe entero, sin desplazamiento</h3>
+        <p>
+          Las filas bajan de 86 px a 54 y las cinco secciones se reparten en dos columnas. Hoy hay que
+          hacer scroll para llegar a Semilla o a Caché, que es donde vive lo que uno busca cuando entra
+          a Ajustes por segunda vez.
+        </p>
+      </div>
+      <div>
+        <h3>El volumen ocupa una línea</h3>
+        <p>
+          Interruptor, riel y porcentaje comparten renglón en vez de apilarse. Son los mismos
+          componentes del juego —el riel <code>game-range</code> y la cartela de porcentaje—, sólo
+          alineados.
+        </p>
+      </div>
+      <div>
+        <h3>La semilla se presenta como Futuro</h3>
+        <p>
+          El código <b>482·117</b> manda y la cadena cruda queda debajo, en gris, como dato técnico.
+          <b>Copiar identidad</b> sigue copiando la seed completa. Es el mismo lenguaje que ya usan
+          Prepartida y los desenlaces, y hoy Ajustes es el único sitio donde se rompe.
+        </p>
+      </div>
+      <div>
+        <h3>Herramientas al final y en cálido</h3>
+        <p>
+          Modo desarrollador y Caché dejan de mezclarse con «Juego» y forman su propio bloque, con el
+          acento naranja que ya existe en <code>main-settings-developer-row</code>. Lo peligroso queda
+          agrupado y reconocible.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ III · CRÓNICAS ═══════════ -->
+  <section class="screen" id="s3">
+    <div class="screen-head">
+      <span class="num">III</span>
+      <h2>Crónicas</h2>
+      <p><code>DecksView</code> — misma pantalla para Huestes</p>
+    </div>
+
+    <div class="frame">
+      <canvas class="sky" data-sky></canvas>
+      <div class="shell-dim"></div>
+      <div class="panel-rule"></div>
+
+      <div class="stage">
+        <div class="panel">
+          <div class="brand">
+            <div class="kicker">CRÓNICAS DE LOS REINOS QUEBRADOS</div>
+            <h1>HOstfAll</h1>
+            <div class="act"><i></i> ACTO I — CORONAS SOBRE CENIZAS</div>
+          </div>
+
+          <nav class="nav">
+            <button class="entry"><span class="mark"></span><span>Jugar</span></button>
+            <button class="entry is-active"><span class="mark"></span><span>Crónicas</span></button>
+            <button class="entry"><span class="mark"></span><span>Huestes</span></button>
+            <button class="entry"><span class="mark"></span><span>Cómo jugar</span></button>
+            <button class="entry"><span class="mark"></span><span>Ajustes</span></button>
+          </nav>
+
+          <div class="panel-foot">
+            <div class="identity">
+              <span class="identity-mark"></span>
+              <div><strong>Leo</strong><em>Cronista</em></div>
+              <button title="Editar nombre del Cronista">✎</button>
+            </div>
+            <div class="credits"><span>Versión 0.9.4</span><span>Leoocast</span></div>
+          </div>
+        </div>
+
+        <div class="pane">
+          <header class="pane-header">
+            <button class="back">← Volver</button>
+            <h2>Crónicas</h2>
+            <p>Crónicas que lleva el Cronista.</p>
+          </header>
+
+          <div class="pane-body">
+            <div class="decks-layout">
+              <div class="decks-row">
+                <button class="deck-key is-selected">
+                  <span class="deck-stage">
+                    <span class="deck-depth back"></span>
+                    <span class="deck-depth mid"></span>
+                    <span class="deck-face">
+                      <img src="../assets/ui_references/card-maela-watcher-of-the-heights.png" alt="Maela, Vigía de las Alturas" />
+                      <span class="deck-sheen"></span>
+                    </span>
+                    <span class="deck-selection"><span>✓</span></span>
+                  </span>
+                  <figcaption><strong>El Pacto de Elarion</strong></figcaption>
+                </button>
+
+                <button class="deck-key" style="--deck-accent:#8f3342; --deck-accent-bright:#efb4b5; --deck-accent-soft: rgb(133 26 49 / 0.38)">
+                  <span class="deck-stage">
+                    <span class="deck-depth back"></span>
+                    <span class="deck-depth mid"></span>
+                    <span class="deck-face">
+                      <span class="deck-fallback">
+                        <small>Carta destacada</small>
+                        <strong>Mirevna, Sed Coronada</strong>
+                      </span>
+                      <span class="deck-sheen"></span>
+                    </span>
+                  </span>
+                  <figcaption><strong>La Corte del Eclipse Carmesí</strong></figcaption>
+                </button>
+              </div>
+
+              <div class="deck-detail">
+                <div>
+                  <span class="deck-eyebrow">Crónica del Cronista</span>
+                  <h3>El Pacto de Elarion</h3>
+                  <p>
+                    Reúne a los antiguos aliados de Elarion y abre el camino para el regreso de Vaelor.
+                  </p>
+                  <div class="deck-stats">
+                    <div class="deck-stat"><span>Cartas</span><strong>39</strong></div>
+                    <div class="deck-stat"><span>Únicas</span><strong>13</strong></div>
+                    <div class="deck-stat"><span>Carta destacada</span><strong>Maela</strong></div>
+                  </div>
+                  <div class="deck-cta">
+                    <button class="action is-deck">Ver las 39 cartas</button>
+                    <button class="action">Jugar con esta Crónica</button>
+                  </div>
+                </div>
+
+                <div class="deck-mix">
+                  <div class="mix-row"><span>Ecos</span><span class="mix-bar"><i style="--w: 100%"></i></span><b>17</b></div>
+                  <div class="mix-row"><span>Fuentes</span><span class="mix-bar"><i style="--w: 88%"></i></span><b>15</b></div>
+                  <div class="mix-row"><span>Hechizos</span><span class="mix-bar"><i style="--w: 41%"></i></span><b>7</b></div>
+                  <div class="mix-row"><span>Apoyos</span><span class="mix-bar"><i style="--w: 0%"></i></span><b>0</b></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="changes">
+      <div>
+        <h3>La pantalla explica el mazo</h3>
+        <p>
+          Hoy sólo hay dos cartas y un título: para saber qué es cada Crónica hay que entrar. El panel
+          inferior trae descripción, conteos y reparto por tipo —<b>39 cartas, 13 únicas, 17 Ecos, 15
+          Fuentes, 7 Hechizos</b>, leídos del JSON real— sin salir de aquí.
+        </p>
+      </div>
+      <div>
+        <h3>La fila pasa a ser un selector</h3>
+        <p>
+          Elegir una carta actualiza el panel en vez de abrir otra pantalla; el estado seleccionado usa
+          el rombo de verificación y el acento de mazo que ya existen. Con cuatro o seis Crónicas la
+          fila crece y el detalle no se mueve.
+        </p>
+      </div>
+      <div>
+        <h3>Dos salidas, no una</h3>
+        <p>
+          <b>Ver las 39 cartas</b> lleva al inspector, y <b>Jugar con esta Crónica</b> abre Prepartida
+          con ese mazo ya elegido. Hoy la vista es sólo un visor: mirar un mazo y decidir jugarlo son
+          dos caminos separados que vuelven al menú.
+        </p>
+      </div>
+      <div>
+        <h3>Huestes reutiliza todo</h3>
+        <p>
+          La misma pantalla con el acento del bando contrario; el panel de detalle cambia el epígrafe y
+          añade lo que sí importa de una Hueste: cada cuánto revela y cuándo llega la Oleada.
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+// Shader del fondo, copiado literal de src/components/temporalBackdropShader.ts
+const VERTEX = `
+attribute vec2 aPosition;
+void main() {
+  gl_Position = vec4(aPosition, 0.0, 1.0);
+}
+`;
+
+const FRAGMENT = `
+precision highp float;
+
+uniform vec2 uRes;
+uniform float uTime;
+uniform float uClimax;
+
+float hash21(vec2 p) {
+  p = fract(p * vec2(123.34, 345.45));
+  p += dot(p, p + 34.345);
+  return fract(p.x * p.y);
+}
+
+vec2 hash22(vec2 p) {
+  float n = hash21(p);
+  return vec2(n, hash21(p + n + 19.19));
+}
+
+float vnoise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  float a = hash21(i);
+  float b = hash21(i + vec2(1.0, 0.0));
+  float c = hash21(i + vec2(0.0, 1.0));
+  float d = hash21(i + vec2(1.0, 1.0));
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+float fbm(vec2 p) {
+  float value = 0.0;
+  float amplitude = 0.55;
+  mat2 turn = mat2(0.82, -0.57, 0.57, 0.82);
+  for (int i = 0; i < 4; i++) {
+    value += amplitude * vnoise(p);
+    p = turn * p * 2.05 + vec2(17.13, 9.71);
+    amplitude *= 0.49;
+  }
+  return value;
+}
+
+mat2 rot(float a) {
+  float c = cos(a);
+  float s = sin(a);
+  return mat2(c, -s, s, c);
+}
+
+float starLayer(vec2 p, float scale, float gate, float speed) {
+  vec2 grid = p * scale;
+  vec2 id = floor(grid);
+  vec2 cell = fract(grid) - 0.5;
+  float seed = hash21(id);
+  if (seed < gate) return 0.0;
+  vec2 shift = (hash22(id + 7.31) - 0.5) * 0.7;
+  float d = length(cell - shift);
+  float cellPx = max(1.0, uRes.y / scale);
+  float radius = max(0.045, 1.35 / cellPx);
+  float core = exp(-pow(d / radius, 2.0) * 1.6);
+  float halo = exp(-pow(d / (radius * 3.2), 2.0)) * step(0.994, seed) * 0.22;
+  return (core + halo) * (0.94 + 0.06 * sin(uTime * speed + seed * 6.2831));
+}
+
+float firefly(vec2 rel, vec2 id, float speed, float off) {
+  float seed = hash21(id + off);
+  if (seed < 0.93) return 0.0;
+  float k = 0.5 + seed;
+  vec2 wander = 0.30 * vec2(
+    sin(uTime * speed * k + seed * 31.0),
+    cos(uTime * speed * (k * 0.82) + seed * 17.0)
+  );
+  vec2 offset = (hash22(id + 5.13) - 0.5) * 0.40 + wander;
+  float d = length(rel - offset);
+  float core = exp(-d * d * 320.0);
+  float halo = exp(-d * d * 30.0) * 0.22;
+  float breath = 0.30 + 0.70 * pow(0.5 + 0.5 * sin(uTime * (0.28 + seed * 0.4) + seed * 44.0), 2.2);
+  return (core + halo) * breath;
+}
+
+float fireflies(vec2 p, float scale, float speed, float off) {
+  vec2 g = p * scale;
+  vec2 id = floor(g);
+  vec2 cell = fract(g) - 0.5;
+  float sum = 0.0;
+  for (int j = -1; j <= 1; j++) {
+    for (int i = -1; i <= 1; i++) {
+      vec2 nb = vec2(float(i), float(j));
+      sum += firefly(cell - nb, id + nb, speed, off);
+    }
+  }
+  return sum;
+}
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / uRes;
+  float aspect = uRes.x / uRes.y;
+  vec2 p = (uv - 0.5) * vec2(aspect, 1.0);
+  p = rot(uTime * 0.0055) * p;
+
+  vec2 flow = vec2(uTime * 0.020, -uTime * 0.014) * (1.0 + uClimax * 0.8);
+  vec2 warp = vec2(
+    fbm(p * 1.32 + vec2(0.0, uTime * 0.022) + 3.7),
+    fbm(p * 1.32 + vec2(uTime * 0.018, 0.0) + 11.9)
+  ) - 0.5;
+  vec2 q = p + warp * 0.36 + flow * 0.4;
+  q += 0.12 * (vec2(fbm(q * 2.3 - flow), fbm(q * 2.3 + flow + 6.1)) - 0.5);
+
+  float broad = fbm(q * 1.62);
+  float folds = fbm(q * 3.70 + 23.4);
+  float edgeBias = smoothstep(0.10, 0.74, length(p - vec2(-0.08, 0.02)));
+  float breathe = 0.92 + 0.08 * sin(uTime * 0.10);
+  float nebula = smoothstep(0.49, 0.87, broad + folds * 0.23) * mix(0.24, 1.0, edgeBias) * breathe;
+  float vein = smoothstep(0.60, 0.90, folds) * nebula;
+  float dust = smoothstep(0.70, 0.95, fbm(q * 5.8 + vec2(31.2, 15.7))) * edgeBias;
+
+  vec3 teal = mix(vec3(0.026, 0.20, 0.24), vec3(0.16, 0.09, 0.09), uClimax);
+  vec3 gold = mix(vec3(0.72, 0.50, 0.18), vec3(0.78, 0.31, 0.14), uClimax);
+  vec3 color = vec3(0.0024, 0.0062, 0.017);
+  color += vec3(0.006, 0.024, 0.058) * (0.22 + broad * 0.62);
+  color += teal * nebula * 0.92;
+  color += vec3(0.036, 0.34, 0.36) * vein * 0.38;
+  color += gold * dust * 0.26;
+
+  vec2 near = rot(uTime * 0.012) * p + vec2(uTime * 0.0040, -uTime * 0.0015);
+  vec2 mid = rot(uTime * 0.007) * p * 1.02 + 5.3;
+  vec2 far = rot(uTime * 0.003) * p + 13.7;
+  color += vec3(0.92, 0.86, 0.68) * starLayer(near, 74.0, 0.9979, 0.055) * 0.40;
+  color += vec3(0.78, 0.70, 0.46) * starLayer(mid, 142.0, 0.99945, 0.038) * 0.28;
+  color += vec3(1.00, 0.72, 0.34) * starLayer(far, 97.0, 0.99935, 0.026) * 0.28;
+
+  float glow = fireflies(p + warp * 0.05, 9.0, 0.10, 0.0)
+             + fireflies(p * 1.7 - warp * 0.04 + 8.2, 15.0, 0.07, 21.3) * 0.7;
+  color += mix(vec3(1.0, 0.80, 0.36), vec3(0.55, 0.95, 0.78), 0.35) * glow * 0.95;
+
+  float vig = 1.0 - smoothstep(0.40, 1.0, length(p * vec2(0.76, 1.0)));
+  color *= mix(0.62, 1.0, vig);
+
+  gl_FragColor = vec4(pow(max(color, 0.0), vec3(0.92)), 1.0);
+}
+`;
+
+function startSky(canvas) {
+  const gl = canvas.getContext("webgl", { alpha: false, antialias: false, depth: false, stencil: false, powerPreference: "low-power" });
+  if (!gl) { canvas.style.display = "none"; return; }
+
+  const compile = (type, source) => {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.error(gl.getShaderInfoLog(shader));
+      return null;
+    }
+    return shader;
+  };
+
+  const vertex = compile(gl.VERTEX_SHADER, VERTEX);
+  const fragment = compile(gl.FRAGMENT_SHADER, FRAGMENT);
+  if (!vertex || !fragment) { canvas.style.display = "none"; return; }
+
+  const program = gl.createProgram();
+  gl.attachShader(program, vertex);
+  gl.attachShader(program, fragment);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) { canvas.style.display = "none"; return; }
+  gl.useProgram(program);
+
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const position = gl.getAttribLocation(program, "aPosition");
+  gl.enableVertexAttribArray(position);
+  gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+
+  const uRes = gl.getUniformLocation(program, "uRes");
+  const uTime = gl.getUniformLocation(program, "uTime");
+  const uClimax = gl.getUniformLocation(program, "uClimax");
+
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const started = performance.now();
+  let visible = true;
+  let frame = 0;
+
+  const draw = (now) => {
+    // Ratio acotado, como boundedVfxPixelRatio: la maqueta corre varios cielos a la vez.
+    const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+    const width = Math.max(2, Math.round(canvas.clientWidth * ratio));
+    const height = Math.max(2, Math.round(canvas.clientHeight * ratio));
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+    }
+    gl.viewport(0, 0, width, height);
+    gl.uniform2f(uRes, width, height);
+    gl.uniform1f(uTime, reduced ? 8 : (now - started) / 1000);
+    gl.uniform1f(uClimax, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  };
+
+  const loop = (now) => {
+    if (!visible) return;
+    draw(now);
+    frame = requestAnimationFrame(loop);
+  };
+
+  if (reduced) {
+    draw(started);
+  } else {
+    // Sólo dibuja el marco que está en pantalla.
+    new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting && !visible) {
+          visible = true;
+          frame = requestAnimationFrame(loop);
+        } else if (!entry.isIntersecting && visible) {
+          visible = false;
+          cancelAnimationFrame(frame);
+        }
+      }
+    }, { rootMargin: "200px" }).observe(canvas);
+    frame = requestAnimationFrame(loop);
+  }
+}
+
+document.querySelectorAll("canvas[data-sky]").forEach(startSky);
+</script>
+</body>
+</html>

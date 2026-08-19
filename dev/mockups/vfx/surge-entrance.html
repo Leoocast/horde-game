@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hostfall — Oleada: fuerza de entrada</title>
+    <style>
+      @font-face {
+        font-family: "Cinzel";
+        font-style: normal;
+        font-weight: 500 900;
+        font-display: block;
+        src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+      }
+      :root {
+        --gold-bright: #e6d59e;
+        --parchment: #e8dec0;
+        --ember-bright: #ffb277;
+        --muted: #9b8f88;
+        --muted-dim: #837771;
+        --rule: rgb(146 116 88 / 0.22);
+        --serif: Georgia, "Times New Roman", serif;
+        --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; padding: 0 0 80px;
+        background: radial-gradient(ellipse at 50% -8%, rgb(74 27 18 / 0.24), transparent 55%), #0a0605;
+        color: var(--muted); font-family: var(--sans); font-size: 15px; line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      main { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
+
+      header { padding: 54px 0 30px; border-bottom: 1px solid var(--rule); }
+      .eyebrow { color: #b8785a; font-size: 10px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; }
+      h1 {
+        margin: 12px 0 0; color: var(--parchment); font-family: var(--serif);
+        font-size: clamp(30px, 4.4vw, 46px); font-weight: 500; letter-spacing: 0.02em; line-height: 1.06;
+      }
+      header p { max-width: 72ch; margin: 16px 0 0; }
+      header strong { color: var(--gold-bright); font-weight: 600; }
+      code { color: #e0b08a; font-family: Consolas, "Courier New", monospace; font-size: 13px; }
+
+      .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 30px 0 10px; }
+      .tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+      button {
+        height: 42px; padding: 0 18px; border: 1px solid rgb(146 116 88 / 0.36); border-radius: 2px;
+        background: linear-gradient(180deg, rgb(33 25 22 / 0.96), rgb(15 10 9 / 0.98));
+        color: var(--muted); font-family: var(--sans); cursor: pointer;
+        font-size: 11px; font-weight: 900; letter-spacing: 0.15em; text-transform: uppercase;
+        transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+      }
+      button:hover { border-color: rgb(214 150 110 / 0.7); color: var(--gold-bright); }
+      button[aria-pressed="true"] {
+        border-color: rgb(214 118 74 / 0.8); background: linear-gradient(180deg, rgb(62 27 18 / 0.96), rgb(24 11 9 / 0.98));
+        color: #f0c39d;
+      }
+      button:focus-visible { outline: 2px solid rgb(234 168 133 / 0.9); outline-offset: 2px; }
+      button.small { height: 34px; padding: 0 13px; font-size: 10px; letter-spacing: 0.12em; }
+      .spacer { flex: 1; }
+      .subcontrol { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; }
+      .subcontrol span.label { color: var(--muted-dim); font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+      label.toggle { display: flex; align-items: center; gap: 8px; color: var(--muted-dim); font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; }
+
+      /* ── Escenario ───────────────────────────────────────────────────── */
+      .stage {
+        position: relative; overflow: hidden; aspect-ratio: 16 / 9;
+        border: 1px solid var(--rule); border-radius: 2px; background: #050303; isolation: isolate;
+      }
+      .layer { position: absolute; inset: 0; pointer-events: none; }
+      .board { z-index: 1; background: #0a1413 url("assets/defeat-board-reference.png") center / cover no-repeat; }
+
+      .veil {
+        z-index: 2; opacity: 0; background: rgb(5 1 1 / 0.9);
+        -webkit-backdrop-filter: blur(10px) saturate(0.65); backdrop-filter: blur(10px) saturate(0.65);
+      }
+      .atmosphere {
+        z-index: 3; opacity: 0;
+        background:
+          radial-gradient(ellipse at 50% 43%, rgb(160 43 25 / 0.42), transparent 34%),
+          radial-gradient(ellipse at center, transparent 7%, rgb(8 0 0 / 0.8) 75%);
+      }
+      /* Sólo la usa el doble golpe: la viñeta aprieta un punto con el segundo impacto. */
+      .clamp {
+        z-index: 4; opacity: 0;
+        background: radial-gradient(ellipse at 50% 46%, transparent 30%, rgb(18 2 1 / 0.5) 62%, rgb(5 0 0 / 0.88) 86%);
+      }
+      /* La grieta sólo existe en la pestaña de referencia. */
+      .rift {
+        position: absolute; z-index: 5; top: -20%; bottom: -20%; left: 50%; width: 3px; display: none; opacity: 0;
+        background: linear-gradient(180deg, transparent, #d45f37 22%, #ffd09b 50%, #d45f37 78%, transparent);
+        box-shadow: 0 0 18px #d34e2f, 0 0 70px rgb(164 38 24 / 0.72);
+        transform: translateX(-50%) rotate(7deg);
+      }
+      .stage[data-variant="current"] .rift { display: block; }
+
+      /* ── El bloque: el estandarte de hoy, sin calavera ────────────────
+         La capa se centra con grid y no lleva transform propio; las animaciones
+         viven en el estandarte y en el subtítulo por separado. */
+      .verdict { z-index: 10; display: grid; align-content: center; justify-items: center; text-align: center; }
+
+      .banner {
+        position: relative; display: grid; width: min(980px, 90%); height: 118px;
+        grid-template-columns: 1fr 1fr; align-items: center; gap: clamp(16px, 2.5vw, 30px); opacity: 0;
+      }
+      .banner::before {
+        position: absolute; z-index: -1; top: 50%; left: 50%; width: min(540px, 62%); height: 112px; content: "";
+        border-top: 1px solid rgb(214 118 74 / 0.32); border-bottom: 1px solid rgb(214 118 74 / 0.2);
+        background: linear-gradient(90deg, transparent, rgb(28 5 3 / 0.86) 17%, rgb(12 2 2 / 0.97) 50%, rgb(28 5 3 / 0.86) 83%, transparent);
+        clip-path: polygon(8% 0, 92% 0, 100% 50%, 92% 100%, 8% 100%, 0 50%);
+        transform: translate(-50%, -50%);
+      }
+      .rule-line {
+        height: 1px; transform-origin: right center;
+        background: linear-gradient(90deg, transparent 0%, #a93f2d 28%, #a93f2d 62%, transparent 96%);
+        box-shadow: 0 0 10px rgb(169 63 45 / 0.5);
+      }
+      .rule-line.right { transform-origin: left center; background: linear-gradient(90deg, transparent 4%, #a93f2d 38%, #a93f2d 72%, transparent 100%); }
+      .banner h2 {
+        position: absolute; z-index: 1; inset: 0; display: flex; align-items: center; justify-content: center;
+        padding-left: 0.12em; margin: 0; color: #ead5c7; font-family: "Cinzel", var(--serif);
+        font-size: clamp(3.2rem, 7.6vw, 6.6rem); font-weight: 700; letter-spacing: 0.12em; line-height: 1;
+        text-transform: uppercase; text-shadow: 0 3px 0 rgb(0 0 0 / 0.95), 0 0 28px rgb(210 67 39 / 0.52);
+      }
+      .banner h2::before {
+        position: absolute; z-index: -1; top: 50%; left: 50%; width: min(760px, 82%); height: 112px; content: "";
+        background: linear-gradient(90deg, transparent, rgb(4 11 9 / 0.97) 14%, rgb(4 11 9 / 0.99) 50%, rgb(4 11 9 / 0.97) 86%, transparent);
+        transform: translate(-50%, -50%);
+      }
+
+      .subtitle {
+        margin: 26px 0 0; opacity: 0; color: #c99175; font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(0.72rem, 1.2vw, 0.95rem); font-weight: 700; letter-spacing: 0.3em;
+        text-transform: uppercase; text-shadow: 0 2px 12px #000, 0 0 14px rgb(183 61 38 / 0.42);
+      }
+      /* Tres pasos de presencia del subtítulo, independientes de la variante. */
+      .stage[data-subtitle="medium"] .subtitle {
+        color: #dcac8c; font-size: clamp(0.84rem, 1.4vw, 1.12rem); letter-spacing: 0.27em;
+        text-shadow: 0 2px 12px #000, 0 0 18px rgb(196 66 38 / 0.44);
+      }
+      .stage[data-subtitle="strong"] .subtitle {
+        color: #ecc0a1; font-size: clamp(0.95rem, 1.62vw, 1.3rem); letter-spacing: 0.24em;
+        text-shadow: 0 2px 14px #000, 0 0 22px rgb(204 72 42 / 0.5);
+      }
+
+      /* ══ 0 · Actual ═══════════════════════════════════════════════════ */
+      .stage.run[data-variant="current"] .veil { animation: v0-veil 2600ms cubic-bezier(0.45, 0, 0.22, 1) both; }
+      .stage.run[data-variant="current"] .atmosphere { animation: v0-atmosphere 2600ms ease-in-out both; }
+      .stage.run[data-variant="current"] .rift { animation: v0-rift 2600ms ease-in-out both; }
+      .stage.run[data-variant="current"] .banner { animation: v0-banner 2600ms cubic-bezier(0.16, 0.9, 0.26, 1) both; }
+      .stage.run[data-variant="current"] .rule-line { animation: v0-line 980ms 80ms cubic-bezier(0.18, 0.84, 0.2, 1) both; }
+      .stage.run[data-variant="current"] .subtitle { animation: v0-subtitle 2600ms ease-in-out both; }
+
+      @keyframes v0-veil { 0% { opacity: 0; } 16%, 76% { opacity: 1; } 100% { opacity: 0; } }
+      @keyframes v0-atmosphere {
+        0% { opacity: 0; transform: scale(1.12); }
+        24%, 72% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(1.08); }
+      }
+      @keyframes v0-rift {
+        0%, 8% { opacity: 0; filter: blur(8px); transform: translateX(-50%) rotate(7deg) scaleY(0.1); }
+        30%, 68% { opacity: 0.9; filter: blur(0); transform: translateX(-50%) rotate(7deg) scaleY(1); }
+        100% { opacity: 0; filter: blur(9px); transform: translateX(-50%) rotate(7deg) scaleY(0.35); }
+      }
+      @keyframes v0-banner {
+        0%, 8% { opacity: 0; filter: blur(7px); transform: translateY(15px) scale(0.88); }
+        28%, 72% { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+        100% { opacity: 0; filter: blur(8px); transform: translateY(-9px) scale(1.08); }
+      }
+      @keyframes v0-line { from { opacity: 0; transform: scaleX(0); } to { opacity: 0.9; transform: scaleX(1); } }
+      @keyframes v0-subtitle {
+        0%, 24% { opacity: 0; letter-spacing: 0.46em; }
+        38%, 72% { opacity: 1; }
+        100% { opacity: 0; letter-spacing: 0.38em; }
+      }
+
+      /* ══ A · Seco ═════════════════════════════════════════════════════
+         El mismo cuadro, sin desenfoques de entrada y sin esperas: todo está
+         puesto al 12 % y el beat dura 2,1 s en vez de 2,6. */
+      .stage.run[data-variant="dry"] .veil { animation: vA-veil 2100ms ease-out both; }
+      .stage.run[data-variant="dry"] .atmosphere { animation: vA-atmosphere 2100ms ease-out both; }
+      .stage.run[data-variant="dry"] .banner { animation: vA-banner 2100ms cubic-bezier(0.14, 0.88, 0.2, 1) both; }
+      .stage.run[data-variant="dry"] .rule-line { animation: vA-line 620ms 60ms cubic-bezier(0.14, 0.88, 0.2, 1) both; }
+      .stage.run[data-variant="dry"] .subtitle { animation: vA-subtitle 2100ms cubic-bezier(0.16, 0.9, 0.26, 1) both; }
+
+      @keyframes vA-veil { 0% { opacity: 0; } 6%, 84% { opacity: 1; } 100% { opacity: 0; } }
+      @keyframes vA-atmosphere {
+        0% { opacity: 0; transform: scale(1.06); }
+        14%, 80% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(1.03); }
+      }
+      @keyframes vA-banner {
+        0%, 3% { opacity: 0; transform: translateY(10px) scale(0.95); }
+        12%, 80% { opacity: 1; transform: translateY(0) scale(1); }
+        100% { opacity: 0; transform: translateY(-6px) scale(1.03); }
+      }
+      @keyframes vA-line { from { opacity: 0; transform: scaleX(0); } to { opacity: 0.9; transform: scaleX(1); } }
+      @keyframes vA-subtitle {
+        0%, 12% { opacity: 0; transform: translateY(6px); }
+        24%, 80% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; transform: translateY(-3px); }
+      }
+
+      /* ══ B · Estampa ══════════════════════════════════════════════════
+         Mismo cuadro; lo que cambia es que llega de golpe. El estandarte cae
+         desde escala 1,35 con un retroceso de 20 ms y la atmósfera golpea con él. */
+      .stage.run[data-variant="stamp"] .veil { animation: vB-veil 2000ms linear both; }
+      .stage.run[data-variant="stamp"] .atmosphere { animation: vB-atmosphere 2000ms cubic-bezier(0.1, 0.8, 0.2, 1) both; }
+      .stage.run[data-variant="stamp"] .banner { animation: vB-banner 2000ms cubic-bezier(0.2, 0, 0, 1) both; }
+      .stage.run[data-variant="stamp"] .rule-line { animation: vB-line 480ms 120ms cubic-bezier(0.1, 0.86, 0.2, 1) both; }
+      .stage.run[data-variant="stamp"] .subtitle { animation: vB-subtitle 2000ms cubic-bezier(0.16, 0.9, 0.26, 1) both; }
+
+      @keyframes vB-veil { 0% { opacity: 0; } 4%, 84% { opacity: 1; } 100% { opacity: 0; } }
+      @keyframes vB-atmosphere {
+        0% { opacity: 0; transform: scale(0.86); }
+        5% { opacity: 0.4; }
+        11% { opacity: 1; transform: scale(1.06); }
+        20%, 84% { opacity: 0.94; transform: scale(1); }
+        100% { opacity: 0; transform: scale(1.03); }
+      }
+      @keyframes vB-banner {
+        0%, 4% { opacity: 0; transform: scale(1.35); }
+        11% { opacity: 1; transform: scale(1); }
+        14% { transform: scale(0.985); }
+        19%, 84% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(1.03); }
+      }
+      @keyframes vB-line { from { opacity: 0; transform: scaleX(0); } to { opacity: 0.9; transform: scaleX(1); } }
+      @keyframes vB-subtitle {
+        0%, 16% { opacity: 0; clip-path: inset(-60% 50% -60% 50%); }
+        28%, 84% { opacity: 1; clip-path: inset(-60% 0 -60% 0); }
+        100% { opacity: 0; clip-path: inset(-60% 0 -60% 0); }
+      }
+
+      /* ══ C · Acecho ═══════════════════════════════════════════════════
+         La oscuridad cae seca —ahí está la entrada— y después algo se acerca:
+         el título cierra su espaciado, la atmósfera respira dos veces y el
+         subtítulo es lo último que se enciende. */
+      .stage.run[data-variant="stalk"] .veil { animation: vC-veil 2700ms linear both; }
+      .stage.run[data-variant="stalk"] .atmosphere { animation: vC-atmosphere 2700ms ease-in-out both; }
+      .stage.run[data-variant="stalk"] .banner { animation: vC-banner 2700ms ease-out both; }
+      .stage.run[data-variant="stalk"] .banner h2 { animation: vC-title 2700ms cubic-bezier(0.22, 0.72, 0.16, 1) both; }
+      .stage.run[data-variant="stalk"] .rule-line { animation: vC-line 900ms 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+      .stage.run[data-variant="stalk"] .subtitle { animation: vC-subtitle 2700ms ease-out both; }
+
+      @keyframes vC-veil { 0% { opacity: 0; } 3%, 88% { opacity: 1; } 100% { opacity: 0; } }
+      @keyframes vC-atmosphere {
+        0% { opacity: 0; transform: scale(1.16); }
+        18% { opacity: 0.52; transform: scale(1.05); }
+        34% { opacity: 0.88; transform: scale(1.01); }
+        44% { opacity: 0.62; transform: scale(1.03); }
+        60% { opacity: 1; transform: scale(1); }
+        74% { opacity: 0.8; transform: scale(1.01); }
+        88% { opacity: 0.96; transform: scale(1); }
+        100% { opacity: 0; transform: scale(1.04); }
+      }
+      @keyframes vC-banner {
+        0%, 5% { opacity: 0; }
+        24%, 88% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+      @keyframes vC-title {
+        0%, 6% { letter-spacing: 0.42em; opacity: 0.2; }
+        44%, 88% { letter-spacing: 0.12em; opacity: 1; }
+        100% { letter-spacing: 0.11em; opacity: 1; }
+      }
+      @keyframes vC-line { from { opacity: 0; transform: scaleX(0); } to { opacity: 0.9; transform: scaleX(1); } }
+      @keyframes vC-subtitle {
+        0%, 54% { opacity: 0; transform: translateY(8px); }
+        70%, 88% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; transform: translateY(-4px); }
+      }
+
+      /* ══ D · Doble golpe ══════════════════════════════════════════════
+         Dos impactos: primero el estandarte, y 340 ms después el subtítulo
+         aterriza mientras la viñeta aprieta un punto. */
+      .stage.run[data-variant="double"] .veil { animation: vB-veil 2300ms linear both; }
+      .stage.run[data-variant="double"] .atmosphere { animation: vD-atmosphere 2300ms cubic-bezier(0.1, 0.8, 0.2, 1) both; }
+      .stage.run[data-variant="double"] .clamp { animation: vD-clamp 2300ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+      .stage.run[data-variant="double"] .banner { animation: vD-banner 2300ms cubic-bezier(0.2, 0, 0, 1) both; }
+      .stage.run[data-variant="double"] .rule-line { animation: vB-line 480ms 120ms cubic-bezier(0.1, 0.86, 0.2, 1) both; }
+      .stage.run[data-variant="double"] .subtitle { animation: vD-subtitle 2300ms cubic-bezier(0.2, 0, 0, 1) both; }
+
+      @keyframes vD-atmosphere {
+        0% { opacity: 0; transform: scale(0.88); }
+        4% { opacity: 0.4; }
+        9% { opacity: 1; transform: scale(1.05); }
+        16% { opacity: 0.9; transform: scale(1); }
+        24% { opacity: 1; transform: scale(1.03); }
+        32%, 86% { opacity: 0.94; transform: scale(1); }
+        100% { opacity: 0; transform: scale(1.02); }
+      }
+      @keyframes vD-clamp {
+        0%, 20% { opacity: 0; transform: scale(1.2); }
+        26% { opacity: 1; transform: scale(1); }
+        34%, 86% { opacity: 0.82; transform: scale(1.01); }
+        100% { opacity: 0; transform: scale(1.04); }
+      }
+      @keyframes vD-banner {
+        0%, 3% { opacity: 0; transform: scale(1.28); }
+        9% { opacity: 1; transform: scale(1); }
+        12% { transform: scale(0.99); }
+        16% { transform: scale(1); }
+        24% { transform: scale(0.994); }
+        30%, 86% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(1.03); }
+      }
+      @keyframes vD-subtitle {
+        0%, 19% { opacity: 0; transform: translateY(14px) scale(1.14); }
+        25% { opacity: 1; transform: translateY(0) scale(1); }
+        29% { transform: translateY(0) scale(0.985); }
+        34%, 86% { opacity: 1; transform: translateY(0) scale(1); }
+        100% { opacity: 0; transform: translateY(0) scale(1.02); }
+      }
+
+      /* ── Pie del escenario ───────────────────────────────────────────── */
+      .scrub { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
+      .track { position: relative; height: 3px; flex: 1; background: rgb(146 116 88 / 0.18); }
+      .fill { position: absolute; top: 0; bottom: 0; left: 0; width: 0; background: linear-gradient(90deg, rgb(146 116 88 / 0.5), var(--ember-bright)); }
+      .clock { color: var(--muted-dim); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
+
+      .caption { margin: 18px 0 0; padding: 16px 18px; border-left: 2px solid rgb(214 118 74 / 0.5); background: rgb(24 12 9 / 0.5); }
+      .caption h3 { margin: 0 0 6px; color: var(--gold-bright); font-size: 11px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+      .caption p { margin: 0; max-width: 80ch; }
+      .caption p + p { margin-top: 8px; }
+      .caption b { color: #f0c39d; font-weight: 600; }
+
+      .notes { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 26px; }
+      .notes h2 { margin: 0 0 12px; color: var(--parchment); font-family: var(--serif); font-size: 22px; font-weight: 500; }
+      .notes h3 { margin: 24px 0 6px; color: var(--gold-bright); font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+      .notes ul { margin: 0; padding-left: 18px; }
+      .notes li { margin: 5px 0; max-width: 84ch; }
+      .notes p { max-width: 84ch; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">Hostfall · VFX</p>
+        <h1>Oleada — fuerza de entrada</h1>
+        <p>
+          El estandarte es <strong>el que ya existe</strong>: placa hexagonal, las dos reglas laterales, el
+          título con su fondo y el subtítulo. Lo único que se quita es la <strong>calavera</strong> y la
+          <strong>grieta</strong>. Nada de fractura, nada de motivos nuevos, nada de tipografía suelta sobre
+          un degradado. Lo que cambia entre pestañas es <strong>sólo cómo entra</strong>, y el tamaño del
+          subtítulo se elige aparte para no atarlo a una variante.
+        </p>
+      </header>
+
+      <div class="controls">
+        <div class="tabs" id="tabs">
+          <button data-variant="current" aria-pressed="true">0 · Actual</button>
+          <button data-variant="dry" aria-pressed="false">A · Seco</button>
+          <button data-variant="stamp" aria-pressed="false">B · Estampa</button>
+          <button data-variant="stalk" aria-pressed="false">C · Acecho</button>
+          <button data-variant="double" aria-pressed="false">D · Doble golpe</button>
+        </div>
+        <span class="spacer"></span>
+        <button id="play">Reproducir</button>
+        <label class="toggle"><input type="checkbox" id="loop" checked /> Bucle</label>
+      </div>
+
+      <div class="subcontrol" id="subtabs">
+        <span class="label">Subtítulo</span>
+        <button class="small" data-subtitle="current" aria-pressed="false">Actual</button>
+        <button class="small" data-subtitle="medium" aria-pressed="true">Medio</button>
+        <button class="small" data-subtitle="strong" aria-pressed="false">Fuerte</button>
+      </div>
+
+      <div class="stage" id="stage" data-variant="current" data-subtitle="medium">
+        <div class="layer board"></div>
+        <div class="layer veil"></div>
+        <div class="layer atmosphere"></div>
+        <div class="layer clamp"></div>
+        <div class="rift"></div>
+
+        <div class="layer verdict">
+          <div class="banner">
+            <span class="rule-line"></span>
+            <h2>Oleada</h2>
+            <span class="rule-line right"></span>
+          </div>
+          <p class="subtitle">La Hueste ha sido desatada</p>
+        </div>
+      </div>
+
+      <div class="scrub">
+        <span class="clock" id="clock">0.00 s</span>
+        <div class="track"><div class="fill" id="fill"></div></div>
+        <span class="clock" id="total">2.60 s</span>
+      </div>
+
+      <div class="caption" id="caption"></div>
+
+      <section class="notes">
+        <h2>Qué se toca y qué no</h2>
+        <p>
+          El bloque conserva la placa hexagonal, su borde superior e inferior, el fondo del título y las dos
+          reglas laterales. Ese marco es lo que le da edad y peso; sin él la pantalla se vuelve tipografía
+          grande sobre rojo. Sólo desaparecen la calavera y la grieta diagonal.
+        </p>
+        <p>
+          El subtítulo es un control aparte con tres pasos, porque «más visible» admite grados y conviene
+          decidirlo mirando, no discutiendo: <b>Actual</b> es lo de hoy (0,72–0,95 rem, <code>#c99175</code>,
+          0,3em); <b>Medio</b> sube a 0,84–1,12 rem con <code>#dcac8c</code> y 0,27em; <b>Fuerte</b> llega a
+          0,95–1,3 rem con <code>#ecc0a1</code> y 0,24em. Por encima de eso empieza a competir con el título,
+          que es lo que hay que evitar.
+        </p>
+
+        <h3>Coste</h3>
+        <ul>
+          <li>Las cuatro son <b>keyframes y borrado de marcado</b>: se va el <code>&lt;Skull&gt;</code>, se va
+            <code>.surge-transition-rift</code> y se recorta la copy. El estandarte se queda como está.</li>
+          <li>A es prácticamente gratis: mismos elementos, sin los <code>blur()</code> de entrada y con la
+            duración bajada de 2,6 s a 2,1 s.</li>
+          <li>D es la única que añade una capa, la viñeta que aprieta con el segundo golpe. Es un gradiente,
+            no un motivo.</li>
+        </ul>
+
+        <h3>Contratos que se respetan</h3>
+        <ul>
+          <li>El beat sigue terminando en un único <code>animationend</code> del contenedor:
+            <code>completeSurgeTransition</code> y la barrera <code>surge.transition</code> no se tocan.</li>
+          <li>Ninguna anima <code>filter</code> a pantalla completa. A, B y D además eliminan los
+            <code>blur()</code> de entrada que hoy llevan el estandarte y la grieta, que son justamente los que
+            hacen que la entrada se sienta blanda.</li>
+          <li>C anima <code>letter-spacing</code> sobre el título, que provoca layout, pero es un solo elemento de
+            una palabra.</li>
+          <li>El SFX sigue siendo <code>playMonsterHeavy</code>. En B y D el golpe llega mucho antes que hoy, así
+            que ahí conviene revisar el <code>rate</code> para que el clip caiga con el impacto.</li>
+        </ul>
+
+        <h3>Decisión pendiente</h3>
+        <ul>
+          <li>La copy recortada deja de nombrar el <code>+1</code> de Fuerza. Es bueno para la Legión de Varka, que
+            tiene su propio perfil de Oleada, pero hay que decidir dónde se entera el jugador del efecto: el
+            log ya lo registra y no lo está mirando.</li>
+        </ul>
+      </section>
+    </main>
+
+    <script>
+      const VARIANTS = {
+        current: {
+          ms: 2600,
+          title: "0 · Actual — referencia",
+          body: [
+            "Lo de hoy, con calavera y grieta, para comparar de igual a igual. El estandarte tarda <b>730 ms</b> en estar puesto y entra desenfocado; el subtítulo no llega hasta el segundo.",
+            "La entrada es blanda porque nada aterriza: todo se funde a la vez durante casi un segundo."
+          ]
+        },
+        dry: {
+          ms: 2100,
+          title: "A · Seco — el mismo cuadro, sin blandura",
+          body: [
+            "Idéntico dibujo. Se quitan los <code>blur()</code> de entrada, el estandarte está puesto al <b>12 %</b> y el beat baja de 2,6 s a 2,1 s.",
+            "Es el cambio de coste cero: sólo números. Si lo que molestaba era que la pantalla se quedaba quieta demasiado tiempo, esto ya lo arregla."
+          ]
+        },
+        stamp: {
+          ms: 2000,
+          title: "B · Estampa — el estandarte cae de golpe",
+          body: [
+            "El velo entra en dos frames y el estandarte <b>se estampa</b> desde escala 1,35 con un retroceso de 20 ms. La atmósfera roja golpea con él, no antes, y las reglas laterales se abren en 480 ms.",
+            "El subtítulo se abre desde el centro con un barrido, 170 ms después del golpe: primero el impacto, luego la noticia."
+          ]
+        },
+        stalk: {
+          ms: 2700,
+          title: "C · Acecho — la oscuridad primero, la amenaza después",
+          body: [
+            "La entrada sigue siendo dura: el velo cae seco en 81 ms. Lo que cambia es lo que viene detrás — el título cierra su espaciado de 0,42em a 0,12em, como algo que se acerca, y la atmósfera respira dos veces.",
+            "El subtítulo es lo último que se enciende. Da miedo por contención; también es la más larga, 2,7 s."
+          ]
+        },
+        double: {
+          ms: 2300,
+          title: "D · Doble golpe — y todavía hay más",
+          body: [
+            "Dos impactos en vez de uno. El primero pone el estandarte desde escala 1,28; el segundo, <b>340 ms después</b>, aterriza el subtítulo mientras la viñeta aprieta un punto sobre el tablero.",
+            "Es la que mejor cuenta que la Oleada no es un aviso sino un cambio de estado: el segundo golpe es el que dice que esto ya no se revierte."
+          ]
+        }
+      };
+
+      const stage = document.getElementById("stage");
+      const tabs = document.getElementById("tabs");
+      const subtabs = document.getElementById("subtabs");
+      const playBtn = document.getElementById("play");
+      const loopBox = document.getElementById("loop");
+      const fill = document.getElementById("fill");
+      const clock = document.getElementById("clock");
+      const total = document.getElementById("total");
+      const caption = document.getElementById("caption");
+
+      let variant = "current";
+      let startedAt = 0;
+      let raf = 0;
+
+      function renderCaption() {
+        const info = VARIANTS[variant];
+        caption.innerHTML = "<h3>" + info.title + "</h3>" + info.body.map((line) => "<p>" + line + "</p>").join("");
+        total.textContent = (info.ms / 1000).toFixed(2) + " s";
+      }
+
+      function tick(now) {
+        const info = VARIANTS[variant];
+        const elapsed = Math.min(now - startedAt, info.ms);
+        fill.style.width = ((elapsed / info.ms) * 100).toFixed(2) + "%";
+        clock.textContent = (elapsed / 1000).toFixed(2) + " s";
+        if (elapsed < info.ms) {
+          raf = requestAnimationFrame(tick);
+          return;
+        }
+        stage.classList.remove("run");
+        if (loopBox.checked) window.setTimeout(play, 700);
+      }
+
+      function play() {
+        cancelAnimationFrame(raf);
+        stage.classList.remove("run");
+        void stage.offsetWidth;
+        stage.classList.add("run");
+        startedAt = performance.now();
+        raf = requestAnimationFrame(tick);
+      }
+
+      tabs.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-variant]");
+        if (!button) return;
+        variant = button.dataset.variant;
+        for (const node of tabs.querySelectorAll("button")) {
+          node.setAttribute("aria-pressed", String(node === button));
+        }
+        stage.dataset.variant = variant;
+        renderCaption();
+        play();
+      });
+
+      // El tamaño del subtítulo es ortogonal a la variante: cambiarlo no reinicia el criterio.
+      subtabs.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-subtitle]");
+        if (!button) return;
+        stage.dataset.subtitle = button.dataset.subtitle;
+        for (const node of subtabs.querySelectorAll("button")) {
+          node.setAttribute("aria-pressed", String(node === button));
+        }
+        play();
+      });
+
+      playBtn.addEventListener("click", play);
+      loopBox.addEventListener("change", () => {
+        if (loopBox.checked && !stage.classList.contains("run")) play();
+      });
+
+      renderCaption();
+      play();
+    </script>
+  </body>
+</html>

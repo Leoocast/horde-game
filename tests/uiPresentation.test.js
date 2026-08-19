@@ -300,9 +300,12 @@ test("the Host attack preview shows cards going to Memory and keeps the math in 
   assert.match(phaseOrbSource, /learnToPlay\.stage === "defense-intro"/u);
   assert.match(phaseOrbSource, /learnToPlayRenewalLeadIn/u);
   assert.match(phaseOrbSource, /guidedSpotlightPending/u);
-  assert.equal(translate("es", "orb.chooseAttackers"), "Elegir atacantes");
-  assert.equal(translate("es", "orb.attackArchive"), "Atacar el Archivo");
-  assert.equal(translate("es", "orb.passCombat"), "Pasar el combate");
+  assert.equal(translate("en", "orb.chooseAttackers"), "Battle Phase");
+  assert.equal(translate("en", "orb.attackArchive"), "Attack");
+  assert.equal(translate("en", "orb.passCombat"), "No Attack");
+  assert.equal(translate("es", "orb.chooseAttackers"), "Fase de batalla");
+  assert.equal(translate("es", "orb.attackArchive"), "Atacar");
+  assert.equal(translate("es", "orb.passCombat"), "No atacar");
 });
 
 test("the Host Archive discard drawer counts departures and closes after the last flight without showing zero", () => {
@@ -1208,6 +1211,7 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   // `transform` sobre cada pieza y borraría un `translate` propio del bloque.
   assert.match(styles, /\.defeat-outcome \{\s*position: absolute;[\s\S]*?place-items: center;/u);
   assert.match(styles, /@keyframes defeat-outcome-in \{\s*from \{ opacity: 0; transform: translateY\(10px\); \}/u);
+  assert.match(styles, /\.defeat-title \.line \{[^}]*padding-left: 0\.065em;/su);
   assert.match(modal, /className="defeat-outcome-inner"/u);
   // TemporalBackdrop and ambience remain alive below the opaque shard geometry.
   assert.match(styles, /\.game-screen-ambience \{/u);
@@ -1230,6 +1234,7 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.doesNotMatch(journeyModal, /disabled/u);
   assert.doesNotMatch(journeyModal, /onRewriteFuture|defeat-future-plate|destiny-command-glyph/u);
   assert.match(styles, /\.learn-to-play-contemplate-button::before \{[\s\S]*?width: 180%;[\s\S]*?aspect-ratio: 1;/u);
+  assert.match(styles, /\.learn-to-play-contemplate-button \.destiny-command-copy strong \{[^}]*padding-left: 0\.13em;/su);
   // El vidrio se lee aunque no haya nada impreso: alfa de la captura con suelo de Fresnel.
   assert.match(glassShader, /float printed = middle\.a/u);
   assert.match(glassShader, /vFade \* max\(printed, glassEdge\)/u);

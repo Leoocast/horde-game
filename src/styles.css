@@ -22203,6 +22203,8 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 
 .defeat-title .line {
   display: block;
+  /* Compensa el espacio que letter-spacing deja después de la última letra. */
+  padding-left: 0.065em;
   opacity: 0;
   clip-path: inset(0 50%);
   transform: translateY(12px);
@@ -22332,6 +22334,8 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 }
 
 .learn-to-play-contemplate-button .destiny-command-copy strong {
+  /* El texto queda ópticamente centrado dentro del botón pese a su tracking. */
+  padding-left: 0.13em;
   font-size: clamp(11px, 2vw, 14px);
   letter-spacing: 0.13em;
   white-space: nowrap;
