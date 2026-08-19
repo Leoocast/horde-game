@@ -42,6 +42,7 @@ export type SeedSearchResult = Readonly<{
     playerDeckKey: string;
     hostDeckKey: string;
     difficulty: SeedAnalysisContext["config"]["difficulty"];
+    profileId: SeedAnalysisContext["config"]["profileId"];
     evaluateMulligan: boolean;
     avoidEarlySpikes: boolean;
     startIndex: number;
@@ -329,5 +330,7 @@ function emptyRejectionCounts(): Record<SeedFilterReason, number> {
     "too-many-sources-in-hand": 0,
     "too-few-accessible-cards": 0,
     "early-host-spike": 0,
+    "host-pressure-too-low": 0,
+    "host-escalation-too-low": 0,
   };
 }

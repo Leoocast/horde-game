@@ -26,12 +26,19 @@ import { useGameStore } from "../store/useGameStore";
 import { useToastStore } from "../store/useToastStore";
 import { useCardImage } from "../utils/cardImages";
 import {
+  BALANCED_PROFILE_ID,
+  EXPERIENCED_PROFILE_ID,
+  FIRST_APPROACH_PROFILE_ID,
+  HIGH_PRESSURE_PROFILE_ID,
+  PROGRESSIVE_PRESSURE_PROFILE_ID,
+  SEED_SEARCH_PROFILES,
   analyzeSeedEntropy,
   createSeedAnalysisContext,
   selectDiverseSeedCandidates,
   verifySeedAnalysis,
   type SeedAnalysisResult,
   type SeedCardPreviewV1,
+  type SeedSearchProfileId,
 } from "../playground/seedExplorer";
 import {
   SeedExplorerRuntime,
@@ -70,10 +77,43 @@ const DIFFICULTY_OPTIONS: ReadonlyArray<{ value: DifficultyMode; label: string }
 
 const SEARCH_COUNTS = [10_000, 100_000, 500_000] as const;
 
+const SEARCH_PROFILE_OPTIONS: ReadonlyArray<{
+  value: SeedSearchProfileId;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: FIRST_APPROACH_PROFILE_ID,
+    label: "Primer acercamiento",
+    description: "Prioriza recursos estables, costes accesibles y una Hueste gradual sin aperturas extremas.",
+  },
+  {
+    value: BALANCED_PROFILE_ID,
+    label: "Equilibrada",
+    description: "Busca un reparto parejo entre apertura, curva, presión y escalada, sin dominar una sola métrica.",
+  },
+  {
+    value: EXPERIENCED_PROFILE_ID,
+    label: "Hostfallero experimentado",
+    description: "Tolera manos menos cómodas y favorece una Hueste más exigente con mayor escalada.",
+  },
+  {
+    value: HIGH_PRESSURE_PROFILE_ID,
+    label: "Presión alta",
+    description: "Descarta Hueste pasiva y busca ventanas tempranas intensas, incluso con recursos más ajustados.",
+  },
+  {
+    value: PROGRESSIVE_PRESSURE_PROFILE_ID,
+    label: "Escalada progresiva",
+    description: "Favorece un comienzo manejable que aumenta claramente su presión durante las ventanas siguientes.",
+  },
+];
+
 type ExplorerConfiguration = Readonly<{
   playerDeckKey: string;
   hostDeckKey: string;
   difficulty: DifficultyMode;
+  profileId: SeedSearchProfileId;
   evaluateMulligan: boolean;
   avoidEarlySpikes: boolean;
   count: number;
@@ -96,6 +136,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
     playerDeckKey: PLAYER_DECK_OPTIONS[0].value,
     hostDeckKey: HOST_DECK_OPTIONS[0].value,
     difficulty: "normal",
+    profileId: FIRST_APPROACH_PROFILE_ID,
     evaluateMulligan: true,
     avoidEarlySpikes: true,
     count: 500_000,
@@ -120,6 +161,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
     configuration.playerDeckKey,
     configuration.hostDeckKey,
     configuration.difficulty,
+    configuration.profileId,
     configuration.evaluateMulligan,
     configuration.avoidEarlySpikes,
     configuration.count,
@@ -222,6 +264,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
       : 0;
   const favoriteCodes = useMemo(() => new Set(favorites.map(({ canonCode }) => canonCode)), [favorites]);
   const preparationTurns = canonSeedPreparationTurns(configuration.difficulty);
+  const selectedProfile = searchProfileOption(configuration.profileId);
 
   function updateConfiguration(patch: Partial<ExplorerConfiguration>) {
     setConfiguration((current) => Object.freeze({ ...current, ...patch }));
@@ -236,6 +279,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
       playerDeckKey: configuration.playerDeckKey,
       hostDeckKey: configuration.hostDeckKey,
       difficulty: configuration.difficulty,
+      profileId: configuration.profileId,
       evaluateMulligan: configuration.evaluateMulligan,
       avoidEarlySpikes: configuration.avoidEarlySpikes,
       count: configuration.count,
@@ -252,6 +296,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
     setFavorites(exists
       ? deleteStoredSeedFavorite(candidate.identity.canonCode)
       : saveStoredSeedFavorite(candidate, {
+        profileId: candidate.profileId,
         evaluateMulligan: configuration.evaluateMulligan,
         avoidEarlySpikes: configuration.avoidEarlySpikes,
       }));
@@ -271,7 +316,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
     const contents = format === "json" ? seedSearchResultToJson(lastComplete) : seedSearchResultToCsv(lastComplete);
     downloadText(
       contents,
-      `hostfall-seeds-${deckKeySuffix(lastComplete.request.playerDeckKey)}-${deckKeySuffix(lastComplete.request.hostDeckKey)}.${format}`,
+      `hostfall-seeds-${deckKeySuffix(lastComplete.request.playerDeckKey)}-${deckKeySuffix(lastComplete.request.hostDeckKey)}-${lastComplete.request.profileId}.${format}`,
       format === "json" ? "application/json" : "text/csv",
     );
   }
@@ -345,12 +390,17 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
 
             <section className="seed-explorer-group">
               <GroupHeading title="Perfil buscado" note="V1" />
-              <div className="seed-explorer-field">
-                <span>Tipo de futuro</span>
-                <output className="seed-explorer-readonly-field">Primer acercamiento</output>
-              </div>
+              <SelectControl
+                label="Tipo de futuro"
+                value={configuration.profileId}
+                options={SEARCH_PROFILE_OPTIONS}
+                onChange={(profileId) => updateConfiguration({
+                  profileId,
+                  avoidEarlySpikes: SEED_SEARCH_PROFILES[profileId].defaultAvoidEarlySpikes,
+                })}
+              />
               <p className="seed-explorer-profile-description">
-                Favorece <strong>recursos estables</strong>, costes accesibles y presión gradual. Penaliza aperturas extremas.
+                {selectedProfile.description}
               </p>
               <SwitchControl
                 label="Evaluar un mulligan"
@@ -577,7 +627,7 @@ function CandidateInspector({
       <section className="seed-explorer-group">
         <div className="seed-explorer-inspector-head">
           <div>
-            <div className="seed-explorer-kicker">Futuro seleccionado</div>
+            <div className="seed-explorer-kicker">{profileLabel(candidate.profileId)}</div>
             <div className="seed-explorer-inspector-code">{candidate.identity.canonCode}</div>
           </div>
           <button
@@ -737,7 +787,7 @@ function SeedDetailsModal({
 
         <div className="seed-explorer-detail-body old-scrollbar">
           <section className="seed-explorer-detail-overview">
-            <div className="seed-explorer-detail-score"><strong>{candidate.score}</strong><span>Ajuste al perfil</span></div>
+            <div className="seed-explorer-detail-score"><strong>{candidate.score}</strong><span>Ajuste · {profileLabel(candidate.profileId)}</span></div>
             <div className="seed-explorer-metric-grid is-wide">
               {ratings.map(([label, value]) => (
                 <div className="seed-explorer-metric" key={label}>
@@ -849,6 +899,7 @@ function resolveStoredFavorites(entries: readonly StoredSeedFavorite[]): readonl
         playerDeckKey: identity.playerDeckKey,
         hostDeckKey: identity.hostDeckKey,
         difficulty: identity.difficulty,
+        profileId: entry.profileId,
         evaluateMulligan: entry.evaluateMulligan,
         avoidEarlySpikes: entry.avoidEarlySpikes,
       });
@@ -926,7 +977,17 @@ function resultSummary(
     return `${formatInteger(snapshot.frame.search.examined)} examinados · ${formatInteger(snapshot.frame.search.passedFilters)} pasaron filtros · ${visibleCount} visibles`;
   }
   if (!result) return "Sin búsqueda todavía · perfil Primer acercamiento";
-  return `${formatInteger(result.examined)} examinados · ${formatInteger(result.passedFilters)} pasaron filtros · ordenados para Primer acercamiento`;
+  return `${formatInteger(result.examined)} examinados · ${formatInteger(result.passedFilters)} pasaron filtros · ${profileLabel(result.request.profileId)}`;
+}
+
+function searchProfileOption(profileId: SeedSearchProfileId) {
+  const option = SEARCH_PROFILE_OPTIONS.find(({ value }) => value === profileId);
+  if (!option) throw new Error(`Perfil de Seed Explorer desconocido: ${profileId}`);
+  return option;
+}
+
+function profileLabel(profileId: SeedSearchProfileId): string {
+  return searchProfileOption(profileId).label;
 }
 
 function runtimeStatusMessage(snapshot: SeedExplorerRuntimeSnapshot, result: SeedSearchResult | undefined): string {

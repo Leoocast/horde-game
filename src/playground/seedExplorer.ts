@@ -18,6 +18,18 @@ import { shuffleWithState } from "../engine/RNG";
 
 export const SEED_ANALYSIS_REVISION = 1 as const;
 export const FIRST_APPROACH_PROFILE_ID = "first-approach-v1" as const;
+export const BALANCED_PROFILE_ID = "balanced-v1" as const;
+export const EXPERIENCED_PROFILE_ID = "experienced-v1" as const;
+export const HIGH_PRESSURE_PROFILE_ID = "high-pressure-v1" as const;
+export const PROGRESSIVE_PRESSURE_PROFILE_ID = "progressive-pressure-v1" as const;
+export const SEED_SEARCH_PROFILE_IDS = Object.freeze([
+  FIRST_APPROACH_PROFILE_ID,
+  BALANCED_PROFILE_ID,
+  EXPERIENCED_PROFILE_ID,
+  HIGH_PRESSURE_PROFILE_ID,
+  PROGRESSIVE_PRESSURE_PROFILE_ID,
+] as const);
+export type SeedSearchProfileId = (typeof SEED_SEARCH_PROFILE_IDS)[number];
 export const PLAYER_DRAW_PREVIEW_COUNT = 5;
 export const HOST_WINDOW_PREVIEW_COUNT = 5;
 
@@ -25,6 +37,7 @@ export type SeedExplorerConfig = Readonly<{
   playerDeckKey: string;
   hostDeckKey: string;
   difficulty: DifficultyMode;
+  profileId?: SeedSearchProfileId;
   evaluateMulligan?: boolean;
   avoidEarlySpikes?: boolean;
 }>;
@@ -119,7 +132,7 @@ export type SeedAnalysisResult = Readonly<{
   identity: SeedFutureIdentity;
   analysisRevision: typeof SEED_ANALYSIS_REVISION;
   score: number;
-  profileId: typeof FIRST_APPROACH_PROFILE_ID;
+  profileId: SeedSearchProfileId;
   metrics: SeedMetricsV1;
   preview: SeedPreviewV1;
   mulligan: Readonly<{
@@ -191,7 +204,9 @@ export type SeedFilterReason =
   | "too-few-sources-before-host"
   | "too-many-sources-in-hand"
   | "too-few-accessible-cards"
-  | "early-host-spike";
+  | "early-host-spike"
+  | "host-pressure-too-low"
+  | "host-escalation-too-low";
 
 export type SeedCandidateEvaluation = Readonly<{
   accepted: boolean;
@@ -199,7 +214,7 @@ export type SeedCandidateEvaluation = Readonly<{
   result: SeedAnalysisResult;
 }>;
 
-export type FirstApproachScoreFeatures = Readonly<{
+export type SeedProfileScoreFeatures = Readonly<{
   openingRating: number;
   resourceRating: number;
   curveRating: number;
@@ -207,9 +222,39 @@ export type FirstApproachScoreFeatures = Readonly<{
   escalationRating: number;
 }>;
 
+export type FirstApproachScoreFeatures = SeedProfileScoreFeatures;
+
+export type SeedSearchProfile = Readonly<{
+  id: SeedSearchProfileId;
+  mulliganMinimumGain: number;
+  defaultAvoidEarlySpikes: boolean;
+  pressureTarget: number;
+  pressureDeviationPenalty: number;
+  weights: Readonly<{
+    opening: number;
+    resources: number;
+    curve: number;
+    pressureFit: number;
+    escalation: number;
+  }>;
+  filters: Readonly<{
+    minimumSourceCoverageTurns: number;
+    maximumSourcesInHand: number;
+    minimumAccessibleNonSources: number;
+    minimumFirstWindowPressure?: number;
+    minimumEarlyWindowPressure?: number;
+    minimumEscalation?: number;
+    maximumFirstWindowPressure: number;
+    maximumEarlyWindowPressure: number;
+  }>;
+}>;
+
 export const FIRST_APPROACH_PROFILE = Object.freeze({
   id: FIRST_APPROACH_PROFILE_ID,
   mulliganMinimumGain: 4,
+  defaultAvoidEarlySpikes: true,
+  pressureTarget: 42,
+  pressureDeviationPenalty: 1.7,
   weights: Object.freeze({
     opening: 0.25,
     resources: 0.25,
@@ -224,6 +269,106 @@ export const FIRST_APPROACH_PROFILE = Object.freeze({
     maximumFirstWindowPressure: 19,
     maximumEarlyWindowPressure: 22,
   }),
+}) satisfies SeedSearchProfile;
+
+export const BALANCED_PROFILE = Object.freeze({
+  id: BALANCED_PROFILE_ID,
+  mulliganMinimumGain: 4,
+  defaultAvoidEarlySpikes: true,
+  pressureTarget: 55,
+  pressureDeviationPenalty: 1.25,
+  weights: Object.freeze({
+    opening: 0.2,
+    resources: 0.18,
+    curve: 0.2,
+    pressureFit: 0.25,
+    escalation: 0.17,
+  }),
+  filters: Object.freeze({
+    minimumSourceCoverageTurns: 2,
+    maximumSourcesInHand: 4,
+    minimumAccessibleNonSources: 2,
+    maximumFirstWindowPressure: 23,
+    maximumEarlyWindowPressure: 26,
+  }),
+}) satisfies SeedSearchProfile;
+
+export const EXPERIENCED_PROFILE = Object.freeze({
+  id: EXPERIENCED_PROFILE_ID,
+  mulliganMinimumGain: 4,
+  defaultAvoidEarlySpikes: false,
+  pressureTarget: 68,
+  pressureDeviationPenalty: 1.1,
+  weights: Object.freeze({
+    opening: 0.12,
+    resources: 0.12,
+    curve: 0.16,
+    pressureFit: 0.36,
+    escalation: 0.24,
+  }),
+  filters: Object.freeze({
+    minimumSourceCoverageTurns: 1,
+    maximumSourcesInHand: 5,
+    minimumAccessibleNonSources: 1,
+    minimumEarlyWindowPressure: 11,
+    maximumFirstWindowPressure: 28,
+    maximumEarlyWindowPressure: 30,
+  }),
+}) satisfies SeedSearchProfile;
+
+export const HIGH_PRESSURE_PROFILE = Object.freeze({
+  id: HIGH_PRESSURE_PROFILE_ID,
+  mulliganMinimumGain: 4,
+  defaultAvoidEarlySpikes: false,
+  pressureTarget: 85,
+  pressureDeviationPenalty: 0.9,
+  weights: Object.freeze({
+    opening: 0.1,
+    resources: 0.08,
+    curve: 0.12,
+    pressureFit: 0.58,
+    escalation: 0.12,
+  }),
+  filters: Object.freeze({
+    minimumSourceCoverageTurns: 1,
+    maximumSourcesInHand: 5,
+    minimumAccessibleNonSources: 1,
+    minimumFirstWindowPressure: 12,
+    minimumEarlyWindowPressure: 15,
+    maximumFirstWindowPressure: 35,
+    maximumEarlyWindowPressure: 35,
+  }),
+}) satisfies SeedSearchProfile;
+
+export const PROGRESSIVE_PRESSURE_PROFILE = Object.freeze({
+  id: PROGRESSIVE_PRESSURE_PROFILE_ID,
+  mulliganMinimumGain: 4,
+  defaultAvoidEarlySpikes: true,
+  pressureTarget: 50,
+  pressureDeviationPenalty: 1.25,
+  weights: Object.freeze({
+    opening: 0.16,
+    resources: 0.14,
+    curve: 0.17,
+    pressureFit: 0.18,
+    escalation: 0.35,
+  }),
+  filters: Object.freeze({
+    minimumSourceCoverageTurns: 2,
+    maximumSourcesInHand: 4,
+    minimumAccessibleNonSources: 2,
+    minimumEscalation: 2,
+    maximumFirstWindowPressure: 20,
+    maximumEarlyWindowPressure: 24,
+  }),
+}) satisfies SeedSearchProfile;
+
+export const SEED_SEARCH_PROFILES: Readonly<Record<SeedSearchProfileId, SeedSearchProfile>> = Object.freeze({
+  [FIRST_APPROACH_PROFILE_ID]: FIRST_APPROACH_PROFILE,
+  [BALANCED_PROFILE_ID]: BALANCED_PROFILE,
+  [EXPERIENCED_PROFILE_ID]: EXPERIENCED_PROFILE,
+  [HIGH_PRESSURE_PROFILE_ID]: HIGH_PRESSURE_PROFILE,
+  [PROGRESSIVE_PRESSURE_PROFILE_ID]: PROGRESSIVE_PRESSURE_PROFILE,
 });
 
 export type SeedAnalysisContext = Readonly<{
@@ -258,6 +403,7 @@ export type ProjectedHostWindow = Readonly<{
 }>;
 
 export function createSeedAnalysisContext(config: SeedExplorerConfig): SeedAnalysisContext {
+  const profile = seedSearchProfile(config.profileId ?? FIRST_APPROACH_PROFILE_ID);
   const canonCode = encodeCanonSeed({
     entropy: "00000",
     playerDeckKey: config.playerDeckKey,
@@ -274,8 +420,9 @@ export function createSeedAnalysisContext(config: SeedExplorerConfig): SeedAnaly
       playerDeckKey: identityTemplate.playerDeckKey,
       hostDeckKey: identityTemplate.hostDeckKey,
       difficulty: identityTemplate.difficulty,
+      profileId: profile.id,
       evaluateMulligan: config.evaluateMulligan ?? true,
-      avoidEarlySpikes: config.avoidEarlySpikes ?? true,
+      avoidEarlySpikes: config.avoidEarlySpikes ?? profile.defaultAvoidEarlySpikes,
     }),
     playerDeck,
     hostDeck,
@@ -334,8 +481,20 @@ export function verifySeedAnalysis(
 }
 
 export function scoreFirstApproach(features: FirstApproachScoreFeatures): number {
-  const pressureFit = clampRating(100 - Math.abs(clampRating(features.pressureRating) - 42) * 1.7);
-  const weights = FIRST_APPROACH_PROFILE.weights;
+  return scoreSeedProfile(FIRST_APPROACH_PROFILE_ID, features);
+}
+
+export function scoreSeedProfile(
+  profileId: SeedSearchProfileId,
+  features: SeedProfileScoreFeatures,
+): number {
+  const profile = seedSearchProfile(profileId);
+  const pressureFit = clampRating(
+    100
+    - Math.abs(clampRating(features.pressureRating) - profile.pressureTarget)
+      * profile.pressureDeviationPenalty,
+  );
+  const weights = profile.weights;
   return round1(
     clampRating(features.openingRating) * weights.opening
       + clampRating(features.resourceRating) * weights.resources
@@ -349,9 +508,17 @@ export function firstApproachFilterReasons(
   metrics: SeedMetricsV1,
   avoidEarlySpikes = true,
 ): readonly SeedFilterReason[] {
+  return seedProfileFilterReasons(FIRST_APPROACH_PROFILE_ID, metrics, avoidEarlySpikes);
+}
+
+export function seedProfileFilterReasons(
+  profileId: SeedSearchProfileId,
+  metrics: SeedMetricsV1,
+  avoidEarlySpikes = seedSearchProfile(profileId).defaultAvoidEarlySpikes,
+): readonly SeedFilterReason[] {
   const reasons: SeedFilterReason[] = [];
   const hand = metrics.selectedHand === "mulligan" ? metrics.mulliganHand ?? metrics.openingHand : metrics.openingHand;
-  const thresholds = FIRST_APPROACH_PROFILE.filters;
+  const thresholds = seedSearchProfile(profileId).filters;
   if (hand.sourceCoverageTurns < thresholds.minimumSourceCoverageTurns) {
     reasons.push("too-few-sources-before-host");
   }
@@ -363,6 +530,17 @@ export function firstApproachFilterReasons(
   }
   const earlyPeak = Math.max(0, ...metrics.host.windows.slice(0, 2).map(({ pressure }) => pressure));
   if (
+    (thresholds.minimumFirstWindowPressure !== undefined
+      && metrics.host.firstWindowPressure < thresholds.minimumFirstWindowPressure)
+    || (thresholds.minimumEarlyWindowPressure !== undefined
+      && metrics.host.earlyPressure < thresholds.minimumEarlyWindowPressure)
+  ) {
+    reasons.push("host-pressure-too-low");
+  }
+  if (thresholds.minimumEscalation !== undefined && metrics.host.escalation < thresholds.minimumEscalation) {
+    reasons.push("host-escalation-too-low");
+  }
+  if (
     avoidEarlySpikes
     && (metrics.host.firstWindowPressure > thresholds.maximumFirstWindowPressure
       || earlyPeak > thresholds.maximumEarlyWindowPressure)
@@ -372,12 +550,23 @@ export function firstApproachFilterReasons(
   return Object.freeze(reasons);
 }
 
+export function isSeedSearchProfileId(value: unknown): value is SeedSearchProfileId {
+  return typeof value === "string" && (SEED_SEARCH_PROFILE_IDS as readonly string[]).includes(value);
+}
+
+export function seedSearchProfile(profileId: SeedSearchProfileId): SeedSearchProfile {
+  const profile = SEED_SEARCH_PROFILES[profileId];
+  if (!profile) throw new Error(`Unknown Seed Explorer profile "${String(profileId)}".`);
+  return profile;
+}
+
 function analyzeOrderedFuture(
   context: SeedAnalysisContext,
   entropy: string,
   future: OrderedFuture,
   solvabilityStatus: SeedAnalysisResult["solvability"]["status"],
 ): SeedCandidateEvaluation {
+  const profile = seedSearchProfile(context.config.profileId);
   const mulliganProjection = context.config.evaluateMulligan
     ? future.exactMulligan ?? projectMulligan(future)
     : undefined;
@@ -390,7 +579,7 @@ function analyzeOrderedFuture(
     ? analyzeHand(mulliganProjection.hand, mulliganProjection.archive, context.identityTemplate.preparationTurns)
     : undefined;
   const mulliganDelta = round1((mulliganMetrics?.qualityRating ?? openingMetrics.qualityRating) - openingMetrics.qualityRating);
-  const recommendation = mulliganMetrics && mulliganDelta >= FIRST_APPROACH_PROFILE.mulliganMinimumGain
+  const recommendation = mulliganMetrics && mulliganDelta >= profile.mulliganMinimumGain
     ? "mulligan"
     : "keep";
   const selectedMetrics = recommendation === "mulligan" ? mulliganMetrics ?? openingMetrics : openingMetrics;
@@ -413,7 +602,7 @@ function analyzeOrderedFuture(
     ratings,
   });
   const identity = identityForEntropy(context, entropy);
-  const score = scoreFirstApproach({
+  const score = scoreSeedProfile(profile.id, {
     openingRating: ratings.opening,
     resourceRating: ratings.resources,
     curveRating: ratings.curve,
@@ -438,13 +627,13 @@ function analyzeOrderedFuture(
     identity,
     analysisRevision: SEED_ANALYSIS_REVISION,
     score,
-    profileId: FIRST_APPROACH_PROFILE_ID,
+    profileId: profile.id,
     metrics,
     preview,
     mulligan: Object.freeze({ recommendation, delta: mulliganDelta }),
     solvability: Object.freeze({ status: solvabilityStatus }),
   });
-  const filterReasons = firstApproachFilterReasons(metrics, context.config.avoidEarlySpikes);
+  const filterReasons = seedProfileFilterReasons(profile.id, metrics, context.config.avoidEarlySpikes);
   return Object.freeze({ accepted: filterReasons.length === 0, filterReasons, result });
 }
 

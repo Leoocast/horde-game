@@ -1,6 +1,6 @@
 # Plan de implementación — Seed Explorer interno (MVP barato)
 
-Estado: **implementación en curso; Fases 0–3 cerradas, Fase 4 pendiente**.
+Estado: **implementación en curso; Fases 0–3.5 cerradas, Fase 4 pendiente**.
 
 Última actualización: **2026-08-18**.
 
@@ -209,7 +209,7 @@ type SeedAnalysisResult = Readonly<{
   identity: SeedFutureIdentity;
   analysisRevision: 1;
   score: number;
-  profileId: "first-approach-v1";
+  profileId: SeedSearchProfileId;
   metrics: SeedMetricsV1;
   preview: SeedPreviewV1;
   mulligan: {
@@ -274,6 +274,24 @@ El score es una preferencia configurable, no una medida objetiva de diversión. 
 Se conservan los valores crudos junto al score. Los pesos y umbrales viven en un objeto versionado y
 se prueban de forma aislada. La seed que dejó al creador en 2 de Vida sirve como referencia humana de
 **Hostfallero experimentado**, no como una verdad que el analyzer pueda deducir sin jugarla.
+
+## Perfiles V1 — Fase 3.5
+
+La misma extracción de métricas alimenta cinco preferencias versionadas. Cambiar perfil no altera
+la Canon Seed, el orden de cartas ni las métricas crudas: cambia filtros, pesos y objetivo de
+presión. Son aproximaciones iniciales pendientes de calibración humana en la Fase 4.
+
+| Perfil | Preferencia estructural |
+| --- | --- |
+| `first-approach-v1` | Recursos estables, curva accesible y presión gradual. |
+| `balanced-v1` | Reparto parejo entre apertura, recursos, curva, presión y escalada. |
+| `experienced-v1` | Tolera menos estabilidad y favorece presión y escalada mayores. |
+| `high-pressure-v1` | Exige presión temprana suficiente y le da el mayor peso del score. |
+| `progressive-pressure-v1` | Exige crecimiento entre ventanas y limita un inicio excesivo. |
+
+**Evitar picos tempranos** permanece como filtro adicional. Cada perfil propone un default, pero el
+usuario puede cambiarlo sin crear otra identidad de partida. Favoritos y exports guardan el perfil
+que produjo el score; favoritos anteriores sin perfil migran a `first-approach-v1`.
 
 ## Algoritmo de búsqueda
 
@@ -470,11 +488,28 @@ distancia estructural sin alterar score ni filtros.
 **Salida:** flujo completo búsqueda → inspección → playtest manual, pendiente únicamente de ajuste
 visual si el usuario detecta diferencias en su resolución real.
 
+### Fase 3.5 — Perfiles estructurales adicionales
+
+**Estado:** cerrada el 2026-08-18. El selector de **Perfil buscado** ejecuta cinco perfiles reales:
+Primer acercamiento, Equilibrada, Hostfallero experimentado, Presión alta y Escalada progresiva.
+Todos reutilizan las métricas V1, mantienen ranking determinista y pasan por la misma verificación
+exacta. El perfil forma parte de request, resultado, favoritos y export, pero no de la Canon Seed.
+
+- generalizar score, filtros y razones de rechazo por perfil;
+- conservar `first-approach-v1` como default compatible;
+- exigir presión mínima o escalada mínima sólo en los perfiles que la solicitan;
+- aplicar defaults de picos tempranos explícitos por perfil;
+- migrar favoritos anteriores al perfil default;
+- comprobar con muestras locales que los cinco perfiles producen finalistas distinguibles.
+
+**Salida:** el creador puede buscar tipos de futuro distintos antes de iniciar la calibración humana,
+sin IA jugadora ni nuevas métricas del engine.
+
 ### Fase 4 — Calibración y cierre
 
 - ejecutar búsquedas del matchup de demo;
-- comparar finalistas con playtests humanos;
-- ajustar sólo pesos del perfil, manteniendo métricas crudas estables;
+- comparar finalistas de los perfiles relevantes con playtests humanos;
+- ajustar sólo pesos y umbrales de perfil, manteniendo métricas crudas estables;
 - documentar throughput observado y limitaciones;
 - ejecutar gates release para probar que el Explorer no se empaqueta.
 

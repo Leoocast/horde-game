@@ -522,8 +522,10 @@ reinterpretar silenciosamente una Canon Seed `HF1` publicada.
 
 El Seed Explorer interno tiene ya su núcleo puro en `src/playground/seedExplorer.ts` y
 `seedExplorerSearch.ts`. Enumera la entropía base 36 sin `Math.random`, proyecta Mano, un mulligan,
-robos de Preparación y cinco ventanas potenciales de Hueste, puntúa `first-approach-v1` y conserva
-un heap top-K acotado. Sus finalistas se reconstruyen con `createInitialGame` y
+robos de Preparación y cinco ventanas potenciales de Hueste. Sus perfiles versionados son
+`first-approach-v1`, `balanced-v1`, `experienced-v1`, `high-pressure-v1` y
+`progressive-pressure-v1`; todos conservan métricas crudas comunes y sólo cambian filtros, pesos y
+objetivo de presión. El analyzer conserva un heap top-K acotado. Sus finalistas se reconstruyen con `createInitialGame` y
 `mulliganOpeningHand`; sólo después pasan de `unchecked` a `structurally-valid`. No simula acciones,
 no usa Zustand y nunca declara una seed ganable, imposible o divertida. La proyección de Hueste usa
 stats impresos y reglas de revelado/Mini Oleada/Oleada, pero no ejecuta efectos que alteran el
@@ -545,7 +547,8 @@ Worker; introducir uno exige una decisión separada porque la CSP desktop mantie
 La UI vive en `src/seed-explorer/SeedExplorerScreen.tsx`: es una pantalla dev independiente,
 hermana de Playground y Audio Lab, con acceso desde el dock dev abajo a la derecha del home.
 Playground no la importa ni la monta. Favoritos viven en `seedExplorerStorage.ts` como Canon Seeds
-versionadas y se reconstruyen defensivamente; los exports JSON/CSV no incluyen timestamps
+versionadas junto con el perfil que produjo su score y se reconstruyen defensivamente; favoritos
+anteriores sin perfil migran a `first-approach-v1`. Los exports JSON/CSV no incluyen timestamps
 variables. **Probar en tablero** crea un juego nuevo con la entropía, decks, dificultad y
 Preparación de la identidad, llama `loadScenario` y alterna la propia herramienta al Board real.
 Volver desde el Board conserva shortlist, selección y último resultado. La búsqueda nunca muta

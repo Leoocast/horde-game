@@ -1377,6 +1377,9 @@ test("Seed Explorer is a standalone dev screen launched from the home tool dock"
   assert.match(explorerSource, /const imageUrl = useCardImage\(card\.definitionId\)/u);
   assert.match(explorerSource, /backgroundColor: ratingColor/u);
   assert.match(explorerSource, /useState<"best" \| "diverse">\("diverse"\)/u);
+  assert.match(explorerSource, /label: "Primer acercamiento"[\s\S]*?label: "Equilibrada"[\s\S]*?label: "Hostfallero experimentado"[\s\S]*?label: "Presión alta"[\s\S]*?label: "Escalada progresiva"/u);
+  assert.match(explorerSource, /value=\{configuration\.profileId\}[\s\S]*?SEED_SEARCH_PROFILES\[profileId\]\.defaultAvoidEarlySpikes/u);
+  assert.doesNotMatch(explorerSource, /<output className="seed-explorer-readonly-field">Primer acercamiento<\/output>/u);
   assert.match(explorerSource, /selectDiverseSeedCandidates\(rankedCandidatePool, configuration\.top\)/u);
   assert.match(explorerSource, />Mejores<\/button>[\s\S]*?>Variadas<\/button>/u);
   assert.match(explorerSource, /seed-explorer-archetype/u);

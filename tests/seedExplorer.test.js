@@ -4,11 +4,18 @@ import { test } from "node:test";
 import { createInitialGame, mulliganOpeningHand } from "../src/engine/GameState";
 import {
   FIRST_APPROACH_PROFILE,
+  FIRST_APPROACH_PROFILE_ID,
+  HIGH_PRESSURE_PROFILE_ID,
+  PROGRESSIVE_PRESSURE_PROFILE_ID,
+  SEED_SEARCH_PROFILE_IDS,
+  SEED_SEARCH_PROFILES,
   analyzeSeedEntropy,
   createSeedAnalysisContext,
   firstApproachFilterReasons,
   projectPotentialHostWindows,
+  scoreSeedProfile,
   scoreFirstApproach,
+  seedProfileFilterReasons,
   selectDiverseSeedCandidates,
   verifySeedAnalysis,
 } from "../src/playground/seedExplorer";
@@ -35,6 +42,7 @@ const DEFAULT_CONFIG = Object.freeze({
   playerDeckKey: "pact_of_elarion",
   hostDeckKey: "uprising_of_the_graveless",
   difficulty: "normal",
+  profileId: FIRST_APPROACH_PROFILE_ID,
   evaluateMulligan: true,
   avoidEarlySpikes: true,
 });
@@ -136,6 +144,67 @@ test("first-approach scoring rewards stable resources and gradual pressure", () 
   assert.ok(earlySpike > resourceStarved);
   const totalWeight = Object.values(FIRST_APPROACH_PROFILE.weights).reduce((total, weight) => total + weight, 0);
   assert.ok(Math.abs(totalWeight - 1) < Number.EPSILON);
+});
+
+test("search profiles apply distinct versioned preferences over the same raw metrics", () => {
+  const gentle = {
+    openingRating: 95,
+    resourceRating: 100,
+    curveRating: 95,
+    pressureRating: 42,
+    escalationRating: 80,
+  };
+  const intense = {
+    openingRating: 60,
+    resourceRating: 55,
+    curveRating: 65,
+    pressureRating: 85,
+    escalationRating: 80,
+  };
+
+  assert.ok(scoreSeedProfile(FIRST_APPROACH_PROFILE_ID, gentle) > scoreSeedProfile(FIRST_APPROACH_PROFILE_ID, intense));
+  assert.ok(scoreSeedProfile(HIGH_PRESSURE_PROFILE_ID, intense) > scoreSeedProfile(HIGH_PRESSURE_PROFILE_ID, gentle));
+  assert.deepEqual(Object.keys(SEED_SEARCH_PROFILES).sort(), [...SEED_SEARCH_PROFILE_IDS].sort());
+  for (const profileId of SEED_SEARCH_PROFILE_IDS) {
+    const profile = SEED_SEARCH_PROFILES[profileId];
+    const totalWeight = Object.values(profile.weights).reduce((total, weight) => total + weight, 0);
+    assert.equal(profile.id, profileId);
+    assert.ok(Math.abs(totalWeight - 1) < Number.EPSILON, profileId);
+  }
+
+  const first = analyzeSeedEntropy(createSeedAnalysisContext(DEFAULT_CONFIG), "LEGPT").result;
+  const pressured = analyzeSeedEntropy(createSeedAnalysisContext({
+    ...DEFAULT_CONFIG,
+    profileId: HIGH_PRESSURE_PROFILE_ID,
+    avoidEarlySpikes: false,
+  }), "LEGPT").result;
+  assert.equal(first.profileId, FIRST_APPROACH_PROFILE_ID);
+  assert.equal(pressured.profileId, HIGH_PRESSURE_PROFILE_ID);
+  assert.deepEqual(first.metrics, pressured.metrics);
+  assert.notEqual(first.score, pressured.score);
+});
+
+test("pressure and escalation profiles reject futures that miss their defining shape", () => {
+  const metrics = {
+    selectedHand: "keep",
+    openingHand: {
+      sourceCoverageTurns: 3,
+      sourceCount: 3,
+      accessibleNonSourceCount: 3,
+    },
+    host: {
+      firstWindowPressure: 10,
+      earlyPressure: 12,
+      escalation: 1,
+      windows: [{ pressure: 10 }, { pressure: 14 }],
+    },
+  };
+  assert.deepEqual(seedProfileFilterReasons(HIGH_PRESSURE_PROFILE_ID, metrics, false), [
+    "host-pressure-too-low",
+  ]);
+  assert.deepEqual(seedProfileFilterReasons(PROGRESSIVE_PRESSURE_PROFILE_ID, metrics, true), [
+    "host-escalation-too-low",
+  ]);
 });
 
 test("first-approach filters expose explicit structural rejection reasons", () => {
@@ -407,12 +476,14 @@ test("favorite storage round-trips Canon identities and fails closed on stale da
     {
       canonCode: "HF1-ELA-GRV-LE2-GPT",
       savedAt: "2026-08-18T12:00:00.000Z",
+      profileId: FIRST_APPROACH_PROFILE_ID,
       evaluateMulligan: true,
       avoidEarlySpikes: true,
     },
     {
       canonCode: "HF1-CEC-VRK-AA1-001",
       savedAt: "2026-08-17T12:00:00.000Z",
+      profileId: HIGH_PRESSURE_PROFILE_ID,
       evaluateMulligan: false,
       avoidEarlySpikes: false,
     },
@@ -430,6 +501,10 @@ test("favorite storage round-trips Canon identities and fails closed on stale da
       { ...entries[1], canonCode: entries[1].canonCode.toLowerCase() },
     ],
   })), [entries[0]]);
+  const { profileId: _legacyProfile, ...legacyEntry } = entries[0];
+  assert.deepEqual(parseStoredSeedFavorites(JSON.stringify({ version: 1, entries: [legacyEntry] })), [
+    { ...legacyEntry, profileId: FIRST_APPROACH_PROFILE_ID },
+  ]);
 });
 
 test("JSON and CSV exports are stable, complete and solver-free", () => {
@@ -441,10 +516,10 @@ test("JSON and CSV exports are stable, complete and solver-free", () => {
   assert.equal(seedSearchResultToCsv(result), csv);
   const parsed = JSON.parse(json);
   assert.equal(parsed.exportedBy, "hostfall-seed-explorer");
-  assert.equal(parsed.version, 1);
+  assert.equal(parsed.version, 2);
   assert.deepEqual(parsed.result, result);
   assert.equal(csv.split("\n").length, result.candidates.length + 1);
-  assert.match(csv, /^rank,canonCode,score,/u);
+  assert.match(csv, /^rank,canonCode,score,profileId,/u);
   for (const candidate of result.candidates) assert.match(csv, new RegExp(candidate.identity.canonCode, "u"));
   assert.doesNotMatch(`${json}\n${csv}`, /winning-line-found|impossible/u);
 });

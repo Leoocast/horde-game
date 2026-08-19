@@ -1,15 +1,21 @@
 import { decodeCanonSeed } from "../content/CanonSeed";
-import type { SeedAnalysisResult } from "./seedExplorer";
+import {
+  FIRST_APPROACH_PROFILE_ID,
+  isSeedSearchProfileId,
+  type SeedAnalysisResult,
+  type SeedSearchProfileId,
+} from "./seedExplorer";
 import type { SeedSearchResult } from "./seedExplorerSearch";
 
 const SEED_FAVORITES_STORAGE_KEY = "hostfall-playground-seed-favorites:v1";
 const SEED_FAVORITES_VERSION = 1 as const;
-const SEED_EXPORT_VERSION = 1 as const;
+const SEED_EXPORT_VERSION = 2 as const;
 const MAX_STORED_FAVORITES = 100;
 
 export type StoredSeedFavorite = Readonly<{
   canonCode: string;
   savedAt: string;
+  profileId: SeedSearchProfileId;
   evaluateMulligan: boolean;
   avoidEarlySpikes: boolean;
 }>;
@@ -26,13 +32,18 @@ export function listStoredSeedFavorites(): readonly StoredSeedFavorite[] {
 
 export function saveStoredSeedFavorite(
   result: SeedAnalysisResult,
-  config: Readonly<{ evaluateMulligan: boolean; avoidEarlySpikes: boolean }>,
+  config: Readonly<{
+    profileId: SeedSearchProfileId;
+    evaluateMulligan: boolean;
+    avoidEarlySpikes: boolean;
+  }>,
 ): readonly StoredSeedFavorite[] {
   const current = listStoredSeedFavorites();
   const existing = current.find((entry) => entry.canonCode === result.identity.canonCode);
   const saved = Object.freeze({
     canonCode: result.identity.canonCode,
     savedAt: existing?.savedAt ?? new Date().toISOString(),
+    profileId: config.profileId,
     evaluateMulligan: config.evaluateMulligan,
     avoidEarlySpikes: config.avoidEarlySpikes,
   });
@@ -57,8 +68,9 @@ export function parseStoredSeedFavorites(serialized: string | null): readonly St
     if (!isFavoriteFile(parsed)) return Object.freeze([]);
     const unique = new Map<string, StoredSeedFavorite>();
     for (const entry of parsed.entries) {
-      if (!isStoredSeedFavorite(entry) || unique.has(entry.canonCode)) continue;
-      unique.set(entry.canonCode, Object.freeze({ ...entry }));
+      const normalized = normalizeStoredSeedFavorite(entry);
+      if (!normalized || unique.has(normalized.canonCode)) continue;
+      unique.set(normalized.canonCode, normalized);
       if (unique.size >= MAX_STORED_FAVORITES) break;
     }
     return Object.freeze([...unique.values()].sort((left, right) => right.savedAt.localeCompare(left.savedAt)));
@@ -88,6 +100,7 @@ export function seedSearchResultToCsv(result: SeedSearchResult): string {
     "rank",
     "canonCode",
     "score",
+    "profileId",
     "playerDeckKey",
     "hostDeckKey",
     "difficulty",
@@ -105,6 +118,7 @@ export function seedSearchResultToCsv(result: SeedSearchResult): string {
     index + 1,
     candidate.identity.canonCode,
     candidate.score,
+    candidate.profileId,
     candidate.identity.playerDeckKey,
     candidate.identity.hostDeckKey,
     candidate.identity.difficulty,
@@ -136,8 +150,8 @@ function isFavoriteFile(value: unknown): value is StoredSeedFavoriteFile {
   return file.version === SEED_FAVORITES_VERSION && Array.isArray(file.entries);
 }
 
-function isStoredSeedFavorite(value: unknown): value is StoredSeedFavorite {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+function normalizeStoredSeedFavorite(value: unknown): StoredSeedFavorite | undefined {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return undefined;
   const entry = value as Record<string, unknown>;
   if (
     typeof entry.canonCode !== "string"
@@ -145,11 +159,18 @@ function isStoredSeedFavorite(value: unknown): value is StoredSeedFavorite {
     || typeof entry.evaluateMulligan !== "boolean"
     || typeof entry.avoidEarlySpikes !== "boolean"
     || Number.isNaN(Date.parse(entry.savedAt))
-  ) return false;
+  ) return undefined;
   try {
-    return decodeCanonSeed(entry.canonCode).canonCode === entry.canonCode;
+    if (decodeCanonSeed(entry.canonCode).canonCode !== entry.canonCode) return undefined;
+    return Object.freeze({
+      canonCode: entry.canonCode,
+      savedAt: entry.savedAt,
+      profileId: isSeedSearchProfileId(entry.profileId) ? entry.profileId : FIRST_APPROACH_PROFILE_ID,
+      evaluateMulligan: entry.evaluateMulligan,
+      avoidEarlySpikes: entry.avoidEarlySpikes,
+    });
   } catch {
-    return false;
+    return undefined;
   }
 }
 
