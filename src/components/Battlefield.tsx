@@ -801,7 +801,6 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
             />
           </GameTooltip>
         )}
-        {tributeOfTheFourSorrowsSourceSelectionActive && <div className="mana-core-target-label">{t("target.discardEnergy")}</div>}
       </aside>
       {reserveTransferAnimation && (
         <ReserveTransferAnimator

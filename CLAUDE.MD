@@ -162,6 +162,8 @@ Contratos principales:
 - Recurso único: Energía, con `energyPool.available` y `energyPool.stored`.
 - Estadísticas: Fuerza y Aguante (`power`, `endurance`).
 - Estados: `exhausted`, `stabilizing`, attacking y defending según el contexto.
+- Letal se describe como «Si este Eco hace cualquier cantidad de daño a otro Eco, ese Eco muere»;
+  no se usa «daño positivo» ni se define el Rasgo con la propia palabra «letal».
 
 La UI española no muestra nombres ingleses de identidad. No agregar proveedores remotos de cartas,
 metadata externa ni arte no local.

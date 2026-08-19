@@ -401,7 +401,7 @@ test("Zombies keep Hostfall card kinds and traits through authored normalization
     mastiff_of_the_overflowing_ossuary: "Mientras la Hueste tenga 7 o más cartas en su Memoria: este Eco gana Imponente.",
     spore_infested: "Sin efecto adicional.",
     harvester_of_the_fallen: "Cada vez que otro Zombi aliado muera: pon un contador +1/+1 sobre esta carta.",
-    nerezh_graveless_matriarch: "Los demás Zombis aliados ganan +1/+1.\nCada vez que otro Zombi aliado muera: el Cronista pierde 1 de Vida.",
+    nerezh_graveless_matriarch: "Los demás Zombis aliados en el Campo ganan +1/+1.\nCada vez que otro Zombi aliado muera: el Cronista pierde 1 de Vida.",
   });
   assert.equal(entry.raw.rulesProfile.damagePerArchiveDiscard, 3);
   assert.equal(entry.raw.rulesProfile.poisonPerArchiveDiscard, 3);
@@ -483,7 +483,7 @@ test("Goblins keep Hostfall card kinds, modifiers and traits through authored no
     unleash_the_legion: "Si la Hueste controla al menos un aliado: sus aliados ganan +2/+0 hasta el final del turno. Si no, comienza otra ronda de Revelado.",
     corrupted_war_bear: "Sin efecto adicional.",
     rider_of_the_umbral_volley: "Al ser invocado: la Hueste elige un enemigo; este Eco inflige a ese enemigo daño igual al número de aliados en el Campo.",
-    varka_infernal_matriarch: "Todos los aliados ganan +1/+1.\nAl ser invocada: este Eco inflige 2 de daño al Cronista y a cada enemigo.",
+    varka_infernal_matriarch: "Todos los aliados en el Campo ganan +1/+1.\nAl ser invocada: este Eco inflige 2 de daño al Cronista y a cada enemigo.",
     varkas_forgemaster: "Los demás Trasgos aliados ganan +1/+1.",
     marshal_of_the_wave: "Cuando uno o más Trasgos aliados ataquen: Invoca un Esbirro de Varka atacando.\nCada vez que otro aliado sea invocado: el Cronista pierde 1 de Vida.",
     vardek_scribe_of_the_legion: "Cuando este Eco ataque: pon un contador +1/+1 sobre este Eco. Después, Invoca una cantidad de Esbirros de Varka atacando igual a su Fuerza.",

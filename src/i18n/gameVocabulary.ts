@@ -127,8 +127,8 @@ export const TRAIT_VOCABULARY = {
     en: "Lethal",
     es: "Letal",
     reminder: {
-      en: "Any positive damage this Echo deals to another Echo is lethal.",
-      es: "Cualquier cantidad positiva de daño que haga a otro Eco es letal.",
+      en: "If this Echo deals any amount of damage to another Echo, that Echo dies.",
+      es: "Si este Eco hace cualquier cantidad de daño a otro Eco, ese Eco muere.",
     },
   },
   REFLEX: {

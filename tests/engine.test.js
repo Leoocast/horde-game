@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { getHostDeck, getPlayerDeck, hostDeck, playerDeck } from "../src/data/decks";
 import { normalizeDeck } from "../src/data/normalizeDeck";
-import { localizedTraitLabel, localizedTypeLine } from "../src/i18n/cardLocalization";
+import { localizedTraitLabel, localizedTraitTooltip, localizedTypeLine } from "../src/i18n/cardLocalization";
 import { canonicalizeRulesText } from "../src/i18n/rulesText";
 import { buildHostRules } from "../src/engine/HostRules";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
@@ -14,7 +14,7 @@ import { drainEventQueue, enqueue } from "../src/engine/EventQueue";
 import { collectStaticAuras, newlyCoveredAuras, snapshotStaticAuras } from "../src/engine/StaticAuras";
 import { acceptOpeningHand, createInitialGame, expandDeck, mulliganOpeningHand, recordFieldEntry } from "../src/engine/GameState";
 import { finishHostTurn, revealHostCardFromTop, runHostMain } from "../src/engine/HostController";
-import { canAttack, hasTrait } from "../src/engine/Traits";
+import { canAttack, canBlockAttacker, hasTrait } from "../src/engine/Traits";
 import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
 import { getPowerEndurance, hostInSurge } from "../src/engine/StaticEffects";
 import { targetCandidates, targetCandidatesWithSelectedTargets } from "../src/engine/Targeting";
@@ -377,6 +377,21 @@ test("Hostfall traits render with localized names", () => {
   assert.equal(localizedTraitLabel("REFLEX", "es"), "REFLEJOS");
   assert.equal(localizedTraitLabel("SKYGUARD", "en"), "SKYGUARD");
   assert.equal(localizedTraitLabel("POISON_1", "es"), "VENENO 1");
+  assert.equal(localizedTraitTooltip("LETHAL", "en"), "If this Echo deals any amount of damage to another Echo, that Echo dies.");
+  assert.equal(localizedTraitTooltip("LETHAL", "es"), "Si este Eco hace cualquier cantidad de daño a otro Eco, ese Eco muere.");
+});
+
+test("Furtive compares defenders against the attacker's current buffed Power", () => {
+  const game = createTestGame("furtive-current-power");
+  const nerezh = addCard(game, cardFromDeck("nerezh_graveless_matriarch", "host"));
+  const spore = addCard(game, cardFromDeck("spore_infested", "host"));
+  const equalPowerDefender = addCard(game, customCard("equal_power_defender", "player", { power: 2 }));
+  const greaterPowerDefender = addCard(game, customCard("greater_power_defender", "player", { power: 3 }));
+
+  assert.deepEqual(getPowerEndurance(game, nerezh), { power: 3, endurance: 3 }, "Nerezh excludes herself from her Zombie aura");
+  assert.deepEqual(getPowerEndurance(game, spore), { power: 2, endurance: 2 });
+  assert.equal(canBlockAttacker(game, equalPowerDefender, spore), true, "a 2-Power defender can defend a buffed 2-Power Spore");
+  assert.equal(canBlockAttacker(game, greaterPowerDefender, spore), false, "a defender with greater current Power remains illegal");
 });
 
 test("Hostfall card kinds, modifiers and authored rules render through the public vocabulary", () => {
@@ -2273,6 +2288,39 @@ test("Host reveal stops at a non-token and Surge adds exactly two reveals", () =
   assert.equal(surgeResult.hostTurnNumber, 10);
   assert.equal(surgeResult.host.field.length, 5);
   assert.equal(surgeResult.host.archive.length, 0);
+});
+
+test("a duplicate Host Support moves to the Archive bottom and grants a replacement reveal", () => {
+  const game = createTestGame("duplicate-host-support");
+  game.hostRules.revealCount = 1;
+  const existing = addCard(game, cardFromDeck("the_broken_headstone", "host"));
+  const duplicate = addCard(game, cardFromDeck("the_broken_headstone", "host", "archive"), "host", "archive");
+  const replacement = addCard(game, customCard("duplicate_support_replacement", "host", { zone: "archive", isToken: true }), "host", "archive");
+  const untouched = addCard(game, customCard("duplicate_support_untouched", "host", { zone: "archive", isToken: true }), "host", "archive");
+
+  const result = runHostMain(game);
+
+  assert.deepEqual(result.host.field.filter((card) => card.definitionId === existing.definitionId).map((card) => card.instanceId), [existing.instanceId]);
+  assert.equal(result.host.field.some((card) => card.instanceId === replacement.instanceId), true);
+  assert.deepEqual(result.host.archive.map((card) => card.instanceId), [untouched.instanceId, duplicate.instanceId]);
+  assert.equal(result.host.archive.at(-1)?.zone, "archive");
+});
+
+test("a duplicate Host Support also grants a replacement Surge reveal without stopping Surge", () => {
+  const game = createTestGame("duplicate-host-support-surge");
+  game.hostTurnNumber = 9;
+  game.hostRules.revealCount = 0;
+  game.hostRules.surgeTurn = 10;
+  game.hostRules.surgeExtraReveals = 1;
+  addCard(game, cardFromDeck("the_broken_headstone", "host"));
+  const duplicate = addCard(game, cardFromDeck("the_broken_headstone", "host", "archive"), "host", "archive");
+  const replacement = addCard(game, customCard("duplicate_support_surge_replacement", "host", { zone: "archive", isToken: true }), "host", "archive");
+  const untouched = addCard(game, customCard("duplicate_support_surge_untouched", "host", { zone: "archive", isToken: true }), "host", "archive");
+
+  const result = runHostMain(game);
+
+  assert.equal(result.host.field.some((card) => card.instanceId === replacement.instanceId), true);
+  assert.deepEqual(result.host.archive.map((card) => card.instanceId), [untouched.instanceId, duplicate.instanceId]);
 });
 
 test("Legion static buffs and the Daunting Front apply to their authored Host Echoes", () => {

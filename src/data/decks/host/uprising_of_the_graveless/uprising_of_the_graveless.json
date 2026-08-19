@@ -838,8 +838,8 @@
       "name": "Nerezh, Graveless Matriarch",
       "displayNameEs": "Nerezh, Matriarca Sinsepulcro",
       "gameText": {
-        "en": "Other allied Zombies gain +1/+1.\nWhenever another allied Zombie dies: the Chronicler loses 1 Life.",
-        "es": "Los demás Zombis aliados ganan +1/+1.\nCada vez que otro Zombi aliado muera: el Cronista pierde 1 de Vida."
+        "en": "Other allied Zombies on the Field gain +1/+1.\nWhenever another allied Zombie dies: the Chronicler loses 1 Life.",
+        "es": "Los demás Zombis aliados en el Campo ganan +1/+1.\nCada vez que otro Zombi aliado muera: el Cronista pierde 1 de Vida."
       },
       "flavorText": {
         "en": "Every death was a name on Nerezh's lips and a new wound among the living.",

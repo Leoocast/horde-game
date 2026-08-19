@@ -1,6 +1,6 @@
 import type { ActionFailure, CardFilter, CardInstance, GameState, Trait } from "./GameTypes";
 import { isTrait } from "./hostfallVocabulary";
-import { matchesFilter, resolveAffectedController, staticConditionMet } from "./StaticEffects";
+import { getPowerEndurance, matchesFilter, resolveAffectedController, staticConditionMet } from "./StaticEffects";
 
 export function isCreature(card: CardInstance): boolean {
   return card.kinds.includes("ECHO");
@@ -87,9 +87,9 @@ export function blockRestriction(game: GameState, blocker: CardInstance, attacke
       code: "BLOCK_REQUIRES_FLYING_OR_SKYGUARD",
     };
   }
-  const blockerCounterPower = blocker.basePower + (blocker.counters["+1/+1"] ?? 0) - (blocker.counters["-1/-1"] ?? 0);
-  const attackerCounterPower = attacker.basePower + (attacker.counters["+1/+1"] ?? 0) - (attacker.counters["-1/-1"] ?? 0);
-  if (attackerTraits.includes("FURTIVE") && blockerCounterPower > attackerCounterPower) {
+  const blockerPower = getPowerEndurance(game, blocker).power;
+  const attackerPower = getPowerEndurance(game, attacker).power;
+  if (attackerTraits.includes("FURTIVE") && blockerPower > attackerPower) {
     return {
       reason: "Furtive cannot be defended by Echoes with greater Power.",
       code: "FURTIVE_BLOCK_RESTRICTION",

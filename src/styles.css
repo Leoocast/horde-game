@@ -8755,11 +8755,6 @@
     color: #f2c66c;
   }
 
-  .player-mana-panel .mana-core-target-label {
-    left: 50%;
-    bottom: -17px;
-  }
-
   @keyframes mana-panel-bonus-arrive {
     0% { opacity: 0; filter: brightness(2); transform: translateY(4px) scale(0.7); }
     65% { opacity: 1; transform: translateY(-1px) scale(1.12); }
@@ -9452,11 +9447,6 @@
     animation-delay: inherit;
   }
 
-  .player-mana-corner .mana-core-target-label {
-    left: 72px;
-    bottom: 10px;
-  }
-
   @keyframes mana-alchemy-orb-blue-idle {
     0%, 100% { filter: brightness(0.96) saturate(0.96); transform: scale(0.97); }
     50% { filter: brightness(1.16) saturate(1.08); transform: scale(1.035); }
@@ -9943,24 +9933,6 @@
   .mana-fragment.is-selected .mana-fragment-energy {
     border-color: #efffc7;
     box-shadow: 0 0 0 4px rgb(106 224 105 / 0.18), 0 0 13px #8bf28b, 0 0 28px rgb(70 215 102 / 0.72);
-  }
-
-  .mana-core-target-label {
-    position: absolute;
-    left: 83px;
-    bottom: -1px;
-    z-index: 7;
-    min-width: 106px;
-    transform: translateX(-50%);
-    color: #c9f0d5;
-    font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
-    font-size: 9px;
-    font-weight: 900;
-    letter-spacing: 0.16em;
-    text-align: center;
-    text-shadow: 0 0 10px rgb(58 200 162 / 0.6);
-    text-transform: uppercase;
-    white-space: nowrap;
   }
 
   @keyframes mana-core-spin {
@@ -11242,22 +11214,8 @@
   }
 }
 
-.combat-arrow-reveal {
-  animation: combat-arrow-reveal 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
 .combat-arrow-pulse {
   animation: combat-arrow-pulse 1.25s ease-in-out infinite;
-}
-
-@keyframes combat-arrow-reveal {
-  from {
-    clip-path: inset(100% 0 0 0);
-  }
-
-  to {
-    clip-path: inset(0 0 0 0);
-  }
 }
 
 @keyframes auto-paid-land-pulse {
@@ -13781,20 +13739,20 @@
 }
 
 /* Tactical arrows: a tapered blade with a glint that sweeps it end to end. */
-.tactical-arrow-blade,
-.tactical-arrow-head {
+.tactical-arrow-outline {
   stroke: none;
 }
 
 /* The band travels along the chord; the clip to the blade gives it the curve. */
 .tactical-arrow-glint {
   animation: tactical-arrow-glint 2.3s linear infinite;
-  opacity: 0.9;
 }
 
 @keyframes tactical-arrow-glint {
-  from { transform: translateX(var(--tactical-arrow-glint-from, 0)); }
-  to { transform: translateX(var(--tactical-arrow-glint-to, 0)); }
+  0% { opacity: 0; transform: translateX(var(--tactical-arrow-glint-from, 0)); }
+  8% { opacity: 0.9; }
+  82% { opacity: 0.9; transform: translateX(var(--tactical-arrow-glint-to, 0)); }
+  90%, 100% { opacity: 0; transform: translateX(var(--tactical-arrow-glint-to, 0)); }
 }
 
 /* All zombies share one alignment; only their vertical position is nudged upward. */

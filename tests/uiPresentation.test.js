@@ -956,6 +956,14 @@ test("cards behind the front of a stack use the left combat-arrow anchor", () =>
   assert.equal(isBehindInStackOrder(front, [front]), false);
 });
 
+test("combat arrows never clip their arrowhead or moving glint during entrance", () => {
+  const combatArrowsSource = readFileSync(new URL("../src/components/CombatArrows.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.doesNotMatch(combatArrowsSource, /combat-arrow-reveal/u);
+  assert.doesNotMatch(stylesSource, /combat-arrow-reveal/u);
+});
+
 test("card names and type lines use initial capitals on every word", () => {
   assert.equal(
     cardLabelCamelCase("tributo de los cuatro pesares", "es"),
@@ -1410,4 +1418,16 @@ test("Seed Explorer is a standalone dev screen launched from the home tool dock"
   assert.match(explorerStylesSource, /\.seed-explorer-topbar \{[\s\S]*?min-height: 52px;/u);
   assert.match(explorerStylesSource, /\.seed-explorer-detail-modal \{[\s\S]*?width: min\(1600px, calc\(100vw - 48px\)\);[\s\S]*?height: calc\(100vh - 36px\);/u);
   assert.doesNotMatch(appSource, /seedExplorerRuntime|seedExplorerSearch/u);
+});
+
+test("Tribute source selection portals only its arrow above Energy and keeps its focused UI elevated", () => {
+  const overlaySource = readFileSync(new URL("../src/components/TributeOfTheFourSorrowsSelectionOverlay.tsx", import.meta.url), "utf8");
+  const battlefieldSource = readFileSync(new URL("../src/components/Battlefield.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(overlaySource, /import \{ createPortal \} from "react-dom";/u);
+  assert.match(overlaySource, /return \(\s*<>\s*<div[^>]*className="counter-target-backdrop"[^>]*\/>\s*\{createPortal\(\s*<svg[^>]*z-\[111\][^>]*>/u);
+  assert.match(overlaySource, /<svg[\s\S]*?<\/svg>,\s*document\.body,\s*\)\}/u);
+  assert.doesNotMatch(battlefieldSource, /mana-core-target-label/u);
+  assert.doesNotMatch(stylesSource, /\.mana-core-target-label/u);
 });

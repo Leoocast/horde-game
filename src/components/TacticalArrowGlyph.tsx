@@ -14,7 +14,7 @@ import {
  */
 export function TacticalArrowGlyph({ curve, color }: { curve: TacticalArrowCurve; color: string }) {
   const instanceId = useId().replace(/:/g, "");
-  const { blade, head, chordLength } = tacticalArrowShape(curve);
+  const { outline, chordLength } = tacticalArrowShape(curve);
   const palette = tacticalArrowPalette(color);
   const bladeGradientId = `${instanceId}-blade`;
   const glintGradientId = `${instanceId}-glint`;
@@ -41,8 +41,7 @@ export function TacticalArrowGlyph({ curve, color }: { curve: TacticalArrowCurve
           <stop offset="100%" stopColor={palette.core} stopOpacity="0" />
         </linearGradient>
         <clipPath id={clipId}>
-          <path d={blade} />
-          <path d={head} />
+          <path d={outline} />
         </clipPath>
         <filter id={bloomId} x="-70%" y="-70%" width="240%" height="240%" colorInterpolationFilters="sRGB">
           <feGaussianBlur in="SourceGraphic" stdDeviation="4.7" result="spread" />
@@ -57,8 +56,7 @@ export function TacticalArrowGlyph({ curve, color }: { curve: TacticalArrowCurve
         </filter>
       </defs>
       <g filter={`url(#${bloomId})`}>
-        <path className="tactical-arrow-blade" d={blade} fill={`url(#${bladeGradientId})`} />
-        <path className="tactical-arrow-head" d={head} fill={`url(#${bladeGradientId})`} />
+        <path className="tactical-arrow-outline" d={outline} fill={`url(#${bladeGradientId})`} />
       </g>
       <g clipPath={`url(#${clipId})`}>
         <g transform={`translate(${curve.start.x} ${curve.start.y}) rotate(${angle})`}>
@@ -66,7 +64,7 @@ export function TacticalArrowGlyph({ curve, color }: { curve: TacticalArrowCurve
             className="tactical-arrow-glint"
             style={{
               ["--tactical-arrow-glint-from" as string]: `${-band}px`,
-              ["--tactical-arrow-glint-to" as string]: `${chordLength + band}px`,
+              ["--tactical-arrow-glint-to" as string]: `${chordLength + band * 1.25}px`,
             }}
           >
             <rect x={0} y={-bandReach} width={band} height={bandReach * 2} fill={`url(#${glintGradientId})`} />

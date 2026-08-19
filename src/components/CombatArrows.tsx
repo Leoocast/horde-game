@@ -168,9 +168,7 @@ export function CombatArrows({ game, hiddenDefenseLinkIds }: { game: GameState; 
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.28, ease: "easeOut" }}
           >
-            <g className="combat-arrow-reveal">
-              <TacticalArrowGlyph curve={arrow.curve} color={arrow.color} />
-            </g>
+            <TacticalArrowGlyph curve={arrow.curve} color={arrow.color} />
           </motion.g>
           );
         })}
