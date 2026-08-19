@@ -19,6 +19,10 @@ import {
   compareSeedResults,
   searchSeedRange,
 } from "../src/playground/seedExplorerSearch";
+import {
+  SeedExplorerRuntime,
+  runSeedSearchCooperatively,
+} from "../src/playground/seedExplorerRuntime";
 
 const DEFAULT_CONFIG = Object.freeze({
   playerDeckKey: "pact_of_elarion",
@@ -214,6 +218,152 @@ test("processing one range in uneven batches produces the same shortlist and cur
     previousNextIndex = progress.nextIndex;
   }
   assert.deepEqual(batched.finalize(), single);
+});
+
+test("cooperative slices preserve the pure result and throttle partial publications", async () => {
+  const request = { ...DEFAULT_CONFIG, startIndex: 5_000, count: 600, top: 6 };
+  const expected = searchSeedRange(request);
+  const frames = [];
+  let clock = 0;
+  let yields = 0;
+  const outcome = await runSeedSearchCooperatively(request, {
+    sliceBudgetMs: 3,
+    progressIntervalMs: 5,
+    searchChunkSize: 11,
+    verificationChunkSize: 2,
+    maxChunksPerSlice: 3,
+    now: () => {
+      clock += 1;
+      return clock;
+    },
+    yieldToHost: async () => {
+      yields += 1;
+    },
+    onProgress: (frame) => frames.push(frame),
+  });
+
+  assert.equal(outcome.status, "completed");
+  assert.deepEqual(outcome.result, expected);
+  assert.ok(yields > 1);
+  assert.equal(frames[0].phase, "searching");
+  assert.equal(frames[0].search.examined, 0);
+  assert.equal(frames.at(-1).phase, "verifying");
+  assert.equal(frames.at(-1).verification.done, true);
+  assert.ok(frames.length < request.count / 2);
+  assert.ok(frames.every(({ partialCandidates }) => partialCandidates.length <= request.top));
+  assert.ok(frames
+    .filter(({ phase }) => phase === "searching")
+    .flatMap(({ partialCandidates }) => partialCandidates)
+    .every(({ solvability }) => solvability.status === "unchecked"));
+  assert.ok(frames
+    .filter(({ phase }) => phase === "verifying")
+    .flatMap(({ partialCandidates }) => partialCandidates)
+    .every(({ solvability }) => solvability.status === "structurally-valid"));
+});
+
+test("AbortSignal stops before another cooperative slice is processed", async () => {
+  const controller = new AbortController();
+  let yields = 0;
+  const outcome = await runSeedSearchCooperatively({
+    ...DEFAULT_CONFIG,
+    startIndex: 8_000,
+    count: 1_000,
+    top: 5,
+  }, {
+    signal: controller.signal,
+    sliceBudgetMs: 1_000,
+    progressIntervalMs: 1_000,
+    searchChunkSize: 10,
+    maxChunksPerSlice: 2,
+    now: () => 0,
+    yieldToHost: async () => {
+      yields += 1;
+      controller.abort();
+    },
+  });
+
+  assert.equal(outcome.status, "cancelled");
+  assert.equal(outcome.frame.phase, "searching");
+  assert.equal(outcome.frame.search.examined, 20);
+  assert.equal(yields, 1);
+});
+
+test("the runtime supersedes stale searches and preserves the last complete result after cancel", async () => {
+  const runtime = new SeedExplorerRuntime();
+  let releaseFirstYield;
+  let announceFirstYield;
+  const firstYielded = new Promise((resolve) => {
+    announceFirstYield = resolve;
+  });
+  const firstRun = runtime.start({
+    ...DEFAULT_CONFIG,
+    startIndex: 10_000,
+    count: 2_000,
+    top: 5,
+  }, {
+    sliceBudgetMs: 1_000,
+    searchChunkSize: 10,
+    maxChunksPerSlice: 1,
+    now: () => 0,
+    yieldToHost: () => new Promise((resolve) => {
+      releaseFirstYield = resolve;
+      announceFirstYield();
+    }),
+  });
+  await firstYielded;
+
+  const secondRun = runtime.start({
+    ...DEFAULT_CONFIG,
+    startIndex: 20_000,
+    count: 120,
+    top: 4,
+  }, {
+    sliceBudgetMs: 1_000,
+    searchChunkSize: 30,
+    verificationChunkSize: 30,
+    maxChunksPerSlice: 10,
+    now: () => 0,
+    yieldToHost: async () => undefined,
+  });
+  const secondOutcome = await secondRun;
+  assert.equal(secondOutcome.status, "completed");
+  releaseFirstYield();
+  const firstOutcome = await firstRun;
+
+  assert.equal(firstOutcome.status, "superseded");
+  assert.equal(runtime.snapshot().runId, secondOutcome.runId);
+  assert.equal(runtime.snapshot().status, "completed");
+  assert.deepEqual(runtime.snapshot().result, secondOutcome.result);
+
+  let releaseThirdYield;
+  let announceThirdYield;
+  const thirdYielded = new Promise((resolve) => {
+    announceThirdYield = resolve;
+  });
+  const thirdRun = runtime.start({
+    ...DEFAULT_CONFIG,
+    startIndex: 30_000,
+    count: 2_000,
+    top: 5,
+  }, {
+    sliceBudgetMs: 1_000,
+    searchChunkSize: 10,
+    maxChunksPerSlice: 1,
+    now: () => 0,
+    yieldToHost: () => new Promise((resolve) => {
+      releaseThirdYield = resolve;
+      announceThirdYield();
+    }),
+  });
+  await thirdYielded;
+  runtime.cancel();
+  releaseThirdYield();
+  const thirdOutcome = await thirdRun;
+
+  assert.equal(thirdOutcome.status, "cancelled");
+  assert.equal(runtime.snapshot().status, "cancelled");
+  assert.deepEqual(runtime.snapshot().lastCompleteResult, secondOutcome.result);
+  assert.equal(runtime.snapshot().result, undefined);
 });
 
 test("disabling mulligan keeps the opening hand and omits its projection", () => {

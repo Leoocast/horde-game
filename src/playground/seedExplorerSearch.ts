@@ -30,6 +30,13 @@ export type SeedVerificationFailure = Readonly<{
   reason: string;
 }>;
 
+export type SeedVerificationProgress = Readonly<{
+  examined: number;
+  total: number;
+  failures: number;
+  done: boolean;
+}>;
+
 export type SeedSearchResult = Readonly<{
   request: Readonly<{
     playerDeckKey: string;
@@ -99,32 +106,101 @@ export class SeedSearchAccumulator {
     });
   }
 
-  finalize(): SeedSearchResult {
+  previewCandidates(limit = this.request.top): readonly SeedAnalysisResult[] {
+    validatePreviewLimit(limit);
+    return Object.freeze(this.#heap.sortedBestFirst().slice(0, limit));
+  }
+
+  createVerifier(): SeedSearchVerifier {
     if (this.#examined !== this.request.count) {
       throw new Error(`Seed Explorer search is incomplete: ${this.#examined}/${this.request.count}.`);
     }
-    const verificationFailures: SeedVerificationFailure[] = [];
-    const verified: SeedAnalysisResult[] = [];
-    const fastCandidates = this.#heap.sortedBestFirst();
-    for (const candidate of fastCandidates) {
+    return new SeedSearchVerifier({
+      context: this.context,
+      request: this.request,
+      examined: this.#examined,
+      passedFilters: this.#passedFilters,
+      rejectedByReason: Object.freeze({ ...this.#rejectedByReason }),
+      fastCandidates: Object.freeze(this.#heap.sortedBestFirst()),
+    });
+  }
+
+  finalize(): SeedSearchResult {
+    const verifier = this.createVerifier();
+    const { total } = verifier.progress();
+    if (total > 0) verifier.process(total);
+    return verifier.finalize();
+  }
+}
+
+type SeedSearchVerifierInput = Readonly<{
+  context: SeedAnalysisContext;
+  request: SeedSearchResult["request"];
+  examined: number;
+  passedFilters: number;
+  rejectedByReason: Readonly<Record<SeedFilterReason, number>>;
+  fastCandidates: readonly SeedAnalysisResult[];
+}>;
+
+export class SeedSearchVerifier {
+  readonly #input: SeedSearchVerifierInput;
+  readonly #verified: SeedAnalysisResult[] = [];
+  readonly #failures: SeedVerificationFailure[] = [];
+  #examined = 0;
+
+  constructor(input: SeedSearchVerifierInput) {
+    this.#input = input;
+  }
+
+  process(batchSize: number): SeedVerificationProgress {
+    if (!Number.isSafeInteger(batchSize) || batchSize <= 0) {
+      throw new Error("Seed Explorer verification batch size must be a positive safe integer.");
+    }
+    const amount = Math.min(batchSize, this.#input.fastCandidates.length - this.#examined);
+    for (let offset = 0; offset < amount; offset += 1) {
+      const candidate = this.#input.fastCandidates[this.#examined];
+      this.#examined += 1;
       try {
-        verified.push(verifySeedAnalysis(this.context, candidate));
+        this.#verified.push(verifySeedAnalysis(this.#input.context, candidate));
       } catch (error) {
-        verificationFailures.push(Object.freeze({
+        this.#failures.push(Object.freeze({
           canonCode: candidate.identity.canonCode,
           reason: error instanceof Error ? error.message : String(error),
         }));
       }
     }
-    verified.sort(compareSeedResults);
+    return this.progress();
+  }
+
+  progress(): SeedVerificationProgress {
     return Object.freeze({
-      request: this.request,
       examined: this.#examined,
-      passedFilters: this.#passedFilters,
-      rejectedByReason: Object.freeze({ ...this.#rejectedByReason }),
-      verificationPoolSize: fastCandidates.length,
-      verificationFailures: Object.freeze(verificationFailures),
-      candidates: Object.freeze(verified.slice(0, this.request.top)),
+      total: this.#input.fastCandidates.length,
+      failures: this.#failures.length,
+      done: this.#examined === this.#input.fastCandidates.length,
+    });
+  }
+
+  previewCandidates(limit = this.#input.request.top): readonly SeedAnalysisResult[] {
+    validatePreviewLimit(limit);
+    return Object.freeze([...this.#verified].sort(compareSeedResults).slice(0, limit));
+  }
+
+  finalize(): SeedSearchResult {
+    if (this.#examined !== this.#input.fastCandidates.length) {
+      throw new Error(
+        `Seed Explorer verification is incomplete: ${this.#examined}/${this.#input.fastCandidates.length}.`,
+      );
+    }
+    const candidates = [...this.#verified].sort(compareSeedResults).slice(0, this.#input.request.top);
+    return Object.freeze({
+      request: this.#input.request,
+      examined: this.#input.examined,
+      passedFilters: this.#input.passedFilters,
+      rejectedByReason: this.#input.rejectedByReason,
+      verificationPoolSize: this.#input.fastCandidates.length,
+      verificationFailures: Object.freeze([...this.#failures]),
+      candidates: Object.freeze(candidates),
     });
   }
 }
@@ -179,6 +255,12 @@ function validateSearchBounds(startIndex: number, count: number, top: number): v
   }
   if (startIndex + count > CANON_ENTROPY_SPACE_SIZE) {
     throw new Error("Seed Explorer range exceeds the five-character Canon entropy space.");
+  }
+}
+
+function validatePreviewLimit(limit: number): void {
+  if (!Number.isSafeInteger(limit) || limit <= 0) {
+    throw new Error("Seed Explorer preview limit must be a positive safe integer.");
   }
 }
 

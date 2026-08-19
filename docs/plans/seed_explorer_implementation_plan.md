@@ -1,6 +1,6 @@
 # Plan de implementación — Seed Explorer interno (MVP barato)
 
-Estado: **implementación en curso; Fases 0–1 cerradas, Fases 2–4 pendientes**.
+Estado: **implementación en curso; Fases 0–2 cerradas, Fases 3–4 pendientes**.
 
 Última actualización: **2026-08-18**.
 
@@ -368,7 +368,9 @@ Al reabrir Seeds, el shortlist sigue disponible para probar la siguiente candida
 - `src/content/CanonSeed.ts` — codec HF1, registro de códigos, dificultad derivada y validación.
 - `src/engine/InitialDeckOrder.ts` — pools genéricos y secuencia compartida de shuffles.
 - `src/playground/seedExplorer.ts` — contratos, analyzer estático, métricas y perfiles.
-- `src/playground/seedExplorerSearch.ts` — enumeración, top-K, scheduler, progreso y cancelación.
+- `src/playground/seedExplorerSearch.ts` — enumeración, top-K y verificación exacta incremental.
+- `src/playground/seedExplorerRuntime.ts` — slices cooperativos, progreso, cancelación y protección
+  contra resultados obsoletos.
 - `src/playground/panels/SeedExplorerWorkspace.tsx` — filtros, lista, inspector y acciones.
 - `src/playground/seedExplorerStorage.ts` — favoritos locales versionados y validación defensiva.
 - `tests/canonSeed.test.js` — codec, normalización, dificultad derivada e independencia de idioma.
@@ -434,13 +436,19 @@ crudas.
 
 ### Fase 2 — Runtime cooperativo
 
+**Estado:** cerrada el 2026-08-18. `src/playground/seedExplorerRuntime.ts` ejecuta tanto el barrido
+como la verificación exacta en slices con presupuesto temporal y límites de trabajo defensivos. El
+scheduler y el reloj son inyectables para probar cancelación y progreso sin timers reales. El
+coordinador invalida búsquedas anteriores por `runId` y retiene por separado el último resultado
+completo.
+
 - envolver la búsqueda pura en slices cancelables;
 - limitar frecuencia de progreso y resultados parciales;
 - impedir que respuestas de búsquedas viejas reemplacen la activa;
 - conservar el último resultado completo al navegar.
 
-**Salida:** 500k pueden tardar, pero la interfaz responde y Cancelar se aplica como máximo al
-terminar el slice actual.
+**Salida:** el renderer puede ceder entre slices durante una búsqueda larga; Cancelar se observa
+antes de procesar el siguiente chunk y ninguna ejecución obsoleta puede reemplazar la activa.
 
 ### Fase 3 — Workspace aprobado
 
@@ -481,7 +489,9 @@ Entre `tests/canonSeed.test.js` y `tests/seedExplorer.test.js` se debe cubrir:
 - seeds técnicas reservadas imposibles de representar como Canon Seed;
 - ranking estable y exactamente `top` resultados;
 - procesar en uno o muchos batches produce el mismo shortlist;
+- ejecución cooperativa produce el mismo resultado que la búsqueda síncrona;
 - cancelación impide ejecutar/publicar batches posteriores;
+- una búsqueda reemplazada no pisa la activa y cancelar conserva el último resultado completo;
 - filtros y pesos sobre fixtures sintéticos comprensibles;
 - export JSON/CSV reproducible y storage inválido que falla cerrado;
 - ningún resultado declara `winning-line-found` o `impossible`.

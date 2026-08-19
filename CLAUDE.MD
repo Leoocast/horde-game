@@ -528,7 +528,14 @@ un heap top-K acotado. Sus finalistas se reconstruyen con `createInitialGame` y
 no usa Zustand y nunca declara una seed ganable, imposible o divertida. La proyección de Hueste usa
 stats impresos y reglas de revelado/Mini Oleada/Oleada, pero no ejecuta efectos que alteran el
 Archivo. El benchmark manual vive en `scripts/benchmark-seed-explorer.mjs`; sus tiempos son
-diagnóstico local, no assertions de CI. Scheduler cooperativo y UI siguen pendientes.
+diagnóstico local, no assertions de CI.
+
+`src/playground/seedExplorerRuntime.ts` envuelve ese núcleo en slices cooperativos de renderer y
+parte también la verificación exacta final. Usa un scheduler, reloj y `AbortSignal` inyectables,
+limita publicaciones parciales y conserva el último resultado completo. Cada ejecución recibe un
+`runId`: una búsqueda cancelada o reemplazada no puede publicar encima de la vigente. No usa Web
+Worker; introducir uno exige una decisión separada porque la CSP desktop mantiene
+`worker-src 'none'`. La UI todavía está pendiente.
 
 Durante una partida normal, la barra superior coloca **Reescribir** antes de Música y Ajustes. Su
 acción principal vuelve al origen de la misma seed, con los mismos decks, dificultad y modo;
