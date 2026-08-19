@@ -53,6 +53,8 @@ export type SeedSearchResult = Readonly<{
   rejectedByReason: Readonly<Record<SeedFilterReason, number>>;
   verificationPoolSize: number;
   verificationFailures: readonly SeedVerificationFailure[];
+  /** Verified candidates kept for alternate presentation orderings such as a diverse shortlist. */
+  candidatePool: readonly SeedAnalysisResult[];
   candidates: readonly SeedAnalysisResult[];
 }>;
 
@@ -192,7 +194,10 @@ export class SeedSearchVerifier {
         `Seed Explorer verification is incomplete: ${this.#examined}/${this.#input.fastCandidates.length}.`,
       );
     }
-    const candidates = [...this.#verified].sort(compareSeedResults).slice(0, this.#input.request.top);
+    const verified = [...this.#verified].sort(compareSeedResults);
+    const candidatePoolSize = Math.min(verified.length, Math.max(this.#input.request.top, this.#input.request.top * 4));
+    const candidatePool = verified.slice(0, candidatePoolSize);
+    const candidates = candidatePool.slice(0, this.#input.request.top);
     return Object.freeze({
       request: this.#input.request,
       examined: this.#input.examined,
@@ -200,6 +205,7 @@ export class SeedSearchVerifier {
       rejectedByReason: this.#input.rejectedByReason,
       verificationPoolSize: this.#input.fastCandidates.length,
       verificationFailures: Object.freeze([...this.#failures]),
+      candidatePool: Object.freeze(candidatePool),
       candidates: Object.freeze(candidates),
     });
   }

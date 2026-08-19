@@ -458,7 +458,9 @@ antes de procesar el siguiente chunk y ninguna ejecución obsoleta puede reempla
 vive en `src/seed-explorer/SeedExplorerScreen.tsx` como pantalla dev hermana de Playground y Audio
 Lab. Se abre desde el dock dev abajo a la derecha del home, usa el runtime real, favoritos locales
 versionados y export JSON/CSV. Reconstruye la candidata mediante `createInitialGame`, la entrega a
-`loadScenario` y alterna al Board real sin perder el estado de búsqueda.
+`loadScenario` y alterna al Board real sin perder el estado de búsqueda. La lista permite cambiar
+entre **Mejores** (ranking puro) y **Variadas** (default), usando un pool verificado más amplio y
+distancia estructural sin alterar score ni filtros.
 
 - trasladar el mockup a React con datos reales;
 - integrar filtros, lista, inspector, favoritos y copy/export;

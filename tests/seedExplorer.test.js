@@ -9,6 +9,7 @@ import {
   firstApproachFilterReasons,
   projectPotentialHostWindows,
   scoreFirstApproach,
+  selectDiverseSeedCandidates,
   verifySeedAnalysis,
 } from "../src/playground/seedExplorer";
 import {
@@ -196,6 +197,32 @@ test("equal scores use the full Canon code as a stable tie-break", () => {
   ]);
 });
 
+test("diverse selection keeps the best result and reaches structurally different candidates", () => {
+  const base = analyzeSeedEntropy(createSeedAnalysisContext(DEFAULT_CONFIG), "LEGPT").result;
+  const ranked = Array.from({ length: 6 }, (_, index) => ({
+    ...base,
+    score: 100 - index,
+    identity: { ...base.identity, canonCode: `HF1-ELA-GRV-${String(index).padStart(2, "0")}2-AAA` },
+    metrics: {
+      ...base.metrics,
+      ratings: {
+        opening: 50,
+        resources: 100 - index * 20,
+        curve: index * 20,
+        pressure: 100 - index * 20,
+        escalation: index * 20,
+      },
+    },
+  }));
+
+  const selected = selectDiverseSeedCandidates(ranked, 3);
+  assert.equal(selected.length, 3);
+  assert.equal(selected[0].identity.canonCode, ranked[0].identity.canonCode);
+  assert.ok(selected.some(({ identity }) => identity.canonCode === ranked.at(-1).identity.canonCode));
+  assert.deepEqual(selectDiverseSeedCandidates(ranked, 3), selected);
+  assert.equal(new Set(selected.map(({ identity }) => identity.canonCode)).size, selected.length);
+});
+
 test("one search request is deterministic, bounded and fully verified", () => {
   const request = { ...DEFAULT_CONFIG, startIndex: 700, count: 1_500, top: 12 };
   const first = searchSeedRange(request);
@@ -207,6 +234,9 @@ test("one search request is deterministic, bounded and fully verified", () => {
   assert.ok(first.passedFilters > 0);
   assert.equal(first.candidates.length, request.top);
   assert.ok(first.verificationPoolSize >= first.candidates.length);
+  assert.ok(first.candidatePool.length >= first.candidates.length);
+  assert.ok(first.candidatePool.length <= request.top * 4);
+  assert.deepEqual(first.candidatePool.slice(0, request.top), first.candidates);
   assert.ok(first.candidates.every(({ solvability }) => solvability.status === "structurally-valid"));
   assert.deepEqual([...first.candidates].sort(compareSeedResults), first.candidates);
   assert.equal(new Set(first.candidates.map(({ identity }) => identity.canonCode)).size, first.candidates.length);

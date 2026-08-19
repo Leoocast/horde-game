@@ -129,6 +129,64 @@ export type SeedAnalysisResult = Readonly<{
   solvability: Readonly<{ status: "unchecked" | "structurally-valid" }>;
 }>;
 
+/**
+ * Greedy max-min selection over the verified top pool. The best score is always retained; each
+ * following slot balances quality rank with distance from the candidates already selected.
+ */
+export function selectDiverseSeedCandidates(
+  rankedCandidates: readonly SeedAnalysisResult[],
+  limit: number,
+): readonly SeedAnalysisResult[] {
+  if (!Number.isSafeInteger(limit) || limit < 0) {
+    throw new Error("Diverse Seed Explorer limit must be a non-negative safe integer.");
+  }
+  if (limit === 0 || rankedCandidates.length === 0) return Object.freeze([]);
+  const target = Math.min(limit, rankedCandidates.length);
+  const selected = [rankedCandidates[0]];
+  const remaining = rankedCandidates.slice(1).map((candidate, rank) => ({ candidate, rank: rank + 1 }));
+  while (selected.length < target && remaining.length > 0) {
+    let bestIndex = 0;
+    let bestPriority = Number.NEGATIVE_INFINITY;
+    for (let index = 0; index < remaining.length; index += 1) {
+      const entry = remaining[index];
+      const minimumDistance = Math.min(...selected.map((chosen) => seedCandidateDistance(entry.candidate, chosen)));
+      const quality = rankedCandidates.length <= 1 ? 1 : 1 - entry.rank / (rankedCandidates.length - 1);
+      const priority = minimumDistance * 0.72 + quality * 0.28;
+      const currentBest = remaining[bestIndex];
+      if (
+        priority > bestPriority
+        || (priority === bestPriority && entry.rank < currentBest.rank)
+        || (priority === bestPriority && entry.rank === currentBest.rank
+          && entry.candidate.identity.canonCode < currentBest.candidate.identity.canonCode)
+      ) {
+        bestPriority = priority;
+        bestIndex = index;
+      }
+    }
+    selected.push(remaining.splice(bestIndex, 1)[0].candidate);
+  }
+  return Object.freeze(selected);
+}
+
+function seedCandidateDistance(left: SeedAnalysisResult, right: SeedAnalysisResult): number {
+  const leftVector = seedCandidateVector(left);
+  const rightVector = seedCandidateVector(right);
+  const squared = leftVector.reduce((total, value, index) => total + (value - rightVector[index]) ** 2, 0);
+  return Math.sqrt(squared / leftVector.length);
+}
+
+function seedCandidateVector(candidate: SeedAnalysisResult): readonly number[] {
+  const ratings = candidate.metrics.ratings;
+  return [
+    ratings.opening / 100,
+    ratings.resources / 100,
+    ratings.curve / 100,
+    ratings.pressure / 100,
+    ratings.escalation / 100,
+    candidate.mulligan.recommendation === "mulligan" ? 1 : 0,
+  ];
+}
+
 export type SeedFilterReason =
   | "too-few-sources-before-host"
   | "too-many-sources-in-hand"

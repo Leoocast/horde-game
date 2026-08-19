@@ -287,10 +287,14 @@
   display: flex;
   min-height: 50px;
   flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   border-bottom: 1px solid rgb(151 143 103 / 0.22);
   padding: 0 16px;
   background: rgb(5 11 13 / 0.82);
 }
+.seed-explorer-result-tabs { display: flex; align-self: stretch; }
 .seed-explorer-tab {
   border: 0;
   border-bottom: 2px solid transparent;
@@ -306,6 +310,37 @@
 .seed-explorer-tab:hover { color: #c7c0a6; }
 .seed-explorer-tab.is-active { border-bottom-color: #caaa63; color: #eee2c2; }
 .seed-explorer-tab span { margin-left: 5px; color: #8f845e; }
+
+.seed-explorer-selection-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid rgb(124 142 137 / 0.25);
+  padding: 3px;
+  background: rgb(3 9 11 / 0.72);
+}
+.seed-explorer-selection-mode > span {
+  padding: 0 7px;
+  color: #677873;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+.seed-explorer-selection-mode button {
+  min-height: 28px;
+  border: 0;
+  padding: 0 9px;
+  background: transparent;
+  color: #71817c;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.seed-explorer-selection-mode button:hover { color: #c7c0a6; }
+.seed-explorer-selection-mode button.is-active { background: rgb(40 57 58 / 0.9); color: #e3d7b7; }
 
 .seed-explorer-list {
   display: flex;
@@ -366,6 +401,54 @@
   font-size: 10px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+.seed-explorer-archetype {
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  border: 1px solid rgb(91 134 146 / 0.48);
+  padding: 2px 7px;
+  background: rgb(40 65 69 / 0.3);
+  color: #9bbdc0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.seed-explorer-archetype.is-best {
+  border-color: rgb(208 187 119 / 0.56);
+  background: rgb(117 87 34 / 0.3);
+  color: #dec47d;
+}
+.seed-explorer-archetype.is-stable {
+  border-color: rgb(103 157 105 / 0.55);
+  background: rgb(42 91 55 / 0.3);
+  color: #9bc99c;
+}
+.seed-explorer-archetype.is-curve {
+  border-color: rgb(89 132 177 / 0.58);
+  background: rgb(37 70 105 / 0.32);
+  color: #9bbfe3;
+}
+.seed-explorer-archetype.is-gentle {
+  border-color: rgb(83 154 161 / 0.56);
+  background: rgb(35 88 94 / 0.3);
+  color: #91ced0;
+}
+.seed-explorer-archetype.is-escalation {
+  border-color: rgb(183 119 69 / 0.58);
+  background: rgb(110 61 29 / 0.32);
+  color: #d9a06f;
+}
+.seed-explorer-archetype.is-mulligan {
+  border-color: rgb(137 105 174 / 0.58);
+  background: rgb(75 46 105 / 0.34);
+  color: #bea0dc;
+}
+.seed-explorer-archetype.is-balanced {
+  border-color: rgb(112 139 130 / 0.52);
+  background: rgb(47 70 66 / 0.3);
+  color: #a6bbb4;
 }
 .seed-explorer-mini-metrics { display: grid; gap: 7px; }
 .seed-explorer-mini-line { display: grid; grid-template-columns: 58px 1fr; align-items: center; gap: 7px; color: #677873; font-size: 10px; }
@@ -634,6 +717,9 @@
   .seed-explorer-result { grid-template-columns: 32px minmax(0, 1fr) 54px; }
   .seed-explorer-mini-metrics { display: none; }
   .seed-explorer-statusbar span:last-child { display: none; }
+  .seed-explorer-tabs { align-items: stretch; flex-direction: column; gap: 0; padding: 0 10px 8px; }
+  .seed-explorer-result-tabs { min-height: 44px; }
+  .seed-explorer-selection-mode { align-self: flex-end; }
   .seed-explorer-detail-overlay { padding: 8px; }
   .seed-explorer-detail-modal { width: calc(100vw - 16px); height: calc(100vh - 16px); }
   .seed-explorer-detail-overview { grid-template-columns: 1fr; }

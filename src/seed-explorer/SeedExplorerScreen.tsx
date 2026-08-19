@@ -28,6 +28,7 @@ import { useCardImage } from "../utils/cardImages";
 import {
   analyzeSeedEntropy,
   createSeedAnalysisContext,
+  selectDiverseSeedCandidates,
   verifySeedAnalysis,
   type SeedAnalysisResult,
   type SeedCardPreviewV1,
@@ -101,6 +102,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
     top: 20,
   }));
   const [resultTab, setResultTab] = useState<"finalists" | "favorites">("finalists");
+  const [selectionMode, setSelectionMode] = useState<"best" | "diverse">("diverse");
   const [selectedCode, setSelectedCode] = useState<string>();
   const [favorites, setFavorites] = useState<readonly StoredSeedFavorite[]>(() => listStoredSeedFavorites());
   const [boardCandidate, setBoardCandidate] = useState<SeedAnalysisResult>();
@@ -191,13 +193,16 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
   const partialCandidates = snapshot.status === "running" || snapshot.status === "cancelled"
     ? snapshot.frame?.partialCandidates ?? []
     : [];
-  const finalistCandidates = partialCandidates.length > 0
+  const rankedCandidatePool = partialCandidates.length > 0
     ? partialCandidates
-    : lastComplete?.candidates ?? [];
+    : lastComplete?.candidatePool ?? lastComplete?.candidates ?? [];
+  const finalistCandidates = selectionMode === "diverse"
+    ? selectDiverseSeedCandidates(rankedCandidatePool, configuration.top)
+    : rankedCandidatePool.slice(0, configuration.top);
   const visibleCandidates = resultTab === "favorites" ? savedCandidates : finalistCandidates;
   const candidatesByCode = useMemo(
-    () => new Map([...finalistCandidates, ...savedCandidates].map((candidate) => [candidate.identity.canonCode, candidate])),
-    [finalistCandidates, savedCandidates],
+    () => new Map([...rankedCandidatePool, ...savedCandidates].map((candidate) => [candidate.identity.canonCode, candidate])),
+    [rankedCandidatePool, savedCandidates],
   );
   const selectedCandidate = selectedCode ? candidatesByCode.get(selectedCode) : undefined;
   const detailsCandidate = detailsCode ? candidatesByCode.get(detailsCode) : undefined;
@@ -426,20 +431,29 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
             </div>
           </header>
           <nav className="seed-explorer-tabs" aria-label="Resultados">
-            <button
-              className={`seed-explorer-tab ${resultTab === "finalists" ? "is-active" : ""}`}
-              type="button"
-              onClick={() => setResultTab("finalists")}
-            >
-              Finalistas
-            </button>
-            <button
-              className={`seed-explorer-tab ${resultTab === "favorites" ? "is-active" : ""}`}
-              type="button"
-              onClick={() => setResultTab("favorites")}
-            >
-              Guardadas <span>{favorites.length}</span>
-            </button>
+            <div className="seed-explorer-result-tabs">
+              <button
+                className={`seed-explorer-tab ${resultTab === "finalists" ? "is-active" : ""}`}
+                type="button"
+                onClick={() => setResultTab("finalists")}
+              >
+                Finalistas
+              </button>
+              <button
+                className={`seed-explorer-tab ${resultTab === "favorites" ? "is-active" : ""}`}
+                type="button"
+                onClick={() => setResultTab("favorites")}
+              >
+                Guardadas <span>{favorites.length}</span>
+              </button>
+            </div>
+            {resultTab === "finalists" && (
+              <div className="seed-explorer-selection-mode" role="group" aria-label="Selección de finalistas">
+                <span>Selección</span>
+                <button className={selectionMode === "best" ? "is-active" : ""} type="button" onClick={() => setSelectionMode("best")}>Mejores</button>
+                <button className={selectionMode === "diverse" ? "is-active" : ""} type="button" onClick={() => setSelectionMode("diverse")}>Variadas</button>
+              </div>
+            )}
           </nav>
           <div className="seed-explorer-list old-scrollbar">
             {visibleCandidates.length === 0 ? (
@@ -455,6 +469,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
                 rank={index + 1}
                 active={candidate.identity.canonCode === selectedCandidate?.identity.canonCode}
                 favorite={favoriteCodes.has(candidate.identity.canonCode)}
+                archetype={candidateArchetype(candidate, index, visibleCandidates)}
                 onSelect={() => setSelectedCode(candidate.identity.canonCode)}
               />
             ))}
@@ -501,12 +516,14 @@ function CandidateRow({
   rank,
   active,
   favorite,
+  archetype,
   onSelect,
 }: Readonly<{
   candidate: SeedAnalysisResult;
   rank: number;
   active: boolean;
   favorite: boolean;
+  archetype: string;
   onSelect: () => void;
 }>) {
   const tags = candidateTags(candidate);
@@ -516,6 +533,7 @@ function CandidateRow({
       <span className="seed-explorer-result-copy">
         <span className="seed-explorer-result-code">{candidate.identity.canonCode}{favorite ? " ★" : ""}</span>
         <span className="seed-explorer-result-tags">
+          <span className={`seed-explorer-archetype is-${archetypeTone(archetype)}`}>{archetype}</span>
           {tags.slice(0, 2).map((tag) => <span className="seed-explorer-tag" key={tag}>{tag}</span>)}
         </span>
       </span>
@@ -852,6 +870,51 @@ function candidateTags(candidate: SeedAnalysisResult): readonly string[] {
   if (candidate.mulligan.recommendation === "mulligan") tags.push("Mulligan sugerido");
   if (tags.length === 0) tags.push("Candidata estructural");
   return Object.freeze(tags.slice(0, 3));
+}
+
+function candidateArchetype(
+  candidate: SeedAnalysisResult,
+  index: number,
+  pool: readonly SeedAnalysisResult[],
+): string {
+  if (index === 0) return "Mejor ajuste";
+  if (candidate.mulligan.recommendation === "mulligan" && candidate.mulligan.delta >= 3) return "Mulligan útil";
+  const ratings = candidate.metrics.ratings;
+  const values = [ratings.resources, ratings.curve, ratings.pressure, ratings.escalation];
+  if (Math.max(...values) - Math.min(...values) <= 8) return "Equilibrada";
+  const averages = {
+    resources: averageRating(pool, "resources"),
+    curve: averageRating(pool, "curve"),
+    pressure: averageRating(pool, "pressure"),
+    escalation: averageRating(pool, "escalation"),
+  };
+  const distinctions = [
+    ["Más estable", ratings.resources - averages.resources],
+    ["Mejor curva", ratings.curve - averages.curve],
+    ["Inicio suave", ratings.pressure - averages.pressure],
+    ["Mayor escalada", ratings.escalation - averages.escalation],
+  ] as const;
+  return [...distinctions].sort((left, right) => right[1] - left[1])[0][0];
+}
+
+function archetypeTone(archetype: string): string {
+  switch (archetype) {
+    case "Mejor ajuste": return "best";
+    case "Más estable": return "stable";
+    case "Mejor curva": return "curve";
+    case "Inicio suave": return "gentle";
+    case "Mayor escalada": return "escalation";
+    case "Mulligan útil": return "mulligan";
+    default: return "balanced";
+  }
+}
+
+function averageRating(
+  candidates: readonly SeedAnalysisResult[],
+  key: keyof SeedAnalysisResult["metrics"]["ratings"],
+): number {
+  if (candidates.length === 0) return 0;
+  return candidates.reduce((sum, candidate) => sum + candidate.metrics.ratings[key], 0) / candidates.length;
 }
 
 function resultSummary(

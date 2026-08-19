@@ -530,6 +530,11 @@ stats impresos y reglas de revelado/Mini Oleada/Oleada, pero no ejecuta efectos 
 Archivo. El benchmark manual vive en `scripts/benchmark-seed-explorer.mjs`; sus tiempos son
 diagnóstico local, no assertions de CI.
 
+El resultado conserva un `candidatePool` verificado más ancho que el top visible. **Mejores** toma
+el ranking puro; **Variadas**, que es el default de UI, siempre conserva la primera y completa la
+lista con una selección greedy max-min sobre apertura, recursos, curva, presión, escalada y
+mulligan. Esta capa no modifica score, filtros ni identidad Canon.
+
 `src/playground/seedExplorerRuntime.ts` envuelve ese núcleo en slices cooperativos de renderer y
 parte también la verificación exacta final. Usa un scheduler, reloj y `AbortSignal` inyectables,
 limita publicaciones parciales y conserva el último resultado completo. Cada ejecución recibe un

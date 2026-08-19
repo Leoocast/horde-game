@@ -1359,6 +1359,12 @@ test("Seed Explorer is a standalone dev screen launched from the home tool dock"
   assert.match(explorerSource, /title="Mano tras mulligan"[\s\S]*?candidate\.preview\.mulliganHand/u);
   assert.match(explorerSource, /const imageUrl = useCardImage\(card\.definitionId\)/u);
   assert.match(explorerSource, /backgroundColor: ratingColor/u);
+  assert.match(explorerSource, /useState<"best" \| "diverse">\("diverse"\)/u);
+  assert.match(explorerSource, /selectDiverseSeedCandidates\(rankedCandidatePool, configuration\.top\)/u);
+  assert.match(explorerSource, />Mejores<\/button>[\s\S]*?>Variadas<\/button>/u);
+  assert.match(explorerSource, /seed-explorer-archetype/u);
+  assert.match(explorerSource, /is-\$\{archetypeTone\(archetype\)\}/u);
+  assert.match(explorerStylesSource, /\.seed-explorer-archetype\.is-best[\s\S]*?\.seed-explorer-archetype\.is-mulligan[\s\S]*?\.seed-explorer-archetype\.is-balanced/u);
   assert.match(explorerSource, /createInitialGame\([\s\S]*?identity\.entropy,[\s\S]*?identity\.preparationTurns,[\s\S]*?identity\.difficulty,[\s\S]*?identity\.gameMode/u);
   assert.match(explorerSource, /loadScenario\([\s\S]*?createInitialGame/u);
   assert.match(explorerSource, /startBattleMusic\(true\);[\s\S]*?setBoardCandidate\(candidate\)/u);
