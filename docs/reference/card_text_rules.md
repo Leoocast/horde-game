@@ -24,7 +24,7 @@ Se omiten las partes vacías y su signo correspondiente.
 
 - `Al ser invocada: elige un aliado; pon un contador +1/+1 sobre ese aliado.`
 - `Agota esta carta; agrega {E}.`
-- `Elige un aliado y un enemigo; el aliado inflige al enemigo daño igual a su Fuerza.`
+- `Elige un aliado. Ese aliado inflige daño igual a su Fuerza a un enemigo que elijas.`
 
 El texto se resuelve de izquierda a derecha. Español e inglés deben conservar los mismos objetivos,
 cantidades, restricciones, orden y dependencias.
@@ -134,8 +134,8 @@ Elige un Apoyo enemigo o un Eco enemigo con Volar; destrúyelo.
 
 - Energía: `Agota esta carta; agrega {E}.`
 - Coste combinado: `Agota esta carta y paga 5 de Vida; agrega {E}.`
-- Daño por Fuerza: `Elige un aliado y un enemigo; el aliado inflige al enemigo daño igual a su
-  Fuerza.`
+- Daño por Fuerza: `Elige un aliado. Ese aliado inflige daño igual a su Fuerza a un enemigo que
+  elijas.`
 - Mejora y lucha: `Elige un aliado y un enemigo; el aliado gana +1/+2 hasta el final del turno.
   Después, ese aliado lucha contra ese enemigo.`
 - Contador colectivo de entrada: `Al ser invocado: pon un contador -1/-1 sobre cada enemigo.`

@@ -956,12 +956,14 @@ test("cards behind the front of a stack use the left combat-arrow anchor", () =>
   assert.equal(isBehindInStackOrder(front, [front]), false);
 });
 
-test("combat arrows never clip their arrowhead or moving glint during entrance", () => {
+test("combat arrows reveal upward with padded edges before their glint starts", () => {
   const combatArrowsSource = readFileSync(new URL("../src/components/CombatArrows.tsx", import.meta.url), "utf8");
   const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
-  assert.doesNotMatch(combatArrowsSource, /combat-arrow-reveal/u);
-  assert.doesNotMatch(stylesSource, /combat-arrow-reveal/u);
+  assert.match(combatArrowsSource, /<g className="combat-arrow-reveal">[\s\S]*?<TacticalArrowGlyph/u);
+  assert.match(stylesSource, /\.combat-arrow-reveal\s*\{[^}]*animation:\s*combat-arrow-reveal 320ms[^}]*both;/u);
+  assert.match(stylesSource, /\.combat-arrow-reveal \.tactical-arrow-glint\s*\{[^}]*animation-delay:\s*320ms;[^}]*animation-fill-mode:\s*backwards;/u);
+  assert.match(stylesSource, /@keyframes combat-arrow-reveal\s*\{[\s\S]*?to\s*\{\s*clip-path:\s*inset\(-32px\);/u);
 });
 
 test("card names and type lines use initial capitals on every word", () => {

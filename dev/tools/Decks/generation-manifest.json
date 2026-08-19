@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "decks": {
     "pact_of_elarion": {
-      "inputHash": "868147b46b01cb1cec35dbabb3af27f8ab2e2ff42deecc5e1e03b8634590dd46",
+      "inputHash": "288b239c81e6a957e832b68d54b69677c2bd55e4e8383b747fbb2918734ed9ef",
       "sources": [
         {
           "path": "dev/tools/Decks/deck-card-studio.css",
@@ -22,7 +22,7 @@
         },
         {
           "path": "dev/tools/Decks/pact_of_elarion/deck-data.generated.js",
-          "sha256": "0d5dbf216cc44eb0d05948f0edb8dc2897b9f253b142b3556c715f5a6f172afc"
+          "sha256": "6a6fdd1a8e2da38c4011260923aa53656388495756c305e878705576b887e01e"
         },
         {
           "path": "dev/tools/Decks/pact_of_elarion/index.html",
@@ -118,7 +118,7 @@
         },
         {
           "path": "src/data/decks/player/pact_of_elarion/pact_of_elarion.json",
-          "sha256": "4b1498f70a296f4371ca1ba8e19961b6de490104e15b04d66293c4555a55ebce"
+          "sha256": "fc6fd2d6eaffb08a996daf8725df0a81fe5683e136aed6401233866b34023d2a"
         },
         {
           "path": "src/data/decks/player/pact_of_elarion/pact_of_elarion_images.json",
@@ -185,7 +185,7 @@
         {
           "id": "clash_of_echoes",
           "path": "public/cards/pact_of_elarion/clash_of_echoes.png",
-          "sha256": "abf7d5ac1f83fbf24305692b309381f0db631e3b714a061e93f7df0ad45593ae",
+          "sha256": "3a42a50388d40f0da202b4fab4b336623d338470cb400e6b449442f66d692c51",
           "width": 976,
           "height": 1360
         },

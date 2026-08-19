@@ -11214,8 +11214,27 @@
   }
 }
 
+.combat-arrow-reveal {
+  animation: combat-arrow-reveal 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.combat-arrow-reveal .tactical-arrow-glint {
+  animation-delay: 320ms;
+  animation-fill-mode: backwards;
+}
+
 .combat-arrow-pulse {
   animation: combat-arrow-pulse 1.25s ease-in-out infinite;
+}
+
+@keyframes combat-arrow-reveal {
+  from {
+    clip-path: inset(calc(100% + 32px) -32px -32px -32px);
+  }
+
+  to {
+    clip-path: inset(-32px);
+  }
 }
 
 @keyframes auto-paid-land-pulse {
@@ -14909,6 +14928,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .combat-arrow-reveal { animation: none; clip-path: none; }
   .tactical-arrow-glint { animation: none; }
 
   .host-attacker-readied .battlefield-attack-chevron-glint,

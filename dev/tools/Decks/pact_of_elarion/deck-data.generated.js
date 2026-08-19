@@ -191,7 +191,7 @@ window.HostfallDeckData = {
         "costo": 2,
         "atk": null,
         "def": null,
-        "desc": "Elige un aliado y un enemigo; el aliado inflige al enemigo daño igual a su Fuerza.",
+        "desc": "Elige un aliado. Ese aliado inflige daño igual a su Fuerza a un enemigo que elijas.",
         "lore": "Ante el llamado del pacto, cada Eco reveló aquello por lo que aún luchaba.",
         "showFlavorText": true,
         "cantidad": 2,

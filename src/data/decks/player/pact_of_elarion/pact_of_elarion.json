@@ -403,7 +403,7 @@
       "displayNameEs": "Choque de Ecos",
       "gameText": {
         "en": "Choose an ally and an enemy; the ally deals damage to the enemy equal to its Power.",
-        "es": "Elige un aliado y un enemigo; el aliado inflige al enemigo daño igual a su Fuerza."
+        "es": "Elige un aliado. Ese aliado inflige daño igual a su Fuerza a un enemigo que elijas."
       },
       "flavorText": {
         "en": "At the pact's call, each Echo revealed what it still fought for.",

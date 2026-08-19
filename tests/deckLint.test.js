@@ -282,7 +282,7 @@ test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored 
     maela_watcher_of_the_heights: "Sin efecto adicional.",
     echo_of_the_forgotten_city: "Sin efecto adicional.",
     vaelor_emerald_guardian: "Al ser invocado: pon un contador -1/-1 sobre cada enemigo.",
-    clash_of_echoes: "Elige un aliado y un enemigo; el aliado inflige al enemigo daño igual a su Fuerza.",
+    clash_of_echoes: "Elige un aliado. Ese aliado inflige daño igual a su Fuerza a un enemigo que elijas.",
     shield_of_the_heir: "Elige un aliado y un enemigo; el aliado gana +1/+2 hasta el final del turno. Después, ese aliado lucha contra ese enemigo.",
     the_judgment_of_elarion: "Elige un Apoyo enemigo o un Eco enemigo con Volar; destrúyelo.",
     elixir_of_the_first_leaf: "Elige un Eco; el Eco elegido gana +3/+3 hasta el final del turno.",
