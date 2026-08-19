@@ -18266,19 +18266,42 @@
 .playground-status.is-ok { color: #9fbf8c; }
 .playground-status.is-error { background: rgba(120, 38, 32, 0.28); color: #f0b4a6; }
 
-/* Developer entry on the main menu, under the title rule. Kept out of the nav: it is not part of
-   the game's offering, and it must not shift the menu's rhythm when it disappears in production. */
+/* Development-only tool dock. It lives outside the game menu hierarchy and disappears entirely
+   from production because App never provides the callbacks. */
 .main-menu-developer-tools {
+  position: absolute;
+  right: clamp(18px, 2.5vw, 38px);
+  bottom: clamp(18px, 3vh, 34px);
+  z-index: 6;
   display: flex;
-  align-items: flex-start;
+  max-width: calc(100vw - 36px);
   flex-direction: column;
+  align-items: flex-end;
   gap: 7px;
-  margin-top: 14px;
+  padding: 10px;
+  border: 1px solid rgba(196, 158, 84, 0.2);
+  background: linear-gradient(145deg, rgb(15 20 19 / 0.88), rgb(7 11 12 / 0.92));
+  box-shadow: 0 14px 32px rgb(0 0 0 / 0.42);
+  backdrop-filter: blur(9px);
 }
 
-.main-menu-playground {
+.main-menu-developer-label {
+  color: #897c59;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.main-menu-developer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.main-menu-developer-tool {
   display: inline-flex;
-  align-self: flex-start;
   align-items: center;
   gap: 8px;
   padding: 8px 13px;
@@ -18294,10 +18317,10 @@
   transition: border-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
-.main-menu-playground:hover {
+.main-menu-developer-tool:hover {
   border-color: rgba(224, 190, 116, 0.72);
   color: #f6e6b8;
-  transform: translateX(3px);
+  transform: translateY(-2px);
 }
 
 /* Playground — Phase 3 panels. */

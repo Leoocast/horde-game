@@ -1330,6 +1330,40 @@ test("developer tools keep their development imports without a release URL escap
   assert.match(appSource, /import\("\.\/playground\/PlaygroundScreen"\)/);
   assert.match(appSource, /const AudioLabScreen = import\.meta\.env\.DEV/);
   assert.match(appSource, /import\("\.\/audio-lab\/AudioLabScreen"\)/);
+  assert.match(appSource, /const SeedExplorerScreen = import\.meta\.env\.DEV/);
+  assert.match(appSource, /import\("\.\/seed-explorer\/SeedExplorerScreen"\)/);
   assert.match(gateSource, /export const IS_DEV: boolean = import\.meta\.env\.DEV/);
   assert.doesNotMatch(`${appSource}\n${gateSource}`, /\?playground/);
+});
+
+test("Seed Explorer is a standalone dev screen launched from the home tool dock", () => {
+  const appSource = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
+  const menuSource = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const playgroundSource = readFileSync(new URL("../src/playground/PlaygroundScreen.tsx", import.meta.url), "utf8");
+  const explorerSource = readFileSync(new URL("../src/seed-explorer/SeedExplorerScreen.tsx", import.meta.url), "utf8");
+  const explorerStylesSource = readFileSync(new URL("../src/seed-explorer/SeedExplorerScreen.css", import.meta.url), "utf8");
+  const globalStylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(appSource, /screen === "seedExplorer" && SeedExplorerScreen/u);
+  assert.match(appSource, /onOpenSeedExplorer=\{IS_DEV/u);
+  assert.match(menuSource, /import\.meta\.env\.DEV && menuScreen === "home" && \(onOpenPlayground \|\| onOpenAudioLab \|\| onOpenSeedExplorer\)/u);
+  assert.match(menuSource, /className="main-menu-developer-tools"/u);
+  assert.match(menuSource, />Seed Explorer</u);
+  assert.match(globalStylesSource, /\.main-menu-developer-tools \{[\s\S]*?position: absolute;[\s\S]*?right:[\s\S]*?bottom:/u);
+  assert.doesNotMatch(playgroundSource, /SeedExplorer|id: "seeds"/u);
+  assert.match(explorerSource, /<strong>Aproximación:<\/strong>/u);
+  assert.match(explorerSource, /Preparación se deriva de dificultad/u);
+  assert.match(explorerSource, /Probar en tablero/u);
+  assert.match(explorerSource, /createInitialGame\([\s\S]*?identity\.entropy,[\s\S]*?identity\.preparationTurns,[\s\S]*?identity\.difficulty,[\s\S]*?identity\.gameMode/u);
+  assert.match(explorerSource, /loadScenario\([\s\S]*?createInitialGame/u);
+  assert.match(explorerSource, /startBattleMusic\(true\);[\s\S]*?setBoardCandidate\(candidate\)/u);
+  assert.match(explorerSource, /if \(boardCandidate\)[\s\S]*?<Board/u);
+  assert.match(explorerSource, /onReturnToMenu=\{\(\) => \{[\s\S]*?stopMusic\(\);[\s\S]*?setBoardCandidate\(undefined\);[\s\S]*?\}\}/u);
+  assert.match(explorerSource, /<header className="seed-explorer-topbar">[\s\S]*?seed-explorer-back[\s\S]*?seed-explorer-brand/u);
+  assert.doesNotMatch(explorerSource, /Hostfall · Developer/u);
+  assert.doesNotMatch(explorerSource, /Análisis aproximado|Explicar Seed Explorer|HelpCircle/u);
+  assert.match(explorerSource, /value=\{finalistDraft\}[\s\S]*?onChange=\{\(event\) => updateFinalistDraft\(event\.target\.value\)\}[\s\S]*?onBlur=\{commitFinalistDraft\}/u);
+  assert.match(explorerSource, /import "\.\/SeedExplorerScreen\.css"/u);
+  assert.match(explorerStylesSource, /\.seed-explorer-workspace \{[\s\S]*?position: fixed;[\s\S]*?inset: 0;[\s\S]*?z-index: 10020;/u);
+  assert.doesNotMatch(appSource, /seedExplorerRuntime|seedExplorerSearch/u);
 });

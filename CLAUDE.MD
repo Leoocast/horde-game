@@ -535,7 +535,16 @@ parte también la verificación exacta final. Usa un scheduler, reloj y `AbortSi
 limita publicaciones parciales y conserva el último resultado completo. Cada ejecución recibe un
 `runId`: una búsqueda cancelada o reemplazada no puede publicar encima de la vigente. No usa Web
 Worker; introducir uno exige una decisión separada porque la CSP desktop mantiene
-`worker-src 'none'`. La UI todavía está pendiente.
+`worker-src 'none'`.
+
+La UI vive en `src/seed-explorer/SeedExplorerScreen.tsx`: es una pantalla dev independiente,
+hermana de Playground y Audio Lab, con acceso desde el dock dev abajo a la derecha del home.
+Playground no la importa ni la monta. Favoritos viven en `seedExplorerStorage.ts` como Canon Seeds
+versionadas y se reconstruyen defensivamente; los exports JSON/CSV no incluyen timestamps
+variables. **Probar en tablero** crea un juego nuevo con la entropía, decks, dificultad y
+Preparación de la identidad, llama `loadScenario` y alterna la propia herramienta al Board real.
+Volver desde el Board conserva shortlist, selección y último resultado. La búsqueda nunca muta
+Zustand; sólo ese handoff explícito toca el Board.
 
 Durante una partida normal, la barra superior coloca **Reescribir** antes de Música y Ajustes. Su
 acción principal vuelve al origen de la misma seed, con los mismos decks, dificultad y modo;

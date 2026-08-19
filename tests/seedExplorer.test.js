@@ -23,6 +23,12 @@ import {
   SeedExplorerRuntime,
   runSeedSearchCooperatively,
 } from "../src/playground/seedExplorerRuntime";
+import {
+  parseStoredSeedFavorites,
+  seedSearchResultToCsv,
+  seedSearchResultToJson,
+  serializeStoredSeedFavorites,
+} from "../src/playground/seedExplorerStorage";
 
 const DEFAULT_CONFIG = Object.freeze({
   playerDeckKey: "pact_of_elarion",
@@ -364,6 +370,53 @@ test("the runtime supersedes stale searches and preserves the last complete resu
   assert.equal(runtime.snapshot().status, "cancelled");
   assert.deepEqual(runtime.snapshot().lastCompleteResult, secondOutcome.result);
   assert.equal(runtime.snapshot().result, undefined);
+});
+
+test("favorite storage round-trips Canon identities and fails closed on stale data", () => {
+  const entries = [
+    {
+      canonCode: "HF1-ELA-GRV-LE2-GPT",
+      savedAt: "2026-08-18T12:00:00.000Z",
+      evaluateMulligan: true,
+      avoidEarlySpikes: true,
+    },
+    {
+      canonCode: "HF1-CEC-VRK-AA1-001",
+      savedAt: "2026-08-17T12:00:00.000Z",
+      evaluateMulligan: false,
+      avoidEarlySpikes: false,
+    },
+  ];
+  const serialized = serializeStoredSeedFavorites(entries);
+  assert.deepEqual(parseStoredSeedFavorites(serialized), entries);
+  assert.deepEqual(parseStoredSeedFavorites("not-json"), []);
+  assert.deepEqual(parseStoredSeedFavorites(JSON.stringify({ version: 99, entries })), []);
+  assert.deepEqual(parseStoredSeedFavorites(JSON.stringify({
+    version: 1,
+    entries: [
+      entries[0],
+      entries[0],
+      { ...entries[1], canonCode: "HF1-ELA-NOPE-LE2-GPT" },
+      { ...entries[1], canonCode: entries[1].canonCode.toLowerCase() },
+    ],
+  })), [entries[0]]);
+});
+
+test("JSON and CSV exports are stable, complete and solver-free", () => {
+  const result = searchSeedRange({ ...DEFAULT_CONFIG, startIndex: 40_000, count: 240, top: 3 });
+  const json = seedSearchResultToJson(result);
+  const csv = seedSearchResultToCsv(result);
+
+  assert.equal(seedSearchResultToJson(result), json);
+  assert.equal(seedSearchResultToCsv(result), csv);
+  const parsed = JSON.parse(json);
+  assert.equal(parsed.exportedBy, "hostfall-seed-explorer");
+  assert.equal(parsed.version, 1);
+  assert.deepEqual(parsed.result, result);
+  assert.equal(csv.split("\n").length, result.candidates.length + 1);
+  assert.match(csv, /^rank,canonCode,score,/u);
+  for (const candidate of result.candidates) assert.match(csv, new RegExp(candidate.identity.canonCode, "u"));
+  assert.doesNotMatch(`${json}\n${csv}`, /winning-line-found|impossible/u);
 });
 
 test("disabling mulligan keeps the opening hand and omits its projection", () => {

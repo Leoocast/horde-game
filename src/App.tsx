@@ -45,8 +45,19 @@ const PlaygroundScreen = import.meta.env.DEV
 const AudioLabScreen = import.meta.env.DEV
   ? lazy(() => import("./audio-lab/AudioLabScreen").then((module) => ({ default: module.AudioLabScreen })))
   : undefined;
+const SeedExplorerScreen = import.meta.env.DEV
+  ? lazy(() => import("./seed-explorer/SeedExplorerScreen").then((module) => ({ default: module.SeedExplorerScreen })))
+  : undefined;
 
-type AppScreen = "start" | "deckInspector" | "game" | "tutorial" | "journey" | "playground" | "audioLab";
+type AppScreen =
+  | "start"
+  | "deckInspector"
+  | "game"
+  | "tutorial"
+  | "journey"
+  | "playground"
+  | "audioLab"
+  | "seedExplorer";
 
 type LaunchTransitionState = {
   id: number;
@@ -465,6 +476,21 @@ export default function App() {
     );
   }
 
+  if (screen === "seedExplorer" && SeedExplorerScreen) {
+    return (
+      <Suspense fallback={<div className="playground-chunk-fallback" />}>
+        <AudioClickListener />
+        <SeedExplorerScreen
+          onReturnToMenu={() => {
+            setPreserveMenuMusic(false);
+            setMenuReturnScreen("home");
+            setScreen("start");
+          }}
+        />
+      </Suspense>
+    );
+  }
+
   if (screen === "deckInspector") {
     return (
       <>
@@ -538,6 +564,10 @@ export default function App() {
           onOpenAudioLab={IS_DEV ? () => {
             stopMusic();
             setScreen("audioLab");
+          } : undefined}
+          onOpenSeedExplorer={IS_DEV ? () => {
+            stopMusic();
+            setScreen("seedExplorer");
           } : undefined}
           howToPlayEntries={howToPlayEntries}
           resumeStatus={desktopResume.status}

@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowLeft, AudioLines, BookOpen, ChevronLeft, ChevronRight, Construction, Copy, Dices, Eye, Feather, Github, Play, RefreshCw, RotateCcw, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, AudioLines, BookOpen, ChevronLeft, ChevronRight, Construction, Copy, Dices, Eye, Feather, Github, Play, RefreshCw, RotateCcw, ScanSearch, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
 import { AnimatePresence, motion, useIsPresent } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { findDeckKeyCard, type InspectableDeck } from "../data/deckCatalog";
@@ -44,6 +44,8 @@ type Props = {
   onOpenPlayground?: () => void;
   /** Only provided in development builds; edits the checked-in per-file audio mix. */
   onOpenAudioLab?: () => void;
+  /** Only provided in development builds; searches deterministic Canon futures. */
+  onOpenSeedExplorer?: () => void;
   howToPlayEntries: readonly HowToPlayMenuEntry[];
   resumeStatus?: "none" | "available" | "recovered" | "corrupt";
   onContinue?: () => void;
@@ -61,7 +63,7 @@ const modes: Array<{ id: DifficultyMode; setupTurns: number }> = [
   { id: "hard", setupTurns: 2 },
 ];
 
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, howToPlayEntries, resumeStatus = "none", onContinue, continueDisabled = false, onDiscardResume, onStart }: Props) {
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, onOpenSeedExplorer, howToPlayEntries, resumeStatus = "none", onContinue, continueDisabled = false, onDiscardResume, onStart }: Props) {
   const t = useTranslation();
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [mode, setMode] = useState<DifficultyMode>("easy");
@@ -251,22 +253,6 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
             <div className="main-menu-kicker">{t("menu.kicker")}</div>
             <h1 className="main-menu-title hostfall-wordmark">HOstfAll</h1>
             <div className="main-menu-subtitle"><span /> {t("menu.act")}</div>
-            {(onOpenPlayground || onOpenAudioLab) && (
-              <div className="main-menu-developer-tools">
-                {onOpenPlayground && (
-                  <button className="main-menu-playground" type="button" onClick={onOpenPlayground} title="Developer playground">
-                    <Construction size={15} aria-hidden="true" />
-                    <span>Playground</span>
-                  </button>
-                )}
-                {onOpenAudioLab && (
-                  <button className="main-menu-playground" type="button" onClick={onOpenAudioLab} title="Audio mix authoring tool">
-                    <AudioLines size={15} aria-hidden="true" />
-                    <span>Audio Lab</span>
-                  </button>
-                )}
-              </div>
-            )}
           </div>
 
           <nav className="main-menu-nav" aria-label={t("menu.mainAria")}>
@@ -311,6 +297,31 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           </nav>
 
         </div>
+        {import.meta.env.DEV && menuScreen === "home" && (onOpenPlayground || onOpenAudioLab || onOpenSeedExplorer) && (
+          <aside className="main-menu-developer-tools" aria-label="Developer tools">
+            <span className="main-menu-developer-label">Dev tools</span>
+            <div className="main-menu-developer-actions">
+              {onOpenPlayground && (
+                <button className="main-menu-developer-tool" type="button" onClick={onOpenPlayground} title="Developer playground">
+                  <Construction size={15} aria-hidden="true" />
+                  <span>Playground</span>
+                </button>
+              )}
+              {onOpenAudioLab && (
+                <button className="main-menu-developer-tool" type="button" onClick={onOpenAudioLab} title="Audio mix authoring tool">
+                  <AudioLines size={15} aria-hidden="true" />
+                  <span>Audio Lab</span>
+                </button>
+              )}
+              {onOpenSeedExplorer && (
+                <button className="main-menu-developer-tool" type="button" onClick={onOpenSeedExplorer} title="Canon Seed Explorer">
+                  <ScanSearch size={15} aria-hidden="true" />
+                  <span>Seed Explorer</span>
+                </button>
+              )}
+            </div>
+          </aside>
+        )}
         {menuScreen === "settings" && (
           <section className={`main-settings-screen ${closingMenuScreen === "settings" ? "is-closing" : ""}`} aria-label={t("menu.settings")}>
             <header className="main-settings-header">

@@ -1,6 +1,6 @@
 # Plan de implementación — Seed Explorer interno (MVP barato)
 
-Estado: **implementación en curso; Fases 0–2 cerradas, Fases 3–4 pendientes**.
+Estado: **implementación en curso; Fases 0–3 cerradas, Fase 4 pendiente**.
 
 Última actualización: **2026-08-18**.
 
@@ -8,8 +8,8 @@ Referencia visual aprobada: [`dev/mockups/ui/seed-explorer.html`](../../dev/mock
 
 ## Resultado buscado
 
-Construir dentro del Playground una herramienta dev que enumere muchas seeds, descarte aperturas
-claramente indeseables y entregue 10–20 candidatas para playtest humano.
+Construir una pantalla dev independiente que enumere muchas seeds, descarte aperturas claramente
+indeseables y entregue 10–20 candidatas para playtest humano en el Board real.
 
 El MVP no intenta jugar Hostfall ni decidir objetivamente si una partida es divertida. Usa datos
 estructurales reales del futuro —Mano, mulligan, próximas cartas, Fuentes, curva y orden potencial
@@ -38,7 +38,7 @@ Esto hace fit con la arquitectura vigente sin refactorizar el engine completo.
 | Mulligan | `mulliganOpeningHand` devuelve toda la Mano, vuelve a barajar con el RNG restante y roba una carta menos. | Compartir/probar la proyección barata y verificarla otra vez para finalistas. |
 | Preparación | `endPlayerTurn`, `startPlayerTurnReady` y `playerDrawForecast`. | Recordar que `N` turnos de Preparación producen `N - 1` robos antes de la primera Hueste. |
 | Hueste | `HostRules.ts` y `HostController.ts` resuelven límite de revelados, corte por no-token, Mini Oleada, Oleada y efectos. | El bulk usa ventanas **potenciales**; nunca promete turnos exactos. |
-| Tooling dev | `PlaygroundScreen` ya es un chunk `import.meta.env.DEV` y monta el Board real. | Añadir un workspace ancho dentro del Playground, no otro producto ni una pantalla release. |
+| Tooling dev | `App` ya poda pantallas dev mediante imports condicionados por `import.meta.env.DEV`. | Añadir Seed Explorer como pantalla dev hermana de Playground y Audio Lab, accesible desde el dock dev del home. |
 | Ejecución larga | No existen Workers ni un scheduler CPU. La CSP Electron usa `worker-src 'none'` en desarrollo y producción. | Ejecutar lotes cooperativos en el renderer con progreso y cancelación. Un Worker queda fuera del MVP. |
 | Solver | Las reglas principales son headless, pero no existe `legalActions(state)`, agente genérico ni replay completo de decisiones. | Mantener `solvability: "unchecked"`. No construir IA ni beam search ahora. |
 
@@ -322,30 +322,30 @@ La búsqueda corre dentro del renderer del Playground en lotes cooperativos:
 
 - cada slice trabaja hasta un presupuesto aproximado de 8–12 ms;
 - después cede con el scheduler más pequeño posible (`setTimeout(0)` inyectable);
-- un `AbortSignal` cancela al cambiar configuración, iniciar otra búsqueda o cerrar el workspace;
+- un `AbortSignal` cancela al cambiar configuración, iniciar otra búsqueda o cerrar la pantalla;
 - progreso y shortlist se publican unas pocas veces por segundo, no por seed;
-- abandonar el workspace cancela trabajo futuro, pero conserva el último resultado completo;
+- abandonar la pantalla cancela trabajo futuro, pero conserva el último resultado completo mientras
+  la herramienta siga montada;
 - nunca se muta `useGameStore` durante búsqueda o inspección.
 
 No se usa Web Worker: hoy no existe esa infraestructura y `electron/protocolServer.ts` fija
 `worker-src 'none'`. Si el benchmark real demuestra jank después del fast path, habilitar Workers
 será una propuesta independiente con revisión de CSP y seguridad, no un cambio incidental.
 
-## Integración visual en el Playground
+## Integración visual como pantalla dev
 
-El diseño aprobado no cabe dentro del dock de 460–620 px. La integración será un **workspace ancho**
-perteneciente a `PlaygroundScreen`:
+El diseño aprobado no cabe dentro del dock de 460–620 px y conceptualmente no es una herramienta
+del Playground. La integración será una **pantalla dev independiente**:
 
-- añadir una entrada **Seeds** en la navegación dev;
-- al abrirla, `SeedExplorerWorkspace` cubre visualmente el Board y usa las tres columnas del mockup;
-- el Board permanece montado detrás pero queda `inert` mientras el workspace está abierto;
-- resultados, selección y favoritos se conservan al volver al Board;
+- añadir **Seed Explorer** junto a Playground y Audio Lab en un dock dev abajo a la derecha del home;
+- `SeedExplorerScreen` ocupa el viewport y usa las tres columnas del mockup;
+- **Probar en tablero** alterna la propia pantalla al Board real sin pasar por Playground;
+- el componente de la herramienta conserva resultados, selección y favoritos al volver desde el Board;
 - las columnas se apilan en breakpoints estrechos como ya hace el mockup;
 - la paleta y controles reutilizan el lenguaje visual vigente del Playground, no su distribución;
 - el código Canon nunca se traduce; sólo se localizan los nombres y la dificultad de su preview.
 
-La navegación actual fija cinco columnas aunque ya existen más tabs; al añadir Seeds se cambia a una
-distribución automática, no a otro número hardcodeado.
+Playground no importa ni monta Seed Explorer y mantiene su navegación dedicada a escenarios.
 
 ### Probar una candidata
 
@@ -356,10 +356,10 @@ distribución automática, no a otro número hardcodeado.
 2. lo planta con `useGameStore.loadScenario`, no con `reset`, para no persistir la seed como próxima
    partida normal;
 3. informa al Board los turnos reales de Preparación;
-4. cierra el workspace y colapsa las herramientas;
+4. muestra el Board dentro de Seed Explorer, conservando en memoria el shortlist de la herramienta;
 5. deja que mulligan, acciones, Hueste y combate ocurran por los handlers normales.
 
-Al reabrir Seeds, el shortlist sigue disponible para probar la siguiente candidata.
+Al volver desde el Board, el shortlist sigue disponible para probar la siguiente candidata.
 
 ## Archivos previstos
 
@@ -371,7 +371,8 @@ Al reabrir Seeds, el shortlist sigue disponible para probar la siguiente candida
 - `src/playground/seedExplorerSearch.ts` — enumeración, top-K y verificación exacta incremental.
 - `src/playground/seedExplorerRuntime.ts` — slices cooperativos, progreso, cancelación y protección
   contra resultados obsoletos.
-- `src/playground/panels/SeedExplorerWorkspace.tsx` — filtros, lista, inspector y acciones.
+- `src/seed-explorer/SeedExplorerScreen.css` — piel de la pantalla dentro del chunk dev-only.
+- `src/seed-explorer/SeedExplorerScreen.tsx` — filtros, lista, inspector, acciones y handoff al Board.
 - `src/playground/seedExplorerStorage.ts` — favoritos locales versionados y validación defensiva.
 - `tests/canonSeed.test.js` — codec, normalización, dificultad derivada e independencia de idioma.
 - `tests/seedExplorer.test.js` — paridad, métricas, ranking, batching y storage.
@@ -379,10 +380,11 @@ Al reabrir Seeds, el shortlist sigue disponible para probar la siguiente candida
 ### Modificados
 
 - `src/engine/GameState.ts` — consumir la nueva costura de orden inicial sin cambiar gameplay.
-- `src/playground/PlaygroundScreen.tsx` — launcher/workspace, preservación de estado y probar en Board.
-- `src/styles.css` — implementación de la piel ya aprobada en el mockup.
+- `src/App.tsx` — import dev-only y ruta interna de la pantalla.
+- `src/components/StartMenu.tsx` — dock de herramientas dev en el home.
+- `src/styles.css` — posición y piel del dock dev.
 - `scripts/run-engine-tests.mjs` — registrar explícitamente el nuevo test.
-- `tests/uiPresentation.test.js` — gate dev-only y contrato del workspace.
+- `tests/uiPresentation.test.js` — gate dev-only y contrato de la pantalla independiente.
 - `docs/guides/testing.md` — añadir la nueva cobertura.
 - `CLAUDE.md` — sólo al cerrar la implementación, para resumir el contrato vigente.
 
@@ -450,14 +452,21 @@ completo.
 **Salida:** el renderer puede ceder entre slices durante una búsqueda larga; Cancelar se observa
 antes de procesar el siguiente chunk y ninguna ejecución obsoleta puede reemplazar la activa.
 
-### Fase 3 — Workspace aprobado
+### Fase 3 — Pantalla dev aprobada
+
+**Estado:** cerrada en código el 2026-08-18; queda el QA visual/manual del usuario. La herramienta
+vive en `src/seed-explorer/SeedExplorerScreen.tsx` como pantalla dev hermana de Playground y Audio
+Lab. Se abre desde el dock dev abajo a la derecha del home, usa el runtime real, favoritos locales
+versionados y export JSON/CSV. Reconstruye la candidata mediante `createInitialGame`, la entrega a
+`loadScenario` y alterna al Board real sin perder el estado de búsqueda.
 
 - trasladar el mockup a React con datos reales;
 - integrar filtros, lista, inspector, favoritos y copy/export;
 - conectar **Probar en tablero** al estado real;
-- ajustar navegación y responsive sin comprimir el diseño dentro del dock.
+- integrar la entrada dev en el home y el responsive sin comprimir el diseño dentro de otro dock.
 
-**Salida:** flujo completo búsqueda → inspección → playtest manual.
+**Salida:** flujo completo búsqueda → inspección → playtest manual, pendiente únicamente de ajuste
+visual si el usuario detecta diferencias en su resolución real.
 
 ### Fase 4 — Calibración y cierre
 

@@ -161,7 +161,7 @@ archivo no corre nunca.
 | --- | --- |
 | `tests/engine.test.js` | Reglas del engine: determinismo por seed, Energía y autopago, estados Exhausted/Stabilizing, eventos de Invocación/Juego/Muerte, Acciones Hostfall, perfiles `hostRules`, combate, Surge por deck, compatibilidad legacy de Chaos y targeting |
 | `tests/canonSeed.test.js` | Codec `HF1-PPP-HHH-XXD-XXX`: códigos de deck independientes del idioma, entropía base 36, dificultad/Preparación acopladas y paridad de la costura de shuffle con `createInitialGame` en los cuatro enfrentamientos builtin |
-| `tests/seedExplorer.test.js` | Analyzer, búsqueda y runtime cooperativo: Mano/mulligan/topes exactos, recursos y curva impresa, ventanas potenciales de Hueste, scoring/filtros, rango base 36, top-K estable, batches invariantes, slices cancelables, progreso limitado, protección contra búsquedas obsoletas y verificación contra el engine en los cuatro enfrentamientos builtin |
+| `tests/seedExplorer.test.js` | Analyzer, búsqueda, runtime y persistencia: Mano/mulligan/topes exactos, recursos y curva impresa, ventanas potenciales de Hueste, scoring/filtros, rango base 36, top-K estable, slices cancelables, progreso limitado, protección contra búsquedas obsoletas, favoritos defensivos, export JSON/CSV y verificación contra el engine |
 | `tests/hostBeats.test.js` | Regresiones de presentación del store: cola visual bajo timers retrasados, orden compartido Chronicler/Host, curaciones y pérdida de vida/robo de hechizos. |
 | `tests/deckLint.test.js` | El deck lint como test: una habilidad desconocida rompe la suite; también protege versión, side, vocabulario cerrado Hostfall, perfiles de reglas y normalización de zonas authored |
 | `tests/deckCardText.test.js` | Formato puro del texto impreso, fuente runtime única de reglas, proyecciones generadas y assets locales: Rasgos, Fuerza/Aguante, contadores, creación de fichas, párrafos y rutas de arte |
@@ -178,7 +178,7 @@ archivo no corre nunca.
 | `tests/guidedSession.test.js` | Ciclo de sesión Explicar/Actuar/Observar, barrera entre beats, tokens visuales con epochs, aborto seguro y vertical del Guidance Lab sobre el store real |
 | `tests/audioMix.test.js` | Cobertura y validacion del JSON de mezcla, import/export, conversion de dB y prohibicion de volumen escondido en `playSfx` |
 | `tests/vocabulary.test.js` | Vocabulario público retirado, presentación localizada de cartas y ausencia de archivos, seed mágico o cartas hardcodeadas del tutorial retirado |
-| `tests/uiPresentation.test.js` | Contratos puros y estáticos de presentación: VFX compartido, Burn, presets, capas y geometría visual |
+| `tests/uiPresentation.test.js` | Contratos puros y estáticos de presentación: VFX compartido, Burn, presets, capas, geometría visual, gates dev-only, dock de herramientas en el home e integración de Seed Explorer como pantalla independiente con el Board real |
 | `tests/contentCatalog.test.js` | Snapshot builtin inmutable, 61 identidades, aliases calificados, defaults estrictos, adapters de assets web/desktop, proyecciones de Card Studio y rechazo de candidatos external adversariales |
 | `tests/electronSecurity.test.js` | Policy pura de `hostfall://`, traversal/hosts/packs adversariales, MIME, Range, roots e integración de respuestas parciales con CSP |
 | `tests/electronPersistence.test.js` | Rutas cloud-worthy/local-only, escritura atómica, backup, corrupción y validación de window state |
