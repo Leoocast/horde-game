@@ -172,6 +172,8 @@ test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms comb
     direction: "up",
     tone: "source",
   });
+  assert.equal(opening.get("play-fourth-source").dimmer, "hidden");
+  assert.equal(opening.get("invoke-aelyra").dimmer, "hidden");
   assert.equal(opening.get("choose-aelyra-target").callout, "hidden");
   assert.equal(opening.get("confirm-aelyra-target").callout, "hidden");
   assert.deepEqual(opening.get("enter-first-combat").presentation, { kind: "spotlight", tone: "gold" });
@@ -243,9 +245,9 @@ test("Learn to Play authors the exact advanced board two Host turns before Surge
   assert.equal(game.hostTurnNumber, 8);
   assert.equal(game.player.life, 31);
   assert.deepEqual(game.player.hand.map((card) => card.instanceId), [
-    id("fourth_source"),
-    id("aelyra"),
     id("vaelor"),
+    id("aelyra"),
+    id("fourth_source"),
   ]);
   assert.deepEqual(definitionIds(game.player.field), [
     "maela_watcher_of_the_heights",
@@ -255,8 +257,8 @@ test("Learn to Play authors the exact advanced board two Host turns before Surge
   ]);
   assert.deepEqual(definitionIds(game.player.archive), [
     "veiled_dawn_flower",
-    "river_of_elarion",
     "clash_of_echoes",
+    "river_of_elarion",
     "echo_of_the_forgotten_city",
   ]);
   assert.deepEqual(definitionIds(game.host.field), [
@@ -432,7 +434,7 @@ test("the post-Surge turn draws two, returns the fifth Source, and computes an u
   const built = reachPostSurgeTurn({ playFlower: true });
   let { game } = built;
 
-  assert.deepEqual(definitionIds(game.player.hand), ["river_of_elarion", "clash_of_echoes"]);
+  assert.deepEqual(definitionIds(game.player.hand), ["clash_of_echoes", "river_of_elarion"]);
   const returnedSource = game.player.hand.find((card) => card.definitionId === "river_of_elarion");
   assert.ok(returnedSource);
   const rejectedFifthSource = castCard(game, returnedSource.instanceId);
@@ -459,7 +461,7 @@ test("every first-Surge offset empties the Hand and reaches the real two-card dr
     for (const attackBeforeSurge of [false, true]) {
       const { game } = reachPostSurgeTurn({ playFlower, attackBeforeSurge });
       assert.equal(game.player.life, 1);
-      assert.deepEqual(definitionIds(game.player.hand), ["river_of_elarion", "clash_of_echoes"]);
+      assert.deepEqual(definitionIds(game.player.hand), ["clash_of_echoes", "river_of_elarion"]);
       assert.equal(game.player.field.filter((card) => card.kinds.includes("SOURCE") && !card.exhausted).length, 4);
     }
   }

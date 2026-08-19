@@ -154,6 +154,7 @@ archivo no corre nunca.
 | Archivo | Cubre |
 | --- | --- |
 | `tests/engine.test.js` | Reglas del engine: determinismo por seed, Energía y autopago, estados Exhausted/Stabilizing, eventos de Invocación/Juego/Muerte, Acciones Hostfall, perfiles `hostRules`, combate, Surge por deck, compatibilidad legacy de Chaos y targeting |
+| `tests/canonSeed.test.js` | Codec `HF1-PPP-HHH-XXD-XXX`: códigos de deck independientes del idioma, entropía base 36, dificultad/Preparación acopladas y paridad de la costura de shuffle con `createInitialGame` en los cuatro enfrentamientos builtin |
 | `tests/hostBeats.test.js` | Regresiones de presentación del store: cola visual bajo timers retrasados, orden compartido Chronicler/Host, curaciones y pérdida de vida/robo de hechizos. |
 | `tests/deckLint.test.js` | El deck lint como test: una habilidad desconocida rompe la suite; también protege versión, side, vocabulario cerrado Hostfall, perfiles de reglas y normalización de zonas authored |
 | `tests/deckCardText.test.js` | Formato puro del texto impreso, fuente runtime única de reglas, proyecciones generadas y assets locales: Rasgos, Fuerza/Aguante, contadores, creación de fichas, párrafos y rutas de arte |

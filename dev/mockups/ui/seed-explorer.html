@@ -1,0 +1,1433 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hostfall — Seed Explorer</title>
+    <style>
+      * { box-sizing: border-box; }
+
+      :root {
+        color-scheme: dark;
+        font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+        background: #0b0c0a;
+        color: #e4ddc2;
+      }
+
+      body {
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+        background:
+          radial-gradient(circle at 84% -10%, rgba(143, 105, 38, 0.12), transparent 32%),
+          linear-gradient(180deg, #15160f 0%, #0b0c09 100%);
+      }
+
+      button,
+      input,
+      select { font: inherit; }
+
+      button { cursor: pointer; }
+
+      .seed-shell {
+        min-height: 100vh;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+      }
+
+      .seed-topbar {
+        min-height: 76px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 22px;
+        padding: 12px 18px;
+        border-bottom: 1px solid rgba(196, 158, 84, 0.24);
+        background:
+          linear-gradient(180deg, rgba(33, 31, 22, 0.98), rgba(13, 14, 11, 0.98)),
+          #101109;
+      }
+
+      .seed-brand {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+      }
+
+      .seed-brand-mark {
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(210, 172, 91, 0.5);
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(139, 105, 42, 0.46), rgba(15, 16, 12, 0.92));
+        color: #dfbd71;
+        box-shadow: inset 0 0 12px rgba(226, 185, 92, 0.12);
+      }
+
+      .seed-brand-mark svg { width: 18px; height: 18px; }
+
+      .seed-kicker {
+        color: #b08a48;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .seed-title {
+        margin: 2px 0 0;
+        color: #f2e7c3;
+        font-size: 19px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .seed-title span { color: #6f6a58; }
+
+      .seed-top-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+      }
+
+      .seed-mode {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 9px;
+        border: 1px solid rgba(196, 158, 84, 0.2);
+        background: rgba(15, 16, 13, 0.74);
+        color: #8d9a94;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .seed-mode i {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #9fbf8c;
+        box-shadow: 0 0 8px rgba(159, 191, 140, 0.52);
+      }
+
+      .seed-icon-button,
+      .seed-button {
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        border: 1px solid rgba(196, 158, 84, 0.34);
+        background: rgba(20, 21, 18, 0.86);
+        color: #cbc3a6;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .seed-icon-button { width: 36px; padding: 0; }
+      .seed-icon-button svg,
+      .seed-button svg { width: 15px; height: 15px; flex: 0 0 auto; }
+
+      .seed-icon-button:hover,
+      .seed-button:hover {
+        border-color: rgba(224, 190, 116, 0.7);
+        color: #f2e7c3;
+      }
+
+      .seed-button { padding: 0 12px; }
+
+      .seed-button.is-primary {
+        border-color: rgba(224, 190, 116, 0.78);
+        background: rgba(120, 92, 38, 0.52);
+        color: #f8ecc2;
+      }
+
+      .seed-button.is-block { width: 100%; min-height: 40px; }
+
+      .seed-workbench {
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(230px, 280px) minmax(390px, 1fr) minmax(330px, 430px);
+      }
+
+      .seed-filter-column,
+      .seed-result-column,
+      .seed-inspector-column { min-width: 0; }
+
+      .seed-filter-column {
+        padding: 15px;
+        border-right: 1px solid rgba(196, 158, 84, 0.2);
+        background: rgba(13, 14, 11, 0.72);
+      }
+
+      .seed-result-column {
+        display: flex;
+        flex-direction: column;
+        background:
+          radial-gradient(circle at 80% 0%, rgba(143, 105, 38, 0.07), transparent 30%),
+          rgba(17, 18, 13, 0.54);
+      }
+
+      .seed-inspector-column {
+        padding: 15px;
+        border-left: 1px solid rgba(196, 158, 84, 0.2);
+        background: rgba(12, 13, 10, 0.84);
+      }
+
+      .seed-section-stack { display: grid; gap: 12px; }
+
+      .seed-group {
+        display: grid;
+        gap: 10px;
+        padding: 12px 13px 13px;
+        border: 1px solid rgba(196, 158, 84, 0.22);
+        border-radius: 4px;
+        background: rgba(22, 23, 18, 0.64);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      }
+
+      .seed-group-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .seed-group-title {
+        margin: 0;
+        color: #cba55f;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .seed-group-note {
+        color: #7f7a66;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+      }
+
+      .seed-field { display: grid; gap: 4px; }
+
+      .seed-field > span {
+        color: #938d76;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .seed-field input,
+      .seed-field select {
+        width: 100%;
+        height: 34px;
+        border: 1px solid rgba(196, 158, 84, 0.32);
+        border-radius: 0;
+        padding: 0 9px;
+        background: rgba(12, 13, 11, 0.92);
+        color: #f2e7c3;
+        font-size: 12px;
+      }
+
+      .seed-field input:focus,
+      .seed-field select:focus {
+        outline: none;
+        border-color: rgba(224, 190, 116, 0.72);
+      }
+
+      .seed-grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+      .seed-profile-description {
+        margin: 0;
+        color: #7f7a66;
+        font-size: 11px;
+        line-height: 1.45;
+      }
+
+      .seed-profile-description strong { color: #b9ad86; }
+
+      .seed-switch-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        color: #938d76;
+        font-size: 11px;
+      }
+
+      .seed-switch-row input { accent-color: #b08a48; }
+
+      .seed-search-progress {
+        display: grid;
+        gap: 6px;
+      }
+
+      .seed-search-progress > div:first-child {
+        display: flex;
+        justify-content: space-between;
+        color: #8d9a94;
+        font-size: 10px;
+      }
+
+      .seed-progress-track {
+        height: 4px;
+        overflow: hidden;
+        background: rgba(9, 10, 8, 0.9);
+      }
+
+      .seed-progress-fill {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, #72582b, #d1a856);
+        box-shadow: 0 0 10px rgba(209, 168, 86, 0.25);
+        transition: width 420ms ease;
+      }
+
+      .seed-results-header {
+        min-height: 78px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 16px 12px;
+        border-bottom: 1px solid rgba(196, 158, 84, 0.2);
+      }
+
+      .seed-results-heading h2 {
+        margin: 0;
+        color: #f2e7c3;
+        font-size: 17px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .seed-results-heading p {
+        margin: 4px 0 0;
+        color: #7f7a66;
+        font-size: 11px;
+      }
+
+      .seed-result-actions { display: flex; gap: 6px; }
+
+      .seed-tabs {
+        display: flex;
+        border-bottom: 1px solid rgba(196, 158, 84, 0.2);
+        padding: 0 16px;
+      }
+
+      .seed-tab {
+        min-height: 38px;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        padding: 0 14px;
+        background: transparent;
+        color: #8e8975;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .seed-tab:hover { color: #d9cfa8; }
+      .seed-tab.is-active { border-bottom-color: #d1a856; color: #f2e7c3; }
+
+      .seed-list {
+        display: grid;
+        gap: 5px;
+        padding: 12px 14px 18px;
+      }
+
+      .seed-result {
+        width: 100%;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr) 130px 48px;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid rgba(196, 158, 84, 0.16);
+        border-radius: 3px;
+        padding: 10px;
+        background: rgba(15, 16, 13, 0.68);
+        color: #cbc3a6;
+        text-align: left;
+      }
+
+      .seed-result:hover {
+        border-color: rgba(196, 158, 84, 0.34);
+        background: rgba(28, 27, 19, 0.78);
+      }
+
+      .seed-result.is-active {
+        border-color: rgba(224, 190, 116, 0.7);
+        background: linear-gradient(90deg, rgba(120, 92, 38, 0.34), rgba(22, 23, 18, 0.76));
+        box-shadow: inset 2px 0 #d1a856;
+      }
+
+      .seed-rank {
+        color: #6f6a58;
+        font-size: 12px;
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .seed-result.is-active .seed-rank { color: #d1a856; }
+
+      .seed-result-copy { min-width: 0; display: grid; gap: 3px; }
+
+      .seed-result-code {
+        overflow: hidden;
+        color: #f2e7c3;
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: 12px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .seed-result-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
+
+      .seed-tag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 18px;
+        border: 1px solid rgba(196, 158, 84, 0.22);
+        padding: 0 6px;
+        background: rgba(120, 92, 38, 0.16);
+        color: #b9ad86;
+        font-size: 8px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .seed-tag.is-easy { border-color: rgba(126, 173, 104, 0.34); color: #9fbf8c; }
+      .seed-tag.is-hard { border-color: rgba(190, 97, 78, 0.34); color: #d99a8c; }
+
+      .seed-mini-metrics { display: grid; gap: 5px; }
+
+      .seed-mini-line {
+        display: grid;
+        grid-template-columns: 44px 1fr;
+        align-items: center;
+        gap: 5px;
+        color: #756e5d;
+        font-size: 8px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .seed-mini-track { height: 3px; background: rgba(8, 9, 7, 0.9); }
+      .seed-mini-track i { display: block; height: 100%; background: #9a7c42; }
+      .seed-mini-line:last-child .seed-mini-track i { background: #8d9a94; }
+
+      .seed-score {
+        color: #e2c271;
+        font-size: 18px;
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .seed-score small {
+        display: block;
+        color: #6f6a58;
+        font-size: 8px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .seed-empty {
+        padding: 36px 12px;
+        color: #7f7a66;
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .seed-inspector { display: grid; gap: 12px; }
+
+      .seed-inspector-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+        gap: 10px;
+      }
+
+      .seed-inspector-code {
+        overflow: hidden;
+        margin-top: 4px;
+        color: #f2e7c3;
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: 14px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .seed-favorite {
+        width: 32px;
+        height: 32px;
+        border: 1px solid rgba(196, 158, 84, 0.28);
+        background: rgba(15, 16, 13, 0.82);
+        color: #756e5d;
+        font-size: 18px;
+      }
+
+      .seed-favorite.is-active { border-color: rgba(224, 190, 116, 0.62); color: #e2c271; }
+
+      .seed-metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+      .seed-metric {
+        display: grid;
+        gap: 5px;
+        border: 1px solid rgba(196, 158, 84, 0.15);
+        padding: 8px;
+        background: rgba(10, 11, 9, 0.48);
+      }
+
+      .seed-metric > div:first-child {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        color: #827d6a;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+      }
+
+      .seed-metric strong { color: #ded2ad; font-size: 11px; }
+
+      .seed-metric-track { height: 4px; background: rgba(4, 5, 4, 0.84); }
+      .seed-metric-track i { display: block; height: 100%; background: linear-gradient(90deg, #72582b, #cba55f); }
+      .seed-metric.is-pressure .seed-metric-track i { background: linear-gradient(90deg, #5b372d, #b6715e); }
+
+      .seed-sequence { display: grid; gap: 6px; }
+
+      .seed-card-row {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(48px, 1fr);
+        gap: 5px;
+      }
+
+      .seed-card-mini {
+        position: relative;
+        min-width: 0;
+        min-height: 62px;
+        display: flex;
+        align-items: flex-end;
+        overflow: hidden;
+        border: 1px solid rgba(196, 158, 84, 0.24);
+        padding: 7px 5px 6px;
+        background:
+          linear-gradient(180deg, rgba(53, 61, 48, 0.7), rgba(11, 15, 12, 0.96)),
+          #11150f;
+        color: #d9cfa8;
+        font-size: 8px;
+        font-weight: 800;
+        line-height: 1.15;
+        text-align: center;
+        text-transform: uppercase;
+      }
+
+      .seed-card-mini::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        height: 3px;
+        background: #7ca2c6;
+      }
+
+      .seed-card-mini.is-source::before { background: #5b9ce0; }
+      .seed-card-mini.is-spell::before { background: #b59655; }
+      .seed-card-mini span {
+        width: 100%;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+      }
+
+      .seed-horde-preview { display: grid; gap: 5px; }
+
+      .seed-horde-turn {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr) 70px;
+        align-items: center;
+        gap: 8px;
+        min-height: 30px;
+        border-bottom: 1px solid rgba(196, 158, 84, 0.12);
+        color: #aca386;
+        font-size: 10px;
+      }
+
+      .seed-horde-turn:last-child { border-bottom: 0; }
+      .seed-horde-turn b { color: #8b7452; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+      .seed-pressure-level { color: #8d9a94; font-size: 9px; text-align: right; text-transform: uppercase; }
+      .seed-pressure-level.is-rising { color: #d2a66f; }
+
+      .seed-inspector-actions { display: grid; grid-template-columns: 1fr 1.3fr; gap: 7px; }
+
+      .seed-disclaimer {
+        margin: 0;
+        color: #756e5d;
+        font-size: 10px;
+        line-height: 1.45;
+      }
+
+      .seed-disclaimer strong { color: #a1987e; }
+
+      .seed-statusbar {
+        min-height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 6px 14px;
+        border-top: 1px solid rgba(196, 158, 84, 0.2);
+        background: #0d0e0b;
+        color: #6f6a58;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+      }
+
+      .seed-statusbar strong { color: #9fbf8c; }
+
+      @media (max-width: 1180px) {
+        .seed-workbench { grid-template-columns: 280px minmax(0, 1fr); }
+        .seed-inspector-column { grid-column: 1 / -1; border-top: 1px solid rgba(196, 158, 84, 0.2); border-left: 0; }
+        .seed-inspector { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+        .seed-inspector > .seed-group:first-child { grid-row: span 2; }
+      }
+
+      @media (max-width: 720px) {
+        .seed-topbar { align-items: flex-start; }
+        .seed-mode { display: none; }
+        .seed-title span { display: none; }
+        .seed-workbench { display: block; }
+        .seed-filter-column,
+        .seed-inspector-column { border: 0; border-bottom: 1px solid rgba(196, 158, 84, 0.2); }
+        .seed-inspector { display: grid; grid-template-columns: 1fr; }
+        .seed-result { grid-template-columns: 28px minmax(0, 1fr) 42px; }
+        .seed-mini-metrics { display: none; }
+        .seed-results-header { align-items: flex-start; }
+        .seed-result-actions .seed-button span { display: none; }
+        .seed-result-actions .seed-button { width: 36px; padding: 0; }
+        .seed-card-row { overflow-x: auto; grid-auto-columns: 62px; }
+        .seed-statusbar span:last-child { display: none; }
+      }
+
+      /* Piel vigente del Playground: carbón azulado, metal apagado y oro como acento. */
+      :root {
+        background: #080e10;
+        color: #d7d1b9;
+      }
+
+      body {
+        background:
+          radial-gradient(circle at 88% 0%, rgb(154 125 64 / 0.07), transparent 34%),
+          linear-gradient(180deg, #11191a, #080e10);
+      }
+
+      .seed-topbar {
+        border-bottom-color: rgb(151 143 103 / 0.24);
+        background: linear-gradient(180deg, rgb(28 35 36 / 0.88), rgb(11 18 19 / 0.76));
+      }
+
+      .seed-brand-mark {
+        border-color: rgb(208 187 119 / 0.56);
+        background: radial-gradient(circle, rgb(130 101 45 / 0.44), rgb(10 17 18 / 0.96));
+        color: #d8bd7a;
+        box-shadow:
+          inset 0 0 12px rgb(226 185 92 / 0.1),
+          0 0 18px rgb(184 144 61 / 0.08);
+      }
+
+      .seed-kicker {
+        color: #8f845e;
+        letter-spacing: 0.2em;
+      }
+
+      .seed-title,
+      .seed-results-heading h2 {
+        color: #ded4b5;
+        font-family: Georgia, "Times New Roman", serif;
+        font-weight: 500;
+        text-transform: none;
+      }
+
+      .seed-title { letter-spacing: 0.09em; }
+      .seed-title span { color: #71817c; }
+
+      .seed-mode {
+        border-color: rgb(124 142 137 / 0.24);
+        background: rgb(7 13 15 / 0.74);
+        color: #7f8f89;
+      }
+
+      .seed-mode i {
+        background: #829b8b;
+        box-shadow: 0 0 8px rgb(130 155 139 / 0.38);
+      }
+
+      .seed-icon-button,
+      .seed-button {
+        border-color: rgb(124 142 137 / 0.3);
+        border-radius: 2px;
+        background: linear-gradient(180deg, rgb(28 36 37 / 0.94), rgb(8 15 17 / 0.96));
+        color: #b8b9aa;
+        transition:
+          border-color 150ms ease,
+          color 150ms ease,
+          filter 150ms ease,
+          transform 120ms ease;
+      }
+
+      .seed-icon-button:hover,
+      .seed-button:hover {
+        border-color: rgb(208 187 119 / 0.66);
+        color: #efe3bd;
+        filter: brightness(1.08);
+        transform: translateY(-1px);
+      }
+
+      .seed-button.is-primary {
+        border-color: rgb(177 158 95 / 0.5);
+        background: linear-gradient(180deg, rgb(78 65 38 / 0.9), rgb(29 29 23 / 0.96));
+        color: #e3d5aa;
+      }
+
+      .seed-filter-column {
+        border-right-color: rgb(151 143 103 / 0.2);
+        background: linear-gradient(180deg, rgb(16 24 25 / 0.94), rgb(7 13 15 / 0.98));
+      }
+
+      .seed-result-column {
+        background:
+          radial-gradient(circle at 82% 0%, rgb(154 125 64 / 0.055), transparent 31%),
+          linear-gradient(180deg, rgb(14 22 23 / 0.78), rgb(7 13 15 / 0.9));
+      }
+
+      .seed-inspector-column {
+        border-left-color: rgb(151 143 103 / 0.2);
+        background: linear-gradient(180deg, rgb(13 20 21 / 0.96), rgb(6 12 14 / 0.98));
+      }
+
+      .seed-group {
+        border-color: rgb(124 142 137 / 0.25);
+        border-top-color: rgb(164 151 101 / 0.34);
+        border-radius: 2px;
+        background: linear-gradient(145deg, rgb(25 33 34 / 0.76), rgb(8 15 17 / 0.88));
+        box-shadow:
+          inset 0 1px rgb(235 220 171 / 0.035),
+          0 9px 24px rgb(0 0 0 / 0.16);
+      }
+
+      .seed-group-title {
+        color: #aa9b68;
+        letter-spacing: 0.2em;
+      }
+
+      .seed-group-note,
+      .seed-profile-description,
+      .seed-results-heading p,
+      .seed-empty,
+      .seed-disclaimer {
+        color: #71817c;
+      }
+
+      .seed-profile-description strong,
+      .seed-disclaimer strong { color: #aeb29f; }
+
+      .seed-field > span {
+        color: #82908b;
+        letter-spacing: 0.14em;
+      }
+
+      .seed-field input,
+      .seed-field select {
+        border-color: rgb(124 142 137 / 0.32);
+        border-radius: 2px;
+        background: rgb(4 10 12 / 0.78);
+        color: #d9d4bd;
+        transition:
+          border-color 150ms ease,
+          box-shadow 150ms ease,
+          background 150ms ease;
+      }
+
+      .seed-field input:focus,
+      .seed-field select:focus {
+        border-color: rgb(177 158 95 / 0.64);
+        background: rgb(7 14 16 / 0.96);
+        box-shadow: 0 0 0 1px rgb(177 158 95 / 0.08), 0 0 18px rgb(177 136 57 / 0.06);
+      }
+
+      .seed-switch-row { color: #82908b; }
+      .seed-switch-row input { accent-color: #aa9b68; }
+
+      .seed-search-progress > div:first-child { color: #7f8f89; }
+      .seed-progress-track,
+      .seed-mini-track,
+      .seed-metric-track { background: rgb(4 10 12 / 0.88); }
+      .seed-progress-fill { background: linear-gradient(90deg, #69572f, #caaa63); }
+
+      .seed-results-header {
+        border-bottom-color: rgb(151 143 103 / 0.2);
+        background: linear-gradient(180deg, rgb(28 35 36 / 0.52), rgb(12 18 20 / 0.16));
+      }
+
+      .seed-results-heading h2 { letter-spacing: 0.07em; }
+
+      .seed-tabs {
+        border-bottom-color: rgb(151 143 103 / 0.25);
+        background: rgb(5 11 13 / 0.52);
+      }
+
+      .seed-tab { color: #778681; }
+      .seed-tab:hover { color: #c7c0a6; }
+      .seed-tab.is-active {
+        border-bottom-color: #caaa63;
+        background: linear-gradient(180deg, rgb(112 84 38 / 0.2), rgb(29 38 38 / 0.12));
+        color: #eee2c2;
+      }
+
+      .seed-result {
+        border-color: rgb(124 142 137 / 0.22);
+        border-radius: 2px;
+        background: rgb(7 14 16 / 0.62);
+        color: #b8b9aa;
+        transition:
+          border-color 150ms ease,
+          background 150ms ease,
+          transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .seed-result:hover {
+        border-color: rgb(177 158 95 / 0.44);
+        background: rgb(32 38 36 / 0.84);
+        transform: translateX(2px);
+      }
+
+      .seed-result.is-active {
+        border-color: rgb(208 187 119 / 0.35);
+        background: linear-gradient(90deg, rgb(112 84 38 / 0.52), rgb(29 38 38 / 0.42));
+        box-shadow: inset 2px 0 #caaa63;
+      }
+
+      .seed-rank,
+      .seed-score small { color: #677873; }
+      .seed-result.is-active .seed-rank,
+      .seed-score { color: #d8bd7a; }
+      .seed-result-code,
+      .seed-inspector-code { color: #ded4b5; }
+
+      .seed-tag {
+        border-color: rgb(124 142 137 / 0.28);
+        background: rgb(28 36 37 / 0.72);
+        color: #aeb29f;
+      }
+
+      .seed-tag.is-easy {
+        border-color: rgb(117 157 132 / 0.4);
+        color: #9bb7a5;
+      }
+
+      .seed-tag.is-hard {
+        border-color: rgb(170 103 90 / 0.42);
+        color: #cc9488;
+      }
+
+      .seed-mini-line { color: #677873; }
+      .seed-mini-track i { background: #9b8654; }
+      .seed-mini-line:last-child .seed-mini-track i { background: #718f89; }
+
+      .seed-favorite {
+        border-color: rgb(124 142 137 / 0.28);
+        background: rgb(7 14 16 / 0.72);
+        color: #677873;
+      }
+
+      .seed-favorite.is-active {
+        border-color: rgb(208 187 119 / 0.52);
+        color: #d8bd7a;
+      }
+
+      .seed-metric {
+        border-color: rgb(124 142 137 / 0.2);
+        background: rgb(4 10 12 / 0.55);
+      }
+
+      .seed-metric > div:first-child { color: #71817c; }
+      .seed-metric strong { color: #c8c4ae; }
+      .seed-metric-track i { background: linear-gradient(90deg, #69572f, #aa9b68); }
+      .seed-metric.is-pressure .seed-metric-track i { background: linear-gradient(90deg, #5e3a34, #aa6c60); }
+
+      .seed-card-mini {
+        border-color: rgb(124 142 137 / 0.26);
+        background: linear-gradient(180deg, rgb(31 43 43 / 0.82), rgb(6 13 15 / 0.97));
+        color: #c8c4ae;
+      }
+
+      .seed-card-mini::before { background: #718f89; }
+      .seed-card-mini.is-source::before { background: #6a91ae; }
+      .seed-card-mini.is-spell::before { background: #aa9b68; }
+
+      .seed-horde-turn {
+        border-bottom-color: rgb(124 142 137 / 0.16);
+        color: #aeb29f;
+      }
+
+      .seed-horde-turn b { color: #8f845e; }
+      .seed-pressure-level { color: #71817c; }
+      .seed-pressure-level.is-rising { color: #c69567; }
+
+      .seed-statusbar {
+        border-top-color: rgb(151 143 103 / 0.2);
+        background: rgb(5 11 13 / 0.94);
+        color: #677873;
+      }
+
+      .seed-statusbar strong { color: #93ad9b; }
+
+      @media (max-width: 1180px) {
+        .seed-inspector-column { border-top-color: rgb(151 143 103 / 0.2); }
+      }
+
+      @media (max-width: 720px) {
+        .seed-filter-column,
+        .seed-inspector-column { border-bottom-color: rgb(151 143 103 / 0.2); }
+      }
+
+      /* Escala tipográfica 1.3×, con contenedores ajustados a su nuevo ritmo. */
+      .seed-kicker,
+      .seed-mode,
+      .seed-icon-button,
+      .seed-button,
+      .seed-group-note,
+      .seed-field > span,
+      .seed-search-progress > div:first-child,
+      .seed-tab,
+      .seed-horde-turn,
+      .seed-disclaimer { font-size: 13px; }
+
+      .seed-title { font-size: 24.7px; }
+      .seed-results-heading h2 { font-size: 22.1px; }
+
+      .seed-group-title,
+      .seed-profile-description,
+      .seed-switch-row,
+      .seed-results-heading p,
+      .seed-metric strong { font-size: 14.3px; }
+
+      .seed-field input,
+      .seed-field select,
+      .seed-rank,
+      .seed-result-code,
+      .seed-empty { font-size: 15.6px; }
+
+      .seed-tag,
+      .seed-mini-line,
+      .seed-score small,
+      .seed-card-mini { font-size: 10.4px; }
+
+      .seed-score,
+      .seed-favorite { font-size: 23.4px; }
+
+      .seed-inspector-code { font-size: 18.2px; }
+
+      .seed-metric > div:first-child,
+      .seed-horde-turn b,
+      .seed-pressure-level,
+      .seed-statusbar { font-size: 11.7px; }
+
+      .seed-topbar {
+        min-height: 86px;
+        padding: 14px 18px;
+      }
+
+      .seed-top-actions,
+      .seed-results-header { flex-wrap: wrap; }
+
+      .seed-mode { padding: 8px 10px; }
+
+      .seed-icon-button,
+      .seed-button { min-height: 40px; }
+
+      .seed-icon-button { width: 40px; }
+      .seed-button.is-block { min-height: 44px; }
+
+      .seed-workbench {
+        grid-template-columns: minmax(270px, 310px) minmax(460px, 1fr) minmax(360px, 460px);
+      }
+
+      .seed-filter-column,
+      .seed-inspector-column { padding: 17px; }
+
+      .seed-section-stack,
+      .seed-inspector { gap: 14px; }
+
+      .seed-group {
+        gap: 12px;
+        padding: 14px 15px 15px;
+      }
+
+      .seed-field { gap: 6px; }
+
+      .seed-field input,
+      .seed-field select { height: 40px; }
+
+      .seed-results-header {
+        min-height: 92px;
+        padding: 16px 18px 14px;
+      }
+
+      .seed-tab {
+        min-height: 44px;
+        padding: 0 16px;
+      }
+
+      .seed-list {
+        gap: 7px;
+        padding: 14px 16px 20px;
+      }
+
+      .seed-result {
+        grid-template-columns: 40px minmax(0, 1fr) 156px 58px;
+        gap: 12px;
+        padding: 12px;
+      }
+
+      .seed-tag { min-height: 22px; }
+      .seed-mini-line { grid-template-columns: 58px 1fr; gap: 7px; }
+
+      .seed-favorite {
+        width: 38px;
+        height: 38px;
+      }
+
+      .seed-metric-grid { gap: 10px; }
+      .seed-metric { gap: 7px; padding: 10px; }
+
+      .seed-card-row { gap: 7px; }
+      .seed-card-mini { min-height: 72px; padding: 8px 6px 7px; }
+
+      .seed-horde-turn {
+        grid-template-columns: 42px minmax(0, 1fr) 88px;
+        gap: 10px;
+        min-height: 36px;
+      }
+
+      .seed-statusbar {
+        min-height: 40px;
+        padding: 7px 16px;
+      }
+
+      @media (max-width: 1180px) {
+        .seed-workbench { grid-template-columns: 280px minmax(0, 1fr); }
+      }
+
+      @media (max-width: 720px) {
+        .seed-topbar { min-height: 0; }
+        .seed-workbench { display: block; }
+        .seed-result {
+          grid-template-columns: 32px minmax(0, 1fr) 52px;
+          gap: 8px;
+          padding: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="seed-shell">
+      <header class="seed-topbar">
+        <div class="seed-brand">
+          <span class="seed-brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+              <circle cx="12" cy="12" r="8"></circle>
+              <path d="M12 2v5m0 10v5M2 12h5m10 0h5"></path>
+              <path d="m12 8 2.8 6.8L8 12z"></path>
+            </svg>
+          </span>
+          <div>
+            <div class="seed-kicker">Hostfall · Playground</div>
+            <h1 class="seed-title">Seed Explorer <span>/ Laboratorio de futuros</span></h1>
+          </div>
+        </div>
+        <div class="seed-top-actions">
+          <span class="seed-mode"><i></i>Análisis aproximado</span>
+          <button class="seed-icon-button" type="button" aria-label="Ayuda">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M9.8 9a2.4 2.4 0 1 1 3.7 2c-1 .6-1.5 1.1-1.5 2.2"></path><path d="M12 17h.01"></path></svg>
+          </button>
+          <button class="seed-button" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h12"></path><path d="m8 7-5 5 5 5"></path><path d="M15 5h5v14h-5"></path></svg>
+            <span>Volver</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="seed-workbench">
+        <aside class="seed-filter-column" aria-label="Configuración de búsqueda">
+          <div class="seed-section-stack">
+            <section class="seed-group">
+              <div class="seed-group-head">
+                <h2 class="seed-group-title">Partida</h2>
+                <span class="seed-group-note">Determinista</span>
+              </div>
+              <label class="seed-field">
+                <span>Crónica</span>
+                <select>
+                  <option>El Pacto de Elarion</option>
+                  <option>La Corte del Eclipse Carmesí</option>
+                </select>
+              </label>
+              <label class="seed-field">
+                <span>Hueste</span>
+                <select>
+                  <option>El Alzamiento de los Sinsepulcro</option>
+                  <option>La Legión de Varka</option>
+                </select>
+              </label>
+              <div class="seed-grid-two">
+                <label class="seed-field">
+                  <span>Dificultad</span>
+                  <select><option>Normal</option><option>Difícil</option></select>
+                </label>
+                <label class="seed-field">
+                  <span>Preparación</span>
+                  <select><option>3 turnos</option><option>2 turnos</option><option>4 turnos</option></select>
+                </label>
+              </div>
+            </section>
+
+            <section class="seed-group">
+              <div class="seed-group-head">
+                <h2 class="seed-group-title">Perfil buscado</h2>
+                <span class="seed-group-note">Demo</span>
+              </div>
+              <label class="seed-field">
+                <span>Tipo de futuro</span>
+                <select id="profile-select">
+                  <option>Primer acercamiento</option>
+                  <option>Equilibrada</option>
+                  <option>Hostfallero experimentado</option>
+                  <option>Recuperación dramática</option>
+                </select>
+              </label>
+              <p class="seed-profile-description" id="profile-description">
+                Favorece <strong>recursos estables</strong>, varias líneas razonables y presión gradual. Penaliza aperturas extremas.
+              </p>
+              <label class="seed-switch-row"><span>Evaluar un mulligan</span><input type="checkbox" checked /></label>
+              <label class="seed-switch-row"><span>Evitar picos tempranos</span><input type="checkbox" checked /></label>
+            </section>
+
+            <section class="seed-group">
+              <div class="seed-group-head">
+                <h2 class="seed-group-title">Búsqueda</h2>
+                <span class="seed-group-note">Barata</span>
+              </div>
+              <label class="seed-field">
+                <span>Cantidad de seeds</span>
+                <select><option>500.000</option><option>100.000</option><option>1.000.000</option></select>
+              </label>
+              <label class="seed-field">
+                <span>Finalistas</span>
+                <input type="number" value="20" min="1" max="100" />
+              </label>
+              <button class="seed-button is-primary is-block" id="search-button" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+                <span>Buscar futuros</span>
+              </button>
+              <div class="seed-search-progress">
+                <div><span id="search-state">Búsqueda finalizada</span><span id="search-count">500.000 / 500.000</span></div>
+                <div class="seed-progress-track"><div class="seed-progress-fill" id="search-progress"></div></div>
+              </div>
+            </section>
+          </div>
+        </aside>
+
+        <section class="seed-result-column" aria-label="Futuros encontrados">
+          <header class="seed-results-header">
+            <div class="seed-results-heading">
+              <h2>20 futuros candidatos</h2>
+              <p id="result-summary">500.000 examinados · 1.842 pasaron filtros · ordenados para Primer acercamiento</p>
+            </div>
+            <div class="seed-result-actions">
+              <button class="seed-button" type="button" id="export-button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+                <span>Exportar</span>
+              </button>
+            </div>
+          </header>
+          <nav class="seed-tabs" aria-label="Resultados">
+            <button class="seed-tab is-active" type="button" data-tab="all">Finalistas</button>
+            <button class="seed-tab" type="button" data-tab="favorites">Guardadas <span id="favorite-count">1</span></button>
+          </nav>
+          <div class="seed-list" id="seed-list"></div>
+        </section>
+
+        <aside class="seed-inspector-column" aria-label="Inspección de seed">
+          <div class="seed-inspector">
+            <section class="seed-group">
+              <div class="seed-inspector-head">
+                <div>
+                  <div class="seed-kicker">Futuro seleccionado</div>
+                  <div class="seed-inspector-code" id="inspector-code">gentle-future-0977472</div>
+                </div>
+                <button class="seed-favorite" id="favorite-button" type="button" aria-label="Guardar futuro">★</button>
+              </div>
+              <div class="seed-result-tags" id="inspector-tags"></div>
+              <div class="seed-metric-grid" id="metric-grid"></div>
+            </section>
+
+            <section class="seed-group">
+              <div class="seed-group-head">
+                <h2 class="seed-group-title">Mano tras mulligan</h2>
+                <span class="seed-group-note">6 cartas</span>
+              </div>
+              <div class="seed-sequence">
+                <div class="seed-card-row" id="hand-row"></div>
+              </div>
+              <div class="seed-group-head">
+                <h2 class="seed-group-title">Próximos robos</h2>
+                <span class="seed-group-note">Vista barata</span>
+              </div>
+              <div class="seed-card-row" id="draw-row"></div>
+            </section>
+
+            <section class="seed-group">
+              <div class="seed-group-head">
+                <h2 class="seed-group-title">Hueste potencial</h2>
+                <span class="seed-group-note">Primeros 5 tramos</span>
+              </div>
+              <div class="seed-horde-preview" id="horde-preview"></div>
+              <p class="seed-disclaimer">
+                <strong>Aproximación:</strong> muestra presión probable desde el orden inicial. Los efectos que alteran el Archivo pueden cambiar los turnos reales.
+              </p>
+            </section>
+
+            <section class="seed-group">
+              <div class="seed-inspector-actions">
+                <button class="seed-button" id="copy-button" type="button">Copiar seed</button>
+                <button class="seed-button is-primary" id="play-button" type="button">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 5 11 7-11 7z"></path></svg>
+                  Probar en tablero
+                </button>
+              </div>
+            </section>
+          </div>
+        </aside>
+      </main>
+
+      <footer class="seed-statusbar">
+        <span><strong id="status-message">Listo</strong> · análisis estático · sin solver</span>
+        <span>RNG determinista · ruleset actual · herramienta dev-only</span>
+      </footer>
+    </div>
+
+    <script>
+      const candidates = [
+        {
+          seed: "gentle-future-0977472",
+          score: 86,
+          tags: ["Introductoria", "Presión gradual"],
+          tone: "easy",
+          metrics: { Apertura: 91, Recursos: 88, Presión: 34, Escalada: 66 },
+          hand: ["Río", "Liora", "Río", "Aelyra", "Río", "Flor"],
+          draws: ["Choque", "Aelyra", "Ciudad", "Vaelor", "Río"],
+          horde: [["T1", "Devorador del Último Recuerdo", "Baja"], ["T2", "Acechador Alado", "Baja"], ["T3", "Retorno a la Memoria", "Media"], ["T4", "Jinete del Osario", "Media"], ["T5", "La Lápida Quebrada", "Ascenso"]],
+          favorite: true
+        },
+        {
+          seed: "gentle-future-2335635",
+          score: 83,
+          tags: ["Defensa aérea", "Recuperación"],
+          tone: "easy",
+          metrics: { Apertura: 87, Recursos: 86, Presión: 43, Escalada: 72 },
+          hand: ["Aelyra", "Río", "Río", "Río", "Hidra", "Liora"],
+          draws: ["Maela", "Escudo", "Kaelor", "Río", "Vaelor"],
+          horde: [["T1", "Retorno a la Memoria", "Baja"], ["T2", "Acechador Alado", "Baja"], ["T3", "Engendro de Alas Cosidas", "Media"], ["T4", "Sabueso de los Siete Recuerdos", "Media"], ["T5", "La Lápida Quebrada", "Ascenso"]],
+          favorite: false
+        },
+        {
+          seed: "gentle-future-0691902",
+          score: 80,
+          tags: ["Curva limpia", "Vaelor"],
+          tone: "easy",
+          metrics: { Apertura: 89, Recursos: 82, Presión: 48, Escalada: 76 },
+          hand: ["Río", "Aelyra", "Kaelor", "Liora", "Río", "Río"],
+          draws: ["Vaelor", "Aelyra", "Escudo", "Río", "Maela"],
+          horde: [["T1", "Retorno a la Memoria", "Baja"], ["T2", "Devorador del Último Recuerdo", "Baja"], ["T3", "Acechador Alado", "Media"], ["T4", "La Lápida Quebrada", "Media"], ["T5", "Mastín del Osario", "Alta"]],
+          favorite: false
+        },
+        {
+          seed: "gentle-future-3251650",
+          score: 77,
+          tags: ["Interactiva", "Tensión media"],
+          tone: "",
+          metrics: { Apertura: 84, Recursos: 83, Presión: 52, Escalada: 74 },
+          hand: ["Río", "Aelyra", "Liora", "Río", "Choque", "Río"],
+          draws: ["Maela", "Juicio", "Elixir", "Flor", "Río"],
+          horde: [["T1", "Retorno a la Memoria", "Baja"], ["T2", "Retorno a la Memoria", "Media"], ["T3", "Infestado de Esporas", "Media"], ["T4", "Rompemuros del Túmulo", "Alta"], ["T5", "Soldado + Lápida", "Ascenso"]],
+          favorite: false
+        },
+        {
+          seed: "prepared-future-434793",
+          score: 61,
+          tags: ["Hostfallero", "Al límite"],
+          tone: "hard",
+          metrics: { Apertura: 78, Recursos: 76, Presión: 91, Escalada: 94 },
+          hand: ["Río", "Juicio", "Río", "Flor", "Río", "Maela"],
+          draws: ["Kaelor", "Aelyra", "Kaelor", "Río", "Hidra"],
+          horde: [["T1", "Soldado + Devorador", "Media"], ["T2", "Soldado + Retorno", "Alta"], ["T3", "Titán + Soldado + Jinete", "Extrema"], ["T4", "Tres Soldados", "Extrema"], ["T5", "Cosechadora", "Alta"]],
+          favorite: false
+        }
+      ];
+
+      const descriptions = {
+        "Primer acercamiento": "Favorece <strong>recursos estables</strong>, varias líneas razonables y presión gradual. Penaliza aperturas extremas.",
+        "Equilibrada": "Busca una partida con <strong>riesgo y margen</strong> parecidos, sin favorecer una curva de aprendizaje concreta.",
+        "Hostfallero experimentado": "Acepta <strong>picos severos</strong>, decisiones ajustadas y finales donde cada punto de Vida importa.",
+        "Recuperación dramática": "Favorece una caída controlada seguida de <strong>herramientas de remontada</strong> y un cierre tenso."
+      };
+
+      let selectedSeed = candidates[0].seed;
+      let activeTab = "all";
+
+      const list = document.getElementById("seed-list");
+      const statusMessage = document.getElementById("status-message");
+
+      function cardType(name) {
+        if (name === "Río") return "is-source";
+        if (["Choque", "Escudo", "Juicio", "Elixir"].includes(name)) return "is-spell";
+        return "";
+      }
+
+      function renderList() {
+        const visible = candidates.filter((candidate) => activeTab === "all" || candidate.favorite);
+        if (!visible.length) {
+          list.innerHTML = '<div class="seed-empty">Todavía no guardaste ningún futuro.</div>';
+          return;
+        }
+        list.innerHTML = visible.map((candidate) => {
+          const rank = candidates.indexOf(candidate) + 1;
+          const tags = candidate.tags.map((tag, index) => `<span class="seed-tag ${index === 0 && candidate.tone ? `is-${candidate.tone}` : ""}">${tag}</span>`).join("");
+          return `
+            <button class="seed-result ${candidate.seed === selectedSeed ? "is-active" : ""}" type="button" data-seed="${candidate.seed}">
+              <span class="seed-rank">${String(rank).padStart(2, "0")}</span>
+              <span class="seed-result-copy">
+                <span class="seed-result-code">${candidate.seed}</span>
+                <span class="seed-result-tags">${tags}</span>
+              </span>
+              <span class="seed-mini-metrics">
+                <span class="seed-mini-line"><span>Recursos</span><span class="seed-mini-track"><i style="width:${candidate.metrics.Recursos}%"></i></span></span>
+                <span class="seed-mini-line"><span>Presión</span><span class="seed-mini-track"><i style="width:${candidate.metrics.Presión}%"></i></span></span>
+              </span>
+              <span class="seed-score">${candidate.score}<small>Ajuste</small></span>
+            </button>`;
+        }).join("");
+      }
+
+      function renderInspector() {
+        const candidate = candidates.find((entry) => entry.seed === selectedSeed) ?? candidates[0];
+        document.getElementById("inspector-code").textContent = candidate.seed;
+        document.getElementById("favorite-button").classList.toggle("is-active", candidate.favorite);
+        document.getElementById("inspector-tags").innerHTML = candidate.tags.map((tag, index) => `<span class="seed-tag ${index === 0 && candidate.tone ? `is-${candidate.tone}` : ""}">${tag}</span>`).join("");
+        document.getElementById("metric-grid").innerHTML = Object.entries(candidate.metrics).map(([label, value]) => `
+          <div class="seed-metric ${label === "Presión" ? "is-pressure" : ""}">
+            <div><span>${label}</span><strong>${value}</strong></div>
+            <div class="seed-metric-track"><i style="width:${value}%"></i></div>
+          </div>`).join("");
+        document.getElementById("hand-row").innerHTML = candidate.hand.map((name) => `<div class="seed-card-mini ${cardType(name)}"><span>${name}</span></div>`).join("");
+        document.getElementById("draw-row").innerHTML = candidate.draws.map((name) => `<div class="seed-card-mini ${cardType(name)}"><span>${name}</span></div>`).join("");
+        document.getElementById("horde-preview").innerHTML = candidate.horde.map(([turn, name, pressure]) => `
+          <div class="seed-horde-turn"><b>${turn}</b><span>${name}</span><span class="seed-pressure-level ${pressure === "Ascenso" || pressure === "Alta" || pressure === "Extrema" ? "is-rising" : ""}">${pressure}</span></div>`).join("");
+      }
+
+      function updateFavoriteCount() {
+        document.getElementById("favorite-count").textContent = String(candidates.filter((candidate) => candidate.favorite).length);
+      }
+
+      list.addEventListener("click", (event) => {
+        const row = event.target.closest("[data-seed]");
+        if (!row) return;
+        selectedSeed = row.dataset.seed;
+        renderList();
+        renderInspector();
+      });
+
+      document.querySelector(".seed-tabs").addEventListener("click", (event) => {
+        const tab = event.target.closest("[data-tab]");
+        if (!tab) return;
+        activeTab = tab.dataset.tab;
+        for (const button of document.querySelectorAll(".seed-tab")) button.classList.toggle("is-active", button === tab);
+        renderList();
+      });
+
+      document.getElementById("favorite-button").addEventListener("click", () => {
+        const candidate = candidates.find((entry) => entry.seed === selectedSeed);
+        candidate.favorite = !candidate.favorite;
+        updateFavoriteCount();
+        renderList();
+        renderInspector();
+      });
+
+      document.getElementById("profile-select").addEventListener("change", (event) => {
+        document.getElementById("profile-description").innerHTML = descriptions[event.target.value];
+        document.getElementById("result-summary").textContent = `500.000 examinados · 1.842 pasaron filtros · ordenados para ${event.target.value}`;
+      });
+
+      document.getElementById("search-button").addEventListener("click", () => {
+        const button = document.getElementById("search-button");
+        const progress = document.getElementById("search-progress");
+        button.disabled = true;
+        button.querySelector("span").textContent = "Buscando…";
+        document.getElementById("search-state").textContent = "Enumerando futuros";
+        document.getElementById("search-count").textContent = "0 / 500.000";
+        progress.style.width = "0%";
+        statusMessage.textContent = "Buscando";
+        requestAnimationFrame(() => {
+          progress.style.width = "100%";
+          setTimeout(() => {
+            button.disabled = false;
+            button.querySelector("span").textContent = "Buscar futuros";
+            document.getElementById("search-state").textContent = "Búsqueda finalizada";
+            document.getElementById("search-count").textContent = "500.000 / 500.000";
+            statusMessage.textContent = "20 finalistas encontradas";
+          }, 650);
+        });
+      });
+
+      document.getElementById("copy-button").addEventListener("click", async (event) => {
+        try { await navigator.clipboard.writeText(selectedSeed); } catch {}
+        event.currentTarget.textContent = "Seed copiada";
+        statusMessage.textContent = "Identidad copiada";
+        setTimeout(() => { event.currentTarget.textContent = "Copiar seed"; }, 900);
+      });
+
+      document.getElementById("play-button").addEventListener("click", () => {
+        statusMessage.textContent = `Preparando ${selectedSeed} en el tablero`;
+      });
+
+      document.getElementById("export-button").addEventListener("click", () => {
+        statusMessage.textContent = "Vista de exportación preparada";
+      });
+
+      renderList();
+      renderInspector();
+      updateFavoriteCount();
+    </script>
+  </body>
+</html>

@@ -388,6 +388,10 @@ test("step validation catches broken aliases, translations and graph edges befor
   invalidCallout.steps[0].callout = "brief";
   assert.ok(validateGuidedLesson(invalidCallout, contentCatalog).some((problem) => /unknown callout visibility/u.test(problem)));
 
+  const invalidDimmer = builtinLesson();
+  invalidDimmer.steps[0].dimmer = "faint";
+  assert.ok(validateGuidedLesson(invalidDimmer, contentCatalog).some((problem) => /unknown dimmer visibility/u.test(problem)));
+
   const invalidGlossary = builtinLesson();
   invalidGlossary.steps[0].copy.glossaryTerms = ["archive", "mystery", "archive"];
   const glossaryProblems = validateGuidedLesson(invalidGlossary, contentCatalog);

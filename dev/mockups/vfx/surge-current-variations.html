@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hostfall — Oleada: variaciones de la actual</title>
+    <style>
+      @font-face {
+        font-family: "Cinzel";
+        font-style: normal;
+        font-weight: 500 900;
+        font-display: block;
+        src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+      }
+      :root {
+        --stage: #0a0605;
+        --gold-bright: #e6d59e;
+        --parchment: #e8dec0;
+        --ember-bright: #ffb277;
+        --muted: #9b8f88;
+        --muted-dim: #837771;
+        --rule: rgb(146 116 88 / 0.22);
+        --serif: Georgia, "Times New Roman", serif;
+        --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 0 0 80px;
+        background: radial-gradient(ellipse at 50% -8%, rgb(74 27 18 / 0.24), transparent 55%), var(--stage);
+        color: var(--muted);
+        font-family: var(--sans);
+        font-size: 15px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      main { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
+
+      header { padding: 54px 0 30px; border-bottom: 1px solid var(--rule); }
+      .eyebrow { color: #b8785a; font-size: 10px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; }
+      h1 {
+        margin: 12px 0 0; color: var(--parchment); font-family: var(--serif);
+        font-size: clamp(30px, 4.4vw, 46px); font-weight: 500; letter-spacing: 0.02em; line-height: 1.06;
+      }
+      header p { max-width: 72ch; margin: 16px 0 0; }
+      header strong { color: var(--gold-bright); font-weight: 600; }
+      code { color: #e0b08a; font-family: Consolas, "Courier New", monospace; font-size: 13px; }
+
+      .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 30px 0 14px; }
+      .tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+      button {
+        height: 42px; padding: 0 18px; border: 1px solid rgb(146 116 88 / 0.36); border-radius: 2px;
+        background: linear-gradient(180deg, rgb(33 25 22 / 0.96), rgb(15 10 9 / 0.98));
+        color: var(--muted); font-family: var(--sans); cursor: pointer;
+        font-size: 11px; font-weight: 900; letter-spacing: 0.15em; text-transform: uppercase;
+        transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+      }
+      button:hover { border-color: rgb(214 150 110 / 0.7); color: var(--gold-bright); }
+      button[aria-pressed="true"] {
+        border-color: rgb(214 118 74 / 0.8); background: linear-gradient(180deg, rgb(62 27 18 / 0.96), rgb(24 11 9 / 0.98));
+        color: #f0c39d;
+      }
+      button:focus-visible { outline: 2px solid rgb(234 168 133 / 0.9); outline-offset: 2px; }
+      .spacer { flex: 1; }
+      label.toggle { display: flex; align-items: center; gap: 8px; color: var(--muted-dim); font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; }
+
+      /* ── Escenario ───────────────────────────────────────────────────── */
+      .stage {
+        position: relative; overflow: hidden; aspect-ratio: 16 / 9;
+        border: 1px solid var(--rule); border-radius: 2px; background: #050303;
+        isolation: isolate;
+      }
+      .layer { position: absolute; inset: 0; pointer-events: none; }
+      .board { z-index: 1; background: #0a1413 url("assets/defeat-board-reference.png") center / cover no-repeat; }
+
+      /* ── Piezas comunes: son las mismas que hoy ──────────────────────── */
+      .veil {
+        z-index: 2; opacity: 0; background: rgb(5 1 1 / 0.9);
+        -webkit-backdrop-filter: blur(10px) saturate(0.65); backdrop-filter: blur(10px) saturate(0.65);
+      }
+      .atmosphere {
+        z-index: 3; opacity: 0;
+        background:
+          radial-gradient(ellipse at 50% 43%, rgb(160 43 25 / 0.42), transparent 34%),
+          radial-gradient(ellipse at center, transparent 7%, rgb(8 0 0 / 0.8) 75%);
+      }
+      .rift {
+        position: absolute; z-index: 4; top: -20%; bottom: -20%; left: 50%; width: 3px; opacity: 0;
+        background: linear-gradient(180deg, transparent, #d45f37 22%, #ffd09b 50%, #d45f37 78%, transparent);
+        box-shadow: 0 0 18px #d34e2f, 0 0 70px rgb(164 38 24 / 0.72);
+        transform: translateX(-50%) rotate(7deg);
+      }
+      /* Piezas exclusivas de la variación que abre la grieta. Los labios se separan con un
+         translate en el marco ya rotado, así se alejan perpendicularmente a la línea; el hueco
+         que queda entre ellos es el único que escala, y por eso no lleva box-shadow: escalar un
+         elemento escala también su halo, y eso convierte la apertura en un borrón. */
+      .rift-lip {
+        position: absolute; z-index: 5; top: -20%; bottom: -20%; left: 50%; width: 2px; opacity: 0;
+        background: linear-gradient(180deg, transparent, #ffd8a6 24%, #fff3dc 50%, #ffd8a6 76%, transparent);
+        box-shadow: 0 0 10px rgb(232 110 62 / 0.85);
+        transform: translateX(-50%) rotate(7deg) translateX(0);
+      }
+      .rift-gap {
+        position: absolute; z-index: 4; top: -20%; bottom: -20%; left: 50%; width: 52px; opacity: 0;
+        background: linear-gradient(90deg, rgb(96 18 9 / 0.9), #c8481f 18%, #f89a55 38%, #ffe3ba 50%, #f89a55 62%, #c8481f 82%, rgb(96 18 9 / 0.9));
+        mask-image: linear-gradient(180deg, transparent, #000 16%, #000 84%, transparent);
+        -webkit-mask-image: linear-gradient(180deg, transparent, #000 16%, #000 84%, transparent);
+        transform: translateX(-50%) rotate(7deg) scaleX(0.04);
+      }
+      .rift-spill {
+        position: absolute; z-index: 3; top: -20%; bottom: -20%; left: 50%; width: 210px; opacity: 0;
+        background: linear-gradient(90deg, transparent, rgb(214 78 44 / 0.34) 34%, rgb(255 186 128 / 0.5) 50%, rgb(214 78 44 / 0.34) 66%, transparent);
+        transform: translateX(-50%) rotate(7deg) scaleX(0.06);
+      }
+      .filament {
+        position: absolute; height: 1px; opacity: 0;
+        background: linear-gradient(90deg, rgb(255 176 116 / 0.85), transparent);
+        box-shadow: 0 0 6px rgb(226 96 52 / 0.6);
+      }
+      .embers { z-index: 5; overflow: hidden; }
+      .ember {
+        position: absolute; width: 2px; height: 2px; border-radius: 50%;
+        background: #ffcf9a; box-shadow: 0 0 7px 2px rgb(232 108 52 / 0.7); opacity: 0;
+      }
+
+      .verdict {
+        position: absolute; z-index: 12; top: 50%; left: 50%; display: grid; justify-items: center;
+        width: min(980px, 92%); transform: translate(-50%, -50%); text-align: center; opacity: 0;
+      }
+      .banner { position: relative; display: grid; width: 100%; height: 118px; grid-template-columns: 1fr 1fr; align-items: center; gap: clamp(16px, 2.5vw, 30px); }
+      .banner::before {
+        position: absolute; z-index: -1; top: 50%; left: 50%; width: min(540px, 62vw); height: 112px; content: "";
+        border-top: 1px solid rgb(214 118 74 / 0.32); border-bottom: 1px solid rgb(214 118 74 / 0.2);
+        background: linear-gradient(90deg, transparent, rgb(28 5 3 / 0.86) 17%, rgb(12 2 2 / 0.97) 50%, rgb(28 5 3 / 0.86) 83%, transparent);
+        clip-path: polygon(8% 0, 92% 0, 100% 50%, 92% 100%, 8% 100%, 0 50%);
+        transform: translate(-50%, -50%);
+      }
+      .rule-line {
+        height: 1px; transform-origin: right center;
+        background: linear-gradient(90deg, transparent 0%, #a93f2d 28%, #a93f2d 62%, transparent 96%);
+        box-shadow: 0 0 10px rgb(169 63 45 / 0.5);
+      }
+      .rule-line.right { transform-origin: left center; background: linear-gradient(90deg, transparent 4%, #a93f2d 38%, #a93f2d 72%, transparent 100%); }
+      .crest {
+        position: absolute; z-index: 2; top: -74px; left: 50%; display: grid; width: 66px; height: 66px; place-items: center;
+        border: 1px solid rgb(226 120 76 / 0.78);
+        background: linear-gradient(135deg, rgb(52 24 17 / 0.98), rgb(10 3 2 / 0.99));
+        color: #f0a06f; box-shadow: inset 0 0 0 4px rgb(6 2 1 / 0.86), inset 0 0 0 5px rgb(214 108 62 / 0.28), 0 0 28px rgb(169 48 31 / 0.4);
+        transform: translateX(-50%) rotate(45deg);
+      }
+      .crest svg { width: 32px; height: 32px; transform: rotate(-45deg); filter: drop-shadow(0 0 8px rgb(214 74 40 / 0.6)); }
+      .banner h2 {
+        position: absolute; z-index: 1; inset: 0; display: flex; align-items: center; justify-content: center;
+        margin: 0; color: #ead5c7; font-family: "Cinzel", var(--serif); font-size: clamp(3.2rem, 7.6vw, 6.6rem);
+        font-weight: 700; letter-spacing: 0.12em; line-height: 1; text-transform: uppercase;
+        text-shadow: 0 3px 0 rgb(0 0 0 / 0.95), 0 0 28px rgb(210 67 39 / 0.5);
+      }
+      .verdict p {
+        margin: 24px 0 0; color: #c99175; font-family: "Cinzel", var(--serif);
+        font-size: clamp(0.66rem, 1.05vw, 0.86rem); font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase;
+        text-shadow: 0 2px 12px #000, 0 0 14px rgb(183 61 38 / 0.42);
+      }
+
+      /* ══ 0 · Actual ═══════════════════════════════════════════════════ */
+      .stage.run[data-variant="current"] .veil { animation: v0-veil 2600ms cubic-bezier(0.45, 0, 0.22, 1) both; }
+      .stage.run[data-variant="current"] .atmosphere { animation: v0-atmosphere 2600ms ease-in-out both; }
+      .stage.run[data-variant="current"] .rift { animation: v0-rift 2600ms ease-in-out both; }
+      .stage.run[data-variant="current"] .verdict { animation: v0-verdict 2600ms cubic-bezier(0.16, 0.9, 0.26, 1) both; }
+
+      @keyframes v0-veil { 0% { opacity: 0; } 16%, 76% { opacity: 1; } 100% { opacity: 0; } }
+      @keyframes v0-atmosphere {
+        0% { opacity: 0; transform: scale(1.12); }
+        24%, 72% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(1.08); }
+      }
+      @keyframes v0-rift {
+        0%, 8% { opacity: 0; filter: blur(8px); transform: translateX(-50%) rotate(7deg) scaleY(0.1); }
+        30%, 68% { opacity: 0.9; filter: blur(0); transform: translateX(-50%) rotate(7deg) scaleY(1); }
+        100% { opacity: 0; filter: blur(9px); transform: translateX(-50%) rotate(7deg) scaleY(0.35); }
+      }
+      @keyframes v0-verdict {
+        0%, 8% { opacity: 0; filter: blur(7px); transform: translate(-50%, -50%) translateY(15px) scale(0.88); }
+        28%, 72% { opacity: 1; filter: blur(0); transform: translate(-50%, -50%) scale(1); }
+        100% { opacity: 0; filter: blur(8px); transform: translate(-50%, -50%) translateY(-9px) scale(1.08); }
+      }
+
+      /* ══ A · Corte ════════════════════════════════════════════════════
+         Mismas piezas, otra causalidad: la grieta corta primero y la oscuridad
+         nace de ella. El velo se abre como una banda alineada al mismo ángulo
+         de 7°, con clip-path — nunca con transform sobre el backdrop-filter. */
+      .stage.run[data-variant="cut"] .veil { animation: vA-veil 2500ms cubic-bezier(0.22, 0.9, 0.2, 1) both; }
+      .stage.run[data-variant="cut"] .atmosphere { animation: vA-atmosphere 2500ms ease-out both; }
+      .stage.run[data-variant="cut"] .rift { animation: vA-rift 2500ms cubic-bezier(0.1, 0.85, 0.2, 1) both; }
+      .stage.run[data-variant="cut"] .verdict { animation: vA-verdict 2500ms cubic-bezier(0.16, 0.9, 0.26, 1) both; }
+
+      @keyframes vA-rift {
+        0% { opacity: 0; transform: translateX(-50%) rotate(7deg) scaleY(0.02); }
+        3% { opacity: 1; }
+        9% { opacity: 1; transform: translateX(-50%) rotate(7deg) scaleY(1); }
+        14% { opacity: 0.72; }
+        22%, 70% { opacity: 0.92; transform: translateX(-50%) rotate(7deg) scaleY(1); }
+        100% { opacity: 0; transform: translateX(-50%) rotate(7deg) scaleY(0.9); }
+      }
+      @keyframes vA-veil {
+        0%, 7% { opacity: 0; clip-path: polygon(53.1% 0, 53.8% 0, 46.9% 100%, 46.2% 100%); }
+        11% { opacity: 1; }
+        26% { opacity: 1; clip-path: polygon(-16.6% 0, 123.5% 0, 116.6% 100%, -23.5% 100%); }
+        78% { opacity: 1; clip-path: polygon(-16.6% 0, 123.5% 0, 116.6% 100%, -23.5% 100%); }
+        96% { opacity: 1; clip-path: polygon(51.7% 0, 55.2% 0, 48.3% 100%, 44.8% 100%); }
+        100% { opacity: 0; clip-path: polygon(53.1% 0, 53.8% 0, 46.9% 100%, 46.2% 100%); }
+      }
+      @keyframes vA-atmosphere {
+        0%, 14% { opacity: 0; }
+        32%, 76% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+      @keyframes vA-verdict {
+        0%, 18% { opacity: 0; transform: translate(-50%, -50%) scale(1.06); }
+        32%, 76% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(0.98); }
+      }
+
+      /* ══ B · Fisura viva ══════════════════════════════════════════════
+         Mismo dibujo y mismo ritmo que la actual; lo que cambia es la materia:
+         la grieta parpadea como una brasa, echa filamentos y suelta pavesas. */
+      .stage.run[data-variant="living"] .veil { animation: v0-veil 2600ms cubic-bezier(0.45, 0, 0.22, 1) both; }
+      .stage.run[data-variant="living"] .atmosphere { animation: v0-atmosphere 2600ms ease-in-out both; }
+      .stage.run[data-variant="living"] .rift { animation: vB-rift 2600ms ease-in-out both; }
+      .stage.run[data-variant="living"] .verdict { animation: v0-verdict 2600ms cubic-bezier(0.16, 0.9, 0.26, 1) both; }
+      .stage.run[data-variant="living"] .filament { animation: filament-life var(--dur) var(--delay) ease-out both; }
+      .stage.run[data-variant="living"] .ember { animation: ember-rise var(--dur) var(--delay) ease-out both; }
+
+      @keyframes vB-rift {
+        0%, 8% { opacity: 0; filter: blur(8px); transform: translateX(-50%) rotate(7deg) scaleY(0.1); }
+        26% { opacity: 0.95; filter: blur(0); transform: translateX(-50%) rotate(7deg) scaleY(1); }
+        34% { opacity: 0.72; }
+        41% { opacity: 1; }
+        49% { opacity: 0.8; }
+        57% { opacity: 0.98; }
+        68% { opacity: 0.88; transform: translateX(-50%) rotate(7deg) scaleY(1); }
+        100% { opacity: 0; filter: blur(9px); transform: translateX(-50%) rotate(7deg) scaleY(0.35); }
+      }
+      @keyframes filament-life {
+        0% { opacity: 0; transform: scaleX(0.1); }
+        22% { opacity: 0.9; transform: scaleX(1); }
+        62% { opacity: 0.5; }
+        100% { opacity: 0; transform: scaleX(1); }
+      }
+      @keyframes ember-rise {
+        0% { opacity: 0; transform: translate(0, 0) scale(0.7); }
+        16% { opacity: 1; }
+        100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.2); }
+      }
+
+      /* ══ C · Apertura ═════════════════════════════════════════════════
+         La grieta entra igual que hoy —creciendo a lo largo— y ahí se separa
+         en dos labios con materia caliente en medio. Respira una vez cuando
+         el estandarte se estampa y vuelve a juntarse. */
+      .stage.run[data-variant="opening"] .veil { animation: v0-veil 2500ms cubic-bezier(0.45, 0, 0.22, 1) both; }
+      .stage.run[data-variant="opening"] .atmosphere { animation: v0-atmosphere 2500ms ease-in-out both; }
+      .stage.run[data-variant="opening"] .rift { animation: vC-rift 2500ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+      .stage.run[data-variant="opening"] .rift-gap { animation: vC-gap 2500ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+      .stage.run[data-variant="opening"] .lip-left { animation: vC-lip-left 2500ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+      .stage.run[data-variant="opening"] .lip-right { animation: vC-lip-right 2500ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+      .stage.run[data-variant="opening"] .rift-spill { animation: vC-spill 2500ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+      .stage.run[data-variant="opening"] .verdict { animation: vC-verdict 2500ms cubic-bezier(0.16, 0.9, 0.26, 1) both; }
+
+      /* El trazo original entra igual que hoy y luego cede el protagonismo al hueco:
+         si se quedara a plena luz en el centro, la apertura volvería a leerse como
+         una línea más gruesa. */
+      @keyframes vC-rift {
+        0%, 6% { opacity: 0; transform: translateX(-50%) rotate(7deg) scaleY(0.12); }
+        10% { opacity: 1; }
+        24% { opacity: 1; transform: translateX(-50%) rotate(7deg) scaleY(1); }
+        42% { opacity: 0.34; transform: translateX(-50%) rotate(7deg) scaleY(1); }
+        74% { opacity: 0.3; transform: translateX(-50%) rotate(7deg) scaleY(1); }
+        100% { opacity: 0; transform: translateX(-50%) rotate(7deg) scaleY(0.94); }
+      }
+      @keyframes vC-gap {
+        0%, 24% { opacity: 0; transform: translateX(-50%) rotate(7deg) scaleX(0.04); }
+        30% { opacity: 1; }
+        42% { opacity: 1; transform: translateX(-50%) rotate(7deg) scaleX(0.7); }
+        54% { opacity: 1; transform: translateX(-50%) rotate(7deg) scaleX(1); }
+        64% { opacity: 1; transform: translateX(-50%) rotate(7deg) scaleX(0.78); }
+        76% { opacity: 0.94; transform: translateX(-50%) rotate(7deg) scaleX(0.76); }
+        100% { opacity: 0; transform: translateX(-50%) rotate(7deg) scaleX(0.04); }
+      }
+      @keyframes vC-lip-left {
+        0%, 22% { opacity: 0; transform: translateX(-50%) rotate(7deg) translateX(0); }
+        28% { opacity: 1; }
+        42% { opacity: 1; transform: translateX(-50%) rotate(7deg) translateX(-18px); }
+        54% { opacity: 1; transform: translateX(-50%) rotate(7deg) translateX(-26px); }
+        64% { opacity: 1; transform: translateX(-50%) rotate(7deg) translateX(-20px); }
+        76% { opacity: 0.95; transform: translateX(-50%) rotate(7deg) translateX(-19px); }
+        100% { opacity: 0; transform: translateX(-50%) rotate(7deg) translateX(-1px); }
+      }
+      @keyframes vC-lip-right {
+        0%, 22% { opacity: 0; transform: translateX(-50%) rotate(7deg) translateX(0); }
+        28% { opacity: 1; }
+        42% { opacity: 1; transform: translateX(-50%) rotate(7deg) translateX(18px); }
+        54% { opacity: 1; transform: translateX(-50%) rotate(7deg) translateX(26px); }
+        64% { opacity: 1; transform: translateX(-50%) rotate(7deg) translateX(20px); }
+        76% { opacity: 0.95; transform: translateX(-50%) rotate(7deg) translateX(19px); }
+        100% { opacity: 0; transform: translateX(-50%) rotate(7deg) translateX(1px); }
+      }
+      @keyframes vC-spill {
+        0%, 8% { opacity: 0; transform: translateX(-50%) rotate(7deg) scaleX(0.06); }
+        26% { opacity: 0.5; transform: translateX(-50%) rotate(7deg) scaleX(0.5); }
+        52% { opacity: 0.9; transform: translateX(-50%) rotate(7deg) scaleX(1); }
+        74% { opacity: 0.6; transform: translateX(-50%) rotate(7deg) scaleX(0.78); }
+        100% { opacity: 0; transform: translateX(-50%) rotate(7deg) scaleX(0.2); }
+      }
+      @keyframes vC-verdict {
+        0%, 16% { opacity: 0; transform: translate(-50%, -50%) scale(0.94); }
+        30% { opacity: 1; transform: translate(-50%, -50%) scale(1.02); }
+        38%, 74% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(1.05); }
+      }
+
+      /* ══ D · Ritmo ════════════════════════════════════════════════════
+         Dibujo idéntico al actual. Sólo cambian el velo (menos opaco, entra
+         seco) y la curva: 2,1 s en vez de 2,6 s y sin desenfoques de entrada. */
+      .stage[data-variant="rhythm"] .veil { background: rgb(5 1 1 / 0.78); }
+      .stage.run[data-variant="rhythm"] .veil { animation: vD-veil 2100ms ease-out both; }
+      .stage.run[data-variant="rhythm"] .atmosphere { animation: vD-atmosphere 2100ms ease-out both; }
+      .stage.run[data-variant="rhythm"] .rift { animation: vD-rift 2100ms cubic-bezier(0.12, 0.86, 0.2, 1) both; }
+      .stage.run[data-variant="rhythm"] .verdict { animation: vD-verdict 2100ms cubic-bezier(0.16, 0.9, 0.26, 1) both; }
+
+      @keyframes vD-veil { 0% { opacity: 0; } 6%, 84% { opacity: 1; } 100% { opacity: 0; } }
+      @keyframes vD-atmosphere {
+        0% { opacity: 0; transform: scale(1.06); }
+        14%, 80% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(1.03); }
+      }
+      @keyframes vD-rift {
+        0% { opacity: 0; transform: translateX(-50%) rotate(7deg) scaleY(0.06); }
+        4% { opacity: 1; }
+        12%, 78% { opacity: 0.95; transform: translateX(-50%) rotate(7deg) scaleY(1); }
+        100% { opacity: 0; transform: translateX(-50%) rotate(7deg) scaleY(0.82); }
+      }
+      @keyframes vD-verdict {
+        0%, 10% { opacity: 0; transform: translate(-50%, -50%) translateY(9px) scale(0.94); }
+        22%, 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        100% { opacity: 0; transform: translate(-50%, -50%) translateY(-5px) scale(1.03); }
+      }
+
+      /* ══ E · Las tres juntas ══════════════════════════════════════════ */
+      .stage[data-variant="combined"] .veil { background: rgb(5 1 1 / 0.8); }
+      .stage.run[data-variant="combined"] .veil { animation: vA-veil 2200ms cubic-bezier(0.22, 0.9, 0.2, 1) both; }
+      .stage.run[data-variant="combined"] .atmosphere { animation: vA-atmosphere 2200ms ease-out both; }
+      .stage.run[data-variant="combined"] .rift { animation: vE-rift 2200ms cubic-bezier(0.1, 0.85, 0.2, 1) both; }
+      .stage.run[data-variant="combined"] .verdict { animation: vA-verdict 2200ms cubic-bezier(0.16, 0.9, 0.26, 1) both; }
+      .stage.run[data-variant="combined"] .filament { animation: filament-life var(--dur) var(--delay) ease-out both; }
+      .stage.run[data-variant="combined"] .ember { animation: ember-rise var(--dur) var(--delay) ease-out both; }
+
+      @keyframes vE-rift {
+        0% { opacity: 0; transform: translateX(-50%) rotate(7deg) scaleY(0.02); }
+        3% { opacity: 1; }
+        9% { opacity: 1; transform: translateX(-50%) rotate(7deg) scaleY(1); }
+        16% { opacity: 0.74; }
+        26% { opacity: 0.98; }
+        38% { opacity: 0.82; }
+        50% { opacity: 1; }
+        64% { opacity: 0.88; transform: translateX(-50%) rotate(7deg) scaleY(1); }
+        100% { opacity: 0; transform: translateX(-50%) rotate(7deg) scaleY(0.88); }
+      }
+
+      /* ── Pie del escenario ───────────────────────────────────────────── */
+      .scrub { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
+      .track { position: relative; height: 3px; flex: 1; background: rgb(146 116 88 / 0.18); }
+      .fill { position: absolute; top: 0; bottom: 0; left: 0; width: 0; background: linear-gradient(90deg, rgb(146 116 88 / 0.5), var(--ember-bright)); }
+      .clock { color: var(--muted-dim); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
+
+      .caption { margin: 18px 0 0; padding: 16px 18px; border-left: 2px solid rgb(214 118 74 / 0.5); background: rgb(24 12 9 / 0.5); }
+      .caption h3 { margin: 0 0 6px; color: var(--gold-bright); font-size: 11px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+      .caption p { margin: 0; max-width: 80ch; }
+      .caption p + p { margin-top: 8px; }
+      .caption b { color: #f0c39d; font-weight: 600; }
+
+      .notes { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 26px; }
+      .notes h2 { margin: 0 0 12px; color: var(--parchment); font-family: var(--serif); font-size: 22px; font-weight: 500; }
+      .notes h3 { margin: 24px 0 6px; color: var(--gold-bright); font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+      .notes ul { margin: 0; padding-left: 18px; }
+      .notes li { margin: 5px 0; max-width: 84ch; }
+      .notes p { max-width: 84ch; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">Hostfall · VFX</p>
+        <h1>Oleada — variaciones sobre la actual</h1>
+        <p>
+          Todas conservan las mismas cuatro piezas de hoy: <strong>velo negro con desenfoque</strong>,
+          <strong>atmósfera roja</strong>, <strong>grieta de 3&nbsp;px a 7°</strong> y el
+          <strong>estandarte con calavera</strong>. Ninguna añade motivos nuevos ni cambia la copy.
+          Cada variación mueve un solo eje —causalidad, materia, apertura o ritmo— para que puedas
+          elegirlos por separado; la última los junta.
+        </p>
+      </header>
+
+      <div class="controls">
+        <div class="tabs" id="tabs">
+          <button data-variant="current" aria-pressed="true">0 · Actual</button>
+          <button data-variant="cut" aria-pressed="false">A · Corte</button>
+          <button data-variant="living" aria-pressed="false">B · Fisura viva</button>
+          <button data-variant="opening" aria-pressed="false">C · Apertura</button>
+          <button data-variant="rhythm" aria-pressed="false">D · Ritmo</button>
+          <button data-variant="combined" aria-pressed="false">E · A+B+D</button>
+        </div>
+        <span class="spacer"></span>
+        <button id="play">Reproducir</button>
+        <label class="toggle"><input type="checkbox" id="loop" checked /> Bucle</label>
+      </div>
+
+      <div class="stage" id="stage" data-variant="current">
+        <div class="layer board"></div>
+        <div class="layer veil"></div>
+        <div class="layer atmosphere"></div>
+        <div class="rift-spill"></div>
+        <div class="rift-gap"></div>
+        <div class="rift-lip lip-left"></div>
+        <div class="rift-lip lip-right"></div>
+        <div class="rift" id="rift"></div>
+        <div class="layer embers" id="embers"></div>
+
+        <div class="verdict">
+          <div class="banner">
+            <span class="rule-line"></span>
+            <span class="crest">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="9" cy="12" r="1" /><circle cx="15" cy="12" r="1" />
+                <path d="M8 20v2h8v-2" /><path d="m12.5 17-.5-1-.5 1h1z" />
+                <path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20" />
+              </svg>
+            </span>
+            <h2>Oleada</h2>
+            <span class="rule-line right"></span>
+          </div>
+          <p>La Hueste ha sido desatada — los Zombis ganan +1 de Fuerza</p>
+        </div>
+      </div>
+
+      <div class="scrub">
+        <span class="clock" id="clock">0.00 s</span>
+        <div class="track"><div class="fill" id="fill"></div></div>
+        <span class="clock" id="total">2.60 s</span>
+      </div>
+
+      <div class="caption" id="caption"></div>
+
+      <section class="notes">
+        <h2>Cómo leer las variaciones</h2>
+        <p>
+          Cada una toca un eje distinto y son <b>independientes entre sí</b>: se puede quedar el
+          ritmo de D con la materia de B sin tocar la causalidad, o al revés. La pestaña E es sólo un
+          ejemplo de las tres compatibles juntas; C es la única que compite con las demás, porque
+          cambia la silueta de la grieta.
+        </p>
+
+        <h3>Coste</h3>
+        <ul>
+          <li><b>D · Ritmo</b> — sólo números en <code>styles.css</code>: opacidad del velo, porcentajes de
+            keyframes y la duración de <code>surge-transition-life</code>. Cero código nuevo. Media hora.</li>
+          <li><b>B · Fisura viva</b> — la grieta ya existe; hay que añadir los filamentos y las pavesas como
+            hijos de <code>.surge-transition-rift</code>, generados una vez por seed en
+            <code>SurgeTransition.tsx</code>. Una hora larga.</li>
+          <li><b>A · Corte</b> — sólo cambia el keyframe del velo (<code>clip-path</code> en vez de
+            <code>opacity</code>) y adelanta la grieta. Sin marcado nuevo. Una hora.</li>
+          <li><b>C · Apertura</b> — es la única que añade marcado: dos labios y un hueco, hermanos de
+            <code>.surge-transition-rift</code>. Los labios se separan con un <code>translate</code> dentro del marco ya
+            rotado y sólo el hueco escala; el hueco no lleva <code>box-shadow</code> a propósito, porque escalar un
+            elemento escala también su halo y la apertura se convierte en un borrón. Dos horas.</li>
+        </ul>
+
+        <h3>Lo que no cambia en ninguna</h3>
+        <ul>
+          <li>El beat sigue terminando en un único <code>animationend</code> del contenedor, así que
+            <code>completeSurgeTransition</code> y la barrera <code>surge.transition</code> quedan intactos.</li>
+          <li>Ninguna anima <code>filter</code> ni <code>backdrop-filter</code>: en A el velo se abre con
+            <code>clip-path</code>, no con <code>transform</code>, para no obligar a recomponer el desenfoque cada frame.
+            B y D además eliminan los <code>blur()</code> de entrada que hoy tienen la grieta y el estandarte.</li>
+          <li>La salida de <code>prefers-reduced-motion</code> sigue sirviendo tal cual está.</li>
+          <li>El SFX sigue siendo <code>playMonsterHeavy</code> a <code>rate: 0.88</code>. En A y D el corte llega
+            mucho antes, así que ahí sí conviene revisar el <code>rate</code> para que el golpe caiga con la grieta.</li>
+        </ul>
+
+        <h3>Abierto</h3>
+        <ul>
+          <li>D deja el tablero legible bajo el velo (0,78 en vez de 0,9). Si prefieres que la Oleada tape del
+            todo, se puede quedar sólo con la curva y conservar 0,9.</li>
+          <li>Las pavesas de B son el único elemento que no existe hoy. Si no quieres piezas nuevas en el DOM,
+            B se puede reducir a su parpadeo, que es puro keyframe.</li>
+        </ul>
+      </section>
+    </main>
+
+    <script>
+      const VARIANTS = {
+        current: {
+          ms: 2600,
+          title: "0 · Actual — referencia",
+          body: [
+            "Reconstrucción exacta de <code>styles.css</code>. El velo entra a la vez que todo lo demás, la grieta aparece desenfocada durante 200 ms y alcanza su forma recién al 30 % del beat.",
+            "El estandarte llega casi con la grieta, así que los dos momentos se pisan y la ruptura no llega a leerse como causa de nada."
+          ]
+        },
+        cut: {
+          ms: 2500,
+          title: "A · Corte — la grieta primero, la oscuridad después",
+          body: [
+            "Mismas piezas, invertida la causalidad: la grieta <b>corta en 220 ms</b> sobre el tablero todavía visible, y el velo se abre desde ella como una banda alineada al mismo ángulo de 7°.",
+            "Al salir, el velo se retrae hacia la línea y la grieta se cierra al final. La partida se rompe y se vuelve a coser: es la lectura que la versión actual insinúa pero no llega a contar."
+          ]
+        },
+        living: {
+          ms: 2600,
+          title: "B · Fisura viva — misma grieta, otra materia",
+          body: [
+            "Ritmo y dibujo idénticos a la actual. Lo único que cambia es que la grieta <b>deja de ser un trazo fijo</b>: parpadea como una brasa, echa filamentos cortos a los lados y suelta pavesas que suben.",
+            "Es la variación más conservadora en estructura y la que más sube la calidad percibida, porque hoy lo que delata la línea es justamente que está quieta."
+          ]
+        },
+        opening: {
+          ms: 2500,
+          title: "C · Apertura — la grieta se separa en dos labios",
+          body: [
+            "La grieta entra igual que hoy, creciendo a lo largo. Lo nuevo empieza al 24 %: el trazo se apaga hasta un tercio y en su lugar <b>dos labios se separan</b> perpendicularmente, dejando ver la materia caliente del hueco. <b>Respira una vez</b> cuando el estandarte se estampa y vuelve a juntarse.",
+            "Es lo que la primera versión de esta pestaña no hacía: ensanchar la línea no se lee como abrir nada, porque la original ya crece —sólo que a lo largo, y ése es el eje legible. Hacen falta dos bordes alejándose con relleno entre ellos.",
+            "Es la única variación que cambia la silueta de la grieta, así que no se combina con las demás sin volver a mirarla."
+          ]
+        },
+        rhythm: {
+          ms: 2100,
+          title: "D · Ritmo — el mismo cuadro, mejor contado",
+          body: [
+            "Dibujo idéntico al actual, sólo curvas y números: el velo baja a 0,78 (el tablero se sigue adivinando), entra en 130 ms en vez de 420, la grieta ya no aparece desenfocada y el beat completo dura <b>2,1 s</b> en vez de 2,6.",
+            "Es la variación de coste cero y probablemente la que más se nota, porque el problema mayor de la actual es que se queda quieta demasiado tiempo."
+          ]
+        },
+        combined: {
+          ms: 2200,
+          title: "E · A + B + D — las tres compatibles",
+          body: [
+            "Corte primero, velo que se abre desde la grieta, grieta viva con pavesas y el ritmo corto de 2,2 s.",
+            "Es la propuesta si quieres una sola: no introduce ningún motivo nuevo, mantiene el estandarte y la copy, y todo lo que cambia son keyframes más un puñado de hijos generados dentro de la grieta."
+          ]
+        }
+      };
+
+      const WITH_PARTICLES = new Set(["living", "combined"]);
+
+      const stage = document.getElementById("stage");
+      const rift = document.getElementById("rift");
+      const embers = document.getElementById("embers");
+      const tabs = document.getElementById("tabs");
+      const playBtn = document.getElementById("play");
+      const loopBox = document.getElementById("loop");
+      const fill = document.getElementById("fill");
+      const clock = document.getElementById("clock");
+      const total = document.getElementById("total");
+      const caption = document.getElementById("caption");
+
+      let variant = "current";
+      let startedAt = 0;
+      let raf = 0;
+
+      function seededRandom(seed) {
+        let s = seed >>> 0;
+        return () => {
+          s = (s * 1664525 + 1013904223) >>> 0;
+          return s / 4294967296;
+        };
+      }
+
+      // Filamentos y pavesas viven dentro de la grieta, así heredan su rotación de 7°.
+      function buildParticles(kind) {
+        for (const node of rift.querySelectorAll(".filament")) node.remove();
+        embers.textContent = "";
+        if (!WITH_PARTICLES.has(kind)) return;
+
+        const rand = seededRandom(kind === "living" ? 8117 : 4423);
+        for (let i = 0; i < 9; i += 1) {
+          const node = document.createElement("span");
+          node.className = "filament";
+          const toRight = rand() > 0.5;
+          const width = 26 + rand() * 62;
+          const spread = 18 + rand() * 34;
+          node.style.top = (8 + rand() * 84).toFixed(1) + "%";
+          node.style.width = width.toFixed(0) + "px";
+          node.style.left = "1px";
+          node.style.transformOrigin = "left center";
+          // La rotación va en la propiedad `rotate` para que el keyframe pueda animar
+          // `transform: scaleX()` sin borrarla.
+          node.style.rotate = (toRight ? spread : 180 - spread).toFixed(1) + "deg";
+          node.style.setProperty("--dur", (620 + rand() * 520).toFixed(0) + "ms");
+          node.style.setProperty("--delay", (280 + rand() * 700).toFixed(0) + "ms");
+          rift.appendChild(node);
+        }
+
+        const count = 26;
+        for (let i = 0; i < count; i += 1) {
+          const node = document.createElement("span");
+          node.className = "ember";
+          const y = rand() * 100;
+          // La grieta está rotada 7°: su x real se desplaza con la altura.
+          const x = 50 + (50 - y) * 0.069 + (rand() - 0.5) * 2.2;
+          node.style.left = x.toFixed(2) + "%";
+          node.style.top = y.toFixed(2) + "%";
+          node.style.setProperty("--dx", ((rand() - 0.5) * 70).toFixed(1) + "px");
+          node.style.setProperty("--dy", (-50 - rand() * 120).toFixed(1) + "px");
+          node.style.setProperty("--dur", (820 + rand() * 640).toFixed(0) + "ms");
+          node.style.setProperty("--delay", (kind === "combined" ? 220 : 420) + Math.round(rand() * 620) + "ms");
+          embers.appendChild(node);
+        }
+      }
+
+      function renderCaption() {
+        const info = VARIANTS[variant];
+        caption.innerHTML = "<h3>" + info.title + "</h3>" + info.body.map((line) => "<p>" + line + "</p>").join("");
+        total.textContent = (info.ms / 1000).toFixed(2) + " s";
+      }
+
+      function tick(now) {
+        const info = VARIANTS[variant];
+        const elapsed = Math.min(now - startedAt, info.ms);
+        fill.style.width = ((elapsed / info.ms) * 100).toFixed(2) + "%";
+        clock.textContent = (elapsed / 1000).toFixed(2) + " s";
+        if (elapsed < info.ms) {
+          raf = requestAnimationFrame(tick);
+          return;
+        }
+        stage.classList.remove("run");
+        if (loopBox.checked) window.setTimeout(play, 620);
+      }
+
+      function play() {
+        cancelAnimationFrame(raf);
+        stage.classList.remove("run");
+        buildParticles(variant);
+        void stage.offsetWidth;
+        stage.classList.add("run");
+        startedAt = performance.now();
+        raf = requestAnimationFrame(tick);
+      }
+
+      tabs.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-variant]");
+        if (!button) return;
+        variant = button.dataset.variant;
+        for (const node of tabs.querySelectorAll("button")) {
+          node.setAttribute("aria-pressed", String(node === button));
+        }
+        stage.dataset.variant = variant;
+        renderCaption();
+        play();
+      });
+
+      playBtn.addEventListener("click", play);
+      loopBox.addEventListener("change", () => {
+        if (loopBox.checked && !stage.classList.contains("run")) play();
+      });
+
+      renderCaption();
+      play();
+    </script>
+  </body>
+</html>

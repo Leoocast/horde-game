@@ -14371,6 +14371,17 @@
 
 .card-cost-badge.is-guided-emphasis {
   z-index: 70;
+}
+
+.card-cost-emphasis-frame {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  transform-origin: center;
+}
+
+.card-cost-badge.is-guided-emphasis > .card-cost-emphasis-frame {
   transform-origin: center;
   animation: guided-card-cost-focus 1.35s ease-in-out infinite;
 }
@@ -21542,7 +21553,7 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
   }
 
   .guided-card-comparison-frame > .card-cost-badge,
-  .card-cost-badge.is-guided-emphasis { animation: none; }
+  .card-cost-badge.is-guided-emphasis > .card-cost-emphasis-frame { animation: none; }
 }
 
 /* Semillas del Destino — the current deterministic seed is presented as a narrative Future. */
@@ -22192,6 +22203,8 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 
 .defeat-title .line {
   display: block;
+  /* Compensa el espacio que letter-spacing deja después de la última letra. */
+  padding-left: 0.065em;
   opacity: 0;
   clip-path: inset(0 50%);
   transform: translateY(12px);
@@ -22321,6 +22334,8 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 }
 
 .learn-to-play-contemplate-button .destiny-command-copy strong {
+  /* El texto queda ópticamente centrado dentro del botón pese a su tracking. */
+  padding-left: 0.13em;
   font-size: clamp(11px, 2vw, 14px);
   letter-spacing: 0.13em;
   white-space: nowrap;

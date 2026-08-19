@@ -7,6 +7,7 @@ import type { Phase, Side } from "../engine/GameTypes";
 import { isTranslationKey } from "../i18n/translations";
 import {
   GUIDED_CALLOUT_VISIBILITIES,
+  GUIDED_DIMMER_VISIBILITIES,
   GUIDED_GLOSSARY_TERM_IDS,
   GUIDED_INTENT_CONTEXTS,
   GUIDED_INTENT_KINDS,
@@ -29,6 +30,7 @@ const ALIAS_PATTERN = /^[a-z][a-z0-9_]*$/u;
 const PHASES = new Set<Phase>(["untap", "draw", "main", "combat", "end", "host"]);
 const INTENT_KINDS = new Set<string>(GUIDED_INTENT_KINDS);
 const CALLOUT_VISIBILITIES = new Set<string>(GUIDED_CALLOUT_VISIBILITIES);
+const DIMMER_VISIBILITIES = new Set<string>(GUIDED_DIMMER_VISIBILITIES);
 const GLOSSARY_TERM_IDS = new Set<string>(GUIDED_GLOSSARY_TERM_IDS);
 const INTENT_CONTEXTS = new Set<string>(GUIDED_INTENT_CONTEXTS);
 const HIGHLIGHT_ROLES = new Set<string>(GUIDED_HIGHLIGHT_ROLES);
@@ -388,6 +390,9 @@ function validateSteps(
     }
     if (step.callout !== undefined && !CALLOUT_VISIBILITIES.has(step.callout)) {
       problems.push(`Step "${step.id}" has unknown callout visibility "${String(step.callout)}".`);
+    }
+    if (step.dimmer !== undefined && !DIMMER_VISIBILITIES.has(step.dimmer)) {
+      problems.push(`Step "${step.id}" has unknown dimmer visibility "${String(step.dimmer)}".`);
     }
     if (!Array.isArray(step.highlights)) problems.push(`Step "${step.id}" highlights must be an array.`);
     for (const highlight of step.highlights ?? []) {

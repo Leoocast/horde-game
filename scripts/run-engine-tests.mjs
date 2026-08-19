@@ -11,6 +11,7 @@ const server = await createServer({
 
 try {
   await server.ssrLoadModule("/tests/engine.test.js");
+  await server.ssrLoadModule("/tests/canonSeed.test.js");
   await server.ssrLoadModule("/tests/hostBeats.test.js");
   await server.ssrLoadModule("/tests/deckLint.test.js");
   await server.ssrLoadModule("/tests/deckCardText.test.js");

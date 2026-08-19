@@ -400,6 +400,8 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   `game-surface-in` y termina en `translateY(0) scale(1)`, y la succión del vórtice al Reescribir,
   que anima `transform` sobre cada pieza de la escena. Con un `translate` propio, el texto se
   descuelga hacia abajo y a la derecha justo antes de la transición.
+  Las líneas **Lost Future** y el CTA de `learn-to-play` compensan además el espacio terminal de su
+  `letter-spacing`, de modo que su centro óptico coincida con el centro geométrico.
 - El desenlace es el bloque de la maqueta, ampliado un paso: etiqueta **Derrota** con reglas
   laterales, título en dos líneas que se abren desde el centro con su corte de luz, subtítulo y
   placa de **Futuro**. Copiar identidad vive en el canto de la placa. **Contemplar otro futuro** no
@@ -503,6 +505,20 @@ Las seeds normales se presentan dentro del mundo como **Semillas del Destino**: 
 que el Cronista contempla, reescribe y finalmente preserva. Cada seed recibe una identidad
 cosmética determinista **Futuro `NNN·NNN`**; ese código compacto puede colisionar y nunca reemplaza
 la seed real. **Copiar identidad** copia la seed completa aunque la UI sólo muestre el Futuro.
+
+Las **Canon Seeds** usan el contrato `HF1-PPP-HHH-XXD-XXX`. `PPP` y `HHH` son códigos estables de
+deck (`ELA`/`CEC` para Cronista y `GRV`/`VRK` para Hueste); los cinco caracteres repartidos alrededor
+de `D` son entropía `A-Z`/`0-9`. El dígito de dificultad no entra al RNG: `1`, `2` y `3` resuelven
+Fácil/Normal/Difícil y derivan 4/3/2 turnos de Preparación respectivamente. El código no se traduce,
+no contiene checksum y una entrada válida escrita manualmente es una Canon Seed comunitaria. Sólo
+un catálogo bundled externo al código puede marcarla como oficial.
+
+`src/content/CanonSeed.ts` es el codec y registro vigentes de `HF1`. Sólo su entropía alimenta
+`hashSeed`. `src/engine/InitialDeckOrder.ts` prepara los pools y conserva el stream único de RNG:
+primero baraja la Crónica y después la Hueste. `createInitialGame` consume esa misma costura; las
+seeds técnicas `developer`, `devlost` y `devwin` permanecen fuera de Canon y conservan sus ramas.
+Un cambio incompatible de códigos, contenido o reglas deterministas exige otro prefijo, no puede
+reinterpretar silenciosamente una Canon Seed `HF1` publicada.
 
 Durante una partida normal, la barra superior coloca **Reescribir** antes de Música y Ajustes. Su
 acción principal vuelve al origen de la misma seed, con los mismos decks, dificultad y modo;
@@ -627,13 +643,13 @@ aprobación explícita. **Cómo jugar** ya consume un catálogo y presenta **Apr
 efímero independiente, rollback de conceptos provisionales, reinicio total, autosave apagado,
 políticas explícitas de tablero e intervenciones estrictas adjuntas al `GameState` vivo. Su launcher
 está activo desde **Cómo jugar** y carga el snapshot avanzado exacto: Vida 31, Maela y tres Fuentes,
-Río/Aelyra/Vaelor en Mano, Flor como próximo robo, Retorno/Acechador/Engendro/Cosechadora en ese
+Vaelor/Aelyra/Río en Mano, Flor como próximo robo, Retorno/Acechador/Engendro/Cosechadora en ese
 orden y la segunda copia de Acechador como siguiente revelado. La guía exige la cuarta Fuente y
 Aelyra con objetivo libre; el director deja defensa libre, exige Vaelor, hace obligatoria una única
 inspección de la Cosechadora y permite Flor antes, después o nunca. Las pruebas enumeran todas las
 defensas legales y esas ramas, que convergen en Cosechadora 7/9, y certifican cero o un descarte
 opcional antes de la primera Oleada. El recorrido ya continúa después de `host.surgeStarted`: los
-Ladrones vacían la Mano, la regla real roba Río + Choque, y jugar la quinta Fuente o intentar
+Ladrones vacían la Mano, la regla real roba Choque + Río —Río queda a la derecha—, y jugar la quinta Fuente o intentar
 avanzar activa una intervención estricta breve para **Devolver Fuente**. Ciudad, Choque, Flor y el
 ataque posterior permanecen libres. Tres Soldados authored absorben los descartes opcionales antes
 del Titán terminal.
@@ -799,6 +815,10 @@ la numeración visible. Las anclas de carta ocultan el marco dorado del spotligh
 indicación propia de la carta; si aparece
 una acción contextual fuera de sus límites, el descendiente marcado con
 `data-guided-anchor-extension="true"` amplía el hueco interactivo y la zona evitada por el recuadro.
+El orbe de coste forma parte explícita de esos límites visuales para que el dimmer no lo recorte.
+Las dos primeras acciones del prólogo —jugar Río de Elarion e invocar a Aelyra— declaran
+`dimmer: "hidden"`: conservan el recuadro, la flecha direccional y el bloqueo de acciones, pero no
+oscurecen el tablero. Los pasos posteriores mantienen el dimmer por defecto.
 Al activar `phase.continueSetup`, el overlay retira el recuadro del paso de Acción desde el
 `pointerdown` o teclado aceptado; así no sobrevive un frame mientras comienza el robo automático.
 El oscurecimiento del tutorial usa 35 % de opacidad y el texto admite párrafos separados para evitar

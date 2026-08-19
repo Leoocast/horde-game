@@ -1,8 +1,17 @@
-import type { CardDefinition, CardInstance, DeckList, DifficultyMode, GameMode, GameState, Trait, Side } from "./GameTypes";
+import type { CardDefinition, CardInstance, DeckList, DifficultyMode, GameMode, GameState, Side, Trait } from "./GameTypes";
 import { buildHostRules } from "./HostRules";
 import { emptyEnergyPool } from "./EnergySystem";
-import { hashSeed, shuffleWithState } from "./RNG";
+import { shuffleWithState } from "./RNG";
 import { buildChaosMutations, prepareChaosDeck } from "./ChaosMode";
+import {
+  createCardInstance,
+  DEFAULT_PLAYER_DECK_SOURCE_COUNT,
+  expandDeck,
+  prepareInitialDeckPools,
+  shuffleInitialDeckOrder,
+} from "./InitialDeckOrder";
+
+export { createCardInstance, expandDeck } from "./InitialDeckOrder";
 
 const DEVELOPER_SEED = "developer";
 const DEVLOST_SEED = "devlost";
@@ -11,7 +20,7 @@ const STANDARD_STARTING_LIFE = 50;
 const CHAOS_STARTING_LIFE = 35;
 const DEVLOST_STARTING_LIFE = 15;
 const DEVWIN_HOST_ARCHIVE = ["graveless_soldier", "graveless_soldier"];
-export const DEFAULT_PLAYER_DECK_LAND_COUNT = 9;
+export const DEFAULT_PLAYER_DECK_LAND_COUNT = DEFAULT_PLAYER_DECK_SOURCE_COUNT;
 const DEVELOPER_OPENING_HAND = ["the_judgment_of_elarion", "the_judgment_of_elarion"];
 const DEVELOPER_RANDOM_OPENING_CARDS = 5;
 const DEVELOPER_HOST_OPENING_ARCHIVE = ["varkas_minion", "summoner_of_the_ranks"];
@@ -34,19 +43,14 @@ export function createInitialGame(
         host: buildChaosMutations(activeHostDeck, "host", seed),
       }
     : { player: {}, host: {} };
-  const playerCards = limitPlayerDeckLands(
-    expandDeck(activePlayerDeck, "player", chaosMutations.player),
-    activePlayerDeck.gameplayLandCount ?? DEFAULT_PLAYER_DECK_LAND_COUNT,
-  );
-  const hostCards = expandDeck(activeHostDeck, "host", chaosMutations.host);
+  const pools = prepareInitialDeckPools(activePlayerDeck, activeHostDeck, chaosMutations);
   const effectiveSetupTurns = gameMode === "chaos" ? 0 : setupTurns;
-  let randomState = hashSeed(seed);
-  const shuffledPlayer = shuffleWithState(playerCards, randomState);
-  randomState = shuffledPlayer.randomState;
-  const playerArchive = applyDeveloperOpeningHand(seed, shuffledPlayer.items);
-  const shuffledHost = shuffleWithState(hostCards, randomState);
-  randomState = shuffledHost.randomState;
-  const hostArchive = applyDevwinHostArchive(seed, applyDeveloperHostOpeningArchive(seed, shuffledHost.items));
+  const initialOrder = shuffleInitialDeckOrder(pools, seed);
+  const playerArchive = applyDeveloperOpeningHand(seed, initialOrder.playerArchive);
+  const hostArchive = applyDevwinHostArchive(
+    seed,
+    applyDeveloperHostOpeningArchive(seed, initialOrder.hostArchive),
+  );
 
   const game: GameState = {
     seed,
@@ -54,7 +58,7 @@ export function createInitialGame(
     gameMode,
     hostRules: buildHostRules(activeHostDeck.rulesProfile),
     chaosMutations,
-    currentRandomState: randomState,
+    currentRandomState: initialOrder.randomState,
     hostDeckOrderHash: hostArchive.map((card) => card.definitionId).join("|"),
     activeSide: "player",
     phase: "main",
@@ -201,15 +205,6 @@ function applyDeveloperStartingBattlefield(game: GameState): void {
   placeOnBattlefield(game, [{ definitionId: landId, amount: DEVELOPER_STARTING_LAND_COUNT }]);
 }
 
-function limitPlayerDeckLands(cards: CardInstance[], maximum: number): CardInstance[] {
-  let landsKept = 0;
-  return cards.filter((card) => {
-    if (!card.kinds.includes("SOURCE")) return true;
-    landsKept += 1;
-    return landsKept <= maximum;
-  });
-}
-
 function applyChaosStartingEnergy(game: GameState): void {
   if (game.gameMode !== "chaos") return;
   const normalizedSeed = game.seed.trim().toLowerCase();
@@ -217,65 +212,8 @@ function applyChaosStartingEnergy(game: GameState): void {
   placeOnBattlefield(game, [{ definitionId: game.player.archive.find((card) => card.kinds.includes("SOURCE"))?.definitionId ?? "", amount: 1 }]);
 }
 
-export function expandDeck(deck: DeckList, side: Side, chaosMutations: Record<string, Trait[]> = {}): CardInstance[] {
-  const allDefinitions = [...(deck.cards ?? [])];
-  return allDefinitions.flatMap((definition) =>
-    Array.from({ length: definition.quantity ?? 1 }, (_, copyIndex) =>
-      createCardInstance(definition, side, `${side}-${definition.id}-${copyIndex}`, chaosMutations[definition.id]),
-    ),
-  );
-}
-
 export function createToken(definition: CardDefinition, side: Side, suffix: string, chaosTraits?: Trait[]): CardInstance {
   return createCardInstance({ ...definition, isToken: true }, side, `${side}-token-${definition.id}-${suffix}`, chaosTraits);
-}
-
-export function createCardInstance(definition: CardDefinition, side: Side, instanceId: string, chaosTraits?: Trait[]): CardInstance {
-  const counters: Record<string, number> = {};
-  for (const counter of definition.entersWithCounters ?? []) {
-    counters[counter.counterType] = (counters[counter.counterType] ?? 0) + (counter.amount ?? 0);
-  }
-  return {
-    instanceId,
-    definitionId: definition.id,
-    name: definition.name,
-    displayName: definition.name,
-    displayNameEs: definition.displayNameEs,
-    gameText: definition.gameText,
-    owner: side,
-    controller: side,
-    zone: "archive",
-    isToken: Boolean(definition.isToken),
-    energyCost: definition.energyCost ?? 0,
-    kinds: definition.kinds ?? [],
-    modifiers: definition.modifiers ?? [],
-    subtypes: definition.subtypes ?? [],
-    basePower: definition.power ?? 0,
-    baseEndurance: definition.endurance ?? 0,
-    traits: chaosTraits ? [...chaosTraits] : definition.traits ?? [],
-    chaosTraits: chaosTraits ? [...chaosTraits] : [],
-    triggerMessage: definition.triggerMessage,
-    effects: definition.effects ?? [],
-    additionalCost: definition.additionalCost,
-    activatedAbilities: definition.activatedAbilities ?? [],
-    requiresTargets: definition.requiresTargets ?? [],
-    exhausted: false,
-    entersExhausted: Boolean(definition.entersExhausted),
-    stabilizing: (definition.kinds ?? []).includes("ECHO"),
-    attacksMade: 0,
-    activatedThisTurn: false,
-    damageMarked: 0,
-    lethalDamage: false,
-    counters,
-    temporaryPower: 0,
-    temporaryEndurance: 0,
-    untilNextPlayerTurnPower: 0,
-    untilNextPlayerTurnEndurance: 0,
-    temporaryTraits: [],
-    attachTo: definition.attachTo,
-    flags: { ...(definition.flags ?? {}) },
-    variableCost: definition.variableCost,
-  };
 }
 
 export function drawCards(game: GameState, side: "player", amount: number): void {

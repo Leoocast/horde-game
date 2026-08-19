@@ -455,11 +455,17 @@ export function CardCostBadge({
   if (label === 0) return null;
 
   return (
-    <div className={`card-cost-badge${emphasized ? " is-guided-emphasis" : ""}`} aria-hidden="true">
-      <span className="card-cost-energy-orb">
-        <span className="card-cost-energy-liquid" />
+    <div
+      className={`card-cost-badge${emphasized ? " is-guided-emphasis" : ""}`}
+      data-guided-anchor-extension="true"
+      aria-hidden="true"
+    >
+      <span className="card-cost-emphasis-frame">
+        <span className="card-cost-energy-orb">
+          <span className="card-cost-energy-liquid" />
+        </span>
+        <span className="card-cost-value">{label}</span>
       </span>
-      <span className="card-cost-value">{label}</span>
     </div>
   );
 }

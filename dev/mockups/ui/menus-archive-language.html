@@ -1,0 +1,2411 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hostfall — Menús en el lenguaje del Archivo</title>
+<style>
+@font-face {
+  font-family: "Cinzel Local";
+  src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Outfit Local";
+  src: url("../assets/fonts/outfit-latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  --bg: #0b0d0c;
+  --surface: #121614;
+  --surface-2: #171c19;
+  --surface-3: #1b211e;
+  --line: rgba(195, 173, 122, .17);
+  --line-strong: rgba(210, 186, 128, .34);
+
+  --text: #e9e2d3;
+  --muted: #8d9189;
+  --muted-2: #646a64;
+
+  --gold: #c5a45b;
+  --gold-light: #e3c983;
+  --gold-dark: #6e592d;
+
+  --sage: #86a38d;
+  --danger: #a1605f;
+
+  --font-display: "Cinzel Local", "Cinzel", Georgia, serif;
+  --font-ui: "Outfit Local", "Inter", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body { min-height: 100%; }
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 72% 8%, rgba(65, 82, 66, .12), transparent 34%),
+    radial-gradient(circle at 12% 74%, rgba(104, 83, 43, .08), transparent 36%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  letter-spacing: .01em;
+}
+
+button, input { font: inherit; color: inherit; }
+button { cursor: default; }
+
+.grain, .vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.grain {
+  opacity: .16;
+  mix-blend-mode: overlay;
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E");
+}
+
+.vignette { box-shadow: inset 0 0 200px rgba(0, 0, 0, .78); }
+
+/* ─────────────────────────── documento ─────────────────────────── */
+
+.doc {
+  position: relative;
+  z-index: 2;
+  width: min(1420px, calc(100% - 56px));
+  margin: 0 auto;
+  padding: 52px 0 90px;
+}
+
+.doc-head {
+  padding-bottom: 26px;
+  border-bottom: 1px solid var(--line);
+}
+
+.eyebrow, .kicker {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.doc-head h1 {
+  margin: 8px 0 10px;
+  font-family: var(--font-display);
+  font-size: clamp(30px, 3.4vw, 46px);
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+
+.doc-head p {
+  margin: 0;
+  max-width: 780px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.doc-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.doc-nav a {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .015);
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.doc-nav a:hover {
+  border-color: var(--line-strong);
+  color: var(--gold-light);
+}
+
+.screen { padding-top: 58px; }
+
+.screen-head {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.screen-head .num {
+  display: grid;
+  place-items: center;
+  height: 46px;
+  border: 1px solid var(--line);
+  color: rgba(197, 164, 91, .5);
+  font-family: var(--font-display);
+  font-size: 15px;
+}
+
+.screen-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 600;
+}
+
+.screen-head p {
+  margin: 3px 0 0;
+  color: var(--muted-2);
+  font-size: 11px;
+}
+
+.screen-head code {
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+/* ─────────────────────────── marco de pantalla ─────────────────────────── */
+
+.frame {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 76% 12%, rgba(65, 82, 66, .14), transparent 40%),
+    radial-gradient(circle at 14% 86%, rgba(104, 83, 43, .1), transparent 42%),
+    #0a0c0b;
+  box-shadow: inset 0 1px rgba(255, 255, 255, .02), 0 30px 80px rgba(0, 0, 0, .3);
+}
+
+.frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, .6);
+}
+
+.frame-glow {
+  position: absolute;
+  inset: auto 25% -60% 25%;
+  height: 220px;
+  background: var(--gold);
+  filter: blur(120px);
+  opacity: .05;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, .015), transparent 35%),
+    rgba(16, 20, 18, .83);
+  box-shadow: inset 0 1px rgba(255, 255, 255, .018);
+}
+
+/* ─────────────────────────── piezas comunes ─────────────────────────── */
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+.back:hover { color: var(--gold-light); }
+
+.screen-title {
+  margin: 6px 0 0;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.screen-desc {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.rule-label {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+}
+
+.segmented {
+  display: inline-grid;
+  grid-auto-flow: column;
+  border: 1px solid var(--line);
+}
+
+.segmented button {
+  min-width: 96px;
+  padding: 9px 12px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted-2);
+  font-size: 9.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.segmented button:last-child { border-right: 0; }
+
+.segmented button.active {
+  background: rgba(197, 164, 91, .11);
+  color: var(--gold-light);
+  box-shadow: inset 0 -1px var(--gold);
+}
+
+.toggle {
+  width: 38px;
+  height: 20px;
+  border: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, .025);
+  position: relative;
+  flex: none;
+}
+
+.toggle::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 12px;
+  height: 12px;
+  background: var(--muted-2);
+}
+
+.toggle.is-on { background: rgba(197, 164, 91, .11); }
+
+.toggle.is-on::after {
+  left: 21px;
+  background: var(--gold-light);
+  box-shadow: 0 0 10px rgba(227, 201, 131, .25);
+}
+
+.rail {
+  position: relative;
+  height: 2px;
+  background: rgba(255, 255, 255, .08);
+}
+
+.rail span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--v, 50%);
+  background: var(--gold-dark);
+}
+
+.rail i {
+  position: absolute;
+  top: 50%;
+  left: var(--v, 50%);
+  width: 11px;
+  height: 11px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--gold-light);
+  box-shadow: 0 0 16px rgba(227, 201, 131, .28);
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+.field input {
+  min-width: 0;
+  flex: 1;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 11px;
+  outline: none;
+}
+
+.field button {
+  padding: 10px 14px;
+  border: 0;
+  border-left: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.field button:hover { color: var(--gold-light); }
+
+.action {
+  padding: 9px 16px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .015);
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.action:hover { border-color: var(--line-strong); color: var(--gold-light); }
+
+.action.is-primary {
+  border-color: var(--gold-dark);
+  background:
+    linear-gradient(180deg, rgba(227, 201, 131, .13), rgba(96, 74, 34, .07)),
+    #1a1914;
+  color: var(--gold-light);
+}
+
+.action.is-primary:hover {
+  border-color: var(--gold);
+  box-shadow: 0 0 30px rgba(197, 164, 91, .08);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+
+.row:first-of-type { border-top: 0; }
+
+.row strong {
+  display: block;
+  margin-bottom: 3px;
+  color: #d8d3c8;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.row small {
+  display: block;
+  color: var(--muted-2);
+  font-size: 9.5px;
+  line-height: 1.4;
+}
+
+.diamond {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  transform: rotate(45deg);
+  font-size: 9px;
+}
+
+.diamond > * { transform: rotate(-45deg); }
+
+.lore-note {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 18px;
+  align-items: center;
+}
+
+.lore-note .line { height: 1px; background: linear-gradient(90deg, transparent, var(--line)); }
+.lore-note .line:last-child { background: linear-gradient(90deg, var(--line), transparent); }
+
+.lore-note p {
+  margin: 0;
+  color: var(--muted-2);
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: .05em;
+  text-align: center;
+}
+
+/* ─────────────────────────── I · menú principal ─────────────────────────── */
+
+.menu-frame { display: grid; }
+
+.menu-profile {
+  position: absolute;
+  top: 26px;
+  left: 30px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  background: rgba(16, 20, 18, .7);
+}
+
+.menu-profile .diamond { width: 30px; height: 30px; color: var(--gold); font-size: 11px; }
+
+.menu-profile strong {
+  display: block;
+  color: var(--gold-light);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.menu-profile span.role {
+  display: block;
+  color: var(--muted-2);
+  font-size: 9px;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.menu-profile .edit {
+  width: 28px;
+  height: 28px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted-2);
+  font-size: 13px;
+}
+
+.menu-profile .edit:hover { border-color: var(--line); color: var(--gold-light); }
+
+.menu-layout {
+  position: absolute;
+  top: 50%;
+  left: 76px;
+  transform: translateY(-50%);
+  display: grid;
+  gap: 44px;
+}
+
+.wordmark {
+  margin: 10px 0 8px;
+  font-family: var(--font-display);
+  font-size: 76px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  line-height: .95;
+  color: #efe6d0;
+  text-shadow: 0 0 60px rgba(197, 164, 91, .12);
+}
+
+.menu-act {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: .19em;
+  text-transform: uppercase;
+}
+
+.menu-act i { width: 46px; height: 1px; background: linear-gradient(90deg, var(--gold-dark), transparent); }
+
+.menu-nav { display: grid; gap: 3px; max-width: 350px; }
+
+.menu-entry {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 16px 13px 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  color: #cfc9bb;
+  font-family: var(--font-display);
+  font-size: 15px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.menu-entry .mark {
+  width: 8px;
+  height: 8px;
+  justify-self: center;
+  border: 1px solid rgba(197, 164, 91, .38);
+  transform: rotate(45deg);
+}
+
+.menu-entry:hover, .menu-entry.is-active {
+  border-color: var(--line);
+  background: rgba(197, 164, 91, .055);
+  color: var(--gold-light);
+}
+
+.menu-entry:hover .mark, .menu-entry.is-active .mark {
+  background: var(--gold);
+  border-color: var(--gold-light);
+  box-shadow: 0 0 14px rgba(227, 201, 131, .3);
+}
+
+.menu-entry.is-disabled { color: var(--muted-2); }
+.menu-entry.is-disabled:hover { border-color: transparent; background: transparent; color: var(--muted-2); }
+.menu-entry.is-disabled:hover .mark { background: transparent; border-color: rgba(197, 164, 91, .38); box-shadow: none; }
+
+.menu-entry small {
+  color: var(--muted-2);
+  font-family: var(--font-ui);
+  font-size: 8.5px;
+  letter-spacing: .12em;
+}
+
+.menu-devtools {
+  position: absolute;
+  top: 28px;
+  right: 30px;
+  display: flex;
+  gap: 8px;
+}
+
+.menu-devtools button {
+  padding: 8px 12px;
+  border: 1px dashed rgba(134, 163, 141, .3);
+  background: transparent;
+  color: rgba(134, 163, 141, .75);
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.menu-foot {
+  position: absolute;
+  left: 30px;
+  bottom: 24px;
+  color: var(--muted-2);
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  line-height: 1.7;
+}
+
+.menu-seal {
+  position: absolute;
+  right: 60px;
+  bottom: 50%;
+  transform: translateY(50%);
+  display: grid;
+  place-items: center;
+  width: 260px;
+  height: 260px;
+  border: 1px solid rgba(197, 164, 91, .1);
+  border-radius: 50%;
+  color: rgba(197, 164, 91, .18);
+  font-size: 62px;
+}
+
+.menu-seal::before {
+  content: "";
+  position: absolute;
+  inset: 32px;
+  border: 1px solid rgba(197, 164, 91, .07);
+  border-radius: 50%;
+}
+
+/* ─────────────────────────── II · ajustes ─────────────────────────── */
+
+.sheet {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.sheet-header {
+  padding: 26px 40px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.sheet-body {
+  min-height: 0;
+  overflow: hidden;
+  padding: 24px 40px 30px;
+}
+
+.settings-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 34px;
+  height: 100%;
+}
+
+.settings-section { margin-bottom: 26px; }
+
+.settings-section .rule-label {
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--line);
+}
+
+.value-tag {
+  min-width: 46px;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  color: var(--gold-light);
+  font-size: 10px;
+  text-align: center;
+}
+
+.slider-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 0 14px;
+}
+
+/* ─────────────────────────── III · mazos ─────────────────────────── */
+
+.deck-row {
+  display: flex;
+  gap: 34px;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 22px;
+}
+
+.deck-key {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.deck-stage {
+  position: relative;
+  width: 214px;
+  height: 300px;
+}
+
+.deck-depth {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255, 255, 255, .05);
+  background: rgba(10, 12, 11, .9);
+}
+
+.deck-depth.back { transform: translate(14px, 12px) rotate(2.4deg); }
+.deck-depth.mid { transform: translate(7px, 6px) rotate(1.2deg); }
+
+.deck-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  background: linear-gradient(160deg, var(--art-a), var(--art-b));
+  display: grid;
+  align-content: end;
+  gap: 4px;
+  padding: 14px;
+}
+
+.deck-face::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(255, 255, 255, .14), transparent 46%),
+    linear-gradient(180deg, transparent 42%, rgba(6, 8, 7, .92));
+}
+
+.deck-face .sigil-art {
+  position: absolute;
+  top: 58px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 60px;
+  color: rgba(255, 255, 255, .3);
+  text-shadow: 0 0 40px rgba(0, 0, 0, .6);
+}
+
+.deck-face small, .deck-face strong { position: relative; }
+
+.deck-face small {
+  color: rgba(233, 226, 211, .55);
+  font-size: 8px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.deck-face strong {
+  color: #f1ead9;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.deck-key:hover .deck-face { border-color: var(--gold); }
+
+.deck-key figcaption {
+  display: grid;
+  gap: 5px;
+  justify-items: center;
+  text-align: center;
+}
+
+.deck-key figcaption strong {
+  color: #e4ded0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.deck-key figcaption span {
+  color: var(--muted-2);
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+/* ─────────────────────────── IV · cartas ─────────────────────────── */
+
+.inspector-header {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+  padding: 18px 30px;
+  border-bottom: 1px solid var(--line);
+}
+
+.inspector-header h2 {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.inspector-tools {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 210px;
+  padding: 8px 11px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted-2);
+  font-size: 10.5px;
+}
+
+.counts {
+  display: flex;
+  gap: 14px;
+  color: var(--muted-2);
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.counts strong { color: var(--gold-light); font-family: var(--font-display); font-size: 12px; }
+
+.zoom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 132px;
+}
+
+.zoom button {
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 12px;
+  padding: 20px 30px;
+}
+
+.mini-card {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 63 / 88;
+  border: 1px solid var(--line);
+  background: linear-gradient(165deg, var(--art-a), var(--art-b));
+  display: grid;
+  align-content: space-between;
+  padding: 8px;
+}
+
+.mini-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(255, 255, 255, .12), transparent 48%),
+    linear-gradient(180deg, rgba(6, 8, 7, .55) 0 12%, transparent 30%, rgba(6, 8, 7, .93) 74%);
+}
+
+.mini-card:hover { border-color: var(--gold); }
+
+.mini-card > * { position: relative; }
+
+.mini-top { display: flex; justify-content: space-between; align-items: flex-start; }
+
+.cost-orb {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(150, 190, 226, .55);
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #4d7ba6, #12243a);
+  color: #dcecff;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.qty {
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  background: rgba(8, 10, 9, .8);
+  color: var(--gold-light);
+  font-family: var(--font-display);
+  font-size: 9px;
+}
+
+.mini-bottom { display: grid; gap: 4px; }
+
+.mini-bottom strong {
+  color: #f0e9d8;
+  font-family: var(--font-display);
+  font-size: 9.5px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.mini-bottom span {
+  color: rgba(141, 145, 137, .95);
+  font-size: 7.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.mini-stats {
+  display: flex;
+  gap: 5px;
+  margin-top: 2px;
+  color: var(--gold-light);
+  font-family: var(--font-display);
+  font-size: 10px;
+}
+
+.mini-stats i { color: var(--muted-2); font-style: normal; }
+
+/* ─────────────────────────── V · prepartida ─────────────────────────── */
+
+.setup {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.setup-header {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) 200px;
+  align-items: center;
+  padding: 18px 34px 14px;
+}
+
+.setup-header h1 {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 27px;
+  font-weight: 600;
+}
+
+.future-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 9.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.setup-body {
+  min-height: 0;
+  display: grid;
+  gap: 16px;
+  align-content: center;
+  padding: 0 34px;
+}
+
+.combatants {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 78px minmax(0, 1fr);
+  align-items: stretch;
+  gap: 8px;
+}
+
+.combatant {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  border: 1px solid var(--line);
+  background: linear-gradient(120deg, rgba(255, 255, 255, .012), transparent 40%), rgba(16, 20, 18, .8);
+}
+
+.combatant-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.combatant-head > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.combatant-head .acts { display: flex; gap: 6px; }
+
+.combatant-head .acts button {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .015);
+  color: var(--muted-2);
+  font-size: 8.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.combatant-head .acts button:hover { border-color: var(--line-strong); color: var(--gold-light); }
+
+.combatant-feature {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px;
+}
+
+.combatant-art {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: linear-gradient(160deg, var(--art-a), var(--art-b));
+  display: grid;
+  place-items: center;
+  font-size: 40px;
+  color: rgba(255, 255, 255, .28);
+}
+
+.combatant-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 45%, rgba(6, 8, 7, .8));
+}
+
+.combatant-copy small {
+  display: block;
+  color: var(--muted-2);
+  font-size: 8.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.combatant-copy h3 {
+  margin: 7px 0 8px;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  color: #e4ded0;
+}
+
+.combatant-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10.5px;
+  line-height: 1.55;
+}
+
+.awakening {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px;
+  border-top: 1px solid var(--line);
+  background: rgba(0, 0, 0, .18);
+  color: var(--muted-2);
+  font-size: 8.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.awakening strong {
+  color: var(--gold-light);
+  font-family: var(--font-display);
+  font-size: 17px;
+}
+
+.versus {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 10px;
+  color: rgba(197, 164, 91, .5);
+}
+
+.versus i { width: 1px; height: 42px; background: linear-gradient(180deg, transparent, var(--line-strong)); }
+.versus i:last-child { background: linear-gradient(0deg, transparent, var(--line-strong)); }
+.versus strong { font-family: var(--font-display); font-size: 13px; letter-spacing: .1em; }
+
+.difficulty {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  align-items: center;
+  gap: 26px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.difficulty h3 {
+  margin: 3px 0 0;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.difficulty p { margin: 0; color: var(--muted-2); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; }
+
+.mode-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+
+.mode {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, .015);
+  text-align: left;
+}
+
+.mode:hover { border-color: var(--line); }
+
+.mode.is-selected {
+  border-color: var(--line-strong);
+  background: rgba(197, 164, 91, .07);
+}
+
+.mode strong {
+  display: block;
+  color: #d8d3c8;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.mode small { display: block; color: var(--muted-2); font-size: 8.5px; }
+
+.mode.is-selected strong, .mode.is-selected .diamond { color: var(--gold-light); }
+
+.advanced-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 9.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.advanced-toggle span { color: var(--muted-2); font-family: var(--font-ui); letter-spacing: .06em; text-transform: none; font-size: 10px; }
+
+.setup-footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+  padding: 16px 34px 20px;
+  border-top: 1px solid var(--line);
+  background: rgba(0, 0, 0, .2);
+}
+
+.footer-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  color: var(--muted-2);
+  font-size: 9px;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.footer-summary strong {
+  color: #ded7c7;
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: .04em;
+  text-transform: none;
+}
+
+.footer-summary i { color: rgba(197, 164, 91, .4); font-style: normal; }
+
+.begin {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 34px;
+  border: 1px solid var(--gold-dark);
+  background: linear-gradient(180deg, rgba(227, 201, 131, .14), rgba(96, 74, 34, .07)), #1a1914;
+  color: var(--gold-light);
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+}
+
+.begin:hover { border-color: var(--gold); box-shadow: 0 0 34px rgba(197, 164, 91, .1); }
+
+/* ─────────────────────────── VI · partida ─────────────────────────── */
+
+.board-ghost {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: 72px minmax(0, 1fr) auto;
+  opacity: .58;
+}
+
+.board-lane {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.board-card {
+  width: 74px;
+  height: 104px;
+  border: 1px solid rgba(195, 173, 122, .14);
+  background: linear-gradient(160deg, rgba(45, 55, 48, .8), rgba(12, 15, 13, .9));
+}
+
+.board-body {
+  display: grid;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 10px 40px;
+  align-content: center;
+}
+
+.board-hand {
+  display: flex;
+  justify-content: center;
+  gap: -10px;
+  padding-bottom: 12px;
+}
+
+.board-hand .board-card { margin: 0 -14px; transform: rotate(var(--r, 0deg)); }
+
+.command-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 22px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(10, 13, 11, .95), rgba(10, 13, 11, .55));
+}
+
+.phase-chip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 16px;
+  border: 1px solid var(--line);
+  background: rgba(16, 20, 18, .8);
+}
+
+.phase-chip span {
+  color: var(--muted-2);
+  font-size: 8.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.phase-chip strong {
+  color: var(--gold-light);
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.command-actions { display: flex; align-items: center; gap: 10px; }
+
+.destiny-control {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  background: rgba(16, 20, 18, .82);
+}
+
+.destiny-control .code {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: .14em;
+}
+
+.destiny-control button {
+  padding: 9px 15px;
+  border: 0;
+  border-left: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.destiny-control button:hover { color: var(--gold-light); }
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  background: rgba(16, 20, 18, .82);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.icon-button:hover, .icon-button.is-open { border-color: var(--line-strong); color: var(--gold-light); }
+
+.popover {
+  position: absolute;
+  top: 84px;
+  right: 68px;
+  width: 292px;
+  padding: 16px;
+  border: 1px solid var(--line-strong);
+  background: rgba(13, 16, 14, .97);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, .5);
+}
+
+.now-playing {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.now-playing .diamond { width: 32px; height: 32px; color: var(--gold); }
+
+.now-playing strong {
+  display: block;
+  margin: 3px 0 2px;
+  color: #e9ddb9;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.now-playing em { color: var(--muted-2); font-size: 8.5px; font-style: normal; letter-spacing: .12em; text-transform: uppercase; }
+
+.transport { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 14px 0; }
+
+.transport button {
+  height: 32px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .015);
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.transport button:hover { border-color: var(--line-strong); color: var(--gold-light); }
+
+.playlist { display: grid; gap: 2px; margin-top: 14px; }
+
+.playlist button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  text-align: left;
+}
+
+.playlist button:hover { border-color: var(--line); }
+
+.playlist button.is-selected {
+  border-color: var(--line-strong);
+  background: rgba(197, 164, 91, .07);
+  color: var(--gold-light);
+}
+
+.playlist em {
+  color: var(--sage);
+  font-size: 8px;
+  font-style: normal;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.hint { margin: 12px 0 0; color: var(--muted-2); font-size: 8.5px; letter-spacing: .06em; }
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 7, 6, .55);
+}
+
+.dialog {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 470px;
+  padding: 30px 32px 26px;
+  border: 1px solid var(--line-strong);
+  background: linear-gradient(160deg, rgba(24, 29, 25, .98), rgba(13, 16, 14, .99));
+  box-shadow: 0 40px 90px rgba(0, 0, 0, .6);
+  text-align: center;
+}
+
+.dialog .diamond { margin: 0 auto 16px; width: 40px; height: 40px; color: var(--gold); font-size: 14px; }
+
+.dialog h3 {
+  margin: 8px 0 0;
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 600;
+}
+
+.dialog .rule {
+  width: 74px;
+  height: 1px;
+  margin: 16px auto;
+  background: linear-gradient(90deg, transparent, var(--line-strong), transparent);
+}
+
+.dialog p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.62; }
+
+.dialog-actions { display: grid; gap: 8px; margin-top: 22px; }
+
+.dialog-copy {
+  margin-top: 14px;
+  border: 0;
+  background: transparent;
+  color: var(--muted-2);
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.dialog-copy:hover { color: var(--gold-light); }
+
+/* ─────────────────────────── VII · ajustes en partida ─────────────────────────── */
+
+.modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 72px);
+  height: calc(100% - 56px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  border: 1px solid var(--line-strong);
+  background: linear-gradient(150deg, rgba(23, 28, 25, .98), rgba(12, 15, 13, .99));
+  box-shadow: 0 40px 100px rgba(0, 0, 0, .6);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.modal-header h2 { margin: 5px 0 0; font-family: var(--font-display); font-size: 20px; font-weight: 600; }
+
+.modal-body {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: 18px;
+  padding: 18px 24px;
+}
+
+.modal-column {
+  min-height: 0;
+  overflow: hidden;
+  padding-right: 6px;
+}
+
+.soft-panel {
+  padding: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .012);
+  margin-bottom: 12px;
+}
+
+.check-row {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 11px;
+  align-items: start;
+  margin-top: 10px;
+}
+
+.check {
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  border: 1px solid var(--line-strong);
+  display: grid;
+  place-items: center;
+  color: var(--gold-light);
+  font-size: 9px;
+}
+
+.zone-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 11px; }
+
+.zone-metric {
+  display: grid;
+  gap: 3px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .012);
+}
+
+.zone-metric span { color: var(--muted-2); font-size: 8px; letter-spacing: .13em; text-transform: uppercase; }
+.zone-metric strong { color: var(--gold-light); font-family: var(--font-display); font-size: 15px; }
+.zone-metric em { color: var(--muted); font-size: 8.5px; font-style: normal; }
+
+.zone-side-title {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.chronicle {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .01);
+  min-height: 0;
+}
+
+.chronicle > p { margin: 6px 0 0; color: var(--muted-2); font-size: 10px; }
+
+.chronicle-log {
+  margin-top: 14px;
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  align-content: start;
+  gap: 1px;
+}
+
+.chronicle-log div {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 12px;
+  padding: 7px 2px;
+  border-bottom: 1px solid rgba(195, 173, 122, .07);
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.chronicle-log span {
+  color: var(--muted-2);
+  font-family: var(--font-display);
+  font-size: 8.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.chronicle-log strong { color: var(--gold-light); font-weight: 500; }
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 24px;
+  border-top: 1px solid var(--line);
+  background: rgba(0, 0, 0, .18);
+}
+
+.notes {
+  margin: 14px 0 0;
+  padding: 14px 18px;
+  border-left: 1px solid var(--line);
+  color: var(--muted-2);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.notes b { color: var(--muted); font-weight: 500; }
+
+/* temas de arte de mazo */
+.theme-ramp { --art-a: #2f4a35; --art-b: #0b1410; }
+.theme-vampires { --art-a: #4a1f28; --art-b: #12080c; }
+.theme-zombies { --art-a: #3b4436; --art-b: #0d110d; }
+.theme-goblins { --art-a: #4b3a1c; --art-b: #120d07; }
+.theme-neutral { --art-a: #313a37; --art-b: #0c100e; }
+
+@media (max-width: 1180px) {
+  .doc { width: calc(100% - 28px); }
+  .wordmark { font-size: 56px; }
+  .card-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+</style>
+</head>
+
+<body>
+<div class="grain"></div>
+<div class="vignette"></div>
+
+<main class="doc">
+  <header class="doc-head">
+    <span class="eyebrow">MAQUETA · LENGUAJE DEL ARCHIVO DE FUTUROS</span>
+    <h1>Los menús actuales, en el otro material</h1>
+    <p>
+      Cada marco reproduce el contenido real de una pantalla del juego —los mismos textos, controles y
+      jerarquías— dibujado con el lenguaje del Explorador de futuros: fondo casi negro, filetes de un
+      píxel, Cinzel en versalitas para identidad, rombos en lugar de iconos y oro sólo donde hay una
+      decisión. Sirve para comparar contra la interfaz vigente, no para reemplazarla.
+    </p>
+    <nav class="doc-nav">
+      <a href="#s1">I · Menú principal</a>
+      <a href="#s2">II · Ajustes</a>
+      <a href="#s3">III · Crónicas y Huestes</a>
+      <a href="#s4">IV · Cartas del mazo</a>
+      <a href="#s5">V · Prepartida</a>
+      <a href="#s6">VI · Menú de partida</a>
+      <a href="#s7">VII · Ajustes en partida</a>
+    </nav>
+  </header>
+
+  <!-- ═══════════════════════ I · MENÚ PRINCIPAL ═══════════════════════ -->
+  <section class="screen" id="s1">
+    <div class="screen-head">
+      <span class="num">I</span>
+      <div>
+        <h2>Menú principal</h2>
+        <p><code>StartMenu</code> · pantalla <code>home</code> — perfil, marca, navegación, versión y créditos</p>
+      </div>
+    </div>
+
+    <div class="frame menu-frame">
+      <div class="frame-glow"></div>
+
+      <div class="menu-profile">
+        <span class="diamond"><span>◆</span></span>
+        <div>
+          <strong>Leo</strong>
+          <span class="role">Cronista</span>
+        </div>
+        <button class="edit" title="Editar nombre del Cronista">✎</button>
+      </div>
+
+      <div class="menu-devtools">
+        <button>Playground</button>
+        <button>Audio Lab</button>
+      </div>
+
+      <div class="menu-seal" aria-hidden="true">✦</div>
+
+      <div class="menu-layout">
+        <div class="menu-brand">
+          <span class="eyebrow">CRÓNICAS DE LOS REINOS QUEBRADOS</span>
+          <h2 class="wordmark">HOSTFALL</h2>
+          <div class="menu-act"><i></i> ACTO I — CORONAS SOBRE CENIZAS</div>
+        </div>
+
+        <nav class="menu-nav">
+          <button class="menu-entry is-disabled">
+            <span class="mark"></span>
+            <span>Continuar</span>
+            <small>NO DISPONIBLE</small>
+          </button>
+          <button class="menu-entry is-active">
+            <span class="mark"></span>
+            <span>Jugar</span>
+            <small></small>
+          </button>
+          <button class="menu-entry">
+            <span class="mark"></span>
+            <span>Crónicas</span>
+            <small></small>
+          </button>
+          <button class="menu-entry">
+            <span class="mark"></span>
+            <span>Huestes</span>
+            <small></small>
+          </button>
+          <button class="menu-entry">
+            <span class="mark"></span>
+            <span>Cómo jugar</span>
+            <small></small>
+          </button>
+          <button class="menu-entry">
+            <span class="mark"></span>
+            <span>Ajustes</span>
+            <small></small>
+          </button>
+        </nav>
+      </div>
+
+      <div class="menu-foot">
+        VERSIÓN 0.9.4<br />
+        DESARROLLADO POR LEOOCAST
+      </div>
+    </div>
+
+    <p class="notes">
+      <b>Diferencia principal:</b> la marca deja de competir con el fondo y la navegación pasa a ser una
+      columna de entradas con filete, en vez de botones con material propio. El perfil del Cronista y las
+      herramientas de desarrollo quedan como anclas en las esquinas.
+    </p>
+  </section>
+
+  <!-- ═══════════════════════ II · AJUSTES ═══════════════════════ -->
+  <section class="screen" id="s2">
+    <div class="screen-head">
+      <span class="num">II</span>
+      <div>
+        <h2>Ajustes del menú</h2>
+        <p><code>StartMenu</code> · <code>menuScreen "settings"</code> — idioma, audio, pantalla y juego</p>
+      </div>
+    </div>
+
+    <div class="frame">
+      <div class="sheet">
+        <header class="sheet-header">
+          <button class="back">← Volver</button>
+          <h2 class="screen-title">Ajustes</h2>
+          <p class="screen-desc">Personaliza el idioma, el audio y la configuración del juego.</p>
+        </header>
+
+        <div class="sheet-body">
+          <div class="settings-columns">
+            <div>
+              <section class="settings-section">
+                <span class="rule-label">Idioma</span>
+                <div class="row">
+                  <div>
+                    <strong>Idioma de la interfaz</strong>
+                    <small>Cambia nombres, reglas y textos impresos.</small>
+                  </div>
+                  <div class="segmented">
+                    <button class="active">Español</button>
+                    <button>English</button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="settings-section">
+                <span class="rule-label">Audio</span>
+                <div class="row">
+                  <div>
+                    <strong>Efectos de sonido</strong>
+                    <small>Acciones, cartas y respuestas de la interfaz</small>
+                  </div>
+                  <span class="toggle is-on"></span>
+                </div>
+                <div class="slider-row">
+                  <div class="rail" style="--v: 72%"><span></span><i></i></div>
+                  <span class="value-tag">72 %</span>
+                </div>
+                <div class="row">
+                  <div>
+                    <strong>Música</strong>
+                    <small>Música del menú y de las batallas</small>
+                  </div>
+                  <span class="toggle is-on"></span>
+                </div>
+                <div class="slider-row">
+                  <div class="rail" style="--v: 44%"><span></span><i></i></div>
+                  <span class="value-tag">44 %</span>
+                </div>
+                <div class="row">
+                  <div>
+                    <strong>Probar sonido</strong>
+                    <small>Reproduce el sonido de confirmación de la interfaz</small>
+                  </div>
+                  <button class="action">Probar</button>
+                </div>
+              </section>
+            </div>
+
+            <div>
+              <section class="settings-section">
+                <span class="rule-label">Pantalla</span>
+                <div class="row">
+                  <div>
+                    <strong>Pantalla completa</strong>
+                    <small>Usa toda la pantalla. También puedes presionar F11.</small>
+                  </div>
+                  <button class="action">Usar pantalla completa</button>
+                </div>
+              </section>
+
+              <section class="settings-section">
+                <span class="rule-label">Juego</span>
+                <div class="row">
+                  <div>
+                    <strong>Semilla</strong>
+                    <small>Repite exactamente la misma configuración de partida</small>
+                  </div>
+                </div>
+                <div class="field" style="margin: -4px 0 14px">
+                  <input value="hostfall-m4k2xq-7f3a1c9d" readonly />
+                  <button>Copiar</button>
+                  <button>Nueva</button>
+                </div>
+                <div class="row">
+                  <div>
+                    <strong>Modo desarrollador</strong>
+                    <small>Herramientas para probar cartas y efectos sin terminar</small>
+                  </div>
+                  <span class="toggle"></span>
+                </div>
+                <div class="row">
+                  <div>
+                    <strong>Caché de recursos</strong>
+                    <small>Elimina imágenes y audio guardados para prepararlos de nuevo</small>
+                  </div>
+                  <button class="action">Limpiar caché</button>
+                </div>
+              </section>
+
+              <div class="lore-note" style="margin-top: 34px">
+                <span class="line"></span>
+                <p>Los cambios se guardan al instante en el perfil del Cronista.</p>
+                <span class="line"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="notes">
+      <b>Diferencia principal:</b> una sola escala de filas —etiqueta, descripción y control a la derecha—
+      en dos columnas, sin tarjetas anidadas. Los porcentajes de volumen se leen en una cartela fija en
+      vez de flotar junto al pulgar.
+    </p>
+  </section>
+
+  <!-- ═══════════════════════ III · CRÓNICAS ═══════════════════════ -->
+  <section class="screen" id="s3">
+    <div class="screen-head">
+      <span class="num">III</span>
+      <div>
+        <h2>Crónicas y Huestes</h2>
+        <p><code>DecksView</code> — la misma pantalla sirve a las dos colecciones; sólo cambian título y descripción</p>
+      </div>
+    </div>
+
+    <div class="frame">
+      <div class="frame-glow"></div>
+      <div class="sheet">
+        <header class="sheet-header">
+          <button class="back">← Volver</button>
+          <h2 class="screen-title">Crónicas</h2>
+          <p class="screen-desc">Crónicas que lleva el Cronista.</p>
+        </header>
+
+        <div class="sheet-body">
+          <div class="deck-row">
+            <button class="deck-key theme-ramp">
+              <span class="deck-stage">
+                <span class="deck-depth back"></span>
+                <span class="deck-depth mid"></span>
+                <span class="deck-face">
+                  <span class="sigil-art">✦</span>
+                  <small>Carta destacada</small>
+                  <strong>Vaelor, Alba del Pacto</strong>
+                </span>
+              </span>
+              <figcaption>
+                <strong>El Pacto de Elarion</strong>
+                <span>40 cartas · 24 únicas</span>
+              </figcaption>
+            </button>
+
+            <button class="deck-key theme-vampires">
+              <span class="deck-stage">
+                <span class="deck-depth back"></span>
+                <span class="deck-depth mid"></span>
+                <span class="deck-face">
+                  <span class="sigil-art">✧</span>
+                  <small>Carta destacada</small>
+                  <strong>Mirevna, Sed Coronada</strong>
+                </span>
+              </span>
+              <figcaption>
+                <strong>La Corte del Eclipse Carmesí</strong>
+                <span>40 cartas · 23 únicas</span>
+              </figcaption>
+            </button>
+          </div>
+
+          <div class="lore-note" style="margin-top: 40px">
+            <span class="line"></span>
+            <p>La Hueste alza sus propias colecciones en la pantalla gemela.</p>
+            <span class="line"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="notes">
+      <b>Diferencia principal:</b> la pila conserva su profundidad de tres capas, pero el nombre del mazo
+      baja fuera de la carta y gana una línea de conteo. El brillo dorado queda reservado al borde de la
+      carta al pasar el cursor.
+    </p>
+  </section>
+
+  <!-- ═══════════════════════ IV · CARTAS ═══════════════════════ -->
+  <section class="screen" id="s4">
+    <div class="screen-head">
+      <span class="num">IV</span>
+      <div>
+        <h2>Cartas del mazo</h2>
+        <p><code>DeckInspector</code> — búsqueda, conteos, zoom de 7 a 5 columnas y rejilla de copias</p>
+      </div>
+    </div>
+
+    <div class="frame">
+      <div class="sheet">
+        <header class="inspector-header">
+          <button class="back">← Crónicas</button>
+          <h2>El Pacto de Elarion</h2>
+          <div class="inspector-tools">
+            <span class="search"><span class="diamond" style="width:18px;height:18px;font-size:8px"><span>⌕</span></span> Buscar cartas...</span>
+            <div class="counts">
+              <span><strong>24</strong> únicas</span>
+              <span><strong>40</strong> cartas</span>
+            </div>
+            <div class="zoom">
+              <button>−</button>
+              <div class="rail" style="--v: 0%"><span></span><i></i></div>
+              <button>+</button>
+            </div>
+          </div>
+        </header>
+
+        <div class="card-grid">
+          <article class="mini-card theme-ramp">
+            <div class="mini-top"><span class="cost-orb">1</span><span class="qty">×4</span></div>
+            <div class="mini-bottom"><strong>Río de Elarion</strong><span>Fuente</span></div>
+          </article>
+          <article class="mini-card theme-ramp">
+            <div class="mini-top"><span class="cost-orb">2</span><span class="qty">×3</span></div>
+            <div class="mini-bottom"><strong>Aelyra, Voz del Bosque</strong><span>Eco · Guardiana</span><span class="mini-stats">2<i>/</i>3</span></div>
+          </article>
+          <article class="mini-card theme-ramp">
+            <div class="mini-top"><span class="cost-orb">2</span><span class="qty">×3</span></div>
+            <div class="mini-bottom"><strong>Liora del Umbral</strong><span>Eco · Centinela</span><span class="mini-stats">1<i>/</i>4</span></div>
+          </article>
+          <article class="mini-card theme-ramp">
+            <div class="mini-top"><span class="cost-orb">3</span><span class="qty">×2</span></div>
+            <div class="mini-bottom"><strong>Maela, Heredera</strong><span>Eco · Noble</span><span class="mini-stats">3<i>/</i>3</span></div>
+          </article>
+          <article class="mini-card theme-ramp">
+            <div class="mini-top"><span class="cost-orb">2</span><span class="qty">×2</span></div>
+            <div class="mini-bottom"><strong>Escudo de la Heredera</strong><span>Hechizo</span></div>
+          </article>
+          <article class="mini-card theme-ramp">
+            <div class="mini-top"><span class="cost-orb">3</span><span class="qty">×2</span></div>
+            <div class="mini-bottom"><strong>Choque de Ecos</strong><span>Hechizo · Rápido</span></div>
+          </article>
+          <article class="mini-card theme-ramp">
+            <div class="mini-top"><span class="cost-orb">4</span><span class="qty">×2</span></div>
+            <div class="mini-bottom"><strong>Ciudad de los Vigías</strong><span>Apoyo</span></div>
+          </article>
+          <article class="mini-card theme-ramp">
+            <div class="mini-top"><span class="cost-orb">1</span><span class="qty">×3</span></div>
+            <div class="mini-bottom"><strong>Flor del Alba</strong><span>Hechizo</span></div>
+          </article>
+          <article class="mini-card theme-ramp">
+            <div class="mini-top"><span class="cost-orb">5</span><span class="qty">×2</span></div>
+            <div class="mini-bottom"><strong>Vaelor, Alba del Pacto</strong><span>Eco · Crónica</span><span class="mini-stats">5<i>/</i>5</span></div>
+          </article>
+          <article class="mini-card theme-ramp">
+            <div class="mini-top"><span class="cost-orb">3</span><span class="qty">×2</span></div>
+            <div class="mini-bottom"><strong>Guardián de la Fronda</strong><span>Eco · Bestia</span><span class="mini-stats">3<i>/</i>4</span></div>
+          </article>
+          <article class="mini-card theme-ramp">
+            <div class="mini-top"><span class="cost-orb">2</span><span class="qty">×2</span></div>
+            <div class="mini-bottom"><strong>Retorno de la Savia</strong><span>Hechizo</span></div>
+          </article>
+          <article class="mini-card theme-ramp">
+            <div class="mini-top"><span class="cost-orb">4</span><span class="qty">×2</span></div>
+            <div class="mini-bottom"><strong>Titán de la Arboleda</strong><span>Eco · Titán</span><span class="mini-stats">4<i>/</i>6</span></div>
+          </article>
+          <article class="mini-card theme-ramp">
+            <div class="mini-top"><span class="cost-orb">1</span><span class="qty">×4</span></div>
+            <div class="mini-bottom"><strong>Manantial Antiguo</strong><span>Fuente</span></div>
+          </article>
+          <article class="mini-card theme-ramp">
+            <div class="mini-top"><span class="cost-orb">6</span><span class="qty">×1</span></div>
+            <div class="mini-bottom"><strong>Tributo de las Cuatro Penas</strong><span>Hechizo · Crónica</span></div>
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <p class="notes">
+      <b>Diferencia principal:</b> la cabecera reparte las herramientas en tres bloques fijos —volver,
+      título centrado y utilidades— y la copia deja de imprimirse como insignia flotante: pasa a una
+      cartela cuadrada con el mismo filete que todo lo demás. El orbe de coste conserva su azul.
+    </p>
+  </section>
+
+  <!-- ═══════════════════════ V · PREPARTIDA ═══════════════════════ -->
+  <section class="screen" id="s5">
+    <div class="screen-head">
+      <span class="num">V</span>
+      <div>
+        <h2>Prepartida</h2>
+        <p><code>ExpeditionSetup</code> — Cronista contra Hueste, dificultad, avanzados y pie de resumen</p>
+      </div>
+    </div>
+
+    <div class="frame">
+      <div class="setup">
+        <header class="setup-header">
+          <button class="back">← Menú principal</button>
+          <div>
+            <h1>Escribir Crónica</h1>
+            <p class="future-chip">✧ Futuro 482·117</p>
+          </div>
+          <span></span>
+        </header>
+
+        <div class="setup-body">
+          <div class="combatants">
+            <article class="combatant theme-ramp">
+              <div class="combatant-head">
+                <span><span class="diamond" style="width:18px;height:18px;font-size:7px"><span>◆</span></span> Cronista</span>
+                <div class="acts">
+                  <button>Inspeccionar</button>
+                  <button>Cambiar →</button>
+                </div>
+              </div>
+              <div class="combatant-feature">
+                <div class="combatant-art">✦</div>
+                <div class="combatant-copy">
+                  <small>40 cartas</small>
+                  <h3>El Pacto de Elarion</h3>
+                  <p>Reúne a los antiguos aliados de Elarion y abre el camino para el regreso de Vaelor.</p>
+                </div>
+              </div>
+              <div class="awakening" style="visibility: hidden"><span>—</span></div>
+            </article>
+
+            <div class="versus" aria-hidden="true">
+              <i></i>
+              <strong>VS</strong>
+              <i></i>
+            </div>
+
+            <article class="combatant theme-zombies">
+              <div class="combatant-head">
+                <span><span class="diamond" style="width:18px;height:18px;font-size:7px"><span>☾</span></span> Hueste</span>
+                <div class="acts">
+                  <button>← Cambiar</button>
+                  <button>Inspeccionar</button>
+                </div>
+              </div>
+              <div class="combatant-feature">
+                <div class="combatant-art">☾</div>
+                <div class="combatant-copy">
+                  <small>40 cartas</small>
+                  <h3>El Alzamiento de los Sinsepulcro</h3>
+                  <p>Nerezh despierta a los muertos sin tumba y convierte los recuerdos de los caídos en nuevas fuerzas para su Alzamiento.</p>
+                </div>
+              </div>
+              <div class="awakening">
+                <span>La Hueste despierta después de</span>
+                <strong>4</strong>
+                <span>turnos</span>
+              </div>
+            </article>
+          </div>
+
+          <section class="difficulty">
+            <div>
+              <p>Elige tu destino</p>
+              <h3>Dificultad</h3>
+            </div>
+            <div class="mode-grid">
+              <button class="mode is-selected">
+                <span class="diamond"><span>◇</span></span>
+                <span><strong>Aventurero</strong><small>4 turnos de Preparación</small></span>
+              </button>
+              <button class="mode">
+                <span class="diamond"><span>✦</span></span>
+                <span><strong>Veterano</strong><small>3 turnos de Preparación</small></span>
+              </button>
+              <button class="mode">
+                <span class="diamond"><span>△</span></span>
+                <span><strong>Condenado</strong><small>2 turnos de Preparación</small></span>
+              </button>
+            </div>
+          </section>
+
+          <button class="advanced-toggle">
+            ⚙ Ajustes avanzados <span>Semilla y herramientas de desarrollo</span>
+          </button>
+        </div>
+
+        <footer class="setup-footer">
+          <div class="footer-summary">
+            <span>Cronista</span><strong>El Pacto de Elarion</strong>
+            <i>◆</i>
+            <span>Hueste</span><strong>El Alzamiento de los Sinsepulcro</strong>
+            <i>◆</i>
+            <span>Dificultad</span><strong>Aventurero</strong>
+          </div>
+          <button class="begin">Iniciar Crónica ▷</button>
+        </footer>
+      </div>
+    </div>
+
+    <p class="notes">
+      <b>Diferencia principal:</b> los dos bandos comparten exactamente la misma caja y el VS pasa a ser
+      una regla vertical, no una pieza ilustrada. La dificultad ocupa una sola banda con las tres opciones
+      del mismo peso y el reloj de despertar vive pegado al panel de la Hueste, que es a quien describe.
+    </p>
+  </section>
+
+  <!-- ═══════════════════════ VI · MENÚ DE PARTIDA ═══════════════════════ -->
+  <section class="screen" id="s6">
+    <div class="screen-head">
+      <span class="num">VI</span>
+      <div>
+        <h2>Menú de partida</h2>
+        <p><code>AppHeader</code> · <code>DestinyRewriteControl</code> · <code>MusicPlayerMenu</code> — barra de comandos y lo que abre</p>
+      </div>
+    </div>
+
+    <div class="frame">
+      <div class="board-ghost" aria-hidden="true">
+        <div></div>
+        <div class="board-body">
+          <div class="board-lane">
+            <span class="board-card"></span><span class="board-card"></span><span class="board-card"></span>
+          </div>
+          <div class="board-lane">
+            <span class="board-card"></span><span class="board-card"></span><span class="board-card"></span><span class="board-card"></span>
+          </div>
+        </div>
+        <div class="board-hand">
+          <span class="board-card" style="--r: -7deg"></span>
+          <span class="board-card" style="--r: -3deg"></span>
+          <span class="board-card" style="--r: 0deg"></span>
+          <span class="board-card" style="--r: 3deg"></span>
+          <span class="board-card" style="--r: 7deg"></span>
+        </div>
+      </div>
+
+      <div class="scrim"></div>
+
+      <header class="command-bar">
+        <div class="phase-chip">
+          <span>Turno 4</span>
+          <strong>Fase principal</strong>
+          <span>Energía 3 · Reserva 1</span>
+        </div>
+        <div class="command-actions">
+          <div class="destiny-control">
+            <span class="code">✧ Futuro 482·117</span>
+            <button>Reescribir</button>
+          </div>
+          <button class="icon-button is-open">♪</button>
+          <button class="icon-button">⚙</button>
+        </div>
+      </header>
+
+      <aside class="popover">
+        <div class="now-playing">
+          <span class="diamond"><span>♪</span></span>
+          <div>
+            <span class="eyebrow">REPRODUCIENDO AHORA</span>
+            <strong>Ceniza y Juramento</strong>
+            <em>Secuencia de batalla</em>
+          </div>
+        </div>
+
+        <div class="transport">
+          <button>⏮</button>
+          <button>⏸</button>
+          <button>⏭</button>
+          <button>🔊</button>
+        </div>
+
+        <div class="slider-row" style="padding: 0 0 4px">
+          <div class="rail" style="--v: 44%"><span></span><i></i></div>
+          <span class="value-tag">44 %</span>
+        </div>
+
+        <div class="playlist">
+          <button class="is-selected"><span>Ceniza y Juramento</span><em>batalla</em></button>
+          <button><span>Marcha de los Sinsepulcro</span></button>
+          <button><span>El Último Capítulo</span></button>
+          <button><span>Corte del Eclipse</span></button>
+        </div>
+
+        <p class="hint">Elige una secuencia · Doble clic para reproducir</p>
+      </aside>
+
+      <section class="dialog">
+        <span class="diamond"><span>✧</span></span>
+        <span class="eyebrow">SEMILLA DEL DESTINO · FUTURO 482·117</span>
+        <h3>¿Reescribir esta historia?</h3>
+        <div class="rule"></div>
+        <p>
+          Volverás al origen de esta posibilidad. Sus condiciones permanecerán intactas, pero tus
+          decisiones comenzarán de nuevo.
+        </p>
+        <div class="dialog-actions">
+          <button class="action is-primary" style="padding: 13px">Reescribir este futuro</button>
+          <button class="action" style="padding: 13px">Contemplar otro futuro</button>
+        </div>
+        <button class="dialog-copy">◇ Copiar identidad</button>
+      </section>
+    </div>
+
+    <p class="notes">
+      <b>Diferencia principal:</b> la barra pierde su placa de material y queda como una línea de filete
+      sobre el tablero; el Futuro y <b>Reescribir</b> comparten una sola caja partida, para que se lean
+      como un mismo control. El diálogo del Destino usa la misma composición centrada que los desenlaces:
+      rombo, etiqueta, título, regla y dos salidas apiladas.
+    </p>
+  </section>
+
+  <!-- ═══════════════════════ VII · AJUSTES EN PARTIDA ═══════════════════════ -->
+  <section class="screen" id="s7">
+    <div class="screen-head">
+      <span class="num">VII</span>
+      <div>
+        <h2>Ajustes en partida</h2>
+        <p><code>SettingsMenu</code> — modal de dos columnas: configuración a la izquierda, Crónica a la derecha</p>
+      </div>
+    </div>
+
+    <div class="frame">
+      <div class="board-ghost" aria-hidden="true">
+        <div></div>
+        <div class="board-body">
+          <div class="board-lane">
+            <span class="board-card"></span><span class="board-card"></span><span class="board-card"></span>
+          </div>
+          <div class="board-lane">
+            <span class="board-card"></span><span class="board-card"></span><span class="board-card"></span><span class="board-card"></span>
+          </div>
+        </div>
+        <div class="board-hand">
+          <span class="board-card" style="--r: -7deg"></span>
+          <span class="board-card" style="--r: -3deg"></span>
+          <span class="board-card" style="--r: 0deg"></span>
+          <span class="board-card" style="--r: 3deg"></span>
+        </div>
+      </div>
+      <div class="scrim" style="background: rgba(5, 7, 6, .7)"></div>
+
+      <section class="modal">
+        <header class="modal-header">
+          <div>
+            <span class="eyebrow">CONFIGURACIÓN DE BATALLA</span>
+            <h2>Ajustes y crónica</h2>
+          </div>
+          <button class="icon-button">✕</button>
+        </header>
+
+        <div class="modal-body">
+          <div class="modal-column">
+            <div class="soft-panel">
+              <span class="rule-label" style="margin-bottom: 12px">Idioma</span>
+              <div class="segmented" style="width: 100%">
+                <button class="active">Español</button>
+                <button>English</button>
+              </div>
+            </div>
+
+            <div class="soft-panel">
+              <span class="rule-label">Audio</span>
+              <div class="row" style="padding: 8px 0">
+                <div><strong>Efectos de sonido</strong></div>
+                <span class="toggle is-on"></span>
+              </div>
+              <div class="slider-row" style="padding: 2px 0 10px">
+                <div class="rail" style="--v: 72%"><span></span><i></i></div>
+                <span class="value-tag">72 %</span>
+              </div>
+              <div class="row" style="padding: 8px 0">
+                <div><strong>Música</strong></div>
+                <span class="toggle is-on"></span>
+              </div>
+              <div class="slider-row" style="padding: 2px 0 0">
+                <div class="rail" style="--v: 44%"><span></span><i></i></div>
+                <span class="value-tag">44 %</span>
+              </div>
+            </div>
+
+            <div class="soft-panel">
+              <span class="rule-label">Ayudas contextuales</span>
+              <label class="check-row">
+                <span class="check">✓</span>
+                <span>
+                  <strong style="display:block;color:#d8d3c8;font-family:var(--font-display);font-size:11px;font-weight:500;margin-bottom:3px">No volver a mostrar explicaciones ya vistas</strong>
+                  <small style="color:var(--muted-2);font-size:9.5px;line-height:1.45">Los conceptos nuevos seguirán apareciendo la primera vez que sean relevantes.</small>
+                </span>
+              </label>
+            </div>
+
+            <div class="soft-panel">
+              <span class="rule-label">Zonas</span>
+              <p class="zone-side-title" style="margin-top: 12px">Cronista</p>
+              <div class="zone-grid">
+                <div class="zone-metric"><span>Archivo</span><strong>21</strong></div>
+                <div class="zone-metric"><span>Mano</span><strong>4</strong></div>
+                <div class="zone-metric"><span>Memoria</span><strong>6</strong><em>Liora del Umbral</em></div>
+                <div class="zone-metric"><span>Olvido</span><strong>1</strong><em>Flor del Alba</em></div>
+              </div>
+              <p class="zone-side-title" style="margin-top: 14px">Hueste</p>
+              <div class="zone-grid">
+                <div class="zone-metric"><span>Archivo</span><strong>17</strong></div>
+                <div class="zone-metric"><span>Memoria</span><strong>9</strong><em>Acechador del Umbral</em></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chronicle">
+            <span class="rule-label" style="margin-bottom: 0">Crónica</span>
+            <p>Cada acción registrada durante esta batalla.</p>
+            <div class="chronicle-log">
+              <div><span>Turno 4</span><p style="margin:0">El Cronista juega <strong>Manantial Antiguo</strong>.</p></div>
+              <div><span>Turno 4</span><p style="margin:0">Se canaliza <strong>3 de Energía</strong> hacia <strong>Maela, Heredera</strong>.</p></div>
+              <div><span>Turno 4</span><p style="margin:0"><strong>Maela, Heredera</strong> es Invocada y queda Estabilizándose.</p></div>
+              <div><span>Turno 3</span><p style="margin:0">La Hueste revela <strong>Acechador del Umbral</strong>.</p></div>
+              <div><span>Turno 3</span><p style="margin:0"><strong>Engendro Sinsepulcro</strong> ataca al Cronista: <strong>2 de daño</strong>.</p></div>
+              <div><span>Turno 3</span><p style="margin:0"><strong>Liora del Umbral</strong> defiende y cae en Memoria.</p></div>
+              <div><span>Turno 2</span><p style="margin:0">El Cronista ataca el Archivo de la Hueste: <strong>3 descartes</strong>.</p></div>
+              <div><span>Turno 2</span><p style="margin:0"><strong>Aelyra, Voz del Bosque</strong> queda Agotada tras atacar.</p></div>
+              <div><span>Turno 1</span><p style="margin:0">Comienza la Preparación · <strong>4 turnos</strong>.</p></div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button class="action is-primary">⌂ Volver al menú</button>
+          <button class="action">Cerrar</button>
+        </footer>
+      </section>
+    </div>
+
+    <p class="notes">
+      <b>Diferencia principal:</b> el modal deja de ser un panel con material y pasa a ser una lámina con
+      un solo filete; las secciones se separan por su etiqueta en versalitas, no por cajas anidadas. La
+      Crónica ocupa toda la columna derecha con una tabla de dos campos —turno y hecho— en vez de un log
+      corrido.
+    </p>
+  </section>
+
+  <div class="lore-note" style="margin-top: 70px">
+    <span class="line"></span>
+    <p>Material de decisión visual · dev/mockups · nada de esta carpeta entra al paquete</p>
+    <span class="line"></span>
+  </div>
+</main>
+</body>
+</html>

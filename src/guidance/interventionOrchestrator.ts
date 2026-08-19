@@ -1,5 +1,6 @@
 import type { GameState } from "../engine/GameTypes";
 import { isTranslationKey } from "../i18n/translations";
+import { GUIDED_DIMMER_VISIBILITIES } from "./contracts";
 import type { GuidedCardAlias, GuidedInterventionDefinition, GuidedStep } from "./contracts";
 import type { GuidedSessionStore } from "./sessionStore";
 
@@ -53,10 +54,12 @@ export function assertInterventionValid(
   if (!Array.isArray(definition.steps) || definition.steps.length === 0) problems.push("intervention has no steps");
   const steps = new Map<string, GuidedStep>();
   const referencedAliases = new Set<string>();
+  const dimmerVisibilities = new Set<string>(GUIDED_DIMMER_VISIBILITIES);
   for (const step of definition.steps ?? []) {
     if (steps.has(step.id)) problems.push(`duplicate step ${step.id}`);
     steps.set(step.id, step);
     if (!isTranslationKey(step.copy.titleKey) || !isTranslationKey(step.copy.bodyKey)) problems.push(`unknown copy in ${step.id}`);
+    if (step.dimmer !== undefined && !dimmerVisibilities.has(step.dimmer)) problems.push(`unknown dimmer visibility in ${step.id}`);
     for (const highlight of step.highlights ?? []) if (highlight.kind === "card") referencedAliases.add(highlight.alias);
     if (step.presentation?.kind === "cardComparison") {
       for (const alias of step.presentation.cardAliases) referencedAliases.add(alias);

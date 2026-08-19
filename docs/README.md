@@ -47,6 +47,9 @@ Estos documentos se conservan porque contienen decisiones o validaciones sin ter
   de la Primera Semilla se encuentra en QA e iteración pedagógica.
 - [`plans/generated_look_remediation_plan.md`](plans/generated_look_remediation_plan.md) — corrección
   de las señales visuales que hacen leer la UI como generada; no iniciado.
+- [`plans/seed_explorer_implementation_plan.md`](plans/seed_explorer_implementation_plan.md) — MVP
+  dev-only para buscar y clasificar seeds mediante análisis estático barato, shortlist verificado por
+  el engine y playtest humano.
 - [`plans/seeds_of_destiny.md`](plans/seeds_of_destiny.md) — narrativa y persistencia futura.
 - [`plans/game_modes.md`](plans/game_modes.md) — variantes futuras y compatibilidad de Chaos.
 - [`plans/webgl_context_budget.md`](plans/webgl_context_budget.md) — migración implementada con QA
