@@ -1336,6 +1336,23 @@ test("developer tools keep their development imports without a release URL escap
   assert.doesNotMatch(`${appSource}\n${gateSource}`, /\?playground/);
 });
 
+test("Audio Lab uses the standalone dev-workbench hierarchy without changing its authoring flow", () => {
+  const labSource = readFileSync(new URL("../src/audio-lab/AudioLabScreen.tsx", import.meta.url), "utf8");
+  const labStyles = readFileSync(new URL("../src/audio-lab/AudioLabScreen.css", import.meta.url), "utf8");
+
+  assert.match(labSource, /import "\.\/AudioLabScreen\.css"/u);
+  assert.match(labSource, /audio-lab-button audio-lab-back[\s\S]*?<ArrowLeft[\s\S]*?<span>Volver<\/span>/u);
+  assert.ok(labSource.indexOf("audio-lab-back") < labSource.indexOf("audio-lab-brand"));
+  assert.doesNotMatch(labSource, /Hostfall · Developer tool|<Home/u);
+  assert.match(labSource, /Audio Lab <span>\/ Mezcla y balance<\/span>/u);
+  assert.match(labSource, /\{visibleCount\} of \{totalCount\}/u);
+  assert.match(labSource, /<AudioLabEmptyState query=\{search\}/u);
+  assert.match(labSource, /sliderPositionPercent[\s\S]*?--audio-lab-position/u);
+  assert.match(labStyles, /\.audio-lab-topbar \{[\s\S]*?grid-template-columns: auto minmax\(0, 1fr\) auto;/u);
+  assert.match(labStyles, /\.audio-lab-workbench \{[\s\S]*?grid-template-columns: minmax\(250px, 286px\) minmax\(0, 1fr\);/u);
+  assert.match(labStyles, /linear-gradient\(90deg,[\s\S]*?var\(--audio-lab-position\)/u);
+});
+
 test("Seed Explorer is a standalone dev screen launched from the home tool dock", () => {
   const appSource = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
   const menuSource = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");

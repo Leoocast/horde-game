@@ -1,7 +1,7 @@
 import {
+  ArrowLeft,
   Download,
   FileJson,
-  Home,
   Music2,
   Pause,
   Play,
@@ -12,7 +12,8 @@ import {
   Volume2,
   Waves,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import "./AudioLabScreen.css";
 import { audioEngine } from "../audio/AudioEngine";
 import {
   MAX_AUDIO_TRIM_DB,
@@ -20,6 +21,7 @@ import {
   clampAudioTrimDb,
   cloneAudioMix,
   dbToGain,
+  dbToTrimPositionPercent,
   parseAudioMix,
   projectAudioMix,
   serializeAudioMix,
@@ -119,6 +121,12 @@ export function AudioLabScreen({ onReturnToMenu }: AudioLabScreenProps) {
     const haystack = `${row.collectionId} ${row.label} ${row.variant} ${collection.category} ${fileName(row.url)}`.toLowerCase();
     return !normalizedSearch || haystack.includes(normalizedSearch);
   }), [normalizedSearch]);
+
+  const visibleSfxCount = useMemo(() => (
+    Array.from(visibleSfxByGroup.values()).reduce((total, ids) => total + ids.length, 0)
+  ), [visibleSfxByGroup]);
+  const visibleCount = tab === "sfx" ? visibleSfxCount : visibleMusicRows.length;
+  const totalCount = tab === "sfx" ? sfxIds.length : musicRows.length;
 
   useEffect(() => {
     const audio = useAudioStore.getState();
@@ -275,21 +283,22 @@ export function AudioLabScreen({ onReturnToMenu }: AudioLabScreenProps) {
   return (
     <main className="audio-lab-shell" data-audio-click="off">
       <header className="audio-lab-topbar">
+        <button className="audio-lab-button audio-lab-back" type="button" onClick={onReturnToMenu}>
+          <ArrowLeft size={16} />
+          <span>Volver</span>
+        </button>
+
         <div className="audio-lab-brand">
-          <span className="audio-lab-brand-mark"><Waves size={22} /></span>
-          <div>
-            <div className="audio-lab-kicker">Hostfall · Developer tool</div>
-            <h1>Audio Lab</h1>
-          </div>
+          <span className="audio-lab-brand-mark" aria-hidden="true"><Waves size={18} /></span>
+          <h1>Audio Lab <span>/ Mezcla y balance</span></h1>
         </div>
 
         <div className="audio-lab-top-actions">
-          <button type="button" onClick={toggleMusic} title={musicPlaying ? "Pause reference music" : "Play reference music"}>
+          <button className={`audio-lab-button ${musicPlaying ? "is-active" : ""}`} type="button" onClick={toggleMusic} title={musicPlaying ? "Pause reference music" : "Play reference music"}>
             {musicPlaying ? <Pause size={15} /> : <Play size={15} />}
             <span>{musicPlaying ? "Pause music" : "Play music"}</span>
           </button>
-          <button type="button" onClick={stopAllAudio}><Square size={14} /><span>Stop all</span></button>
-          <button type="button" onClick={onReturnToMenu}><Home size={15} /><span>Main menu</span></button>
+          <button className="audio-lab-button" type="button" onClick={stopAllAudio}><Square size={14} /><span>Stop all</span></button>
         </div>
       </header>
 
@@ -341,6 +350,10 @@ export function AudioLabScreen({ onReturnToMenu }: AudioLabScreenProps) {
 
         <section className="audio-lab-main">
           <div className="audio-lab-controls">
+            <div className="audio-lab-view-summary">
+              <span>{tab === "sfx" ? "Sound effects" : "Music library"}</span>
+              <strong>{visibleCount} of {totalCount}</strong>
+            </div>
             <nav className="audio-lab-tabs" aria-label="Audio categories">
               <button className={tab === "sfx" ? "is-active" : ""} type="button" onClick={() => setTab("sfx")}>
                 <Volume2 size={16} /> SFX <span>{sfxIds.length}</span>
@@ -366,6 +379,7 @@ export function AudioLabScreen({ onReturnToMenu }: AudioLabScreenProps) {
           <div className="audio-lab-scroll old-scrollbar">
             {tab === "sfx" ? (
               <div className="audio-lab-groups">
+                {visibleSfxCount === 0 && <AudioLabEmptyState query={search} />}
                 {sfxGroups.map((group) => {
                   const visibleIds = visibleSfxByGroup.get(group.id) ?? [];
                   if (visibleIds.length === 0) return null;
@@ -399,6 +413,7 @@ export function AudioLabScreen({ onReturnToMenu }: AudioLabScreenProps) {
               </div>
             ) : (
               <div className="audio-lab-list audio-lab-music-list">
+                {visibleMusicRows.length === 0 && <AudioLabEmptyState query={search} />}
                 {visibleMusicRows.map((row) => {
                   const trimDb = row.variant === "both"
                     ? draft.music[row.collectionId].battle
@@ -439,6 +454,7 @@ function AudioTrimRow({ active, id, label, file, meta, trimDb, onPlay, onChange 
   onChange: (value: number) => void;
 }) {
   const percent = Math.round(dbToGain(trimDb) * 100);
+  const sliderPositionPercent = dbToTrimPositionPercent(trimDb);
   return (
     <article className={`audio-lab-row ${active ? "is-playing" : ""}`}>
       <button className="audio-lab-play" type="button" onClick={onPlay} title={`Play ${label}`}>
@@ -457,6 +473,7 @@ function AudioTrimRow({ active, id, label, file, meta, trimDb, onPlay, onChange 
           max={MAX_AUDIO_TRIM_DB}
           step={0.5}
           value={trimDb}
+          style={{ "--audio-lab-position": `${sliderPositionPercent}%` } as CSSProperties}
           aria-label={`${label} trim in decibels`}
           onChange={(event) => onChange(Number(event.target.value))}
         />
@@ -465,6 +482,16 @@ function AudioTrimRow({ active, id, label, file, meta, trimDb, onPlay, onChange 
         <button type="button" disabled={trimDb === 0} onClick={() => onChange(0)} title="Reset to 0 dB"><RotateCcw size={13} /></button>
       </div>
     </article>
+  );
+}
+
+function AudioLabEmptyState({ query }: { query: string }) {
+  return (
+    <div className="audio-lab-empty">
+      <Search size={24} />
+      <strong>No audio matches “{query}”</strong>
+      <span>Try a file name, label, category, or internal id.</span>
+    </div>
   );
 }
 

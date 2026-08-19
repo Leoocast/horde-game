@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import {
   dbToGain,
+  dbToTrimPositionPercent,
   parseAudioMix,
   projectAudioMix,
   projectAudioMixProblems,
@@ -67,6 +68,14 @@ test("invalid or missing trims fall back safely and are reported", () => {
 test("decibel trims convert to linear gain", () => {
   assert.equal(dbToGain(0), 1);
   assert.ok(Math.abs(dbToGain(-6) - 0.501187) < 0.000001);
+});
+
+test("Audio Lab trim position follows its decibel slider instead of linear gain", () => {
+  assert.equal(dbToTrimPositionPercent(-30), 0);
+  assert.equal(dbToTrimPositionPercent(0), 100);
+  assert.ok(Math.abs(dbToTrimPositionPercent(-11) - 63.333333) < 0.000001);
+  assert.equal(dbToTrimPositionPercent(-80), 0);
+  assert.equal(dbToTrimPositionPercent(8), 100);
 });
 
 test("playSfx call sites cannot hide volume outside audioMix.json", () => {

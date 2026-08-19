@@ -84,6 +84,13 @@ export function dbToGain(db: number): number {
   return Math.pow(10, clampAudioTrimDb(db) / 20);
 }
 
+export function dbToTrimPositionPercent(db: number): number {
+  return (
+    (clampAudioTrimDb(db) - MIN_AUDIO_TRIM_DB)
+    / (MAX_AUDIO_TRIM_DB - MIN_AUDIO_TRIM_DB)
+  ) * 100;
+}
+
 export function clampAudioTrimDb(db: number): number {
   if (!Number.isFinite(db)) return 0;
   return Math.max(MIN_AUDIO_TRIM_DB, Math.min(MAX_AUDIO_TRIM_DB, db));
