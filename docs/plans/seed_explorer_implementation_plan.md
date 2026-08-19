@@ -1,6 +1,6 @@
 # Plan de implementación — Seed Explorer interno (MVP barato)
 
-Estado: **propuesta técnica lista para implementación; sin fases iniciadas**.
+Estado: **implementación en curso; Fase 0 cerrada, Fases 1–4 pendientes**.
 
 Última actualización: **2026-08-18**.
 
@@ -142,6 +142,15 @@ separado; este plan no la ejecuta ni la mezcla con la implementación del Explor
 Los códigos de deck son IDs de registro, no abreviaturas localizadas. El mismo código se comparte en
 todos los idiomas: la UI decodifica `ELA`, `GRV` y `2` y presenta nombres y dificultad mediante i18n.
 `SIN`, por ejemplo, no se usa porque dependería del nombre español de Sinsepulcro.
+
+El registro `HF1` ya fijado para los cuatro decks jugables es:
+
+| Código | Bando | Deck calificado |
+| --- | --- | --- |
+| `ELA` | Cronista | `hostfall.core/pact_of_elarion` |
+| `CEC` | Cronista | `hostfall.core/court_of_the_crimson_eclipse` |
+| `GRV` | Hueste | `hostfall.core/uprising_of_the_graveless` |
+| `VRK` | Hueste | `hostfall.core/legion_of_varka` |
 
 `HF1` fija también la interpretación de sus códigos de deck, dificultad y reglas deterministas. Una
 revisión incompatible de contenido o reglas debe introducir otro prefijo; no puede cambiar
@@ -380,6 +389,10 @@ No se crea CLI ni se añade dependencia.
 ## Fases de implementación
 
 ### Fase 0 — Costura determinista compartida
+
+**Estado:** cerrada el 2026-08-18. El codec vive en `src/content/CanonSeed.ts`; la preparación y el
+shuffle compartidos viven en `src/engine/InitialDeckOrder.ts`. `createInitialGame` ya consume esa
+costura y la suite certifica paridad en los cuatro enfrentamientos builtin.
 
 - fijar el codec `HF1-PPP-HHH-XXD-XXX` y el registro estable de códigos de deck;
 - derivar Preparación exclusivamente desde dificultad;

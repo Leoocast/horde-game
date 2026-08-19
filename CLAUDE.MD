@@ -506,6 +506,20 @@ que el Cronista contempla, reescribe y finalmente preserva. Cada seed recibe una
 cosmética determinista **Futuro `NNN·NNN`**; ese código compacto puede colisionar y nunca reemplaza
 la seed real. **Copiar identidad** copia la seed completa aunque la UI sólo muestre el Futuro.
 
+Las **Canon Seeds** usan el contrato `HF1-PPP-HHH-XXD-XXX`. `PPP` y `HHH` son códigos estables de
+deck (`ELA`/`CEC` para Cronista y `GRV`/`VRK` para Hueste); los cinco caracteres repartidos alrededor
+de `D` son entropía `A-Z`/`0-9`. El dígito de dificultad no entra al RNG: `1`, `2` y `3` resuelven
+Fácil/Normal/Difícil y derivan 4/3/2 turnos de Preparación respectivamente. El código no se traduce,
+no contiene checksum y una entrada válida escrita manualmente es una Canon Seed comunitaria. Sólo
+un catálogo bundled externo al código puede marcarla como oficial.
+
+`src/content/CanonSeed.ts` es el codec y registro vigentes de `HF1`. Sólo su entropía alimenta
+`hashSeed`. `src/engine/InitialDeckOrder.ts` prepara los pools y conserva el stream único de RNG:
+primero baraja la Crónica y después la Hueste. `createInitialGame` consume esa misma costura; las
+seeds técnicas `developer`, `devlost` y `devwin` permanecen fuera de Canon y conservan sus ramas.
+Un cambio incompatible de códigos, contenido o reglas deterministas exige otro prefijo, no puede
+reinterpretar silenciosamente una Canon Seed `HF1` publicada.
+
 Durante una partida normal, la barra superior coloca **Reescribir** antes de Música y Ajustes. Su
 acción principal vuelve al origen de la misma seed, con los mismos decks, dificultad y modo;
 **Contemplar otro futuro** abandona el intento y abre la preparación con los decks actuales y una
