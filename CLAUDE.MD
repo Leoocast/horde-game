@@ -520,6 +520,16 @@ seeds técnicas `developer`, `devlost` y `devwin` permanecen fuera de Canon y co
 Un cambio incompatible de códigos, contenido o reglas deterministas exige otro prefijo, no puede
 reinterpretar silenciosamente una Canon Seed `HF1` publicada.
 
+El Seed Explorer interno tiene ya su núcleo puro en `src/playground/seedExplorer.ts` y
+`seedExplorerSearch.ts`. Enumera la entropía base 36 sin `Math.random`, proyecta Mano, un mulligan,
+robos de Preparación y cinco ventanas potenciales de Hueste, puntúa `first-approach-v1` y conserva
+un heap top-K acotado. Sus finalistas se reconstruyen con `createInitialGame` y
+`mulliganOpeningHand`; sólo después pasan de `unchecked` a `structurally-valid`. No simula acciones,
+no usa Zustand y nunca declara una seed ganable, imposible o divertida. La proyección de Hueste usa
+stats impresos y reglas de revelado/Mini Oleada/Oleada, pero no ejecuta efectos que alteran el
+Archivo. El benchmark manual vive en `scripts/benchmark-seed-explorer.mjs`; sus tiempos son
+diagnóstico local, no assertions de CI. Scheduler cooperativo y UI siguen pendientes.
+
 Durante una partida normal, la barra superior coloca **Reescribir** antes de Música y Ajustes. Su
 acción principal vuelve al origen de la misma seed, con los mismos decks, dificultad y modo;
 **Contemplar otro futuro** abandona el intento y abre la preparación con los decks actuales y una

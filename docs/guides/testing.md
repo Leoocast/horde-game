@@ -21,6 +21,12 @@ Suite completa:
 C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe --test scripts/run-engine-tests.mjs
 ```
 
+Benchmark manual del Seed Explorer —no es un gate de CI—:
+
+```bash
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts/benchmark-seed-explorer.mjs
+```
+
 Deck lint standalone (reporte por deck: ready / vanilla / WIP):
 
 ```bash
@@ -155,6 +161,7 @@ archivo no corre nunca.
 | --- | --- |
 | `tests/engine.test.js` | Reglas del engine: determinismo por seed, Energía y autopago, estados Exhausted/Stabilizing, eventos de Invocación/Juego/Muerte, Acciones Hostfall, perfiles `hostRules`, combate, Surge por deck, compatibilidad legacy de Chaos y targeting |
 | `tests/canonSeed.test.js` | Codec `HF1-PPP-HHH-XXD-XXX`: códigos de deck independientes del idioma, entropía base 36, dificultad/Preparación acopladas y paridad de la costura de shuffle con `createInitialGame` en los cuatro enfrentamientos builtin |
+| `tests/seedExplorer.test.js` | Analyzer y búsqueda pura: Mano/mulligan/topes exactos, recursos y curva impresa, ventanas potenciales de Hueste, scoring/filtros, rango base 36, top-K estable, batches invariantes y verificación contra el engine en los cuatro enfrentamientos builtin |
 | `tests/hostBeats.test.js` | Regresiones de presentación del store: cola visual bajo timers retrasados, orden compartido Chronicler/Host, curaciones y pérdida de vida/robo de hechizos. |
 | `tests/deckLint.test.js` | El deck lint como test: una habilidad desconocida rompe la suite; también protege versión, side, vocabulario cerrado Hostfall, perfiles de reglas y normalización de zonas authored |
 | `tests/deckCardText.test.js` | Formato puro del texto impreso, fuente runtime única de reglas, proyecciones generadas y assets locales: Rasgos, Fuerza/Aguante, contadores, creación de fichas, párrafos y rutas de arte |

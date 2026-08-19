@@ -1,6 +1,6 @@
 # Plan de implementación — Seed Explorer interno (MVP barato)
 
-Estado: **implementación en curso; Fase 0 cerrada, Fases 1–4 pendientes**.
+Estado: **implementación en curso; Fases 0–1 cerradas, Fases 2–4 pendientes**.
 
 Última actualización: **2026-08-18**.
 
@@ -407,6 +407,10 @@ fast path compartido.
 
 ### Fase 1 — Analyzer, perfil y búsqueda pura
 
+**Estado:** cerrada el 2026-08-18. `src/playground/seedExplorer.ts` contiene métricas, preview,
+perfil, filtros, proyección de mulligan y ventanas potenciales. `seedExplorerSearch.ts` aporta el
+rango base 36, acumulador por batches, heap top-K, desempate y verificación exacta sin Zustand.
+
 - definir identidad, preview y métricas V1;
 - implementar keep + un mulligan, filtros y `first-approach-v1`;
 - implementar heap top-K y desempate estable;
@@ -414,6 +418,19 @@ fast path compartido.
 - medir 10k, 100k y 500k sin establecer un límite temporal flaky en CI.
 
 **Salida:** una función pura devuelve finalistas reproducibles sin tocar Zustand.
+
+Benchmark local observado con Elarion vs Sinsepulcro, Normal, mulligan y top 20 —incluye pool de
+verificación de 400 finalistas—:
+
+| Seeds | Tiempo | Throughput observado | Pasaron filtros | Divergencias |
+| ---: | ---: | ---: | ---: | ---: |
+| 10.000 | 304 ms | 32.912/s | 9.186 | 0 |
+| 100.000 | 1.319 ms | 75.844/s | 91.532 | 0 |
+| 500.000 | 5.821 ms | 85.895/s | 457.727 | 0 |
+
+No son límites de CI. Los filtros V1 son deliberadamente conservadores y todavía dejan pasar la
+mayoría de futuros; la Fase 4 calibrará pesos y umbrales con playtests sin cambiar las métricas
+crudas.
 
 ### Fase 2 — Runtime cooperativo
 
