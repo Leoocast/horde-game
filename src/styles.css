@@ -6040,6 +6040,21 @@
     filter: saturate(0.95) brightness(1.02) contrast(1.02);
   }
 
+  /* Va antes del resplandor en el DOM: oscurece la carta y el overlay en soft-light
+     se compone encima de ese velo, no al revés. */
+  .summoning-sickness-veil {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: radial-gradient(
+      farthest-corner circle at 50% 50%,
+      rgb(2 6 24 / 0.2) 0 30%,
+      rgb(1 4 18 / 0.34) 68%,
+      rgb(0 2 10 / 0.46) 100%
+    );
+  }
+
   .summoning-sickness-overlay {
     pointer-events: none;
     position: absolute;
@@ -6050,11 +6065,11 @@
     background:
       radial-gradient(circle at 50% 50%, rgb(220 255 250 / 0.28), transparent 38%),
       linear-gradient(180deg, rgb(72 202 191 / 0.12), rgb(55 123 168 / 0.12)),
-      url("../assets/images/mareo.gif");
+      radial-gradient(circle at 50% 50%, #00011d 0 64%, #000009 100%);
     background-size:
       auto,
       auto,
-      248% auto;
+      auto;
     background-position:
       center,
       center,
@@ -6064,6 +6079,95 @@
       no-repeat,
       no-repeat;
     filter: hue-rotate(145deg) saturate(1.45) contrast(1.2) brightness(1.1);
+  }
+
+  /* Ventana fija en el espacio de la carta: los anillos nacen en el hueco central,
+     se abren y se apagan al salir. No escala con ellos. */
+  .summoning-sickness-swirl {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    -webkit-mask: radial-gradient(
+      farthest-corner circle at 50% 50%,
+      transparent 0 10%,
+      rgb(0 0 0 / 0.32) 18%,
+      #000 32% 92%,
+      rgb(0 0 0 / 0.5) 102%,
+      transparent 112%
+    );
+    mask: radial-gradient(
+      farthest-corner circle at 50% 50%,
+      transparent 0 10%,
+      rgb(0 0 0 / 0.32) 18%,
+      #000 32% 92%,
+      rgb(0 0 0 / 0.5) 102%,
+      transparent 112%
+    );
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    opacity: 0.85;
+  }
+
+  /* Los radios siguen una progresión geométrica de razón 1.75: al escalar el conjunto
+     por 1.75 cada anillo cae exactamente donde estaba el siguiente, así que el ciclo
+     de expansión cierra sin salto. Tocar un radio obliga a recalcular la razón. */
+  .summoning-sickness-rings {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 200%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border-radius: 999px;
+    mix-blend-mode: screen;
+    background: conic-gradient(
+      from 0deg,
+      rgb(255 86 212 / 1) 0deg,
+      rgb(255 226 250 / 1) 26deg,
+      rgb(204 104 255 / 0.96) 62deg,
+      rgb(96 120 255 / 0.24) 112deg,
+      rgb(36 54 150 / 0.08) 152deg,
+      rgb(90 220 255 / 0.3) 190deg,
+      rgb(214 250 255 / 1) 232deg,
+      rgb(88 216 255 / 0.96) 268deg,
+      rgb(120 130 255 / 0.24) 308deg,
+      rgb(255 86 212 / 1) 360deg
+    );
+    -webkit-mask: var(--summoning-ring-stack);
+    mask: var(--summoning-ring-stack);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    animation:
+      summoning-rings-expand 1450ms linear infinite,
+      summoning-rings-turn 12s linear infinite;
+  }
+
+  .summoning-sickness-rings-echo {
+    background: conic-gradient(
+      from 200deg,
+      rgb(110 238 255 / 0.96) 0deg,
+      rgb(236 252 255 / 1) 34deg,
+      rgb(120 168 255 / 0.5) 78deg,
+      rgb(60 52 180 / 0.1) 130deg,
+      rgb(214 96 255 / 0.42) 180deg,
+      rgb(255 118 226 / 1) 220deg,
+      rgb(255 202 246 / 0.86) 250deg,
+      rgb(150 90 240 / 0.3) 298deg,
+      rgb(110 238 255 / 0.96) 360deg
+    );
+    animation:
+      summoning-rings-expand 1450ms linear -725ms infinite,
+      summoning-rings-turn-reverse 17s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .summoning-sickness-rings {
+      animation: none;
+    }
+
+    .summoning-sickness-rings-echo {
+      scale: 1.3229;
+    }
   }
 
   .summoning-sickness-overlay::before,
@@ -11270,6 +11374,102 @@
       inset 0 0 0 1px rgb(226 190 91 / 0),
       0 0 0 rgb(137 209 67 / 0);
     transform: rotate(2deg) scale(1);
+  }
+}
+
+:root {
+  --summoning-ring-stack: radial-gradient(
+    closest-side circle,
+    transparent 0 4.82%,
+    rgb(0 0 0 / 0.25) 5.26%,
+    rgb(0 0 0 / 0.85) 5.48%,
+    #000 5.6%,
+    rgb(0 0 0 / 0.45) 5.7%,
+    transparent 5.88% 8.43%,
+    rgb(0 0 0 / 0.25) 9.21%,
+    rgb(0 0 0 / 0.85) 9.58%,
+    #000 9.8%,
+    rgb(0 0 0 / 0.45) 9.98%,
+    transparent 10.29% 14.75%,
+    rgb(0 0 0 / 0.25) 16.12%,
+    rgb(0 0 0 / 0.85) 16.77%,
+    #000 17.15%,
+    rgb(0 0 0 / 0.45) 17.46%,
+    transparent 18.01% 25.81%,
+    rgb(0 0 0 / 0.25) 28.21%,
+    rgb(0 0 0 / 0.85) 29.35%,
+    #000 30.01%,
+    rgb(0 0 0 / 0.45) 30.55%,
+    transparent 31.51% 45.17%,
+    rgb(0 0 0 / 0.25) 49.37%,
+    rgb(0 0 0 / 0.85) 51.37%,
+    #000 52.52%,
+    rgb(0 0 0 / 0.45) 53.47%,
+    transparent 55.15% 79.05%,
+    rgb(0 0 0 / 0.25) 86.4%,
+    rgb(0 0 0 / 0.85) 89.89%,
+    #000 91.91%,
+    rgb(0 0 0 / 0.45) 93.57%,
+    transparent 96.51% 100%
+  );
+}
+/* Muestreo lineal por tramos de 1.75^u: la expansión es exponencial, así cada anillo
+   conserva su velocidad al cerrar el ciclo y la costura no se ve. */
+@keyframes summoning-rings-expand {
+  0% {
+    scale: 1;
+  }
+
+  12.5% {
+    scale: 1.0725;
+  }
+
+  25% {
+    scale: 1.1502;
+  }
+
+  37.5% {
+    scale: 1.2335;
+  }
+
+  50% {
+    scale: 1.3229;
+  }
+
+  62.5% {
+    scale: 1.4187;
+  }
+
+  75% {
+    scale: 1.5215;
+  }
+
+  87.5% {
+    scale: 1.6318;
+  }
+
+  100% {
+    scale: 1.75;
+  }
+}
+
+@keyframes summoning-rings-turn {
+  from {
+    rotate: 0turn;
+  }
+
+  to {
+    rotate: 1turn;
+  }
+}
+
+@keyframes summoning-rings-turn-reverse {
+  from {
+    rotate: 0turn;
+  }
+
+  to {
+    rotate: -1turn;
   }
 }
 

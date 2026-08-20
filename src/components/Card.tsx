@@ -298,7 +298,17 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         )
       )}
       {!suppressHoverOverlay && darkenOnHover && <div className="pointer-events-none absolute inset-0 bg-stone-950/0 transition group-hover:bg-stone-950/20" />}
-      {stabilizing && <div className="summoning-sickness-overlay" aria-hidden="true" />}
+      {stabilizing && (
+        <>
+          <div className="summoning-sickness-veil" aria-hidden="true" />
+          <div className="summoning-sickness-overlay" aria-hidden="true">
+            <span className="summoning-sickness-swirl">
+              <span className="summoning-sickness-rings" />
+              <span className="summoning-sickness-rings summoning-sickness-rings-echo" />
+            </span>
+          </div>
+        </>
+      )}
       <div className="absolute left-1 top-1 flex flex-col items-start gap-1">
         <div className="flex flex-wrap gap-1">
           {card.exhausted && !usesHostExhaustedStyle && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">{t("card.exhausted")}</span>}
