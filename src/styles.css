@@ -22628,18 +22628,15 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 
 .defeat-outcome-inner {
   position: relative;
-  left: 50%;
   display: grid;
   width: min(820px, 94%);
-  justify-self: start;
+  justify-self: center;
   justify-items: center;
   gap: 8px;
   isolation: isolate;
+  margin-inline: auto;
   opacity: 0;
   text-align: center;
-  /* `translate` stays independent from the vertical `transform` animation below. Anchoring the
-     block at the viewport midpoint removes the small horizontal drift shared by title and CTA. */
-  translate: -50% 0;
   animation: defeat-outcome-in 460ms ease-out both;
 }
 
@@ -22681,6 +22678,9 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
   letter-spacing: 0.065em;
   text-transform: uppercase;
   text-shadow: 0 3px 8px #000, 0 0 18px rgb(151 190 192 / 0.24);
+  /* Cinzel's wide tracking leaves more visible air on the right edge. This half-tracking optical
+     correction centers the actual letterforms, not merely their CSS advance box. */
+  translate: 0.0325em 0;
 }
 
 .defeat-title .line {

@@ -730,7 +730,7 @@ ataque posterior permanecen libres. Tres Soldados authored absorben los descarte
 del Titán terminal.
 
 El lenguaje visible del tutorial distingue objetos de reglas: **Fuente** aporta Energía al
-contenedor inferior izquierdo y **Energía** se canaliza para **Invocar Ecos** y activar Acciones;
+contenedor inferior izquierdo y **Energía** se canaliza para **Invocar Ecos** o lanzar Hechizos;
 nunca se enseña que se «Invocan cartas». El glosario usa términos separados para **Archivo de la
 Hueste** —la pila de Ecos aún no Invocados— y **Archivo del Cronista** —la pila de Ecos y Fuentes aún
 no robados—, de modo que el subrayado cubre la frase completa. Vida se define sólo como la

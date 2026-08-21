@@ -70,7 +70,7 @@ test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
   );
   assert.equal(
     translate("es", "guided.glossary.energy.definition"),
-    "La fuerza que canalizas para Invocar Ecos y activar Acciones.",
+    "Para Invocar Ecos o lanzar Hechizos.",
   );
   assert.equal(
     translate("es", "guided.glossary.echoes.definition"),
@@ -109,6 +109,10 @@ test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
     "Guarda hasta 3 de Energía que no usaste para tu siguiente turno. Esa Energía se utiliza antes que la de tus Fuentes.",
   );
   assert.equal(translate("es", "guided.cardComparison.powerGloss"), "El daño que inflige");
+  assert.equal(
+    translate("es", "guided.cardComparison.enduranceGloss"),
+    "Lo que resiste antes de ser destruido",
+  );
   assert.equal(
     translate("es", "guided.contextual.product.surgeBody"),
     "A partir de este turno, la Hueste desata todo su poder e Invoca más Ecos con cada avance.",
@@ -457,6 +461,7 @@ test("post-Surge concepts react only to the real empty-Hand draw and the require
     reason: "empty-hand",
     cardIds: ["river:1", "spell:1"],
   }, context), { placement: "center" });
+  assert.deepEqual(emptyHand.copy.glossaryTerms ?? [], []);
   assert.equal(emptyHand.evaluate({
     kind: "player.cardsDrawn",
     amount: 2,
@@ -535,4 +540,7 @@ test("App exposes both launchers, disables Continue, and hands the journey to a 
   assert.equal((intro.match(/body: "guided\.learnToPlay\.intro\.beat(?:One|Two|Three|Four|Five)"/gu) ?? []).length, 5);
   assert.match(intro, /chroniclerName\.trim\(\) \|\| t\("guided\.learnToPlay\.intro\.chronicler"\)/u);
   assert.match(intro, /finalBeat[\s\S]*?onComplete\(\)/u);
+  assert.match(intro, /<GuidedTutorialDialog/u);
+  assert.match(intro, /learn-to-play-intro-progress/u);
+  assert.doesNotMatch(intro, /old-panel|old-title|game-home-dialog/u);
 });

@@ -81,7 +81,7 @@ Los subtipos como Vampiro, Druida, Zombi o Trasgo son lore y filtros, no tipos d
 
 | English | Español | Regla |
 | --- | --- | --- |
-| Energy | Energía | Fuerza que se canaliza para Invocar Ecos y activar Acciones. |
+| Energy | Energía | Fuerza que se canaliza para Invocar Ecos o lanzar Hechizos. |
 | Energy cost | Coste de Energía | Cantidad indicada por el orbe de coste. |
 | Power | Fuerza | Daño base que inflige un Eco. |
 | Endurance | Aguante | Daño que soporta un Eco antes de morir. |

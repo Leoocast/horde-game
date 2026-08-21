@@ -80,7 +80,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
   },
   {
     id: "reserve-and-ready",
-    revision: 2,
+    revision: 3,
     policy: "informative",
     priority: 90,
     copy: {
@@ -184,7 +184,6 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
     copy: {
       titleKey: "guided.contextual.product.emptyHandDrawTitle",
       bodyKey: "guided.contextual.product.emptyHandDrawBody",
-      glossaryTerms: ["hand"],
     },
     signalKinds: ["player.cardsDrawn"],
     evaluate: (signal) => signal.kind === "player.cardsDrawn"

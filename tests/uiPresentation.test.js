@@ -1271,7 +1271,8 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   // El desenlace se centra con una capa a pantalla completa: la succión del vórtice anima
   // `transform` sobre cada pieza y borraría un `translate` propio del bloque.
   assert.match(styles, /\.defeat-outcome \{\s*position: absolute;[\s\S]*?place-items: center;/u);
-  assert.match(styles, /\.defeat-outcome-inner \{[\s\S]*?left: 50%;[\s\S]*?justify-self: start;[\s\S]*?translate: -50% 0;/u);
+  assert.match(styles, /\.defeat-outcome-inner \{[\s\S]*?justify-self: center;[\s\S]*?margin-inline: auto;/u);
+  assert.match(styles, /\.defeat-title \{[^}]*translate: 0\.0325em 0;/su);
   assert.match(styles, /@keyframes defeat-outcome-in \{\s*from \{ opacity: 0; transform: translateY\(10px\); \}/u);
   assert.match(styles, /\.defeat-title \.line \{[^}]*padding-left: 0\.065em;/su);
   assert.match(modal, /<GameOutcomeDialog/u);
@@ -1485,10 +1486,15 @@ test("UI Reference inventories only real player UI and traces every component to
   const menuSource = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
   const screenSource = readFileSync(new URL("../src/ui-reference/UIReferenceScreen.tsx", import.meta.url), "utf8");
   const modalGallerySource = readFileSync(new URL("../src/ui-reference/RuntimeModalGallery.tsx", import.meta.url), "utf8");
+  const confirmationSource = readFileSync(new URL("../src/components/GameConfirmationDialog.tsx", import.meta.url), "utf8");
+  const destinyDialogSource = readFileSync(new URL("../src/components/DestinyRewriteControl.tsx", import.meta.url), "utf8");
+  const handLimitSource = readFileSync(new URL("../src/components/HandLimitOverlay.tsx", import.meta.url), "utf8");
+  const learnIntroSource = readFileSync(new URL("../src/components/LearnToPlayIntroModal.tsx", import.meta.url), "utf8");
   const guidedOverlaySource = readFileSync(new URL("../src/components/GuidedTutorialOverlay.tsx", import.meta.url), "utf8");
   const guidedDialogSource = readFileSync(new URL("../src/components/GuidedTutorialDialog.tsx", import.meta.url), "utf8");
   const referenceStyles = readFileSync(new URL("../src/ui-reference/UIReferenceScreen.css", import.meta.url), "utf8");
   const runtimeStyles = readFileSync(new URL("../src/ui-system.css", import.meta.url), "utf8");
+  const gameStyles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
   const mainSource = readFileSync(new URL("../src/main.tsx", import.meta.url), "utf8");
 
   assert.match(appSource, /screen === "uiReference" && UIReferenceScreen/u);
@@ -1504,6 +1510,9 @@ test("UI Reference inventories only real player UI and traces every component to
   assert.match(screenSource, /entry\.usedIn/u);
   assert.match(screenSource, /Qué significa cada estado/u);
   assert.match(screenSource, /No\s+significa viejo, retirado ni pendiente de reemplazo/u);
+  assert.match(screenSource, /const ELEMENT_FILTERS = \[[\s\S]*?"Botones"[\s\S]*?"Modales"[\s\S]*?"Texto"[\s\S]*?"Feedback"/u);
+  assert.match(screenSource, />Tipos de elemento</u);
+  assert.doesNotMatch(screenSource, /UI_REFERENCE_GROUPS|ui-reference-scope/u);
   assert.doesNotMatch(screenSource, /from\s+["'][^"']*(?:dev\/mockups|playground|audio-lab|seed-explorer|Animator|Vfx|vfx|three)[^"']*["']/u);
   assert.match(modalGallerySource, /const MODAL_SPECIMENS:[\s\S]*?chronicler-name[\s\S]*?guided-tutorial[\s\S]*?learn-defeat-narrative/u);
   assert.doesNotMatch(modalGallerySource, /chronicler-required|chronicler-edit|deck-drawer-(?:player|host)|settings-(?:normal|tutorial|journey)|confirmation-(?:return|interrupted|restart)|outcome-(?:victory|defeat)/u);
@@ -1516,14 +1525,26 @@ test("UI Reference inventories only real player UI and traces every component to
   assert.doesNotMatch(modalGallerySource, /from\s+["'][^"']*(?:dev\/mockups|playground|audio-lab|seed-explorer|Animator|Vfx|vfx|three)[^"']*["']/u);
   assert.match(guidedOverlaySource, /<GuidedTutorialDialog/u);
   assert.match(guidedDialogSource, /guided-tutorial-callout-mark/u);
+  assert.doesNotMatch(confirmationSource, /game-dialog-icon|game-dialog-kicker|kicker:/u);
+  assert.match(destinyDialogSource, /destiny-dialog-heading[\s\S]*?destiny-dialog-actions/u);
+  assert.match(destinyDialogSource, /game-dialog-action game-dialog-action-primary destiny-dialog-primary/u);
+  assert.doesNotMatch(destinyDialogSource, /destiny-dialog-sigil|destiny-dialog-divider/u);
+  assert.match(handLimitSource, /hand-limit-mark[\s\S]*?hand-limit-heading[\s\S]*?hand-limit-actions/u);
+  assert.doesNotMatch(handLimitSource, /hand\.endPhaseCount|hand-limit-icon|counter-target-button/u);
+  assert.match(learnIntroSource, /<GuidedTutorialDialog/u);
+  assert.match(learnIntroSource, /learn-to-play-intro-progress/u);
+  assert.doesNotMatch(learnIntroSource, /old-panel|old-title|game-home-dialog/u);
 
   assert.match(mainSource, /import "\.\/ui-system\.css"/u);
   assert.match(runtimeStyles, /\.hf-ui-panel,/u);
   assert.match(runtimeStyles, /\.hf-ui-button/u);
   assert.match(runtimeStyles, /\.expedition-begin,[\s\S]*?\.game-dialog-action-primary,[\s\S]*?\.guided-tutorial-continue/u);
   assert.match(referenceStyles, /--ui-reference-font: "Segoe UI"/u);
+  assert.match(referenceStyles, /\.ui-reference-topbar \{[\s\S]*?min-height: 68px;[\s\S]*?grid-template-columns: auto minmax\(0, 1fr\);/u);
   assert.match(referenceStyles, /\.ui-reference-specimen-stage \{[\s\S]*?font-family: var\(--hf-ui-font-body\);/u);
   assert.doesNotMatch(referenceStyles, /(^|\n)(?:body|:root|\.game-screen|\.old-panel|\.hf-ui-panel)\s*\{/u);
+  assert.match(gameStyles, /\.hand-limit-mark\s*\{[\s\S]*?transform: rotate\(45deg\);/u);
+  assert.match(gameStyles, /\.learn-to-play-intro-overlay\s*\{[\s\S]*?backdrop-filter: blur\(10px\)/u);
 
   const ids = UI_REFERENCE_CATALOG.map((entry) => entry.id);
   assert.equal(new Set(ids).size, ids.length);

@@ -51,6 +51,10 @@ En development, abrir **UI Reference** desde el dock de herramientas del home. E
 e independiente, eliminada por compilación en release. No existe una query string ni una ruta
 oculta para abrirla en producción.
 
+El lateral filtra el inventario por tipos de elemento reconocibles —Botones, Modales, Texto,
+Controles, Cartas, Navegación, Paneles/HUD y Feedback—. Las agrupaciones internas del catálogo no se
+presentan como filtros al usuario.
+
 Cada ficha visible debe mostrar siempre:
 
 - nombre del componente o primitiva;
@@ -60,7 +64,8 @@ Cada ficha visible debe mostrar siempre:
 
 Los resultados abren únicamente su panel de UI compartido. El diálogo ornamental del tutorial se
 monta mediante `GuidedTutorialDialog`, la misma superficie presentacional que consume
-`GuidedTutorialOverlay`; la geometría de anchors y el bloqueo de interacción se siguen revisando en
+`GuidedTutorialOverlay` y que ahora contiene la introducción narrativa de Aprender a jugar; la
+geometría de anchors y el bloqueo de interacción se siguen revisando en
 Board. Las secuencias cinematográficas de
 victoria/derrota siguen perteneciendo al runtime, pero sus animadores y VFX no se ejecutan ni se
 catalogan aquí. Los diálogos tutoriales que dependen de anchors vivos de Board aparecen registrados
