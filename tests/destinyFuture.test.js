@@ -89,14 +89,14 @@ test("the narrative Future control owns normal rewrites outside Settings", async
   assert.ok(header.indexOf("<DestinyRewriteControl") < header.indexOf("<MusicPlayerMenu"));
   assert.ok(header.indexOf("<DestinyRewriteControl") < header.indexOf("<DestinyCopyIdentityButton"));
   assert.ok(header.indexOf("<DestinyCopyIdentityButton") < header.indexOf("<MusicPlayerMenu"));
-  assert.match(copyControl, /writeClipboardText\(seed\)/u);
+  assert.match(copyControl, /writeClipboardText\(canonCode\)/u);
   assert.match(copyControl, /<GameTooltip content=\{t\("destiny\.copyIdentity"\)\}/u);
-  assert.doesNotMatch(header, /futureSeed\?\.trim\(\)\.toLowerCase\(\) !== "developer"/u);
+  assert.match(header, /matchOrigin!\.seedKind === "canon"/u);
   assert.doesNotMatch(settings, /settings\.battleSeed|game-seed-input|setSeed/u);
   assert.match(settings, /!guided && isDeveloperMode/u);
 
-  assert.match(result, /futureCodeFromSeed\(game\.seed\)/u);
-  assert.match(result, /writeClipboardText\(game\.seed\)/u);
+  assert.match(result, /futureCodeFromSeed\(matchOriginVisualSeed\(matchOrigin\)\)/u);
+  assert.match(result, /writeClipboardText\(matchOrigin\.canonCode\)/u);
   assert.doesNotMatch(result, /<input|generateRandomSeed/u);
 
   assert.match(transition, /prefers-reduced-motion: reduce/u);
@@ -105,8 +105,9 @@ test("the narrative Future control owns normal rewrites outside Settings", async
   assert.match(shader, /uniform float uSeed/u);
   assert.match(warmup, /uSeed/u);
   assert.match(app, /resolvedDestinyIdRef\.current === transitionId/u);
-  assert.match(app, /seed: gameStore\.game\.seed,\s*setupTurns,\s*destination,/u);
-  assert.match(app, /reset\(transition\.seed, transition\.setupTurns\)/u);
+  assert.match(app, /seed: origin \? matchOriginVisualSeed\(origin\) : gameStore\.game\.seed/u);
+  assert.match(app, /origin,\s*destination,/u);
+  assert.match(app, /origin\.rngSeed,[\s\S]*?origin\.preparationTurns/u);
   assert.match(app, /\}, \[clearResumeForProduct, reset, startBattleMusic\]\);/u);
   assert.match(app, /setMenuReturnScreen\("setup"\)/u);
   const commandRadial = styles.match(/\.destiny-command-button::before\s*\{[^}]*\}/su)?.[0] ?? "";

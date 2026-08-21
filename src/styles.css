@@ -1386,11 +1386,34 @@
     text-transform: uppercase;
   }
 
+  .expedition-seed-kind {
+    grid-column: 1 / -1;
+  }
+
+  .expedition-seed-kind-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .expedition-seed-kind-actions .main-settings-action.is-active {
+    border-color: rgb(209 187 116 / 0.68);
+    background: rgb(126 106 49 / 0.24);
+    color: #e8d397;
+  }
+
   .expedition-seed-field {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 40px 40px;
     border: 1px solid rgb(126 139 135 / 0.26);
     background: rgb(6 11 13 / 0.72);
+  }
+
+  .expedition-seed-field.is-import {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .expedition-seed-field.is-single-action {
+    grid-template-columns: minmax(0, 1fr) 40px;
   }
 
   .expedition-seed-field input {
@@ -1414,12 +1437,31 @@
     color: #7a8783;
   }
 
+  .expedition-seed-field.is-import button {
+    padding: 0 12px;
+    color: #c8b77f;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
   .expedition-seed-field button:hover,
   .expedition-seed-field button:focus-visible {
     background: rgb(126 139 135 / 0.16);
     color: #d1c6a5;
     outline: none;
   }
+
+  .expedition-seed-note,
+  .expedition-seed-error {
+    margin-top: 7px;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .expedition-seed-note { color: #69766f; }
+  .expedition-seed-error { color: #d08b7a; }
 
   .expedition-developer-setting {
     display: flex;

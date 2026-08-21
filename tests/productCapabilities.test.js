@@ -95,7 +95,8 @@ test("App and StartMenu expose resume only through the product runtime gate", as
     app,
     /onContinue=\{productResumeRuntime\.enabled && !requiredLesson && desktopResume\.save/u,
   );
-  assert.match(app, /loadScenario\(restoreResumeGame\(save\), deckIds\)/u);
+  assert.match(app, /const restoredGame = restoreResumeGame\(save\)/u);
+  assert.match(app, /loadScenario\(restoredGame, deckIds\)/u);
   assert.doesNotMatch(
     app,
     /\b(?:deleteDesktopResume|loadDesktopResume|startDesktopResumeCheckpointing)\b/u,

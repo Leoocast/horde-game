@@ -1,4 +1,5 @@
 import { Copy } from "lucide-react";
+import { matchOriginVisualSeed, type MatchOrigin } from "../content/MatchOrigin";
 import type { GameState } from "../engine/GameTypes";
 import { useTranslation } from "../i18n/useTranslation";
 import { writeClipboardText } from "../platform/desktopBridge";
@@ -10,23 +11,25 @@ export type GameOutcomeTone = "victory" | "defeat";
 
 type Props = Readonly<{
   game: GameState;
+  matchOrigin: MatchOrigin;
   tone: GameOutcomeTone;
   onRewriteFuture: () => void;
   onContemplateFuture: () => void;
 }>;
 
 /** The UI verdict shared by the runtime outcome sequences and the VFX-free UI Reference. */
-export function GameOutcomeDialog({ game, tone, onRewriteFuture, onContemplateFuture }: Props) {
+export function GameOutcomeDialog({ matchOrigin, tone, onRewriteFuture, onContemplateFuture }: Props) {
   const t = useTranslation();
   const pushToast = useToastStore((state) => state.pushToast);
-  const futureCode = futureCodeFromSeed(game.seed);
+  const futureCode = futureCodeFromSeed(matchOriginVisualSeed(matchOrigin));
   const titleId = `${tone}-result-title`;
   const descriptionId = `${tone}-result-description`;
   const preserved = tone === "victory";
 
   async function copySeed() {
+    if (matchOrigin.seedKind !== "canon") return;
     try {
-      await writeClipboardText(game.seed);
+      await writeClipboardText(matchOrigin.canonCode);
       pushToast({ title: t("destiny.identityCopied"), message: t("destiny.future", { code: futureCode }), tone: "success" });
     } catch {
       pushToast({ title: t("destiny.identityCopyFailed"), message: t("destiny.future", { code: futureCode }), tone: "warning" });
@@ -54,9 +57,9 @@ export function GameOutcomeDialog({ game, tone, onRewriteFuture, onContemplateFu
         <span className={`${tone}-future-plate`}>
           <span>{t("destiny.futureWord")}</span>
           <b>{futureCode}</b>
-          <button type="button" onClick={copySeed} title={t("destiny.copyIdentity")} aria-label={t("destiny.copyIdentity")}>
+          {matchOrigin.seedKind === "canon" && <button type="button" onClick={copySeed} title={t("destiny.copyIdentity")} aria-label={t("destiny.copyIdentity")}>
             <Copy size={14} />
-          </button>
+          </button>}
         </span>
 
         <div className={`${tone}-outcome-actions`}>

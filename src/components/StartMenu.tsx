@@ -1,8 +1,17 @@
 import { AlertTriangle, ArrowLeft, AudioLines, BookOpen, ChevronLeft, ChevronRight, Construction, Copy, Dices, Eye, Feather, Github, PanelsTopLeft, Play, RefreshCw, RotateCcw, ScanSearch, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
 import { AnimatePresence, motion, useIsPresent } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { contentCatalog } from "../content/bootstrap";
+import {
+  createCanonMatchOrigin,
+  createOpaqueMatchOrigin,
+  generateCanonSeedEntropy,
+  importCanonMatchOrigin,
+  matchOriginVisualSeed,
+  type MatchOrigin,
+} from "../content/MatchOrigin";
 import { findDeckKeyCard, type InspectableDeck } from "../data/deckCatalog";
-import type { DifficultyMode, GameMode } from "../engine/GameTypes";
+import type { DifficultyMode } from "../engine/GameTypes";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { openExternalLink, writeClipboardText } from "../platform/desktopBridge";
@@ -55,7 +64,7 @@ type Props = {
   onContinue?: () => void;
   continueDisabled?: boolean;
   onDiscardResume?: () => void;
-  onStart: (options: { playerName: string; mode: DifficultyMode; gameMode: GameMode; setupTurns: number; seed: string }) => void;
+  onStart: (options: { playerName: string; origin: MatchOrigin }) => void;
 };
 
 type MenuScreen = "home" | "setup" | "chaos" | "chronicles" | "hosts" | "seeds" | "howToPlay" | "settings";
@@ -71,7 +80,11 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const t = useTranslation();
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [mode, setMode] = useState<DifficultyMode>("easy");
-  const [seed, setSeed] = useState(() => generateRandomSeed());
+  const [seedKind, setSeedKind] = useState<"canon" | "opaque">("canon");
+  const [canonEntropy, setCanonEntropy] = useState(() => generateCanonSeedEntropy());
+  const [canonDraft, setCanonDraft] = useState("");
+  const [canonImportError, setCanonImportError] = useState<string>();
+  const [opaqueSeed, setOpaqueSeed] = useState(() => generateRandomSeed());
   const [developerMode, setDeveloperMode] = useState(() => readStoredDeveloperMode());
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [launching, setLaunching] = useState(false);
@@ -93,7 +106,23 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const playableDecks = decks.filter((deck) => deck.presentation.playable !== false);
   const selectedDeck = playableDecks.find((deck) => deck.id === selectedDeckId) ?? playableDecks[0];
   const selectedHostDeck = hostDecks.find((deck) => deck.id === selectedHostDeckId) ?? hostDecks[0];
-  const effectiveSeed = developerMode ? "developer" : seed;
+  const canonOrigin = useMemo(() => createCanonMatchOrigin({
+    entropy: canonEntropy,
+    playerDeckKey: contentCatalog.requireDeck(selectedDeckId, "player").qualifiedDeckKey,
+    hostDeckKey: contentCatalog.requireDeck(selectedHostDeckId, "host").qualifiedDeckKey,
+    difficulty: mode,
+  }), [canonEntropy, mode, selectedDeckId, selectedHostDeckId]);
+  const activeOrigin = useMemo<MatchOrigin>(() => {
+    if (!developerMode && menuScreen !== "chaos" && seedKind === "canon") return canonOrigin;
+    return createOpaqueMatchOrigin({
+      rngSeed: developerMode ? "developer" : opaqueSeed,
+      playerDeckKey: contentCatalog.requireDeck(selectedDeckId, "player").qualifiedDeckKey,
+      hostDeckKey: contentCatalog.requireDeck(selectedHostDeckId, "host").qualifiedDeckKey,
+      difficulty: menuScreen === "chaos" ? "normal" : mode,
+      preparationTurns: menuScreen === "chaos" ? 0 : selectedMode.setupTurns,
+      gameMode: menuScreen === "chaos" ? "chaos" : "standard",
+    });
+  }, [canonOrigin, developerMode, menuScreen, mode, opaqueSeed, seedKind, selectedDeckId, selectedHostDeckId, selectedMode.setupTurns]);
   const preserveMusicOnInitialMount = useRef(preserveMusicOnMount);
 
   useEffect(() => {
@@ -193,12 +222,42 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     if (menuScreen === "chronicles" || menuScreen === "hosts" || menuScreen === "seeds" || menuScreen === "howToPlay" || menuScreen === "settings") setClosingMenuScreen(menuScreen);
   }
 
-  async function copySeed() {
+  async function copyCanonIdentity() {
+    if (activeOrigin.seedKind !== "canon") return;
     try {
-      await writeClipboardText(effectiveSeed);
-      pushToast({ title: t("toast.seedCopied"), message: effectiveSeed, tone: "success" });
+      await writeClipboardText(activeOrigin.canonCode);
+      pushToast({ title: t("destiny.identityCopied"), message: activeOrigin.canonCode, tone: "success" });
     } catch {
-      pushToast({ title: t("toast.seedCopyFailed"), message: effectiveSeed, tone: "warning" });
+      pushToast({ title: t("destiny.identityCopyFailed"), message: activeOrigin.canonCode, tone: "warning" });
+    }
+  }
+
+  async function copyInternalSeed() {
+    if (!developerMode) return;
+    try {
+      await writeClipboardText(activeOrigin.rngSeed);
+      pushToast({ title: t("setup.internalSeedCopied"), message: activeOrigin.rngSeed, tone: "success" });
+    } catch {
+      pushToast({ title: t("setup.internalSeedCopyFailed"), message: activeOrigin.rngSeed, tone: "warning" });
+    }
+  }
+
+  function useCanonSeed() {
+    try {
+      const imported = importCanonMatchOrigin(canonDraft);
+      if (!playableDecks.some((deck) => deck.id === imported.playerDeckId)) throw new Error("Chronicle unavailable");
+      if (!hostDecks.some((deck) => deck.id === imported.hostDeckId)) throw new Error("Host unavailable");
+      onSelectDeck(imported.playerDeckId);
+      onSelectHostDeck(imported.hostDeckId);
+      setMode(imported.difficulty);
+      setCanonEntropy(imported.rngSeed);
+      setSeedKind("canon");
+      setCanonDraft(imported.canonCode);
+      setCanonImportError(undefined);
+      if (developerMode) updateDeveloperMode(false);
+      pushToast({ title: t("setup.canonApplied"), message: imported.canonCode, tone: "success" });
+    } catch {
+      setCanonImportError(t("setup.canonInvalid"));
     }
   }
 
@@ -206,12 +265,15 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     if (launching) return;
     persistDeveloperMode(developerMode);
     setLaunching(true);
+    const origin = activeOrigin.seedKind === "opaque" && !activeOrigin.rngSeed.trim()
+      ? createOpaqueMatchOrigin({
+        ...activeOrigin,
+        rngSeed: generateRandomSeed(),
+      })
+      : activeOrigin;
     onStart({
       playerName: playerName.trim() || "Chronicler",
-      mode: menuScreen === "chaos" ? "normal" : mode,
-      gameMode: menuScreen === "chaos" ? "chaos" : "standard",
-      setupTurns: menuScreen === "chaos" ? 0 : selectedMode.setupTurns,
-      seed: effectiveSeed.trim() || generateRandomSeed(),
+      origin,
     });
   }
 
@@ -358,32 +420,6 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
                 <div className="main-settings-section-title">{t("settings.game")}</div>
                 <div className="main-settings-row">
                   <div>
-                    <label className="main-settings-label" htmlFor="main-settings-seed">{t("settings.seed")}</label>
-                    <div className="main-settings-description">{t("settings.seedDescription")}</div>
-                  </div>
-                  <div className="main-settings-seed-control">
-                    <input
-                      id="main-settings-seed"
-                      value={developerMode ? "developer" : seed}
-                      onChange={(event) => setSeed(event.target.value)}
-                      disabled={developerMode}
-                      className="main-settings-input"
-                    />
-                    <button className="main-settings-action" type="button" onClick={copySeed}>{t("common.copy")}</button>
-                    <button
-                      className="main-settings-action"
-                      type="button"
-                      onClick={() => {
-                        if (developerMode) updateDeveloperMode(false);
-                        setSeed(generateRandomSeed());
-                      }}
-                    >
-                      {t("common.new")}
-                    </button>
-                  </div>
-                </div>
-                <div className="main-settings-row">
-                  <div>
                     <div className="main-settings-label">{t("settings.developerMode")}</div>
                     <div className="main-settings-description">{t("settings.developerDescription")}</div>
                   </div>
@@ -480,14 +516,19 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           selectedMode={selectedMode}
           showAdvanced={showAdvanced}
           onToggleAdvanced={() => setShowAdvanced((value) => !value)}
-          seed={effectiveSeed}
+          origin={activeOrigin}
+          seedKind={seedKind}
+          canonDraft={canonDraft}
+          canonImportError={canonImportError}
           developerMode={developerMode}
-          onSeedChange={setSeed}
-          onCopySeed={copySeed}
-          onRegenerateSeed={() => {
-            if (developerMode) updateDeveloperMode(false);
-            setSeed(generateRandomSeed());
-          }}
+          onSeedKindChange={setSeedKind}
+          onCanonDraftChange={(value) => { setCanonDraft(value); setCanonImportError(undefined); }}
+          onUseCanonSeed={useCanonSeed}
+          onCopyCanonIdentity={copyCanonIdentity}
+          onRegenerateCanon={() => setCanonEntropy(generateCanonSeedEntropy())}
+          onOpaqueSeedChange={setOpaqueSeed}
+          onRegenerateOpaqueSeed={() => setOpaqueSeed(generateRandomSeed())}
+          onCopyInternalSeed={copyInternalSeed}
           onToggleDeveloperMode={toggleDeveloperMode}
           onBack={() => setSetupClosing(true)}
           onStart={startGame}
@@ -620,11 +661,19 @@ type ExpeditionSetupProps = {
   selectedMode: (typeof modes)[number];
   showAdvanced: boolean;
   onToggleAdvanced: () => void;
-  seed: string;
+  origin: MatchOrigin;
+  seedKind: "canon" | "opaque";
+  canonDraft: string;
+  canonImportError?: string;
   developerMode: boolean;
-  onSeedChange: (seed: string) => void;
-  onCopySeed: () => void;
-  onRegenerateSeed: () => void;
+  onSeedKindChange: (kind: "canon" | "opaque") => void;
+  onCanonDraftChange: (seed: string) => void;
+  onUseCanonSeed: () => void;
+  onCopyCanonIdentity: () => void;
+  onRegenerateCanon: () => void;
+  onOpaqueSeedChange: (seed: string) => void;
+  onRegenerateOpaqueSeed: () => void;
+  onCopyInternalSeed: () => void;
   onToggleDeveloperMode: () => void;
   onBack: () => void;
   onStart: () => void;
@@ -637,7 +686,7 @@ type ExpeditionSetupProps = {
 function ExpeditionSetup(props: ExpeditionSetupProps) {
   const t = useTranslation();
   const [openDeckSide, setOpenDeckSide] = useState<"player" | "host" | null>(null);
-  const futureCode = futureCodeFromSeed(props.seed);
+  const futureCode = futureCodeFromSeed(matchOriginVisualSeed(props.origin));
 
   const closeDeckDrawer = () => {
     const closingSide = openDeckSide;
@@ -671,7 +720,7 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
         <div>
           {props.chaos && <p className="chaos-header-kicker">{t("setup.chaosKicker")}</p>}
           <h1>{props.chaos ? t("setup.invokeChaos") : t("setup.prepare")}</h1>
-          {!props.chaos && !props.developerMode && (
+          {!props.chaos && props.origin.seedKind === "canon" && (
             <p className="expedition-future-identity"><Sparkles size={13} aria-hidden="true" /> {t("destiny.future", { code: futureCode })}</p>
           )}
         </div>
@@ -725,14 +774,49 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
           </button>
           {props.showAdvanced && (
             <div className="expedition-advanced-content">
-              <div>
-                <label htmlFor="expedition-seed">{t("settings.seed")}</label>
-                <div className="expedition-seed-field">
-                  <input id="expedition-seed" value={props.seed} disabled={props.developerMode} onChange={(event) => props.onSeedChange(event.target.value)} />
-                  <button type="button" onClick={props.onCopySeed} title={t("common.copy")}><Copy size={16} /></button>
-                  <button type="button" onClick={props.onRegenerateSeed} title={t("common.new")}><RefreshCw size={16} /></button>
+              {!props.chaos && !props.developerMode && (
+                <div className="expedition-seed-kind">
+                  <div className="expedition-seed-kind-actions">
+                    <button className={`main-settings-action ${props.seedKind === "canon" ? "is-active" : ""}`} type="button" onClick={() => props.onSeedKindChange("canon")}>{t("setup.canonSeed")}</button>
+                    <button className={`main-settings-action ${props.seedKind === "opaque" ? "is-active" : ""}`} type="button" onClick={() => props.onSeedKindChange("opaque")}>{t("setup.freeSeed")}</button>
+                  </div>
                 </div>
-              </div>
+              )}
+              {!props.chaos && !props.developerMode && props.seedKind === "canon" && props.origin.seedKind === "canon" && (
+                <div>
+                  <label htmlFor="expedition-canon-seed">{t("setup.canonSeed")}</label>
+                  <div className="expedition-seed-field">
+                    <input id="expedition-canon-seed" value={props.origin.canonCode} readOnly />
+                    <button type="button" onClick={props.onCopyCanonIdentity} title={t("destiny.copyIdentity")}><Copy size={16} /></button>
+                    <button type="button" onClick={props.onRegenerateCanon} title={t("common.new")}><RefreshCw size={16} /></button>
+                  </div>
+                  <label className="mt-3" htmlFor="expedition-canon-import">{t("setup.importCanon")}</label>
+                  <div className="expedition-seed-field is-import">
+                    <input id="expedition-canon-import" value={props.canonDraft} placeholder="HF1-ELA-GRV-XX1-XXX" onChange={(event) => props.onCanonDraftChange(event.target.value)} />
+                    <button type="button" onClick={props.onUseCanonSeed}>{t("setup.useCanon")}</button>
+                  </div>
+                  {props.canonImportError && <p className="expedition-seed-error" role="alert">{props.canonImportError}</p>}
+                </div>
+              )}
+              {(props.chaos || (!props.developerMode && props.seedKind === "opaque")) && (
+                <div>
+                  <label htmlFor="expedition-free-seed">{t("setup.freeSeed")}</label>
+                  <div className="expedition-seed-field is-single-action">
+                    <input id="expedition-free-seed" value={props.origin.rngSeed} onChange={(event) => props.onOpaqueSeedChange(event.target.value)} />
+                    <button type="button" onClick={props.onRegenerateOpaqueSeed} title={t("common.new")}><RefreshCw size={16} /></button>
+                  </div>
+                  <p className="expedition-seed-note">{t("setup.freeSeedDescription")}</p>
+                </div>
+              )}
+              {props.developerMode && (
+                <div>
+                  <label>{t("setup.internalSeed")}</label>
+                  <div className="expedition-seed-field is-single-action">
+                    <input value={props.origin.rngSeed} readOnly />
+                    <button type="button" onClick={props.onCopyInternalSeed} title={t("setup.copyInternalSeed")}><Copy size={16} /></button>
+                  </div>
+                </div>
+              )}
               <div className="expedition-developer-setting">
                 <span><strong>{t("settings.developerMode")}</strong><small>{t("setup.developerDescription")}</small></span>
                 <button className={`main-settings-toggle ${props.developerMode ? "is-on" : ""}`} type="button" role="switch" aria-checked={props.developerMode} onClick={props.onToggleDeveloperMode}><span /></button>

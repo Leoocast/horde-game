@@ -12,6 +12,7 @@ const server = await createServer({
 try {
   await server.ssrLoadModule("/tests/engine.test.js");
   await server.ssrLoadModule("/tests/canonSeed.test.js");
+  await server.ssrLoadModule("/tests/matchOrigin.test.js");
   await server.ssrLoadModule("/tests/seedExplorer.test.js");
   await server.ssrLoadModule("/tests/attemptNarrative.test.js");
   await server.ssrLoadModule("/tests/productCapabilities.test.js");

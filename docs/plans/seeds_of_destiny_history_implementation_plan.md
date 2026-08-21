@@ -1,6 +1,6 @@
 # Plan por fases — historial de Semillas del Destino para la demo
 
-Estado: **Fases 1 y 2 completadas; Fase 2.5 pendiente**.
+Estado: **Fases 1, 2 y 2.5 completadas; siguiente fase: 3**.
 
 Última actualización: **2026-08-21**.
 
@@ -65,8 +65,8 @@ Fase 1 y la decisión creativa de esa fase se registra antes de construir el his
 ### Identidad exacta de un Futuro
 
 `Futuro NNN·NNN` es sólo una identidad cosmética y puede colisionar. Antes de este plan, el menú
-normal genera seeds opacas `hostfall-...`; la Fase 2.5 hará Canon a la ruta standard autogenerada,
-pero conservará una ruta avanzada explícita para seeds libres. Por eso el agrupamiento y la
+normal generaba seeds opacas `hostfall-...`; desde la Fase 2.5 la ruta standard autogenerada es
+Canon y conserva una ruta avanzada explícita para seeds libres. Por eso el agrupamiento y la
 reescritura usan una identidad compuesta:
 
 ```ts
@@ -168,8 +168,8 @@ Una interrupción posterior no borra una victoria previa.
 
 | Necesidad | Qué existe | Brecha |
 | --- | --- | --- |
-| Identidad de Futuro | `futureCodeFromSeed` y el codec HF1 están implementados. | Setup, Header, Reescribir y resultado copian la seed cruda de `game.seed`; el launcher normal no crea ni importa HF1. |
-| Canon Seed reproducible | Seed Explorer decodifica HF1 y entrega sólo su entropía a `createInitialGame`. | El producto normal genera `hostfall-...`; pegar HF1 allí lo hashea como texto opaco y no reproduce la candidata Canon. |
+| Identidad de Futuro | `MatchOrigin` separa la identidad pública de `GameState.seed`; Setup, Header, Reescribir y resultado usan `canonCode`. | La biblioteca real todavía no consume esta identidad porque sigue siendo maqueta. |
+| Canon Seed reproducible | El producto normal y Seed Explorer decodifican HF1 y entregan sólo su entropía a `createInitialGame`. | La reescritura desde historial se conecta en la Fase 6. |
 | Reiniciar el mismo origen | `reset` y `DestinyRewriteTransition` ya conservan seed y configuración de la sesión viva. | La pantalla de historial no puede entregar todavía una identidad persistida a `App`. |
 | Detectar resultado | `GameState.winner`, `triggerEndGame` y la señal `game.ended`. | Ningún consumidor crea un registro de intento. |
 | Observar hitos | `gameplaySignalStream` observa también partidas normales y emite turnos, robos, Oleadas, atacantes, Vida y Archivo. | Es efímero, conserva sólo 256 señales y no cubre aún todos los hitos candidatos. |
@@ -419,6 +419,17 @@ Entrega:
 capability recupera el comportamiento actual.
 
 ### Fase 2.5 — Canon Seed player-facing y reproducible
+
+Estado: **completada el 2026-08-21**.
+
+Implementación: `src/content/MatchOrigin.ts` conserva el origen fuera de `GameState`; Preparación
+genera e importa HF1, mientras la seed libre queda como ruta opaque separada. `App` propaga el mismo
+origen al tablero, reescritura, desenlace y handoff del tutorial; este último carga siempre la
+Primera Canon Seed aprobada `HF1-ELA-GRV-082-QC5`. `CanonSeed.ts` contiene un
+registro de compatibilidad determinista independiente de la revisión del catálogo. Los golden
+vectors de `tests/canonSeed.test.js` fijan identidad, orden completo de Crónica/Hueste y estado RNG;
+`tests/matchOrigin.test.js` cierra generación/importación, incompatibilidad, opacidad y superficies
+de copia.
 
 Esta fase es bloqueante para el historial: define cuál es la identidad pública que se persiste y se
 copia. No convierte una trayectoria jugada en replay; reproduce el origen exacto y el mismo stream

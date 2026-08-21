@@ -1465,7 +1465,7 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.doesNotMatch(glassShader, /gl_FragColor = vec4\(color \* fade, 1\.0\)/u);
   assert.doesNotMatch(animator, /new THREE\.WebGLRenderer|forceContextLoss/u);
   assert.match(animator, /prefers-reduced-motion:\s*reduce/u);
-  assert.match(modal, /<DefeatShatterAnimator seed=\{game\.seed\} snapshotImage=\{snapshotImage\} onSequenceStart=\{startSequence\}/u);
+  assert.match(modal, /<DefeatShatterAnimator seed=\{matchOriginVisualSeed\(matchOrigin\)\} snapshotImage=\{snapshotImage\} onSequenceStart=\{startSequence\}/u);
   assert.match(modal, /<GameOutcomeDialog[\s\S]*?tone="defeat"/u);
   assert.match(outcomeDialog, /destiny\.futureLostLineOne/u);
   assert.match(outcomeDialog, /destiny\.futureLostLineTwo/u);

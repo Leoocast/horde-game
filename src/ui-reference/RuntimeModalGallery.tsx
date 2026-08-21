@@ -16,6 +16,7 @@ import {
 import { OpeningHandModal } from "../components/OpeningHandOverlay";
 import { SettingsMenu } from "../components/SettingsMenu";
 import { ChroniclerNameModal, SetupDeckDrawer } from "../components/StartMenu";
+import { createCanonMatchOrigin } from "../content/MatchOrigin";
 import { hostInspectableDecks, playerInspectableDecks } from "../data/deckCatalog";
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { useTranslation } from "../i18n/useTranslation";
@@ -70,6 +71,12 @@ const MODAL_SPECIMENS: readonly ModalSpecimen[] = [
 ];
 
 const CONTEXT_ONLY_DIALOGS = ["contextual-tutorial-callout"] as const;
+const UI_REFERENCE_MATCH_ORIGIN = createCanonMatchOrigin({
+  entropy: "U1REF",
+  playerDeckKey: "hostfall.core/pact_of_elarion",
+  hostDeckKey: "hostfall.core/uprising_of_the_graveless",
+  difficulty: "normal",
+});
 
 export function RuntimeModalGallery({ game }: { game: GameState }) {
   const [activeModal, setActiveModal] = useState<ModalSpecimenId>();
@@ -249,7 +256,7 @@ function ActiveRuntimeModal({
   if (id === "destiny") {
     return (
       <DestinyRewriteControl
-        seed={game.seed}
+        origin={UI_REFERENCE_MATCH_ORIGIN}
         onRewrite={close}
         onContemplateAnother={close}
         initiallyOpen
@@ -361,7 +368,7 @@ function ActiveRuntimeModal({
     const tone = "victory";
     return (
       <div className={`game-result-overlay game-result-${tone} fixed inset-0 z-[140]`}>
-        <GameOutcomeDialog game={game} tone={tone} onRewriteFuture={close} onContemplateFuture={close} />
+        <GameOutcomeDialog game={game} matchOrigin={UI_REFERENCE_MATCH_ORIGIN} tone={tone} onRewriteFuture={close} onContemplateFuture={close} />
       </div>
     );
   }

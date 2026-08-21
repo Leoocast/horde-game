@@ -22,6 +22,7 @@ import {
   decodeCanonSeed,
 } from "../content/CanonSeed";
 import { contentCatalog } from "../content/bootstrap";
+import { importCanonMatchOrigin } from "../content/MatchOrigin";
 import { createInitialGame } from "../engine/GameState";
 import type { DifficultyMode } from "../engine/GameTypes";
 import { writeClipboardText } from "../platform/desktopBridge";
@@ -383,6 +384,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
         <Board
           key={gameSessionId}
           playerName="Seed Explorer"
+          matchOrigin={importCanonMatchOrigin(boardCandidate.identity.canonCode)}
           setupTurns={boardCandidate.identity.preparationTurns}
           onReturnToMenu={() => {
             stopMusic();

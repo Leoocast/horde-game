@@ -9,12 +9,16 @@ import { GameLoadingScreen } from "./components/GameLoadingScreen";
 import { LearnToPlayIntroModal } from "./components/LearnToPlayIntroModal";
 import { StartMenu, type HowToPlayMenuEntry } from "./components/StartMenu";
 import {
+  createOpaqueMatchOrigin,
+  matchOriginVisualSeed,
+  type MatchOrigin,
+} from "./content/MatchOrigin";
+import {
   GUIDED_LESSON_BOARD_SESSION,
   LEARN_TO_PLAY_BOARD_SESSION,
   NORMAL_BOARD_SESSION,
 } from "./components/boardSessionPolicies";
 import { findInspectableDeck, hostInspectableDecks, playerInspectableDecks } from "./data/deckCatalog";
-import { DEFAULT_HOST_DECK_ID, DEFAULT_PLAYER_DECK_ID } from "./data/decks";
 import type { GameMode } from "./engine/GameTypes";
 import { useAudioStore } from "./store/useAudioStore";
 import { useGameStore } from "./store/useGameStore";
@@ -34,6 +38,7 @@ import { guidedProductLifecycle } from "./guidance/productRuntime";
 import { guidedLessonRegistry } from "./guidance/registry";
 import { HOW_TO_PLAY_CATALOG } from "./guidance/howToPlayCatalog";
 import { LEARN_TO_PLAY_JOURNEY, learnToPlayJourneyLifecycle } from "./guidance/learnToPlayJourney";
+import { createLearnToPlayFirstMatchOrigin } from "./guidance/learnToPlayHandoff";
 import { guidedProgressStore } from "./guidance/progress";
 
 // The conditional imports are compile-time: release builds remove every developer module instead
@@ -85,23 +90,12 @@ type DestinyTransitionState = {
   id: number;
   kind: DestinyTransitionKind;
   seed: string;
-  setupTurns: number;
-  destination: "standard" | "learn-to-play-random";
+  origin?: MatchOrigin;
+  destination: "standard" | "learn-to-play-first-seed";
 };
 
 /** La Mano empieza a subir mientras el último rastro del signo termina de apagarse. */
 const BOARD_OVERTURE_HAND_DELAY_MS = 650;
-const STANDARD_SETUP_TURNS = 3;
-
-function generateRandomFutureSeed(): string {
-  const random = new Uint32Array(2);
-  if (typeof crypto !== "undefined" && crypto.getRandomValues) crypto.getRandomValues(random);
-  else {
-    random[0] = Math.floor(Math.random() * 0xffffffff);
-    random[1] = Math.floor(Math.random() * 0xffffffff);
-  }
-  return `hostfall-${Date.now().toString(36)}-${random[0].toString(36)}${random[1].toString(36)}`;
-}
 
 const subscribeGuidedLifecycle = (listener: () => void) => guidedProductLifecycle.subscribe(listener);
 const readGuidedLifecycle = () => guidedProductLifecycle.snapshot();
@@ -134,6 +128,7 @@ export default function App() {
      lanzamiento ya se secuencia en App; `Board` sólo se entera de en qué fase está. */
   const [boardOverture, setBoardOverture] = useState<BoardOvertureState | null>(null);
   const [destinyTransition, setDestinyTransition] = useState<DestinyTransitionState | null>(null);
+  const [matchOrigin, setMatchOrigin] = useState<MatchOrigin | null>(null);
   const launchIdRef = useRef(0);
   const destinyIdRef = useRef(0);
   const destinyTransitionRef = useRef<DestinyTransitionState | null>(null);
@@ -320,6 +315,7 @@ export default function App() {
     const lesson = guidedLessonRegistry.require(lessonId);
     setSetupTurns(lesson.scenario.setupTurnsTotal);
     setPreserveMenuMusic(false);
+    setMatchOrigin(null);
     stopMusic();
     guidedProductLifecycle.start(lesson.id);
     setScreen("tutorial");
@@ -337,6 +333,7 @@ export default function App() {
   function beginLearnToPlayJourney() {
     setSetupTurns(LEARN_TO_PLAY_JOURNEY.setupTurns);
     setPreserveMenuMusic(false);
+    setMatchOrigin(null);
     if (!learnToPlayJourneyLifecycle.start()) return;
     setLearnToPlayIntroOpen(false);
     stopMusic();
@@ -354,43 +351,60 @@ export default function App() {
   ): boolean => {
     if (destinyTransitionRef.current) return false;
     const gameStore = useGameStore.getState();
+    const origin = destination === "standard" ? matchOrigin ?? undefined : undefined;
+    if (destination === "standard" && !origin) return false;
     gameStore.stopGamePresentation();
     const transition = {
       id: ++destinyIdRef.current,
       kind,
-      seed: gameStore.game.seed,
-      setupTurns,
+      seed: origin ? matchOriginVisualSeed(origin) : gameStore.game.seed,
+      origin,
       destination,
     };
     destinyTransitionRef.current = transition;
     resolvedDestinyIdRef.current = null;
     setDestinyTransition(transition);
     return true;
-  }, [setupTurns]);
+  }, [matchOrigin]);
 
   const resolveDestinyTransition = useCallback((transitionId: number) => {
     const transition = destinyTransitionRef.current;
     if (!transition || transition.id !== transitionId || resolvedDestinyIdRef.current === transitionId) return;
     resolvedDestinyIdRef.current = transitionId;
     if (transition.kind === "rewrite") {
-      reset(transition.seed, transition.setupTurns);
+      if (!transition.origin) return;
+      const origin = transition.origin;
+      setMatchOrigin(origin);
+      setSetupTurns(origin.preparationTurns);
+      setSelectedDeckId(origin.playerDeckId);
+      setSelectedHostDeckId(origin.hostDeckId);
+      reset(
+        origin.rngSeed,
+        origin.preparationTurns,
+        origin.playerDeckId,
+        origin.hostDeckId,
+        origin.difficulty,
+        origin.gameMode,
+      );
       startBattleMusic(true);
       return;
     }
 
-    if (transition.destination === "learn-to-play-random") {
+    if (transition.destination === "learn-to-play-first-seed") {
       clearResumeForProduct();
       setPreserveMenuMusic(false);
-      setSetupTurns(STANDARD_SETUP_TURNS);
-      setSelectedDeckId(DEFAULT_PLAYER_DECK_ID);
-      setSelectedHostDeckId(DEFAULT_HOST_DECK_ID);
+      const origin = createLearnToPlayFirstMatchOrigin();
+      setMatchOrigin(origin);
+      setSetupTurns(origin.preparationTurns);
+      setSelectedDeckId(origin.playerDeckId);
+      setSelectedHostDeckId(origin.hostDeckId);
       reset(
-        generateRandomFutureSeed(),
-        STANDARD_SETUP_TURNS,
-        DEFAULT_PLAYER_DECK_ID,
-        DEFAULT_HOST_DECK_ID,
-        "normal",
-        "standard",
+        origin.rngSeed,
+        origin.preparationTurns,
+        origin.playerDeckId,
+        origin.hostDeckId,
+        origin.difficulty,
+        origin.gameMode,
       );
       setScreen("game");
       startBattleMusic(true);
@@ -399,6 +413,7 @@ export default function App() {
 
     clearResumeForProduct();
     setPreserveMenuMusic(false);
+    setMatchOrigin(null);
     setMenuReturnScreen("setup");
     setScreen("start");
   }, [clearResumeForProduct, reset, startBattleMusic]);
@@ -410,8 +425,8 @@ export default function App() {
     setDestinyTransition((current) => (current?.id === transitionId ? null : current));
   }, []);
 
-  function continueLearnToPlayIntoRandomFuture() {
-    if (!beginDestinyTransition("contemplate", "learn-to-play-random")) return;
+  function continueLearnToPlayIntoFirstCanonFuture() {
+    if (!beginDestinyTransition("contemplate", "learn-to-play-first-seed")) return;
     // Clicking the CTA is the authored completion boundary. The board remains mounted beneath
     // the vortex until `onCovered` replaces it with the new, normal Future.
     learnToPlayJourneyLifecycle.stop();
@@ -421,6 +436,7 @@ export default function App() {
   function leaveGuidedLesson() {
     guidedProductLifecycle.stop();
     setPreserveMenuMusic(false);
+    setMatchOrigin(null);
     setMenuReturnScreen("home");
     setScreen("start");
   }
@@ -428,6 +444,7 @@ export default function App() {
   function leaveLearnToPlayJourney() {
     learnToPlayJourneyLifecycle.stop();
     setPreserveMenuMusic(false);
+    setMatchOrigin(null);
     setMenuReturnScreen("home");
     setScreen("start");
   }
@@ -606,12 +623,23 @@ export default function App() {
           onContinue={productResumeRuntime.enabled && !requiredLesson && desktopResume.save ? () => {
             const save = desktopResume.save!;
             const deckIds = resumeDeckIds(save);
+            const restoredGame = restoreResumeGame(save);
+            const restoredOrigin = createOpaqueMatchOrigin({
+              rngSeed: restoredGame.seed,
+              playerDeckKey: save.playerDeckKey,
+              hostDeckKey: save.hostDeckKey,
+              difficulty: restoredGame.difficulty,
+              preparationTurns: save.setupTurns,
+              gameMode: restoredGame.gameMode,
+              deterministicRevision: `resume-v${save.formatVersion}`,
+            });
             stopMusic();
             setPlayerName(save.playerName);
             setSetupTurns(save.setupTurns);
             setSelectedDeckId(deckIds.playerDeckId);
             setSelectedHostDeckId(deckIds.hostDeckId);
-            loadScenario(restoreResumeGame(save), deckIds);
+            setMatchOrigin(restoredOrigin);
+            loadScenario(restoredGame, deckIds);
             setDesktopResume({ status: "none" });
             setScreen("game");
             startBattleMusic(true);
@@ -636,17 +664,20 @@ export default function App() {
             clearResumeForProduct();
             setPreserveMenuMusic(false);
             setPlayerName(options.playerName);
-            setSetupTurns(options.setupTurns);
+            setMatchOrigin(options.origin);
+            setSetupTurns(options.origin.preparationTurns);
+            setSelectedDeckId(options.origin.playerDeckId);
+            setSelectedHostDeckId(options.origin.hostDeckId);
             stopMusic();
             playSfx("draw");
             playSfx("playMonsterHeavy", { rate: 0.92 });
             reset(
-              options.seed,
-              options.setupTurns,
-              selectedDeckId,
-              selectedHostDeckId,
-              options.mode,
-              options.gameMode,
+              options.origin.rngSeed,
+              options.origin.preparationTurns,
+              options.origin.playerDeckId,
+              options.origin.hostDeckId,
+              options.origin.difficulty,
+              options.origin.gameMode,
             );
             const id = ++launchIdRef.current;
             const startedAtMs = performance.now();
@@ -656,7 +687,7 @@ export default function App() {
                obertura y el reloj absoluto la ancla a la apertura real de las cortinas. */
             setBoardOverture(reducedMotion ? null : {
               id,
-              seed: useGameStore.getState().game.seed,
+              seed: matchOriginVisualSeed(options.origin),
               dialPending: true,
               startsAtMs: startedAtMs + ENCOUNTER_OPEN_MS,
               phase: "sigil",
@@ -665,9 +696,9 @@ export default function App() {
             });
             setLaunchTransition({
               id,
-              chronicleDeckId: selectedDeckId,
-              hostDeckId: selectedHostDeckId,
-              gameMode: options.gameMode,
+              chronicleDeckId: options.origin.playerDeckId,
+              hostDeckId: options.origin.hostDeckId,
+              gameMode: options.origin.gameMode,
               startedAtMs,
               reducedMotion,
             });
@@ -692,6 +723,7 @@ export default function App() {
       <Board
         key={gameSessionId}
         playerName={playerName}
+        matchOrigin={screen === "game" ? matchOrigin ?? undefined : undefined}
         setupTurns={setupTurns}
         encounterEntering={Boolean(launchTransition)}
         overtureActive={boardOverture?.phase === "sigil"}
@@ -710,11 +742,12 @@ export default function App() {
         onContemplateFuture={screen === "game"
           ? () => beginDestinyTransition("contemplate")
           : screen === "journey"
-            ? continueLearnToPlayIntoRandomFuture
+            ? continueLearnToPlayIntoFirstCanonFuture
             : undefined}
         onReturnToMenu={screen === "tutorial" ? leaveGuidedLesson : screen === "journey" ? leaveLearnToPlayJourney : () => {
           clearResumeForProduct();
           setPreserveMenuMusic(false);
+          setMatchOrigin(null);
           setMenuReturnScreen("home");
           setScreen("start");
         }}

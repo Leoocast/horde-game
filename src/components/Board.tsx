@@ -1,6 +1,7 @@
 import { Home, RotateCcw } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
+import type { MatchOrigin } from "../content/MatchOrigin";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useGameStore, type GameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
@@ -57,6 +58,7 @@ import { contextualTutorialRuntime } from "../guidance/contextualProductRuntime"
 
 type Props = {
   playerName: string;
+  matchOrigin?: MatchOrigin;
   setupTurns: number;
   encounterEntering?: boolean;
   /** El signo del Futuro se está trazando sobre el Campo: el tablero llega desnudo. */
@@ -209,6 +211,7 @@ function settleDefeatCapture(
 
 export function Board({
   playerName,
+  matchOrigin,
   setupTurns,
   encounterEntering = false,
   overtureActive = false,
@@ -447,7 +450,7 @@ export function Board({
         onRestartTutorial={onRestartTutorial}
         onRewriteFuture={sessionPolicy.showFutureControls ? onRewriteFuture : undefined}
         onContemplateFuture={sessionPolicy.showFutureControls ? onContemplateFuture : undefined}
-        futureSeed={game.seed}
+        matchOrigin={matchOrigin}
         onReturnToMenu={() => setShowHomeConfirmation(true)}
       />
       <DuelHud game={game} />
@@ -507,9 +510,10 @@ export function Board({
       <GuidedTutorialOverlay />
       <ContextualTutorialCallout />
 
-      {sessionPolicy.showStandardOutcome && defeatReady && onRewriteFuture && onContemplateFuture && (
+      {sessionPolicy.showStandardOutcome && defeatReady && matchOrigin && onRewriteFuture && onContemplateFuture && (
         <DefeatModal
           game={game}
+          matchOrigin={matchOrigin}
           snapshotImage={defeatSnapshot ?? undefined}
           onRewriteFuture={onRewriteFuture}
           onContemplateFuture={onContemplateFuture}
@@ -522,8 +526,8 @@ export function Board({
           onContemplateFuture={onContemplateFuture}
         />
       )}
-      {sessionPolicy.showStandardOutcome && victoryReady && onRewriteFuture && onContemplateFuture && (
-        <VictoryModal game={game} onRewriteFuture={onRewriteFuture} onContemplateFuture={onContemplateFuture} />
+      {sessionPolicy.showStandardOutcome && victoryReady && matchOrigin && onRewriteFuture && onContemplateFuture && (
+        <VictoryModal game={game} matchOrigin={matchOrigin} onRewriteFuture={onRewriteFuture} onContemplateFuture={onContemplateFuture} />
       )}
 
       {sessionPolicy.showGuidedInterruption && tutorialInterrupted && (

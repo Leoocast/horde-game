@@ -118,6 +118,14 @@ La cobertura automática asociada vive principalmente en `tests/engine.test.js` 
 `tests/uiPresentation.test.js`; no sustituye la comprobación visual de trayectorias, solapamientos y
 ritmo.
 
+## Canon Seeds y origen de partida
+
+`tests/canonSeed.test.js` fija el codec HF1 y contiene un golden vector manual con el orden completo
+de Crónica/Hueste y `currentRandomState`. `tests/matchOrigin.test.js` cubre generación e importación,
+aplicación de configuración, rechazo de una revisión determinista incompatible, separación de seeds
+opaque y el contrato de copia pública. Si cambia intencionalmente el consumo de RNG, las reglas o el
+contenido determinista, no se actualiza el golden de HF1: se introduce un formato nuevo.
+
 CI corre en Windows x64, instala con `pnpm install --frozen-lockfile` y ejecuta typecheck, suite,
 deck lint, proyección de Card Studio, `build:web` y auditoría offline. Los
 scripts de instalación permitidos están declarados por paquete en `pnpm-workspace.yaml`, sin

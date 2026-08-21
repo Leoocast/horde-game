@@ -1,9 +1,9 @@
 # Auditoría y plan por fases — Aprender a jugar y ayudas contextuales
 
-Estado: **auditoría técnica completada; Fases 1, 2 y 3 implementadas y verificadas; primer corte fijado
-hasta la derrota y la aparición de su CTA; handoff y partida posterior aplazados**.
+Estado: **auditoría técnica completada; primer corte, derrota, vórtice y handoff a la Primera Canon
+Seed implementados; mulligan final y durabilidad durante la transición pendientes**.
 
-Última actualización: **2026-08-17**.
+Última actualización: **2026-08-21**.
 
 ## Objetivo y alcance
 
@@ -564,19 +564,20 @@ antes de continuar, y entrega el combate a la resolución normal.
 descartada, cero o un descarte antes de Oleada, el rechazo de la quinta Fuente, Río → Ciudad,
 Choque, el ataque opcional contra los Soldados protegidos y una rama defensiva con más Vida.
 
-### Fase 6 — Derrota y handoff provisional — límite del primer corte
+### Fase 6 — Derrota y handoff a la Primera Canon Seed
 
-**Estado: implementada el 2026-08-17; pendiente de QA manual de copy, presentación y handoff.**
+**Estado: implementada; handoff Canon fijado el 2026-08-21.**
 
 - Reutilizar el quiebre normal con variante narrativa y un único CTA.
 - Nombrar ese CTA **Contemplar otro futuro**.
 - Llegar a la pantalla sin convertir la derrota en un aborto de la sesión guiada.
-- Activar el CTA para registrar la finalización del recorrido y cargar, como reemplazo provisional,
-  una partida normal de Elarion contra los Sinsepulcro con seed aleatoria.
-- Mantener fuera de este corte el vórtice, el gate de primera apertura y la partida real preparada.
+- Activar el CTA para registrar la finalización del recorrido, ejecutar el vórtice y cargar
+  `HF1-ELA-GRV-082-QC5`: Elarion contra los Sinsepulcro, Normal, Preparación 3.
+- Mantener fuera de este corte el mulligan authored, el gate de primera apertura y la recuperación
+  ante un cierre durante el vórtice.
 
 **Cierre:** la derrota se resuelve con las reglas reales, aparece su presentación narrativa y el
-CTA único conduce a una partida normal aleatoria sin conservar estado parcial del prólogo.
+CTA único conduce a la Primera Canon Seed aprobada sin conservar estado parcial del prólogo.
 
 El tablero de `learn-to-play` reutiliza la misma barrera de presentación, captura y quiebre que una
 derrota normal, pero monta un resultado propio sin código de Futuro ni las dos acciones normales.
@@ -584,12 +585,11 @@ El único CTA visible es **Contemplar otro futuro**. Comparte el material visual
 Reescribir, sin icono ni código de Futuro, y está habilitado sólo después de aceptar la narración.
 Una victoria accidental del escenario tampoco puede instalar una barrera de resultado huérfana.
 
-### Fase 6B — Vórtice y partida real preparada — aplazada
+### Fase 6B — Primera apertura final y durabilidad — aplazada
 
 - Definir el comportamiento persistente al activar el CTA y al cerrar durante el vórtice.
 - Definir primera apertura, perfiles existentes y activación del gate obligatorio.
-- Añadir el destino `prepared-future` con seed, decks, dificultad, Preparación y mulligan
-  certificados.
+- Certificar el mulligan y la primera apertura sobre `HF1-ELA-GRV-082-QC5` sin cambiar su identidad.
 - Cambiar a partida normal y comenzar su autosave en el checkpoint que se apruebe para release.
 
 **Entrada:** requiere una revisión de producto posterior; no forma parte de la implementación actual.

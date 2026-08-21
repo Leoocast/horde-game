@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  CANON_SEED_COMPATIBILITY,
   CANON_SEED_DECKS,
   CANON_SEED_ENTROPY_ALPHABET,
   CANON_SEED_ENTROPY_LENGTH,
@@ -44,6 +45,7 @@ test("Canon Seed round-trips the agreed HF1 example", () => {
     difficulty: "normal",
     preparationTurns: 3,
     gameMode: "standard",
+    deterministicRevision: CANON_SEED_COMPATIBILITY.HF1.deterministicRevision,
     contentRevision: contentCatalog.revision,
     rulesetVersion: 1,
   });
@@ -133,6 +135,53 @@ test("difficulty changes rules but not the deck order encoded by the same entrop
   assert.equal(orders[0].randomState, orders[1].randomState);
   assert.equal(orders[1].randomState, orders[2].randomState);
   assert.deepEqual(orders.map(({ setupTurns }) => setupTurns), [4, 3, 2]);
+});
+
+test("HF1-ELA-GRV-LE2-GPT has a manually fixed deterministic golden state", () => {
+  const identity = decodeCanonSeed("HF1-ELA-GRV-LE2-GPT");
+  const game = createInitialGame(
+    getPlayerDeck(identity.playerDeckKey),
+    getHostDeck(identity.hostDeckKey),
+    identity.entropy,
+    identity.preparationTurns,
+    identity.difficulty,
+    identity.gameMode,
+  );
+
+  assert.deepEqual(
+    [...game.player.hand, ...game.player.archive].map((card) => card.definitionId),
+    [
+      "kaelor_stormcaller", "echo_of_the_forgotten_city", "clash_of_echoes", "aelyra_heir_of_elarion",
+      "river_of_elarion", "the_judgment_of_elarion", "hydra_of_the_black_bough",
+      "aelyra_heir_of_elarion", "maela_watcher_of_the_heights", "elixir_of_the_first_leaf",
+      "liora_keeper_of_the_grove", "river_of_elarion", "veiled_dawn_flower", "aelyra_heir_of_elarion",
+      "hydra_of_the_black_bough", "clash_of_echoes", "river_of_elarion", "kaelor_stormcaller",
+      "veiled_dawn_flower", "liora_keeper_of_the_grove", "shield_of_the_heir",
+      "maela_watcher_of_the_heights", "elixir_of_the_first_leaf", "river_of_elarion",
+      "vaelor_emerald_guardian", "river_of_elarion", "kaelor_stormcaller", "river_of_elarion",
+      "river_of_elarion", "echo_of_the_forgotten_city", "the_judgment_of_elarion",
+      "river_of_elarion", "river_of_elarion",
+    ],
+  );
+  assert.deepEqual(
+    game.host.archive.map((card) => card.definitionId),
+    [
+      "ossuary_rider", "harvester_of_the_fallen", "graveless_soldier", "graveless_soldier",
+      "mastiff_of_the_overflowing_ossuary", "graveless_soldier", "graveless_titan", "graveless_soldier",
+      "graveless_soldier", "nerezh_graveless_matriarch", "devourer_of_the_last_memory",
+      "graveless_soldier", "graveless_titan", "barrow_wallbreaker", "mastiff_of_the_overflowing_ossuary",
+      "graveless_soldier", "tribute_of_the_four_sorrows", "the_broken_headstone", "graveless_titan",
+      "the_broken_headstone", "graveless_soldier", "graveless_soldier", "devourer_of_the_last_memory",
+      "memory_thief", "stitched_wing_spawn", "memory_thief", "tribute_of_the_four_sorrows",
+      "winged_stalker_of_the_crypt", "return_to_memory", "graveless_soldier", "graveless_soldier",
+      "graveless_soldier", "spore_infested", "graveless_titan", "graveless_soldier", "graveless_soldier",
+      "graveless_soldier", "graveless_soldier", "winged_stalker_of_the_crypt", "return_to_memory",
+      "graveless_soldier", "hound_of_seven_memories", "nerezh_graveless_matriarch", "graveless_soldier",
+      "harvester_of_the_fallen", "inexhaustible_ossuary", "graveless_soldier", "graveless_soldier",
+      "spore_infested", "graveless_soldier",
+    ],
+  );
+  assert.equal(game.currentRandomState, 1982697425);
 });
 
 test("the shared fast order matches createInitialGame in every builtin matchup", () => {

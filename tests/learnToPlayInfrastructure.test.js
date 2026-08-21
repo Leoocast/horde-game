@@ -512,7 +512,7 @@ test("authored Host-turn policies are scoped and reject invalid reveal plans", (
   assert.throws(() => gate.plan({}), /Invalid authored Host reveal count/u);
 });
 
-test("App exposes both launchers, disables Continue, and hands the journey to a random normal future", async () => {
+test("App exposes both launchers, disables Continue, and hands the journey to its approved first Canon future", async () => {
   const [app, menu, board, intro] = await Promise.all([
     readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8"),
@@ -529,10 +529,10 @@ test("App exposes both launchers, disables Continue, and hands the journey to a 
   assert.match(app, /continueDisabled/u);
   assert.match(app, /if \(!productResumeRuntime\.enabled \|\| !boardSessionPolicy\.autosave \|\| screen !== "game"\) return;/u);
   assert.match(app, /guidedProgressStore\.markJourneyCompleted\(LEARN_TO_PLAY_JOURNEY\.id, LEARN_TO_PLAY_JOURNEY\.revision\)/u);
-  assert.match(app, /generateRandomFutureSeed\(\)[\s\S]*?DEFAULT_PLAYER_DECK_ID[\s\S]*?DEFAULT_HOST_DECK_ID[\s\S]*?"normal"[\s\S]*?"standard"/u);
-  assert.match(app, /beginDestinyTransition\("contemplate", "learn-to-play-random"\)/u);
-  assert.match(app, /transition\.destination === "learn-to-play-random"/u);
-  assert.match(app, /screen === "journey"[\s\S]*?continueLearnToPlayIntoRandomFuture/u);
+  assert.match(app, /createLearnToPlayFirstMatchOrigin\(\)/u);
+  assert.match(app, /beginDestinyTransition\("contemplate", "learn-to-play-first-seed"\)/u);
+  assert.match(app, /transition\.destination === "learn-to-play-first-seed"/u);
+  assert.match(app, /screen === "journey"[\s\S]*?continueLearnToPlayIntoFirstCanonFuture/u);
   assert.match(menu, /howToPlayEntries\.map/u);
   assert.match(menu, /disabled=\{continueDisabled \|\| !onContinue\}/u);
   assert.match(board, /sessionPolicy\.showStandardOutcome && defeatReady/u);

@@ -1,9 +1,9 @@
 # Aprender a jugar — diseño vivo del onboarding
 
-Estado: **diseño de contenido abierto; primer corte fijado hasta la derrota predeterminada y un
-handoff provisional desde “Contemplar otro futuro” hacia una partida normal aleatoria**.
+Estado: **diseño de contenido abierto; primer corte fijado hasta la derrota predeterminada y
+handoff desde “Contemplar otro futuro” hacia la Primera Canon Seed aprobada**.
 
-Última actualización: **2026-08-20**.
+Última actualización: **2026-08-21**.
 
 ## Propósito del documento
 
@@ -60,10 +60,9 @@ de implementación.
 - Tres Soldados reales dentro del Archivo protegen al Titán terminal de los tres descartes opcionales
   máximos. Choque de Ecos conserva su ventana legal después de ver la fuerza terminal, y la posición
   del Titán puede variar como consecuencia de los descartes anteriores.
-- El CTA único de salida se llama **Contemplar otro futuro**. Activarlo completa el tutorial y, en
-  el corte provisional actual, inicia una partida normal con seed aleatoria de **El Pacto de
-  Elarion** contra **El Alzamiento de los Sinsepulcro**. La seed preparada, el vórtice, el mulligan
-  authored y el contrato final de handoff se resolverán después.
+- El CTA único de salida se llama **Contemplar otro futuro**. Activarlo completa el tutorial y,
+  mediante el vórtice, inicia la Canon Seed aprobada `HF1-ELA-GRV-082-QC5`: **El Pacto de Elarion**
+  contra **El Alzamiento de los Sinsepulcro**, dificultad Normal y tres turnos de Preparación.
 - En esa partida real y en las siguientes, las ayudas pendientes serán contextuales. Cada concepto
   conserva si ya fue mostrado; la preferencia global decide si los conceptos vistos pueden
   repetirse, pero los no vistos siempre conservan su primera aparición.
@@ -71,8 +70,7 @@ de implementación.
   ocultarlo y apagar resume mediante la capability descrita en el plan de historial de Semillas,
   conservando su implementación para Early Access.
 - El primer corte de implementación termina cuando **Contemplar otro futuro** registra la
-  finalización y carga esa partida normal aleatoria. Todavía no incluye el vórtice ni la seed real
-  preparada.
+  finalización, ejecuta el vórtice y carga `HF1-ELA-GRV-082-QC5` como partida normal.
 - La introducción cinematográfica, las voces y las líneas narrativas finales quedan fuera de la
   implementación actual. El documento sólo conserva su intención y copy provisional.
 
@@ -550,15 +548,14 @@ Este desenlace no reiniciará la misma seed condenada: conducirá a un Futuro di
 reutiliza la escena visual de derrota, pero ofrece un único CTA narrativo sin la elección normal
 entre Reescribir y Contemplar. Su nombre visible confirmado es **Contemplar otro futuro**.
 
-El primer corte termina al presentar ese botón. Su activación, el vórtice, el commit persistente y la
-carga directa de una partida real se implementarán en otra fase. La intención de diseño se mantiene:
-el clic será el acto que completa **Aprender a jugar**, pero la durabilidad exacta si la aplicación se
-cierra durante la transición queda pendiente hasta preparar el release.
+El clic es el acto que completa **Aprender a jugar**. Su activación ejecuta el vórtice y carga la
+Primera Canon Seed aprobada; la durabilidad exacta si la aplicación se cierra durante la transición
+queda pendiente hasta preparar el release.
 
 ### Buena Mano y mulligan: fuera del primer corte
 
-La seed real deberá ser favorable y determinista, pero su diseño se aplaza hasta trabajar la partida
-posterior. Entonces deberá resolverse explícitamente:
+La seed favorable y determinista ya está fijada como `HF1-ELA-GRV-082-QC5`. Todavía debe resolverse
+explícitamente sobre esa misma seed:
 
 - la decisión anterior pedía un mulligan obligatorio para explicar que la Mano del futuro perdido
   contribuyó a la derrota;
@@ -636,8 +633,8 @@ Esta lista describe información semántica necesaria, no nombres de APIs defini
 - presentación normal de derrota asentada;
 - CTA **Contemplar otro futuro** presentado.
 
-La activación del CTA, el commit de recorrido/conceptos, el vórtice y el nuevo `GameState` real son
-observables de una fase posterior.
+La activación del CTA, el commit de recorrido/conceptos, el vórtice y el nuevo `GameState` real ya
+forman parte del handoff. La recuperación ante un cierre durante la transición permanece pendiente.
 
 El análisis futuro deberá distinguir qué observables ya existen como intents, receipts, eventos o
 estado estable y cuáles requieren una señal nueva. No debe deducir progreso leyendo strings del log,
@@ -662,8 +659,9 @@ texto visible, tiempos de animación o nombres de cartas.
   cualquier rama alcanzable.
 - Representación narrativa y técnica de la Invocación terminal para no confundirla con el límite
   ordinario de revelados de la Oleada.
-- Integración de la derrota normal y el CTA único **Contemplar otro futuro**. La carga directa de una
-  partida real preparada pertenece a una fase posterior.
+- Integración de la derrota normal, el CTA único **Contemplar otro futuro** y la carga directa de
+  `HF1-ELA-GRV-082-QC5`. El mulligan authored y la recuperación ante cierres pertenecen a trabajo
+  posterior.
 - Separación de progreso entre el prólogo, el tutorial específico **Preparación** y las
   ayudas contextuales que continúan en partidas normales.
 
@@ -678,12 +676,11 @@ escenas aisladas a código fuera de la fase aprobada.
    otro futuro».
 3. Certificación automatizada de 31 como Vida inicial y cantidad máxima de Soldados necesaria en
    todas las ramas.
-4. Si la seed real muestra primero una Mano mala y el mulligan entrega la buena, o si comienza ya
+4. Si la Canon Seed aprobada muestra primero una Mano mala y el mulligan entrega la buena, o si comienza ya
    con la buena Mano y elimina el mulligan obligatorio.
-5. Seed, dificultad y cantidad de turnos de Preparación de la partida real.
-6. Comportamiento de primera apertura y alcance sobre perfiles existentes.
-7. Persistencia exacta si la aplicación se cierra durante el vórtice.
-8. Lore previo del Cronista.
+5. Comportamiento de primera apertura y alcance sobre perfiles existentes.
+6. Persistencia exacta si la aplicación se cierra durante el vórtice.
+7. Lore previo del Cronista.
 
 La llegada terminal no está abierta: todas las cartas se presentan una por una con el revelado
 normal y sin agrupación visual. Esto no cambia que el evento terminal sea authored y pueda superar

@@ -1,5 +1,6 @@
 import { Copy, Orbit, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { matchOriginCanonCode, matchOriginVisualSeed, type MatchOrigin } from "../content/MatchOrigin";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useTranslation } from "../i18n/useTranslation";
 import { writeClipboardText } from "../platform/desktopBridge";
@@ -9,7 +10,7 @@ import { DestinyActionButton } from "./DestinyActionButton";
 import { GameTooltip } from "./GameTooltip";
 
 type Props = {
-  seed: string;
+  origin: MatchOrigin;
   onRewrite: () => void;
   onContemplateAnother: () => void;
   initiallyOpen?: boolean;
@@ -17,7 +18,7 @@ type Props = {
   onDismiss?: () => void;
 };
 
-export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother, initiallyOpen = false, hideLauncher = false, onDismiss }: Props) {
+export function DestinyRewriteControl({ origin, onRewrite, onContemplateAnother, initiallyOpen = false, hideLauncher = false, onDismiss }: Props) {
   const t = useTranslation();
   const pushToast = useToastStore((state) => state.pushToast);
   const [open, setOpenState] = useState(initiallyOpen);
@@ -27,7 +28,8 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother, i
   const restoreFocusRef = useRef(true);
   const dialogWasMountedRef = useRef(false);
   const modalPresence = useAnimatedPresence(open, 480);
-  const futureCode = futureCodeFromSeed(seed);
+  const canonCode = matchOriginCanonCode(origin);
+  const futureCode = futureCodeFromSeed(matchOriginVisualSeed(origin));
 
   function setOpen(next: boolean) {
     setOpenState(next);
@@ -99,8 +101,9 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother, i
   }, [modalPresence.closing, modalPresence.mounted]);
 
   async function copyIdentity() {
+    if (!canonCode) return;
     try {
-      await writeClipboardText(seed);
+      await writeClipboardText(canonCode);
       pushToast({
         title: t("destiny.identityCopied"),
         message: t("destiny.future", { code: futureCode }),
@@ -158,7 +161,7 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother, i
           }}
         >
           <div className="destiny-dialog-controls">
-            <GameTooltip content={t("destiny.copyIdentity")} side="bottom">
+            {canonCode && <GameTooltip content={t("destiny.copyIdentity")} side="bottom">
               <button
                 className="destiny-dialog-copy"
                 type="button"
@@ -167,7 +170,7 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother, i
               >
                 <Copy size={16} />
               </button>
-            </GameTooltip>
+            </GameTooltip>}
             <button className="destiny-dialog-close" type="button" onClick={() => setOpen(false)} aria-label={t("common.close")}>
               <X size={18} />
             </button>

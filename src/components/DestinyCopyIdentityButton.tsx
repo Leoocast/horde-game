@@ -5,14 +5,14 @@ import { useToastStore } from "../store/useToastStore";
 import { futureCodeFromSeed } from "../utils/futureIdentity";
 import { GameTooltip } from "./GameTooltip";
 
-export function DestinyCopyIdentityButton({ seed }: Readonly<{ seed: string }>) {
+export function DestinyCopyIdentityButton({ canonCode }: Readonly<{ canonCode: string }>) {
   const t = useTranslation();
   const pushToast = useToastStore((state) => state.pushToast);
-  const futureCode = futureCodeFromSeed(seed);
+  const futureCode = futureCodeFromSeed(canonCode);
 
   async function copyIdentity() {
     try {
-      await writeClipboardText(seed);
+      await writeClipboardText(canonCode);
       pushToast({
         title: t("destiny.identityCopied"),
         message: t("destiny.future", { code: futureCode }),

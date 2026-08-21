@@ -545,14 +545,16 @@ seeds técnicas `developer`, `devlost` y `devwin` permanecen fuera de Canon y co
 Un cambio incompatible de códigos, contenido o reglas deterministas exige otro prefijo, no puede
 reinterpretar silenciosamente una Canon Seed `HF1` publicada.
 
-La decisión de demo, pendiente de implementación en la Fase 2.5 de
-`docs/plans/seeds_of_destiny_history_implementation_plan.md`, es conectar ese codec al producto:
-partidas standard autogeneradas crean HF1, el engine recibe sólo su entropía, todas las superficies
-de **Copiar identidad** copian el `canonCode`, y Preparación ofrece un importador Canon explícito que
-aplica decks, dificultad y Preparación codificados. El campo libre conserva semántica opaca y nunca
-infiere Canon sólo por el patrón del texto; esas sesiones ocultan **Copiar identidad** y sólo
-Developer Mode puede exponer **Copiar seed interna**. Una HF1 válida es **Canon**; sólo un catálogo
-bundled puede otorgarle el sello **Oficial**.
+La Fase 2.5 de `docs/plans/seeds_of_destiny_history_implementation_plan.md` ya conectó el codec al
+producto. `src/content/MatchOrigin.ts` conserva fuera de `GameState` la identidad, configuración y
+revisiones deterministas de cada origen. Las partidas standard autogeneradas crean HF1 y el engine
+recibe sólo su entropía; Preparación puede importar una Canon Seed y aplica decks, dificultad y
+Preparación antes de jugar. **Copiar identidad** escribe siempre `canonCode`, y `Futuro NNN·NNN` y
+su firma visual también parten de ese código. El campo libre conserva semántica opaca aunque su
+texto parezca HF1: no muestra controles públicos de copia. Sólo Developer Mode expone **Copiar seed
+interna**. `CANON_SEED_COMPATIBILITY` versiona HF1 sin depender de `contentCatalog.revision`, y los
+golden vectors fijan el orden de ambos mazos y `currentRandomState`. Una HF1 válida es **Canon**;
+sólo un catálogo bundled puede otorgarle el sello **Oficial**.
 
 El Seed Explorer interno tiene ya su núcleo puro en `src/playground/seedExplorer.ts` y
 `seedExplorerSearch.ts`. Enumera la entropía base 36 sin `Math.random`, proyecta Mano, un mulligan,
@@ -720,9 +722,8 @@ Soldados necesarios para que el ataque sea letal. Tres Soldados dentro del Archi
 terminal de los descartes opcionales; Choque conserva su ventana legal y la posición del Titán puede
 variar. Esa Invocación terminal no redefine la regla normal de Oleada y cada llegada se presenta una
 a una mediante el revelado normal, sin agrupación visual. El CTA único se llama **Contemplar otro
-futuro**. El corte provisional actual registra la finalización al activarlo y carga una partida
-normal aleatoria de Elarion contra los Sinsepulcro. El vórtice y la seed real preparada pertenecen
-a una fase posterior. La
+futuro**. Al activarlo registra la finalización, ejecuta el vórtice y carga la Primera Canon Seed
+aprobada `HF1-ELA-GRV-082-QC5`: Elarion contra los Sinsepulcro, Normal y Preparación 3. La
 relación exacta entre buena Mano y mulligan sigue abierta. Si no queda un atacante
 estabilizado, la enseñanza del ataque no bloquea el flujo, permanece como no vista y reaparece en
 una partida posterior. La preferencia global de no repetir ayudas sólo suprime conceptos ya
@@ -792,13 +793,11 @@ El cierre terminal calcula desde el tablero vivo el mínimo de llegadas que vuel
 derrota, verifica la mejor defensa con el resolutor real y presenta cada carta mediante su llegada
 normal, una a una. La Vida llega a 0 por el combate real; `learn-to-play` reutiliza el quiebre de
 derrota y muestra sólo **Contemplar otro futuro** con copy narrativo propio. Tras aceptar la
-narración, el botón registra el recorrido como completado y abre provisionalmente una partida
-normal con seed aleatoria; ejecutar el vórtice y cargar la partida preparada pertenecen a la Fase
-6B aplazada. En el código actual **Continuar** está deshabilitado globalmente; la política aprobada
+narración, el botón registra el recorrido como completado, ejecuta el vórtice y abre
+`HF1-ELA-GRV-082-QC5` como partida normal. La Fase 6B aplazada conserva únicamente el mulligan final,
+el gate de primera apertura y la durabilidad durante la transición. En el código actual **Continuar** está deshabilitado globalmente; la política aprobada
 para la demo es ocultarlo sin retirar su implementación de Early Access. Para una fase posterior
-siguen pendientes
-la Mano/mulligan, seed, dificultad y
-Preparación de la partida real; el comportamiento de primera apertura y perfiles existentes; y la
+siguen pendientes la Mano/mulligan sobre esa misma Canon Seed, el comportamiento de primera apertura y perfiles existentes; y la
 persistencia exacta si la aplicación se cierra durante el vórtice.
 
 La Fase 0 quedó cerrada el 2026-08-11. La Primera Semilla obligatoria será canónica y usará **El

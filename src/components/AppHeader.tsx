@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { MatchOrigin } from "../content/MatchOrigin";
 import { DestinyCopyIdentityButton } from "./DestinyCopyIdentityButton";
 import { DestinyRewriteControl } from "./DestinyRewriteControl";
 import { MusicPlayerMenu } from "./MusicPlayerMenu";
@@ -11,7 +12,7 @@ type Props = {
   onRestartTutorial?: () => void;
   onRewriteFuture?: () => void;
   onContemplateFuture?: () => void;
-  futureSeed?: string;
+  matchOrigin?: MatchOrigin;
   sessionKind?: "normal" | "tutorial" | "journey";
   settingsRestricted?: boolean;
   setupTurns?: number;
@@ -20,9 +21,9 @@ type Props = {
   elevated?: boolean;
 };
 
-export function AppHeader({ left, showSettings = true, onReturnToMenu, onRestartTutorial, onRewriteFuture, onContemplateFuture, futureSeed, sessionKind = "normal", settingsRestricted, setupTurns, elevated = false }: Props) {
+export function AppHeader({ left, showSettings = true, onReturnToMenu, onRestartTutorial, onRewriteFuture, onContemplateFuture, matchOrigin, sessionKind = "normal", settingsRestricted, setupTurns, elevated = false }: Props) {
   const showDestinyControl = sessionKind === "normal"
-    && Boolean(futureSeed)
+    && Boolean(matchOrigin)
     && Boolean(onRewriteFuture)
     && Boolean(onContemplateFuture);
 
@@ -33,11 +34,11 @@ export function AppHeader({ left, showSettings = true, onReturnToMenu, onRestart
         {showDestinyControl && (
           <>
             <DestinyRewriteControl
-              seed={futureSeed!}
+              origin={matchOrigin!}
               onRewrite={onRewriteFuture!}
               onContemplateAnother={onContemplateFuture!}
             />
-            <DestinyCopyIdentityButton seed={futureSeed!} />
+            {matchOrigin!.seedKind === "canon" && <DestinyCopyIdentityButton canonCode={matchOrigin!.canonCode} />}
           </>
         )}
         <MusicPlayerMenu />
