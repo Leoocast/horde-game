@@ -5,6 +5,7 @@ import { useTranslation } from "../i18n/useTranslation";
 import { writeClipboardText } from "../platform/desktopBridge";
 import { useToastStore } from "../store/useToastStore";
 import { futureCodeFromSeed } from "../utils/futureIdentity";
+import { DestinyActionButton } from "./DestinyActionButton";
 
 type Props = {
   seed: string;
@@ -149,6 +150,10 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother, i
               <div>
                 <div className="destiny-dialog-kicker">{t("destiny.future", { code: futureCode })}</div>
                 <h2 id="destiny-dialog-title">{t("destiny.dialogTitle")}</h2>
+                <button className="destiny-dialog-copy" type="button" onClick={copyIdentity}>
+                  <Copy size={14} />
+                  <span>{t("destiny.copyIdentity")}</span>
+                </button>
               </div>
               <button className="destiny-dialog-close" type="button" onClick={() => setOpen(false)} aria-label={t("common.close")}>
                 <X size={18} />
@@ -157,18 +162,17 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother, i
             <p id="destiny-dialog-description">{t("destiny.dialogBody")}</p>
 
             <div className="destiny-dialog-actions">
-              <button ref={primaryActionRef} className="game-dialog-action game-dialog-action-primary destiny-dialog-primary" type="button" onClick={() => choose(onRewrite)} autoFocus>
-                <span>{t("destiny.rewriteThis")}</span>
-              </button>
               <button className="game-dialog-action destiny-dialog-secondary" type="button" onClick={() => choose(onContemplateAnother)}>
                 <span>{t("destiny.contemplateAnother")}</span>
               </button>
+              <DestinyActionButton
+                ref={primaryActionRef}
+                className="destiny-dialog-primary"
+                label={t("destiny.rewriteThis")}
+                onClick={() => choose(onRewrite)}
+                autoFocus
+              />
             </div>
-
-            <button className="destiny-dialog-copy" type="button" onClick={copyIdentity}>
-              <Copy size={14} />
-              <span>{t("destiny.copyIdentity")}</span>
-            </button>
           </section>
         </div>
       )}

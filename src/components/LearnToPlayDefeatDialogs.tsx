@@ -1,4 +1,5 @@
 import { useTranslation } from "../i18n/useTranslation";
+import { DestinyActionButton } from "./DestinyActionButton";
 
 export function LearnToPlayDefeatOutcomeDialog({ narrativeOpen, narrativeAcknowledged, onContemplateFuture }: {
   narrativeOpen: boolean;
@@ -27,17 +28,11 @@ export function LearnToPlayDefeatOutcomeDialog({ narrativeOpen, narrativeAcknowl
 
         {narrativeAcknowledged && (
           <div className="defeat-outcome-actions is-single-action learn-to-play-defeat-cta">
-            <button
-              type="button"
-              className="destiny-command-button learn-to-play-contemplate-button"
+            <DestinyActionButton
+              label={t("guided.learnToPlay.defeatCta")}
               onClick={onContemplateFuture}
               aria-describedby="learn-to-play-defeat-description"
-            >
-              <span className="destiny-command-copy">
-                <strong>{t("guided.learnToPlay.defeatCta")}</strong>
-              </span>
-              <span className="destiny-command-shimmer" aria-hidden="true" />
-            </button>
+            />
           </div>
         )}
       </div>

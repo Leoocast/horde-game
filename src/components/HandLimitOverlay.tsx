@@ -45,52 +45,52 @@ export function HandLimitModal({ game, selectedId, onClearSelection, onConfirm }
   return (
     <>
       <motion.div className="hand-limit-backdrop fixed inset-0 z-[101]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
-      <div className="fixed left-1/2 top-1/2 z-[118] w-[min(500px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2">
-          <motion.section
-            className="hand-limit-panel hf-ui-panel w-full text-[#eadfbd]"
-            initial={{ opacity: 0, y: 24, scale: 0.94 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 18, scale: 0.96 }}
-            transition={{ type: "spring", stiffness: 430, damping: 32 }}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="hand-limit-title"
-          >
-            <span className="hand-limit-mark" aria-hidden="true" />
-            <header className="hand-limit-heading">
-              <h2 id="hand-limit-title" className="hf-ui-title">{t("hand.discardToSeven")}</h2>
-              <p>{t(overflow === 1 ? "hand.chooseBeforeEnd" : "hand.chooseMultipleBeforeEnd", { count: overflow })}</p>
-            </header>
-            <div className="hand-limit-actions">
-              <button
-                ref={(element) => guidedAnchorRegistry.set(
-                  guidedSurfaceAnchorKey("selection.cancelAction"),
-                  "hand-limit:cancel",
-                  element,
-                )}
-                className="game-dialog-action hand-limit-selection-action"
-                type="button"
-                disabled={!selectedId}
-                onClick={onClearSelection}
-              >
-                {selected ? localizedCardName(selected, language) : t("hand.chooseCard")}
-              </button>
-              <button
-                ref={(element) => guidedAnchorRegistry.set(
-                  guidedSurfaceAnchorKey("selection.primaryAction"),
-                  "hand-limit:confirm",
-                  element,
-                )}
-                className="game-dialog-action game-dialog-action-primary hand-limit-confirm-action"
-                type="button"
-                disabled={!selectedId}
-                onClick={onConfirm}
-                title={t("hand.discardSelected")}
-              >
-                <Check size={20} /> {t("hand.discard")}
-              </button>
-            </div>
-          </motion.section>
+      <div className="hand-limit-layer pointer-events-none fixed inset-0 z-[118] grid place-items-center">
+        <motion.section
+          className="hand-limit-panel pointer-events-auto hf-ui-panel w-[min(500px,calc(100vw-32px))] text-[#eadfbd]"
+          initial={{ opacity: 0, y: 24, scale: 0.94 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 18, scale: 0.96 }}
+          transition={{ type: "spring", stiffness: 430, damping: 32 }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="hand-limit-title"
+        >
+          <span className="hand-limit-mark" aria-hidden="true" />
+          <header className="hand-limit-heading">
+            <h2 id="hand-limit-title" className="hf-ui-title">{t("hand.discardToSeven")}</h2>
+            <p>{t(overflow === 1 ? "hand.chooseBeforeEnd" : "hand.chooseMultipleBeforeEnd", { count: overflow })}</p>
+          </header>
+          <div className="hand-limit-actions">
+            <button
+              ref={(element) => guidedAnchorRegistry.set(
+                guidedSurfaceAnchorKey("selection.cancelAction"),
+                "hand-limit:cancel",
+                element,
+              )}
+              className="counter-target-button counter-target-cancel hand-limit-selection-action"
+              type="button"
+              disabled={!selectedId}
+              onClick={onClearSelection}
+            >
+              {selected ? localizedCardName(selected, language) : t("hand.chooseCard")}
+            </button>
+            <button
+              ref={(element) => guidedAnchorRegistry.set(
+                guidedSurfaceAnchorKey("selection.primaryAction"),
+                "hand-limit:confirm",
+                element,
+              )}
+              className="counter-target-button counter-target-confirm hand-limit-confirm-action"
+              type="button"
+              disabled={!selectedId}
+              onClick={onConfirm}
+              title={t("hand.discardSelected")}
+            >
+              <Check size={20} /> {t("hand.discard")}
+            </button>
+          </div>
+        </motion.section>
       </div>
     </>
   );

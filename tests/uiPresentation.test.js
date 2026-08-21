@@ -1194,6 +1194,7 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   const glassShader = readFileSync(new URL("../src/components/defeatGlassShader.ts", import.meta.url), "utf8");
   const modal = readFileSync(new URL("../src/components/DefeatModal.tsx", import.meta.url), "utf8");
   const outcomeDialog = readFileSync(new URL("../src/components/GameOutcomeDialog.tsx", import.meta.url), "utf8");
+  const destinyAction = readFileSync(new URL("../src/components/DestinyActionButton.tsx", import.meta.url), "utf8");
   const journeyModal = readFileSync(new URL("../src/components/LearnToPlayDefeatModal.tsx", import.meta.url), "utf8");
   const journeyDialogs = readFileSync(new URL("../src/components/LearnToPlayDefeatDialogs.tsx", import.meta.url), "utf8");
   const board = readFileSync(new URL("../src/components/Board.tsx", import.meta.url), "utf8");
@@ -1271,8 +1272,8 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   // El desenlace se centra con una capa a pantalla completa: la succión del vórtice anima
   // `transform` sobre cada pieza y borraría un `translate` propio del bloque.
   assert.match(styles, /\.defeat-outcome \{\s*position: absolute;[\s\S]*?place-items: center;/u);
-  assert.match(styles, /\.defeat-outcome-inner \{[\s\S]*?justify-self: center;[\s\S]*?margin-inline: auto;/u);
-  assert.match(styles, /\.defeat-title \{[^}]*translate: 0\.0325em 0;/su);
+  assert.match(styles, /\.defeat-outcome-inner \{[\s\S]*?place-self: center;[\s\S]*?margin-inline: auto;/u);
+  assert.doesNotMatch(styles, /\.defeat-title \{[^}]*translate:/su);
   assert.match(styles, /@keyframes defeat-outcome-in \{\s*from \{ opacity: 0; transform: translateY\(10px\); \}/u);
   assert.match(styles, /\.defeat-title \.line \{[^}]*padding-left: 0\.065em;/su);
   assert.match(modal, /<GameOutcomeDialog/u);
@@ -1295,7 +1296,8 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(journeyDialogs, /guided\.continue/u);
   assert.match(journeyDialogs, /guided\.learnToPlay\.defeatCta/u);
   assert.match(journeyModal, /onContemplateFuture/u);
-  assert.match(journeyDialogs, /destiny-command-button learn-to-play-contemplate-button/u);
+  assert.match(journeyDialogs, /<DestinyActionButton/u);
+  assert.match(destinyAction, /"destiny-command-button", "learn-to-play-contemplate-button"/u);
   assert.doesNotMatch(journeyDialogs, /disabled/u);
   assert.doesNotMatch(`${journeyModal}\n${journeyDialogs}`, /onRewriteFuture|defeat-future-plate|destiny-command-glyph/u);
   assert.match(styles, /\.learn-to-play-contemplate-button::before \{[\s\S]*?width: 180%;[\s\S]*?aspect-ratio: 1;/u);
@@ -1374,7 +1376,8 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(defeatFutureLabel, /font: 800 14px\/1\.2 "Cinzel"/u);
   assert.match(defeatFutureCode, /font: 800 clamp\(23px, 2\.8vw, 33px\)\/1\.2 "Cinzel"/u);
   assert.match(styles, /grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/u);
-  assert.match(styles, /\.game-result-defeat \.game-result-action \{[\s\S]*?font-size: clamp\(8px, 2\.1vw, 13px\);[\s\S]*?white-space: nowrap;/u);
+  assert.match(styles, /\.defeat-outcome-inner \{[\s\S]*?place-self: center;/u);
+  assert.match(styles, /\.game-outcome-action \{[\s\S]*?width: 100%;[\s\S]*?margin: 0;[\s\S]*?white-space: nowrap;/u);
   const contemplateHandlerAt = outcomeDialog.indexOf("onClick={onContemplateFuture}");
   const contemplateButton = outcomeDialog.slice(
     outcomeDialog.lastIndexOf("<button", contemplateHandlerAt),
@@ -1382,6 +1385,10 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   );
   assert.ok(contemplateHandlerAt >= 0);
   assert.doesNotMatch(contemplateButton, /<(?:svg|[A-Z][A-Za-z0-9]*)\b/u);
+  assert.match(outcomeDialog, /<DestinyActionButton[\s\S]*?className="game-outcome-rewrite-action"[\s\S]*?onClick=\{onRewriteFuture\}/u);
+  assert.match(destinyAction, /"destiny-command-button", "learn-to-play-contemplate-button"/u);
+  assert.match(destinyAction, /destiny-command-copy[\s\S]*?<strong>\{label\}<\/strong>[\s\S]*?destiny-command-shimmer/u);
+  assert.match(journeyDialogs, /<DestinyActionButton[\s\S]*?guided\.learnToPlay\.defeatCta/u);
   assert.doesNotMatch(outcomeDialog, /Sparkles/u);
   assert.doesNotMatch(styles, /@media \(max-width: 520px\) \{[\s\S]*?\.defeat-outcome-actions \{ grid-template-columns: 1fr; \}/u);
   const vortexVeil = styles.match(/\.destiny-vortex-veil \{[\s\S]*?\n\}/u)?.[0] ?? "";
@@ -1488,6 +1495,7 @@ test("UI Reference inventories only real player UI and traces every component to
   const modalGallerySource = readFileSync(new URL("../src/ui-reference/RuntimeModalGallery.tsx", import.meta.url), "utf8");
   const confirmationSource = readFileSync(new URL("../src/components/GameConfirmationDialog.tsx", import.meta.url), "utf8");
   const destinyDialogSource = readFileSync(new URL("../src/components/DestinyRewriteControl.tsx", import.meta.url), "utf8");
+  const destinyActionSource = readFileSync(new URL("../src/components/DestinyActionButton.tsx", import.meta.url), "utf8");
   const handLimitSource = readFileSync(new URL("../src/components/HandLimitOverlay.tsx", import.meta.url), "utf8");
   const learnIntroSource = readFileSync(new URL("../src/components/LearnToPlayIntroModal.tsx", import.meta.url), "utf8");
   const guidedOverlaySource = readFileSync(new URL("../src/components/GuidedTutorialOverlay.tsx", import.meta.url), "utf8");
@@ -1527,10 +1535,14 @@ test("UI Reference inventories only real player UI and traces every component to
   assert.match(guidedDialogSource, /guided-tutorial-callout-mark/u);
   assert.doesNotMatch(confirmationSource, /game-dialog-icon|game-dialog-kicker|kicker:/u);
   assert.match(destinyDialogSource, /destiny-dialog-heading[\s\S]*?destiny-dialog-actions/u);
-  assert.match(destinyDialogSource, /game-dialog-action game-dialog-action-primary destiny-dialog-primary/u);
+  assert.match(destinyDialogSource, /<h2 id="destiny-dialog-title">[\s\S]*?destiny-dialog-copy/u);
+  assert.match(destinyDialogSource, /destiny-dialog-secondary[\s\S]*?<DestinyActionButton[\s\S]*?className="destiny-dialog-primary"/u);
+  assert.match(destinyActionSource, /"destiny-command-button", "learn-to-play-contemplate-button"/u);
   assert.doesNotMatch(destinyDialogSource, /destiny-dialog-sigil|destiny-dialog-divider/u);
   assert.match(handLimitSource, /hand-limit-mark[\s\S]*?hand-limit-heading[\s\S]*?hand-limit-actions/u);
-  assert.doesNotMatch(handLimitSource, /hand\.endPhaseCount|hand-limit-icon|counter-target-button/u);
+  assert.doesNotMatch(handLimitSource, /hand\.endPhaseCount|hand-limit-icon/u);
+  assert.match(handLimitSource, /counter-target-button counter-target-cancel[\s\S]*?counter-target-button counter-target-confirm/u);
+  assert.match(handLimitSource, /hand-limit-layer pointer-events-none[\s\S]*?hand-limit-panel pointer-events-auto/u);
   assert.match(learnIntroSource, /<GuidedTutorialDialog/u);
   assert.match(learnIntroSource, /learn-to-play-intro-progress/u);
   assert.doesNotMatch(learnIntroSource, /old-panel|old-title|game-home-dialog/u);
@@ -1544,7 +1556,10 @@ test("UI Reference inventories only real player UI and traces every component to
   assert.match(referenceStyles, /\.ui-reference-specimen-stage \{[\s\S]*?font-family: var\(--hf-ui-font-body\);/u);
   assert.doesNotMatch(referenceStyles, /(^|\n)(?:body|:root|\.game-screen|\.old-panel|\.hf-ui-panel)\s*\{/u);
   assert.match(gameStyles, /\.hand-limit-mark\s*\{[\s\S]*?transform: rotate\(45deg\);/u);
+  assert.match(gameStyles, /\.hand-limit-layer \{[\s\S]*?padding: 16px 16px clamp\(104px, 18vh, 184px\);/u);
   assert.match(gameStyles, /\.learn-to-play-intro-overlay\s*\{[\s\S]*?backdrop-filter: blur\(10px\)/u);
+  assert.match(gameStyles, /\.game-tooltip-top::after \{[\s\S]*?border-right: 1px solid[\s\S]*?border-bottom: 1px solid/u);
+  assert.match(gameStyles, /\.game-tooltip-bottom::after \{[\s\S]*?border-top: 1px solid[\s\S]*?border-left: 1px solid/u);
 
   const ids = UI_REFERENCE_CATALOG.map((entry) => entry.id);
   assert.equal(new Set(ids).size, ids.length);

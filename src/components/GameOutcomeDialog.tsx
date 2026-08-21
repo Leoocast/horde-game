@@ -1,9 +1,10 @@
-import { Copy, RefreshCcw } from "lucide-react";
+import { Copy } from "lucide-react";
 import type { GameState } from "../engine/GameTypes";
 import { useTranslation } from "../i18n/useTranslation";
 import { writeClipboardText } from "../platform/desktopBridge";
 import { useToastStore } from "../store/useToastStore";
 import { futureCodeFromSeed } from "../utils/futureIdentity";
+import { DestinyActionButton } from "./DestinyActionButton";
 
 export type GameOutcomeTone = "victory" | "defeat";
 
@@ -60,18 +61,16 @@ export function GameOutcomeDialog({ game, tone, onRewriteFuture, onContemplateFu
 
         <div className={`${tone}-outcome-actions`}>
           <button
-            className="game-result-action game-result-action-secondary flex h-12 w-full min-w-0 items-center justify-center"
+            className="hf-ui-button game-outcome-action game-outcome-action-secondary"
             onClick={onContemplateFuture}
           >
             <span>{t("destiny.contemplateAnother")}</span>
           </button>
-          <button
-            className="game-result-action game-result-action-primary flex h-12 w-full min-w-0 items-center justify-center gap-2"
+          <DestinyActionButton
+            className="game-outcome-rewrite-action"
+            label={t("destiny.rewriteThis")}
             onClick={onRewriteFuture}
-          >
-            <RefreshCcw size={18} aria-hidden="true" />
-            <span>{t("destiny.rewriteThis")}</span>
-          </button>
+          />
         </div>
       </div>
     </div>
