@@ -52,7 +52,10 @@ Estos documentos se conservan porque contienen decisiones o validaciones sin ter
 - [`plans/seed_explorer_implementation_plan.md`](plans/seed_explorer_implementation_plan.md) — MVP
   dev-only para buscar y clasificar seeds mediante análisis estático barato, shortlist verificado por
   el engine y playtest humano.
-- [`plans/seeds_of_destiny.md`](plans/seeds_of_destiny.md) — narrativa y persistencia futura.
+- [`plans/seeds_of_destiny.md`](plans/seeds_of_destiny.md) — identidad narrativa y biblioteca futura.
+- [`plans/seeds_of_destiny_history_implementation_plan.md`](plans/seeds_of_destiny_history_implementation_plan.md)
+  — auditoría y fases verificables para validar el relato, conectar Canon Seed al launcher, ocultar
+  resume en la demo e implementar el historial factual con reescritura exacta.
 - [`plans/game_modes.md`](plans/game_modes.md) — variantes futuras y compatibilidad de Chaos.
 - [`plans/webgl_context_budget.md`](plans/webgl_context_budget.md) — migración implementada con QA
   visual final todavía pendiente.

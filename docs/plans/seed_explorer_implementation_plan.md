@@ -182,8 +182,12 @@ Reglas del contrato:
 - `entropy` contiene los cinco caracteres que alimentan `hashSeed`;
 - se resuelven las claves calificadas de los decks, no sus nombres visibles;
 - `preparationTurns` sale únicamente de la tabla de dificultad V1;
-- `contentRevision` usa `contentCatalog.revision` para distinguir cambios de contenido;
-- `rulesetVersion` se incrementa cuando cambia una regla determinista que altera el futuro;
+- `contentRevision` registra como diagnóstico la revisión instalada al decodificar; no forma parte
+  de la clave Canon ni separa dos usos compatibles del mismo `canonCode`;
+- `rulesetVersion` describe el contrato de compatibilidad fijado por el prefijo HF1, no una variante
+  libre de esa misma Canon Seed;
+- `canonCode` normalizado es la clave Canon. Decks, dificultad, Preparación, modo y entropía deben
+  coincidir siempre con su decode; una incompatibilidad exige otro prefijo o rechazar el código;
 - `futureCodeFromSeed` es sólo identidad cosmética y nunca sustituye la seed real;
 - una trayectoria jugada requeriría además mulligan y decisiones; no forma parte de esta identidad.
 
@@ -602,3 +606,8 @@ Sólo después de usar el MVP y medir sus carencias se evaluaría:
 - una Future Explorer para jugadores sin spoilers.
 
 Ninguno de esos puntos es requisito para encontrar buenas candidatas de demo.
+
+Decisión posterior, 2026-08-21: generar/importar una Canon Seed en Preparación y hacer que las
+superficies player-facing copien `canonCode` quedó incorporado como precondición del historial en
+`seeds_of_destiny_history_implementation_plan.md`. Esa integración no reabre el alcance ya cerrado
+del Explorer ni incluye todavía el catálogo curado Oficial/Comunidad.

@@ -527,7 +527,9 @@ beats retenidos. No es el guion ni el copy de la Primera Semilla y no entra al b
 Las seeds normales se presentan dentro del mundo como **Semillas del Destino**: líneas temporales
 que el Cronista contempla, reescribe y finalmente preserva. Cada seed recibe una identidad
 cosmética determinista **Futuro `NNN·NNN`**; ese código compacto puede colisionar y nunca reemplaza
-la seed real. **Copiar identidad** copia la seed completa aunque la UI sólo muestre el Futuro.
+la identidad reproducible. En el runtime actual, **Copiar identidad** copia `game.seed` y el launcher
+normal genera strings `hostfall-...`; ese valor alimenta el RNG pero no incluye decks, dificultad ni
+Preparación, así que todavía no es una identidad pública autocontenida.
 
 Las **Canon Seeds** usan el contrato `HF1-PPP-HHH-XXD-XXX`. `PPP` y `HHH` son códigos estables de
 deck (`ELA`/`CEC` para Cronista y `GRV`/`VRK` para Hueste); los cinco caracteres repartidos alrededor
@@ -542,6 +544,15 @@ primero baraja la Crónica y después la Hueste. `createInitialGame` consume esa
 seeds técnicas `developer`, `devlost` y `devwin` permanecen fuera de Canon y conservan sus ramas.
 Un cambio incompatible de códigos, contenido o reglas deterministas exige otro prefijo, no puede
 reinterpretar silenciosamente una Canon Seed `HF1` publicada.
+
+La decisión de demo, pendiente de implementación en la Fase 2.5 de
+`docs/plans/seeds_of_destiny_history_implementation_plan.md`, es conectar ese codec al producto:
+partidas standard autogeneradas crean HF1, el engine recibe sólo su entropía, todas las superficies
+de **Copiar identidad** copian el `canonCode`, y Preparación ofrece un importador Canon explícito que
+aplica decks, dificultad y Preparación codificados. El campo libre conserva semántica opaca y nunca
+infiere Canon sólo por el patrón del texto; esas sesiones ocultan **Copiar identidad** y sólo
+Developer Mode puede exponer **Copiar seed interna**. Una HF1 válida es **Canon**; sólo un catálogo
+bundled puede otorgarle el sello **Oficial**.
 
 El Seed Explorer interno tiene ya su núcleo puro en `src/playground/seedExplorer.ts` y
 `seedExplorerSearch.ts`. Enumera la entropía base 36 sin `Math.random`, proyecta Mano, un mulligan,
@@ -635,9 +646,16 @@ rígido. Volver a animar
 `filter: blur()` o `saturate()` sobre la pantalla completa es una regresión de rendimiento, porque
 obliga a repintar todo el árbol en cada frame.
 
-El historial de intentos y la futura biblioteca de Semillas siguen bosquejados en
-`docs/plans/seeds_of_destiny.md`; no están implementados. El seed literal `developer` queda
-fuera de la identidad comunitaria, pero muestra el control de Futuro para que el mismo acceso de
+El historial de intentos y la futura biblioteca de Semillas no están implementados. Su identidad
+narrativa vive en `docs/plans/seeds_of_destiny.md` y la auditoría con el contrato técnico por fases
+en `docs/plans/seeds_of_destiny_history_implementation_plan.md`. La decisión de demo, todavía
+pendiente de implementación, es ocultar **Continuar** y apagar toda lectura/mutación de resume
+mediante una capability de producto, sin borrar su infraestructura para Early Access. Una partida
+cortada se registra como **Historia interrumpida**, nunca como derrota, y sólo puede reescribirse
+desde la seed,
+decks, dificultad, modo, Preparación y revisión determinista originales. El historial factual no
+depende de que el prototipo previo de relato del Cronista sea aprobado. El seed literal `developer`
+queda fuera del historial comunitario, pero muestra el control de Futuro para que el mismo acceso de
 reescritura pueda verificarse durante QA. Conserva además su reinicio técnico dentro de las opciones
 de desarrollo.
 
@@ -698,8 +716,9 @@ estabilizado, la enseñanza del ataque no bloquea el flujo, permanece como no vi
 una partida posterior. La preferencia global de no repetir ayudas sólo suprime conceptos ya
 mostrados: un concepto no visto conserva siempre su primera aparición. Está activa por defecto, se
 marca al cerrar/aceptar la ayuda y las repeticiones se limitan a una por concepto y partida.
-**Continuar** permanece deshabilitado globalmente por ahora. No traducir escenas aisladas a código
-fuera de las fases aprobadas.
+En el código actual **Continuar** permanece deshabilitado globalmente; el objetivo posterior de la
+demo es ocultarlo y apagar resume con la capability definida en el plan de historial de Semillas.
+No traducir escenas aisladas a código fuera de las fases aprobadas.
 
 La auditoría y el plan técnico de esa extensión viven en
 `docs/plans/learn_to_play_implementation_plan.md`. La decisión arquitectónica vigente es conservar
@@ -763,8 +782,9 @@ normal, una a una. La Vida llega a 0 por el combate real; `learn-to-play` reutil
 derrota y muestra sólo **Contemplar otro futuro** con copy narrativo propio. Tras aceptar la
 narración, el botón registra el recorrido como completado y abre provisionalmente una partida
 normal con seed aleatoria; ejecutar el vórtice y cargar la partida preparada pertenecen a la Fase
-6B aplazada. **Continuar** está deshabilitado globalmente. Para una fase
-posterior siguen pendientes
+6B aplazada. En el código actual **Continuar** está deshabilitado globalmente; la política aprobada
+para la demo es ocultarlo sin retirar su implementación de Early Access. Para una fase posterior
+siguen pendientes
 la Mano/mulligan, seed, dificultad y
 Preparación de la partida real; el comportamiento de primera apertura y perfiles existentes; y la
 persistencia exacta si la aplicación se cierra durante el vórtice.

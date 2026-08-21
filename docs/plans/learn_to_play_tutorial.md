@@ -67,7 +67,9 @@ de implementación.
 - En esa partida real y en las siguientes, las ayudas pendientes serán contextuales. Cada concepto
   conserva si ya fue mostrado; la preferencia global decide si los conceptos vistos pueden
   repetirse, pero los no vistos siempre conservan su primera aparición.
-- **Continuar** permanece deshabilitado globalmente por ahora.
+- En el código actual **Continuar** permanece deshabilitado. El objetivo aprobado para la demo es
+  ocultarlo y apagar resume mediante la capability descrita en el plan de historial de Semillas,
+  conservando su implementación para Early Access.
 - El primer corte de implementación termina cuando **Contemplar otro futuro** registra la
   finalización y carga esa partida normal aleatoria. Todavía no incluye el vórtice ni la seed real
   preparada.

@@ -30,7 +30,9 @@ su activación completará el recorrido, pero el primer corte aprobado termina c
 no implementa todavía su activación, el vórtice ni la carga de la partida real preparada.
 
 Durante este corte, **Continuar** queda deshabilitado globalmente, no condicionado al progreso de un
-tutorial. Cuándo volverá a habilitarse se resolverá en una fase posterior.
+tutorial. La decisión posterior de demo es ocultarlo y apagar resume mediante una capability de
+producto; su reactivación se reserva para Early Access. Ese cambio pertenece a
+`seeds_of_destiny_history_implementation_plan.md`, no a este tutorial.
 
 Este plan no autoriza a implementar todas las fases juntas. Antes de cada fase se revisan con el
 usuario su experiencia visible, sus límites y las decisiones abiertas que le correspondan; sólo
@@ -435,7 +437,8 @@ Sin cambios de código.
 - Mantener fuera del corte la Mano/mulligan, seed, dificultad y Preparación de la partida posterior.
 - Aplazar el comportamiento de primera apertura y perfiles existentes.
 - Presentar todas las llegadas terminales con el revelado normal, una carta a la vez y sin agrupación.
-- Deshabilitar **Continuar** globalmente por ahora.
+- Deshabilitar **Continuar** globalmente para este corte; el objetivo posterior de la demo es
+  ocultarlo mediante la capability del plan de historial de Semillas.
 
 **Salida:** contrato del primer corte cerrado; las decisiones posteriores están aplazadas de forma
 explícita y no bloquean su implementación.
@@ -481,7 +484,8 @@ ningún gate de primera apertura.
 - Registrar `learn-to-play` con identidad independiente y launcher propio.
 - Volver data-driven el listado de Cómo jugar.
 - Deshabilitar **Continuar** globalmente sin convertir todavía `learn-to-play` en gate de primera
-  apertura.
+  apertura. El plan posterior de historial lo ocultará en la demo sin eliminar el camino de Early
+  Access.
 - Crear el lifecycle del recorrido y las políticas explícitas de tablero.
 - Permitir que una intervención guiada breve se conecte al `GameState` actual sin reconstruirlo ni
   marcar completa la jornada.
@@ -625,7 +629,8 @@ autoridad semántica.
 - Abandonar antes del CTA final reinicia el recorrido y descarta conceptos provisionales.
 - El CTA final se llama **Contemplar otro futuro**.
 - El primer corte termina al mostrarlo; su activación y persistencia se implementarán después.
-- **Continuar** permanece deshabilitado globalmente por ahora.
+- En este corte **Continuar** permanece deshabilitado; la demo final lo ocultará y Early Access
+  conservará la capacidad de reactivarlo.
 - La preferencia de no repetir está activa por defecto; se marca visto al cerrar/aceptar y, si se
   permiten repeticiones, hay un máximo de una aparición por concepto y partida.
 - Las ayudas observadas son no bloqueantes; las preventivas interceptan sólo la acción relevante;
@@ -644,7 +649,7 @@ resolver, sin inferirlas durante el trabajo actual:
 2. Comportamiento de primera apertura y alcance sobre perfiles existentes.
 3. Seed, dificultad y Preparación de la partida real.
 4. Persistencia exacta si la aplicación se cierra después de activar el CTA pero durante el vórtice.
-5. Momento en que **Continuar** vuelve a habilitarse.
+5. Contrato de Early Access para vincular resume e historial al mismo intento sin duplicarlo.
 
 Tampoco bloquean este corte el copy narrativo definitivo, el lore previo del Cronista ni la
 cinemática futura.

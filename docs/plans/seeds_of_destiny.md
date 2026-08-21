@@ -2,7 +2,9 @@
 
 Nota de diseño para la narrativa del tutorial y el futuro historial de partidas de Hostfall.
 El control de reescritura y la identidad básica de cada Futuro ya están implementados; el historial
-y la biblioteca personal descritos más abajo siguen siendo dirección conceptual.
+y la biblioteca personal descritos más abajo siguen siendo dirección conceptual. La auditoría, el
+contrato de demo y el orden verificable para implementarlos viven en
+[`seeds_of_destiny_history_implementation_plan.md`](seeds_of_destiny_history_implementation_plan.md).
 
 ## Premisa
 
@@ -25,8 +27,11 @@ La idea central se resume así:
 ## Superficie implementada
 
 - La seed técnica se representa mediante un código cosmético estable **Futuro `NNN·NNN`**. El
-  código se deriva de la seed, no es reversible y no sustituye su identidad exacta; copiar la
-  identidad copia la seed completa.
+  código se deriva hoy de `game.seed`, no es reversible y no sustituye una identidad exacta.
+- **Copiar identidad** todavía copia `game.seed`, normalmente un string `hostfall-...`; no incluye
+  decks, dificultad ni Preparación y, por sí solo, no es una identidad pública autocontenida.
+- El codec Canon `HF1-PPP-HHH-XXD-XXX` ya existe y Seed Explorer entrega sólo su entropía al engine,
+  pero el launcher normal todavía no genera ni importa ese código.
 - La barra de partida muestra **Reescribir** antes de Música y Ajustes. No aparece en tutoriales ni
   con la seed técnica `developer`.
 - **Reescribir este futuro** reinicia siempre la misma seed y conserva Crónica, Hueste, dificultad
@@ -42,6 +47,36 @@ La idea central se resume así:
 
 Esta superficie todavía no persiste intentos ni convierte el código compacto en una clave única de
 historial. Esas responsabilidades pertenecen a la futura biblioteca de Semillas.
+
+## Decisión de producto para la demo — 2026-08-21
+
+- **Continuar** se ocultará en la demo y no se leerán ni mutarán checkpoints jugables. La
+  infraestructura actual de resume se conserva detrás de una capability para Early Access.
+- Abandonar, cerrar la aplicación o sufrir un corte eléctrico registra un intento **interrumpido**,
+  nunca una derrota. Desde el historial sólo puede reescribirse desde el origen, no retomarse a
+  mitad.
+- El historial factual se implementará independientemente de que se apruebe o descarte la prosa del
+  Cronista.
+- Antes del historial, toda partida standard autogenerada recibirá una Canon Seed HF1. **Copiar
+  identidad** copiará ese código, mientras `game.seed` conservará sólo la entropía interna que
+  reproduce el shuffle.
+- Preparación tendrá una acción explícita para importar HF1: aplicará decks, dificultad y turnos de
+  Preparación codificados antes de jugar. Pegar HF1 en el campo de seed libre no la reinterpreta.
+- Las sesiones de seed libre no mostrarán **Copiar identidad**; sólo Developer Mode podrá copiar la
+  seed interna bajo un nombre técnico distinto.
+- La identidad persistida incluye `canonCode`/entropía o seed libre, Crónica, Hueste, dificultad,
+  modo, turnos de Preparación y revisiones compatibles de contenido/reglas; el código
+  `Futuro NNN·NNN` sigue siendo sólo una etiqueta cosmética.
+- Antes de implementar el historial se validará el relato con fixtures aislados. El usuario elegirá
+  entre relato breve, hitos factuales sin prosa o descarte de esa capa.
+
+Una HF1 generada por el juego es **Canon** y reproducible. **Oficial** queda reservado a códigos
+curados que aparezcan en un catálogo bundled de Hostfall; no es una propiedad de cualquier partida
+aleatoria.
+
+El estado actual del código todavía muestra **Continuar** como opción deshabilitada y no guarda
+historial. La lista anterior es el objetivo aprobado para la demo, no una descripción de trabajo ya
+entregado.
 
 ## Texto propuesto para el tutorial
 
@@ -76,7 +111,7 @@ Una versión más extensa para desarrollar esta idea:
 | Elegir otra seed | Buscar una posibilidad diferente entre incontables futuros. |
 | Perder | Contemplar un futuro en el que los héroes cayeron. |
 | Ganar | Estabilizar y preservar una versión victoriosa de la historia. |
-| Abandonar una partida | Dejar una historia inconclusa que puede retomarse. |
+| Abandonar una partida | Dejar una historia interrumpida que puede reescribirse desde su origen. |
 
 Una derrota no elimina la Semilla: conserva el desenlace observado para que el Cronista pueda
 aprender de él. Una victoria tampoco necesita impedir nuevos intentos; el Cronista puede explorar
@@ -106,15 +141,15 @@ Cada Semilla podría mostrar:
 - la cantidad de intentos;
 - la fecha del intento más reciente;
 - información relevante de la partida, como el turno del desenlace;
-- una acción para continuar o volver a explorarla.
+- una acción para reescribirla desde su origen o contemplar otro Futuro.
 
 ### Estados y acciones sugeridos
 
 | Estado | Presentación posible | Acción principal |
 | --- | --- | --- |
-| Victoria | **Destino preservado** | **Explorar otra posibilidad** |
+| Victoria | **Destino preservado** | **Reescribir este futuro** |
 | Derrota | **Futuro perdido** | **Reescribir destino** |
-| Partida guardada | **Historia inconclusa** | **Continuar la Crónica** |
+| Intento abandonado o cortado | **Historia interrumpida** | **Reescribir desde el origen** |
 
 Estos nombres son copy propuesto y deberán revisarse en contexto cuando se diseñe la pantalla.
 
@@ -134,15 +169,15 @@ misma Semilla permite que las derrotas y la victoria final formen una pequeña h
 Así, el registro no se limita a decir si el jugador ganó o perdió: muestra cómo el Cronista vio un
 futuro terrible, aprendió de él y encontró una ramificación victoriosa.
 
-## Decisiones pendientes para implementación
+## Decisiones todavía abiertas
 
-- Definir qué información exacta se persiste por Semilla y por intento.
-- Decidir si una partida inconclusa puede continuarse o sólo reiniciarse desde la misma seed.
-- Aclarar qué configuraciones deben formar parte de la identidad de una Semilla: decks, modo,
-  dificultad y futuras variantes de reglas.
-- Establecer si el historial tendrá límites, archivado o eliminación manual.
+- Establecer la política definitiva de retención, archivado o eliminación por Semilla.
 - Diseñar cómo se comunica que repetir una seed conserva sus condiciones deterministas aunque las
   decisiones del jugador creen otra ramificación.
-- Revisar el copy final junto con el tutorial y la pantalla real para evitar explicaciones
-  excesivas.
+- Revisar el copy final y qué hechos visibles sobreviven al prototipo de relato.
+- Definir en Early Access cómo una partida reanudable se vincula al mismo `attemptId` sin crear un
+  intento duplicado.
+
+La forma exacta de persistencia, los estados del intento, la identidad compuesta y los gates de
+validación ya no están abiertos: se fijan en el plan técnico enlazado al comienzo de este documento.
 
