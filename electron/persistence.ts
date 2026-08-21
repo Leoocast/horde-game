@@ -14,13 +14,26 @@ export const DESKTOP_LOCAL_DIRECTORY = "local";
 export const PREFERENCES_FILE_NAME = "preferences-v1.json";
 export const WINDOW_STATE_FILE_NAME = "window-state-v1.json";
 export const RESUME_SAVE_FILE_NAME = "resume-v1.json";
+export const SEED_HISTORY_FILE_NAME = "seed-history-v1.json";
 
-const MAX_JSON_BYTES = 5 * 1024 * 1024;
+export const MAX_JSON_BYTES = 5 * 1024 * 1024;
 
 export type DesktopDataPaths = Readonly<{
   preferences: string;
   windowState: string;
   resumeSave: string;
+  seedHistory: string;
+  diagnostics: string;
+}>;
+
+export type DesktopPromotionStep =
+  | "temporary-synced"
+  | "primary-sheltered"
+  | "primary-replaced";
+
+export type DesktopJsonStoreHooks = Readonly<{
+  onPromotionStep?: (step: DesktopPromotionStep) => Promise<void> | void;
+  now?: () => Date;
 }>;
 
 export type StoredJsonCandidates = Readonly<{
@@ -45,11 +58,18 @@ export function desktopDataPaths(userDataPath: string): DesktopDataPaths {
     preferences: path.join(userDataPath, DESKTOP_DATA_DIRECTORY, PREFERENCES_FILE_NAME),
     windowState: path.join(userDataPath, DESKTOP_LOCAL_DIRECTORY, WINDOW_STATE_FILE_NAME),
     resumeSave: path.join(userDataPath, DESKTOP_DATA_DIRECTORY, "saves", RESUME_SAVE_FILE_NAME),
+    seedHistory: path.join(userDataPath, DESKTOP_DATA_DIRECTORY, SEED_HISTORY_FILE_NAME),
+    diagnostics: path.join(userDataPath, DESKTOP_DATA_DIRECTORY, "diagnostics"),
   });
 }
 
 export class DesktopJsonStore {
   #writeQueues = new Map<string, Promise<void>>();
+  readonly #hooks: DesktopJsonStoreHooks;
+
+  constructor(hooks: DesktopJsonStoreHooks = {}) {
+    this.#hooks = hooks;
+  }
 
   async readCandidates(filePath: string): Promise<StoredJsonCandidates> {
     const [primary, backup] = await Promise.all([
@@ -98,6 +118,41 @@ export class DesktopJsonStore {
     return next;
   }
 
+  /** Promotes a parsed backup without ever rotating the corrupt primary over that backup. */
+  promoteBackup(filePath: string): Promise<void> {
+    const previous = this.#writeQueues.get(filePath) ?? Promise.resolve();
+    const next = previous
+      .catch(() => undefined)
+      .then(() => promoteBackupSafely(filePath, this.#hooks.onPromotionStep));
+    this.#writeQueues.set(filePath, next);
+    const clearQueue = () => {
+      if (this.#writeQueues.get(filePath) === next) this.#writeQueues.delete(filePath);
+    };
+    void next.then(clearQueue, clearQueue);
+    return next;
+  }
+
+  /** Reset is destructive only after every existing primary/backup has a diagnostic copy. */
+  resetWithDiagnostics(filePath: string, diagnosticsDirectory: string): Promise<Readonly<{
+    preservedDiagnostic: boolean;
+  }>> {
+    const previous = this.#writeQueues.get(filePath) ?? Promise.resolve();
+    const next = previous
+      .catch(() => undefined)
+      .then(() => resetWithDiagnostics(
+        filePath,
+        diagnosticsDirectory,
+        this.#hooks.now?.() ?? new Date(),
+      ));
+    this.#writeQueues.set(filePath, next.then(() => undefined));
+    const tracked = this.#writeQueues.get(filePath)!;
+    const clearQueue = () => {
+      if (this.#writeQueues.get(filePath) === tracked) this.#writeQueues.delete(filePath);
+    };
+    void tracked.then(clearQueue, clearQueue);
+    return next;
+  }
+
   async flush(): Promise<void> {
     await Promise.allSettled(this.#writeQueues.values());
   }
@@ -126,14 +181,14 @@ export function parseWindowState(value: unknown): PersistedWindowState | undefin
 export function assertJsonPayload(value: unknown): void {
   const serialized = JSON.stringify(value);
   if (serialized === undefined) throw new Error("Desktop persistence payload is not JSON serializable.");
-  if (Buffer.byteLength(serialized, "utf8") > MAX_JSON_BYTES) throw new Error("Desktop persistence payload is too large.");
+  if (Buffer.byteLength(serialized, "utf8") > MAX_JSON_BYTES) throw new DesktopPersistenceError("full", "Desktop persistence payload is too large.");
   const parsed = JSON.parse(serialized) as unknown;
   if (!isJsonValue(parsed)) throw new Error("Desktop persistence payload contains unsupported values.");
 }
 
 async function atomicWriteJson(filePath: string, value: unknown): Promise<void> {
   const serialized = `${JSON.stringify(value, null, 2)}\n`;
-  if (Buffer.byteLength(serialized, "utf8") > MAX_JSON_BYTES) throw new Error("Desktop persistence payload is too large.");
+  if (Buffer.byteLength(serialized, "utf8") > MAX_JSON_BYTES) throw new DesktopPersistenceError("full", "Desktop persistence payload is too large.");
   await mkdir(path.dirname(filePath), { recursive: true });
   const temporaryPath = `${filePath}.tmp`;
   const backupPath = `${filePath}.bak`;
@@ -145,6 +200,79 @@ async function atomicWriteJson(filePath: string, value: unknown): Promise<void> 
     await replaceFile(backupTemporaryPath, backupPath);
   }
   await replaceFile(temporaryPath, filePath);
+}
+
+export class DesktopPersistenceError extends Error {
+  readonly reason: "full";
+
+  constructor(reason: "full", message: string) {
+    super(message);
+    this.name = "DesktopPersistenceError";
+    this.reason = reason;
+  }
+}
+
+export function desktopPersistenceFailureReason(error: unknown): "full" | "io" {
+  if (error instanceof DesktopPersistenceError) return error.reason;
+  const code = isRecord(error) ? error.code : undefined;
+  return code === "ENOSPC" || code === "EDQUOT" ? "full" : "io";
+}
+
+async function promoteBackupSafely(
+  filePath: string,
+  onStep?: (step: DesktopPromotionStep) => Promise<void> | void,
+): Promise<void> {
+  const backup = await readJsonCandidate(`${filePath}.bak`);
+  if (backup.corrupted || backup.value === undefined) throw new Error("Desktop history backup is unavailable.");
+  assertJsonPayload(backup.value);
+  await mkdir(path.dirname(filePath), { recursive: true });
+  const temporaryPath = `${filePath}.promote.tmp`;
+  const shelteredPrimaryPath = `${filePath}.promote.invalid`;
+  await writeAndSync(temporaryPath, `${JSON.stringify(backup.value, null, 2)}\n`);
+  await onStep?.("temporary-synced");
+
+  await rm(shelteredPrimaryPath, { force: true });
+  if (await fileExists(filePath)) await rename(filePath, shelteredPrimaryPath);
+  await onStep?.("primary-sheltered");
+
+  await rename(temporaryPath, filePath);
+  await onStep?.("primary-replaced");
+  await rm(shelteredPrimaryPath, { force: true });
+}
+
+async function resetWithDiagnostics(
+  filePath: string,
+  diagnosticsDirectory: string,
+  now: Date,
+): Promise<Readonly<{ preservedDiagnostic: boolean }>> {
+  await mkdir(diagnosticsDirectory, { recursive: true });
+  const stamp = now.toISOString().replaceAll(":", "-");
+  const sources = [
+    { path: filePath, suffix: "primary" },
+    { path: `${filePath}.bak`, suffix: "backup" },
+  ];
+  let preservedDiagnostic = false;
+  for (const source of sources) {
+    if (!await fileExists(source.path)) continue;
+    const destination = path.join(diagnosticsDirectory, `seed-history-reset-${stamp}-${source.suffix}.json`);
+    await copyFile(source.path, destination);
+    const handle = await open(destination, "r+");
+    try {
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+    preservedDiagnostic = true;
+  }
+  await Promise.all([
+    rm(filePath, { force: true }),
+    rm(`${filePath}.bak`, { force: true }),
+    rm(`${filePath}.tmp`, { force: true }),
+    rm(`${filePath}.bak.tmp`, { force: true }),
+    rm(`${filePath}.promote.tmp`, { force: true }),
+    rm(`${filePath}.promote.invalid`, { force: true }),
+  ]);
+  return Object.freeze({ preservedDiagnostic });
 }
 
 async function writeAndSync(filePath: string, contents: string): Promise<void> {

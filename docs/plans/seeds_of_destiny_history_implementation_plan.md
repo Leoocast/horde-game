@@ -1,6 +1,6 @@
 # Plan por fases — historial de Semillas del Destino para la demo
 
-Estado: **Fases 1, 2, 2.5 y 3 completadas; siguiente fase: 4**.
+Estado: **Fases 1, 2, 2.5, 3 y 4 completadas; siguiente fase: 5**.
 
 Última actualización: **2026-08-21**.
 
@@ -508,6 +508,17 @@ límites pertenecen respectivamente a las Fases 6 y 4.
 
 ### Fase 4 — Persistencia independiente
 
+Estado: **completada el 2026-08-21**.
+
+Implementación: `HistoryService` es la única autoridad read-modify-write y conserva revisiones
+lógica/durable, snapshot dirty, retry automático y cola serial. Los adapters desktop/web viven en
+`src/history/`; web usa Web Locks y BroadcastChannel, cae a sólo lectura sin lock, rota un backup y
+cuarentena el payload antes de reset. Desktop usa canales IPC concretos y
+`profile/seed-history-v1.json`; `DesktopJsonStore.promoteBackup` mantiene `.bak` intacto durante
+todos los cortes y el reset copia primario/backup a `profile/diagnostics` antes de borrarlos. Un
+envelope doblemente inválido queda congelado en lectura con sus intentos estructuralmente
+rescatables. Ninguna de estas piezas se inicializa todavía desde `App`.
+
 - Añadir adapter web y servicio desktop para `history-v1`.
 - Extender `DesktopDataPaths`, preload, bridge y handlers main con canales concretos.
 - Reutilizar `DesktopJsonStore` para escritura atómica, tamaño y flush, y extenderlo con promoción
@@ -526,6 +537,9 @@ límites pertenecen respectivamente a las Fases 6 y 4.
 **Cierre:** round-trip web/desktop, promoción de backup con fallas inyectadas, corrupción doble,
 cuarentena/reset, límite, dos adapters web, hydrate lento, mutaciones concurrentes e IDs duplicados
 quedan cubiertos automáticamente.
+
+El cierre vive en `tests/historyPersistence.test.js`, `tests/electronPersistence.test.js` y los
+guards IPC de `tests/electronSecurity.test.js`.
 
 ### Fase 5 — Grabador del ciclo de vida
 

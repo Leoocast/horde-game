@@ -20,6 +20,7 @@ import {
 import { RotatingFileLogger } from "./logger";
 import {
   DesktopJsonStore,
+  desktopPersistenceFailureReason,
   desktopDataPaths,
   parseWindowState,
   type DesktopDataPaths,
@@ -382,6 +383,36 @@ function registerIpcHandlers(): void {
     await desktopStore.delete(requireDataPaths().resumeSave);
   });
 
+  ipcMain.handle("hostfall:read-seed-history", async (event) => {
+    assertTrustedRenderer(event);
+    return desktopStore.readCandidates(requireDataPaths().seedHistory);
+  });
+
+  ipcMain.handle("hostfall:write-seed-history", async (event, value: unknown) => {
+    assertTrustedRenderer(event);
+    assertEnvelope(value, "hostfall-history");
+    try {
+      await desktopStore.write(requireDataPaths().seedHistory, value);
+      return Object.freeze({ ok: true });
+    } catch (error) {
+      logger?.log("error", "Seed history write failed", error);
+      return Object.freeze({ ok: false, reason: desktopPersistenceFailureReason(error) });
+    }
+  });
+
+  ipcMain.handle("hostfall:promote-seed-history-backup", async (event) => {
+    assertTrustedRenderer(event);
+    await desktopStore.promoteBackup(requireDataPaths().seedHistory);
+  });
+
+  ipcMain.handle("hostfall:reset-seed-history", async (event) => {
+    assertTrustedRenderer(event);
+    return desktopStore.resetWithDiagnostics(
+      requireDataPaths().seedHistory,
+      requireDataPaths().diagnostics,
+    );
+  });
+
   ipcMain.handle("hostfall:write-clipboard-text", (event, value: unknown) => {
     assertTrustedRenderer(event);
     if (typeof value !== "string" || value.length > CLIPBOARD_TEXT_MAX_LENGTH) {
@@ -477,7 +508,7 @@ function emitLifecycle(state: "background" | "foreground" | "suspend" | "resume"
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send("hostfall:lifecycle", state);
 }
 
-function assertEnvelope(value: unknown, kind: "hostfall-preferences" | "hostfall-resume"): void {
+function assertEnvelope(value: unknown, kind: "hostfall-preferences" | "hostfall-resume" | "hostfall-history"): void {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Desktop persistence envelope is malformed.");
   const candidate = value as Record<string, unknown>;
   if (candidate.kind !== kind || candidate.formatVersion !== 1) throw new Error("Desktop persistence envelope is unsupported.");

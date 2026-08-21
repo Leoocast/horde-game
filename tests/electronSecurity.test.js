@@ -38,6 +38,21 @@ test("clipboard writes cross the narrow trusted Electron bridge", async () => {
   assert.match(rendererBridge, /navigator\.clipboard\.writeText\(value\)/u);
 });
 
+test("seed history crosses only dedicated trusted IPC channels", async () => {
+  const [main, preload, rendererBridge] = await Promise.all([
+    readFile(new URL("../electron/main.ts", import.meta.url), "utf8"),
+    readFile(new URL("../electron/preload.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/platform/desktopBridge.ts", import.meta.url), "utf8"),
+  ]);
+  for (const operation of ["read", "write", "promote", "reset"]) {
+    assert.match(main, new RegExp(`ipcMain\\.handle\\("hostfall:${operation}-seed-history(?:-backup)?"[\\s\\S]*?assertTrustedRenderer\\(event\\)`, "u"));
+    assert.match(preload, new RegExp(`ipcRenderer\\.invoke\\("hostfall:${operation}-seed-history(?:-backup)?"`, "u"));
+  }
+  assert.match(rendererBridge, /readSeedHistory\(\): Promise<StoredJsonCandidates>/u);
+  assert.match(rendererBridge, /writeSeedHistory\(value: unknown\): Promise<DesktopHistoryWriteResult>/u);
+  assert.doesNotMatch(preload, /readFile|writeFile|filePath|path:/u);
+});
+
 test("hostfall protocol maps only registered app and content identities", () => {
   assert.deepEqual(parseHostfallRequestUrl("hostfall://app/"), { scope: "app", logicalPath: "index.html" });
   assert.deepEqual(parseHostfallRequestUrl("hostfall://app/assets/menu%20theme.mp3"), {

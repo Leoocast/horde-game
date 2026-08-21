@@ -134,9 +134,10 @@ Contratos desktop vigentes:
   del primer efecto visible. El vidrio se monta justo cuando la Vida llega a 0, así que compilarlo
   entonces costaría un tirón en el peor momento. Sus escenas mínimas quedan retenidas para conservar
   los programas GPU; no crear renderers nuevos en los animadores.
-- Fase 4 separa `profile/preferences-v1.json`, `profile/saves/resume-v1.json` y el local-only
-  `local/window-state-v1.json`. El contrato, backups, recuperación, Cloud-worthy data y checkpoints
-  seguros están en `docs/electron/persistence.md`.
+- Persistencia separa `profile/preferences-v1.json`, `profile/saves/resume-v1.json`,
+  `profile/seed-history-v1.json` y el local-only `local/window-state-v1.json`. El contrato, backups,
+  recuperación, diagnósticos, Cloud-worthy data y checkpoints seguros están en
+  `docs/electron/persistence.md`.
 - El resume guarda sólo `GameState` estable y claves calificadas; nunca Zustand, UI, timers,
   animaciones o Playground. `backgroundThrottling: true` es final y el lifecycle pausa/reanuda audio.
 - Pantalla completa se controla desde ambos menús o F11 y se persiste con el estado local de
@@ -648,8 +649,9 @@ rígido. Volver a animar
 `filter: blur()` o `saturate()` sobre la pantalla completa es una regresión de rendimiento, porque
 obliga a repintar todo el árbol en cada frame.
 
-El dominio puro del historial está implementado, pero todavía no tiene persistencia, integración de
-partidas ni UI real. `src/history/historyTypes.ts` fija `FutureIdentityV1`, `AttemptRecordV1` y
+El dominio y la persistencia independiente del historial están implementados, pero todavía no se
+inicializan desde `App` ni tienen integración de partidas o UI real. `src/history/historyTypes.ts`
+fija `FutureIdentityV1`, `AttemptRecordV1` y
 `HistoryEnvelopeV1`; `historyParser.ts` valida estructura e invariantes sin depender del catálogo;
 `historyFuture.ts` mantiene aparte compatibilidad determinista y resolución de decks; y
 `historyDomain.ts` concentra begin/close idempotente, metadata de salida explícita, `sequence`,
@@ -658,6 +660,16 @@ inferir elegibilidad por seed, carta o pantalla. Canon agrupa por formato+códig
 incluye seed, configuración, `contentRevision` y `OPAQUE_MATCH_RULESET_VERSION`. Un cambio de reglas
 o consumo RNG de seeds libres debe incrementar ese gate en `MatchOrigin.ts`; un cambio incompatible
 Canon exige otro formato.
+
+`HistoryService` hidrata una sola vez y serializa begin/close/recover sobre el último snapshot
+lógico, incluso si una escritura anterior quedó dirty. `logicalRevision` y `durableRevision` no se
+confunden; un fallo transitorio reintenta el snapshot más reciente y un límite físico revierte la
+mutación nueva. Web usa `hostfall-history:v1`, backup, cuarentena, Web Locks y BroadcastChannel; sin
+lock queda sólo lectura. Desktop usa `profile/seed-history-v1.json`, IPCs concretos y promoción que
+nunca rota un primario corrupto sobre `.bak`. Corrupción doble congela escrituras y conserva intentos
+rescatables hasta un reset confirmado; desktop guarda diagnósticos y web exige segunda confirmación
+si la cuota impide la cuarentena. `createHistoryServiceForCurrentPlatform` sólo construye la capa:
+la Fase 5 decide cuándo inicializarla y registrar partidas.
 
 La identidad narrativa vive en `docs/plans/seeds_of_destiny.md` y la auditoría con el contrato
 técnico por fases en `docs/plans/seeds_of_destiny_history_implementation_plan.md`. La Fase 1 tiene un prototipo

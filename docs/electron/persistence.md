@@ -9,6 +9,10 @@ canal IPC genérico. Main es el único proceso que lee o escribe archivos.
 profile/
   preferences-v1.json
   preferences-v1.json.bak
+  seed-history-v1.json
+  seed-history-v1.json.bak
+  diagnostics/
+    seed-history-reset-*.json
   saves/
     resume-v1.json
     resume-v1.json.bak
@@ -18,9 +22,10 @@ local/
 logs/
 ```
 
-`profile/preferences-v1.json` y `profile/saves/resume-v1.json` son los únicos candidatos futuros
-para Steam Auto-Cloud. `local/window-state-v1.json` depende de monitores, coordenadas, maximizado y
-pantalla completa de esa PC, por lo que nunca debe sincronizarse. Los logs tampoco.
+`profile/preferences-v1.json`, `profile/seed-history-v1.json` y `profile/saves/resume-v1.json` son
+candidatos futuros para Steam Auto-Cloud. `local/window-state-v1.json` depende de monitores,
+coordenadas, maximizado y pantalla completa de esa PC, por lo que nunca debe sincronizarse. Los logs
+y copias diagnósticas tampoco.
 
 Los boards y replays del Playground conservan sus namespaces de desarrollo en `localStorage`. No
 se migran a `profile`, no aparecen dentro del envelope de resume y no se empaquetan en release.
@@ -31,6 +36,24 @@ Cada escritura se serializa por archivo, se limita a 5 MiB y usa un temporal en 
 Antes de reemplazar el primario se copia el valor anterior a `.bak`; ambos temporales se sincronizan
 antes del rename. Al abrir, renderer valida primario y backup por separado. Un backup válido ofrece
 `Continuar partida recuperada`; si los dos fallan aparece la acción para eliminar el save dañado.
+
+El historial usa una promoción especial: copia y sincroniza el backup en un temporal, aparta el
+primario inválido y coloca la copia como primario sin modificar nunca `.bak`. Si ambos envelopes son
+inválidos, sus intentos v1 rescatables quedan sólo lectura. Restablecer requiere confirmación y copia
+primario/backup a `profile/diagnostics` antes de eliminarlos.
+
+## Historial de Semillas v1
+
+`profile/seed-history-v1.json` es independiente de resume y no contiene `GameState`. El renderer es
+la autoridad read-modify-write mediante `HistoryService`; main sólo serializa operaciones de archivo
+ya recibidas por IPC concreto. La cola conserva por separado la revisión lógica y durable, reintenta
+fallos transitorios y detiene mutaciones nuevas al alcanzar 5 MiB.
+
+Web usa `hostfall-history:v1` y un backup separado en `localStorage`. Sólo el tab que adquiere Web
+Locks escribe; los demás observan por BroadcastChannel y nunca ejecutan recuperación de intentos.
+Sin mecanismo de lock la conducta segura es sólo lectura. Un reset conserva primero primary/backup
+bajo `hostfall-history:quarantine:v1`; si la cuota lo impide exige una segunda confirmación explícita
+antes de borrar sin copia recuperable.
 
 ## Resume v1
 

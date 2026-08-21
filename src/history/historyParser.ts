@@ -220,6 +220,40 @@ export function parseHistoryEnvelopeV1(value: unknown): HistoryEnvelopeParseResu
   };
 }
 
+/**
+ * Read-only salvage for a v1 envelope whose individual attempts no longer all validate. Unknown
+ * envelope versions are never interpreted. The caller must keep writes frozen until explicit reset.
+ */
+export function salvageHistoryEnvelopeV1(value: unknown): HistoryEnvelopeV1 | undefined {
+  if (
+    !isRecord(value) ||
+    value.kind !== "hostfall-history" ||
+    value.formatVersion !== HISTORY_FORMAT_VERSION ||
+    !Array.isArray(value.attempts) ||
+    value.attempts.length > HISTORY_LIMITS.attempts
+  ) return undefined;
+
+  const attempts: AttemptRecordV1[] = [];
+  const ids = new Set<string>();
+  const sequences = new Set<number>();
+  let highestSequence = 0;
+  for (const candidate of value.attempts) {
+    const parsed = parseAttemptRecordV1(candidate);
+    if (!parsed.ok || ids.has(parsed.attempt.attemptId) || sequences.has(parsed.attempt.sequence)) continue;
+    ids.add(parsed.attempt.attemptId);
+    sequences.add(parsed.attempt.sequence);
+    highestSequence = Math.max(highestSequence, parsed.attempt.sequence);
+    attempts.push(parsed.attempt);
+  }
+  if (highestSequence >= Number.MAX_SAFE_INTEGER) return undefined;
+  return Object.freeze({
+    kind: "hostfall-history",
+    formatVersion: HISTORY_FORMAT_VERSION,
+    nextSequence: highestSequence + 1,
+    attempts: Object.freeze(attempts),
+  });
+}
+
 function isFutureSharedFields(value: Readonly<Record<string, unknown>>): value is Readonly<Record<string, unknown>> & {
   rngSeed: string;
   playerDeckKey: string;

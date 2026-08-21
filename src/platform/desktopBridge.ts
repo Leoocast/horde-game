@@ -16,6 +16,14 @@ export type StoredJsonCandidates = Readonly<{
   backupCorrupted: boolean;
 }>;
 
+export type DesktopHistoryWriteResult =
+  | Readonly<{ ok: true }>
+  | Readonly<{ ok: false; reason: "full" | "io" }>;
+
+export type DesktopHistoryResetResult = Readonly<{
+  preservedDiagnostic: boolean;
+}>;
+
 export type RendererErrorReport = Readonly<{
   message: string;
   stack?: string;
@@ -34,6 +42,10 @@ export type HostfallDesktopBridge = Readonly<{
   readResumeSave(): Promise<StoredJsonCandidates>;
   writeResumeSave(value: unknown): Promise<void>;
   deleteResumeSave(): Promise<void>;
+  readSeedHistory(): Promise<StoredJsonCandidates>;
+  writeSeedHistory(value: unknown): Promise<DesktopHistoryWriteResult>;
+  promoteSeedHistoryBackup(): Promise<void>;
+  resetSeedHistory(): Promise<DesktopHistoryResetResult>;
   writeClipboardText(value: string): Promise<void>;
   openExternalLink(linkId: ExternalLinkId): Promise<boolean>;
   reportError(report: RendererErrorReport): Promise<void>;
