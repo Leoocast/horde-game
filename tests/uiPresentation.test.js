@@ -773,7 +773,7 @@ test("production resume checkpoints exclude Playground and presentation state", 
   assert.doesNotMatch(service, /playground/iu);
   assert.doesNotMatch(schema, /playground/iu);
   assert.match(schema, /checkpoint:\s*Object\.freeze\(\{ game:/u);
-  assert.match(app, /if \(!boardSessionPolicy\.autosave \|\| screen !== "game"\) return;/u);
+  assert.match(app, /if \(!productResumeRuntime\.enabled \|\| !boardSessionPolicy\.autosave \|\| screen !== "game"\) return;/u);
 });
 
 test("procedural Burn never mounts the legacy full-screen white flash", () => {

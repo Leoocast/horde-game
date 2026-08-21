@@ -50,6 +50,7 @@ type Props = {
   /** Only provided in development builds; inventories the real player-facing runtime UI. */
   onOpenUiReference?: () => void;
   howToPlayEntries: readonly HowToPlayMenuEntry[];
+  resumeEnabled?: boolean;
   resumeStatus?: "none" | "available" | "recovered" | "corrupt";
   onContinue?: () => void;
   continueDisabled?: boolean;
@@ -66,7 +67,7 @@ const modes: Array<{ id: DifficultyMode; setupTurns: number }> = [
   { id: "hard", setupTurns: 2 },
 ];
 
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, onOpenSeedExplorer, onOpenUiReference, howToPlayEntries, resumeStatus = "none", onContinue, continueDisabled = false, onDiscardResume, onStart }: Props) {
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, onOpenSeedExplorer, onOpenUiReference, howToPlayEntries, resumeEnabled = false, resumeStatus = "none", onContinue, continueDisabled = false, onDiscardResume, onStart }: Props) {
   const t = useTranslation();
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [mode, setMode] = useState<DifficultyMode>("easy");
@@ -264,7 +265,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           </div>
 
           <nav className="main-menu-nav" aria-label={t("menu.mainAria")}>
-            {(resumeStatus === "available" || resumeStatus === "recovered") && (
+            {resumeEnabled && (resumeStatus === "available" || resumeStatus === "recovered") && (
               <button
                 className={`main-menu-entry group ${continueDisabled || !onContinue ? "is-disabled" : ""}`}
                 type="button"
@@ -276,7 +277,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
                 <span>{resumeStatus === "recovered" ? t("menu.continueRecovered") : t("menu.continue")}</span>
               </button>
             )}
-            {resumeStatus === "corrupt" && onDiscardResume && (
+            {resumeEnabled && resumeStatus === "corrupt" && onDiscardResume && (
               <button className="main-menu-entry group" type="button" onClick={onDiscardResume} title={t("menu.corruptSaveDescription")}>
                 <span className="main-menu-entry-mark" />
                 <span>{t("menu.discardCorruptSave")}</span>

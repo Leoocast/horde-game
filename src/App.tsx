@@ -24,12 +24,10 @@ import { preloadGameAssets, type LoadingLabel } from "./utils/assetPreloader";
 import { registerDesktopLifecycle } from "./platform/desktopLifecycle";
 import { initializeDesktopPreferences } from "./persistence/desktopPreferences";
 import {
-  deleteDesktopResume,
-  loadDesktopResume,
   resumeDeckIds,
-  startDesktopResumeCheckpointing,
   type DesktopResumeLoad,
 } from "./persistence/resumeService";
+import { productResumeRuntime } from "./persistence/resumeRuntime";
 import { restoreResumeGame } from "./persistence/resumeSave";
 import { initializeGuidedProgressPersistence } from "./persistence/guidedProgressPersistence";
 import { guidedProductLifecycle } from "./guidance/productRuntime";
@@ -154,6 +152,10 @@ export default function App() {
     : screen === "journey"
       ? LEARN_TO_PLAY_BOARD_SESSION
       : NORMAL_BOARD_SESSION;
+  const clearResumeForProduct = useCallback(() => {
+    void productResumeRuntime.clear().catch(() => undefined);
+    if (productResumeRuntime.enabled) setDesktopResume({ status: "none" });
+  }, []);
 
   useEffect(() => {
     return registerDesktopLifecycle();
@@ -161,7 +163,7 @@ export default function App() {
 
   useEffect(() => {
     let active = true;
-    void loadDesktopResume()
+    void productResumeRuntime.load()
       .then((resume) => {
         if (active) setDesktopResume(resume);
       })
@@ -172,8 +174,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!boardSessionPolicy.autosave || screen !== "game") return;
-    return startDesktopResumeCheckpointing({ setupTurns, playerName });
+    if (!productResumeRuntime.enabled || !boardSessionPolicy.autosave || screen !== "game") return;
+    return productResumeRuntime.startCheckpointing({ setupTurns, playerName });
   }, [boardSessionPolicy, playerName, screen, setupTurns]);
 
   useEffect(() => {
@@ -377,8 +379,7 @@ export default function App() {
     }
 
     if (transition.destination === "learn-to-play-random") {
-      void deleteDesktopResume();
-      setDesktopResume({ status: "none" });
+      clearResumeForProduct();
       setPreserveMenuMusic(false);
       setSetupTurns(STANDARD_SETUP_TURNS);
       setSelectedDeckId(DEFAULT_PLAYER_DECK_ID);
@@ -396,12 +397,11 @@ export default function App() {
       return;
     }
 
-    void deleteDesktopResume();
-    setDesktopResume({ status: "none" });
+    clearResumeForProduct();
     setPreserveMenuMusic(false);
     setMenuReturnScreen("setup");
     setScreen("start");
-  }, [reset, startBattleMusic]);
+  }, [clearResumeForProduct, reset, startBattleMusic]);
 
   const completeDestinyTransition = useCallback((transitionId: number) => {
     if (destinyTransitionRef.current?.id !== transitionId) return;
@@ -600,9 +600,10 @@ export default function App() {
             setScreen("uiReference");
           } : undefined}
           howToPlayEntries={howToPlayEntries}
+          resumeEnabled={productResumeRuntime.enabled}
           resumeStatus={desktopResume.status}
-          continueDisabled
-          onContinue={!requiredLesson && desktopResume.save ? () => {
+          continueDisabled={Boolean(requiredLesson)}
+          onContinue={productResumeRuntime.enabled && !requiredLesson && desktopResume.save ? () => {
             const save = desktopResume.save!;
             const deckIds = resumeDeckIds(save);
             stopMusic();
@@ -615,10 +616,9 @@ export default function App() {
             setScreen("game");
             startBattleMusic(true);
           } : undefined}
-          onDiscardResume={desktopResume.status === "corrupt" ? () => {
-            void deleteDesktopResume();
-            setDesktopResume({ status: "none" });
-          } : undefined}
+          onDiscardResume={productResumeRuntime.enabled && desktopResume.status === "corrupt"
+            ? clearResumeForProduct
+            : undefined}
           onRestartFirstTime={() => {
             setRequiredTutorialOffered(false);
             setScreen("start");
@@ -633,8 +633,7 @@ export default function App() {
               launchGuidedLesson(requiredLesson.id);
               return;
             }
-            void deleteDesktopResume();
-            setDesktopResume({ status: "none" });
+            clearResumeForProduct();
             setPreserveMenuMusic(false);
             setPlayerName(options.playerName);
             setSetupTurns(options.setupTurns);
@@ -714,8 +713,7 @@ export default function App() {
             ? continueLearnToPlayIntoRandomFuture
             : undefined}
         onReturnToMenu={screen === "tutorial" ? leaveGuidedLesson : screen === "journey" ? leaveLearnToPlayJourney : () => {
-          void deleteDesktopResume();
-          setDesktopResume({ status: "none" });
+          clearResumeForProduct();
           setPreserveMenuMusic(false);
           setMenuReturnScreen("home");
           setScreen("start");

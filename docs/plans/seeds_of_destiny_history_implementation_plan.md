@@ -1,6 +1,6 @@
 # Plan por fases — historial de Semillas del Destino para la demo
 
-Estado: **Fase 1 implementada; decisión creativa del usuario pendiente**.
+Estado: **Fases 1 y 2 completadas; Fase 2.5 pendiente**.
 
 Última actualización: **2026-08-21**.
 
@@ -319,7 +319,7 @@ Estado: **completada en este documento**.
 
 ### Fase 1 — Prototipo aislado del relato
 
-Estado: **implementación completada el 2026-08-21; validación del usuario pendiente**.
+Estado: **completada y aprobada por el usuario el 2026-08-21**.
 
 Entrega:
 
@@ -383,9 +383,26 @@ salidas:
 
 La decisión y los hitos aceptados se registran aquí antes de iniciar la Fase 2.
 
-**Decisión registrada:** pendiente.
+**Decisión registrada:** **Relato aprobado** como primera versión. Se conservan párrafo y hasta dos
+marcas con el tono y vocabulario fijados arriba; su integración runtime sigue perteneciendo a la
+Fase 7.
 
 ### Fase 2 — Política de sesión de la demo
+
+Estado: **completada el 2026-08-21**.
+
+Entrega:
+
+- `src/product/productCapabilities.ts` fija `DEMO_CAPABILITIES` como preset activo y conserva
+  `EARLY_ACCESS_RESUME_REGRESSION_CAPABILITIES` con historial todavía apagado.
+- `src/persistence/resumeRuntime.ts` es la única frontera usada por `App`: con resume apagado,
+  `load`, `clear` y `startCheckpointing` son operaciones nulas que no alcanzan el bridge.
+- `App` enruta Jugar, volver al menú, contemplar, handoff del tutorial, carga y checkpoints por esa
+  frontera. Ya no importa directamente ninguna operación mutable de resume.
+- `StartMenu` exige `resumeEnabled` para renderizar Continuar, la recuperación o el descarte de un
+  save corrupto. La demo usa `false`; el preset de regresión conserva restore y checkpointing.
+- `tests/productCapabilities.test.js` prueba ambos presets con operaciones espía y protege el wiring
+  estático del menú y `App`.
 
 - Añadir los presets tipados de producto y seleccionar `DEMO_CAPABILITIES` en la build de la demo.
 - No iniciar `loadDesktopResume` ni `startDesktopResumeCheckpointing` cuando esté apagada.

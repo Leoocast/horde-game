@@ -92,7 +92,7 @@ test("App isolates tutorial sessions from resume and Settings hides scenario mut
     readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/SettingsMenu.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(app, /if \(!boardSessionPolicy\.autosave \|\| screen !== "game"\) return;/u);
+  assert.match(app, /if \(!productResumeRuntime\.enabled \|\| !boardSessionPolicy\.autosave \|\| screen !== "game"\) return;/u);
   assert.match(app, /const requiredLesson = IS_DEV \? undefined : guidedProductLifecycle\.nextRequiredLesson\(\);/u);
   assert.match(app, /if \(!requiredLesson\) return;/u);
   assert.match(app, /resumeStatus=\{desktopResume\.status\}/u);

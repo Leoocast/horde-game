@@ -527,7 +527,7 @@ test("App exposes both launchers, disables Continue, and hands the journey to a 
   assert.match(app, /function beginLearnToPlayJourney\(\)[\s\S]*?learnToPlayJourneyLifecycle\.start\(\)[\s\S]*?setScreen\("journey"\)/u);
   assert.match(app, /howToPlayEntries=\{howToPlayEntries\}/u);
   assert.match(app, /continueDisabled/u);
-  assert.match(app, /if \(!boardSessionPolicy\.autosave \|\| screen !== "game"\) return;/u);
+  assert.match(app, /if \(!productResumeRuntime\.enabled \|\| !boardSessionPolicy\.autosave \|\| screen !== "game"\) return;/u);
   assert.match(app, /guidedProgressStore\.markJourneyCompleted\(LEARN_TO_PLAY_JOURNEY\.id, LEARN_TO_PLAY_JOURNEY\.revision\)/u);
   assert.match(app, /generateRandomFutureSeed\(\)[\s\S]*?DEFAULT_PLAYER_DECK_ID[\s\S]*?DEFAULT_HOST_DECK_ID[\s\S]*?"normal"[\s\S]*?"standard"/u);
   assert.match(app, /beginDestinyTransition\("contemplate", "learn-to-play-random"\)/u);

@@ -654,11 +654,15 @@ renderiza templates ES/EN sin leer `game.log` y dispone sus muestras de decisió
 `docs/plans/seeds_of_destiny_narrative_samples.md`. Resultado, turno y Reserva permanecen como
 metadatos: no se repiten en el párrafo, y si no hay un acontecimiento el fallback permanece dentro
 del mundo. La voz habla de Ecos, nunca de cartas ni de datos generados/registrados. No está
-conectado a partidas, estado, UI ni
-persistencia; la decisión entre relato, bullets factuales o descarte sigue pendiente y bloquea el
-inicio de la Fase 2. La decisión de demo, todavía pendiente de implementación, es ocultar
-**Continuar** y apagar toda lectura/mutación de resume
-mediante una capability de producto, sin borrar su infraestructura para Early Access. Una partida
+conectado a partidas, estado, UI ni persistencia; el usuario aprobó **Relato** como primera versión
+el 2026-08-21 y su integración sigue reservada para la Fase 7.
+
+La Fase 2 está implementada. `src/product/productCapabilities.ts` selecciona
+`DEMO_CAPABILITIES`: **Continuar** no se renderiza y resume no lee, escribe ni borra `resume-v1`.
+`src/persistence/resumeRuntime.ts` concentra esa frontera con operaciones nulas para demo. El preset
+`EARLY_ACCESS_RESUME_REGRESSION_CAPABILITIES` conserva carga, restore, checkpointing, recuperación y
+borrado detrás de tests, sin habilitar aún historial. No borrar la infraestructura de resume ni
+volver a llamarla directamente desde `App`. Una partida
 cortada se registra como **Historia interrumpida**, nunca como derrota, y sólo puede reescribirse
 desde la seed,
 decks, dificultad, modo, Preparación y revisión determinista originales. El historial factual no
@@ -724,8 +728,8 @@ estabilizado, la enseñanza del ataque no bloquea el flujo, permanece como no vi
 una partida posterior. La preferencia global de no repetir ayudas sólo suprime conceptos ya
 mostrados: un concepto no visto conserva siempre su primera aparición. Está activa por defecto, se
 marca al cerrar/aceptar la ayuda y las repeticiones se limitan a una por concepto y partida.
-En el código actual **Continuar** permanece deshabilitado globalmente; el objetivo posterior de la
-demo es ocultarlo y apagar resume con la capability definida en el plan de historial de Semillas.
+En la build demo actual **Continuar** no se renderiza y el archivo de resume existente permanece
+intacto. El control sólo reaparece al seleccionar el preset de regresión Early Access.
 No traducir escenas aisladas a código fuera de las fases aprobadas.
 
 La auditoría y el plan técnico de esa extensión viven en
