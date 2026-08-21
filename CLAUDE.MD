@@ -598,12 +598,15 @@ retira visualmente tablero y HUD para dejar al descubierto el `TemporalBackdrop`
 la partida; no monta otro cielo, renderer ni instrumento. Al abrir, el cosmos adopta una versión
 dorada y hacia la izquierda el mismo campo de flujo procedural que acelera durante Surge, mientras el dial gira 180 grados en
 sentido antihorario; al cerrar, escena, atmósfera y dial recorren la animación inversa. El contenido flota
-sin panel opaco y muestra únicamente el código numérico del Futuro, grande, alto y con halo dorado;
+sin panel opaco y muestra únicamente el código numérico del Futuro, grande, centrado contra el
+viewport, alto y con halo dorado;
 no usa máscara de fade ni
 lleva título, raja ni divisor. Copiar y cerrar viven con contraste medio junto al extremo superior
-derecho de la composición y ganan presencia con hover o foco; copiar expone un tooltip localizado.
+derecho de la composición y ganan presencia con hover o foco; copiar expone el `GameTooltip`
+compartido y localizado.
 **Reescribir este
-futuro** reutiliza sin overrides el botón de Destino establecido por `LOST FUTURE`, y **Contemplar
+futuro** reutiliza el botón de Destino establecido por `LOST FUTURE`; sólo invierte el giro de su
+ornamento en este diálogo. **Contemplar
 otro futuro** queda debajo como salida textual tenue. No recupera el antiguo sigilo centrado.
 
 El vórtice es un agujero negro dibujado por el renderer WebGL compartido: `destinyVortexShader.ts`

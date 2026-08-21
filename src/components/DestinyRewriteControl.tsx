@@ -6,6 +6,7 @@ import { writeClipboardText } from "../platform/desktopBridge";
 import { useToastStore } from "../store/useToastStore";
 import { futureCodeFromSeed } from "../utils/futureIdentity";
 import { DestinyActionButton } from "./DestinyActionButton";
+import { GameTooltip } from "./GameTooltip";
 
 type Props = {
   seed: string;
@@ -157,15 +158,16 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother, i
           }}
         >
           <div className="destiny-dialog-controls">
-            <button
-              className="destiny-dialog-copy"
-              type="button"
-              onClick={copyIdentity}
-              data-tooltip={t("destiny.copyIdentity")}
-              aria-label={t("destiny.copyIdentity")}
-            >
-              <Copy size={16} />
-            </button>
+            <GameTooltip content={t("destiny.copyIdentity")} side="bottom">
+              <button
+                className="destiny-dialog-copy"
+                type="button"
+                onClick={copyIdentity}
+                aria-label={t("destiny.copyIdentity")}
+              >
+                <Copy size={16} />
+              </button>
+            </GameTooltip>
             <button className="destiny-dialog-close" type="button" onClick={() => setOpen(false)} aria-label={t("common.close")}>
               <X size={18} />
             </button>

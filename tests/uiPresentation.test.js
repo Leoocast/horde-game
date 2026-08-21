@@ -1575,11 +1575,13 @@ test("UI Reference inventories only real player UI and traces every component to
   assert.match(destinyDialogSource, /<DestinyActionButton[\s\S]*?className="destiny-dialog-primary"[\s\S]*?destiny-dialog-secondary/u);
   assert.match(destinyActionSource, /"destiny-command-button", "learn-to-play-contemplate-button"/u);
   assert.match(destinyDialogSource, /destiny-dialog-kicker" aria-label=[^>]*>\{futureCode\}<\/span>/u);
-  assert.match(gameStyles, /\.destiny-dialog-kicker \{[^}]*margin: -54px auto 38px;[^}]*color: rgb\(244 224 153 \/ 0\.72\);[^}]*font-size: clamp\(92px, 14vw, 146px\);[^}]*text-align: center;/su);
+  assert.match(gameStyles, /\.destiny-dialog-kicker \{[^}]*left: 50%;[^}]*width: min\(920px, calc\(100vw - 32px\)\);[^}]*margin: -82px 0 92px;[^}]*font-size: clamp\(92px, 14vw, 146px\);[^}]*padding: 0;[^}]*text-align: center;[^}]*transform: translateX\(-50%\);/su);
   assert.doesNotMatch(gameStyles.match(/\.destiny-dialog-kicker \{[^}]*\}/su)?.[0] ?? "", /mask-image/u);
-  assert.match(gameStyles, /\.destiny-dialog-controls \{[^}]*position: fixed;[^}]*top: calc\(50% - 150px\);[^}]*left: calc\(50% \+ 220px\);[^}]*opacity: 0\.68;/su);
-  assert.match(destinyDialogSource, /data-tooltip=\{t\("destiny\.copyIdentity"\)\}/u);
-  assert.match(gameStyles, /\.destiny-dialog-copy::after \{[^}]*content: attr\(data-tooltip\);/su);
+  assert.match(gameStyles, /\.destiny-dialog-controls \{[^}]*position: fixed;[^}]*top: calc\(50% - 235px\);[^}]*left: min\(calc\(50% \+ 305px\), calc\(100% - 82px\)\);[^}]*opacity: 0\.68;/su);
+  assert.match(destinyDialogSource, /<GameTooltip content=\{t\("destiny\.copyIdentity"\)\} side="bottom">[\s\S]*?className="destiny-dialog-copy"/u);
+  assert.doesNotMatch(destinyDialogSource, /data-tooltip/u);
+  assert.doesNotMatch(gameStyles, /\.destiny-dialog-copy::after/u);
+  assert.match(gameStyles, /\.destiny-dialog-primary::before \{ animation-direction: reverse; \}/u);
   assert.match(gameStyles, /\.destiny-dialog-secondary \{[^}]*border: 0;[^}]*background: transparent;[^}]*font-size: 9px;/su);
   assert.match(temporalBackdropSource, /const presentedDial = dialMix - destinyMix \* 180;[\s\S]*?positionDial\(presentedDial\)/u);
   assert.match(temporalBackdropSource, /uprightTemporalDialLabelTransform\(degrees, DIAL_LABELS\[index\]\)/u);

@@ -22157,9 +22157,9 @@ body.is-destiny-dialog-open.is-destiny-dialog-closing .temporal-backdrop-grid {
 .destiny-dialog-controls {
   position: fixed;
   z-index: 3;
-  top: calc(50% - 150px);
+  top: calc(50% - 235px);
   right: auto;
-  left: calc(50% + 220px);
+  left: min(calc(50% + 305px), calc(100% - 82px));
   display: flex;
   gap: 7px;
   opacity: 0.68;
@@ -22192,50 +22192,23 @@ body.is-destiny-dialog-open.is-destiny-dialog-closing .temporal-backdrop-grid {
   outline: none;
 }
 
-.destiny-dialog-copy::after {
-  position: absolute;
-  top: calc(100% + 9px);
-  right: 0;
-  width: max-content;
-  max-width: min(230px, calc(100vw - 28px));
-  border: 1px solid rgb(174 158 104 / 0.22);
-  padding: 6px 9px;
-  background: rgb(5 11 13 / 0.96);
-  color: #b9c1af;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.38);
-  content: attr(data-tooltip);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  opacity: 0;
-  pointer-events: none;
-  text-transform: uppercase;
-  transform: translateY(-3px);
-  transition: opacity 140ms ease, transform 140ms ease;
-  white-space: nowrap;
-}
-
-.destiny-dialog-copy:hover::after,
-.destiny-dialog-copy:focus-visible::after {
-  opacity: 1;
-  transform: translateY(0);
-}
-
 .destiny-dialog-kicker {
   position: relative;
   z-index: 1;
   display: block;
-  width: max-content;
-  max-width: 100%;
-  margin: -54px auto 38px;
+  left: 50%;
+  width: min(920px, calc(100vw - 32px));
+  max-width: none;
+  margin: -82px 0 92px;
   color: rgb(244 224 153 / 0.72);
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(92px, 14vw, 146px);
   font-weight: 500;
   letter-spacing: 0.08em;
   line-height: 0.86;
-  padding: 0 0.16em 0 0.28em;
+  padding: 0;
   text-align: center;
+  transform: translateX(-50%);
   text-shadow:
     0 0 10px rgb(255 236 170 / 0.36),
     0 0 34px rgb(222 188 103 / 0.3),
@@ -22273,6 +22246,8 @@ body.is-destiny-dialog-open.is-destiny-dialog-closing .temporal-backdrop-grid {
   gap: 5px;
   margin: 0 auto;
 }
+
+.destiny-dialog-primary::before { animation-direction: reverse; }
 
 @media (max-width: 560px) {
   .hand-limit-actions { grid-template-columns: 1fr; }
@@ -22430,9 +22405,9 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
   .destiny-command-button { min-width: 42px; width: 42px; padding: 0 5px; justify-content: center; }
   .destiny-command-copy { display: none; }
   .destiny-dialog { padding: 0 22px 18px; }
-  .destiny-dialog-controls { top: 18px; right: 18px; left: auto; }
+  .destiny-dialog-controls { top: 10px; right: 10px; left: auto; }
   .destiny-dialog-kicker {
-    margin: -42px auto 32px;
+    margin: -58px 0 68px;
     font-size: clamp(70px, 22vw, 104px);
   }
   .destiny-dialog .destiny-command-copy { display: grid; }
