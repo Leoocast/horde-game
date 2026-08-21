@@ -67,12 +67,17 @@ export function SeedsOfDestinyScreen({ decks, hostDecks, onBack, closing = false
       className={`main-settings-screen seeds-panel ${closing ? "is-closing" : ""}`}
       aria-label={t("menu.seedsOfDestiny")}
     >
-      <header className="main-settings-header">
-        <button className="menu-screen-back" type="button" onClick={onBack}>
-          <ArrowLeft size={16} /> {t("common.back")}
+      {/* Misma barra que la pantalla de Jugar: reutiliza `expedition-header` y
+          `expedition-back` en lugar de copiar su material, para que las dos
+          cabeceras sigan cambiando juntas. */}
+      <header className="expedition-header seeds-header">
+        <button className="expedition-back" type="button" onClick={onBack}>
+          <ArrowLeft size={17} /> {t("common.mainMenu")}
         </button>
-        <h2>{t("menu.seedsOfDestiny")}</h2>
-        <span className="seeds-intro">{t("seeds.intro")}</span>
+        <div>
+          <h1>{t("menu.seedsOfDestiny")}</h1>
+          <p className="seeds-intro">{t("seeds.intro")}</p>
+        </div>
       </header>
 
       <div className="seeds-book">
@@ -83,8 +88,6 @@ export function SeedsOfDestinyScreen({ decks, hostDecks, onBack, closing = false
               <SeedIndexEntry
                 key={entry.seed}
                 future={entry}
-                decks={decks}
-                hostDecks={hostDecks}
                 current={entry.seed === selectedSeed}
                 onSelect={() => selectFuture(entry.seed)}
                 onMove={(offset) => {
@@ -132,22 +135,17 @@ function useSeedIdentity(seed: string) {
 
 function SeedIndexEntry({
   future,
-  decks,
-  hostDecks,
   current,
   onSelect,
   onMove,
 }: Readonly<{
   future: SeedFutureFixture;
-  decks: readonly InspectableDeck[];
-  hostDecks: readonly InspectableDeck[];
   current: boolean;
   onSelect: () => void;
   onMove: (offset: number) => void;
 }>) {
   const t = useTranslation();
   const { code } = useSeedIdentity(future.seed);
-  const { chronicle, host } = useFutureDecks(future, decks, hostDecks);
   const stateWord = future.state === "preserved" ? t("seeds.statePreserved") : t("seeds.stateLost");
 
   return (
@@ -162,13 +160,8 @@ function SeedIndexEntry({
           if (event.key === "ArrowUp") { event.preventDefault(); onMove(-1); }
         }}
       >
-        <DestinySeal state={future.state} size={32} />
-        <span className="seeds-entry-body">
-          <span className="seeds-entry-code">{code}</span>
-          <span className="seeds-entry-match">
-            {chronicle?.label ?? future.chronicleDeckId} · {host?.label ?? future.hostDeckId}
-          </span>
-        </span>
+        <DestinySeal state={future.state} size={34} />
+        <span className="seeds-entry-code">{code}</span>
         <span className={`seeds-entry-word seeds-state-${future.state}`}>{stateWord}</span>
       </button>
     </li>
@@ -234,12 +227,9 @@ function SeedFuturePage({
       <SeedThread future={future} openAttempt={openAttempt} onToggleAttempt={onToggleAttempt} />
 
       <footer className="seeds-page-actions">
-        {/* Maqueta: las dos salidas comparten material y todavía no ejecutan nada. */}
+        {/* Maqueta: la salida todavía no ejecuta nada. */}
         <button type="button" className="seeds-action is-rewrite">
           <strong>{t("destiny.rewriteThis")}</strong>
-        </button>
-        <button type="button" className="seeds-action is-contemplate">
-          <strong>{t("destiny.contemplateAnother")}</strong>
         </button>
       </footer>
     </div>
@@ -385,34 +375,25 @@ const SEAL_INCISION_PATH = SEAL_PLAN.nodes
   })
   .join(" ");
 
-/** Preservado: la rosa cerrada y encendida. Perdido: la misma rosa fría y quebrada. */
+/**
+ * El sello es sólo la rosa: preservada en oro, perdida en gris. No lleva aro,
+ * quebradura ni recortes de trazo — las dos versiones son la misma figura y lo
+ * único que cambia entre ellas es el color.
+ */
 function DestinySeal({ state, size }: Readonly<{ state: "preserved" | "lost"; size: number }>) {
-  const preserved = state === "preserved";
   return (
     <svg
       className="seeds-seal"
       data-state={state}
-      viewBox="-118 -118 236 236"
+      viewBox="-108 -108 216 216"
       width={size}
       height={size}
       aria-hidden="true"
       focusable="false"
     >
-      <circle
-        className="ring"
-        r={SEAL_RING_RADIUS}
-        pathLength={360}
-        strokeDasharray={preserved ? "1 14" : "92 46"}
-      />
-      <path
-        className="rose"
-        d={SEAL_ROSE_PATH}
-        pathLength={preserved ? undefined : 100}
-        strokeDasharray={preserved ? undefined : "36 6 44 14"}
-      />
+      <path className="rose" d={SEAL_ROSE_PATH} />
       <path className="incision" d={SEAL_INCISION_PATH} />
-      <circle className="heart" r={preserved ? 5 : 3.6} />
-      {!preserved && <path className="fracture" d="M-88 -34 L-22 -6 L6 -46 L34 12 L92 30" />}
+      <circle className="heart" r={5} />
     </svg>
   );
 }

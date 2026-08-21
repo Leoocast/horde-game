@@ -23388,15 +23388,16 @@ body.is-victory-clearing .game-battlefield-stage {
   --seeds-muted-2: #7b888c;
 }
 
-/* Una sola fila: la entradilla es una línea, no un párrafo. */
-.seeds-panel .seeds-intro {
+/* Una sola fila: la entradilla es la leyenda de la barra, no un párrafo. */
+.seeds-header .seeds-intro {
   display: block;
   overflow: hidden;
-  color: var(--seeds-muted);
+  margin: 9px 0 0;
+  color: #8a979a;
   font-family: "Lora", Georgia, "Times New Roman", serif;
-  font-size: clamp(12px, 0.98vw, 16px);
+  font-size: clamp(13px, 1vw, 17px);
   font-style: italic;
-  line-height: 1.6;
+  line-height: 1.5;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -23431,9 +23432,9 @@ body.is-victory-clearing .game-battlefield-stage {
 }
 
 .seeds-index-label {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   color: var(--seeds-muted-2);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.24em;
   text-transform: uppercase;
@@ -23446,9 +23447,9 @@ body.is-victory-clearing .game-battlefield-stage {
   position: relative;
   display: grid;
   width: 100%;
-  grid-template-columns: 34px minmax(0, 1fr) auto;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   border: 0;
   border-bottom: 1px solid rgb(145 154 157 / 0.1);
   background: transparent;
@@ -23475,12 +23476,11 @@ body.is-victory-clearing .game-battlefield-stage {
   content: "";
 }
 
-.seeds-entry-body { display: grid; gap: 5px; min-width: 0; }
-
 .seeds-entry-code {
+  min-width: 0;
   color: var(--seeds-parchment);
   font-family: "Cinzel", Georgia, "Times New Roman", serif;
-  font-size: 19px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: 0.08em;
   line-height: 1;
@@ -23489,18 +23489,8 @@ body.is-victory-clearing .game-battlefield-stage {
 
 .seeds-index-entry[aria-current="true"] .seeds-entry-code { color: var(--seeds-gold-bright); }
 
-.seeds-entry-match {
-  overflow: hidden;
-  color: var(--seeds-muted);
-  font-family: "Lora", Georgia, "Times New Roman", serif;
-  font-size: 14px;
-  line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .seeds-entry-word {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -23576,7 +23566,7 @@ body.is-victory-clearing .game-battlefield-stage {
 
 .seeds-duel-kicker {
   color: var(--seeds-muted-2);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.3em;
   text-transform: uppercase;
@@ -23586,7 +23576,7 @@ body.is-victory-clearing .game-battlefield-stage {
   margin: 6px 0 0;
   color: var(--seeds-gold-bright);
   font-family: "Cinzel", Georgia, "Times New Roman", serif;
-  font-size: clamp(32px, 3.4vw, 50px);
+  font-size: clamp(38px, 3.9vw, 60px);
   font-weight: 700;
   letter-spacing: 0.1em;
   line-height: 1;
@@ -23598,8 +23588,8 @@ body.is-victory-clearing .game-battlefield-stage {
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  margin-top: 9px;
-  font-size: 13px;
+  margin-top: 11px;
+  font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -23612,14 +23602,14 @@ body.is-victory-clearing .game-battlefield-stage {
   margin: 14px 0 0;
   color: var(--seeds-parchment);
   font-family: "Lora", Georgia, "Times New Roman", serif;
-  font-size: clamp(14px, 1.1vw, 17px);
+  font-size: clamp(16px, 1.3vw, 21px);
   line-height: 1.35;
 }
 
 .seeds-versus {
   color: var(--seeds-muted-2);
   font-family: "Cinzel", Georgia, "Times New Roman", serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.26em;
   text-transform: uppercase;
@@ -23631,7 +23621,7 @@ body.is-victory-clearing .game-battlefield-stage {
   margin: 12px 0 0;
   color: var(--seeds-muted);
   font-family: "Cinzel", Georgia, "Times New Roman", serif;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -23646,10 +23636,10 @@ body.is-victory-clearing .game-battlefield-stage {
   align-items: center;
   gap: 8px;
   border: 1px solid rgb(158 151 110 / 0.28);
-  padding: 6px 12px;
+  padding: 8px 14px;
   background: rgb(4 12 14 / 0.7);
   color: #a8ad98;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -23671,7 +23661,7 @@ body.is-victory-clearing .game-battlefield-stage {
 .seeds-thread-label {
   margin: 0 0 12px;
   color: var(--seeds-muted-2);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.24em;
   text-transform: uppercase;
@@ -23719,7 +23709,7 @@ body.is-victory-clearing .game-battlefield-stage {
 .seeds-thread-title {
   color: var(--seeds-parchment);
   font-family: "Lora", Georgia, "Times New Roman", serif;
-  font-size: 17px;
+  font-size: 20px;
   line-height: 1.45;
   transition: color 160ms ease;
 }
@@ -23745,7 +23735,7 @@ body.is-victory-clearing .game-battlefield-stage {
   margin: 0;
   color: #c8cdcb;
   font-family: "Lora", Georgia, "Times New Roman", serif;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.72;
 }
 
@@ -23758,7 +23748,7 @@ body.is-victory-clearing .game-battlefield-stage {
   gap: 12px;
   color: var(--seeds-muted);
   font-family: "Lora", Georgia, "Times New Roman", serif;
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1.6;
 }
 
@@ -23781,7 +23771,7 @@ body.is-victory-clearing .game-battlefield-stage {
   padding-top: 14px;
   border-top: 1px solid rgb(199 170 105 / 0.22);
   font-family: "Cinzel", Georgia, "Times New Roman", serif;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -23790,7 +23780,7 @@ body.is-victory-clearing .game-battlefield-stage {
 .seeds-thread-seal small {
   color: var(--seeds-muted);
   font-family: "Lora", Georgia, "Times New Roman", serif;
-  font-size: 14px;
+  font-size: 16px;
   font-style: italic;
   font-weight: 400;
   letter-spacing: 0.01em;
@@ -23839,7 +23829,7 @@ body.is-victory-clearing .game-battlefield-stage {
   position: relative;
   z-index: 2;
   font-family: "Lora", Georgia, "Times New Roman", serif;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -23860,10 +23850,8 @@ body.is-victory-clearing .game-battlefield-stage {
   animation: seeds-action-orbit 8s linear infinite;
 }
 
-/* Reescribir vuelve sobre sus pasos y gira a la izquierda; Contemplar busca
-   adelante y gira a la derecha. */
+/* Reescribir vuelve sobre sus pasos: su ornamento gira a la izquierda. */
 .seeds-action.is-rewrite::before { animation-direction: reverse; }
-.seeds-action.is-contemplate::before { animation-direction: normal; }
 
 .seeds-action::after {
   position: absolute;
@@ -23886,27 +23874,22 @@ body.is-victory-clearing .game-battlefield-stage {
 
 @keyframes seeds-action-orbit { to { transform: translate(-50%, -50%) rotate(360deg); } }
 
-/* ---- Sello: la misma rosa cardinal del instrumento y de la victoria ---- */
+/* ---- Sello: la misma rosa cardinal del instrumento y de la victoria ----
+   Sólo la rosa. Sin aro punteado, sin quebradura y sin recortes de trazo: las
+   dos versiones son la misma figura y lo único que cambia es el color. */
 .seeds-seal { display: block; overflow: visible; flex: 0 0 auto; }
-.seeds-seal .rose { fill: none; stroke-linejoin: miter; vector-effect: non-scaling-stroke; }
-.seeds-seal .incision { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-.seeds-seal .ring { fill: none; vector-effect: non-scaling-stroke; }
-.seeds-seal .fracture { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.seeds-seal .rose { fill: none; stroke-linejoin: miter; stroke-width: 1.3; vector-effect: non-scaling-stroke; }
+.seeds-seal .incision { fill: none; stroke-linecap: round; stroke-width: 1; vector-effect: non-scaling-stroke; }
 
-.seeds-seal[data-state="preserved"] .rose { stroke: rgb(232 205 138 / 0.95); stroke-width: 1.3; }
-.seeds-seal[data-state="preserved"] .incision { stroke: rgb(214 164 76 / 0.85); stroke-width: 1; }
-.seeds-seal[data-state="preserved"] .ring { stroke: rgb(214 192 122 / 0.5); stroke-width: 1; animation: seeds-seal-breathe 6s ease-in-out infinite; }
+.seeds-seal[data-state="preserved"] .rose { stroke: rgb(232 205 138 / 0.95); }
+.seeds-seal[data-state="preserved"] .incision { stroke: rgb(214 164 76 / 0.85); }
 .seeds-seal[data-state="preserved"] .heart { fill: #fff0c4; }
 
-.seeds-seal[data-state="lost"] .rose { stroke: rgb(186 196 197 / 0.55); stroke-width: 1.2; }
-.seeds-seal[data-state="lost"] .incision { stroke: rgb(160 172 174 / 0.36); stroke-width: 1; }
-.seeds-seal[data-state="lost"] .ring { stroke: rgb(172 119 84 / 0.5); stroke-width: 1; }
-.seeds-seal[data-state="lost"] .heart { fill: rgb(213 166 126 / 0.6); }
-.seeds-seal[data-state="lost"] .fracture { stroke: rgb(226 240 246 / 0.42); stroke-width: 1; }
+.seeds-seal[data-state="lost"] .rose { stroke: rgb(168 178 180 / 0.62); }
+.seeds-seal[data-state="lost"] .incision { stroke: rgb(168 178 180 / 0.42); }
+.seeds-seal[data-state="lost"] .heart { fill: rgb(168 178 180 / 0.6); }
 
 .seeds-index-entry[aria-current="true"] .seeds-seal[data-state="preserved"] .rose { stroke: #fff0c4; }
-
-@keyframes seeds-seal-breathe { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
 @media (max-width: 1180px) {
   .seeds-panel .seeds-intro { white-space: normal; }
@@ -23916,8 +23899,7 @@ body.is-victory-clearing .game-battlefield-stage {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .seeds-action::before,
-  .seeds-seal[data-state="preserved"] .ring { animation: none; }
+  .seeds-action::before { animation: none; }
   .seeds-duel-card img { transition: none; }
 }
 
@@ -23929,7 +23911,6 @@ body.is-victory-clearing .game-battlefield-stage {
    `max-width: none`; de ahí las tres clases del selector. */
 .seeds-panel { width: 100%; }
 
-.main-settings-screen.seeds-panel .main-settings-header,
 .main-settings-screen.seeds-panel .seeds-book {
   width: 100%;
   max-width: 1680px;
@@ -23962,7 +23943,7 @@ body.is-victory-clearing .game-battlefield-stage {
   animation: seeds-screen-exit 345ms ease-in both;
 }
 
-.seeds-panel:not(.is-closing) .main-settings-header {
+.seeds-panel:not(.is-closing) .seeds-header {
   animation: seeds-enter-drop 340ms cubic-bezier(0.2, 0.85, 0.25, 1) both;
 }
 
@@ -24014,7 +23995,7 @@ body.is-victory-clearing .game-battlefield-stage {
   animation: seeds-exit-index 190ms 135ms cubic-bezier(0.5, 0, 0.85, 0.4) both;
 }
 
-.seeds-panel.is-closing .main-settings-header {
+.seeds-panel.is-closing .seeds-header {
   animation: seeds-exit-drop 175ms 165ms cubic-bezier(0.5, 0, 0.85, 0.4) both;
 }
 
@@ -24106,7 +24087,7 @@ body.is-victory-clearing .game-battlefield-stage {
 @media (prefers-reduced-motion: reduce) {
   .main-settings-screen.seeds-panel,
   .main-settings-screen.seeds-panel.is-closing,
-  .seeds-panel .main-settings-header,
+  .seeds-panel .seeds-header,
   .seeds-panel .seeds-index,
   .seeds-panel .seeds-duel-card-player,
   .seeds-panel .seeds-duel-card-host,
@@ -24116,4 +24097,14 @@ body.is-victory-clearing .game-battlefield-stage {
     animation-duration: 1ms !important;
     animation-delay: 0ms !important;
   }
+}
+
+/* ---- La barra va a sangre ----
+   El panel pierde el respiro de Ajustes, que a pantalla completa se comía la
+   primera pantalla entera antes de que empezara el libro: la cabecera trae su
+   propio padding —el de la Expedición— y el aire horizontal pasa al libro. */
+.main-settings-screen.seeds-panel { padding: 0; }
+
+.seeds-panel .seeds-book {
+  padding: clamp(14px, 2vh, 24px) clamp(28px, 4vw, 64px) clamp(16px, 2vh, 26px);
 }
