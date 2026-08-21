@@ -426,7 +426,7 @@
   }
 
   /* The main menu's own cool near-black, mirrored instead of weighted to one side. */
-  .main-menu-shell.expedition-active {
+  .main-menu-shell:is(.expedition-active, .menu-fullscreen-active) {
     background-image:
       linear-gradient(90deg, rgb(4 7 9 / 0.95), rgb(11 17 20 / 0.8) 48%, rgb(4 7 9 / 0.94)),
       linear-gradient(0deg, rgb(3 6 8 / 0.94), rgb(0 0 0 / 0.14) 60%),
@@ -434,13 +434,13 @@
     background-position: center, center, center 44%;
   }
 
-  .main-menu-shell.expedition-active::before {
+  .main-menu-shell:is(.expedition-active, .menu-fullscreen-active)::before {
     background:
       radial-gradient(circle at 50% 43%, rgb(0 0 0 / 0.04) 0 17%, rgb(7 11 14 / 0.28) 42%, rgb(2 5 7 / 0.76) 100%),
       linear-gradient(180deg, rgb(0 0 0 / 0.76), rgb(0 0 0 / 0.08) 20% 68%, rgb(0 0 0 / 0.82));
   }
 
-  .main-menu-shell.expedition-active::after {
+  .main-menu-shell:is(.expedition-active, .menu-fullscreen-active)::after {
     display: none;
   }
 
@@ -23369,4 +23369,751 @@ body.is-victory-clearing .game-battlefield-stage {
   /* El tablero se retira igual, pero sin recorrido: sólo deja de estar. */
   body.is-victory-clearing > *:not(:where(#root, .toast-stack)),
   body.is-victory-clearing .game-screen > *:not(:where(.temporal-backdrop, .game-screen-ambience, .game-result-overlay)) { animation: none !important; visibility: hidden; }
+}
+
+/* ============================================================================
+   ARCHIVO DE SEMILLAS DEL DESTINO
+   Maqueta dentro del juego: `SeedsOfDestinyScreen.tsx` monta el diseño sobre
+   datos falsos. La maqueta de decisión es
+   `dev/mockups/ui/claude-seeds-of-destiny-menu.html`.
+   ========================================================================= */
+.seeds-panel {
+  --seeds-gold: #d6a44c;
+  --seeds-gold-bright: #f0e5c4;
+  --seeds-gold-plate: #e6d59e;
+  --seeds-gold-rule: rgb(199 170 105 / 0.34);
+  --seeds-copper: #d5a67e;
+  --seeds-parchment: #e0d3ad;
+  --seeds-muted: #93a0a3;
+  --seeds-muted-2: #7b888c;
+}
+
+/* Una sola fila: la entradilla es una línea, no un párrafo. */
+.seeds-panel .seeds-intro {
+  display: block;
+  overflow: hidden;
+  color: var(--seeds-muted);
+  font-family: "Lora", Georgia, "Times New Roman", serif;
+  font-size: clamp(12px, 0.98vw, 16px);
+  font-style: italic;
+  line-height: 1.6;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.seeds-book {
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  grid-template-columns: minmax(300px, 26%) minmax(0, 1fr);
+  gap: 0 clamp(22px, 2.4vw, 42px);
+  padding-top: 16px;
+}
+
+.seeds-index {
+  position: relative;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: clamp(14px, 1.6vw, 26px);
+  scrollbar-width: thin;
+  scrollbar-color: rgb(199 170 105 / 0.28) transparent;
+}
+
+/* El canto del libro. */
+.seeds-index::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(transparent 2%, rgb(156 137 89 / 0.3) 16%, rgb(156 137 89 / 0.14) 78%, transparent 98%);
+  content: "";
+}
+
+.seeds-index-label {
+  margin: 0 0 6px;
+  color: var(--seeds-muted-2);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.seeds-index-list { display: grid; margin: 0; padding: 0; list-style: none; }
+
+/* Una entrada de registro por Futuro: sello, identidad y estado. */
+.seeds-index-entry {
+  position: relative;
+  display: grid;
+  width: 100%;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  border: 0;
+  border-bottom: 1px solid rgb(145 154 157 / 0.1);
+  background: transparent;
+  padding: 14px 8px 14px 6px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 170ms ease, padding-left 170ms ease;
+}
+
+.seeds-index-entry:hover { background: rgb(199 170 105 / 0.05); padding-left: 11px; }
+
+.seeds-index-entry[aria-current="true"] {
+  background: linear-gradient(90deg, rgb(199 170 105 / 0.12), transparent 82%);
+  padding-left: 11px;
+}
+
+.seeds-index-entry[aria-current="true"]::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  background: linear-gradient(transparent, var(--seeds-gold) 22% 78%, transparent);
+  content: "";
+}
+
+.seeds-entry-body { display: grid; gap: 5px; min-width: 0; }
+
+.seeds-entry-code {
+  color: var(--seeds-parchment);
+  font-family: "Cinzel", Georgia, "Times New Roman", serif;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.seeds-index-entry[aria-current="true"] .seeds-entry-code { color: var(--seeds-gold-bright); }
+
+.seeds-entry-match {
+  overflow: hidden;
+  color: var(--seeds-muted);
+  font-family: "Lora", Georgia, "Times New Roman", serif;
+  font-size: 14px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.seeds-entry-word {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.seeds-state-preserved { color: var(--seeds-gold); }
+.seeds-state-lost { color: var(--seeds-copper); }
+
+/* ---- Página derecha: el Futuro abierto ---- */
+.seeds-page { display: grid; min-height: 0; grid-template-rows: auto minmax(0, 1fr) auto; }
+
+/* El enfrentamiento se ve: las dos cartas clave enfrentadas y la identidad
+   del Futuro entre ellas. */
+.seeds-duel {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(14px, 1.8vw, 30px);
+  border-bottom: 1px solid rgb(145 154 157 / 0.12);
+  padding: 0 clamp(6px, 2.6vw, 48px) 18px;
+}
+
+/* `isolation` no es cosmético: sin su propio contexto de apilamiento, el halo
+   en `z-index: -1` cae por detrás del `TemporalBackdrop` de la pantalla. */
+.seeds-duel-card { position: relative; isolation: isolate; margin: 0; }
+
+/* El PNG de la carta ya trae su marco y sus esquinas transparentes. Un borde,
+   un radio o un fondo propios se ven como una placa cuadrada asomando por
+   detrás, y `box-shadow` proyecta ese rectángulo en vez del recorte real: la
+   sombra va por `drop-shadow`, que sigue el alfa de la carta. */
+.seeds-duel-card img {
+  display: block;
+  width: clamp(140px, 12vw, 192px);
+  height: auto;
+  filter:
+    drop-shadow(0 1px 1px rgb(0 0 0 / 0.6))
+    drop-shadow(0 10px 16px rgb(0 0 0 / 0.5))
+    drop-shadow(0 26px 40px rgb(0 0 0 / 0.42));
+  transition: transform 340ms cubic-bezier(0.16, 1, 0.3, 1), filter 340ms ease;
+}
+
+/* Las dos cartas se miran: giran hacia dentro sobre su propio eje. */
+.seeds-duel-card-player img { transform: perspective(1000px) rotateY(9deg) rotate(-3deg); }
+.seeds-duel-card-host img { transform: perspective(1000px) rotateY(-9deg) rotate(3deg); }
+.seeds-duel-card-player:hover img { transform: perspective(1000px) rotateY(4deg) rotate(-1.2deg) translateY(-9px) scale(1.045); }
+.seeds-duel-card-host:hover img { transform: perspective(1000px) rotateY(-4deg) rotate(1.2deg) translateY(-9px) scale(1.045); }
+
+.seeds-duel-card:hover img {
+  filter:
+    drop-shadow(0 1px 1px rgb(0 0 0 / 0.6))
+    drop-shadow(0 14px 20px rgb(0 0 0 / 0.52))
+    drop-shadow(0 34px 52px rgb(0 0 0 / 0.46));
+}
+
+/* Un halo detrás de cada carta, en el color de su bando: la separa del fondo
+   sin dibujarle un marco encima. */
+.seeds-duel-card::before {
+  position: absolute;
+  z-index: -1;
+  inset: 12% 0 6%;
+  border-radius: 50%;
+  content: "";
+  filter: blur(30px);
+  opacity: 0.42;
+  transition: opacity 340ms ease;
+}
+.seeds-duel-card:hover::before { opacity: 0.7; }
+.seeds-duel-card-player::before { background: radial-gradient(ellipse at center, rgb(214 164 76 / 0.5), transparent 68%); }
+.seeds-duel-card-host::before { background: radial-gradient(ellipse at center, rgb(168 84 54 / 0.5), transparent 68%); }
+
+.seeds-duel-center { display: grid; justify-items: center; text-align: center; }
+
+.seeds-duel-kicker {
+  color: var(--seeds-muted-2);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.seeds-duel-code {
+  margin: 6px 0 0;
+  color: var(--seeds-gold-bright);
+  font-family: "Cinzel", Georgia, "Times New Roman", serif;
+  font-size: clamp(32px, 3.4vw, 50px);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 20px rgb(220 185 94 / 0.3);
+}
+
+.seeds-duel-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 9px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Los dos bandos, uno sobre otro y el vs entre ellos. */
+.seeds-duel-match {
+  display: grid;
+  gap: 3px;
+  margin: 14px 0 0;
+  color: var(--seeds-parchment);
+  font-family: "Lora", Georgia, "Times New Roman", serif;
+  font-size: clamp(14px, 1.1vw, 17px);
+  line-height: 1.35;
+}
+
+.seeds-versus {
+  color: var(--seeds-muted-2);
+  font-family: "Cinzel", Georgia, "Times New Roman", serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+
+.seeds-host-side { color: #d9cfc0; }
+
+.seeds-duel-difficulty {
+  margin: 12px 0 0;
+  color: var(--seeds-muted);
+  font-family: "Cinzel", Georgia, "Times New Roman", serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* La semilla no se imprime: el Futuro es el nombre visible y Copiar identidad
+   sigue copiando la semilla completa. */
+.seeds-duel-copy { margin-top: 14px; }
+
+.seeds-copy-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgb(158 151 110 / 0.28);
+  padding: 6px 12px;
+  background: rgb(4 12 14 / 0.7);
+  color: #a8ad98;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease;
+}
+.seeds-copy-chip:hover,
+.seeds-copy-chip:focus-visible { border-color: rgb(214 192 122 / 0.7); color: var(--seeds-gold-bright); }
+
+/* ---- El hilo de reescrituras: una historia escrita y corregida ---- */
+.seeds-thread-wrap {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 6px 6px 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(199 170 105 / 0.28) transparent;
+}
+
+.seeds-thread-label {
+  margin: 0 0 12px;
+  color: var(--seeds-muted-2);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.seeds-thread { position: relative; display: grid; margin: 0; padding: 0 0 0 26px; list-style: none; }
+
+.seeds-thread::before {
+  position: absolute;
+  top: 8px;
+  bottom: 16px;
+  left: 6px;
+  width: 1px;
+  background: linear-gradient(rgb(199 170 105 / 0.44), rgb(199 170 105 / 0.14) 72%, transparent);
+  content: "";
+}
+
+.seeds-thread-item { position: relative; }
+
+.seeds-thread-line {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 11px 8px 11px 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.seeds-thread-line::before {
+  position: absolute;
+  left: -24px;
+  top: 18px;
+  width: 9px;
+  height: 9px;
+  border: 1px solid rgb(199 170 105 / 0.66);
+  background: #060d0f;
+  content: "";
+  transform: rotate(45deg);
+  transition: background-color 170ms ease, border-color 170ms ease;
+}
+
+.seeds-thread-item.is-victory .seeds-thread-line::before { background: var(--seeds-gold); border-color: #f3dfa8; }
+
+.seeds-thread-title {
+  color: var(--seeds-parchment);
+  font-family: "Lora", Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  line-height: 1.45;
+  transition: color 160ms ease;
+}
+.seeds-thread-title b { color: var(--seeds-gold-plate); font-weight: 700; }
+.seeds-verdict-word { color: var(--seeds-copper); }
+.seeds-thread-item.is-victory .seeds-verdict-word { color: var(--seeds-gold); }
+.seeds-thread-line:hover .seeds-thread-title,
+.seeds-thread-line:focus-visible .seeds-thread-title { color: var(--seeds-gold-bright); }
+
+/* El detalle del intento: un párrafo y sus marcas. Sin repetir lo que la
+   página ya dice arriba. */
+.seeds-attempt-detail {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 14px;
+  border-left: 1px solid rgb(199 170 105 / 0.26);
+  padding: 4px 0 4px 18px;
+}
+.seeds-attempt-detail[hidden] { display: none; }
+
+.seeds-attempt-body {
+  max-width: 74ch;
+  margin: 0;
+  color: #c8cdcb;
+  font-family: "Lora", Georgia, "Times New Roman", serif;
+  font-size: 16px;
+  line-height: 1.72;
+}
+
+.seeds-attempt-marks { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
+
+.seeds-attempt-marks li {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 12px;
+  color: var(--seeds-muted);
+  font-family: "Lora", Georgia, "Times New Roman", serif;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.seeds-attempt-marks li::before {
+  width: 6px;
+  height: 6px;
+  margin-top: 7px;
+  border: 1px solid rgb(214 192 122 / 0.62);
+  content: "";
+  transform: rotate(45deg);
+}
+
+/* El cierre del hilo: la frase que convierte el registro en historia. */
+.seeds-thread-seal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 14px;
+  margin: 16px 0 0 26px;
+  padding-top: 14px;
+  border-top: 1px solid rgb(199 170 105 / 0.22);
+  font-family: "Cinzel", Georgia, "Times New Roman", serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.seeds-thread-seal small {
+  color: var(--seeds-muted);
+  font-family: "Lora", Georgia, "Times New Roman", serif;
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+/* ---- Las dos salidas ---- */
+.seeds-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 12px;
+  border-top: 1px solid rgb(166 151 105 / 0.24);
+  padding-top: 14px;
+}
+
+/* Mismo material que `DestinyActionButton`. Las dos miden lo mismo: comparten
+   diseño, así que una más ancha volvería a insinuar una jerarquía que no hay.
+   Lo único que las separa es hacia dónde gira su ornamento. */
+.seeds-action {
+  position: relative;
+  display: flex;
+  min-width: 296px;
+  height: 50px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgb(207 183 105 / 0.62);
+  border-radius: 2px;
+  padding: 0 22px;
+  background:
+    linear-gradient(105deg, rgb(10 18 21 / 0.98), rgb(26 35 36 / 0.98) 52%, rgb(8 15 18 / 0.99)),
+    radial-gradient(circle at 18% 50%, rgb(89 146 147 / 0.2), transparent 42%);
+  color: var(--seeds-gold-plate);
+  box-shadow:
+    inset 0 1px 0 rgb(251 235 177 / 0.1),
+    inset 0 -1px 0 rgb(0 0 0 / 0.62),
+    0 8px 22px rgb(0 0 0 / 0.34);
+  cursor: pointer;
+  transition: border-color 180ms ease, color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.seeds-action > strong {
+  position: relative;
+  z-index: 2;
+  font-family: "Lora", Georgia, "Times New Roman", serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.seeds-action::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(100% + 64px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: conic-gradient(from 20deg, transparent, rgb(108 180 178 / 0.18), transparent 34%, rgb(222 196 116 / 0.16), transparent 68%);
+  content: "";
+  opacity: 0.65;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: seeds-action-orbit 8s linear infinite;
+}
+
+/* Reescribir vuelve sobre sus pasos y gira a la izquierda; Contemplar busca
+   adelante y gira a la derecha. */
+.seeds-action.is-rewrite::before { animation-direction: reverse; }
+.seeds-action.is-contemplate::before { animation-direction: normal; }
+
+.seeds-action::after {
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgb(218 196 126 / 0.1);
+  content: "";
+  pointer-events: none;
+}
+
+.seeds-action:hover,
+.seeds-action:focus-visible {
+  border-color: rgb(234 210 133 / 0.92);
+  color: #fff0bc;
+  box-shadow: inset 0 1px 0 rgb(255 239 184 / 0.14), 0 10px 26px rgb(0 0 0 / 0.42), 0 0 25px rgb(83 153 151 / 0.18);
+  transform: translateY(-1px);
+}
+
+.seeds-action:hover::before,
+.seeds-action:focus-visible::before { opacity: 1; animation-duration: 1.4s; }
+
+@keyframes seeds-action-orbit { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+/* ---- Sello: la misma rosa cardinal del instrumento y de la victoria ---- */
+.seeds-seal { display: block; overflow: visible; flex: 0 0 auto; }
+.seeds-seal .rose { fill: none; stroke-linejoin: miter; vector-effect: non-scaling-stroke; }
+.seeds-seal .incision { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.seeds-seal .ring { fill: none; vector-effect: non-scaling-stroke; }
+.seeds-seal .fracture { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+
+.seeds-seal[data-state="preserved"] .rose { stroke: rgb(232 205 138 / 0.95); stroke-width: 1.3; }
+.seeds-seal[data-state="preserved"] .incision { stroke: rgb(214 164 76 / 0.85); stroke-width: 1; }
+.seeds-seal[data-state="preserved"] .ring { stroke: rgb(214 192 122 / 0.5); stroke-width: 1; animation: seeds-seal-breathe 6s ease-in-out infinite; }
+.seeds-seal[data-state="preserved"] .heart { fill: #fff0c4; }
+
+.seeds-seal[data-state="lost"] .rose { stroke: rgb(186 196 197 / 0.55); stroke-width: 1.2; }
+.seeds-seal[data-state="lost"] .incision { stroke: rgb(160 172 174 / 0.36); stroke-width: 1; }
+.seeds-seal[data-state="lost"] .ring { stroke: rgb(172 119 84 / 0.5); stroke-width: 1; }
+.seeds-seal[data-state="lost"] .heart { fill: rgb(213 166 126 / 0.6); }
+.seeds-seal[data-state="lost"] .fracture { stroke: rgb(226 240 246 / 0.42); stroke-width: 1; }
+
+.seeds-index-entry[aria-current="true"] .seeds-seal[data-state="preserved"] .rose { stroke: #fff0c4; }
+
+@keyframes seeds-seal-breathe { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+@media (max-width: 1180px) {
+  .seeds-panel .seeds-intro { white-space: normal; }
+  .seeds-book { grid-template-columns: minmax(0, 1fr); }
+  .seeds-index { max-height: 240px; padding-right: 0; }
+  .seeds-index::after { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seeds-action::before,
+  .seeds-seal[data-state="preserved"] .ring { animation: none; }
+  .seeds-duel-card img { transition: none; }
+}
+
+/* ---- A pantalla completa, igual que Jugar ----
+   El Archivo sustituye al menú en vez de abrirse a su derecha, así que su
+   contenido se topa: en pantallas anchas la entradilla de una sola línea y el
+   hilo del historial no deben estirarse sin fin. La cabecera necesita ganar a
+   `.main-settings-screen:not(.decks-panel) .main-settings-header`, que fuerza
+   `max-width: none`; de ahí las tres clases del selector. */
+.seeds-panel { width: 100%; }
+
+.main-settings-screen.seeds-panel .main-settings-header,
+.main-settings-screen.seeds-panel .seeds-book {
+  width: 100%;
+  max-width: 1680px;
+  margin-inline: auto;
+}
+
+/* El índice deja de crecer con la pantalla: siete líneas cortas no necesitan
+   un cuarto del ancho de un monitor ancho. */
+.seeds-panel .seeds-book { grid-template-columns: clamp(300px, 24%, 404px) minmax(0, 1fr); }
+
+@media (max-width: 1180px) {
+  .seeds-panel .seeds-book { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---- Llegada por partes, como la Expedición ----
+   El Archivo se abre en el mismo orden en que se lee: la cabecera cae, el
+   índice entra por el canto del libro, los dos bandos se declaran, la
+   identidad del Futuro se asienta entre ellos y al final llegan la historia y
+   sus dos salidas. Salir desanda ese orden.
+
+   Las reglas de `.main-settings-screen` viven dentro de `@layer components`,
+   así que estas, sin capa, ganan sin necesitar más especificidad; `.is-closing`
+   sí está fuera de capa y por eso el selector lleva las tres clases. */
+.main-settings-screen.seeds-panel {
+  animation: seeds-screen-enter 280ms ease-out both;
+}
+
+.main-settings-screen.seeds-panel.is-closing {
+  pointer-events: none;
+  animation: seeds-screen-exit 345ms ease-in both;
+}
+
+.seeds-panel:not(.is-closing) .main-settings-header {
+  animation: seeds-enter-drop 340ms cubic-bezier(0.2, 0.85, 0.25, 1) both;
+}
+
+.seeds-panel:not(.is-closing) .seeds-index {
+  animation: seeds-enter-index 420ms 60ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.seeds-panel:not(.is-closing) .seeds-duel-card-player {
+  animation: seeds-enter-left 420ms 150ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.seeds-panel:not(.is-closing) .seeds-duel-card-host {
+  animation: seeds-enter-right 420ms 210ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.seeds-panel:not(.is-closing) .seeds-duel-center {
+  animation: seeds-enter-settle 360ms 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.seeds-panel:not(.is-closing) .seeds-thread-wrap {
+  animation: seeds-enter-rise 360ms 390ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.seeds-panel:not(.is-closing) .seeds-page-actions {
+  animation: seeds-enter-lift 380ms 450ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.seeds-panel.is-closing .seeds-page-actions {
+  animation: seeds-exit-lift 200ms cubic-bezier(0.5, 0, 0.85, 0.4) both;
+}
+
+.seeds-panel.is-closing .seeds-thread-wrap {
+  animation: seeds-exit-rise 190ms 30ms cubic-bezier(0.5, 0, 0.85, 0.4) both;
+}
+
+.seeds-panel.is-closing .seeds-duel-center {
+  animation: seeds-exit-settle 160ms 60ms cubic-bezier(0.5, 0, 0.85, 0.4) both;
+}
+
+.seeds-panel.is-closing .seeds-duel-card-host {
+  animation: seeds-exit-right 190ms 85ms cubic-bezier(0.5, 0, 0.85, 0.4) both;
+}
+
+.seeds-panel.is-closing .seeds-duel-card-player {
+  animation: seeds-exit-left 190ms 110ms cubic-bezier(0.5, 0, 0.85, 0.4) both;
+}
+
+.seeds-panel.is-closing .seeds-index {
+  animation: seeds-exit-index 190ms 135ms cubic-bezier(0.5, 0, 0.85, 0.4) both;
+}
+
+.seeds-panel.is-closing .main-settings-header {
+  animation: seeds-exit-drop 175ms 165ms cubic-bezier(0.5, 0, 0.85, 0.4) both;
+}
+
+@keyframes seeds-screen-enter {
+  from { opacity: 0; transform: scale(1.008); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Sostiene el fondo hasta que las piezas ya salieron, y se va con ellas. */
+@keyframes seeds-screen-exit {
+  0%, 62% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.008); }
+}
+
+@keyframes seeds-enter-drop {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes seeds-enter-index {
+  from { opacity: 0; transform: translate3d(-14px, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes seeds-enter-left {
+  from { opacity: 0; transform: translate3d(-14px, 18px, 0) scale(0.985); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes seeds-enter-right {
+  from { opacity: 0; transform: translate3d(14px, 18px, 0) scale(0.985); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+/* La identidad se asienta entre las dos cartas. Un salto tan amplio como el de
+   la Expedición no sirve aquí: eso es un emblema y esto es un bloque de texto. */
+@keyframes seeds-enter-settle {
+  0% { opacity: 0; transform: scale(1.13); }
+  58% { opacity: 1; transform: scale(0.988); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes seeds-enter-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes seeds-enter-lift {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes seeds-exit-drop {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-16px); }
+}
+
+@keyframes seeds-exit-index {
+  from { opacity: 1; transform: translate3d(0, 0, 0); }
+  to { opacity: 0; transform: translate3d(-14px, 0, 0); }
+}
+
+@keyframes seeds-exit-left {
+  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to { opacity: 0; transform: translate3d(-14px, 14px, 0) scale(0.985); }
+}
+
+@keyframes seeds-exit-right {
+  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to { opacity: 0; transform: translate3d(14px, 14px, 0) scale(0.985); }
+}
+
+@keyframes seeds-exit-settle {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.09); }
+}
+
+@keyframes seeds-exit-rise {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(14px); }
+}
+
+@keyframes seeds-exit-lift {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(20px); }
+}
+
+/* Sin movimiento el orden deja de contarse: todo llega de una vez. */
+@media (prefers-reduced-motion: reduce) {
+  .main-settings-screen.seeds-panel,
+  .main-settings-screen.seeds-panel.is-closing,
+  .seeds-panel .main-settings-header,
+  .seeds-panel .seeds-index,
+  .seeds-panel .seeds-duel-card-player,
+  .seeds-panel .seeds-duel-card-host,
+  .seeds-panel .seeds-duel-center,
+  .seeds-panel .seeds-thread-wrap,
+  .seeds-panel .seeds-page-actions {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+  }
 }

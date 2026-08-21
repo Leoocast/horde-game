@@ -17,6 +17,7 @@ import { AudioControls } from "./AudioControls";
 import { DeckKeyCard, DecksView } from "./DecksView";
 import { DisplayControls } from "./DisplayControls";
 import { LanguageSelector } from "./LanguageSelector";
+import { SeedsOfDestinyScreen } from "./SeedsOfDestinyScreen";
 import { TemporalBackdrop } from "./TemporalBackdrop";
 import { ToastStack } from "./ToastStack";
 import type { HowToPlayCatalogEntry } from "../guidance/howToPlayCatalog";
@@ -56,8 +57,8 @@ type Props = {
   onStart: (options: { playerName: string; mode: DifficultyMode; gameMode: GameMode; setupTurns: number; seed: string }) => void;
 };
 
-type MenuScreen = "home" | "setup" | "chaos" | "chronicles" | "hosts" | "howToPlay" | "settings";
-type ClosingMenuScreen = Extract<MenuScreen, "chronicles" | "hosts" | "howToPlay" | "settings">;
+type MenuScreen = "home" | "setup" | "chaos" | "chronicles" | "hosts" | "seeds" | "howToPlay" | "settings";
+type ClosingMenuScreen = Extract<MenuScreen, "chronicles" | "hosts" | "seeds" | "howToPlay" | "settings">;
 
 const modes: Array<{ id: DifficultyMode; setupTurns: number }> = [
   { id: "easy", setupTurns: 4 },
@@ -86,6 +87,8 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const playSfx = useAudioStore((state) => state.playSfx);
   const pushToast = useToastStore((state) => state.pushToast);
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[0];
+  /* Pantallas que sustituyen al menú entero en vez de abrirse a su derecha. */
+  const fullScreenMenu = menuScreen === "setup" || menuScreen === "chaos" || menuScreen === "seeds";
   const playableDecks = decks.filter((deck) => deck.presentation.playable !== false);
   const selectedDeck = playableDecks.find((deck) => deck.id === selectedDeckId) ?? playableDecks[0];
   const selectedHostDeck = hostDecks.find((deck) => deck.id === selectedHostDeckId) ?? hostDecks[0];
@@ -108,10 +111,13 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
 
   useEffect(() => {
     if (!closingMenuScreen) return;
+    // El Archivo se retira por partes como la Expedición, así que necesita el
+    // mismo margen: la última pieza sale a 340ms y el fondo la acompaña.
+    const duration = closingMenuScreen === "seeds" ? 345 : 210;
     const timeout = window.setTimeout(() => {
       setMenuScreen("home");
       setClosingMenuScreen(undefined);
-    }, 210);
+    }, duration);
     return () => window.clearTimeout(timeout);
   }, [closingMenuScreen]);
 
@@ -183,7 +189,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   }
 
   function closeMenuPanel() {
-    if (menuScreen === "chronicles" || menuScreen === "hosts" || menuScreen === "howToPlay" || menuScreen === "settings") setClosingMenuScreen(menuScreen);
+    if (menuScreen === "chronicles" || menuScreen === "hosts" || menuScreen === "seeds" || menuScreen === "howToPlay" || menuScreen === "settings") setClosingMenuScreen(menuScreen);
   }
 
   async function copySeed() {
@@ -234,9 +240,9 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   }
 
   return (
-    <main className={`main-menu-shell h-screen overflow-hidden text-[#f6e6b8] ${menuScreen === "setup" || menuScreen === "chaos" ? "expedition-active" : ""} ${menuScreen === "chaos" ? "chaos-active" : ""}`}>
+    <main className={`main-menu-shell h-screen overflow-hidden text-[#f6e6b8] ${menuScreen === "setup" || menuScreen === "chaos" ? "expedition-active" : ""} ${menuScreen === "seeds" ? "menu-fullscreen-active" : ""} ${menuScreen === "chaos" ? "chaos-active" : ""}`}>
       <TemporalBackdrop />
-      {menuScreen !== "setup" && menuScreen !== "chaos" ? (
+      {!fullScreenMenu ? (
         <div className="main-menu-stage">
         {menuScreen === "home" && (
           <div className="main-menu-chronicler" aria-label={t("menu.profileLabel")}>
@@ -287,6 +293,10 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
             <button className={`main-menu-entry group ${menuScreen === "hosts" ? "is-active" : ""}`} type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("hosts"); }}>
               <span className="main-menu-entry-mark" />
               <span>{t("menu.hosts")}</span>
+            </button>
+            <button className="main-menu-entry group" type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("seeds"); }}>
+              <span className="main-menu-entry-mark" />
+              <span>{t("menu.seedsOfDestiny")}</span>
             </button>
             <button className={`main-menu-entry group ${menuScreen === "howToPlay" ? "is-active" : ""}`} type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("howToPlay"); }}>
               <span className="main-menu-entry-mark" />
@@ -448,6 +458,9 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           <DecksView collection="hosts" decks={hostDecks} onOpenDeck={onOpenDeck} onBack={closeMenuPanel} closing={closingMenuScreen === "hosts"} />
         )}
         </div>
+      ) : menuScreen === "seeds" ? (
+        /* Maqueta dentro del juego: monta el Archivo sobre datos falsos y no persiste nada. */
+        <SeedsOfDestinyScreen decks={decks} hostDecks={hostDecks} onBack={closeMenuPanel} closing={closingMenuScreen === "seeds"} />
       ) : (
         <ExpeditionSetup
           playerDeck={selectedDeck}
@@ -504,7 +517,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         />
       )}
       
-      {menuScreen !== "setup" && menuScreen !== "chaos" && <div className="main-menu-credits fixed z-[300] text-[10px] font-bold uppercase tracking-wide text-[#66776f]">
+      {!fullScreenMenu && <div className="main-menu-credits fixed z-[300] text-[10px] font-bold uppercase tracking-wide text-[#66776f]">
         <div className="mb-0.5">Version: {APP_VERSION}</div>
         <button type="button" onClick={() => void openExternalLink("credits")} className="flex items-center gap-1.5 transition hover:text-[#e6c36f]" data-audio-click="valid">
           <span>{t("common.developedBy")}</span>
