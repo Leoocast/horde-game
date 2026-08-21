@@ -23507,11 +23507,14 @@ body.is-victory-clearing .game-battlefield-stage {
    del Futuro entre ellas. */
 .seeds-duel {
   display: grid;
+  width: 100%;
+  max-width: clamp(720px, 62vw, 1180px);
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: clamp(14px, 1.8vw, 30px);
+  margin-inline: auto;
   border-bottom: 1px solid rgb(145 154 157 / 0.12);
-  padding: 0 clamp(6px, 2.6vw, 48px) 18px;
+  padding: clamp(18px, 2.6vh, 32px) clamp(4px, 1.2vw, 22px) clamp(22px, 3.2vh, 38px);
 }
 
 /* `isolation` no es cosmético: sin su propio contexto de apilamiento, el halo
@@ -23524,12 +23527,12 @@ body.is-victory-clearing .game-battlefield-stage {
    sombra va por `drop-shadow`, que sigue el alfa de la carta. */
 .seeds-duel-card img {
   display: block;
-  width: clamp(140px, 12vw, 192px);
+  width: clamp(156px, min(13.5vw, calc((100vh - 540px) / 1.45)), 300px);
   height: auto;
   filter:
     drop-shadow(0 1px 1px rgb(0 0 0 / 0.6))
-    drop-shadow(0 10px 16px rgb(0 0 0 / 0.5))
-    drop-shadow(0 26px 40px rgb(0 0 0 / 0.42));
+    drop-shadow(0 12px 20px rgb(0 0 0 / 0.52))
+    drop-shadow(0 32px 52px rgb(0 0 0 / 0.44));
   transition: transform 340ms cubic-bezier(0.16, 1, 0.3, 1), filter 340ms ease;
 }
 
@@ -23542,8 +23545,8 @@ body.is-victory-clearing .game-battlefield-stage {
 .seeds-duel-card:hover img {
   filter:
     drop-shadow(0 1px 1px rgb(0 0 0 / 0.6))
-    drop-shadow(0 14px 20px rgb(0 0 0 / 0.52))
-    drop-shadow(0 34px 52px rgb(0 0 0 / 0.46));
+    drop-shadow(0 16px 24px rgb(0 0 0 / 0.54))
+    drop-shadow(0 42px 66px rgb(0 0 0 / 0.48));
 }
 
 /* Un halo detrás de cada carta, en el color de su bando: la separa del fondo
@@ -23554,7 +23557,7 @@ body.is-victory-clearing .game-battlefield-stage {
   inset: 12% 0 6%;
   border-radius: 50%;
   content: "";
-  filter: blur(30px);
+  filter: blur(42px);
   opacity: 0.42;
   transition: opacity 340ms ease;
 }
@@ -23911,11 +23914,7 @@ body.is-victory-clearing .game-battlefield-stage {
    `max-width: none`; de ahí las tres clases del selector. */
 .seeds-panel { width: 100%; }
 
-.main-settings-screen.seeds-panel .seeds-book {
-  width: 100%;
-  max-width: 1680px;
-  margin-inline: auto;
-}
+.main-settings-screen.seeds-panel .seeds-book { width: 100%; }
 
 /* El índice deja de crecer con la pantalla: siete líneas cortas no necesitan
    un cuarto del ancho de un monitor ancho. */
@@ -24105,6 +24104,8 @@ body.is-victory-clearing .game-battlefield-stage {
    propio padding —el de la Expedición— y el aire horizontal pasa al libro. */
 .main-settings-screen.seeds-panel { padding: 0; }
 
+.seeds-header { padding-inline: clamp(20px, 2.2vw, 40px); }
+
 .seeds-panel .seeds-book {
-  padding: clamp(14px, 2vh, 24px) clamp(28px, 4vw, 64px) clamp(16px, 2vh, 26px);
+  padding: clamp(14px, 2vh, 24px) clamp(20px, 2.2vw, 40px) clamp(16px, 2vh, 26px);
 }
