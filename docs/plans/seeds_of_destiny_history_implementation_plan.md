@@ -1,6 +1,6 @@
 # Plan por fases — historial de Semillas del Destino para la demo
 
-Estado: **auditoría completada; implementación no iniciada**.
+Estado: **Fase 1 implementada; decisión creativa del usuario pendiente**.
 
 Última actualización: **2026-08-21**.
 
@@ -319,6 +319,32 @@ Estado: **completada en este documento**.
 
 ### Fase 1 — Prototipo aislado del relato
 
+Estado: **implementación completada el 2026-08-21; validación del usuario pendiente**.
+
+Entrega:
+
+- `src/history/attemptNarrative.ts` contiene el vocabulario cerrado de ocho hitos, selección pura
+  independiente del idioma, templates ES/EN, límites y fallback dentro del mundo.
+- `tests/fixtures/attemptNarrativeFixtures.js` cubre los cuatro enfrentamientos builtin con
+  victorias, derrotas e interrupciones.
+- [`seeds_of_destiny_narrative_samples.md`](seeds_of_destiny_narrative_samples.md) es el artefacto
+  legible generado por las mismas fixtures que ejercitan los tests.
+- `tests/attemptNarrative.test.js` fija determinismo, vocabulario, límites, fallback, seguridad ante
+  hitos desconocidos, paridad factual ES/EN y sincronía del artefacto.
+
+Este prototipo sigue sin conectarse al runtime. No lee `game.log` ni toca `GameState`, Zustand,
+persistencia, Electron o la maqueta.
+
+Iteración de lectura del 2026-08-21:
+
+- resultado y turno permanecen como metadatos del historial y no se repiten en el relato;
+- se retiró «registrado» y el tono de reporte técnico de todas las plantillas narrativas;
+- el cierre victorioso identifica su fuente, pero omite cantidad descartada y turno repetido;
+- Reserva no basta para fabricar un acontecimiento: si es el único dato disponible, el párrafo dice
+  que el Futuro no dejó un momento para la Crónica sin exponer el dato técnico.
+- El vocabulario narrativo habla de **Ecos**, nunca de cartas ni de datos «generados» o
+  «registrados».
+
 No toca `GameState`, Zustand, persistencia, Electron ni la pantalla runtime.
 
 - Definir un `AttemptFacts` mínimo y una lista cerrada de 8–12 hitos directos:
@@ -326,14 +352,15 @@ No toca `GameState`, Zustand, persistencia, Electron ni la pantalla runtime.
   - Campo al comenzar la primera Oleada;
   - mayor ataque sin defensor;
   - mayor pérdida directa de Vida;
-  - efecto de una carta sobre varios objetivos;
+  - efecto de un Eco sobre varios objetivos;
   - Archivo de la Hueste reducido a un umbral significativo;
   - Reserva sin usar al perder;
   - fuente directa del cierre victorioso.
 - Implementar un resumidor puro y determinista que elija como máximo un párrafo y dos marcas.
 - Prohibir inferencias como «salvó», «causó la derrota» o «llegó demasiado tarde» salvo que el hecho
   correspondiente sea explícito en la entrada.
-- Añadir fallback factual para todo caso sin hitos claros.
+- Abstenerse de generar un párrafo cuando no haya un acontecimiento directo con valor narrativo; el
+  resultado y turno factual permanecen disponibles fuera del relato.
 - Crear fixtures variados de ambos decks: victorias, derrotas, partidas ordinarias e interrupciones.
 - Generar un artefacto legible con todos los resultados ES/EN para revisión, además de las assertions.
 
@@ -355,6 +382,8 @@ salidas:
    final disponibles.
 
 La decisión y los hitos aceptados se registran aquí antes de iniciar la Fase 2.
+
+**Decisión registrada:** pendiente.
 
 ### Fase 2 — Política de sesión de la demo
 

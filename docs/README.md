@@ -56,6 +56,8 @@ Estos documentos se conservan porque contienen decisiones o validaciones sin ter
 - [`plans/seeds_of_destiny_history_implementation_plan.md`](plans/seeds_of_destiny_history_implementation_plan.md)
   — auditoría y fases verificables para validar el relato, conectar Canon Seed al launcher, ocultar
   resume en la demo e implementar el historial factual con reescritura exacta.
+- [`plans/seeds_of_destiny_narrative_samples.md`](plans/seeds_of_destiny_narrative_samples.md) —
+  muestras ES/EN generadas por el prototipo aislado de la Fase 1; decisión creativa pendiente.
 - [`plans/game_modes.md`](plans/game_modes.md) — variantes futuras y compatibilidad de Chaos.
 - [`plans/webgl_context_budget.md`](plans/webgl_context_budget.md) — migración implementada con QA
   visual final todavía pendiente.

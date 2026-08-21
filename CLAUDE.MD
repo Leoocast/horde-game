@@ -648,8 +648,16 @@ obliga a repintar todo el árbol en cada frame.
 
 El historial de intentos y la futura biblioteca de Semillas no están implementados. Su identidad
 narrativa vive en `docs/plans/seeds_of_destiny.md` y la auditoría con el contrato técnico por fases
-en `docs/plans/seeds_of_destiny_history_implementation_plan.md`. La decisión de demo, todavía
-pendiente de implementación, es ocultar **Continuar** y apagar toda lectura/mutación de resume
+en `docs/plans/seeds_of_destiny_history_implementation_plan.md`. La Fase 1 sí tiene un prototipo
+aislado en `src/history/attemptNarrative.ts`: selecciona de un vocabulario cerrado de ocho hechos,
+renderiza templates ES/EN sin leer `game.log` y dispone sus muestras de decisión en
+`docs/plans/seeds_of_destiny_narrative_samples.md`. Resultado, turno y Reserva permanecen como
+metadatos: no se repiten en el párrafo, y si no hay un acontecimiento el fallback permanece dentro
+del mundo. La voz habla de Ecos, nunca de cartas ni de datos generados/registrados. No está
+conectado a partidas, estado, UI ni
+persistencia; la decisión entre relato, bullets factuales o descarte sigue pendiente y bloquea el
+inicio de la Fase 2. La decisión de demo, todavía pendiente de implementación, es ocultar
+**Continuar** y apagar toda lectura/mutación de resume
 mediante una capability de producto, sin borrar su infraestructura para Early Access. Una partida
 cortada se registra como **Historia interrumpida**, nunca como derrota, y sólo puede reescribirse
 desde la seed,
