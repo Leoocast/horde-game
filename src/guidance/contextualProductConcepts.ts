@@ -5,7 +5,7 @@ import type { ContextualConceptDefinition, ContextualConceptMatch } from "./cont
 export const PRODUCT_CONTEXTUAL_CONCEPTS = [
   {
     id: "host-defense-order",
-    revision: 1,
+    revision: 2,
     policy: "informative",
     priority: 80,
     copy: {
@@ -21,7 +21,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
   },
   {
     id: "assign-defenders",
-    revision: 2,
+    revision: 3,
     policy: "informative",
     priority: 85,
     copy: {
@@ -67,7 +67,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
   },
   {
     id: "chronicler-life",
-    revision: 1,
+    revision: 2,
     policy: "informative",
     priority: 70,
     copy: {
@@ -80,7 +80,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
   },
   {
     id: "reserve-and-ready",
-    revision: 1,
+    revision: 2,
     policy: "informative",
     priority: 90,
     copy: {
@@ -120,13 +120,13 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
   },
   {
     id: "attack-the-host-archive",
-    revision: 2,
+    revision: 3,
     policy: "preventive",
     priority: 60,
     copy: {
       titleKey: "guided.contextual.product.attackArchiveTitle",
       bodyKey: "guided.contextual.product.attackArchiveBody",
-      glossaryTerms: ["archive", "echoes"],
+      glossaryTerms: ["hostArchive", "echoes"],
     },
     signalKinds: [],
     evaluate: () => undefined,
@@ -162,7 +162,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
   },
   {
     id: "host-surge",
-    revision: 1,
+    revision: 2,
     policy: "informative",
     priority: 130,
     copy: {
@@ -178,7 +178,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
   },
   {
     id: "empty-hand-draw",
-    revision: 1,
+    revision: 2,
     policy: "informative",
     priority: 95,
     copy: {
@@ -191,20 +191,19 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
       && signal.reason === "empty-hand"
       && signal.amount === 2
       ? {
-          highlights: [{ kind: "surface", anchor: "player.hand", showHighlight: false }],
           placement: "center",
         }
       : undefined,
   },
   {
     id: "return-source",
-    revision: 1,
+    revision: 2,
     policy: "reactive",
     priority: 150,
     copy: {
       titleKey: "guided.contextual.product.returnSourceTitle",
       bodyKey: "guided.contextual.product.returnSourceBody",
-      glossaryTerms: ["source", "archive"],
+      glossaryTerms: ["source", "chroniclerArchive"],
     },
     signalKinds: ["action.denied"],
     evaluate: (signal, context) => {

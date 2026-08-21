@@ -1,4 +1,4 @@
-import { ExternalLink, Home, RefreshCcw, RotateCcw, X } from "lucide-react";
+import { ExternalLink, Home, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { DeckInspectorDetailsModal } from "../components/DeckInspector";
@@ -7,11 +7,12 @@ import { GameConfirmationDialog } from "../components/GameConfirmationDialog";
 import { GameOutcomeDialog } from "../components/GameOutcomeDialog";
 import { GraveyardDetailsModal, GraveyardViewerModal } from "../components/GraveyardViewerModal";
 import { HandLimitModal } from "../components/HandLimitOverlay";
+import { GuidedTutorialDialog } from "../components/GuidedTutorialDialog";
 import { LearnToPlayIntroModal } from "../components/LearnToPlayIntroModal";
 import {
   LearnToPlayDefeatNarrativeDialog,
   LearnToPlayDefeatOutcomeDialog,
-} from "../components/LearnToPlayDefeatModal";
+} from "../components/LearnToPlayDefeatDialogs";
 import { OpeningHandModal } from "../components/OpeningHandOverlay";
 import { SettingsMenu } from "../components/SettingsMenu";
 import { ChroniclerNameModal, SetupDeckDrawer } from "../components/StartMenu";
@@ -21,25 +22,19 @@ import { useTranslation } from "../i18n/useTranslation";
 import { UI_REFERENCE_CATALOG, type UiReferenceStatus } from "./uiReferenceCatalog";
 
 type ModalSpecimenId =
-  | "chronicler-required"
-  | "chronicler-edit"
-  | "deck-drawer-player"
-  | "deck-drawer-host"
-  | "settings-normal"
-  | "settings-tutorial"
-  | "settings-journey"
+  | "chronicler-name"
+  | "deck-drawer"
+  | "settings"
   | "destiny"
-  | "confirmation-return"
-  | "confirmation-interrupted"
-  | "confirmation-restart"
+  | "confirmation"
   | "opening-hand"
   | "hand-limit"
   | "graveyard-viewer"
   | "graveyard-details"
   | "deck-details"
   | "learn-intro"
-  | "outcome-victory"
-  | "outcome-defeat"
+  | "guided-tutorial"
+  | "outcome"
   | "outcome-learn"
   | "learn-defeat-narrative";
 
@@ -57,30 +52,24 @@ const STATUS_LABELS: Record<UiReferenceStatus, string> = {
 };
 
 const MODAL_SPECIMENS: readonly ModalSpecimen[] = [
-  { id: "chronicler-required", entryId: "chronicler-name-modal", label: "Nombre del Cronista", variant: "Primer ingreso · requerido" },
-  { id: "chronicler-edit", entryId: "chronicler-name-modal", label: "Nombre del Cronista", variant: "Edición desde Home" },
-  { id: "deck-drawer-player", entryId: "setup-deck-drawer", label: "Selector lateral", variant: "Crónica" },
-  { id: "deck-drawer-host", entryId: "setup-deck-drawer", label: "Selector lateral", variant: "Hueste" },
-  { id: "settings-normal", entryId: "settings-menu-modal", label: "Ajustes de partida", variant: "Sesión normal" },
-  { id: "settings-tutorial", entryId: "settings-menu-modal", label: "Ajustes de tutorial", variant: "Primera Semilla" },
-  { id: "settings-journey", entryId: "settings-menu-modal", label: "Ajustes de recorrido", variant: "Aprender a jugar" },
+  { id: "chronicler-name", entryId: "chronicler-name-modal", label: "Nombre del Cronista", variant: "Primer ingreso y edición" },
+  { id: "deck-drawer", entryId: "setup-deck-drawer", label: "Selector lateral", variant: "Crónica y Hueste" },
+  { id: "settings", entryId: "settings-menu-modal", label: "Ajustes", variant: "Normal, tutorial y recorrido" },
   { id: "destiny", entryId: "destiny-rewrite-dialog", label: "Reescribir Futuro", variant: "Decisión de Destino" },
-  { id: "confirmation-return", entryId: "game-confirmation-dialog", label: "Confirmación", variant: "Volver al menú" },
-  { id: "confirmation-interrupted", entryId: "game-confirmation-dialog", label: "Confirmación", variant: "Tutorial interrumpido" },
-  { id: "confirmation-restart", entryId: "game-confirmation-dialog", label: "Confirmación", variant: "Reiniciar sesión" },
+  { id: "confirmation", entryId: "game-confirmation-dialog", label: "Confirmación", variant: "Salir, interrumpir o reiniciar" },
   { id: "opening-hand", entryId: "opening-hand", label: "Mano inicial", variant: "Aceptar o cambiar" },
   { id: "hand-limit", entryId: "hand-limit-modal", label: "Límite de Mano", variant: "Descarte obligatorio" },
   { id: "graveyard-viewer", entryId: "graveyard-viewer-modal", label: "Memoria", variant: "Colección" },
   { id: "graveyard-details", entryId: "graveyard-details-modal", label: "Memoria", variant: "Detalle de carta" },
   { id: "deck-details", entryId: "deck-inspector-details-modal", label: "Inspector de mazo", variant: "Detalle de carta" },
   { id: "learn-intro", entryId: "learn-intro", label: "Aprender a jugar", variant: "Introducción narrativa" },
-  { id: "outcome-victory", entryId: "victory-outcome-dialog", label: "Resultado", variant: "Victoria · sólo UI" },
-  { id: "outcome-defeat", entryId: "defeat-outcome-dialog", label: "Resultado", variant: "Derrota · sólo UI" },
+  { id: "guided-tutorial", entryId: "guided-tutorial-dialog", label: "Diálogo guiado", variant: "Aprender a jugar · ornamento" },
+  { id: "outcome", entryId: "game-outcome-dialog", label: "Resultado", variant: "Victoria y derrota · sólo UI" },
   { id: "outcome-learn", entryId: "learn-defeat-outcome-dialog", label: "Resultado pedagógico", variant: "Veredicto" },
   { id: "learn-defeat-narrative", entryId: "learn-defeat-narrative-dialog", label: "Resultado pedagógico", variant: "Explicación narrativa" },
 ];
 
-const CONTEXT_ONLY_DIALOGS = ["guided-tutorial-overlay", "contextual-tutorial-callout"] as const;
+const CONTEXT_ONLY_DIALOGS = ["contextual-tutorial-callout"] as const;
 
 export function RuntimeModalGallery({ game }: { game: GameState }) {
   const [activeModal, setActiveModal] = useState<ModalSpecimenId>();
@@ -211,7 +200,7 @@ function ActiveRuntimeModal({
   const memoryCard = memoryCards[0];
   const selectedHandCard = handLimitGame.player.hand[0];
 
-  if (id === "chronicler-required" || id === "chronicler-edit") {
+  if (id === "chronicler-name") {
     return (
       <ChroniclerNameModal
         value={chroniclerName}
@@ -219,20 +208,19 @@ function ActiveRuntimeModal({
         onClose={close}
         onSave={close}
         closing={false}
-        required={id === "chronicler-required"}
+        required={false}
       />
     );
   }
 
-  if (id === "deck-drawer-player" || id === "deck-drawer-host") {
-    const side = id === "deck-drawer-player" ? "player" : "host";
-    const decks = side === "player" ? playerInspectableDecks : hostInspectableDecks;
+  if (id === "deck-drawer") {
+    const decks = playerInspectableDecks;
     return (
       <div className="ui-reference-drawer-runtime-layer expedition-deck-drawer-layer main-menu-shell">
         <button className="expedition-deck-drawer-scrim" type="button" tabIndex={-1} aria-hidden="true" onClick={close} />
         <SetupDeckDrawer
-          side={side}
-          eyebrow={side === "player" ? "Lado del Cronista" : "Lado de la Hueste"}
+          side="player"
+          eyebrow="Lado del Cronista"
           decks={[...decks]}
           selectedDeckId={decks[0]?.id ?? ""}
           onSelectDeck={() => undefined}
@@ -242,13 +230,12 @@ function ActiveRuntimeModal({
     );
   }
 
-  if (id === "settings-normal" || id === "settings-tutorial" || id === "settings-journey") {
-    const sessionKind = id === "settings-normal" ? "normal" : id === "settings-tutorial" ? "tutorial" : "journey";
+  if (id === "settings") {
     return (
       <SettingsMenu
         key={id}
-        sessionKind={sessionKind}
-        restricted={sessionKind !== "normal"}
+        sessionKind="normal"
+        restricted={false}
         initiallyOpen
         hideLauncher
         allowDeveloperActions={false}
@@ -272,30 +259,18 @@ function ActiveRuntimeModal({
     );
   }
 
-  if (id === "confirmation-return" || id === "confirmation-interrupted" || id === "confirmation-restart") {
-    const interrupted = id === "confirmation-interrupted";
-    const restart = id === "confirmation-restart";
+  if (id === "confirmation") {
     return (
       <div className="game-settings-popover game-system-confirmation-layer game-home-backdrop fixed inset-0 flex items-center justify-center p-6 text-[#e4ddc2]" role="presentation">
         <GameConfirmationDialog
           titleId={`ui-reference-${id}-title`}
-          kicker={t(interrupted ? "guided.lifecycle.interruptedKicker" : restart ? "guided.settings.restartKicker" : "game.leaveBattlefield")}
-          title={t(interrupted ? "guided.lifecycle.interruptedTitle" : restart ? "guided.settings.restartTitle" : "game.returnHomeQuestion")}
-          body={t(interrupted ? "guided.lifecycle.interruptedBody" : restart ? "guided.settings.restartBody" : "game.progressLost")}
-          actions={interrupted
-            ? [
-              { label: t("guided.lifecycle.exit"), icon: <Home size={16} />, onClick: close },
-              { label: t("guided.lifecycle.restart"), icon: <RotateCcw size={16} />, onClick: close, primary: true },
-            ]
-            : [
-              { label: t("common.cancel"), onClick: close },
-              {
-                label: t(restart ? "common.restart" : "game.returnHome"),
-                icon: restart ? <RefreshCcw size={16} /> : <Home size={16} />,
-                onClick: close,
-                primary: true,
-              },
-            ]}
+          kicker={t("game.leaveBattlefield")}
+          title={t("game.returnHomeQuestion")}
+          body={t("game.progressLost")}
+          actions={[
+            { label: t("common.cancel"), onClick: close },
+            { label: t("game.returnHome"), icon: <Home size={16} />, onClick: close, primary: true },
+          ]}
         />
       </div>
     );
@@ -357,8 +332,34 @@ function ActiveRuntimeModal({
     return <LearnToPlayIntroModal open chroniclerName={chroniclerName} onClose={close} onComplete={close} />;
   }
 
-  if (id === "outcome-victory" || id === "outcome-defeat") {
-    const tone = id === "outcome-victory" ? "victory" : "defeat";
+  if (id === "guided-tutorial") {
+    const body = t("guided.learnToPlay.fourthSourceBriefingBody");
+    return (
+      <div
+        className="guided-tutorial-overlay is-learn-to-play"
+        data-mode="explain"
+        style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
+      >
+        <GuidedTutorialDialog
+          style={{ position: "relative", top: "auto", left: "auto", width: "min(560px, calc(100vw - 48px))" }}
+          title={t("guided.learnToPlay.intro.evy")}
+          body={body.split(/\n{2,}/u).filter(Boolean).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+          isLearnToPlay
+          ariaModal
+          closeLabel={t("common.close")}
+          showContinue
+          continueLabel={t("guided.contextual.understood")}
+          onClose={close}
+          onContinue={close}
+          titleId="ui-reference-guided-tutorial-title"
+          bodyId="ui-reference-guided-tutorial-body"
+        />
+      </div>
+    );
+  }
+
+  if (id === "outcome") {
+    const tone = "victory";
     return (
       <div className={`game-result-overlay game-result-${tone} fixed inset-0 z-[140]`}>
         <GameOutcomeDialog game={game} tone={tone} onRewriteFuture={close} onContemplateFuture={close} />

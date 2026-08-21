@@ -162,6 +162,61 @@ test("Host reveal, Surge, attacker order, life impact and outcome are projected 
   assert.equal(impactSignals.some((signal) => signal.kind === "game.ended" && signal.winner === "host"), true);
 });
 
+test("the first Surge pauses after its animation and before the Host reveals", async () => {
+  await withStoreHarness(async () => {
+    const game = createTestGame("signals-surge-explanation-seam");
+    game.openingHandAccepted = true;
+    game.activeSide = "host";
+    game.phase = "host";
+    game.setupTurnsRemaining = 0;
+    game.hostTurnNumber = 9;
+    const first = addCard(game, customCard("surge-pause-one", "host", { zone: "archive", isToken: true, subtypes: ["ZOMBIE"] }));
+    const second = addCard(game, customCard("surge-pause-two", "host", { zone: "archive", isToken: true, subtypes: ["ZOMBIE"] }));
+    const third = addCard(game, customCard("surge-pause-three", "host", { zone: "archive", isToken: true, subtypes: ["ZOMBIE"] }));
+    load(game);
+
+    useGameStore.getState().runHostMain();
+    const transitioning = useGameStore.getState();
+    assert.equal(transitioning.surgeTransitionActive, true);
+    assert.equal(transitioning.surgeRevealPending, false);
+    assert.equal(transitioning.game.hostTurnNumber, 9);
+    assert.deepEqual(transitioning.game.host.archive.map((card) => card.instanceId), [
+      first.instanceId,
+      second.instanceId,
+      third.instanceId,
+    ]);
+
+    useGameStore.getState().completeSurgeTransition();
+    const paused = useGameStore.getState();
+    assert.equal(paused.surgeTransitionActive, false);
+    assert.equal(paused.surgeRevealPending, true);
+    assert.equal(paused.game.hostTurnNumber, 10);
+    assert.deepEqual(paused.game.host.archive.map((card) => card.instanceId), [
+      first.instanceId,
+      second.instanceId,
+      third.instanceId,
+    ]);
+    assert.equal(gameplaySignalStream.snapshot().signals.some((signal) => signal.kind === "host.surgeStarted"), true);
+    assert.equal(gameplaySignalStream.snapshot().signals.some((signal) => signal.kind === "host.cardsRevealed"), false);
+
+    useGameStore.getState().continueSurgeAfterExplanation();
+    const revealed = useGameStore.getState();
+    assert.equal(revealed.surgeRevealPending, false);
+    assert.deepEqual(revealed.game.host.archive, []);
+    assert.deepEqual(revealed.game.host.field.map((card) => card.instanceId), [
+      first.instanceId,
+      second.instanceId,
+      third.instanceId,
+    ]);
+
+    const signals = gameplaySignalStream.snapshot().signals;
+    const surgeIndex = signals.findIndex((signal) => signal.kind === "host.surgeStarted");
+    const revealIndex = signals.findIndex((signal) => signal.kind === "host.cardsRevealed");
+    assert.ok(surgeIndex >= 0);
+    assert.ok(revealIndex > surgeIndex);
+  });
+});
+
 function lastDenial() {
   return gameplaySignalStream.snapshot().signals.filter((signal) => signal.kind === "action.denied").at(-1);
 }

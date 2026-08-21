@@ -22369,13 +22369,18 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 
 .defeat-outcome-inner {
   position: relative;
+  left: 50%;
   display: grid;
   width: min(820px, 94%);
+  justify-self: start;
   justify-items: center;
   gap: 8px;
   isolation: isolate;
   opacity: 0;
   text-align: center;
+  /* `translate` stays independent from the vertical `transform` animation below. Anchoring the
+     block at the viewport midpoint removes the small horizontal drift shared by title and CTA. */
+  translate: -50% 0;
   animation: defeat-outcome-in 460ms ease-out both;
 }
 
@@ -22531,6 +22536,8 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 }
 
 .learn-to-play-defeat-cta {
+  justify-self: center;
+  margin-inline: auto;
   animation: learn-to-play-defeat-cta-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 

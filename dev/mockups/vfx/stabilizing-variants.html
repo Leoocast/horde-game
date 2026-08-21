@@ -23,7 +23,8 @@
       --rule: rgb(146 116 88 / 0.22);
       --serif: Georgia, "Times New Roman", serif;
       --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
-      --card-w: 168px;
+      /* El ancho real de una carta en el Campo. */
+      --card-w: 212px;
     }
 
     * {
@@ -42,7 +43,7 @@
     }
 
     main {
-      max-width: 1160px;
+      max-width: 1180px;
       margin: 0 auto;
       padding: 0 28px;
     }
@@ -148,7 +149,7 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
       gap: 30px 24px;
       margin-top: 34px;
     }
@@ -157,37 +158,76 @@
       margin: 0;
     }
 
+    /* ══ La carta tal como vive en el Campo ══════════════════════════════
+       Recorte canónico 488×434 de Card Studio, encuadre por variables y el
+       propio elemento como contenedor de consulta: es lo mismo que hace
+       .card-visual.card-battlefield-cropped en el runtime. */
     .card {
       position: relative;
       width: var(--card-w);
-      aspect-ratio: 488 / 680;
+      height: calc(var(--card-w) * 0.8893442623);
       margin: 0 auto;
-      border-radius: 6px;
+      container-type: inline-size;
       overflow: hidden;
-      background: #150f0c;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: #1c1712;
       box-shadow: 0 10px 24px rgb(0 0 0 / 0.55);
       isolation: isolate;
-      transition: width 220ms ease;
     }
 
     .art,
     .ghost {
       position: absolute;
-      inset: 0;
-      background: url("../assets/ui_references/card-maela-watcher-of-the-heights.png") center / cover no-repeat;
+      top: 50%;
+      left: 50%;
+      width: var(--art-w, 100%);
+      height: var(--art-h, 100%);
+      max-width: none;
+      object-fit: contain;
+      object-position: center;
+      transform: translate3d(calc(-50% + var(--art-x, 0cqw)), calc(-50% + var(--art-y, 0cqw)), 0) scale(var(--art-zoom, 1));
+      transform-origin: center;
+      user-select: none;
     }
 
-    body[data-card="retorno"] .art,
-    body[data-card="retorno"] .ghost {
-      background-image: url("../assets/ui_references/card-return-to-memory.png");
+    /* Placa de estadísticas: reproduce la huella y la posición de
+       .card-stat-badge para poder juzgar qué tapa cada efecto. El contenido
+       es una simplificación, no el componente real. */
+    .stat-plate {
+      position: absolute;
+      right: 3px;
+      bottom: 3px;
+      z-index: 12;
+      display: flex;
+      height: clamp(25px, 15cqw, 31px);
+      min-width: clamp(76px, 46cqw, 94px);
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      overflow: hidden;
+      border: 1px solid rgb(183 169 118 / 0.62);
+      background: linear-gradient(180deg, rgb(27 35 34 / 0.96), rgb(7 13 13 / 0.98));
+      color: #e9e1c4;
+      font-family: var(--serif);
+      font-size: clamp(11px, 7cqw, 14px);
+      font-weight: 700;
+      box-shadow: inset 0 1px 0 rgb(255 247 208 / 0.1), 0 4px 12px rgb(0 0 0 / 0.68);
+      clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
     }
 
-    body[data-size="mano"] {
-      --card-w: 112px;
+    .stat-plate i {
+      width: 1px;
+      height: 58%;
+      background: rgb(183 169 118 / 0.45);
+    }
+
+    body[data-size="comprimido"] {
+      --card-w: 156px;
     }
 
     body[data-size="detalle"] {
-      --card-w: 232px;
+      --card-w: 320px;
     }
 
     body[data-paused="true"] .card *,
@@ -197,6 +237,10 @@
     }
 
     body[data-bare="true"] .fx {
+      display: none;
+    }
+
+    body[data-stats="false"] .stat-plate {
       display: none;
     }
 
@@ -256,6 +300,7 @@
     .fx {
       position: absolute;
       inset: 0;
+      z-index: 6;
       pointer-events: none;
     }
 
@@ -400,9 +445,10 @@
     }
 
     /* ══ 2 · Doble sin asentar ═══════════════════════════════════════════
-       La carta no terminó de fijarse a una sola posición: dos copias frías
-       y cálidas oscilan alrededor del original sin llegar a coincidir. */
+       El desplazamiento va en cqw para que sea proporcional a la carta y no
+       al recuadro del arte, que es mucho más alto que el recorte. */
     .ghost {
+      z-index: 4;
       mix-blend-mode: screen;
       opacity: 0.26;
       filter: hue-rotate(150deg) saturate(1.7) brightness(1.15);
@@ -416,28 +462,26 @@
     }
 
     @keyframes ghost-drift {
-      from { translate: -1.7% -1.1%; }
-      to { translate: 1.3% 0.8%; }
+      from { translate: -1.7cqw -1.1cqw; }
+      to { translate: 1.3cqw 0.9cqw; }
     }
 
     @keyframes ghost-drift-back {
-      from { translate: 1.5% 0.9%; }
-      to { translate: -1.1% -0.7%; }
+      from { translate: 1.5cqw 1cqw; }
+      to { translate: -1.1cqw -0.8cqw; }
     }
 
-    /* ══ 3 · Anclas cardinales ═══════════════════════════════════════════
-       Cuatro escuadras que se cierran sobre la carta y vuelven a abrirse,
-       como un instrumento buscando el encaje. */
+    /* ══ 3 · Anclas cardinales ═══════════════════════════════════════════ */
     .anchors {
       position: absolute;
-      inset: 7%;
+      inset: 6%;
       animation: anchors-close 2.9s ease-in-out infinite alternate;
     }
 
     .anchor {
       position: absolute;
-      width: 26%;
-      height: 19%;
+      width: 22%;
+      height: 24%;
       border: 2px solid rgb(190 232 255 / 0.92);
       box-shadow: 0 0 7px rgb(120 200 255 / 0.55);
     }
@@ -451,7 +495,7 @@
       position: absolute;
       left: 50%;
       top: 50%;
-      width: 12%;
+      width: 9cqw;
       height: 2px;
       translate: -50% -50%;
       background: rgb(206 240 255 / 0.7);
@@ -461,11 +505,11 @@
 
     .anchor-tick.vertical {
       width: 2px;
-      height: 12%;
+      height: 9cqw;
     }
 
     @keyframes anchors-close {
-      from { scale: 1.11; opacity: 0.45; }
+      from { scale: 1.1; opacity: 0.45; }
       to { scale: 1; opacity: 1; }
     }
 
@@ -475,13 +519,13 @@
     }
 
     /* ══ 4 · Coalescencia ════════════════════════════════════════════════
-       Motas que caen hacia la carta desde fuera y se disuelven al llegar.
-       Cada una se apaga en los dos extremos, así que su bucle no se ve. */
+       Los orígenes van en cqw: la carta mide 100cqw de ancho y 88.9 de alto,
+       así que cualquier valor por encima de 50 nace fuera del encuadre. */
     .mote {
       position: absolute;
       left: 50%;
       top: 50%;
-      width: 3.4%;
+      width: 3.6cqw;
       aspect-ratio: 1;
       border-radius: 999px;
       background: radial-gradient(circle, rgb(232 250 255 / 0.98) 0 28%, rgb(126 208 255 / 0.6) 54%, rgb(80 160 255 / 0) 78%);
@@ -489,15 +533,13 @@
     }
 
     @keyframes mote-fall {
-      0% { translate: var(--from-x) var(--from-y); opacity: 0; scale: 1.3; }
+      0% { translate: var(--from-x) var(--from-y); opacity: 0; scale: 1.35; }
       18% { opacity: 0.95; }
       82% { opacity: 0.7; }
       100% { translate: 0 0; opacity: 0; scale: 0.3; }
     }
 
-    /* ══ 5 · Onda de asentamiento ════════════════════════════════════════
-       Una sola onda por vez, lenta y limpia: la versión calmada de lo que
-       hoy hace el remolino. Nace y muere dentro del encuadre. */
+    /* ══ 5 · Onda de asentamiento ════════════════════════════════════════ */
     .settle-wave {
       position: absolute;
       left: 50%;
@@ -523,7 +565,7 @@
       position: absolute;
       left: 50%;
       top: 50%;
-      width: 26%;
+      width: 30cqw;
       aspect-ratio: 1;
       translate: -50% -50%;
       border-radius: 999px;
@@ -532,10 +574,10 @@
     }
 
     @keyframes settle-out {
-      0% { scale: 0.1; opacity: 0; }
+      0% { scale: 0.08; opacity: 0; }
       14% { opacity: 1; }
       70% { opacity: 0.55; }
-      100% { scale: 0.92; opacity: 0; }
+      100% { scale: 0.76; opacity: 0; }
     }
 
     @keyframes settle-core-pulse {
@@ -543,8 +585,7 @@
       12% { opacity: 0.85; }
     }
 
-    /* ══ 6 · Escarcha creciente ══════════════════════════════════════════
-       La carta cuaja desde el marco hacia dentro y deja el arte legible. */
+    /* ══ 6 · Escarcha creciente ══════════════════════════════════════════ */
     .frost-plates {
       position: absolute;
       inset: -12%;
@@ -585,7 +626,6 @@
     }
 
     /* ══ 7 · Contorno en espera ══════════════════════════════════════════
-       El arte queda intacto: sólo el canto respira y una luz lo recorre.
        El marco es una máscara fija; lo que gira es el cónico de debajo. */
     .rim {
       position: absolute;
@@ -640,8 +680,8 @@
     }
 
     /* ══ 8 · Trama temporal ══════════════════════════════════════════════
-       La carta se está tejiendo. La retícula está quieta —es la máscara del
-       contenedor— y lo que viaja por debajo es la onda que la enciende. */
+       La retícula está quieta —es la máscara del contenedor— y lo que viaja
+       por debajo es la onda que la enciende. */
     .weave-mask {
       position: absolute;
       inset: 0;
@@ -682,49 +722,51 @@
     }
 
     @keyframes weave-out {
-      0% { scale: 0.08; opacity: 0; }
+      0% { scale: 0.07; opacity: 0; }
       16% { opacity: 1; }
       74% { opacity: 0.5; }
-      100% { scale: 0.88; opacity: 0; }
+      100% { scale: 0.72; opacity: 0; }
     }
   </style>
 </head>
 
-<body data-card="maela" data-size="campo" data-paused="false" data-bare="false">
+<body data-card="maela" data-size="real" data-paused="false" data-bare="false" data-stats="true">
   <main>
     <header>
       <p class="eyebrow">Efectos · Estabilizándose</p>
       <h1>Ocho maneras de decir «todavía no»</h1>
       <p>
         Ocho tratamientos alternativos para el <strong>mismo</strong> estado: el Eco acaba de llegar al
-        Campo y aún no puede actuar. Todos son procedurales —sin GIF, sin imagen externa, sin WebGL y sin
-        JavaScript de animación—, se montan como <strong>velo + luz</strong> y
-        <strong>cierran su bucle sin costura</strong>, que es la condición para poder estar siempre
-        visibles mientras dure el estado. El primero es el que está hoy en el juego, puesto como
-        referencia para comparar contra él.
+        Campo y aún no puede actuar. Se ven sobre la carta tal como vive ahí —el
+        <strong>recorte 488×434</strong> con su encuadre real, no el PNG de la Mano—, al ancho de
+        <strong>212 px</strong> que usa el tablero. Todos son procedurales, se montan como
+        <strong>velo + luz</strong> y <strong>cierran su bucle sin costura</strong>. El primero es el que
+        está hoy en el juego, puesto como referencia.
       </p>
       <p>
-        Lo que cada uno tiene que comunicar es lo mismo: <em>esta carta todavía se está asentando</em>. Lo
-        que cambia es la metáfora y cuánto tapa la ilustración. Míralos en tamaño <em>Mano</em> antes de
-        elegir. <code>src/</code> no importa nada de esta carpeta.
+        La placa de estadísticas reproduce la huella y la posición de <code>.card-stat-badge</code> para
+        poder juzgar qué tapa cada efecto; su contenido es una simplificación. <code>src/</code> no
+        importa nada de esta carpeta.
       </p>
 
       <div class="controls">
-        <span class="group-label">Carta</span>
+        <span class="group-label">Eco</span>
         <div class="group">
           <button type="button" data-set="card" data-value="maela" aria-pressed="true">Maela</button>
-          <button type="button" data-set="card" data-value="retorno" aria-pressed="false">Retorno</button>
+          <button type="button" data-set="card" data-value="aelyra" aria-pressed="false">Aelyra</button>
+          <button type="button" data-set="card" data-value="hydra" aria-pressed="false">Hidra</button>
         </div>
-        <span class="group-label" style="margin-left: 14px">Tamaño</span>
+        <span class="group-label" style="margin-left: 14px">Ancho</span>
         <div class="group">
-          <button type="button" data-set="size" data-value="mano" aria-pressed="false">Mano</button>
-          <button type="button" data-set="size" data-value="campo" aria-pressed="true">Campo</button>
-          <button type="button" data-set="size" data-value="detalle" aria-pressed="false">Detalle</button>
+          <button type="button" data-set="size" data-value="comprimido" aria-pressed="false">156</button>
+          <button type="button" data-set="size" data-value="real" aria-pressed="true">212 · real</button>
+          <button type="button" data-set="size" data-value="detalle" aria-pressed="false">320</button>
         </div>
         <span class="spacer"></span>
         <div class="group">
           <button type="button" data-toggle="paused" aria-pressed="false">Pausar</button>
           <button type="button" data-toggle="bare" aria-pressed="false">Sin efecto</button>
+          <button type="button" data-toggle="stats" aria-pressed="true">Stats</button>
         </div>
       </div>
     </header>
@@ -732,7 +774,7 @@
     <div class="grid">
       <figure>
         <div class="card">
-          <div class="art"></div>
+          <img class="art" alt="" />
           <div class="fx">
             <div class="veil cool-veil"></div>
             <div class="swirl-glow">
@@ -742,40 +784,42 @@
               </div>
             </div>
           </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
         </div>
         <figcaption>
           <h3>Remolino de anillos</h3>
           <p class="says">Vigente · referencia</p>
           <p class="how">
-            El que está hoy en el juego. Anillos que nacen en el centro y se abren sin parar: la carta
-            está atrapada en una corriente de la que todavía no sale.
+            El que está hoy en el juego. Anillos que nacen en el centro y se abren sin parar: el Eco
+            está atrapado en una corriente de la que todavía no sale.
           </p>
         </figcaption>
       </figure>
 
       <figure>
         <div class="card">
-          <div class="art"></div>
+          <img class="art" alt="" />
           <div class="fx">
             <div class="veil cool-veil"></div>
-            <div class="ghost"></div>
-            <div class="ghost warm"></div>
+            <img class="ghost" alt="" />
+            <img class="ghost warm" alt="" />
           </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
         </div>
         <figcaption>
           <h3>Doble sin asentar</h3>
           <p class="says">No terminó de llegar</p>
           <p class="how">
-            Dos copias de la propia carta, una fría y otra cálida, oscilan alrededor del original sin
-            llegar a coincidir. No tapa nada: lo que se ve mal es la carta misma, que es exactamente
-            lo que se quiere decir.
+            Dos copias del propio recorte, una fría y otra cálida, oscilan alrededor del original sin
+            llegar a coincidir. No tapa nada: lo que se ve mal es el Eco mismo, que es exactamente lo
+            que se quiere decir.
           </p>
         </figcaption>
       </figure>
 
       <figure>
         <div class="card">
-          <div class="art"></div>
+          <img class="art" alt="" />
           <div class="fx">
             <div class="veil cool-veil"></div>
             <div class="glow">
@@ -789,34 +833,36 @@
               <div class="anchor-tick vertical"></div>
             </div>
           </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
         </div>
         <figcaption>
           <h3>Anclas cardinales</h3>
           <p class="says">Buscando el encaje</p>
           <p class="how">
             Cuatro escuadras se cierran sobre la carta y vuelven a abrirse, como un instrumento que aún
-            no fijó la pieza. Deja la ilustración entera limpia y es el único que se lee de un vistazo
-            a tamaño Mano.
+            no fijó la pieza. Deja el arte entero limpio, pero la escuadra inferior derecha discute
+            sitio con la placa de estadísticas.
           </p>
         </figcaption>
       </figure>
 
       <figure>
         <div class="card">
-          <div class="art"></div>
+          <img class="art" alt="" />
           <div class="fx">
             <div class="veil cool-veil"></div>
             <div class="glow">
-              <div class="mote" style="--from-x: -190%; --from-y: -520%; animation-duration: 3.4s; animation-delay: -0.3s"></div>
-              <div class="mote" style="--from-x: 340%; --from-y: -430%; animation-duration: 4.1s; animation-delay: -2.2s"></div>
-              <div class="mote" style="--from-x: -430%; --from-y: 180%; animation-duration: 3.7s; animation-delay: -1.4s"></div>
-              <div class="mote" style="--from-x: 400%; --from-y: 360%; animation-duration: 4.6s; animation-delay: -3.1s"></div>
-              <div class="mote" style="--from-x: 60%; --from-y: -640%; animation-duration: 3.9s; animation-delay: -0.9s"></div>
-              <div class="mote" style="--from-x: -300%; --from-y: 520%; animation-duration: 4.3s; animation-delay: -2.7s"></div>
-              <div class="mote" style="--from-x: 470%; --from-y: -110%; animation-duration: 3.5s; animation-delay: -1.8s"></div>
-              <div class="mote" style="--from-x: -90%; --from-y: 610%; animation-duration: 4.8s; animation-delay: -3.6s"></div>
+              <div class="mote" style="--from-x: -64cqw; --from-y: -58cqw; animation-duration: 3.4s; animation-delay: -0.3s"></div>
+              <div class="mote" style="--from-x: 71cqw; --from-y: -47cqw; animation-duration: 4.1s; animation-delay: -2.2s"></div>
+              <div class="mote" style="--from-x: -78cqw; --from-y: 22cqw; animation-duration: 3.7s; animation-delay: -1.4s"></div>
+              <div class="mote" style="--from-x: 66cqw; --from-y: 54cqw; animation-duration: 4.6s; animation-delay: -3.1s"></div>
+              <div class="mote" style="--from-x: 8cqw; --from-y: -66cqw; animation-duration: 3.9s; animation-delay: -0.9s"></div>
+              <div class="mote" style="--from-x: -41cqw; --from-y: 63cqw; animation-duration: 4.3s; animation-delay: -2.7s"></div>
+              <div class="mote" style="--from-x: 82cqw; --from-y: -14cqw; animation-duration: 3.5s; animation-delay: -1.8s"></div>
+              <div class="mote" style="--from-x: -12cqw; --from-y: 69cqw; animation-duration: 4.8s; animation-delay: -3.6s"></div>
             </div>
           </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
         </div>
         <figcaption>
           <h3>Coalescencia</h3>
@@ -830,7 +876,7 @@
 
       <figure>
         <div class="card">
-          <div class="art"></div>
+          <img class="art" alt="" />
           <div class="fx">
             <div class="veil cool-veil"></div>
             <div class="glow">
@@ -839,6 +885,7 @@
               <div class="settle-wave second"></div>
             </div>
           </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
         </div>
         <figcaption>
           <h3>Onda de asentamiento</h3>
@@ -852,7 +899,7 @@
 
       <figure>
         <div class="card">
-          <div class="art"></div>
+          <img class="art" alt="" />
           <div class="fx">
             <div class="veil cool-veil"></div>
             <div class="glow">
@@ -860,20 +907,21 @@
               <div class="frost-rime"></div>
             </div>
           </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
         </div>
         <figcaption>
           <h3>Escarcha creciente</h3>
           <p class="says">Cuajando en su sitio</p>
           <p class="how">
             La helada entra por el marco y respira hacia el centro. «Estabilizarse» leído como cuajar:
-            la carta se está volviendo sólida. El centro queda casi limpio.
+            el Eco se está volviendo sólido. El centro queda casi limpio.
           </p>
         </figcaption>
       </figure>
 
       <figure>
         <div class="card">
-          <div class="art"></div>
+          <img class="art" alt="" />
           <div class="fx">
             <div class="veil cool-veil"></div>
             <div class="glow">
@@ -883,20 +931,21 @@
               <div class="rim-breath"></div>
             </div>
           </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
         </div>
         <figcaption>
           <h3>Contorno en espera</h3>
           <p class="says">Marcado, no tapado</p>
           <p class="how">
-            No toca la ilustración: sólo el canto respira y una luz lo recorre. El más discreto y el
-            más barato, pero también el que más se parece a un borde de selección, que es su riesgo.
+            No toca el arte: sólo el canto respira y una luz lo recorre. El más discreto y el más
+            barato, pero también el que más se parece a un borde de selección, que es su riesgo.
           </p>
         </figcaption>
       </figure>
 
       <figure>
         <div class="card">
-          <div class="art"></div>
+          <img class="art" alt="" />
           <div class="fx">
             <div class="veil cool-veil"></div>
             <div class="glow">
@@ -907,14 +956,15 @@
               </div>
             </div>
           </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
         </div>
         <figcaption>
           <h3>Trama temporal</h3>
           <p class="says">Todavía tejiéndose</p>
           <p class="how">
-            La carta se está tejiendo en la línea temporal. La retícula está quieta —es la máscara del
+            El Eco se está tejiendo en la línea temporal. La retícula está quieta —es la máscara del
             contenedor— y lo que viaja por debajo es la onda que la enciende. El más «temporal» de los
-            ocho y el que peor aguanta el tamaño Mano.
+            ocho y el que peor aguanta el ancho comprimido.
           </p>
         </figcaption>
       </figure>
@@ -934,18 +984,20 @@
           lo mismo que Agotado en vez de algo distinto.
         </li>
         <li>
-          <strong>Tamaño Mano.</strong> A 112 px la <em>Trama</em> se vuelve moiré y el <em>Doble</em>
-          casi desaparece. <em>Anclas</em>, <em>Onda</em> y <em>Escarcha</em> aguantan porque su forma
-          es grande.
+          <strong>La placa de estadísticas.</strong> Vive en la esquina inferior derecha y ocupa casi
+          la mitad del ancho del recorte. <em>Anclas cardinales</em> le pisa la esquina; los radiales
+          la rodean sin taparla.
+        </li>
+        <li>
+          <strong>El recorte es apaisado y bajo.</strong> Hay mucho menos alto que en el PNG de la
+          Mano, así que todo lo que crece desde el centro sale por los lados mucho antes de lo que
+          parece. Es lo que obliga a que <em>Onda</em> y <em>Trama</em> mueran antes del borde.
         </li>
         <li>
           <strong>Convivencia.</strong> Varios Ecos pueden estar Estabilizándose a la vez, recién
-          Invocados en la misma secuencia. <em>Coalescencia</em> y <em>Escarcha</em> se sostienen en
-          grupo; el <em>Remolino</em> y la <em>Trama</em> se vuelven un tablero agitado.
-        </li>
-        <li>
-          <strong>Que ceda ante el combate.</strong> Ninguno usa destello a pantalla completa ni sacude
-          la carta, para no discutirle protagonismo a los beats de ataque, muerte y Burn.
+          Invocados en la misma secuencia, y en el Campo van pegados. <em>Coalescencia</em> y
+          <em>Escarcha</em> se sostienen en grupo; el <em>Remolino</em> y la <em>Trama</em> vuelven la
+          fila un hervidero.
         </li>
         <li>
           <strong>Coste.</strong> Todos animan sólo <code>transform</code> y <code>opacity</code>.
@@ -957,10 +1009,37 @@
   </main>
 
   <script>
+    // Mismo contrato que src/utils/battlefieldArtFrame.ts. Los encuadres son los
+    // valores authored de src/data/cardStudioGameArt.generated.json.
+    const VIEWPORT = { width: 488, height: 434 };
+    const ECHOES = {
+      maela: { file: "field-maela.jpg", width: 600, height: 600, frame: { zoom: 1, x: 1, y: 79 } },
+      aelyra: { file: "field-aelyra.jpg", width: 600, height: 842, frame: { zoom: 1.875, x: 12, y: 267 } },
+      hydra: { file: "field-hydra.jpg", width: 600, height: 600, frame: { zoom: 1.04, x: 8, y: 69 } },
+    };
+
+    function applyEcho(key) {
+      const echo = ECHOES[key];
+      if (!echo) return;
+      const viewportAspect = VIEWPORT.width / VIEWPORT.height;
+      const sourceAspect = echo.width / echo.height;
+      const wide = sourceAspect >= viewportAspect;
+      const style = document.body.style;
+      style.setProperty("--art-w", wide ? `${(sourceAspect / viewportAspect) * 100}%` : "100%");
+      style.setProperty("--art-h", wide ? "100%" : `${(viewportAspect / sourceAspect) * 100}%`);
+      style.setProperty("--art-zoom", String(echo.frame.zoom));
+      style.setProperty("--art-x", `${(echo.frame.x / VIEWPORT.width) * 100}cqw`);
+      style.setProperty("--art-y", `${(echo.frame.y / VIEWPORT.width) * 100}cqw`);
+      document.querySelectorAll("img.art, img.ghost").forEach((img) => {
+        img.src = `../assets/ui_references/${echo.file}`;
+      });
+    }
+
     document.querySelectorAll("button[data-set]").forEach((button) => {
       button.addEventListener("click", () => {
         const key = button.dataset.set;
         document.body.dataset[key] = button.dataset.value;
+        if (key === "card") applyEcho(button.dataset.value);
         document.querySelectorAll(`button[data-set="${key}"]`).forEach((sibling) => {
           sibling.setAttribute("aria-pressed", String(sibling === button));
         });
@@ -975,6 +1054,8 @@
         button.setAttribute("aria-pressed", String(next));
       });
     });
+
+    applyEcho(document.body.dataset.card);
   </script>
 </body>
 

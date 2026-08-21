@@ -34,6 +34,10 @@ vfx/                exploraciones de efectos
 
 ## Contenido
 
+- `ui/chronicler-name-modal.html` — seis reemplazos interactivos de `ChroniclerNameModal`, construidos sólo
+  con los tokens vigentes (`--hf-ui-*` y el material del menú principal) para retirar la paleta oliva del
+  modal actual. Cada variante se escribe, se enfoca, se confirma y se vuelve a abrir sobre una silueta del
+  menú; la barra superior cambia idioma, alterna primera apertura/reapertura y repite las entradas.
 - `ui/ui-typography.html` — diez conjuntos tipográficos sobre la piel actual, con muestras EN/ES y una
   prueba de encaje que mide cada cadena contra el ancho real de su hueco en `src/styles.css`.
 - `ui/ui-kit.html` — seis pieles completas (botones, modales, paneles, controles, HUD).

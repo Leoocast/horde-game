@@ -291,7 +291,7 @@ export const LEARN_TO_PLAY_FIRST_BATTLE_INTERVENTION = Object.freeze({
       copy: {
         titleKey: "guided.contextual.product.attackArchiveTitle",
         bodyKey: "guided.contextual.product.attackArchiveBody",
-        glossaryTerms: ["archive", "echoes"],
+        glossaryTerms: ["hostArchive", "echoes"],
       },
       highlights: [{ kind: "surface", anchor: "host.archive" }],
       nextStepId: "attacking-is-optional",
@@ -465,7 +465,7 @@ export const LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION = Object.freeze({
       copy: {
         titleKey: "guided.contextual.product.returnSourceTitle",
         bodyKey: "guided.contextual.product.returnSourceBody",
-        glossaryTerms: ["source", "archive"],
+        glossaryTerms: ["source", "chroniclerArchive"],
       },
       highlights: [
         { kind: "card", alias: "post_surge_source", role: "origin" },
@@ -483,7 +483,7 @@ export const LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION = Object.freeze({
       copy: {
         titleKey: "guided.contextual.product.returnSourceTitle",
         bodyKey: "guided.contextual.product.returnSourceBody",
-        glossaryTerms: ["source", "archive"],
+        glossaryTerms: ["source", "chroniclerArchive"],
       },
       highlights: [
         { kind: "card", alias: "post_surge_source", role: "origin" },

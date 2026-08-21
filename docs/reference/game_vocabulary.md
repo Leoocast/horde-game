@@ -62,8 +62,8 @@ los consumidores runtime. No existen zonas paralelas ni aliases en el estado del
 
 | Id | English | Español | Comportamiento |
 | --- | --- | --- | --- |
-| `ECHO` | Echo | Eco | Puede atacar y defender; tiene Fuerza y Aguante. |
-| `SOURCE` | Source | Fuente | Permanece en el Campo y normalmente genera Energía. |
+| `ECHO` | Echo | Eco | Combatiente Invocado al Campo; puede atacar y defender. |
+| `SOURCE` | Source | Fuente | Al jugarla, su Energía se acumula en el contenedor del Cronista. |
 | `SPELL` | Spell | Hechizo | Produce un efecto y después pasa a la Memoria. |
 | `SUPPORT` | Support | Apoyo | Permanece en el Campo y modifica reglas o produce efectos. |
 | `TOKEN` | Token | Ficha | Objeto creado por un efecto que no pertenece a un Archivo. |
@@ -81,17 +81,17 @@ Los subtipos como Vampiro, Druida, Zombi o Trasgo son lore y filtros, no tipos d
 
 | English | Español | Regla |
 | --- | --- | --- |
-| Energy | Energía | Recurso numérico que paga cartas y Acciones. |
+| Energy | Energía | Fuerza que se canaliza para Invocar Ecos y activar Acciones. |
 | Energy cost | Coste de Energía | Cantidad indicada por el orbe de coste. |
-| Power | Fuerza | Daño base que hace un Eco. |
+| Power | Fuerza | Daño base que inflige un Eco. |
 | Endurance | Aguante | Daño que soporta un Eco antes de morir. |
-| Life | Vida | Recurso de supervivencia del Cronista. |
+| Life | Vida | La supervivencia del Cronista. |
 | +1/+1 counter | Contador +1/+1 | Aumento persistente de Fuerza y Aguante. |
 | -1/-1 counter | Contador -1/-1 | Reducción persistente de Fuerza y Aguante. |
 | Poison | Veneno | Presión acumulada que hace perder cartas del Archivo a la Hueste. |
 
-Una Fuente es una carta permanente; Energía es el recurso que produce. Se escribe `Sacrifica una
-Fuente`, nunca `Sacrifica una Energía`.
+Una Fuente aporta Energía al contenedor de la esquina inferior izquierda; Energía es la fuerza que
+el Cronista canaliza. Se escribe `Sacrifica una Fuente`, nunca `Sacrifica una Energía`.
 
 En `+N/+N` y `-N/-N`, el primer valor siempre es Fuerza y el segundo Aguante. La Energía generada se imprime
 como `Agrega {E}` o `Agrega {E}{E}`, sin un número junto al símbolo.
@@ -113,7 +113,7 @@ como `Agrega {E}` o `Agrega {E}{E}`, sin un número junto al símbolo.
 | Id | English | Español | Definición breve |
 | --- | --- | --- | --- |
 | `PLAY` | Play | Jugar | Pagar costes y usar una carta de la Mano. |
-| `INVOKE` | Invoke | Invocar | Poner la carta indicada en el Campo. |
+| `INVOKE` | Invoke | Invocar | Traer un Eco al Campo. |
 | `EXHAUST` | Exhaust | Agotar | Girar una carta preparada para pagar o atacar. |
 | `READY` | Ready | Preparar | Devolver una carta agotada a su orientación disponible. |
 | `DRAW` | Draw | Robar | Mover la carta superior del Archivo a la Mano. |
@@ -124,7 +124,7 @@ como `Agrega {E}` o `Agrega {E}{E}`, sin un número junto al símbolo.
 | `BANISH` | Banish | Desterrar | Mover una carta al Olvido. |
 | `REVEAL` | Reveal | Revelar | Mostrar una carta sin cambiar necesariamente su zona. |
 
-Una carta es Invocada cada vez que entra al Campo, sin importar su origen. Hostfall no tiene una
+Un Eco es Invocado cada vez que entra al Campo, sin importar su origen. Hostfall no tiene una
 keyword equivalente a mill: se escribe la instrucción completa, por ejemplo `Descarta las 2
 primeras cartas del Archivo de la Hueste a su Memoria`.
 

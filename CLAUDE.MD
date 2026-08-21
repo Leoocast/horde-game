@@ -729,6 +729,17 @@ avanzar activa una intervención estricta breve para **Devolver Fuente**. Ciudad
 ataque posterior permanecen libres. Tres Soldados authored absorben los descartes opcionales antes
 del Titán terminal.
 
+El lenguaje visible del tutorial distingue objetos de reglas: **Fuente** aporta Energía al
+contenedor inferior izquierdo y **Energía** se canaliza para **Invocar Ecos** y activar Acciones;
+nunca se enseña que se «Invocan cartas». El glosario usa términos separados para **Archivo de la
+Hueste** —la pila de Ecos aún no Invocados— y **Archivo del Cronista** —la pila de Ecos y Fuentes aún
+no robados—, de modo que el subrayado cubre la frase completa. Vida se define sólo como la
+supervivencia del Cronista y Reserva explica que conserva hasta 3 de Energía para el turno siguiente
+y la utiliza antes que las Fuentes. En la primera Oleada el orden es contractual: termina la
+animación, aparece su ayuda contextual sobre el tablero asentado y sólo al aceptarla se revelan los
+Ecos. La ayuda de Mano vacía no ilumina la Mano. En el desenlace de Aprender a jugar, tanto
+**Futuro perdido** como **Contemplar otro futuro** quedan centrados horizontalmente.
+
 El cierre terminal calcula desde el tablero vivo el mínimo de llegadas que vuelve inevitable la
 derrota, verifica la mejor defensa con el resolutor real y presenta cada carta mediante su llegada
 normal, una a una. La Vida llega a 0 por el combate real; `learn-to-play` reutiliza el quiebre de

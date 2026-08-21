@@ -240,7 +240,8 @@ export type GuidedStepCopy = Readonly<{
 
 export const GUIDED_GLOSSARY_TERM_IDS = [
   "host",
-  "archive",
+  "hostArchive",
+  "chroniclerArchive",
   "life",
   "preparation",
   "field",

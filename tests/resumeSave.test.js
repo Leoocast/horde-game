@@ -49,6 +49,7 @@ test("animations, Host beats and manual commitments preserve the previous checkp
   assert.equal(isSafeResumeCheckpoint(stable), true);
   assert.equal(isSafeResumeCheckpoint({ ...stable, burnAnimation: {} }), false);
   assert.equal(isSafeResumeCheckpoint({ ...stable, resolvingHostCombat: true }), false);
+  assert.equal(isSafeResumeCheckpoint({ ...stable, surgeRevealPending: true }), false);
   assert.equal(isSafeResumeCheckpoint({ ...stable, spellTargeting: {} }), false);
   assert.equal(isSafeResumeCheckpoint({
     ...stable,

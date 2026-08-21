@@ -1195,6 +1195,7 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   const modal = readFileSync(new URL("../src/components/DefeatModal.tsx", import.meta.url), "utf8");
   const outcomeDialog = readFileSync(new URL("../src/components/GameOutcomeDialog.tsx", import.meta.url), "utf8");
   const journeyModal = readFileSync(new URL("../src/components/LearnToPlayDefeatModal.tsx", import.meta.url), "utf8");
+  const journeyDialogs = readFileSync(new URL("../src/components/LearnToPlayDefeatDialogs.tsx", import.meta.url), "utf8");
   const board = readFileSync(new URL("../src/components/Board.tsx", import.meta.url), "utf8");
   const desktopMain = readFileSync(new URL("../electron/main.ts", import.meta.url), "utf8");
   const backdrop = readFileSync(new URL("../src/components/TemporalBackdrop.tsx", import.meta.url), "utf8");
@@ -1270,6 +1271,7 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   // El desenlace se centra con una capa a pantalla completa: la succión del vórtice anima
   // `transform` sobre cada pieza y borraría un `translate` propio del bloque.
   assert.match(styles, /\.defeat-outcome \{\s*position: absolute;[\s\S]*?place-items: center;/u);
+  assert.match(styles, /\.defeat-outcome-inner \{[\s\S]*?left: 50%;[\s\S]*?justify-self: start;[\s\S]*?translate: -50% 0;/u);
   assert.match(styles, /@keyframes defeat-outcome-in \{\s*from \{ opacity: 0; transform: translateY\(10px\); \}/u);
   assert.match(styles, /\.defeat-title \.line \{[^}]*padding-left: 0\.065em;/su);
   assert.match(modal, /<GameOutcomeDialog/u);
@@ -1281,21 +1283,23 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(board, /sessionPolicy\.showStandardOutcome && defeatReady/u);
   assert.match(board, /sessionPolicy\.showJourneyDefeat && defeatReady/u);
   assert.match(journeyModal, /<DefeatShatterAnimator/u);
-  assert.match(journeyModal, /destiny\.futureLostLineOne/u);
-  assert.match(journeyModal, /destiny\.futureLostLineTwo/u);
-  assert.match(journeyModal, /result\.chapterLostAmongShards/u);
+  assert.match(journeyModal, /<LearnToPlayDefeatOutcomeDialog/u);
+  assert.match(journeyDialogs, /destiny\.futureLostLineOne/u);
+  assert.match(journeyDialogs, /destiny\.futureLostLineTwo/u);
+  assert.match(journeyDialogs, /result\.chapterLostAmongShards/u);
   assert.match(journeyModal, /LEARN_TO_PLAY_NARRATIVE_DELAY_MS\s*=\s*1_000/u);
-  assert.match(journeyModal, /guided\.learnToPlay\.defeatLineOne/u);
-  assert.match(journeyModal, /guided\.learnToPlay\.defeatLineTwo/u);
-  assert.match(journeyModal, /guided\.learnToPlay\.defeatBody/u);
-  assert.match(journeyModal, /guided\.continue/u);
-  assert.match(journeyModal, /guided\.learnToPlay\.defeatCta/u);
+  assert.match(journeyDialogs, /guided\.learnToPlay\.defeatLineOne/u);
+  assert.match(journeyDialogs, /guided\.learnToPlay\.defeatLineTwo/u);
+  assert.match(journeyDialogs, /guided\.learnToPlay\.defeatBody/u);
+  assert.match(journeyDialogs, /guided\.continue/u);
+  assert.match(journeyDialogs, /guided\.learnToPlay\.defeatCta/u);
   assert.match(journeyModal, /onContemplateFuture/u);
-  assert.match(journeyModal, /destiny-command-button learn-to-play-contemplate-button/u);
-  assert.doesNotMatch(journeyModal, /disabled/u);
-  assert.doesNotMatch(journeyModal, /onRewriteFuture|defeat-future-plate|destiny-command-glyph/u);
+  assert.match(journeyDialogs, /destiny-command-button learn-to-play-contemplate-button/u);
+  assert.doesNotMatch(journeyDialogs, /disabled/u);
+  assert.doesNotMatch(`${journeyModal}\n${journeyDialogs}`, /onRewriteFuture|defeat-future-plate|destiny-command-glyph/u);
   assert.match(styles, /\.learn-to-play-contemplate-button::before \{[\s\S]*?width: 180%;[\s\S]*?aspect-ratio: 1;/u);
   assert.match(styles, /\.learn-to-play-contemplate-button \.destiny-command-copy strong \{[^}]*padding-left: 0\.13em;/su);
+  assert.match(styles, /\.learn-to-play-defeat-cta \{[^}]*justify-self: center;[^}]*margin-inline: auto;/su);
   // El vidrio se lee aunque no haya nada impreso: alfa de la captura con suelo de Fresnel.
   assert.match(glassShader, /float printed = middle\.a/u);
   assert.match(glassShader, /vFade \* max\(printed, glassEdge\)/u);
@@ -1481,6 +1485,8 @@ test("UI Reference inventories only real player UI and traces every component to
   const menuSource = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
   const screenSource = readFileSync(new URL("../src/ui-reference/UIReferenceScreen.tsx", import.meta.url), "utf8");
   const modalGallerySource = readFileSync(new URL("../src/ui-reference/RuntimeModalGallery.tsx", import.meta.url), "utf8");
+  const guidedOverlaySource = readFileSync(new URL("../src/components/GuidedTutorialOverlay.tsx", import.meta.url), "utf8");
+  const guidedDialogSource = readFileSync(new URL("../src/components/GuidedTutorialDialog.tsx", import.meta.url), "utf8");
   const referenceStyles = readFileSync(new URL("../src/ui-reference/UIReferenceScreen.css", import.meta.url), "utf8");
   const runtimeStyles = readFileSync(new URL("../src/ui-system.css", import.meta.url), "utf8");
   const mainSource = readFileSync(new URL("../src/main.tsx", import.meta.url), "utf8");
@@ -1499,13 +1505,17 @@ test("UI Reference inventories only real player UI and traces every component to
   assert.match(screenSource, /Qué significa cada estado/u);
   assert.match(screenSource, /No\s+significa viejo, retirado ni pendiente de reemplazo/u);
   assert.doesNotMatch(screenSource, /from\s+["'][^"']*(?:dev\/mockups|playground|audio-lab|seed-explorer|Animator|Vfx|vfx|three)[^"']*["']/u);
-  assert.match(modalGallerySource, /const MODAL_SPECIMENS:[\s\S]*?chronicler-required[\s\S]*?learn-defeat-narrative/u);
+  assert.match(modalGallerySource, /const MODAL_SPECIMENS:[\s\S]*?chronicler-name[\s\S]*?guided-tutorial[\s\S]*?learn-defeat-narrative/u);
+  assert.doesNotMatch(modalGallerySource, /chronicler-required|chronicler-edit|deck-drawer-(?:player|host)|settings-(?:normal|tutorial|journey)|confirmation-(?:return|interrupted|restart)|outcome-(?:victory|defeat)/u);
   assert.match(modalGallerySource, /<strong>Dónde se usa<\/strong>/u);
   assert.match(modalGallerySource, /<OpeningHandModal/u);
   assert.match(modalGallerySource, /<HandLimitModal/u);
+  assert.match(modalGallerySource, /<GuidedTutorialDialog/u);
   assert.match(modalGallerySource, /<GameOutcomeDialog/u);
   assert.match(modalGallerySource, /Los resultados omiten su secuencia visual/u);
   assert.doesNotMatch(modalGallerySource, /from\s+["'][^"']*(?:dev\/mockups|playground|audio-lab|seed-explorer|Animator|Vfx|vfx|three)[^"']*["']/u);
+  assert.match(guidedOverlaySource, /<GuidedTutorialDialog/u);
+  assert.match(guidedDialogSource, /guided-tutorial-callout-mark/u);
 
   assert.match(mainSource, /import "\.\/ui-system\.css"/u);
   assert.match(runtimeStyles, /\.hf-ui-panel,/u);
@@ -1531,8 +1541,8 @@ test("UI Reference inventories only real player UI and traces every component to
     "graveyard-details-modal",
     "deck-inspector-details-modal",
     "learn-intro",
-    "victory-outcome-dialog",
-    "defeat-outcome-dialog",
+    "guided-tutorial-dialog",
+    "game-outcome-dialog",
     "learn-defeat-outcome-dialog",
     "learn-defeat-narrative-dialog",
   ]) {

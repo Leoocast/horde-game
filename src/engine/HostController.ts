@@ -19,8 +19,23 @@ type HostRevealResult = {
 
 export function runHostMain(game: GameState, options: HostMainOptions = {}): GameState {
   const next = beginHostMain(game);
+  resolveHostMainReveals(next, options, hostInSurge(game));
+  return next;
+}
+
+/**
+ * Continues the first Surge turn after its presentation and explanation have finished. The Host
+ * turn is already open, so this seam reveals without readying the Field or advancing the clock a
+ * second time.
+ */
+export function revealHostMainAfterSurgeEntry(game: GameState, options: HostMainOptions = {}): GameState {
+  const next = structuredClone(game) as GameState;
+  resolveHostMainReveals(next, options, false);
+  return next;
+}
+
+function resolveHostMainReveals(next: GameState, options: HostMainOptions, wasInSurge: boolean): void {
   const rules = next.hostRules;
-  const wasInSurge = hostInSurge(game);
   revealNormal(next, options);
   if (next.hostTurnNumber === rules.miniSurgeTurn && rules.miniSurgeExtraReveals > 0) {
     next.log.unshift(`Host Mini Surge on turn ${rules.miniSurgeTurn} reveals ${rules.miniSurgeExtraReveals} extra card(s).`);
@@ -36,7 +51,6 @@ export function runHostMain(game: GameState, options: HostMainOptions = {}): Gam
   }
   resolveRequestedRevealRounds(next, options);
   if (!options.deferInvokedTriggers) drainEventQueue(next);
-  return next;
 }
 
 /**

@@ -66,7 +66,19 @@ test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
   );
   assert.equal(
     translate("es", "guided.glossary.source.definition"),
-    "Al jugar una Fuente, su Energía se acumula en el contenedor de la esquina inferior izquierda. Puedes reunir hasta cuatro para Invocar cartas y activar Acciones.",
+    "Al jugar una Fuente, su Energía se acumula en el contenedor de la esquina inferior izquierda. Puedes reunir hasta cuatro para Invocar Ecos y activar Acciones.",
+  );
+  assert.equal(
+    translate("es", "guided.glossary.energy.definition"),
+    "La fuerza que canalizas para Invocar Ecos y activar Acciones.",
+  );
+  assert.equal(
+    translate("es", "guided.glossary.echoes.definition"),
+    "Combatientes que el Cronista y la Hueste Invocan al Campo. Pueden atacar y defender.",
+  );
+  assert.equal(
+    translate("es", "guided.glossary.host.definition"),
+    "Una fuerza implacable que avanza sin esperar órdenes. Invoca sus propios Ecos y los lanza contra el Cronista.",
   );
   assert.equal(
     translate("es", "guided.learnToPlay.fourthSourceBody"),
@@ -84,7 +96,31 @@ test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
     translate("es", "guided.contextual.product.attackExhaustsBody"),
     "Es opcional atacar. Si un Eco ataca, se Agota, por lo que no estará disponible para defender durante el siguiente turno de la Hueste.",
   );
-  assert.equal(translate("es", "guided.glossary.archive.definition"), "La pila de cartas aún no robadas.");
+  assert.equal(translate("es", "guided.glossary.hostArchive.label"), "Archivo de la Hueste");
+  assert.equal(translate("es", "guided.glossary.hostArchive.definition"), "La pila de Ecos aún no Invocados.");
+  assert.equal(translate("es", "guided.glossary.chroniclerArchive.label"), "Archivo del Cronista");
+  assert.equal(
+    translate("es", "guided.glossary.chroniclerArchive.definition"),
+    "La pila de Ecos y Fuentes aún no robados.",
+  );
+  assert.equal(translate("es", "guided.glossary.life.definition"), "La supervivencia del Cronista.");
+  assert.equal(
+    translate("es", "guided.glossary.reserve.definition"),
+    "Guarda hasta 3 de Energía que no usaste para tu siguiente turno. Esa Energía se utiliza antes que la de tus Fuentes.",
+  );
+  assert.equal(translate("es", "guided.cardComparison.powerGloss"), "El daño que inflige");
+  assert.equal(
+    translate("es", "guided.contextual.product.surgeBody"),
+    "A partir de este turno, la Hueste desata todo su poder e Invoca más Ecos con cada avance.",
+  );
+  assert.equal(
+    translate("es", "guided.contextual.product.emptyHandDrawBody"),
+    "Si comienzas tu turno sin Ecos o Fuentes en la Mano, robas 2 cartas en lugar de 1.",
+  );
+  assert.equal(
+    translate("es", "guided.contextual.product.returnSourceBody"),
+    "No puedes reunir más de 4 Fuentes. Arrastra Río de Elarion hacia el Archivo del Cronista para colocarlo al fondo y robar otra carta. Jugar o devolver una Fuente consume tu Acción de Fuente del turno.",
+  );
   assert.equal(
     translate("es", "guided.learnToPlay.combatStatsBody"),
     "La Fuerza indica cuánto daño inflige un Eco. El Aguante indica cuánto daño puede recibir antes de ser destruido. Cuando dos Ecos combaten, ambos se infligen daño al mismo tiempo.",
@@ -420,10 +456,7 @@ test("post-Surge concepts react only to the real empty-Hand draw and the require
     amount: 2,
     reason: "empty-hand",
     cardIds: ["river:1", "spell:1"],
-  }, context), {
-    highlights: [{ kind: "surface", anchor: "player.hand", showHighlight: false }],
-    placement: "center",
-  });
+  }, context), { placement: "center" });
   assert.equal(emptyHand.evaluate({
     kind: "player.cardsDrawn",
     amount: 2,

@@ -53,6 +53,7 @@ import { NORMAL_BOARD_SESSION, type BoardSessionPolicy } from "./boardSessionPol
 import { useHiddenDefenseLinkIds } from "./useDefenseLinkVisibility";
 import { IS_DEV } from "../utils/devMode";
 import { guidedPresentationActivity } from "../guidance";
+import { contextualTutorialRuntime } from "../guidance/contextualProductRuntime";
 
 type Props = {
   playerName: string;
@@ -83,6 +84,8 @@ const OUTCOME_DRAIN_WATCHDOG_MS = 15000;
 const subscribeToPresentationActivity = (listener: () => void) =>
   guidedPresentationActivity.subscribe(listener);
 const readPresentationActivity = () => guidedPresentationActivity.snapshot();
+const subscribeToContextualTutorial = (listener: () => void) => contextualTutorialRuntime.subscribe(listener);
+const readContextualTutorial = () => contextualTutorialRuntime.snapshot();
 
 /** Trabajo visual finito que todavía debe completar su último frame. Se ignoran los idles
  * infinitos del tablero (vuelo, agua, energía y ambiente), porque nunca forman parte de un beat. */
@@ -151,6 +154,7 @@ function outcomePresentationActive(state: GameStore): boolean {
     || state.hostAutoTriggerCount > 0
     || state.playerAutoTriggerCount > 0
     || state.surgeTransitionActive
+    || state.surgeRevealPending
     || state.hostCombatDeadCardIds.length > 0
     || state.specialDeadCardIds.length > 0
     || state.hostMillAnimationQueue.length > 0
@@ -230,8 +234,10 @@ export function Board({
   // overlay's own backdrop dims the rest of the board and each zone only allows target-locking.
   const tributeOfTheFourSorrowsSelectionActive = useGameStore((state) => Boolean(state.tributeOfTheFourSorrowsSelection));
   const surgeTransitionActive = useGameStore((state) => state.surgeTransitionActive);
+  const surgeRevealPending = useGameStore((state) => state.surgeRevealPending);
   const surgeTransitionShown = useGameStore((state) => state.surgeTransitionShown);
   const completeSurgeTransition = useGameStore((state) => state.completeSurgeTransition);
+  const continueSurgeAfterExplanation = useGameStore((state) => state.continueSurgeAfterExplanation);
   const stopGamePresentation = useGameStore((state) => state.stopGamePresentation);
   const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
   const setMusicVariant = useAudioStore((state) => state.setMusicVariant);
@@ -259,6 +265,11 @@ export function Board({
     subscribeToPresentationActivity,
     readPresentationActivity,
     readPresentationActivity,
+  );
+  const contextualTutorial = useSyncExternalStore(
+    subscribeToContextualTutorial,
+    readContextualTutorial,
+    readContextualTutorial,
   );
   const destinyDialSettled = settledDestinyDialRevision === destinyDialRevision;
   const forcedOutcomeDrain = Boolean(game.winner)
@@ -289,6 +300,25 @@ export function Board({
     (!game.winner && storePresentationActive)
     || outcomePresentationPending
   );
+
+  useEffect(() => {
+    if (!surgeRevealPending) return;
+    if (contextualTutorial.active || contextualTutorial.queue.length > 0) return;
+    // Signal publication and contextual promotion are synchronous, but one frame of grace keeps
+    // this hand-off safe if a future scheduler defers either side. If the Surge explanation is
+    // eligible it owns the pause; after acknowledgement this same effect releases the reveals.
+    const frame = window.requestAnimationFrame(() => {
+      const latestTutorial = contextualTutorialRuntime.snapshot();
+      if (latestTutorial.active || latestTutorial.queue.length > 0) return;
+      if (useGameStore.getState().surgeRevealPending) continueSurgeAfterExplanation();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [
+    contextualTutorial.active,
+    contextualTutorial.queue,
+    continueSurgeAfterExplanation,
+    surgeRevealPending,
+  ]);
 
   useEffect(() => {
     if (!outcomeEnabled) {

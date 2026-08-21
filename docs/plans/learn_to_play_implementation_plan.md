@@ -392,7 +392,7 @@ Preparación ni cambiar la derrota normal.
 
 La infraestructura debe poder registrar, como mínimo, estos conceptos independientes:
 
-- jugar una Fuente e Invocar una carta;
+- jugar una Fuente e Invocar un Eco;
 - asignar defensores;
 - orden de ataque de la Hueste;
 - Volar y Guardia aérea ante un intento inválido;
@@ -513,7 +513,9 @@ La receta deja la Vida en 31, la Cosechadora con dos contadores y el próximo re
 Acechador. Retorno consume los dos Soldados de equivalencia al morir; después quedan las dos ramas
 robustas de la primera Oleada, con o sin el descarte opcional previo. Al cerrar esta fase, el
 director se detenía en la señal real `host.surgeStarted`; las fases siguientes extienden ahora ese
-mismo recorrido sin simular la Oleada.
+mismo recorrido sin simular la Oleada. El primer turno de Oleada conserva una pausa de dominio entre
+`beginHostMain` y los revelados: termina la animación, se explica la Oleada y sólo entonces se
+revelan los Ecos de la Hueste.
 
 Las pruebas automáticas enumeran ambos objetivos legales de Aelyra, todas las asignaciones legales
 de Maela/Aelyra y los órdenes `omitir Flor`, `Flor → Vaelor` y `Vaelor → Flor`. Todas las ramas

@@ -26,7 +26,7 @@ import {
   togglePlayerAttacker,
   type HostAttackEvent,
 } from "../engine/CombatResolver";
-import { beginHostMain, finishHostTurn, revealHostCardFromTop, runHostMain as runHostMainPhase } from "../engine/HostController";
+import { beginHostMain, finishHostTurn, revealHostCardFromTop, revealHostMainAfterSurgeEntry, runHostMain as runHostMainPhase } from "../engine/HostController";
 import { canAttack, hasTrait } from "../engine/Traits";
 import { getPowerEndurance, hostInSurge } from "../engine/StaticEffects";
 import { EFFECT_ANNOUNCEMENTS, destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, findManualInvokedTargetTrigger, hasEffectPresentation, manualInvokedTargetRequirement, resolveEffect, resolveEffects, triggerConditionMet } from "../engine/EffectResolver";
@@ -149,6 +149,7 @@ export type GameStore = {
   playerAutoTriggerCount: number;
   surgeTransitionActive: boolean;
   surgeTransitionShown: boolean;
+  surgeRevealPending: boolean;
   /**
    * Ángulo acumulado del disco de grados del fondo, en grados. Es presentación pura:
    * no entra en `GameState`, no se persiste y no decide nada. Mide cómo se mueve el
@@ -258,6 +259,7 @@ export type GameStore = {
    *  running a Host turn. */
   resolveHostCardFromTop: () => void;
   completeSurgeTransition: () => void;
+  continueSurgeAfterExplanation: () => void;
   prepareHostAttackers: () => void;
   declareBlocker: (blockerId: string, attackerId: string) => void;
   cancelBlocks: () => void;
@@ -589,6 +591,7 @@ function createCleanUiState(): Partial<GameStore> {
     playerAutoTriggerCount: 0,
     surgeTransitionActive: false,
     surgeTransitionShown: false,
+    surgeRevealPending: false,
     hostCombatVisualDamage: undefined,
     hostCombatDeadCardIds: [],
     specialDeadCardIds: [],
@@ -648,6 +651,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   playerAutoTriggerCount: 0,
   surgeTransitionActive: false,
   surgeTransitionShown: false,
+  surgeRevealPending: false,
   destinyDial: 0,
   destinyDialRevision: 0,
   hostCombatVisualDamage: undefined,
@@ -1866,7 +1870,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   runHostMain: () => {
     const state = get();
-    if (discardPauseInProgress(state) || state.surgeTransitionActive) return;
+    if (discardPauseInProgress(state) || state.surgeTransitionActive || state.surgeRevealPending) return;
     const { game } = state;
     if (!gameplayIntentAllowed(runHostIntent(game))) return;
     const authoredPlan = authoredHostTurnGate.plan(game);
@@ -1888,39 +1892,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return;
       }
     }
-    const previousHostBattlefieldIds = new Set(game.host.field.map((card) => card.instanceId));
     const main = runHostMainPhase(game, { deferInvokedTriggers: true });
-    const enteredCards = main.host.field.filter((card) => !previousHostBattlefieldIds.has(card.instanceId));
-    const triggerCards = enteredCards.filter(hasInvokedTrigger);
-    if (main.host.pendingCard) {
-      const pendingCard = main.host.pendingCard;
-      set({
-        game: main,
-        selectedHostCreatureId: undefined,
-        selectedPlayerCreatureId: undefined,
-        hostAutoTriggerCount: triggerCards.length,
-        summoningAnimationCount: state.summoningAnimationCount + enteredCards.length,
-        hostMillAnimationQueue: appendHostMillAnimations(state, game, main),
-      });
-      publishGameplayReceipt({ kind: "host.resolved" });
-      captureStaticAuraBeats();
-      scheduleHostArrivalEffects(enteredCards, () => runTributeOfTheFourSorrowsSequence(pendingCard));
-      return;
-    }
-    if (main.host.field.length > game.host.field.length) useAudioStore.getState().playSfx("draw");
-    set({
-      game: main,
-      selectedHostCreatureId: undefined,
-      selectedPlayerCreatureId: undefined,
-      hostAutoTriggerCount: triggerCards.length,
-      summoningAnimationCount: state.summoningAnimationCount + enteredCards.length,
-      hostMillAnimationQueue: appendHostMillAnimations(state, game, main),
-    });
-    publishGameplayReceipt({ kind: "host.resolved" });
-    // Before any frame renders the new creatures: hold back the buffs they just gained so the
-    // announcement beat still has something to reveal.
-    captureStaticAuraBeats();
-    scheduleHostArrivalEffects(enteredCards, () => startHostCombatSequence());
+    presentResolvedHostMain(game, main, state);
   },
   /**
    * Playground only. Same beats as `runHostMain` — enter triggers, static aura capture, mill
@@ -1960,9 +1933,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
     scheduleHostArrivalEffects(entered, () => scheduleQueuedHostTriggers());
   },
   completeSurgeTransition: () => {
-    if (!get().surgeTransitionActive) return;
-    set({ surgeTransitionActive: false });
-    runGuidedSystemAction(() => get().runHostMain());
+    const state = get();
+    if (!state.surgeTransitionActive) return;
+    const begun = beginHostMain(state.game);
+    set({
+      game: begun,
+      surgeTransitionActive: false,
+      surgeRevealPending: true,
+    });
+    // This transition is the exact narrative seam: Surge now exists, but the Host has not
+    // revealed anything yet. Publish it directly so contextual help never depends on a strict
+    // guided intervention still owning the interaction gate at this instant.
+    publishGuidedTransitionReceipts(state.game, begun);
+  },
+  continueSurgeAfterExplanation: () => {
+    const state = get();
+    if (!state.surgeRevealPending) return;
+    const main = revealHostMainAfterSurgeEntry(state.game, { deferInvokedTriggers: true });
+    presentResolvedHostMain(state.game, main, state);
   },
   prepareHostAttackers: () => {
     if (discardPauseInProgress(get())) return;
@@ -2119,6 +2107,40 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(createCleanUiState());
   },
 }));
+
+function presentResolvedHostMain(previous: GameState, main: GameState, state: GameStore): void {
+  const previousHostBattlefieldIds = new Set(previous.host.field.map((card) => card.instanceId));
+  const enteredCards = main.host.field.filter((card) => !previousHostBattlefieldIds.has(card.instanceId));
+  const triggerCards = enteredCards.filter(hasInvokedTrigger);
+  const shared = {
+    game: main,
+    surgeRevealPending: false,
+    selectedHostCreatureId: undefined,
+    selectedPlayerCreatureId: undefined,
+    hostAutoTriggerCount: triggerCards.length,
+    summoningAnimationCount: state.summoningAnimationCount + enteredCards.length,
+    hostMillAnimationQueue: appendHostMillAnimations(state, previous, main),
+  } as const;
+
+  if (main.host.pendingCard) {
+    const pendingCard = main.host.pendingCard;
+    useGameStore.setState(shared);
+    publishGuidedTransitionReceipts(previous, main);
+    publishGameplayReceipt({ kind: "host.resolved" });
+    captureStaticAuraBeats();
+    scheduleHostArrivalEffects(enteredCards, () => runTributeOfTheFourSorrowsSequence(pendingCard));
+    return;
+  }
+
+  if (main.host.field.length > previous.host.field.length) useAudioStore.getState().playSfx("draw");
+  useGameStore.setState(shared);
+  publishGuidedTransitionReceipts(previous, main);
+  publishGameplayReceipt({ kind: "host.resolved" });
+  // Before any frame renders the new creatures: hold back the buffs they just gained so the
+  // announcement beat still has something to reveal.
+  captureStaticAuraBeats();
+  scheduleHostArrivalEffects(enteredCards, () => startHostCombatSequence());
+}
 
 function runAuthoredHostTurn(game: GameState, plan: AuthoredHostTurnPlan): void {
   const begun = beginHostMain(game);

@@ -8,7 +8,6 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
 import {
   guidedAnchorRegistry,
   guidedConnectorPath,
@@ -30,6 +29,7 @@ import {
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
 import { GuidedCardComparison } from "./GuidedCardComparison";
+import { GuidedTutorialDialog } from "./GuidedTutorialDialog";
 import { GameTooltip } from "./GameTooltip";
 import { createGuidedFrameLoop } from "./guidedFrameLoop";
 import { TutorialDirectionalCueGlyph } from "./TutorialDirectionalCue";
@@ -456,45 +456,17 @@ export function GuidedTutorialOverlay() {
       )}
 
       {showCallout && (
-      <section
-        ref={calloutRef}
-        className="guided-tutorial-callout"
-        style={{
-          left: calloutPosition.left,
-          top: calloutPosition.top,
-          width: comparisonCards.length > 0 ? undefined : preferredCalloutWidth,
-        }}
-        role="dialog"
-        aria-modal={session.mode !== "act"}
-        aria-labelledby="guided-tutorial-title"
-        aria-describedby="guided-tutorial-body"
-        tabIndex={-1}
-        data-guided-overlay-control="true"
-      >
-        <span className="guided-tutorial-callout-mark" aria-hidden="true" />
-        <div className="tutorial-dialog-heading">
-          <h2 id="guided-tutorial-title" style={{ fontSize: titleFontSize }}>{title}</h2>
-          {isLearnToPlay && (
-            <button
-              type="button"
-              className="tutorial-dialog-close"
-              onClick={dismissLearnToPlayCallout}
-              disabled={session.mode === "explain" && !session.canContinue}
-              title={t("common.close")}
-              aria-label={t("common.close")}
-            >
-              <X size={15} />
-            </button>
-          )}
-        </div>
-        {!isLearnToPlay && (
-          <div className="guided-tutorial-step">
-            <span>{modeLabel}</span>
-            {session.currentStepIndex && session.stepCount && <b>{session.currentStepIndex} / {session.stepCount}</b>}
-          </div>
-        )}
-        <div id="guided-tutorial-body" className="guided-tutorial-body">
-          {bodyParagraphs.map((paragraph, paragraphIndex) => (
+        <GuidedTutorialDialog
+          calloutRef={calloutRef}
+          continueRef={continueRef}
+          style={{
+            left: calloutPosition.left,
+            top: calloutPosition.top,
+            width: comparisonCards.length > 0 ? undefined : preferredCalloutWidth,
+          }}
+          title={title}
+          titleFontSize={titleFontSize}
+          body={bodyParagraphs.map((paragraph, paragraphIndex) => (
             <p key={`${session.currentStep?.id}:body:${paragraphIndex}`}>
               {paragraph.map((segment, segmentIndex) => segment.kind === "text"
                 ? <span key={`text:${segmentIndex}`}>{segment.text}</span>
@@ -517,27 +489,25 @@ export function GuidedTutorialOverlay() {
                 ))}
             </p>
           ))}
-        </div>
-        <div className="guided-tutorial-feedback" role="status" aria-live="polite">{feedback}</div>
-        {(session.mode === "explain" || (isLearnToPlay && session.mode === "act")) && !missingAnchor && (
-          <button
-            ref={continueRef}
-            type="button"
-            data-audio-click={session.mode === "act" || session.canContinue ? "valid" : "off"}
-            className="guided-tutorial-continue"
-            disabled={session.mode === "explain" && !session.canContinue}
-            onClick={isLearnToPlay
-              ? dismissLearnToPlayCallout
-              : () => guidedSessionStore.continueExplanation()}
-          >
-            {t(isLearnToPlay && session.mode === "explain"
-              ? "guided.contextual.understood"
-              : finalExplanation
-              ? "guided.finish"
-              : "guided.continue")}
-          </button>
-        )}
-      </section>
+          isLearnToPlay={isLearnToPlay}
+          ariaModal={session.mode !== "act"}
+          closeLabel={t("common.close")}
+          modeLabel={modeLabel}
+          currentStepIndex={session.currentStepIndex}
+          stepCount={session.stepCount}
+          feedback={feedback}
+          showContinue={(session.mode === "explain" || (isLearnToPlay && session.mode === "act")) && !missingAnchor}
+          continueDisabled={session.mode === "explain" && !session.canContinue}
+          continueLabel={t(isLearnToPlay && session.mode === "explain"
+            ? "guided.contextual.understood"
+            : finalExplanation
+            ? "guided.finish"
+            : "guided.continue")}
+          onClose={isLearnToPlay ? dismissLearnToPlayCallout : undefined}
+          onContinue={isLearnToPlay
+            ? dismissLearnToPlayCallout
+            : () => guidedSessionStore.continueExplanation()}
+        />
       )}
     </div>,
     document.body,

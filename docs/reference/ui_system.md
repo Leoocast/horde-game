@@ -17,7 +17,9 @@ En orden:
 La sección **Modales y diálogos** abre cada superficie a tamaño real desde
 `RuntimeModalGallery.tsx`. Las muestras controladas (`GameConfirmationDialog`, `OpeningHandModal`,
 `HandLimitModal` y los paneles de resultado) también son consumidas por sus wrappers runtime: no son
-copias creadas para la herramienta. Sólo puede haber una muestra modal abierta a la vez.
+copias creadas para la herramienta. El catálogo ofrece una sola ficha por componente; sus variantes
+y todos sus lugares de uso se enumeran en esa misma ficha. Sólo puede haber una muestra modal abierta
+a la vez.
 
 UI Reference no debe contener una copia de un componente para que se le parezca. Si una superficie
 no puede montarse sin mutar una partida o sin inventar estado, se registra como **Revisar en
@@ -56,7 +58,10 @@ Cada ficha visible debe mostrar siempre:
 - **Dónde se usa** con las pantallas o paneles runtime;
 - estado: **Canónico**, **Variante de producto** o **Revisar en contexto**.
 
-Los resultados abren únicamente su panel de UI compartido. Las secuencias cinematográficas de
+Los resultados abren únicamente su panel de UI compartido. El diálogo ornamental del tutorial se
+monta mediante `GuidedTutorialDialog`, la misma superficie presentacional que consume
+`GuidedTutorialOverlay`; la geometría de anchors y el bloqueo de interacción se siguen revisando en
+Board. Las secuencias cinematográficas de
 victoria/derrota siguen perteneciendo al runtime, pero sus animadores y VFX no se ejecutan ni se
 catalogan aquí. Los diálogos tutoriales que dependen de anchors vivos de Board aparecen registrados
 como **Revisar en contexto** en vez de falsificar su posición.

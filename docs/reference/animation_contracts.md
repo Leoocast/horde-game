@@ -24,7 +24,7 @@ bonus draw, playing or Invoking a card, and the replacement draw after returning
 
 On a valid drop, the dragged DOM card yields immediately to the presentation that owns the action.
 Sources are concealed before `LandPlayAnimator` captures the same release geometry; returned Sources
-yield to `EnergyRecycleAnimator`; Invoked cards yield to their battlefield arrival. The concealed
+yield to `EnergyRecycleAnimator`; Invoked Echoes yield to their battlefield arrival. The concealed
 copy must never snap back toward the hand underneath the real animation. Invalid drops keep the
 normal drag return. The generic `AnimatePresence` exit changes opacity only and never invents a
 second movement for an action that already has one.

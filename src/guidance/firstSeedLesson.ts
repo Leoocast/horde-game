@@ -89,7 +89,7 @@ export const FIRST_SEED_LESSON: GuidedLessonDefinition = {
       copy: {
         titleKey: "guided.firstSeed.objectiveTitle",
         bodyKey: "guided.firstSeed.objectiveBody",
-        glossaryTerms: ["host", "archive", "life", "invoke", "echoes"],
+        glossaryTerms: ["hostArchive", "host", "life", "invoke", "echoes"],
       },
       highlights: [{ kind: "surface", anchor: "host.archive" }],
       preconditions: [{ kind: "setup.remaining", amount: 3 }],

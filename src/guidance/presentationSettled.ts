@@ -32,6 +32,8 @@ export function guidedPresentationBlockers(
   if (state.pendingTriggeredEffectCount > 0) blockers.push("trigger.pending");
   if (state.pendingStaticAuras.length > 0) blockers.push("aura.pending");
   if (state.surgeTransitionActive) blockers.push("surge.transition");
+  // The Surge explanation itself needs a settled board, so this hand-off cannot be a contextual
+  // presentation blocker. The callout owns the pause and resumes the reveals when acknowledged.
   if (state.hostMillAnimationQueue.length > 0) blockers.push("host.archive.discard");
   if (state.hostMillPreviewCards.length > 0) blockers.push("host.archive.preview");
   if (state.playerDiscardAnimationQueue.length > 0) blockers.push("player.discard");

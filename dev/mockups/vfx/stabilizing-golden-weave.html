@@ -1,0 +1,930 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hostfall — Estabilizándose: coalescencia dorada</title>
+  <style>
+    @font-face {
+      font-family: "Cinzel";
+      font-style: normal;
+      font-weight: 500 900;
+      font-display: block;
+      src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+    }
+
+    :root {
+      --stage: #0a0605;
+      --gold-bright: #e6d59e;
+      --parchment: #e8dec0;
+      --muted: #9b8f88;
+      --muted-dim: #837771;
+      --rule: rgb(146 116 88 / 0.22);
+      --serif: Georgia, "Times New Roman", serif;
+      --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+      /* El ancho real de una carta en el Campo. */
+      --card-w: 212px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0 0 90px;
+      background: radial-gradient(ellipse at 50% -8%, rgb(74 27 18 / 0.24), transparent 55%), var(--stage);
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 28px;
+    }
+
+    header {
+      padding: 54px 0 30px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .eyebrow {
+      color: #b8785a;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 12px 0 0;
+      color: var(--parchment);
+      font-family: var(--serif);
+      font-size: clamp(30px, 4.4vw, 46px);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      line-height: 1.06;
+    }
+
+    header p {
+      max-width: 74ch;
+      margin: 16px 0 0;
+    }
+
+    header strong {
+      color: var(--gold-bright);
+      font-weight: 600;
+    }
+
+    code {
+      color: #e0b08a;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin: 28px 0 10px;
+    }
+
+    .group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .group-label {
+      align-self: center;
+      margin-right: 2px;
+      color: var(--muted-dim);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    button {
+      height: 40px;
+      padding: 0 16px;
+      border: 1px solid rgb(146 116 88 / 0.36);
+      border-radius: 2px;
+      background: linear-gradient(180deg, rgb(33 25 22 / 0.96), rgb(15 10 9 / 0.98));
+      color: var(--muted);
+      font-family: var(--sans);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+    }
+
+    button:hover {
+      border-color: rgb(214 150 110 / 0.7);
+      color: var(--gold-bright);
+    }
+
+    button[aria-pressed="true"] {
+      border-color: rgb(214 118 74 / 0.8);
+      background: linear-gradient(180deg, rgb(62 27 18 / 0.96), rgb(24 11 9 / 0.98));
+      color: #f0c39d;
+    }
+
+    button:focus-visible {
+      outline: 2px solid rgb(234 168 133 / 0.9);
+      outline-offset: 2px;
+    }
+
+    .spacer {
+      flex: 1;
+    }
+
+    h2.family {
+      margin: 46px 0 0;
+      padding-top: 26px;
+      border-top: 1px solid var(--rule);
+      color: var(--gold-bright);
+      font-family: "Cinzel", var(--serif);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    p.family-lead {
+      max-width: 74ch;
+      margin: 8px 0 0;
+      font-size: 14px;
+    }
+
+    .hero {
+      /* Fijo, para verlo grande. Las filas de abajo sí siguen el ancho elegido. */
+      --card-w: 320px;
+      margin-top: 26px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 30px 24px;
+      margin-top: 24px;
+    }
+
+    figure {
+      margin: 0;
+    }
+
+    /* ══ La carta tal como vive en el Campo ══════════════════════════════ */
+    .card {
+      position: relative;
+      width: var(--card-w);
+      height: calc(var(--card-w) * 0.8893442623);
+      margin: 0 auto;
+      container-type: inline-size;
+      overflow: hidden;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: #1c1712;
+      box-shadow: 0 10px 24px rgb(0 0 0 / 0.55);
+      isolation: isolate;
+    }
+
+    .hero .card {
+      margin: 0;
+    }
+
+    .art {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: var(--art-w, 100%);
+      height: var(--art-h, 100%);
+      max-width: none;
+      object-fit: contain;
+      object-position: center;
+      transform: translate3d(calc(-50% + var(--art-x, 0cqw)), calc(-50% + var(--art-y, 0cqw)), 0) scale(var(--art-zoom, 1));
+      transform-origin: center;
+      user-select: none;
+    }
+
+    .stat-plate {
+      position: absolute;
+      right: 3px;
+      bottom: 3px;
+      z-index: 12;
+      display: flex;
+      height: clamp(25px, 15cqw, 31px);
+      min-width: clamp(76px, 46cqw, 94px);
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      overflow: hidden;
+      border: 1px solid rgb(183 169 118 / 0.62);
+      background: linear-gradient(180deg, rgb(27 35 34 / 0.96), rgb(7 13 13 / 0.98));
+      color: #e9e1c4;
+      font-family: var(--serif);
+      font-size: clamp(11px, 7cqw, 14px);
+      font-weight: 700;
+      box-shadow: inset 0 1px 0 rgb(255 247 208 / 0.1), 0 4px 12px rgb(0 0 0 / 0.68);
+      clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+    }
+
+    .stat-plate i {
+      width: 1px;
+      height: 58%;
+      background: rgb(183 169 118 / 0.45);
+    }
+
+    body[data-size="comprimido"] {
+      --card-w: 156px;
+    }
+
+    body[data-size="detalle"] {
+      --card-w: 320px;
+    }
+
+    body[data-paused="true"] .card *,
+    body[data-paused="true"] .card *::before,
+    body[data-paused="true"] .card *::after {
+      animation-play-state: paused !important;
+    }
+
+    body[data-bare="true"] .fx {
+      display: none;
+    }
+
+    body[data-stats="false"] .stat-plate {
+      display: none;
+    }
+
+    figcaption {
+      margin-top: 14px;
+    }
+
+    figcaption h3 {
+      margin: 0;
+      color: var(--parchment);
+      font-family: "Cinzel", var(--serif);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    figcaption .says {
+      margin: 5px 0 0;
+      color: #c08d63;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    figcaption p.how {
+      margin: 7px 0 0;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .hero-layout {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      align-items: flex-start;
+    }
+
+    .hero-text {
+      flex: 1 1 300px;
+      max-width: 56ch;
+    }
+
+    .hero-text h3 {
+      margin: 0;
+      color: var(--parchment);
+      font-family: "Cinzel", var(--serif);
+      font-size: 19px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .hero-text ol {
+      margin: 12px 0 0;
+      padding-left: 20px;
+      font-size: 13.5px;
+    }
+
+    .hero-text li {
+      margin-bottom: 8px;
+    }
+
+    .note {
+      margin-top: 46px;
+      padding-top: 22px;
+      border-top: 1px solid var(--rule);
+      max-width: 78ch;
+      font-size: 13.5px;
+    }
+
+    .note h2 {
+      margin: 0 0 10px;
+      color: var(--gold-bright);
+      font-family: "Cinzel", var(--serif);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .note li {
+      margin-bottom: 7px;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       COALESCENCIA DORADA CON TRAMA RADIAL
+
+       Cada mota lleva una onda hermana con la MISMA duración y el MISMO
+       retardo. La mota llega al 100% de su ciclo, que es el mismo instante
+       que el 0% de la onda: por eso la retícula se enciende justo cuando la
+       mota aterriza, sin JavaScript de sincronía.
+       ══════════════════════════════════════════════════════════════════════ */
+    .fx {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      pointer-events: none;
+    }
+
+    .veil {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(farthest-corner circle at 50% 50%,
+          rgb(20 12 2 / 0.18) 0 30%,
+          rgb(12 7 1 / 0.32) 68%,
+          rgb(6 3 0 / 0.44) 100%);
+    }
+
+    .glow {
+      position: absolute;
+      inset: 0;
+      mix-blend-mode: screen;
+    }
+
+    /* La retícula: cuadros grandes y dorados. El paso va en cqw, así que la
+       densidad es la misma a cualquier ancho de carta. */
+    .lattice {
+      position: absolute;
+      inset: 0;
+      --cell: 7cqw;
+      --thread: 0.46cqw;
+      --gap: calc(var(--cell) - var(--thread));
+      -webkit-mask:
+        repeating-linear-gradient(0deg,
+          transparent 0 var(--gap),
+          rgb(0 0 0 / 0.5) calc(var(--gap) + var(--thread) * 0.3),
+          #000 calc(var(--gap) + var(--thread) * 0.5),
+          rgb(0 0 0 / 0.5) calc(var(--gap) + var(--thread) * 0.7),
+          transparent var(--cell)),
+        repeating-linear-gradient(90deg,
+          transparent 0 var(--gap),
+          rgb(0 0 0 / 0.5) calc(var(--gap) + var(--thread) * 0.3),
+          #000 calc(var(--gap) + var(--thread) * 0.5),
+          rgb(0 0 0 / 0.5) calc(var(--gap) + var(--thread) * 0.7),
+          transparent var(--cell));
+      mask:
+        repeating-linear-gradient(0deg,
+          transparent 0 var(--gap),
+          rgb(0 0 0 / 0.5) calc(var(--gap) + var(--thread) * 0.3),
+          #000 calc(var(--gap) + var(--thread) * 0.5),
+          rgb(0 0 0 / 0.5) calc(var(--gap) + var(--thread) * 0.7),
+          transparent var(--cell)),
+        repeating-linear-gradient(90deg,
+          transparent 0 var(--gap),
+          rgb(0 0 0 / 0.5) calc(var(--gap) + var(--thread) * 0.3),
+          #000 calc(var(--gap) + var(--thread) * 0.5),
+          rgb(0 0 0 / 0.5) calc(var(--gap) + var(--thread) * 0.7),
+          transparent var(--cell));
+    }
+
+    .lattice.cell-sm { --cell: 5.5cqw; }
+    .lattice.cell-lg { --cell: 9cqw; }
+    .lattice.cell-xl { --cell: 11.5cqw; }
+
+    /* Rescoldo permanente de la retícula, para que exista entre onda y onda. */
+    .lattice-base {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(farthest-corner circle at 50% 50%,
+          rgb(226 190 91 / 0.2) 0 38%, rgb(168 124 46 / 0.08) 100%);
+    }
+
+    .gold-soft .lattice-base {
+      background: radial-gradient(farthest-corner circle at 50% 50%,
+          rgb(226 190 91 / 0.12) 0 38%, rgb(168 124 46 / 0.05) 100%);
+    }
+
+    .gold-strong .lattice-base {
+      background: radial-gradient(farthest-corner circle at 50% 50%,
+          rgb(240 208 120 / 0.32) 0 38%, rgb(190 142 56 / 0.14) 100%);
+    }
+
+    .glow.gold-soft { opacity: 0.62; }
+    .glow.gold-strong { opacity: 1; }
+
+    /* La onda. Sale del encuadre antes de apagarse: a escala 1.43 el aro ya
+       pasó la esquina de la carta, que está a 66.9cqw del centro. */
+    .pulse {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 210%;
+      aspect-ratio: 1;
+      translate: -50% -50%;
+      border-radius: 999px;
+      background: radial-gradient(closest-side circle,
+          transparent 0 30%,
+          rgb(226 190 91 / 0.5) 40%,
+          rgb(255 246 216 / 0.98) 46%,
+          rgb(226 190 91 / 0.32) 52%,
+          transparent 62%);
+      animation: pulse-out var(--dur, 3.4s) linear var(--delay, 0s) infinite;
+    }
+
+    @keyframes pulse-out {
+      0% { scale: 0.05; opacity: 0; }
+      2% { opacity: 1; }
+      20% { opacity: 0.9; }
+      26% { scale: 1.85; opacity: 0; }
+      100% { scale: 1.85; opacity: 0; }
+    }
+
+    /* Las motas van fuera de la máscara: son puntos limpios, no rejilla. */
+    .mote {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 3.6cqw;
+      aspect-ratio: 1;
+      border-radius: 999px;
+      background: radial-gradient(circle,
+          rgb(255 248 220 / 0.98) 0 28%,
+          rgb(236 194 104 / 0.62) 54%,
+          rgb(190 130 40 / 0) 78%);
+      animation: mote-fall var(--dur, 3.4s) ease-in var(--delay, 0s) infinite;
+    }
+
+    @keyframes mote-fall {
+      0% { translate: var(--from-x) var(--from-y); opacity: 0; scale: 1.3; }
+      16% { opacity: 0.95; }
+      88% { opacity: 0.95; }
+      100% { translate: 0 0; opacity: 0; scale: 0.35; }
+    }
+  </style>
+</head>
+
+<body data-card="maela" data-size="real" data-paused="false" data-bare="false" data-stats="true">
+  <main>
+    <header>
+      <p class="eyebrow">Efectos · Estabilizándose · tercera ronda</p>
+      <h1>Coalescencia dorada</h1>
+      <p>
+        Motas doradas que caen al centro del recorte y, <strong>cada vez que una llega</strong>, la
+        retícula se enciende con una onda que <strong>sale del encuadre</strong> en vez de apagarse
+        antes. Cuadros más grandes y en oro. Sobre el recorte 488×434 con su encuadre real.
+      </p>
+      <p>
+        La sincronía no lleva JavaScript: cada mota tiene una onda hermana con la misma duración y el
+        mismo retardo, y como la mota llega al 100% de su ciclo —que es el mismo instante que el 0% de
+        la onda— el encendido cae exactamente en el aterrizaje. <code>src/</code> no importa nada de
+        esta carpeta.
+      </p>
+
+      <div class="controls">
+        <span class="group-label">Eco</span>
+        <div class="group">
+          <button type="button" data-set="card" data-value="maela" aria-pressed="true">Maela</button>
+          <button type="button" data-set="card" data-value="aelyra" aria-pressed="false">Aelyra</button>
+          <button type="button" data-set="card" data-value="hydra" aria-pressed="false">Hidra</button>
+        </div>
+        <span class="group-label" style="margin-left: 14px">Ancho</span>
+        <div class="group">
+          <button type="button" data-set="size" data-value="comprimido" aria-pressed="false">156</button>
+          <button type="button" data-set="size" data-value="real" aria-pressed="true">212 · real</button>
+          <button type="button" data-set="size" data-value="detalle" aria-pressed="false">320</button>
+        </div>
+        <span class="spacer"></span>
+        <div class="group">
+          <button type="button" data-toggle="paused" aria-pressed="false">Pausar</button>
+          <button type="button" data-toggle="bare" aria-pressed="false">Sin efecto</button>
+          <button type="button" data-toggle="stats" aria-pressed="true">Stats</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="hero">
+      <div class="hero-layout">
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil"></div>
+            <div class="glow" data-motes="6" data-seed="11">
+              <div class="lattice">
+                <div class="lattice-base"></div>
+              </div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <div class="hero-text">
+          <h3>La versión pedida</h3>
+          <ol>
+            <li>
+              <strong>Seis motas doradas</strong> nacen fuera del encuadre y caen al centro con
+              <code>ease-in</code>, así que aceleran hacia el impacto en vez de flotar.
+            </li>
+            <li>
+              <strong>Cada aterrizaje enciende la retícula.</strong> La onda arranca en el centro en
+              ese mismo frame, no antes ni después.
+            </li>
+            <li>
+              <strong>La onda no se detiene dentro de la carta.</strong> Cuando empieza a apagarse, el
+              aro ya pasó la esquina del recorte —que está a 66.9 <code>cqw</code> del centro— así que
+              lo que se ve es que se va, no que se muere.
+            </li>
+            <li>
+              <strong>Los cuadros son de 7 <code>cqw</code></strong>, casi el doble que en la ronda
+              anterior, y el oro reemplaza al frío. Entre onda y onda queda un rescoldo tenue para que
+              la retícula no desaparezca del todo.
+            </li>
+          </ol>
+          <p class="how" style="margin-top: 14px">
+            Debajo están las tres perillas por separado, por si hay que ajustar tamaño de cuadro,
+            cadencia o intensidad.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="family">Tamaño del cuadro</h2>
+    <p class="family-lead">
+      El paso de la retícula, en <code>cqw</code>. Cuanto más grande el cuadro, menos parece una grilla
+      de interfaz y más un enrejado; pasado cierto punto deja de leerse como retícula.
+    </p>
+
+    <div class="grid">
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil"></div>
+            <div class="glow" data-motes="6" data-seed="11">
+              <div class="lattice cell-sm">
+                <div class="lattice-base"></div>
+              </div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>5.5 cqw</h3>
+          <p class="says">Cerca de la ronda anterior</p>
+          <p class="how">Más denso, más «grilla». Al ancho comprimido los hilos empiezan a aliasar.</p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil"></div>
+            <div class="glow" data-motes="6" data-seed="11">
+              <div class="lattice">
+                <div class="lattice-base"></div>
+              </div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>7 cqw</h3>
+          <p class="says">El de la versión pedida</p>
+          <p class="how">Unos 15 px de cuadro a tamaño real. Se lee como enrejado sin perder la trama.</p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil"></div>
+            <div class="glow" data-motes="6" data-seed="11">
+              <div class="lattice cell-lg">
+                <div class="lattice-base"></div>
+              </div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>9 cqw</h3>
+          <p class="says">Más aire</p>
+          <p class="how">Deja ver mucho más arte y la onda se lee mejor, porque cruza menos hilos.</p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil"></div>
+            <div class="glow" data-motes="6" data-seed="11">
+              <div class="lattice cell-xl">
+                <div class="lattice-base"></div>
+              </div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>11.5 cqw</h3>
+          <p class="says">El límite</p>
+          <p class="how">
+            Ya son pocos cuadros: a tamaño real caben unos nueve de ancho y empieza a leerse como
+            marco, no como trama.
+          </p>
+        </figcaption>
+      </figure>
+    </div>
+
+    <h2 class="family">Cadencia</h2>
+    <p class="family-lead">
+      Cuántas motas hay a la vez. Como cada una dispara su onda, esto controla también cada cuánto se
+      enciende la retícula: más motas es más encendidos y menos silencio entre ellos.
+    </p>
+
+    <div class="grid">
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil"></div>
+            <div class="glow" data-motes="3" data-seed="4">
+              <div class="lattice">
+                <div class="lattice-base"></div>
+              </div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Tres motas</h3>
+          <p class="says">Con silencio</p>
+          <p class="how">
+            Hay pausas reales entre encendidos. Cada llegada se nota como un suceso, pero puede leerse
+            como que el efecto se apagó.
+          </p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil"></div>
+            <div class="glow" data-motes="6" data-seed="11">
+              <div class="lattice">
+                <div class="lattice-base"></div>
+              </div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Seis motas</h3>
+          <p class="says">El de la versión pedida</p>
+          <p class="how">Casi siempre hay una onda en camino, sin que se pisen entre sí.</p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil"></div>
+            <div class="glow" data-motes="10" data-seed="19">
+              <div class="lattice">
+                <div class="lattice-base"></div>
+              </div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Diez motas</h3>
+          <p class="says">Sin respiro</p>
+          <p class="how">
+            Las ondas se solapan y la retícula queda encendida casi todo el tiempo. Se pierde la
+            relación entre llegada y encendido, que era la gracia.
+          </p>
+        </figcaption>
+      </figure>
+    </div>
+
+    <h2 class="family">Intensidad del oro</h2>
+    <p class="family-lead">
+      Lo mismo con el brillo bajado y subido. Conviene mirarlo con varias cartas en mente: en el Campo
+      pueden estar Estabilizándose varios Ecos a la vez.
+    </p>
+
+    <div class="grid">
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil"></div>
+            <div class="glow gold-soft" data-motes="6" data-seed="11">
+              <div class="lattice">
+                <div class="lattice-base"></div>
+              </div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Sobrio</h3>
+          <p class="says">Deja mandar al arte</p>
+          <p class="how">El rescoldo casi no existe y sólo las ondas se notan.</p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil"></div>
+            <div class="glow" data-motes="6" data-seed="11">
+              <div class="lattice">
+                <div class="lattice-base"></div>
+              </div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Medio</h3>
+          <p class="says">El de la versión pedida</p>
+          <p class="how">La retícula existe siempre, apagada, y la onda la enciende al pasar.</p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil"></div>
+            <div class="glow gold-strong" data-motes="6" data-seed="11">
+              <div class="lattice">
+                <div class="lattice-base"></div>
+              </div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Intenso</h3>
+          <p class="says">Se impone</p>
+          <p class="how">
+            La retícula se lee sola, sin necesidad de onda. Riesgo de discutirle protagonismo a los
+            beats de combate.
+          </p>
+        </figcaption>
+      </figure>
+    </div>
+
+    <div class="note">
+      <h2>Cómo está hecho</h2>
+      <ul>
+        <li>
+          <strong>La sincronía es de fase, no de eventos.</strong> Cada par mota/onda comparte
+          <code>animation-duration</code> y <code>animation-delay</code>. La mota aterriza al 100% de
+          su ciclo y la onda nace al 0% del suyo: el mismo instante. No hay temporizador ni JS de
+          sincronía, y por eso no se puede desfasar nunca.
+        </li>
+        <li>
+          <strong>La onda sale de la carta.</strong> El aro brillante está al 46% del radio del
+          elemento, que mide 210% del ancho de la carta. A escala 1.43 el aro ya pasó la esquina, a
+          66.9 <code>cqw</code> del centro, y recién ahí empieza a bajar la opacidad. Bajar la escala
+          final por debajo de 1.5 lo devuelve al problema de que se apaga adentro.
+        </li>
+        <li>
+          <strong>La retícula nunca se mueve.</strong> Es la máscara del contenedor; lo que viaja por
+          debajo es la onda. Por eso el encendido sigue el dibujo de los hilos en vez de ser un halo.
+        </li>
+        <li>
+          <strong>Las motas van fuera de la máscara.</strong> Si estuvieran dentro se verían cortadas
+          por la rejilla; así son puntos limpios que contrastan con los hilos.
+        </li>
+        <li>
+          <strong>El paso va en <code>cqw</code>.</strong> La densidad es la misma a 156, 212 o 320 px
+          de ancho de carta: no hay que reajustar nada por tamaño.
+        </li>
+        <li>
+          <strong>Coste.</strong> Sólo se animan <code>scale</code>, <code>translate</code> y
+          <code>opacity</code>. Con seis motas son doce animaciones por carta.
+        </li>
+      </ul>
+    </div>
+  </main>
+
+  <script>
+    // Mismo contrato que src/utils/battlefieldArtFrame.ts. Los encuadres son los
+    // valores authored de src/data/cardStudioGameArt.generated.json.
+    const VIEWPORT = { width: 488, height: 434 };
+    const ECHOES = {
+      maela: { file: "field-maela.jpg", width: 600, height: 600, frame: { zoom: 1, x: 1, y: 79 } },
+      aelyra: { file: "field-aelyra.jpg", width: 600, height: 842, frame: { zoom: 1.875, x: 12, y: 267 } },
+      hydra: { file: "field-hydra.jpg", width: 600, height: 600, frame: { zoom: 1.04, x: 8, y: 69 } },
+    };
+
+    function applyEcho(key) {
+      const echo = ECHOES[key];
+      if (!echo) return;
+      const viewportAspect = VIEWPORT.width / VIEWPORT.height;
+      const sourceAspect = echo.width / echo.height;
+      const wide = sourceAspect >= viewportAspect;
+      const style = document.body.style;
+      style.setProperty("--art-w", wide ? `${(sourceAspect / viewportAspect) * 100}%` : "100%");
+      style.setProperty("--art-h", wide ? "100%" : `${(viewportAspect / sourceAspect) * 100}%`);
+      style.setProperty("--art-zoom", String(echo.frame.zoom));
+      style.setProperty("--art-x", `${(echo.frame.x / VIEWPORT.width) * 100}cqw`);
+      style.setProperty("--art-y", `${(echo.frame.y / VIEWPORT.width) * 100}cqw`);
+      document.querySelectorAll("img.art").forEach((img) => {
+        img.src = `../assets/ui_references/${echo.file}`;
+      });
+    }
+
+    // Crea los pares mota/onda. Es sólo para no repetir markup: la sincronía la
+    // hace el CSS, porque ambos reciben la misma duración y el mismo retardo.
+    function buildMotes(glow) {
+      const count = Number(glow.dataset.motes || 6);
+      const lattice = glow.querySelector(".lattice");
+      let seed = Number(glow.dataset.seed || 1);
+      const random = () => {
+        seed = (seed * 9301 + 49297) % 233280;
+        return seed / 233280;
+      };
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2 + random() * 0.8;
+        const distance = 64 + random() * 26;
+        const duration = (2.9 + random() * 1.8).toFixed(2);
+        const delay = (-random() * duration).toFixed(2);
+        const timing = `--dur:${duration}s;--delay:${delay}s`;
+
+        const mote = document.createElement("div");
+        mote.className = "mote";
+        mote.setAttribute(
+          "style",
+          `--from-x:${(Math.cos(angle) * distance).toFixed(1)}cqw;` +
+            `--from-y:${(Math.sin(angle) * distance * 0.9).toFixed(1)}cqw;${timing}`,
+        );
+        glow.appendChild(mote);
+
+        const pulse = document.createElement("div");
+        pulse.className = "pulse";
+        pulse.setAttribute("style", timing);
+        lattice.appendChild(pulse);
+      }
+    }
+
+    document.querySelectorAll("button[data-set]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.set;
+        document.body.dataset[key] = button.dataset.value;
+        if (key === "card") applyEcho(button.dataset.value);
+        document.querySelectorAll(`button[data-set="${key}"]`).forEach((sibling) => {
+          sibling.setAttribute("aria-pressed", String(sibling === button));
+        });
+      });
+    });
+
+    document.querySelectorAll("button[data-toggle]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.toggle;
+        const next = document.body.dataset[key] !== "true";
+        document.body.dataset[key] = String(next);
+        button.setAttribute("aria-pressed", String(next));
+      });
+    });
+
+    document.querySelectorAll(".glow[data-motes]").forEach(buildMotes);
+    applyEcho(document.body.dataset.card);
+  </script>
+</body>
+
+</html>

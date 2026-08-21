@@ -3,7 +3,7 @@
 Estado: **diseño de contenido abierto; primer corte fijado hasta la derrota predeterminada y un
 handoff provisional desde “Contemplar otro futuro” hacia una partida normal aleatoria**.
 
-Última actualización: **2026-08-17**.
+Última actualización: **2026-08-20**.
 
 ## Propósito del documento
 
@@ -37,7 +37,7 @@ de implementación.
 - Esa libertad acotada debe seguir sintiéndose como una partida. No se autoriza una secuencia
   permanente de «haz clic aquí → ahora aquí».
 - Algunas intervenciones sí pueden usar el comportamiento guiado actual cuando una acción básica
-  necesita aprenderse de forma inequívoca, por ejemplo Jugar una Fuente, Invocar una carta o asignar
+  necesita aprenderse de forma inequívoca, por ejemplo Jugar una Fuente, Invocar un Eco o asignar
   un defensor.
 - Las demás explicaciones aparecen cuando la mecánica sucede por primera vez o cuando el jugador
   intenta una acción cuya restricción todavía no conoce.
@@ -347,8 +347,13 @@ la preferencia global de no repetir está activa, sólo se aplica a ese conjunto
 
 ### Comienzo de la Oleada
 
-El Cronista termina el turno y comienza la Oleada. La primera explicación de esta fase pertenece
-exclusivamente a la Oleada: qué cambió y por qué la Hueste acaba de volverse más peligrosa.
+El Cronista termina el turno y comienza la animación de Oleada. Cuando esa animación termina, el
+turno de la Hueste ya ha cruzado el umbral, pero todavía no revela ningún Eco. En esa pausa aparece
+la explicación: **«A partir de este turno, la Hueste desata todo su poder e Invoca más Ecos con cada
+avance.»** Sólo después de aceptarla comienzan el revelado normal y los revelados adicionales.
+
+La primera explicación pertenece exclusivamente a la Oleada: qué cambió y por qué la Hueste acaba
+de volverse más peligrosa. El orden visual es un contrato: **animación → explicación → revelados**.
 
 La Fase 1 termina en ese punto. La composición y continuación pertenecen a la Fase 2.
 
@@ -413,7 +418,9 @@ Mano está vacía, la regla real de robo entrega dos cartas:
 2. **Choque de Ecos**.
 
 La ayuda contextual explica el robo adicional después de que ambas cartas hayan llegado y la
-presentación se haya asentado. No se altera la regla de robo para el tutorial.
+presentación se haya asentado: **«Si comienzas tu turno sin Ecos o Fuentes en la Mano, robas 2
+cartas en lugar de 1.»** El cuadro aparece centrado sin resaltar la Mano; las dos cartas recién
+robadas ya hacen evidente el área relevante. No se altera la regla de robo para el tutorial.
 
 El jugador dispone inicialmente de cuatro Fuentes preparadas. Su Energía adicional depende de la
 rama anterior:
