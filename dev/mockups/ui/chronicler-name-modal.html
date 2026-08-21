@@ -117,7 +117,7 @@ button { cursor: pointer; }
 
 /* ── variante ──────────────────────────────────────────────────────────── */
 .variant { margin-top: 54px; scroll-margin-top: 78px; }
-.variant-head { display: flex; align-items: baseline; gap: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--line-soft); }
+.variant-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--line-soft); }
 .variant-head b {
   display: inline-flex;
   width: 26px;
@@ -131,7 +131,7 @@ button { cursor: pointer; }
   font-size: 12px;
 }
 .variant-head h2 { margin: 0; flex: none; color: var(--title); font-family: var(--serif); font-size: 21px; font-weight: 500; letter-spacing: 0.05em; }
-.variant-head p { margin: 0; flex: 1; color: #7b878b; font-size: 12.5px; line-height: 1.6; }
+.variant-head p { margin: 0; flex: 1 1 320px; min-width: 0; color: #7b878b; font-size: 12.5px; line-height: 1.6; }
 .variant-actions { display: flex; flex: none; gap: 8px; }
 
 /* escenario: el modal sobre una silueta del menú principal */
@@ -314,12 +314,12 @@ button { cursor: pointer; }
 .sparks { position: absolute; overflow: hidden; inset: 0; pointer-events: none; }
 .sparks i {
   position: absolute;
-  width: 2px;
-  height: 2px;
+  width: 3px;
+  height: 3px;
   border-radius: 50%;
-  background: var(--gold-bright);
-  box-shadow: 0 0 6px rgb(234 213 155 / 0.9);
-  animation: spark 620ms ease-out forwards;
+  background: #fff6dd;
+  box-shadow: 0 0 8px rgb(234 213 155 / 0.95), 0 0 20px rgb(234 213 155 / 0.5);
+  animation: spark 820ms ease-out forwards;
 }
 @keyframes spark {
   from { opacity: 1; transform: translate(0, 0) scale(1); }
@@ -426,6 +426,18 @@ button { cursor: pointer; }
 
 /* ══ G · Umbral grabado ════════════════════════════════════════════════ */
 .m-forge { width: min(460px, 100%); text-align: center; }
+/* La rosa es una capa a pantalla completa detrás del modal, como lo sería en el
+   juego: dentro del formulario el escenario le recortaba las puntas. */
+.constellation {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.backdrop > .m { z-index: 1; }
+.stage[data-constellation="off"] .constellation { display: none; }
 .m-forge .m-kicker { display: block; min-height: 13px; margin-bottom: 18px; transition: color 200ms ease, letter-spacing 200ms ease; }
 .m-forge .m-kicker.is-mark { color: var(--gold); font-size: 8px; letter-spacing: 0.7em; opacity: 0.7; text-indent: 0.7em; }
 .m-forge .m-kicker.is-empty { margin-bottom: 0; min-height: 0; }
@@ -547,13 +559,19 @@ button { cursor: pointer; }
       <b>G</b>
       <h2>Umbral grabado</h2>
       <p>La composición de <b>F</b> —sin panel, sólo velo, regla que respira y renglón— con el grabado de
-        <b>B</b>: cada letra levanta chispas y un rescoldo sigue al cursor. Las chispas ahora se miden con el
-        ancho real del texto, así que nacen en la punta de la última letra y no detrás de ella.</p>
-      <div class="variant-actions"><button class="chip" data-replay>Repetir</button></div>
+        <b>B</b>, y detrás la constelación cardinal del desenlace de victoria. <b>El nombre construye la
+        rosa</b>: la primera letra enciende el corazón y cada letra siguiente trae una mota que fija una
+        punta; los hilos esperan a sus dos extremos y al inscribir se completa lo que falte y el corazón
+        suelta una sola onda. Un nombre de nueve letras cierra la figura antes de pulsar.</p>
+      <div class="variant-actions">
+        <button class="chip is-on" id="toggle-constellation">Constelación encendida</button>
+        <button class="chip" data-replay>Repetir</button>
+      </div>
     </div>
     <div class="kicker-picker" data-kicker-picker><span>Línea superior</span></div>
     <div class="stage is-open" data-variant data-required="true">
       <div class="backdrop">
+        <canvas class="constellation" data-constellation aria-hidden="true"></canvas>
         <form class="m m-forge" data-form autocomplete="off">
           <button class="m-close" type="button" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
           <p class="m-kicker" data-kicker-slot></p>
@@ -572,8 +590,9 @@ button { cursor: pointer; }
       <div class="said" data-said></div>
     </div>
     <ul class="notes">
+      <li>Borrar el campo apaga la rosa; volver a escribir la reconstruye desde el corazón.</li>
       <li>El rescoldo se apaga solo 700 ms después de la última tecla; no queda encendido en reposo.</li>
-      <li>Sin panel el grabado es lo único que pesa: por eso las chispas son más escasas que en <b>B</b>.</li>
+      <li>La rosa no se desvanece tras la onda: queda encendida, como en la victoria.</li>
       <li>Los selectores de arriba cambian en vivo la línea que sustituye a «Antes de la primera página».</li>
     </ul>
   </section>
@@ -1007,7 +1026,9 @@ document.querySelectorAll("[data-dust]").forEach((canvas) => {
   dusts.push({ canvas, ctx: canvas.getContext("2d"), motes, pull: 0 });
 });
 
-function frame() {
+function frame(now) {
+  const sharedDpr = Math.min(window.devicePixelRatio || 1, 2);
+  constellations.forEach((entry) => drawConstellation(entry, now, sharedDpr));
   dusts.forEach((dust) => {
     const rect = dust.canvas.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
@@ -1041,9 +1062,233 @@ function frame() {
 }
 requestAnimationFrame(frame);
 
+/* ── constelación cardinal (G) ─────────────────────────────────────────
+   Mismo fraseo que el desenlace de victoria: motas que entran desde fuera de
+   los cuatro bordes, el corazón primero, las ocho puntas una a una, el
+   contorno detrás esperando a sus DOS extremos y una única onda al cerrar.
+   Aquí es canvas 2D porque es una maqueta; en runtime sería la rosa de
+   chronicleSigilGeometry sobre el aro del disco. */
+const TIP_ORDER = [0, 4, 8, 12, 2, 6, 10, 14];
+const constellations = [];
+
+/* Los nodos viven en radios normalizados; el radio en píxeles sale del tamaño
+   real de la capa, así que la rosa nunca se sale del encuadre. */
+function createConstellation(canvas) {
+  const nodes = [];
+  for (let k = 0; k < 16; k += 1) {
+    const angle = (-90 + k * 22.5) * Math.PI / 180;
+    const tip = k % 2 === 0;
+    const radius = tip ? (k % 4 === 0 ? 1 : 0.58) : 0.13;
+    nodes.push({ nx: Math.cos(angle) * radius, ny: Math.sin(angle) * radius, x: 0, y: 0, tip, lit: 0 });
+  }
+  nodes.push({ nx: 0, ny: 0, x: 0, y: 0, tip: false, heart: true, lit: 0 });
+
+  const entry = { canvas, ctx: canvas.getContext("2d"), unit: 200, nodes, flights: [], tipsLit: 0, seed: 1 };
+  constellations.push(entry);
+  return entry;
+}
+
+function layoutConstellation(entry, width, height) {
+  entry.unit = Math.min(width, height) * 0.38;
+  entry.nodes.forEach((node) => {
+    node.x = node.nx * entry.unit;
+    node.y = node.ny * entry.unit;
+  });
+}
+
+function constellationReset(entry) {
+  entry.nodes.forEach((node) => { node.lit = 0; });
+  entry.flights.length = 0;
+  entry.tipsLit = 0;
+  entry.wave = 0;
+}
+
+/** Manda una mota desde fuera del encuadre hacia el nodo; al llegar, lo enciende. */
+function sendMote(entry, index, now, delay) {
+  const node = entry.nodes[index];
+  if (node.lit || entry.flights.some((flight) => flight.index === index)) return;
+  const rand = () => { entry.seed = (entry.seed * 1664525 + 1013904223) % 4294967296; return entry.seed / 4294967296; };
+  const side = Math.floor(rand() * 4);
+  const away = entry.unit * (1.5 + rand() * 0.8);
+  const lane = (rand() - 0.5) * entry.unit * 2.4;
+  const from = side === 0 ? { x: -away, y: lane }
+    : side === 1 ? { x: away, y: lane }
+    : side === 2 ? { x: lane, y: -away }
+    : { x: lane, y: away };
+  const travel = { x: node.x - from.x, y: node.y - from.y };
+  const length = Math.hypot(travel.x, travel.y) || 1;
+  const bend = { x: -travel.y / length, y: travel.x / length };
+  const swing = (rand() - 0.5) * entry.unit * 1.1;
+  entry.flights.push({
+    index,
+    from,
+    ctrl: { x: from.x + travel.x * 0.5 + bend.x * swing, y: from.y + travel.y * 0.5 + bend.y * swing },
+    to: node,
+    start: now + (delay || 0),
+    dur: 520 + rand() * 220,
+  });
+}
+
+/** Progreso pedido por el texto: el corazón con la primera letra, una punta por letra. */
+function constellationProgress(entry, chars, now) {
+  if (chars === 0) {
+    constellationReset(entry);
+    return;
+  }
+  const wanted = Math.min(8, chars - 1);
+  sendMote(entry, 16, now);
+  for (let k = 0; k < wanted; k += 1) sendMote(entry, TIP_ORDER[k], now, k * 90);
+  entry.tipsLit = wanted;
+}
+
+/** Inscribir: se completa lo que falte y el corazón suelta una sola onda. */
+function constellationSeal(entry, now) {
+  sendMote(entry, 16, now);
+  TIP_ORDER.forEach((index, order) => sendMote(entry, index, now, order * 70));
+  entry.sealAt = now + 8 * 70 + 620;
+}
+
+function drawConstellation(entry, now, dpr) {
+  const { ctx, canvas, unit, nodes } = entry;
+  const rect = canvas.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+  layoutConstellation(entry, rect.width, rect.height);
+  if (canvas.width !== Math.round(rect.width * dpr)) {
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, rect.width, rect.height);
+  ctx.save();
+  ctx.translate(rect.width / 2, rect.height / 2);
+  ctx.globalCompositeOperation = "lighter";
+
+  /* motas en vuelo */
+  for (let i = entry.flights.length - 1; i >= 0; i -= 1) {
+    const flight = entry.flights[i];
+    const k = (now - flight.start) / flight.dur;
+    if (k < 0) continue;
+    if (k >= 1) {
+      flight.to.lit = now;
+      entry.flights.splice(i, 1);
+      continue;
+    }
+    const ease = k * k * (3 - 2 * k);
+    const inv = 1 - ease;
+    const x = inv * inv * flight.from.x + 2 * inv * ease * flight.ctrl.x + ease * ease * flight.to.x;
+    const y = inv * inv * flight.from.y + 2 * inv * ease * flight.ctrl.y + ease * ease * flight.to.y;
+    const prev = Math.max(0, ease - 0.11);
+    const pinv = 1 - prev;
+    const tx = pinv * pinv * flight.from.x + 2 * pinv * prev * flight.ctrl.x + prev * prev * flight.to.x;
+    const ty = pinv * pinv * flight.from.y + 2 * pinv * prev * flight.ctrl.y + prev * prev * flight.to.y;
+    const fade = Math.min(1, k * 6) * (1 - Math.max(0, (k - 0.86) / 0.14) * 0.4);
+    const tail = ctx.createLinearGradient(tx, ty, x, y);
+    tail.addColorStop(0, "rgba(107, 219, 209, 0)");
+    tail.addColorStop(1, "rgba(150, 232, 219, " + (0.42 * fade).toFixed(3) + ")");
+    ctx.strokeStyle = tail;
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    const bloom = ctx.createRadialGradient(x, y, 0, x, y, 9);
+    bloom.addColorStop(0, "rgba(255, 250, 234, " + (0.95 * fade).toFixed(3) + ")");
+    bloom.addColorStop(0.4, "rgba(214, 236, 224, " + (0.35 * fade).toFixed(3) + ")");
+    bloom.addColorStop(1, "rgba(150, 232, 219, 0)");
+    ctx.fillStyle = bloom;
+    ctx.beginPath();
+    ctx.arc(x, y, 9, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  /* los valles se encienden cuando ya lo están sus dos puntas vecinas */
+  for (let k = 1; k < 16; k += 2) {
+    if (nodes[k].lit) continue;
+    const before = nodes[(k + 15) % 16].lit;
+    const after = nodes[(k + 1) % 16].lit;
+    if (before && after) nodes[k].lit = Math.max(before, after) + 90;
+  }
+
+  /* hilos: cada uno espera a sus dos extremos */
+  for (let k = 0; k < 16; k += 1) {
+    const a = nodes[k];
+    const b = nodes[(k + 1) % 16];
+    if (!a.lit || !b.lit) continue;
+    const born = Math.max(a.lit, b.lit);
+    const grow = Math.min(1, Math.max(0, (now - born) / 420));
+    if (grow <= 0) continue;
+    ctx.strokeStyle = "rgba(224, 200, 138, " + (0.5 * grow).toFixed(3) + ")";
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(a.x + (b.x - a.x) * grow, a.y + (b.y - a.y) * grow);
+    ctx.stroke();
+  }
+
+  /* corazón, puntas y valles ya fijos */
+  nodes.forEach((node) => {
+    if (!node.lit) return;
+    const age = Math.min(1, (now - node.lit) / 460);
+    const pop = 1 + (1 - age) * (1 - age) * 2.4;
+    const size = (node.heart ? 26 : node.tip ? 13 : 6) * pop;
+    const peak = node.heart ? 0.85 : node.tip ? 0.7 : 0.36;
+    const bloom = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, size);
+    bloom.addColorStop(0, "rgba(255, 251, 238, " + peak.toFixed(3) + ")");
+    bloom.addColorStop(0.32, "rgba(234, 213, 155, " + (peak * 0.42).toFixed(3) + ")");
+    bloom.addColorStop(1, "rgba(199, 170, 105, 0)");
+    ctx.fillStyle = bloom;
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  /* incisiones sin área, nunca cuñas rellenas hacia el centro */
+  if (nodes[16].lit) {
+    for (let k = 0; k < 16; k += 2) {
+      if (!nodes[k].lit) continue;
+      const angle = (-90 + k * 22.5) * Math.PI / 180;
+      ctx.strokeStyle = "rgba(199, 170, 105, 0.3)";
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(angle) * unit * 0.24, Math.sin(angle) * unit * 0.24);
+      ctx.lineTo(Math.cos(angle) * unit * 0.68, Math.sin(angle) * unit * 0.68);
+      ctx.stroke();
+    }
+  }
+
+  /* una sola onda circular al cerrarse */
+  if (entry.sealAt && now >= entry.sealAt) {
+    const k = (now - entry.sealAt) / 1000;
+    if (k >= 1) entry.sealAt = 0;
+    else {
+      const radius = unit * (0.2 + k * 1.5);
+      ctx.strokeStyle = "rgba(255, 244, 214, " + (0.5 * (1 - k)).toFixed(3) + ")";
+      ctx.lineWidth = 2.4 * (1 - k) + 0.4;
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+
+  ctx.restore();
+}
+
+document.querySelectorAll("[data-constellation]").forEach((canvas) => {
+  const entry = createConstellation(canvas);
+  const rect = canvas.getBoundingClientRect();
+  layoutConstellation(entry, rect.width || 780, rect.height || 440);
+});
+
 /* ── comportamiento por escenario ──────────────────────────────────────── */
 function replay(stage) {
   stage.classList.remove("is-open", "is-confirmed");
+  const sky = constellations.find((entry) => entry.canvas.closest("[data-variant]") === stage);
+  if (sky) {
+    constellationReset(sky);
+    sky.sealAt = 0;
+    const input = stage.querySelector("[data-input]");
+    if (input.value.trim()) constellationProgress(sky, input.value.trim().length, performance.now() + 260);
+  }
   void stage.offsetWidth;
   requestAnimationFrame(() => stage.classList.add("is-open"));
 }
@@ -1058,12 +1303,14 @@ document.querySelectorAll("[data-variant]").forEach((stage) => {
   const sparkLayer = stage.querySelector("[data-spark-layer]");
   const heat = stage.querySelector("[data-heat]");
   const field = stage.querySelector("[data-field]");
-  const sparkCount = heat ? 3 : 4;
+  const sparkCount = heat ? 6 : 4;
   const dust = dusts.find((entry) => entry.canvas.closest("[data-variant]") === stage);
+  const sky = constellations.find((entry) => entry.canvas.closest("[data-variant]") === stage);
 
   function sync() {
     const value = input.value.trim();
     if (count) count.textContent = String(input.value.length);
+    if (sky) constellationProgress(sky, value.length, performance.now());
     if (tips.length) {
       const lit = value.length === 0 ? 0 : Math.min(8, Math.ceil(value.length / 2));
       tips.forEach((tip, index) => tip.classList.toggle("is-lit", index < lit));
@@ -1110,6 +1357,7 @@ document.querySelectorAll("[data-variant]").forEach((stage) => {
     event.preventDefault();
     stage.classList.add("is-confirmed");
     refreshSaid(said);
+    if (sky) constellationSeal(sky, performance.now());
     if (dust) dust.pull = 0.11;
     if (deg) deg.textContent = "000°·N";
     setTimeout(() => {
@@ -1146,6 +1394,13 @@ document.querySelectorAll("[data-lang]").forEach((chip) => {
     applyLang();
   });
 });
+const skyToggle = document.getElementById("toggle-constellation");
+skyToggle.addEventListener("click", () => {
+  const on = skyToggle.classList.toggle("is-on");
+  skyToggle.textContent = on ? "Constelación encendida" : "Constelación apagada";
+  skyToggle.closest(".variant").querySelector(".stage").dataset.constellation = on ? "on" : "off";
+});
+
 const requiredToggle = document.getElementById("toggle-required");
 requiredToggle.addEventListener("click", () => {
   const next = requiredToggle.classList.toggle("is-on");
