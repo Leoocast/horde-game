@@ -503,7 +503,9 @@ button { cursor: pointer; }
   <header class="doc-head">
     <div class="kicker">Maquetas de interfaz · Onboarding</div>
     <h1>Modal del nombre del Cronista</h1>
-    <p>Seis reemplazos vivos de <code>ChroniclerNameModal</code> (<code>src/components/StartMenu.tsx</code>).
+    <p>Siete reemplazos vivos de <code>ChroniclerNameModal</code> (<code>src/components/StartMenu.tsx</code>).
+      <b>G · Umbral grabado</b> es la dirección elegida: la composición sin panel de <b>F</b> con el grabado de
+      letra de <b>B</b>.
       El modal vigente todavía usa la paleta oliva que el resto del juego abandonó —<code>rgb(74 100 70)</code>,
       el glow <code>rgb(112 151 93)</code>, la placa de pluma en rombo— mientras la interfaz ya vive en el
       verde-azulado frío de <code>--hf-ui-*</code> y el oro <code>#c7aa69</code>. Estas variantes se construyen
@@ -538,6 +540,43 @@ button { cursor: pointer; }
       <button class="chip" id="clear-all">Vaciar campos</button>
     </div>
   </div>
+
+  <!-- ═══ G · la elegida ══════════════════════════════════════════════ -->
+  <section class="variant" id="g">
+    <div class="variant-head">
+      <b>G</b>
+      <h2>Umbral grabado</h2>
+      <p>La composición de <b>F</b> —sin panel, sólo velo, regla que respira y renglón— con el grabado de
+        <b>B</b>: cada letra levanta chispas y un rescoldo sigue al cursor. Las chispas ahora se miden con el
+        ancho real del texto, así que nacen en la punta de la última letra y no detrás de ella.</p>
+      <div class="variant-actions"><button class="chip" data-replay>Repetir</button></div>
+    </div>
+    <div class="kicker-picker" data-kicker-picker><span>Línea superior</span></div>
+    <div class="stage is-open" data-variant data-required="true">
+      <div class="backdrop">
+        <form class="m m-forge" data-form autocomplete="off">
+          <button class="m-close" type="button" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+          <p class="m-kicker" data-kicker-slot></p>
+          <h2 class="m-title" data-i18n="title"></h2>
+          <div class="sweep"></div>
+          <div class="field" data-field>
+            <input class="m-input" maxlength="24" data-input data-i18n-ph="ph" />
+            <div class="underline"><i></i></div>
+            <div class="sparks" data-spark-layer aria-hidden="true"><span class="heat" data-heat></span></div>
+          </div>
+          <div class="count"><span data-count>0</span> / 24</div>
+          <button class="m-cta" type="submit" data-i18n="cta"></button>
+        </form>
+      </div>
+      <div class="confirm-flash"></div>
+      <div class="said" data-said></div>
+    </div>
+    <ul class="notes">
+      <li>El rescoldo se apaga solo 700 ms después de la última tecla; no queda encendido en reposo.</li>
+      <li>Sin panel el grabado es lo único que pesa: por eso las chispas son más escasas que en <b>B</b>.</li>
+      <li>Los selectores de arriba cambian en vivo la línea que sustituye a «Antes de la primera página».</li>
+    </ul>
+  </section>
 
   <!-- ═══ A ═══════════════════════════════════════════════════════════ -->
   <section class="variant" id="a">
@@ -782,11 +821,75 @@ const COPY = {
 };
 let lang = "es";
 
+/* Alternativas a «Antes de la primera página» para la variante G. */
+const KICKERS = [
+  { id: "none", chip: "Sin línea", es: "", en: "" },
+  { id: "mark", chip: "Marca cardinal", es: "◆ ◆ ◆", en: "◆ ◆ ◆", mark: true },
+  { id: "chapter", chip: "Capítulo I", es: "Capítulo I", en: "Chapter I" },
+  { id: "unsigned", chip: "La Crónica aún no tiene autor", es: "La Crónica aún no tiene autor", en: "The Chronicle has no author yet" },
+  { id: "signature", chip: "Toda Crónica lleva una firma", es: "Toda Crónica lleva una firma", en: "Every Chronicle bears a signature" },
+  { id: "archive", chip: "El Archivo espera un nombre", es: "El Archivo espera un nombre", en: "The Archive awaits a name" },
+  { id: "hand", chip: "Alguien tiene que escribirla", es: "Alguien tiene que escribirla", en: "Someone has to write it" },
+];
+let kickerId = "chapter";
+
+function applyKicker() {
+  const option = KICKERS.find((entry) => entry.id === kickerId) ?? KICKERS[0];
+  document.querySelectorAll("[data-kicker-slot]").forEach((slot) => {
+    slot.textContent = option[lang];
+    slot.classList.toggle("is-mark", Boolean(option.mark));
+    slot.classList.toggle("is-empty", option.id === "none");
+  });
+  document.querySelectorAll("[data-kicker-option]").forEach((chip) => {
+    chip.classList.toggle("is-on", chip.dataset.kickerOption === kickerId);
+  });
+}
+
+document.querySelectorAll("[data-kicker-picker]").forEach((picker) => {
+  KICKERS.forEach((option) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip";
+    chip.dataset.kickerOption = option.id;
+    chip.textContent = option.chip;
+    chip.addEventListener("click", () => { kickerId = option.id; applyKicker(); });
+    picker.append(chip);
+  });
+});
+
 function applyLang() {
   const dict = COPY[lang];
   document.querySelectorAll("[data-i18n]").forEach((node) => { node.textContent = dict[node.dataset.i18n] ?? ""; });
   document.querySelectorAll("[data-i18n-ph]").forEach((node) => { node.placeholder = dict[node.dataset.i18nPh] ?? ""; });
   document.querySelectorAll("[data-said]").forEach(refreshSaid);
+  applyKicker();
+}
+
+/* Punta real de la última letra: measureText no conoce letter-spacing ni la
+   alineación del campo, así que ambos se compensan a mano. Sin esto las
+   chispas nacen detrás del texto y el grabado se ve desfasado. */
+const RULER = document.createElement("canvas").getContext("2d");
+function caretPoint(input) {
+  const styles = getComputedStyle(input);
+  RULER.font = styles.fontStyle + " " + styles.fontWeight + " " + styles.fontSize + " " + styles.fontFamily;
+  const spacing = parseFloat(styles.letterSpacing) || 0;
+  const text = input.value;
+  const advance = text.length === 0 ? 0 : RULER.measureText(text).width + spacing * text.length;
+  const rect = input.getBoundingClientRect();
+  const padLeft = parseFloat(styles.paddingLeft) || 0;
+  const padRight = parseFloat(styles.paddingRight) || 0;
+  const inner = Math.max(0, rect.width - padLeft - padRight);
+  const shown = Math.min(advance, inner);
+  const align = styles.textAlign;
+  let x;
+  if (align === "center") {
+    x = padLeft + inner / 2 + shown / 2 - spacing / 2;
+  } else if (align === "right" || align === "end") {
+    x = rect.width - padRight;
+  } else {
+    x = padLeft + Math.max(0, shown - spacing);
+  }
+  return { x, y: rect.height / 2 };
 }
 
 function refreshSaid(node) {
@@ -953,6 +1056,9 @@ document.querySelectorAll("[data-variant]").forEach((stage) => {
   const tips = stage.querySelectorAll(".rose-tip");
   const deg = stage.querySelector("[data-deg]");
   const sparkLayer = stage.querySelector("[data-spark-layer]");
+  const heat = stage.querySelector("[data-heat]");
+  const field = stage.querySelector("[data-field]");
+  const sparkCount = heat ? 3 : 4;
   const dust = dusts.find((entry) => entry.canvas.closest("[data-variant]") === stage);
 
   function sync() {
@@ -965,19 +1071,36 @@ document.querySelectorAll("[data-variant]").forEach((stage) => {
     refreshSaid(said);
   }
 
-  input.addEventListener("input", (event) => {
+  let lastLength = input.value.length;
+  let coolDown;
+
+  input.addEventListener("input", () => {
+    const grew = input.value.length > lastLength;
+    lastLength = input.value.length;
     sync();
-    if (!sparkLayer || event.inputType === "deleteContentBackward") return;
+    if (!sparkLayer) return;
+
+    const caret = caretPoint(input);
     const rect = input.getBoundingClientRect();
     const host = sparkLayer.getBoundingClientRect();
-    const x = rect.left - host.left + Math.min(rect.width - 18, 18 + input.value.length * 12);
-    const y = rect.top - host.top + rect.height / 2;
-    for (let k = 0; k < 4; k += 1) {
+    const x = rect.left - host.left + caret.x;
+    const y = rect.top - host.top + caret.y;
+
+    if (heat) {
+      heat.style.left = x + "px";
+      heat.style.top = y + "px";
+      field?.classList.add("is-writing");
+      clearTimeout(coolDown);
+      coolDown = setTimeout(() => field?.classList.remove("is-writing"), 700);
+    }
+    if (!grew) return;
+
+    for (let k = 0; k < sparkCount; k += 1) {
       const spark = document.createElement("i");
       spark.style.left = x + "px";
       spark.style.top = y + "px";
-      spark.style.setProperty("--dx", ((Math.random() - 0.5) * 34).toFixed(1) + "px");
-      spark.style.setProperty("--dy", (-8 - Math.random() * 26).toFixed(1) + "px");
+      spark.style.setProperty("--dx", ((Math.random() - 0.5) * 30).toFixed(1) + "px");
+      spark.style.setProperty("--dy", (-7 - Math.random() * 24).toFixed(1) + "px");
       sparkLayer.append(spark);
       setTimeout(() => spark.remove(), 660);
     }

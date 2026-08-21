@@ -1563,6 +1563,7 @@ test("UI Reference inventories only real player UI and traces every component to
   assert.match(guidedDialogSource, /guided-tutorial-callout-mark/u);
   assert.doesNotMatch(confirmationSource, /game-dialog-icon|game-dialog-kicker|kicker:/u);
   assert.match(destinyDialogSource, /destiny-dialog-heading[\s\S]*?destiny-dialog-actions/u);
+  assert.match(destinyDialogSource, /destiny-dialog hf-ui-panel w-full max-w-\[580px\]/u);
   assert.match(destinyDialogSource, /<h2 id="destiny-dialog-title">[\s\S]*?destiny-dialog-copy/u);
   assert.match(destinyDialogSource, /destiny-dialog-secondary[\s\S]*?<DestinyActionButton[\s\S]*?className="destiny-dialog-primary"/u);
   assert.match(destinyActionSource, /"destiny-command-button", "learn-to-play-contemplate-button"/u);

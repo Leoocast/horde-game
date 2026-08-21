@@ -139,7 +139,7 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother, i
         >
           <section
             ref={dialogRef}
-            className={["destiny-dialog hf-ui-panel w-full max-w-[540px]", modalPresence.closing ? "is-closing" : ""].join(" ")}
+            className={["destiny-dialog hf-ui-panel w-full max-w-[580px]", modalPresence.closing ? "is-closing" : ""].join(" ")}
             role="dialog"
             aria-modal="true"
             aria-labelledby="destiny-dialog-title"
