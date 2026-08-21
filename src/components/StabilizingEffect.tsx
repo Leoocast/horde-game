@@ -1,10 +1,13 @@
 import type { CSSProperties } from "react";
 
-const STABILIZING_MOTE_COUNT = 4;
+const STABILIZING_MOTE_COUNT = 5;
 
 type StabilizingWaveStyle = CSSProperties & {
   "--stabilizing-delay": string;
   "--stabilizing-duration": string;
+  "--stabilizing-glint-duration": string;
+  "--stabilizing-interval": string;
+  "--stabilizing-sweep-duration": string;
   "--stabilizing-from-x": string;
   "--stabilizing-from-y": string;
 };
@@ -26,34 +29,43 @@ export function stabilizingWaveStyles(seedKey: string): StabilizingWaveStyle[] {
     return seed / 4294967296;
   };
 
-  return Array.from({ length: STABILIZING_MOTE_COUNT }, (_, index) => {
+  const routes = Array.from({ length: STABILIZING_MOTE_COUNT }, (_, index) => {
     const angle = (index / STABILIZING_MOTE_COUNT) * Math.PI * 2 + random() * 0.8;
     const distance = 64 + random() * 26;
-    const duration = 7.5 + random() * 3.5;
 
     return {
       "--stabilizing-from-x": `${(Math.cos(angle) * distance).toFixed(1)}cqw`,
       "--stabilizing-from-y": `${(Math.sin(angle) * distance * 0.9).toFixed(1)}cqw`,
-      "--stabilizing-duration": `${duration.toFixed(2)}s`,
-      "--stabilizing-delay": `${(-random() * duration).toFixed(2)}s`,
     };
   });
+  const duration = 9.5 + random() * 1.5;
+  const firstDelay = 0;
+  const moteInterval = duration / STABILIZING_MOTE_COUNT;
+
+  return routes.map((route, index) => ({
+    ...route,
+    "--stabilizing-duration": `${duration.toFixed(2)}s`,
+    "--stabilizing-glint-duration": `${(moteInterval * 1.45).toFixed(2)}s`,
+    "--stabilizing-interval": `${moteInterval.toFixed(2)}s`,
+    "--stabilizing-sweep-duration": `${(moteInterval * 2).toFixed(2)}s`,
+    "--stabilizing-delay": `${(firstDelay - index * moteInterval).toFixed(2)}s`,
+  }));
 }
 
 export function StabilizingEffect({ seedKey }: { seedKey: string }) {
   const waves = stabilizingWaveStyles(seedKey);
+  const sweepStyle = waves[0];
 
   return (
     <>
       <span className="stabilizing-veil" aria-hidden="true" />
       <span className="stabilizing-gold-patina" aria-hidden="true">
-        {waves.map((style, index) => (
-          <span key={`charge-${index}`} className="stabilizing-gold-charge" style={style} />
-        ))}
+        <span className="stabilizing-gold-charge" style={sweepStyle} />
+        <span className="stabilizing-gold-glint" style={sweepStyle} />
       </span>
       <span className="stabilizing-wave-effect" aria-hidden="true">
         <span className="stabilizing-lattice">
-          {waves.map((style, index) => (
+          {waves.slice(0, 2).map((style, index) => (
             <span key={`front-${index}`} className="stabilizing-wave-front" style={style} />
           ))}
         </span>

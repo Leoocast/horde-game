@@ -491,21 +491,37 @@ test("debuffed stats render a red downward indicator independently of damage", (
 
 test("Stabilizing uses synchronized CSS motes, charges and wave-only lattice", () => {
   const first = stabilizingWaveStyles("echo-alpha");
-  assert.equal(first.length, 4);
+  assert.equal(first.length, 5);
   assert.deepEqual(first, stabilizingWaveStyles("echo-alpha"));
   assert.notDeepEqual(first, stabilizingWaveStyles("echo-beta"));
 
   for (const style of first) {
     const duration = Number.parseFloat(style["--stabilizing-duration"]);
+    const glintDuration = Number.parseFloat(style["--stabilizing-glint-duration"]);
+    const interval = Number.parseFloat(style["--stabilizing-interval"]);
+    const sweepDuration = Number.parseFloat(style["--stabilizing-sweep-duration"]);
     const delay = Number.parseFloat(style["--stabilizing-delay"]);
-    assert.ok(duration >= 7.5 && duration <= 11);
-    assert.ok(delay <= 0 && delay >= -duration);
+    assert.ok(duration >= 9.5 && duration <= 11);
+    assert.ok(Math.abs(interval - duration / 5) <= 0.02);
+    assert.ok(Math.abs(glintDuration - interval * 1.45) <= 0.02);
+    assert.ok(Math.abs(sweepDuration - interval * 2) <= 0.02);
+    assert.ok(delay <= 0 && delay >= -(duration * 2));
+  }
+
+  const duration = Number.parseFloat(first[0]["--stabilizing-duration"]);
+  assert.equal(new Set(first.map((style) => style["--stabilizing-duration"])).size, 1);
+  assert.ok(new Set(first.map((style) => `${style["--stabilizing-from-x"]}:${style["--stabilizing-from-y"]}`)).size > 1);
+  for (let index = 1; index < first.length; index += 1) {
+    const previousDelay = Number.parseFloat(first[index - 1]["--stabilizing-delay"]);
+    const delay = Number.parseFloat(first[index]["--stabilizing-delay"]);
+    assert.ok(Math.abs(previousDelay - delay - duration / 5) <= 0.02);
   }
 
   const markup = renderToStaticMarkup(createElement(StabilizingEffect, { seedKey: "echo-alpha" }));
-  assert.equal(markup.match(/class="stabilizing-gold-charge"/gu)?.length, 4);
-  assert.equal(markup.match(/class="stabilizing-wave-front"/gu)?.length, 4);
-  assert.equal(markup.match(/class="stabilizing-mote"/gu)?.length, 4);
+  assert.equal(markup.match(/class="stabilizing-gold-charge"/gu)?.length, 1);
+  assert.equal(markup.match(/class="stabilizing-gold-glint"/gu)?.length, 1);
+  assert.equal(markup.match(/class="stabilizing-wave-front"/gu)?.length, 2);
+  assert.equal(markup.match(/class="stabilizing-mote"/gu)?.length, 5);
 
   const cardSource = readFileSync(new URL("../src/components/Card.tsx", import.meta.url), "utf8");
   const effectSource = readFileSync(new URL("../src/components/StabilizingEffect.tsx", import.meta.url), "utf8");
@@ -517,9 +533,18 @@ test("Stabilizing uses synchronized CSS motes, charges and wave-only lattice", (
   assert.match(latticeRule, /repeating-linear-gradient/u);
   assert.doesNotMatch(latticeRule, /background:/u);
   assert.match(css, /\.stabilizing-wave-front\s*\{[^}]*background:\s*radial-gradient/su);
+  assert.match(css, /\.stabilizing-wave-front\s*\{[^}]*animation:\s*stabilizing-wave-front var\(--stabilizing-sweep-duration,/su);
   assert.match(css, /\.stabilizing-mote\s*\{[^}]*width:\s*4\.4cqw;/su);
-  assert.match(css, /@keyframes stabilizing-gold-charge\s*\{\s*0%,\s*100%\s*\{/su);
-  assert.match(css, /@keyframes stabilizing-gold-glint\s*\{\s*0%,\s*100%\s*\{/su);
+  assert.match(css, /animation:\s*stabilizing-mote-fall[^;]*linear[^;]*infinite;/u);
+  assert.match(css, /@keyframes stabilizing-wave-front\s*\{\s*0%\s*\{[^}]*opacity:\s*0\.92;/u);
+  assert.match(css, /@keyframes stabilizing-wave-front[\s\S]*?62\.5%,\s*100%\s*\{[^}]*opacity:\s*0;/u);
+  assert.match(css, /@keyframes stabilizing-mote-fall\s*\{[\s\S]*?94%\s*\{[^}]*opacity:\s*0\.95;[\s\S]*?100%\s*\{[^}]*opacity:\s*0;/u);
+  assert.match(css, /\.stabilizing-gold-charge\s*\{[^}]*opacity:\s*0\.12;[^}]*\}/su);
+  assert.match(css, /animation:\s*stabilizing-gold-glint var\(--stabilizing-glint-duration, 3s\) linear infinite;/u);
+  assert.match(css, /animation:\s*stabilizing-satin-drift 9\.5s linear infinite;/u);
+  assert.doesNotMatch(css, /@keyframes stabilizing-gold-charge/u);
+  assert.match(css, /@keyframes stabilizing-gold-glint\s*\{\s*0%\s*\{[^}]*transform:\s*translate3d\(-85%, 0, 0\);[^}]*opacity:\s*0;/su);
+  assert.match(css, /@keyframes stabilizing-satin-drift\s*\{\s*0%\s*\{[^}]*transform:\s*translate3d\(-85%, 0, 0\);[^}]*opacity:\s*0;/su);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.stabilizing-wave-front:first-child/su);
   assert.doesNotMatch(css, /summoning-sickness-rings|summoning-water-/u);
 });
