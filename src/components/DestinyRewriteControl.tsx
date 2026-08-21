@@ -10,12 +10,15 @@ type Props = {
   seed: string;
   onRewrite: () => void;
   onContemplateAnother: () => void;
+  initiallyOpen?: boolean;
+  hideLauncher?: boolean;
+  onDismiss?: () => void;
 };
 
-export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother }: Props) {
+export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother, initiallyOpen = false, hideLauncher = false, onDismiss }: Props) {
   const t = useTranslation();
   const pushToast = useToastStore((state) => state.pushToast);
-  const [open, setOpen] = useState(false);
+  const [open, setOpenState] = useState(initiallyOpen);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
   const primaryActionRef = useRef<HTMLButtonElement>(null);
@@ -23,6 +26,11 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother }:
   const dialogWasMountedRef = useRef(false);
   const modalPresence = useAnimatedPresence(open, 220);
   const futureCode = futureCodeFromSeed(seed);
+
+  function setOpen(next: boolean) {
+    setOpenState(next);
+    if (!next) onDismiss?.();
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -103,7 +111,7 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother }:
 
   return (
     <>
-      <button
+      {!hideLauncher && <button
         ref={triggerRef}
         className="destiny-command-button"
         type="button"
@@ -118,7 +126,7 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother }:
           <strong>{t("destiny.rewrite")}</strong>
         </span>
         <span className="destiny-command-shimmer" aria-hidden="true" />
-      </button>
+      </button>}
 
       {modalPresence.mounted && (
         <div
@@ -130,7 +138,7 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother }:
         >
           <section
             ref={dialogRef}
-            className={["destiny-dialog old-panel w-full max-w-[540px]", modalPresence.closing ? "is-closing" : ""].join(" ")}
+            className={["destiny-dialog hf-ui-panel w-full max-w-[540px]", modalPresence.closing ? "is-closing" : ""].join(" ")}
             role="dialog"
             aria-modal="true"
             aria-labelledby="destiny-dialog-title"

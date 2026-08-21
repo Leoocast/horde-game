@@ -154,7 +154,14 @@ function scanBuiltAssetReferences() {
 
 function scanReleaseForDeveloperTools() {
   if (!fs.existsSync(DIST_ROOT)) return;
-  const markers = ["?playground", "PlaygroundScreen", "AudioLabScreen"];
+  const markers = [
+    "?playground",
+    "PlaygroundScreen",
+    "AudioLabScreen",
+    "SeedExplorerScreen",
+    "UIReferenceScreen",
+    "ui-reference",
+  ];
   for (const file of DIST_FILES.filter((entry) => [".html", ".js", ".mjs"].includes(path.extname(entry).toLowerCase()))) {
     const text = fs.readFileSync(file, "utf8");
     for (const marker of markers) {

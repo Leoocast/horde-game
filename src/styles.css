@@ -16005,6 +16005,20 @@
   .game-turn-hud.is-setup { min-width: 250px; }
 }
 
+/* Settings is a system surface: its body portal must stay above gameplay, guided overlays,
+   and the destiny transition. Confirmations opened from it keep Settings visible underneath. */
+.game-settings-system-layer {
+  z-index: 40000;
+}
+
+.game-guided-settings-launcher-layer {
+  z-index: 39990;
+}
+
+.game-system-confirmation-layer {
+  z-index: 40010;
+}
+
 .game-settings-modal-backdrop {
   background:
     radial-gradient(circle at 50% 38%, rgb(50 62 63 / 0.22), transparent 44%),
@@ -16019,7 +16033,8 @@
   animation: game-settings-backdrop-out 220ms ease-in both;
 }
 
-.game-screen .game-settings-modal {
+.game-screen .game-settings-modal,
+.game-settings-popover .game-settings-modal {
   border: 1px solid rgb(164 151 101 / 0.42);
   border-top-color: rgb(208 187 119 / 0.76);
   border-radius: 0;
@@ -16028,7 +16043,8 @@
   animation: game-settings-modal-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.game-screen .game-settings-modal.is-closing {
+.game-screen .game-settings-modal.is-closing,
+.game-settings-popover .game-settings-modal.is-closing {
   animation: game-settings-modal-out 190ms ease-in both;
 }
 
@@ -16621,7 +16637,8 @@
 
 @media (max-width: 760px) {
   .game-settings-modal-backdrop { padding: 10px; }
-  .game-screen .game-settings-modal { width: calc(100vw - 20px); max-height: calc(100vh - 20px); }
+  .game-screen .game-settings-modal,
+  .game-settings-popover .game-settings-modal { width: calc(100vw - 20px); max-height: calc(100vh - 20px); }
   .game-settings-modal > div { grid-template-columns: 1fr; }
   .game-settings-log { min-height: 320px; }
 }

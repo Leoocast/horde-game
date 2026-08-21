@@ -139,7 +139,7 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
             preferNativeImageRendering={showFullSourceImage}
           />
         </div>
-        <div className="counter-target-preview old-panel-soft">
+        <div className="counter-target-preview hf-ui-panel-soft">
           <span className="text-[#d6b879]">{target ? localizedCardName(target, language) : t("target.noSelection")}</span>
           <strong className="text-[#91f58f]">{previewStats ? `${previewStats.power}/${previewStats.endurance}` : "--/--"}</strong>
         </div>

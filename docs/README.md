@@ -13,6 +13,8 @@ Este índice separa contratos vigentes, contenido, planes todavía abiertos y re
 
 - [`reference/game_vocabulary.md`](reference/game_vocabulary.md) — vocabulario público y técnico.
 - [`reference/card_text_rules.md`](reference/card_text_rules.md) — redacción normativa de cartas.
+- [`reference/ui_system.md`](reference/ui_system.md) — contrato ejecutable de UI player-facing,
+  trazabilidad de componentes y reglas de homologación.
 - [`reference/animation_contracts.md`](reference/animation_contracts.md) — orden de beats, combate y VFX.
 - [`reference/vfx_and_threejs.md`](reference/vfx_and_threejs.md) — implementación visual y referencias
   técnicas.

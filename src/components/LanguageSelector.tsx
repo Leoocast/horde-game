@@ -34,7 +34,7 @@ export function LanguageSelector({ variant = "screen" }: Props) {
 
   if (variant === "panel") {
     return (
-      <section className="old-panel-soft p-4">
+      <section className="hf-ui-panel-soft p-4">
         <div className="game-settings-section-title flex items-center gap-2"><Languages size={15} /> {t("language.title")}</div>
         <p className="mt-2 text-xs leading-relaxed text-[#8d9a94]">{t("language.description")}</p>
         <div className="mt-3">{buttons}</div>

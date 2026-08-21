@@ -1,5 +1,6 @@
-import { AlertTriangle, Home, RotateCcw } from "lucide-react";
+import { Home, RotateCcw } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useGameStore, type GameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
@@ -46,6 +47,7 @@ import { RootsTouchedSkyAnimator } from "./RootsTouchedSkyAnimator";
 import { EnergyFlowAnimator } from "./EnergyFlowAnimator";
 import { GuidedTutorialOverlay } from "./GuidedTutorialOverlay";
 import { ContextualTutorialCallout } from "./ContextualTutorialCallout";
+import { GameConfirmationDialog } from "./GameConfirmationDialog";
 import { LearnToPlayJourneyCues } from "./LearnToPlayJourneyCues";
 import { NORMAL_BOARD_SESSION, type BoardSessionPolicy } from "./boardSessionPolicies";
 import { useHiddenDefenseLinkIds } from "./useDefenseLinkVisibility";
@@ -496,59 +498,46 @@ export function Board({
 
       {sessionPolicy.showGuidedInterruption && tutorialInterrupted && (
         <div data-guided-system-control="true" className="game-home-backdrop fixed inset-0 z-[20040] flex items-center justify-center p-6 text-[#e4ddc2]" role="presentation">
-          <section className="old-panel game-dialog game-home-dialog w-full max-w-md p-6" role="dialog" aria-modal="true" aria-labelledby="tutorial-interrupted-title">
-            <div className="flex items-start gap-3">
-              <div className="game-dialog-icon flex h-10 w-10 shrink-0 items-center justify-center"><AlertTriangle size={20} /></div>
-              <div>
-                <div className="game-dialog-kicker">{t("guided.lifecycle.interruptedKicker")}</div>
-                <h2 id="tutorial-interrupted-title" className="old-title mt-1 text-xl font-medium uppercase tracking-[0.08em]">{t("guided.lifecycle.interruptedTitle")}</h2>
-                <p className="mt-2 text-sm text-[#8d9a94]">{t("guided.lifecycle.interruptedBody")}</p>
-                {IS_DEV && tutorialErrorMessage && <pre className="mt-3 max-h-24 overflow-auto whitespace-pre-wrap text-xs text-[#c8a985]">{tutorialErrorMessage}</pre>}
-              </div>
-            </div>
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <button className="game-dialog-action flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onReturnToMenu}>
-                <Home size={16} /> {t("guided.lifecycle.exit")}
-              </button>
-              <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onRestartTutorial}>
-                <RotateCcw size={16} /> {t("guided.lifecycle.restart")}
-              </button>
-            </div>
-          </section>
+          <GameConfirmationDialog
+            titleId="tutorial-interrupted-title"
+            kicker={t("guided.lifecycle.interruptedKicker")}
+            title={t("guided.lifecycle.interruptedTitle")}
+            body={t("guided.lifecycle.interruptedBody")}
+            detail={IS_DEV && tutorialErrorMessage
+              ? <pre className="mt-3 max-h-24 overflow-auto whitespace-pre-wrap text-xs text-[#c8a985]">{tutorialErrorMessage}</pre>
+              : undefined}
+            actions={[
+              { label: t("guided.lifecycle.exit"), icon: <Home size={16} />, onClick: onReturnToMenu },
+              { label: t("guided.lifecycle.restart"), icon: <RotateCcw size={16} />, onClick: onRestartTutorial ?? (() => undefined), primary: true },
+            ]}
+          />
         </div>
       )}
 
-      {homeConfirmationPresence.mounted && (
+      {homeConfirmationPresence.mounted && createPortal(
         <div
           {...(sessionPolicy.guidedSystemControls ? { "data-guided-system-control": "true" } : {})}
-          className={[`game-home-backdrop fixed inset-0 ${sessionPolicy.guidedSystemControls ? "z-[20040]" : "z-[450]"} flex items-center justify-center p-6 text-[#e4ddc2]`, homeConfirmationPresence.closing ? "is-closing" : ""].join(" ")}
+          className={["game-settings-popover game-system-confirmation-layer game-home-backdrop fixed inset-0 flex items-center justify-center p-6 text-[#e4ddc2]", homeConfirmationPresence.closing ? "is-closing" : ""].join(" ")}
           role="presentation"
         >
-          <section className={["old-panel game-dialog game-home-dialog w-full max-w-md p-6", homeConfirmationPresence.closing ? "is-closing" : ""].join(" ")} role="dialog" aria-modal="true" aria-labelledby="return-home-title">
-            <div className="flex items-start gap-3">
-              <div className="game-dialog-icon flex h-10 w-10 shrink-0 items-center justify-center">
-                <AlertTriangle size={20} />
-              </div>
-              <div>
-                <div className="game-dialog-kicker">{t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveKicker" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveKicker" : "game.leaveBattlefield")}</div>
-                <h2 id="return-home-title" className="old-title mt-1 text-xl font-medium uppercase tracking-[0.08em]">
-                  {t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveTitle" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveTitle" : "game.returnHomeQuestion")}
-                </h2>
-                <p className="mt-2 text-sm text-[#8d9a94]">{t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveBody" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveBody" : "game.progressLost")}</p>
-              </div>
-            </div>
-
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <button className="game-dialog-action flex h-11 items-center justify-center text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={() => setShowHomeConfirmation(false)}>
-                {t("common.cancel")}
-              </button>
-              <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onReturnToMenu}>
-                <Home size={16} />
-                {t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.exit" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.exit" : "game.returnHome")}
-              </button>
-            </div>
-          </section>
-        </div>
+          <GameConfirmationDialog
+            titleId="return-home-title"
+            kicker={t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveKicker" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveKicker" : "game.leaveBattlefield")}
+            title={t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveTitle" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveTitle" : "game.returnHomeQuestion")}
+            body={t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveBody" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveBody" : "game.progressLost")}
+            closing={homeConfirmationPresence.closing}
+            actions={[
+              { label: t("common.cancel"), onClick: () => setShowHomeConfirmation(false) },
+              {
+                label: t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.exit" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.exit" : "game.returnHome"),
+                icon: <Home size={16} />,
+                onClick: onReturnToMenu,
+                primary: true,
+              },
+            ]}
+          />
+        </div>,
+        document.body,
       )}
     </main>
   );

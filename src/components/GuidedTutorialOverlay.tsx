@@ -269,7 +269,7 @@ export function GuidedTutorialOverlay() {
     const handlePointerDown = (event: PointerEvent) => {
       if (targetAllowed(event.target)) {
         allowedPointers.add(event.pointerId);
-        if (!isOverlayControl(event.target)) dismissActionCallout();
+        if (!isControl(event.target)) dismissActionCallout();
         return;
       }
       block(event);
@@ -280,7 +280,7 @@ export function GuidedTutorialOverlay() {
     };
     const handleEvent = (event: Event) => {
       if (targetAllowed(event.target)) {
-        if (!isOverlayControl(event.target)) dismissActionCallout();
+        if (!isControl(event.target)) dismissActionCallout();
         return;
       }
       block(event);

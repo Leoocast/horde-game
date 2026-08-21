@@ -56,9 +56,9 @@ export function DisplayControls({ variant = "panel" }: Props) {
   }
 
   return (
-    <section className="old-panel-soft p-3">
+    <section className="hf-ui-panel-soft p-3">
       <div className="game-settings-section-title">{t("settings.display")}</div>
-      <button className="old-button mt-3 flex h-9 w-full items-center justify-center gap-2 text-xs font-black uppercase tracking-wide" type="button" onClick={toggleFullscreen}>
+      <button className="hf-ui-button mt-3 flex h-9 w-full items-center justify-center gap-2 text-xs font-black uppercase tracking-wide" type="button" onClick={toggleFullscreen}>
         {fullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
         {fullscreen ? t("settings.exitFullscreen") : t("settings.enterFullscreen")}
       </button>

@@ -77,7 +77,7 @@ test("the narrative Future control owns normal rewrites outside Settings", async
   const [header, settings, result, transition, shader, warmup, app] = await Promise.all([
     readFile(new URL("../src/components/AppHeader.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/SettingsMenu.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/components/DefeatModal.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/GameOutcomeDialog.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/DestinyRewriteTransition.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/destinyVortexShader.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/components/vfxWarmup.ts", import.meta.url), "utf8"),

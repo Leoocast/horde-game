@@ -248,8 +248,8 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
   }
 
   return (
-    <aside className={`game-log-panel old-panel-soft flex min-h-0 flex-col ${className}`}>
-      <div className="game-log-panel-title old-title">{t("log.title")} <span>{visibleLog.length}</span></div>
+    <aside className={`game-log-panel hf-ui-panel-soft flex min-h-0 flex-col ${className}`}>
+      <div className="game-log-panel-title hf-ui-title">{t("log.title")} <span>{visibleLog.length}</span></div>
       <div className="game-log-panel-search">{search}{matchNavigator}</div>
       <div className="game-log-scroll old-scrollbar">{entries}</div>
       {overlays}

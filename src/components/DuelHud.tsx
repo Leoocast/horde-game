@@ -234,7 +234,7 @@ export function DuelHud({ game }: { game: GameState }) {
               />
             </div>
             {tributeOfTheFourSorrowsSelectionActive && (
-              <div className="tribute-of-the-four-sorrows-selection-panel-inline old-panel-soft">
+              <div className="tribute-of-the-four-sorrows-selection-panel-inline hf-ui-panel-soft">
                 <span className="text-[11px] font-bold uppercase tracking-wide text-[#d6b879]">{t(tributeOfTheFourSorrowsSelectionKind === "discard" ? "target.discardCard" : tributeOfTheFourSorrowsSelectionKind === "sacrifice-creature" ? "target.sacrificeCreature" : "target.discardEnergy")}</span>
                 <span className="text-sm text-[#d6b879]">
                   {tributeOfTheFourSorrowsSelectionKind === "sacrifice-land" && tributeOfTheFourSorrowsSelectionTargetId
@@ -289,7 +289,7 @@ export function DuelHud({ game }: { game: GameState }) {
             data-player-attack-target="host-deck"
             data-host-life-panel="true"
             className={[
-              "old-panel combatant-vitals combatant-vitals-host host-deck-counter flex min-w-44 items-center gap-3 px-3 py-2",
+              "hf-ui-panel combatant-vitals combatant-vitals-host host-deck-counter flex min-w-44 items-center gap-3 px-3 py-2",
               attackCountVisible ? "is-attack-locked" : "",
               hostTakingDamage ? "host-counter-hit" : "",
               latestLifestealAttack ? "is-lifesteal-bitten" : "",
@@ -333,7 +333,7 @@ export function DuelHud({ game }: { game: GameState }) {
               <Skull size={24} />
             </div>
             <div className="host-deck-counter-copy">
-              <div className="old-title host-deck-counter-title text-xs font-bold uppercase tracking-wide">{t("game.hostArchive")}</div>
+              <div className="hf-ui-title host-deck-counter-title text-xs font-bold uppercase tracking-wide">{t("game.hostArchive")}</div>
               <div className="host-deck-counter-values flex items-end gap-2 leading-none">
                 <div className="host-deck-count text-3xl font-black">{visualHostLibraryCount}</div>
                 <AnimatePresence initial={false} mode="popLayout">
@@ -640,7 +640,7 @@ export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameSt
           >
           <div
             className={[
-              "old-panel combatant-vitals combatant-vitals-player player-life-counter flex items-center gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]",
+              "hf-ui-panel combatant-vitals combatant-vitals-player player-life-counter flex items-center gap-3 overflow-visible px-3 py-2 text-[#f6e6b8]",
               takingDamage ? "player-life-damage" : "",
               lifeBuffAnimationId ? "player-life-buff" : "",
               bloodPactAnimation?.phase === "impact" || lifePaymentAnimation || finalBanquetAnimation?.phase === "siphon" ? "blood-pact-life-corrupted" : "",
@@ -660,7 +660,7 @@ export function PlayerLifePanel({ game, playerName, setupTurns }: { game: GameSt
             {lifeBuffAnimationId && <span key={lifeBuffAnimationId} className="buff-rise-lines life-buff-lines buff-rise-lines-green" aria-hidden="true" />}
             <div className="player-life-copy">
               <input
-                className="old-title player-life-name-input text-xs font-bold uppercase tracking-wide"
+                className="hf-ui-title player-life-name-input text-xs font-bold uppercase tracking-wide"
                 value={chroniclerName}
                 maxLength={24}
                 aria-label={t("game.chroniclerName")}

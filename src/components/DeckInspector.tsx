@@ -295,7 +295,7 @@ function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: Ins
   );
 }
 
-function DeckInspectorDetailsModal({
+export function DeckInspectorDetailsModal({
   deck,
   card,
   position,

@@ -330,6 +330,10 @@ test("Learn to Play keeps the combat-stat and Harvester interventions reachable 
       ));
       director.start(bindings, `learn-to-play:director-regression:${attempt}`);
 
+      assert.equal(guidedSessionStore.snapshot().currentStep.id, "evy-fourth-source-briefing");
+      guidedSessionStore.notifyCheckpointState(true);
+      assert.equal(guidedSessionStore.continueExplanation(), true);
+      assert.equal(guidedSessionStore.snapshot().currentStep.id, "play-fourth-source");
       const sourceId = bindings.fourth_source;
       useGameStore.getState().playLand(sourceId);
       useGameStore.getState().completeLandPlayAnimation(useGameStore.getState().landPlayAnimationQueue[0].id);
@@ -490,6 +494,10 @@ test("the production Learn to Play lifecycle recovers when End Turn commits befo
         assert.equal(contextualTutorialRuntime.snapshot().progressMode, "isolated");
         const bindings = guidedSessionStore.snapshot().bindings;
 
+        assert.equal(guidedSessionStore.snapshot().currentStep.id, "evy-fourth-source-briefing");
+        guidedSessionStore.notifyCheckpointState(true);
+        assert.equal(guidedSessionStore.continueExplanation(), true);
+        assert.equal(guidedSessionStore.snapshot().currentStep.id, "play-fourth-source");
         useGameStore.getState().playLand(bindings.fourth_source);
         useGameStore.getState().completeLandPlayAnimation(useGameStore.getState().landPlayAnimationQueue[0].id);
         await flushMicrotasks();

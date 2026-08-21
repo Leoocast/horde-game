@@ -6,6 +6,7 @@ import { DestinyRewriteTransition, type DestinyTransitionKind } from "./componen
 import { ENCOUNTER_IMPACT_MS, ENCOUNTER_OPEN_MS, ENCOUNTER_TRANSITION_MS, EncounterTransition } from "./components/EncounterTransition";
 import { ChronicleSigilOverture } from "./components/ChronicleSigilOverture";
 import { GameLoadingScreen } from "./components/GameLoadingScreen";
+import { LearnToPlayIntroModal } from "./components/LearnToPlayIntroModal";
 import { StartMenu, type HowToPlayMenuEntry } from "./components/StartMenu";
 import {
   GUIDED_LESSON_BOARD_SESSION,
@@ -37,7 +38,7 @@ import { HOW_TO_PLAY_CATALOG } from "./guidance/howToPlayCatalog";
 import { LEARN_TO_PLAY_JOURNEY, learnToPlayJourneyLifecycle } from "./guidance/learnToPlayJourney";
 import { guidedProgressStore } from "./guidance/progress";
 
-// The conditional imports are compile-time: release builds remove both developer modules instead
+// The conditional imports are compile-time: release builds remove every developer module instead
 // of merely hiding their entry buttons.
 const PlaygroundScreen = import.meta.env.DEV
   ? lazy(() => import("./playground/PlaygroundScreen").then((module) => ({ default: module.PlaygroundScreen })))
@@ -48,6 +49,9 @@ const AudioLabScreen = import.meta.env.DEV
 const SeedExplorerScreen = import.meta.env.DEV
   ? lazy(() => import("./seed-explorer/SeedExplorerScreen").then((module) => ({ default: module.SeedExplorerScreen })))
   : undefined;
+const UIReferenceScreen = import.meta.env.DEV
+  ? lazy(() => import("./ui-reference/UIReferenceScreen").then((module) => ({ default: module.UIReferenceScreen })))
+  : undefined;
 
 type AppScreen =
   | "start"
@@ -57,7 +61,8 @@ type AppScreen =
   | "journey"
   | "playground"
   | "audioLab"
-  | "seedExplorer";
+  | "seedExplorer"
+  | "uiReference";
 
 type LaunchTransitionState = {
   id: number;
@@ -138,6 +143,7 @@ export default function App() {
   const [desktopResume, setDesktopResume] = useState<DesktopResumeLoad>({ status: "none" });
   const [preferencesReady, setPreferencesReady] = useState(false);
   const [requiredTutorialOffered, setRequiredTutorialOffered] = useState(false);
+  const [learnToPlayIntroOpen, setLearnToPlayIntroOpen] = useState(false);
   const guidedLifecycle = useSyncExternalStore(subscribeGuidedLifecycle, readGuidedLifecycle, readGuidedLifecycle);
   const journeyLifecycle = useSyncExternalStore(subscribeJourneyLifecycle, readJourneyLifecycle, readJourneyLifecycle);
   // The generic lesson gate remains available, but the current catalog contains only optional
@@ -323,10 +329,15 @@ export default function App() {
   }
 
   function launchLearnToPlayJourney() {
+    setLearnToPlayIntroOpen(true);
+  }
+
+  function beginLearnToPlayJourney() {
     setSetupTurns(LEARN_TO_PLAY_JOURNEY.setupTurns);
     setPreserveMenuMusic(false);
-    stopMusic();
     if (!learnToPlayJourneyLifecycle.start()) return;
+    setLearnToPlayIntroOpen(false);
+    stopMusic();
     setScreen("journey");
     startBattleMusic(true);
   }
@@ -491,6 +502,21 @@ export default function App() {
     );
   }
 
+  if (screen === "uiReference" && UIReferenceScreen) {
+    return (
+      <Suspense fallback={<div className="playground-chunk-fallback" />}>
+        <AudioClickListener />
+        <UIReferenceScreen
+          onReturnToMenu={() => {
+            setPreserveMenuMusic(false);
+            setMenuReturnScreen("home");
+            setScreen("start");
+          }}
+        />
+      </Suspense>
+    );
+  }
+
   if (screen === "deckInspector") {
     return (
       <>
@@ -569,6 +595,10 @@ export default function App() {
             stopMusic();
             setScreen("seedExplorer");
           } : undefined}
+          onOpenUiReference={IS_DEV ? () => {
+            stopMusic();
+            setScreen("uiReference");
+          } : undefined}
           howToPlayEntries={howToPlayEntries}
           resumeStatus={desktopResume.status}
           continueDisabled
@@ -643,6 +673,12 @@ export default function App() {
               reducedMotion,
             });
           }}
+        />
+        <LearnToPlayIntroModal
+          open={learnToPlayIntroOpen}
+          chroniclerName={playerName}
+          onClose={() => setLearnToPlayIntroOpen(false)}
+          onComplete={beginLearnToPlayJourney}
         />
         {transitionOverlay}
         {destinyTransitionOverlay}

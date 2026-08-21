@@ -120,8 +120,9 @@ Contratos desktop vigentes:
 - Los paths `/cards/...` son referencias lógicas del pack builtin. El adapter web conserva esas
   URLs y el build Electron activa `hostfall://content/...`; main sólo sirve archivos indexados de
   roots registrados.
-- El renderer release no puede contener recursos remotos, `?playground`, `PlaygroundScreen` ni
-  `AudioLabScreen`. Verificarlo con `scripts/audit-offline-runtime.mjs` después de `build:web`.
+- El renderer release no puede contener recursos remotos, `?playground`, `PlaygroundScreen`,
+  `AudioLabScreen`, `SeedExplorerScreen` ni `UIReferenceScreen`. Verificarlo con
+  `scripts/audit-offline-runtime.mjs` después de `build:web`.
 - `docs/data/generated/runtime_asset_inventory.json` es una captura diagnóstica del último build
   release aprobado. No es un gate de desarrollo ni del CI básico y puede quedar desfasada entre
   releases; se regenera sólo después de un build release intencional.
@@ -491,6 +492,27 @@ antes de crear otra implementación.
   individual mediante `AUDIO_FEATURE_FLAGS`; apagar un flag no debe ocultar su clip del Taller.
 - La música cambia al tema de clímax cuando la Vida del Cronista baja del umbral configurado.
 
+## Sistema de UI player-facing
+
+La referencia canónica está en `docs/reference/ui_system.md`. `src/ui-system.css` contiene los
+tokens y primitivas runtime; `src/ui-reference/UIReferenceScreen.tsx` monta componentes reales y
+`uiReferenceCatalog.ts` documenta para cada uno el archivo y **Dónde se usa**.
+
+La sección **Modales y diálogos** abre una sola muestra a tamaño real. Si un modal necesita estado
+controlado, la vista presentacional debe ser la misma que usa su wrapper runtime; los resultados
+exponen el panel de UI sin ejecutar sus animadores. Los diálogos anclados a una sesión viva de Board
+se registran como **Revisar en contexto**.
+
+Sólo el juego ejecutable decide esta referencia. No usar `dev/mockups`, VFX, animadores ni el estilo
+de Playground/Audio Lab/Seed Explorer para diseñar UI player-facing. No añadir `old-*` a UI nueva:
+esas clases son compatibilidad legacy dependiente de contexto. Toda pieza reutilizable nueva o
+alterada debe actualizar su specimen o quedar marcada para revisión en su pantalla real; nunca
+crear una réplica exclusiva del catálogo.
+
+UI Reference es dev-only y se abre desde el dock del home. El release no puede contener su módulo,
+ruta, etiqueta ni chunk. Su CSS sólo organiza la herramienta bajo `.ui-reference-*`; los estilos
+canónicos siempre viven en código compartido por el runtime.
+
 ## Developer mode
 
 El seed literal `developer` activa una preparación determinista para probar cartas y secuencias.
@@ -686,9 +708,18 @@ aprobación explícita. **Cómo jugar** ya consume un catálogo y presenta **Apr
 **Preparación**; `first-seed` conserva su ID pero ahora es opcional. El recorrido tiene lifecycle
 efímero independiente, rollback de conceptos provisionales, reinicio total, autosave apagado,
 políticas explícitas de tablero e intervenciones estrictas adjuntas al `GameState` vivo. Su launcher
-está activo desde **Cómo jugar** y carga el snapshot avanzado exacto: Vida 31, Maela y tres Fuentes,
+está activo desde **Cómo jugar**. Antes de iniciar el lifecycle muestra una antesala temporal de
+cinco diálogos localizados: Evy pide ayuda, el Cronista decide contemplar ese futuro sin anticipar
+que sus protagonistas morirán y Evy entrega el combate tras preparar tres Fuentes antes de que la
+Hueste rompa su línea y la obligue a retroceder. Cerrar la
+antesala conserva **Cómo jugar**; sólo el CTA del quinto diálogo carga el recorrido. Este copy es
+una maqueta para la futura cinemática con voz, no lore definitivo. Los parlamentos del Cronista
+muestran como speaker el nombre elegido por el jugador; «El Cronista» es sólo el fallback si
+estuviera vacío. Después carga el snapshot avanzado exacto: Vida 31, Maela y tres Fuentes,
 Vaelor/Aelyra/Río en Mano, Flor como próximo robo, Retorno/Acechador/Engendro/Cosechadora en ese
-orden y la segunda copia de Acechador como siguiente revelado. La guía exige la cuarta Fuente y
+orden y la segunda copia de Acechador como siguiente revelado. Evy presenta la llegada del
+Cronista y la cuarta Fuente que completa el contenedor de Energía inferior izquierdo antes de que aparezca la instrucción actual
+**Juega Río de Elarion**. La guía exige la cuarta Fuente y
 Aelyra con objetivo libre; el director deja defensa libre, exige Vaelor, hace obligatoria una única
 inspección de la Cosechadora y permite Flor antes, después o nunca. Las pruebas enumeran todas las
 defensas legales y esas ramas, que convergen en Cosechadora 7/9, y certifican cero o un descarte
@@ -792,6 +823,12 @@ nunca paso, escenario, bindings, timers o `GameState`. Entrar, reiniciar, salir 
 lección preserva cualquier resume normal. Onboarding de
 nombre y tutorial completado son estados independientes. Settings en tutorial conserva idioma,
 audio, pantalla, reinicio total y salida, y oculta toda mutación o inspección del escenario. El
+modal de Settings es una superficie global por encima de gameplay, tutoriales y transiciones. Las
+confirmaciones que abre —incluida la salida del recorrido— aparecen por encima de Settings sin
+cerrarlo; cancelar debe devolver al mismo Settings. Ambos portales reutilizan el tema vigente
+mediante `.game-settings-popover`, sin una apariencia paralela. Durante una guía estricta, también
+el launcher de Settings vive en una capa global inmediatamente superior al escudo del tutorial:
+debe seguir accesible en Actuar, Explicar y Observar sin abrir el resto del tablero.
 registro release contiene la revisión jugable de `first-seed`, presentada como **Preparación** y
 marcada opcional. El menú **Cómo jugar** lista además **Aprender a jugar** con identidad propia. No
 hay un gate tutorial activo mientras ese recorrido principal siga incompleto.

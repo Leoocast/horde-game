@@ -106,7 +106,7 @@ function BattlefieldRowSurface({
 }: BattlefieldRowSurfaceProps) {
   const t = useTranslation();
   return (
-    <div data-battlefield-drop-target={dropTarget} className="old-panel-soft relative p-1.5">
+    <div data-battlefield-drop-target={dropTarget} className="hf-ui-panel-soft relative p-1.5">
       {cardsEmpty ? (
         <div aria-label={`${t("zones.field")}: 0`} className={["battlefield-row-surface", compact ? "battlefield-empty-compact" : "battlefield-empty"].join(" ")} />
       ) : (

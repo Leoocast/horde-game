@@ -50,6 +50,28 @@ test("How to Play catalogs the main journey before optional Preparation", () => 
 });
 
 test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
+  assert.equal(translate("es", "guided.learnToPlay.intro.beatOne"), "¡Cronista… ayuda!");
+  assert.equal(
+    translate("es", "guided.learnToPlay.intro.beatFour"),
+    "Contemplemos este futuro. Quizá todavía estemos a tiempo.",
+  );
+  assert.equal(translate("es", "guided.learnToPlay.intro.evy"), "Evy");
+  assert.equal(
+    translate("es", "guided.learnToPlay.intro.beatFive"),
+    "Contuve a la Hueste a orillas del Elarion mientras pude. Logré preparar tres Fuentes, pero sus filas rompieron nuestra línea y me obligaron a retroceder. Continúa la batalla desde aquí.",
+  );
+  assert.equal(
+    translate("es", "guided.learnToPlay.fourthSourceBriefingBody"),
+    "Has llegado. Preparemos una Fuente más antes de que la Hueste vuelva a avanzar. Será la cuarta; con ella llenaremos por completo el contenedor de Energía.",
+  );
+  assert.equal(
+    translate("es", "guided.glossary.source.definition"),
+    "Al jugar una Fuente, su Energía se acumula en el contenedor de la esquina inferior izquierda. Puedes reunir hasta cuatro para Invocar cartas y activar Acciones.",
+  );
+  assert.equal(
+    translate("es", "guided.learnToPlay.fourthSourceBody"),
+    "Arrastra la carta hacia el Campo para agregar su Energía al contenedor de la esquina inferior izquierda.",
+  );
   assert.equal(
     translate("es", "guided.learnToPlay.invokeAelyraBody"),
     "Aelyra, Heredera de Elarion, necesita 1 de Energía para ser Invocada. Ya tienes suficiente Energía.",
@@ -452,13 +474,18 @@ test("authored Host-turn policies are scoped and reject invalid reveal plans", (
 });
 
 test("App exposes both launchers, disables Continue, and hands the journey to a random normal future", async () => {
-  const [app, menu, board] = await Promise.all([
+  const [app, menu, board, intro] = await Promise.all([
     readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/Board.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/LearnToPlayIntroModal.tsx", import.meta.url), "utf8"),
   ]);
   assert.match(app, /HOW_TO_PLAY_CATALOG\.map/u);
   assert.match(app, /onLaunch: launchLearnToPlayJourney/u);
+  assert.match(app, /function launchLearnToPlayJourney\(\)\s*\{\s*setLearnToPlayIntroOpen\(true\);\s*\}/u);
+  assert.match(app, /chroniclerName=\{playerName\}/u);
+  assert.match(app, /onComplete=\{beginLearnToPlayJourney\}/u);
+  assert.match(app, /function beginLearnToPlayJourney\(\)[\s\S]*?learnToPlayJourneyLifecycle\.start\(\)[\s\S]*?setScreen\("journey"\)/u);
   assert.match(app, /howToPlayEntries=\{howToPlayEntries\}/u);
   assert.match(app, /continueDisabled/u);
   assert.match(app, /if \(!boardSessionPolicy\.autosave \|\| screen !== "game"\) return;/u);
@@ -472,4 +499,7 @@ test("App exposes both launchers, disables Continue, and hands the journey to a 
   assert.match(board, /sessionPolicy\.showStandardOutcome && defeatReady/u);
   assert.match(board, /sessionPolicy\.showJourneyDefeat && defeatReady && onContemplateFuture/u);
   assert.match(board, /!sessionPolicy\.showPhaseBanner/u);
+  assert.equal((intro.match(/body: "guided\.learnToPlay\.intro\.beat(?:One|Two|Three|Four|Five)"/gu) ?? []).length, 5);
+  assert.match(intro, /chroniclerName\.trim\(\) \|\| t\("guided\.learnToPlay\.intro\.chronicler"\)/u);
+  assert.match(intro, /finalBeat[\s\S]*?onComplete\(\)/u);
 });

@@ -157,9 +157,20 @@ export const LEARN_TO_PLAY_PROLOGUE_SCENARIO = Object.freeze({
 /** Strict opening intervention. Target selection remains free between the engine's legal allies. */
 export const LEARN_TO_PLAY_OPENING_INTERVENTION = Object.freeze({
   id: "learn-to-play.opening",
-  revision: 1,
-  startStepId: "play-fourth-source",
+  revision: 2,
+  startStepId: "evy-fourth-source-briefing",
   steps: [
+    {
+      id: "evy-fourth-source-briefing",
+      kind: "explain",
+      copy: {
+        titleKey: "guided.learnToPlay.intro.evy",
+        bodyKey: "guided.learnToPlay.fourthSourceBriefingBody",
+        glossaryTerms: ["source", "energy"],
+      },
+      highlights: [],
+      nextStepId: "play-fourth-source",
+    },
     {
       id: "play-fourth-source",
       kind: "act",

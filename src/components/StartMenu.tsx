@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowLeft, AudioLines, BookOpen, ChevronLeft, ChevronRight, Construction, Copy, Dices, Eye, Feather, Github, Play, RefreshCw, RotateCcw, ScanSearch, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, AudioLines, BookOpen, ChevronLeft, ChevronRight, Construction, Copy, Dices, Eye, Feather, Github, PanelsTopLeft, Play, RefreshCw, RotateCcw, ScanSearch, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
 import { AnimatePresence, motion, useIsPresent } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { findDeckKeyCard, type InspectableDeck } from "../data/deckCatalog";
@@ -46,6 +46,8 @@ type Props = {
   onOpenAudioLab?: () => void;
   /** Only provided in development builds; searches deterministic Canon futures. */
   onOpenSeedExplorer?: () => void;
+  /** Only provided in development builds; inventories the real player-facing runtime UI. */
+  onOpenUiReference?: () => void;
   howToPlayEntries: readonly HowToPlayMenuEntry[];
   resumeStatus?: "none" | "available" | "recovered" | "corrupt";
   onContinue?: () => void;
@@ -63,7 +65,7 @@ const modes: Array<{ id: DifficultyMode; setupTurns: number }> = [
   { id: "hard", setupTurns: 2 },
 ];
 
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, onOpenSeedExplorer, howToPlayEntries, resumeStatus = "none", onContinue, continueDisabled = false, onDiscardResume, onStart }: Props) {
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, onOpenSeedExplorer, onOpenUiReference, howToPlayEntries, resumeStatus = "none", onContinue, continueDisabled = false, onDiscardResume, onStart }: Props) {
   const t = useTranslation();
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [mode, setMode] = useState<DifficultyMode>("easy");
@@ -297,7 +299,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           </nav>
 
         </div>
-        {import.meta.env.DEV && menuScreen === "home" && (onOpenPlayground || onOpenAudioLab || onOpenSeedExplorer) && (
+        {import.meta.env.DEV && menuScreen === "home" && (onOpenPlayground || onOpenAudioLab || onOpenSeedExplorer || onOpenUiReference) && (
           <aside className="main-menu-developer-tools" aria-label="Developer tools">
             <span className="main-menu-developer-label">Dev tools</span>
             <div className="main-menu-developer-actions">
@@ -317,6 +319,12 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
                 <button className="main-menu-developer-tool" type="button" onClick={onOpenSeedExplorer} title="Canon Seed Explorer">
                   <ScanSearch size={15} aria-hidden="true" />
                   <span>Seed Explorer</span>
+                </button>
+              )}
+              {onOpenUiReference && (
+                <button className="main-menu-developer-tool" type="button" onClick={onOpenUiReference} title="Player UI reference">
+                  <PanelsTopLeft size={15} aria-hidden="true" />
+                  <span>UI Reference</span>
                 </button>
               )}
             </div>
@@ -510,7 +518,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   );
 }
 
-function ChroniclerNameModal({ value, onChange, onClose, onSave, closing, required }: { value: string; onChange: (value: string) => void; onClose: () => void; onSave: () => void; closing: boolean; required: boolean }) {
+export function ChroniclerNameModal({ value, onChange, onClose, onSave, closing, required }: { value: string; onChange: (value: string) => void; onClose: () => void; onSave: () => void; closing: boolean; required: boolean }) {
   const t = useTranslation();
   const inputIdentity = useRef(`chronicle-alias-${crypto.randomUUID()}`);
   const inputId = `${inputIdentity.current}-field`;
@@ -880,7 +888,7 @@ function SetupCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onChangeDe
   );
 }
 
-function SetupDeckDrawer({ side, eyebrow, decks, selectedDeckId, onSelectDeck, onClose }: {
+export function SetupDeckDrawer({ side, eyebrow, decks, selectedDeckId, onSelectDeck, onClose }: {
   side: "player" | "host";
   eyebrow: string;
   decks: InspectableDeck[];

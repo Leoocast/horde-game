@@ -125,12 +125,24 @@ No incluye todavía:
 
 ### Cold open
 
-La intención narrativa provisional es:
+La antesala temporal implementada usa cinco modales localizados:
 
-> «¡Cronista… ayuda!»
+> Evy: «¡Cronista… ayuda!»
+>
+> «Una voz nos llama desde un futuro al borde del colapso.»
+>
+> «La Hueste ya ha quebrado sus defensas. No veremos cómo comenzó.»
+>
+> «Contemplemos este futuro. Quizá todavía estemos a tiempo.»
+>
+> Evy: «Contuve a la Hueste a orillas del Elarion mientras pude. Logré preparar tres Fuentes,
+> pero sus filas rompieron nuestra línea y me obligaron a retroceder. Continúa la batalla desde
+> aquí.»
 
-Después ocurre una transición hacia una partida ya avanzada. No se diseña ni implementa todavía la
-cinemática, y sigue abierto si el Cronista es nuevo dentro del lore o ya conoce su función.
+El launcher permanece en **Cómo jugar** mientras se recorren estos diálogos. Cerrarlos vuelve al
+mismo panel; sólo el CTA final inicia el lifecycle y carga la partida avanzada. Son una maqueta para
+probar el ritmo de la futura cinemática con voz, no copy ni lore definitivo. Sigue abierto si el
+Cronista es nuevo dentro del lore o ya conoce su función.
 
 Al llegar al tablero, el indicador comunica que faltan dos turnos para la Oleada. El narrador
 advierte que la Hueste está cerca de fortalecerse. El copy exacto de esa advertencia sigue abierto.
@@ -175,6 +187,13 @@ authored y el orden real de resolución sigan comunicando la misma cronología i
 copias se agrupen visualmente.
 
 ### Turno 1 del Cronista
+
+Antes de señalar la carta, Evy entrega el siguiente tramo:
+
+> Evy: «Has llegado. Preparemos una Fuente más antes de que la Hueste vuelva a avanzar. Será la
+> cuarta; con ella llenaremos por completo el contenedor de Energía.»
+
+Al continuar aparece la instrucción actual **Juega Río de Elarion**.
 
 Objetivos requeridos:
 

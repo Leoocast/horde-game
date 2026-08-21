@@ -35,7 +35,7 @@ assert.ok(asarEntries.includes(".vite/build/preload.cjs"));
 assert.ok(asarEntries.includes(".vite/renderer/main_window/index.html"));
 assert.equal(asarEntries.some((entry) => /\.(?:mp3|ogg|wav)$/iu.test(entry)), false, "Audio must remain outside ASAR.");
 assert.equal(asarEntries.some((entry) => entry.endsWith(".map")), false, "Production source maps must not ship.");
-for (const forbidden of ["src/", "tests/", "dev/", "playground/", "audio-lab/", "card-studio/"]) {
+for (const forbidden of ["src/", "tests/", "dev/", "playground/", "audio-lab/", "seed-explorer/", "ui-reference/", "card-studio/"]) {
   assert.equal(asarEntries.some((entry) => entry.toLowerCase().includes(forbidden)), false, `Forbidden package path: ${forbidden}`);
 }
 

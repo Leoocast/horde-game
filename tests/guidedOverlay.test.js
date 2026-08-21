@@ -249,6 +249,7 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(card, /data-guided-anchor-extension="true"/u);
   assert.match(card, /card-cost-emphasis-frame/u);
   assert.match(overlay, /data-guided-overlay-control="true"/u);
+  assert.equal((overlay.match(/if \(!isControl\(event\.target\)\) dismissActionCallout\(\);/gu) ?? []).length, 2);
   assert.match(overlay, /guidedGlossarySegments/u);
   assert.match(overlay, /data-guided-glossary-term="true"/u);
   assert.match(overlay, /tooltipClassName="guided-glossary-tooltip"/u);

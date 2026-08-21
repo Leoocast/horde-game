@@ -8,7 +8,7 @@ import { newestMemoryCard } from "./memoryPresentation";
 export function ZoneDrawer({ game }: { game: GameState }) {
   const t = useTranslation();
   return (
-    <section className="game-zone-panel old-panel-soft">
+    <section className="game-zone-panel hf-ui-panel-soft">
       <div className="game-zone-header flex w-full items-center justify-between px-4 py-3 text-sm font-bold">
         <span className="inline-flex items-center gap-2">
           <Archive size={16} />

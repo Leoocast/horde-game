@@ -36,6 +36,7 @@ import { PreviewStatsBadge, TraitPills } from "../src/components/CardPreview";
 import { VampireBite } from "../src/components/VampireBite";
 import { cardLabelCamelCase } from "../src/i18n/cardLocalization";
 import { translate } from "../src/i18n/translations";
+import { UI_REFERENCE_CATALOG } from "../src/ui-reference/uiReferenceCatalog";
 import {
   resolveCardBurnMaterial,
   resolveCardBurnScale,
@@ -965,6 +966,28 @@ test("How to Play opens a right-side data-driven tutorial catalog", () => {
   assert.match(styles, /\.how-to-play-lesson\s*\{[^}]*grid-template-columns:/u);
 });
 
+test("Settings stays above gameplay while confirmations stay above Settings", () => {
+  const settings = readFileSync(new URL("../src/components/SettingsMenu.tsx", import.meta.url), "utf8");
+  const board = readFileSync(new URL("../src/components/Board.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(settings, /modalPresence\.mounted && createPortal\(/u);
+  assert.match(settings, /const portalLauncher = guided && typeof document !== "undefined";/u);
+  assert.match(settings, /game-settings-popover game-guided-settings-launcher-layer fixed right-4 top-4/u);
+  assert.match(settings, /game-settings-popover game-settings-system-layer game-settings-modal-backdrop/u);
+  assert.match(settings, /restartPresence\.mounted && createPortal\(/u);
+  assert.match(settings, /game-settings-popover game-system-confirmation-layer game-home-backdrop/u);
+  assert.match(settings, /onClick=\{onReturnToMenu\}/u);
+
+  assert.match(board, /homeConfirmationPresence\.mounted && createPortal\(/u);
+  assert.match(board, /game-settings-popover game-system-confirmation-layer game-home-backdrop/u);
+  assert.match(styles, /\.game-settings-system-layer\s*\{\s*z-index:\s*40000;/u);
+  assert.match(styles, /\.game-guided-settings-launcher-layer\s*\{\s*z-index:\s*39990;/u);
+  assert.match(styles, /\.game-system-confirmation-layer\s*\{\s*z-index:\s*40010;/u);
+  assert.match(styles, /\.game-settings-popover \.old-panel/u);
+  assert.match(styles, /\.game-settings-popover \.game-settings-modal/u);
+});
+
 test("deck detail close buttons inherit their deck palette", () => {
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
   assert.match(styles, /\.deck-collection-modal-close\s*\{[^}]*var\(--deck-accent,[^}]*var\(--deck-accent-bright,[^}]*var\(--deck-accent-soft,/u);
@@ -1170,6 +1193,7 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   const animator = readFileSync(new URL("../src/components/DefeatShatterAnimator.tsx", import.meta.url), "utf8");
   const glassShader = readFileSync(new URL("../src/components/defeatGlassShader.ts", import.meta.url), "utf8");
   const modal = readFileSync(new URL("../src/components/DefeatModal.tsx", import.meta.url), "utf8");
+  const outcomeDialog = readFileSync(new URL("../src/components/GameOutcomeDialog.tsx", import.meta.url), "utf8");
   const journeyModal = readFileSync(new URL("../src/components/LearnToPlayDefeatModal.tsx", import.meta.url), "utf8");
   const board = readFileSync(new URL("../src/components/Board.tsx", import.meta.url), "utf8");
   const desktopMain = readFileSync(new URL("../electron/main.ts", import.meta.url), "utf8");
@@ -1248,7 +1272,8 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(styles, /\.defeat-outcome \{\s*position: absolute;[\s\S]*?place-items: center;/u);
   assert.match(styles, /@keyframes defeat-outcome-in \{\s*from \{ opacity: 0; transform: translateY\(10px\); \}/u);
   assert.match(styles, /\.defeat-title \.line \{[^}]*padding-left: 0\.065em;/su);
-  assert.match(modal, /className="defeat-outcome-inner"/u);
+  assert.match(modal, /<GameOutcomeDialog/u);
+  assert.match(outcomeDialog, /className=\{`\$\{tone\}-outcome-inner`\}/u);
   // TemporalBackdrop and ambience remain alive below the opaque shard geometry.
   assert.match(styles, /\.game-screen-ambience \{/u);
   assert.doesNotMatch(styles, /\.game-screen::before/u);
@@ -1296,8 +1321,9 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.doesNotMatch(animator, /new THREE\.WebGLRenderer|forceContextLoss/u);
   assert.match(animator, /prefers-reduced-motion:\s*reduce/u);
   assert.match(modal, /<DefeatShatterAnimator seed=\{game\.seed\} snapshotImage=\{snapshotImage\} onSequenceStart=\{startSequence\}/u);
-  assert.match(modal, /t\("destiny\.futureLostLineOne"\)/u);
-  assert.match(modal, /t\("destiny\.futureLostLineTwo"\)/u);
+  assert.match(modal, /<GameOutcomeDialog[\s\S]*?tone="defeat"/u);
+  assert.match(outcomeDialog, /destiny\.futureLostLineOne/u);
+  assert.match(outcomeDialog, /destiny\.futureLostLineTwo/u);
   // Detrás del vidrio no se dibuja ningún fondo propio: el lienzo queda transparente y lo
   // que asoma es el espacio permanente del juego, con el tablero vivo ya retirado.
   assert.doesNotMatch(animator, /Abyss/u);
@@ -1344,14 +1370,14 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(defeatFutureCode, /font: 800 clamp\(23px, 2\.8vw, 33px\)\/1\.2 "Cinzel"/u);
   assert.match(styles, /grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/u);
   assert.match(styles, /\.game-result-defeat \.game-result-action \{[\s\S]*?font-size: clamp\(8px, 2\.1vw, 13px\);[\s\S]*?white-space: nowrap;/u);
-  const contemplateHandlerAt = modal.indexOf("onClick={onContemplateFuture}");
-  const contemplateButton = modal.slice(
-    modal.lastIndexOf("<button", contemplateHandlerAt),
-    modal.indexOf("</button>", contemplateHandlerAt) + "</button>".length,
+  const contemplateHandlerAt = outcomeDialog.indexOf("onClick={onContemplateFuture}");
+  const contemplateButton = outcomeDialog.slice(
+    outcomeDialog.lastIndexOf("<button", contemplateHandlerAt),
+    outcomeDialog.indexOf("</button>", contemplateHandlerAt) + "</button>".length,
   );
   assert.ok(contemplateHandlerAt >= 0);
   assert.doesNotMatch(contemplateButton, /<(?:svg|[A-Z][A-Za-z0-9]*)\b/u);
-  assert.doesNotMatch(modal, /Sparkles/u);
+  assert.doesNotMatch(outcomeDialog, /Sparkles/u);
   assert.doesNotMatch(styles, /@media \(max-width: 520px\) \{[\s\S]*?\.defeat-outcome-actions \{ grid-template-columns: 1fr; \}/u);
   const vortexVeil = styles.match(/\.destiny-vortex-veil \{[\s\S]*?\n\}/u)?.[0] ?? "";
   assert.doesNotMatch(vortexVeil, /repeating-conic-gradient/u);
@@ -1368,6 +1394,8 @@ test("developer tools keep their development imports without a release URL escap
   assert.match(appSource, /import\("\.\/audio-lab\/AudioLabScreen"\)/);
   assert.match(appSource, /const SeedExplorerScreen = import\.meta\.env\.DEV/);
   assert.match(appSource, /import\("\.\/seed-explorer\/SeedExplorerScreen"\)/);
+  assert.match(appSource, /const UIReferenceScreen = import\.meta\.env\.DEV/);
+  assert.match(appSource, /import\("\.\/ui-reference\/UIReferenceScreen"\)/);
   assert.match(gateSource, /export const IS_DEV: boolean = import\.meta\.env\.DEV/);
   assert.doesNotMatch(`${appSource}\n${gateSource}`, /\?playground/);
 });
@@ -1399,7 +1427,7 @@ test("Seed Explorer is a standalone dev screen launched from the home tool dock"
 
   assert.match(appSource, /screen === "seedExplorer" && SeedExplorerScreen/u);
   assert.match(appSource, /onOpenSeedExplorer=\{IS_DEV/u);
-  assert.match(menuSource, /import\.meta\.env\.DEV && menuScreen === "home" && \(onOpenPlayground \|\| onOpenAudioLab \|\| onOpenSeedExplorer\)/u);
+  assert.match(menuSource, /import\.meta\.env\.DEV && menuScreen === "home" && \(onOpenPlayground \|\| onOpenAudioLab \|\| onOpenSeedExplorer \|\| onOpenUiReference\)/u);
   assert.match(menuSource, /className="main-menu-developer-tools"/u);
   assert.match(menuSource, />Seed Explorer</u);
   assert.match(globalStylesSource, /\.main-menu-developer-tools \{[\s\S]*?position: absolute;[\s\S]*?right:[\s\S]*?bottom:/u);
@@ -1446,6 +1474,76 @@ test("Seed Explorer is a standalone dev screen launched from the home tool dock"
   assert.match(explorerStylesSource, /\.seed-explorer-topbar \{[\s\S]*?min-height: 52px;/u);
   assert.match(explorerStylesSource, /\.seed-explorer-detail-modal \{[\s\S]*?width: min\(1600px, calc\(100vw - 48px\)\);[\s\S]*?height: calc\(100vh - 36px\);/u);
   assert.doesNotMatch(appSource, /seedExplorerRuntime|seedExplorerSearch/u);
+});
+
+test("UI Reference inventories only real player UI and traces every component to its runtime use", () => {
+  const appSource = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
+  const menuSource = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const screenSource = readFileSync(new URL("../src/ui-reference/UIReferenceScreen.tsx", import.meta.url), "utf8");
+  const modalGallerySource = readFileSync(new URL("../src/ui-reference/RuntimeModalGallery.tsx", import.meta.url), "utf8");
+  const referenceStyles = readFileSync(new URL("../src/ui-reference/UIReferenceScreen.css", import.meta.url), "utf8");
+  const runtimeStyles = readFileSync(new URL("../src/ui-system.css", import.meta.url), "utf8");
+  const mainSource = readFileSync(new URL("../src/main.tsx", import.meta.url), "utf8");
+
+  assert.match(appSource, /screen === "uiReference" && UIReferenceScreen/u);
+  assert.match(appSource, /onOpenUiReference=\{IS_DEV/u);
+  assert.match(menuSource, />UI Reference</u);
+  assert.match(screenSource, /import \{ Card, CardCostBadge \} from "\.\.\/components\/Card"/u);
+  assert.match(screenSource, /import \{ TurnPhaseHud \} from "\.\.\/components\/TurnPhaseHud"/u);
+  assert.match(screenSource, /import \{ DeckKeyCard \} from "\.\.\/components\/DecksView"/u);
+  assert.match(screenSource, /<strong>Dónde se usa<\/strong>/u);
+  assert.match(screenSource, /<RuntimeModalGallery game=\{game\}/u);
+  assert.match(screenSource, /entry\.component/u);
+  assert.match(screenSource, /entry\.source/u);
+  assert.match(screenSource, /entry\.usedIn/u);
+  assert.match(screenSource, /Qué significa cada estado/u);
+  assert.match(screenSource, /No\s+significa viejo, retirado ni pendiente de reemplazo/u);
+  assert.doesNotMatch(screenSource, /from\s+["'][^"']*(?:dev\/mockups|playground|audio-lab|seed-explorer|Animator|Vfx|vfx|three)[^"']*["']/u);
+  assert.match(modalGallerySource, /const MODAL_SPECIMENS:[\s\S]*?chronicler-required[\s\S]*?learn-defeat-narrative/u);
+  assert.match(modalGallerySource, /<strong>Dónde se usa<\/strong>/u);
+  assert.match(modalGallerySource, /<OpeningHandModal/u);
+  assert.match(modalGallerySource, /<HandLimitModal/u);
+  assert.match(modalGallerySource, /<GameOutcomeDialog/u);
+  assert.match(modalGallerySource, /Los resultados omiten su secuencia visual/u);
+  assert.doesNotMatch(modalGallerySource, /from\s+["'][^"']*(?:dev\/mockups|playground|audio-lab|seed-explorer|Animator|Vfx|vfx|three)[^"']*["']/u);
+
+  assert.match(mainSource, /import "\.\/ui-system\.css"/u);
+  assert.match(runtimeStyles, /\.hf-ui-panel,/u);
+  assert.match(runtimeStyles, /\.hf-ui-button/u);
+  assert.match(runtimeStyles, /\.expedition-begin,[\s\S]*?\.game-dialog-action-primary,[\s\S]*?\.guided-tutorial-continue/u);
+  assert.match(referenceStyles, /--ui-reference-font: "Segoe UI"/u);
+  assert.match(referenceStyles, /\.ui-reference-specimen-stage \{[\s\S]*?font-family: var\(--hf-ui-font-body\);/u);
+  assert.doesNotMatch(referenceStyles, /(^|\n)(?:body|:root|\.game-screen|\.old-panel|\.hf-ui-panel)\s*\{/u);
+
+  const ids = UI_REFERENCE_CATALOG.map((entry) => entry.id);
+  assert.equal(new Set(ids).size, ids.length);
+  assert.ok(UI_REFERENCE_CATALOG.length >= 25);
+  assert.equal(UI_REFERENCE_CATALOG.some((entry) => /CardContextMenu|CardDetailsModal/u.test(entry.component)), false);
+  for (const modalId of [
+    "chronicler-name-modal",
+    "setup-deck-drawer",
+    "settings-menu-modal",
+    "destiny-rewrite-dialog",
+    "game-confirmation-dialog",
+    "opening-hand",
+    "hand-limit-modal",
+    "graveyard-viewer-modal",
+    "graveyard-details-modal",
+    "deck-inspector-details-modal",
+    "learn-intro",
+    "victory-outcome-dialog",
+    "defeat-outcome-dialog",
+    "learn-defeat-outcome-dialog",
+    "learn-defeat-narrative-dialog",
+  ]) {
+    assert.ok(ids.includes(modalId), `${modalId} must be inventoried individually`);
+  }
+  for (const entry of UI_REFERENCE_CATALOG) {
+    assert.ok(entry.component.length > 0, `${entry.id} must name its component`);
+    assert.match(entry.source, /^src\//u, `${entry.id} must point to runtime source`);
+    assert.ok(entry.usedIn.length > 0, `${entry.id} must say where it is used`);
+    assert.ok(["canonical", "product-variant", "context-only"].includes(entry.status));
+  }
 });
 
 test("Tribute source selection portals only its arrow above Energy and keeps its focused UI elevated", () => {
