@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, Search, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Search, ShieldCheck } from "lucide-react";
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { AudioControls } from "../components/AudioControls";
 import { Card, CardCostBadge } from "../components/Card";
@@ -19,9 +19,7 @@ import { cardThemeForDefinition, shouldShowFullCardImage } from "../utils/cardIm
 import { cardStatState, cardTraits } from "../utils/selectors";
 import {
   UI_REFERENCE_CATALOG,
-  UI_REFERENCE_GROUPS,
   type UiReferenceEntry,
-  type UiReferenceGroup,
   type UiReferenceStatus,
 } from "./uiReferenceCatalog";
 import { RuntimeModalGallery } from "./RuntimeModalGallery";
@@ -31,7 +29,56 @@ type Props = {
   onReturnToMenu: () => void;
 };
 
-type GroupFilter = "Todos" | UiReferenceGroup;
+const ELEMENT_FILTERS = [
+  "Todos",
+  "Botones",
+  "Modales",
+  "Texto",
+  "Controles",
+  "Cartas",
+  "Navegación",
+  "Paneles y HUD",
+  "Feedback",
+] as const;
+
+type ElementFilter = (typeof ELEMENT_FILTERS)[number];
+
+const BUTTON_ENTRY_IDS: readonly string[] = [
+  "ui-primitives",
+  "start-menu",
+  "app-header",
+  "music-player-menu",
+  "settings-controls",
+  "destiny-rewrite-dialog",
+  "phase-controls",
+  "game-confirmation-dialog",
+];
+
+const TEXT_ENTRY_IDS: readonly string[] = [
+  "ui-primitives",
+  "loading-screen",
+  "error-boundary",
+  "card-details",
+  "tooltip",
+  "game-log",
+  "learn-intro",
+  "guided-tutorial-dialog",
+  "contextual-tutorial-callout",
+  "game-outcome-dialog",
+  "learn-defeat-outcome-dialog",
+  "learn-defeat-narrative-dialog",
+];
+
+const CONTROL_ENTRY_IDS: readonly string[] = [
+  "settings-controls",
+  "music-player-menu",
+  "settings-menu-modal",
+  "destiny-rewrite-dialog",
+  "phase-controls",
+  "opening-hand",
+  "hand-limit-modal",
+  "targeting-overlays",
+];
 
 const STATUS_LABELS: Record<UiReferenceStatus, string> = {
   canonical: "Canónico",
@@ -56,7 +103,7 @@ export function UIReferenceScreen({ onReturnToMenu }: Props) {
   const game = useGameStore((state) => state.game);
   const pushToast = useToastStore((state) => state.pushToast);
   const [query, setQuery] = useState("");
-  const [group, setGroup] = useState<GroupFilter>("Todos");
+  const [elementFilter, setElementFilter] = useState<ElementFilter>("Todos");
   const allCards = useMemo(() => collectRuntimeCards(game), [game]);
   const playerCard = useMemo(
     () => pickCard(allCards, "player", (card) => card.kinds.includes("ECHO")) ?? pickCard(allCards, "player"),
@@ -78,14 +125,14 @@ export function UIReferenceScreen({ onReturnToMenu }: Props) {
   const filteredInventory = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase();
     return UI_REFERENCE_CATALOG.filter((entry) => {
-      if (group !== "Todos" && entry.group !== group) return false;
+      if (!matchesElementFilter(entry, elementFilter)) return false;
       if (!needle) return true;
       return [entry.component, entry.source, entry.group, ...entry.usedIn]
         .join(" ")
         .toLocaleLowerCase()
         .includes(needle);
     });
-  }, [group, query]);
+  }, [elementFilter, query]);
 
   const cardStats = playerCard ? cardStatState(game, playerCard).text : "";
   const traitText = traitCard ? cardTraits(game, traitCard) : "";
@@ -107,22 +154,14 @@ export function UIReferenceScreen({ onReturnToMenu }: Props) {
           <span>Volver</span>
         </button>
         <div className="ui-reference-brand">
-          <span>Hostfall · contrato ejecutable</span>
           <h1>UI Reference</h1>
-          <p>Solamente UI player-facing que existe y se ejecuta en <code>src/</code>.</p>
-        </div>
-        <div className="ui-reference-scope" aria-label="Alcance de esta referencia">
-          <span><Check size={12} /> Runtime</span>
-          <span>Sin mockups</span>
-          <span>Sin VFX</span>
-          <span>Sin tools dev</span>
         </div>
       </header>
 
       <div className="ui-reference-layout">
         <aside className="ui-reference-sidebar hf-ui-panel-soft">
           <div className="ui-reference-sidebar-heading">
-            <span>Catálogo</span>
+            <span>Tipos de elemento</span>
             <strong>{UI_REFERENCE_CATALOG.length}</strong>
           </div>
           <label className="ui-reference-search">
@@ -130,40 +169,25 @@ export function UIReferenceScreen({ onReturnToMenu }: Props) {
             <span className="sr-only">Buscar componente o uso</span>
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Componente, archivo o uso" />
           </label>
-          <nav className="ui-reference-groups" aria-label="Filtrar por grupo">
-            {(["Todos", ...UI_REFERENCE_GROUPS] as const).map((option) => (
+          <nav className="ui-reference-groups" aria-label="Filtrar por tipo de elemento">
+            {ELEMENT_FILTERS.map((option) => (
               <button
                 key={option}
                 type="button"
-                className={group === option ? "is-active" : ""}
-                onClick={() => setGroup(option)}
+                className={elementFilter === option ? "is-active" : ""}
+                onClick={() => {
+                  setElementFilter(option);
+                  document.getElementById("ui-reference-inventory")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
               >
                 <span>{option}</span>
-                <small>{option === "Todos" ? UI_REFERENCE_CATALOG.length : UI_REFERENCE_CATALOG.filter((entry) => entry.group === option).length}</small>
+                <small>{UI_REFERENCE_CATALOG.filter((entry) => matchesElementFilter(entry, option)).length}</small>
               </button>
             ))}
           </nav>
-          <div className="ui-reference-legend">
-            <strong>Estados</strong>
-            <span><i className="is-canonical" /> Canónico: specimen vivo aquí</span>
-            <span><i className="is-product-variant" /> Variante: identidad deliberada</span>
-            <span><i className="is-context-only" /> Contexto: se valida en su pantalla real</span>
-          </div>
         </aside>
 
         <div className="ui-reference-content old-scrollbar">
-          <section className="ui-reference-intro hf-ui-panel">
-            <div>
-              <span className="ui-reference-kicker">Regla de uso</span>
-              <h2 className="hf-ui-title">Lo que aparece aquí sale del juego, no al revés</h2>
-            </div>
-            <p>
-              Los especímenes vivos montan el componente runtime. Las superficies muy acopladas al
-              estado figuran en el inventario con su archivo y ubicación exacta para revisarlas en su
-              pantalla real, sin fabricar una copia visual.
-            </p>
-          </section>
-
           <ReferenceSection id="foundations" eyebrow="Fundamentos" title="Material, color y acciones compartidas">
             <Specimen entryId="ui-primitives">
               <div className="ui-reference-token-grid">
@@ -282,7 +306,7 @@ export function UIReferenceScreen({ onReturnToMenu }: Props) {
             </div>
           </ReferenceSection>
 
-          <ReferenceSection id="inventory" eyebrow="Trazabilidad" title={`Inventario runtime · ${filteredInventory.length} de ${UI_REFERENCE_CATALOG.length}`}>
+          <ReferenceSection id="inventory" eyebrow="Trazabilidad" title={`Inventario · ${elementFilter} · ${filteredInventory.length}`}>
             <div className="ui-reference-inventory">
               {filteredInventory.map((entry) => <InventoryEntry key={entry.id} entry={entry} />)}
               {filteredInventory.length === 0 && (
@@ -394,6 +418,29 @@ function InventoryEntry({ entry }: { entry: UiReferenceEntry }) {
 
 function StatusBadge({ status }: { status: UiReferenceStatus }) {
   return <span className={`ui-reference-status is-${status}`}>{STATUS_LABELS[status]}</span>;
+}
+
+function matchesElementFilter(entry: UiReferenceEntry, filter: ElementFilter) {
+  switch (filter) {
+    case "Todos":
+      return true;
+    case "Botones":
+      return BUTTON_ENTRY_IDS.includes(entry.id);
+    case "Modales":
+      return entry.specimen === "modal-gallery" || entry.group === "Resultados";
+    case "Texto":
+      return TEXT_ENTRY_IDS.includes(entry.id);
+    case "Controles":
+      return CONTROL_ENTRY_IDS.includes(entry.id);
+    case "Cartas":
+      return entry.group === "Mazos y cartas" || entry.id.startsWith("graveyard-");
+    case "Navegación":
+      return entry.group === "Navegación y ajustes" || entry.id === "deck-navigation";
+    case "Paneles y HUD":
+      return entry.group === "Tablero y HUD" || ["zones", "game-log", "setup-deck-drawer"].includes(entry.id);
+    case "Feedback":
+      return entry.group === "Overlays y feedback" || entry.group === "Resultados" || entry.id === "guided-support-ui";
+  }
 }
 
 function RuntimeCard({ gameCard, game, label }: { gameCard: CardInstance; game: ReturnType<typeof useGameStore.getState>["game"]; label: string }) {

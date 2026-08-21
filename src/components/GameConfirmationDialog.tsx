@@ -1,4 +1,3 @@
-import { AlertTriangle } from "lucide-react";
 import type { ReactNode } from "react";
 
 export type GameConfirmationAction = Readonly<{
@@ -10,24 +9,20 @@ export type GameConfirmationAction = Readonly<{
 
 type Props = Readonly<{
   titleId: string;
-  kicker: ReactNode;
   title: ReactNode;
   body: ReactNode;
   actions: readonly GameConfirmationAction[];
   detail?: ReactNode;
-  icon?: ReactNode;
   closing?: boolean;
 }>;
 
 /** Shared player-facing confirmation surface used by Board and Settings. */
 export function GameConfirmationDialog({
   titleId,
-  kicker,
   title,
   body,
   actions,
   detail,
-  icon = <AlertTriangle size={20} />,
   closing = false,
 }: Props) {
   return (
@@ -37,15 +32,9 @@ export function GameConfirmationDialog({
       aria-modal="true"
       aria-labelledby={titleId}
     >
-      <div className="flex items-start gap-3">
-        <div className="game-dialog-icon flex h-10 w-10 shrink-0 items-center justify-center">{icon}</div>
-        <div>
-          <div className="game-dialog-kicker">{kicker}</div>
-          <h2 id={titleId} className="hf-ui-title mt-1 text-xl font-medium uppercase tracking-[0.08em]">{title}</h2>
-          <p className="mt-2 text-sm text-[#8d9a94]">{body}</p>
-          {detail}
-        </div>
-      </div>
+      <h2 id={titleId} className="hf-ui-title text-xl font-medium uppercase tracking-[0.08em]">{title}</h2>
+      <p className="mt-3 text-sm leading-relaxed text-[#8d9a94]">{body}</p>
+      {detail}
       <div className={`mt-5 grid gap-3 ${actions.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
         {actions.map((action, index) => (
           <button

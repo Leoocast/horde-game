@@ -21774,6 +21774,174 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
   .card-cost-badge.is-guided-emphasis > .card-cost-emphasis-frame { animation: none; }
 }
 
+/* Hand-limit dialog: same Hostfall material and ornament as the current guided surfaces. */
+.hand-limit-backdrop {
+  background:
+    radial-gradient(circle at 50% 45%, rgb(45 59 58 / 0.2), transparent 42%),
+    rgb(1 4 5 / 0.82);
+  -webkit-backdrop-filter: blur(10px) saturate(0.86);
+  backdrop-filter: blur(10px) saturate(0.86);
+}
+
+.hand-limit-panel {
+  position: relative;
+  overflow: visible;
+  border-color: rgb(210 183 102 / 0.58) !important;
+  border-top-color: rgb(241 218 146 / 0.82) !important;
+  padding: 25px 26px 24px;
+  background:
+    radial-gradient(circle at 15% 0%, rgb(171 191 163 / 0.08), transparent 42%),
+    linear-gradient(145deg, rgb(28 35 38 / 0.985), rgb(7 12 15 / 0.995)) !important;
+  box-shadow:
+    inset 0 1px 0 rgb(238 223 174 / 0.08),
+    inset 0 -24px 40px rgb(0 0 0 / 0.18),
+    0 0 0 1px rgb(122 91 27 / 0.16),
+    0 24px 62px rgb(0 0 0 / 0.68) !important;
+  text-align: left;
+}
+
+.hand-limit-panel::before,
+.hand-limit-panel::after {
+  position: absolute;
+  right: 18px;
+  left: 18px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(203 187 127 / 0.42), transparent);
+  content: "";
+}
+
+.hand-limit-panel::before { top: 0; }
+.hand-limit-panel::after { bottom: -5px; }
+
+.hand-limit-mark {
+  position: absolute;
+  top: -6px;
+  left: 22px;
+  width: 11px;
+  height: 11px;
+  border: 1px solid rgb(190 172 111 / 0.64);
+  background: #111b17;
+  box-shadow: 0 0 12px rgb(176 157 92 / 0.2);
+  transform: rotate(45deg);
+}
+
+.hand-limit-heading {
+  border-bottom: 1px solid rgb(145 156 125 / 0.28);
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+}
+
+.hand-limit-heading h2 {
+  margin: 0;
+  color: #e2d7b8;
+  font-family: var(--hf-ui-font-body);
+  font-size: clamp(19px, 2.4vw, 25px);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.hand-limit-heading p {
+  margin: 9px 0 0;
+  color: #aeb8b5;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.hand-limit-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.hand-limit-actions .game-dialog-action {
+  min-height: 44px;
+  padding: 0 16px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hand-limit-selection-action {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hand-limit-confirm-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Learn-to-Play keeps its authored beats and progress inside the real guided dialog shell. */
+.learn-to-play-intro-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 50% 42%, rgb(45 59 58 / 0.2), transparent 42%),
+    rgb(1 4 5 / 0.82);
+  -webkit-backdrop-filter: blur(10px) saturate(0.86);
+  backdrop-filter: blur(10px) saturate(0.86);
+}
+
+.learn-to-play-intro-dialog {
+  max-height: calc(100vh - 48px);
+}
+
+.learn-to-play-intro-context {
+  display: block;
+  margin-bottom: 8px;
+  color: #8e9d97;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.guided-tutorial-body .learn-to-play-intro-line {
+  min-height: 72px;
+  color: #c0c8c5;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.learn-to-play-intro-footer {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  border-top: 1px solid rgb(145 156 125 / 0.28);
+  margin-top: 18px;
+  padding-top: 16px;
+}
+
+.learn-to-play-intro-progress > span {
+  color: #87958f;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.learn-to-play-intro-progress > div {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.learn-to-play-intro-progress i {
+  width: 28px;
+  height: 2px;
+  background: #53605b;
+}
+
+.learn-to-play-intro-progress i.is-complete { background: #c7aa69; }
+
 /* Semillas del Destino — the current deterministic seed is presented as a narrative Future. */
 .destiny-command-button {
   position: relative;
@@ -22083,6 +22251,97 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
 
 .destiny-dialog-copy:hover,
 .destiny-dialog-copy:focus-visible { color: #cdbf96; outline: none; }
+
+/* The decision dialog follows the shared Hostfall modal hierarchy; only its Future identity varies. */
+.destiny-dialog {
+  overflow: visible;
+  padding: 26px;
+  background:
+    radial-gradient(circle at 14% 0%, rgb(153 183 173 / 0.08), transparent 40%),
+    linear-gradient(145deg, rgb(27 34 37 / 0.99), rgb(6 12 15 / 0.995)) !important;
+  text-align: left;
+}
+
+.destiny-dialog-mark {
+  position: absolute;
+  top: -6px;
+  left: 22px;
+  width: 11px;
+  height: 11px;
+  border: 1px solid rgb(190 172 111 / 0.64);
+  background: #111b17;
+  box-shadow: 0 0 12px rgb(176 157 92 / 0.2);
+  transform: rotate(45deg);
+}
+
+.destiny-dialog-heading {
+  display: flex;
+  min-height: 54px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid rgb(145 156 125 / 0.28);
+  padding-bottom: 15px;
+}
+
+.destiny-dialog-heading > div { min-width: 0; }
+
+.destiny-dialog-close {
+  position: static;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+}
+
+.destiny-dialog h2 {
+  margin: 5px 0 0;
+  color: #e2d7b8;
+  font-family: var(--hf-ui-font-body);
+  font-size: clamp(20px, 2.5vw, 26px);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.destiny-dialog > p {
+  max-width: none;
+  margin: 17px 0 22px;
+  color: #aeb8b5;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.destiny-dialog-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.destiny-dialog-primary,
+.destiny-dialog-secondary {
+  min-height: 46px;
+  height: auto;
+  padding: 0 15px;
+}
+
+.destiny-dialog-secondary {
+  border-color: rgb(126 139 135 / 0.36);
+  background: linear-gradient(180deg, rgb(36 44 45 / 0.94), rgb(12 18 20 / 0.98));
+  color: #aeb9b3;
+}
+
+.destiny-dialog-copy { margin-top: 15px; }
+
+@media (max-width: 560px) {
+  .hand-limit-actions,
+  .destiny-dialog-actions { grid-template-columns: 1fr; }
+
+  .learn-to-play-intro-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .learn-to-play-intro-footer .guided-tutorial-continue { width: 100%; }
+}
 
 .expedition-future-identity {
   display: flex;

@@ -208,7 +208,6 @@ export function SettingsMenu({
         >
           <GameConfirmationDialog
             titleId="restart-game-title"
-            kicker={t(journey ? "guided.journey.restartKicker" : guided ? "guided.settings.restartKicker" : isDeveloperMode ? "settings.developerOptions" : "settings.rewriteChronicle")}
             title={t(journey ? "guided.journey.restartTitle" : guided ? "guided.settings.restartTitle" : "settings.restartQuestion")}
             body={t(journey ? "guided.journey.restartBody" : guided ? "guided.settings.restartBody" : "settings.currentProgressLost")}
             closing={restartPresence.closing}

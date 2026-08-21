@@ -1,8 +1,8 @@
-import { X } from "lucide-react";
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "../i18n/useTranslation";
 import type { TranslationKey } from "../i18n/translations";
+import { GuidedTutorialDialog } from "./GuidedTutorialDialog";
 
 type Props = {
   open: boolean;
@@ -79,51 +79,47 @@ export function LearnToPlayIntroModal({ open, chroniclerName, onClose, onComplet
 
   return createPortal(
     <div
-      className="game-settings-popover game-home-backdrop fixed inset-0 z-[22000] flex items-center justify-center p-6 text-[#e4ddc2]"
+      className="guided-tutorial-overlay is-learn-to-play learn-to-play-intro-overlay"
+      data-mode="explain"
       role="presentation"
       onKeyDown={handleKeyDown}
     >
-      <section
-        ref={dialogRef}
-        className="old-panel game-dialog game-home-dialog w-full max-w-xl p-6"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="learn-to-play-intro-speaker"
-        aria-describedby="learn-to-play-intro-line"
-        aria-label={t("guided.learnToPlay.intro.ariaLabel")}
-      >
-        <div className="flex items-start justify-between gap-5">
-          <div>
-            <div className="game-dialog-kicker">{t("guided.learnToPlay.intro.kicker")}</div>
-            <h2 id="learn-to-play-intro-speaker" className="old-title mt-2 text-xl font-medium uppercase tracking-[0.08em]">
-              {speaker}
-            </h2>
-          </div>
-          <button className="game-header-button flex h-10 w-10 shrink-0 items-center justify-center" type="button" onClick={onClose} title={t("common.close")} aria-label={t("common.close")}>
-            <X size={19} />
-          </button>
-        </div>
-
-        <p id="learn-to-play-intro-line" className="mt-6 min-h-20 text-base leading-relaxed text-[#c4ccc7]" aria-live="polite">
-          {t(beat.body)}
-        </p>
-
-        <div className="mt-6 flex items-end justify-between gap-5 border-t border-[#8f7e4f]/30 pt-5">
-          <div>
-            <div className="game-dialog-kicker">
+      <GuidedTutorialDialog
+        calloutRef={dialogRef}
+        className="learn-to-play-intro-dialog"
+        style={{ position: "relative", top: "auto", left: "auto", width: "min(620px, calc(100vw - 48px))" }}
+        title={speaker}
+        body={(
+          <>
+            <span className="learn-to-play-intro-context">{t("guided.learnToPlay.intro.kicker")}</span>
+            <p className="learn-to-play-intro-line" aria-live="polite">{t(beat.body)}</p>
+          </>
+        )}
+        isLearnToPlay
+        ariaModal
+        closeLabel={t("common.close")}
+        onClose={onClose}
+        showFeedback={false}
+        titleId="learn-to-play-intro-speaker"
+        bodyId="learn-to-play-intro-line"
+        footer={(
+          <footer className="learn-to-play-intro-footer">
+            <div className="learn-to-play-intro-progress">
+              <span>
               {t("guided.learnToPlay.intro.progress", { current: beatIndex + 1, total: INTRO_BEATS.length })}
-            </div>
-            <div className="mt-3 flex gap-2" aria-hidden="true">
+              </span>
+              <div aria-hidden="true">
               {INTRO_BEATS.map((_, index) => (
-                <span key={index} className={`h-1 w-8 ${index <= beatIndex ? "bg-[#c7aa69]" : "bg-[#53605b]"}`} />
+                  <i key={index} className={index <= beatIndex ? "is-complete" : ""} />
               ))}
+              </div>
             </div>
-          </div>
-          <button ref={advanceButtonRef} className="guided-tutorial-continue" type="button" onClick={advance}>
-            {t(finalBeat ? "guided.learnToPlay.intro.enter" : "guided.continue")}
-          </button>
-        </div>
-      </section>
+            <button ref={advanceButtonRef} className="guided-tutorial-continue" type="button" onClick={advance}>
+              {t(finalBeat ? "guided.learnToPlay.intro.enter" : "guided.continue")}
+            </button>
+          </footer>
+        )}
+      />
     </div>,
     document.body,
   );

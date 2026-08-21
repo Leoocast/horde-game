@@ -264,7 +264,6 @@ function ActiveRuntimeModal({
       <div className="game-settings-popover game-system-confirmation-layer game-home-backdrop fixed inset-0 flex items-center justify-center p-6 text-[#e4ddc2]" role="presentation">
         <GameConfirmationDialog
           titleId={`ui-reference-${id}-title`}
-          kicker={t("game.leaveBattlefield")}
           title={t("game.returnHomeQuestion")}
           body={t("game.progressLost")}
           actions={[

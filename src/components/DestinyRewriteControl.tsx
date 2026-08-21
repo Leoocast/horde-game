@@ -1,4 +1,4 @@
-import { Copy, Orbit, RefreshCcw, Sparkles, X } from "lucide-react";
+import { Copy, Orbit, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useTranslation } from "../i18n/useTranslation";
@@ -144,26 +144,26 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother, i
             aria-labelledby="destiny-dialog-title"
             aria-describedby="destiny-dialog-description"
           >
-            <button className="destiny-dialog-close" type="button" onClick={() => setOpen(false)} aria-label={t("common.close")}>
-              <X size={18} />
-            </button>
-
-            <div className="destiny-dialog-sigil" aria-hidden="true"><Orbit size={42} strokeWidth={1.2} /></div>
-            <div className="destiny-dialog-kicker">{t("destiny.future", { code: futureCode })}</div>
-            <h2 id="destiny-dialog-title">{t("destiny.dialogTitle")}</h2>
+            <span className="destiny-dialog-mark" aria-hidden="true" />
+            <header className="destiny-dialog-heading">
+              <div>
+                <div className="destiny-dialog-kicker">{t("destiny.future", { code: futureCode })}</div>
+                <h2 id="destiny-dialog-title">{t("destiny.dialogTitle")}</h2>
+              </div>
+              <button className="destiny-dialog-close" type="button" onClick={() => setOpen(false)} aria-label={t("common.close")}>
+                <X size={18} />
+              </button>
+            </header>
             <p id="destiny-dialog-description">{t("destiny.dialogBody")}</p>
 
-            <button ref={primaryActionRef} className="destiny-dialog-primary" type="button" onClick={() => choose(onRewrite)} autoFocus>
-              <RefreshCcw size={18} />
-              <span>{t("destiny.rewriteThis")}</span>
-            </button>
-
-            <div className="destiny-dialog-divider" aria-hidden="true"><span />◆<span /></div>
-
-            <button className="destiny-dialog-secondary" type="button" onClick={() => choose(onContemplateAnother)}>
-              <Sparkles size={17} />
-              <span>{t("destiny.contemplateAnother")}</span>
-            </button>
+            <div className="destiny-dialog-actions">
+              <button ref={primaryActionRef} className="game-dialog-action game-dialog-action-primary destiny-dialog-primary" type="button" onClick={() => choose(onRewrite)} autoFocus>
+                <span>{t("destiny.rewriteThis")}</span>
+              </button>
+              <button className="game-dialog-action destiny-dialog-secondary" type="button" onClick={() => choose(onContemplateAnother)}>
+                <span>{t("destiny.contemplateAnother")}</span>
+              </button>
+            </div>
 
             <button className="destiny-dialog-copy" type="button" onClick={copyIdentity}>
               <Copy size={14} />

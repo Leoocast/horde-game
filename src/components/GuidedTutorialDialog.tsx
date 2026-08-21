@@ -7,12 +7,15 @@ export type GuidedTutorialDialogProps = Readonly<{
   isLearnToPlay: boolean;
   ariaModal: boolean;
   closeLabel: string;
+  className?: string;
   style?: CSSProperties;
   titleFontSize?: number;
   modeLabel?: string;
   currentStepIndex?: number;
   stepCount?: number;
   feedback?: string;
+  showFeedback?: boolean;
+  footer?: ReactNode;
   showContinue?: boolean;
   continueDisabled?: boolean;
   continueLabel?: string;
@@ -34,12 +37,15 @@ export function GuidedTutorialDialog({
   isLearnToPlay,
   ariaModal,
   closeLabel,
+  className,
   style,
   titleFontSize,
   modeLabel,
   currentStepIndex,
   stepCount,
   feedback,
+  showFeedback = true,
+  footer,
   showContinue = false,
   continueDisabled = false,
   continueLabel,
@@ -53,7 +59,7 @@ export function GuidedTutorialDialog({
   return (
     <section
       ref={calloutRef}
-      className="guided-tutorial-callout"
+      className={["guided-tutorial-callout", className].filter(Boolean).join(" ")}
       style={style}
       role="dialog"
       aria-modal={ariaModal}
@@ -85,8 +91,9 @@ export function GuidedTutorialDialog({
         </div>
       )}
       <div id={bodyId} className="guided-tutorial-body">{body}</div>
-      <div className="guided-tutorial-feedback" role="status" aria-live="polite">{feedback}</div>
-      {showContinue && continueLabel && onContinue && (
+      {showFeedback && <div className="guided-tutorial-feedback" role="status" aria-live="polite">{feedback}</div>}
+      {footer}
+      {!footer && showContinue && continueLabel && onContinue && (
         <button
           ref={continueRef}
           type="button"

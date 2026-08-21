@@ -530,7 +530,6 @@ export function Board({
         <div data-guided-system-control="true" className="game-home-backdrop fixed inset-0 z-[20040] flex items-center justify-center p-6 text-[#e4ddc2]" role="presentation">
           <GameConfirmationDialog
             titleId="tutorial-interrupted-title"
-            kicker={t("guided.lifecycle.interruptedKicker")}
             title={t("guided.lifecycle.interruptedTitle")}
             body={t("guided.lifecycle.interruptedBody")}
             detail={IS_DEV && tutorialErrorMessage
@@ -552,7 +551,6 @@ export function Board({
         >
           <GameConfirmationDialog
             titleId="return-home-title"
-            kicker={t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveKicker" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveKicker" : "game.leaveBattlefield")}
             title={t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveTitle" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveTitle" : "game.returnHomeQuestion")}
             body={t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveBody" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveBody" : "game.progressLost")}
             closing={homeConfirmationPresence.closing}

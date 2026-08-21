@@ -1,6 +1,6 @@
-import { Check, Hand } from "lucide-react";
+import { Check } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { MAX_PLAYER_HAND_SIZE, playerHandOverflow } from "../engine/GameRules";
+import { playerHandOverflow } from "../engine/GameRules";
 import type { GameState } from "../engine/GameTypes";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useGameStore } from "../store/useGameStore";
@@ -45,9 +45,9 @@ export function HandLimitModal({ game, selectedId, onClearSelection, onConfirm }
   return (
     <>
       <motion.div className="hand-limit-backdrop fixed inset-0 z-[101]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
-      <div className="fixed left-1/2 top-[42%] z-[118] w-[min(460px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2">
+      <div className="fixed left-1/2 top-1/2 z-[118] w-[min(500px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2">
           <motion.section
-            className="hand-limit-panel hf-ui-panel w-full p-4 text-center text-[#eadfbd]"
+            className="hand-limit-panel hf-ui-panel w-full text-[#eadfbd]"
             initial={{ opacity: 0, y: 24, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 18, scale: 0.96 }}
@@ -56,18 +56,19 @@ export function HandLimitModal({ game, selectedId, onClearSelection, onConfirm }
             aria-modal="true"
             aria-labelledby="hand-limit-title"
           >
-            <div className="hand-limit-icon"><Hand size={20} /></div>
-            <p className="game-dialog-kicker">{t("hand.endPhaseCount", { current: game.player.hand.length, max: MAX_PLAYER_HAND_SIZE })}</p>
-            <h2 id="hand-limit-title" className="hf-ui-title mt-1 text-lg uppercase tracking-[0.09em]">{t("hand.discardToSeven")}</h2>
-            <p className="mt-2 text-sm text-[#a9aaa0]">{t(overflow === 1 ? "hand.chooseBeforeEnd" : "hand.chooseMultipleBeforeEnd", { count: overflow })}</p>
-            <div className="mt-3 flex items-center gap-2">
+            <span className="hand-limit-mark" aria-hidden="true" />
+            <header className="hand-limit-heading">
+              <h2 id="hand-limit-title" className="hf-ui-title">{t("hand.discardToSeven")}</h2>
+              <p>{t(overflow === 1 ? "hand.chooseBeforeEnd" : "hand.chooseMultipleBeforeEnd", { count: overflow })}</p>
+            </header>
+            <div className="hand-limit-actions">
               <button
                 ref={(element) => guidedAnchorRegistry.set(
                   guidedSurfaceAnchorKey("selection.cancelAction"),
                   "hand-limit:cancel",
                   element,
                 )}
-                className="counter-target-button counter-target-cancel"
+                className="game-dialog-action hand-limit-selection-action"
                 type="button"
                 disabled={!selectedId}
                 onClick={onClearSelection}
@@ -80,7 +81,7 @@ export function HandLimitModal({ game, selectedId, onClearSelection, onConfirm }
                   "hand-limit:confirm",
                   element,
                 )}
-                className="counter-target-button counter-target-confirm !flex-none !px-5"
+                className="game-dialog-action game-dialog-action-primary hand-limit-confirm-action"
                 type="button"
                 disabled={!selectedId}
                 onClick={onConfirm}
