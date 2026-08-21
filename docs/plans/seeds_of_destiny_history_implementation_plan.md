@@ -1,6 +1,6 @@
 # Plan por fases — historial de Semillas del Destino para la demo
 
-Estado: **Fases 1, 2 y 2.5 completadas; siguiente fase: 3**.
+Estado: **Fases 1, 2, 2.5 y 3 completadas; siguiente fase: 4**.
 
 Última actualización: **2026-08-21**.
 
@@ -472,6 +472,16 @@ públicos ausentes en opaque y que todas las superficies Canon copian el mismo `
 
 ### Fase 3 — Dominio puro del historial
 
+Estado: **completada el 2026-08-21**.
+
+Implementación: `src/history/historyTypes.ts` fija el envelope v1, las identidades y el vocabulario
+versionado de hitos; `historyParser.ts` valida estructura e invariantes sin consultar contenido;
+`historyFuture.ts` separa compatibilidad determinista y resolución; `historyDomain.ts` implementa
+mutaciones, secuencias, claves, agrupación y estados agregados; y `historyEligibility.ts` conserva
+una única matriz explícita. `OPAQUE_MATCH_RULESET_VERSION` es el gate compartido para seeds libres:
+cualquier cambio de reglas o consumo RNG exige incrementarlo, mientras los cambios de contenido se
+separan mediante `contentRevision`.
+
 - Crear `FutureIdentityV1`, `AttemptRecordV1`, `HistoryEnvelopeV1` y parsers sin dependencia de UI.
 - Derivar una clave interna estable desde toda la identidad, nunca desde `Futuro NNN·NNN`.
 - Implementar inicio, cierre idempotente y actualización opcional de metadatos durante una salida
@@ -492,6 +502,9 @@ públicos ausentes en opaque y que todas las superficies Canon copian el mismo `
 revisiones distintas, la misma HF1 agrupada entre builds compatibles, HF1 opaca frente a Canon
 explícita, `rngSeed` conservada byte a byte, empate de timestamps, victoria seguida de interrupción,
 invariantes cruzados, cierres duplicados y callbacks de sesiones viejas.
+
+El cierre vive en `tests/historyDomain.test.js`. Esta fase no conecta UI ni escribe archivos; esos
+límites pertenecen respectivamente a las Fases 6 y 4.
 
 ### Fase 4 — Persistencia independiente
 

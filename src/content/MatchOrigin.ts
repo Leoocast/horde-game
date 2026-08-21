@@ -10,6 +10,13 @@ import {
 import type { ContentCatalog } from "./ContentCatalog";
 import { contentCatalog } from "./bootstrap";
 
+/**
+ * Gate for free/legacy seeds. Increment this when engine rules or RNG consumption change; content
+ * changes are tracked independently by observedContentRevision in each origin.
+ */
+export const OPAQUE_MATCH_RULESET_VERSION = 1 as const;
+export const OPAQUE_MATCH_DETERMINISTIC_REVISION = `opaque-runtime-v${OPAQUE_MATCH_RULESET_VERSION}` as const;
+
 type MatchOriginBase = Readonly<{
   rngSeed: string;
   playerDeckKey: string;
@@ -102,7 +109,7 @@ export function createOpaqueMatchOrigin(
     difficulty: request.difficulty,
     preparationTurns: request.preparationTurns,
     gameMode: request.gameMode,
-    deterministicRevision: request.deterministicRevision ?? "opaque-runtime-v1",
+    deterministicRevision: request.deterministicRevision ?? OPAQUE_MATCH_DETERMINISTIC_REVISION,
     observedContentRevision: catalog.revision,
   });
 }

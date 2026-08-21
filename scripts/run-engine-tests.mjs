@@ -15,6 +15,7 @@ try {
   await server.ssrLoadModule("/tests/matchOrigin.test.js");
   await server.ssrLoadModule("/tests/seedExplorer.test.js");
   await server.ssrLoadModule("/tests/attemptNarrative.test.js");
+  await server.ssrLoadModule("/tests/historyDomain.test.js");
   await server.ssrLoadModule("/tests/productCapabilities.test.js");
   await server.ssrLoadModule("/tests/hostBeats.test.js");
   await server.ssrLoadModule("/tests/deckLint.test.js");

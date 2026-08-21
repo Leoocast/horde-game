@@ -527,9 +527,9 @@ beats retenidos. No es el guion ni el copy de la Primera Semilla y no entra al b
 Las seeds normales se presentan dentro del mundo como **Semillas del Destino**: líneas temporales
 que el Cronista contempla, reescribe y finalmente preserva. Cada seed recibe una identidad
 cosmética determinista **Futuro `NNN·NNN`**; ese código compacto puede colisionar y nunca reemplaza
-la identidad reproducible. En el runtime actual, **Copiar identidad** copia `game.seed` y el launcher
-normal genera strings `hostfall-...`; ese valor alimenta el RNG pero no incluye decks, dificultad ni
-Preparación, así que todavía no es una identidad pública autocontenida.
+la identidad reproducible. Desde la Fase 2.5, el launcher normal genera una Canon Seed `HF1` y
+**Copiar identidad** copia ese código completo; `GameState.seed` recibe únicamente sus cinco
+caracteres de entropía. La ruta avanzada de seed libre continúa siendo opaca.
 
 Las **Canon Seeds** usan el contrato `HF1-PPP-HHH-XXD-XXX`. `PPP` y `HHH` son códigos estables de
 deck (`ELA`/`CEC` para Cronista y `GRV`/`VRK` para Hueste); los cinco caracteres repartidos alrededor
@@ -648,9 +648,19 @@ rígido. Volver a animar
 `filter: blur()` o `saturate()` sobre la pantalla completa es una regresión de rendimiento, porque
 obliga a repintar todo el árbol en cada frame.
 
-El historial de intentos y la futura biblioteca de Semillas no están implementados. Su identidad
-narrativa vive en `docs/plans/seeds_of_destiny.md` y la auditoría con el contrato técnico por fases
-en `docs/plans/seeds_of_destiny_history_implementation_plan.md`. La Fase 1 sí tiene un prototipo
+El dominio puro del historial está implementado, pero todavía no tiene persistencia, integración de
+partidas ni UI real. `src/history/historyTypes.ts` fija `FutureIdentityV1`, `AttemptRecordV1` y
+`HistoryEnvelopeV1`; `historyParser.ts` valida estructura e invariantes sin depender del catálogo;
+`historyFuture.ts` mantiene aparte compatibilidad determinista y resolución de decks; y
+`historyDomain.ts` concentra begin/close idempotente, metadata de salida explícita, `sequence`,
+agrupación y estado agregado. `historyEligibility.ts` admite sólo sesiones normales standard, sin
+inferir elegibilidad por seed, carta o pantalla. Canon agrupa por formato+código normalizado; opaque
+incluye seed, configuración, `contentRevision` y `OPAQUE_MATCH_RULESET_VERSION`. Un cambio de reglas
+o consumo RNG de seeds libres debe incrementar ese gate en `MatchOrigin.ts`; un cambio incompatible
+Canon exige otro formato.
+
+La identidad narrativa vive en `docs/plans/seeds_of_destiny.md` y la auditoría con el contrato
+técnico por fases en `docs/plans/seeds_of_destiny_history_implementation_plan.md`. La Fase 1 tiene un prototipo
 aislado en `src/history/attemptNarrative.ts`: selecciona de un vocabulario cerrado de ocho hechos,
 renderiza templates ES/EN sin leer `game.log` y dispone sus muestras de decisión en
 `docs/plans/seeds_of_destiny_narrative_samples.md`. Resultado, turno y Reserva permanecen como
