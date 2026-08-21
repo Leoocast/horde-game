@@ -517,7 +517,7 @@ cuarentena el payload antes de reset. Desktop usa canales IPC concretos y
 `profile/seed-history-v1.json`; `DesktopJsonStore.promoteBackup` mantiene `.bak` intacto durante
 todos los cortes y el reset copia primario/backup a `profile/diagnostics` antes de borrarlos. Un
 envelope doblemente inválido queda congelado en lectura con sus intentos estructuralmente
-rescatables. Ninguna de estas piezas se inicializa todavía desde `App`.
+rescatables. La conexión con `App` pertenece a la Fase 5.
 
 - Añadir adapter web y servicio desktop para `history-v1`.
 - Extender `DesktopDataPaths`, preload, bridge y handlers main con canales concretos.
@@ -542,6 +542,17 @@ El cierre vive en `tests/historyPersistence.test.js`, `tests/electronPersistence
 guards IPC de `tests/electronSecurity.test.js`.
 
 ### Fase 5 — Grabador del ciclo de vida
+
+Estado: **completada el 2026-08-21**.
+
+Implementación: `MatchLifecycleCoordinator` recibe reloj, IDs, port de historial, sesión y fuente de
+outcomes; encola las operaciones en el orden en que se solicitan aunque el gate visual agote su
+timeout. `historyRuntime.ts` es el único adapter hacia Zustand y `gameplaySignalStream`. `App`
+declara cada launch y salida: Jugar conserva `EncounterTransition`; reescribir, contemplar y el
+handoff de Aprender a jugar conservan el vórtice. `DestinyRewriteTransition` añade la fase
+`covered` y un `release` explícito compartido por animación y movimiento reducido. `Board` incorpora
+el gate durable al drenaje de desenlace. La demo activa `seedHistory` sin reactivar resume; el preset
+de regresión Early Access conserva la combinación inversa.
 
 - Extraer un `MatchLaunchSpec` común y un coordinador puro de lifecycle con reloj, persistencia,
   sesión, `MatchOrigin` y callbacks inyectados; `App` queda como wiring fino. No se unifican las
@@ -572,6 +583,11 @@ sin `await`, fallo/timeout de begin seguido por close sobre el snapshot lógico 
 victoria natural, derrota, `triggerEndGame`, menú, rewrite, contemplate, hold/release del vórtice,
 movimiento reducido, hydrate lento, doble inicialización, callbacks viejos, crash entre turnos,
 reapertura repetida y corte después de `winner` pero antes del outro. No requiere montar React.
+
+El cierre vive en `tests/matchLifecycle.test.js`; `tests/gameplaySignals.test.js` prueba además que
+`triggerEndGame` publica la misma señal comprometida, y los guards vigentes verifican el wiring de
+`App`, `Board` y el vórtice sin montar React. La pantalla todavía consume su fixture: sustituirlo y
+conectar replay desde la biblioteca pertenece a la Fase 6.
 
 ### Fase 6 — Biblioteca real y reescritura
 

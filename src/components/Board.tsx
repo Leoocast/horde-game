@@ -69,6 +69,8 @@ type Props = {
   overtureHandPending?: boolean;
   /** El disco de grados todavía no fue entregado por el signo. */
   overtureDialPending?: boolean;
+  /** El resultado factual ya quedó durable o agotó su timeout degradado. */
+  outcomePersistenceReady?: boolean;
   sessionPolicy?: BoardSessionPolicy;
   tutorialInterrupted?: boolean;
   tutorialErrorMessage?: string;
@@ -218,6 +220,7 @@ export function Board({
   overtureSettling = false,
   overtureHandPending = false,
   overtureDialPending = false,
+  outcomePersistenceReady = true,
   sessionPolicy = NORMAL_BOARD_SESSION,
   tutorialInterrupted = false,
   tutorialErrorMessage,
@@ -279,6 +282,7 @@ export function Board({
     && forcedOutcomeDrainSessionId === gameSessionId;
   // La barrera se abre igual para los dos desenlaces: sólo lo que ocurre después difiere.
   const outcomeOutroReady = Boolean(game.winner)
+    && outcomePersistenceReady
     && destinyDialSettled
     && (
       forcedOutcomeDrain

@@ -22,6 +22,8 @@ import { findInspectableDeck, hostInspectableDecks, playerInspectableDecks } fro
 import type { GameMode } from "./engine/GameTypes";
 import { useAudioStore } from "./store/useAudioStore";
 import { useGameStore } from "./store/useGameStore";
+import { useToastStore } from "./store/useToastStore";
+import { useTranslation } from "./i18n/useTranslation";
 import { IS_DEV } from "./utils/devMode";
 import { hasCompletedOnboarding, hasPreloadedGameAssets, markGameAssetsPreloaded, readStoredPlayerName } from "./utils/appPersistence";
 import { preloadGameAssets, type LoadingLabel } from "./utils/assetPreloader";
@@ -40,6 +42,7 @@ import { HOW_TO_PLAY_CATALOG } from "./guidance/howToPlayCatalog";
 import { LEARN_TO_PLAY_JOURNEY, learnToPlayJourneyLifecycle } from "./guidance/learnToPlayJourney";
 import { createLearnToPlayFirstMatchOrigin } from "./guidance/learnToPlayHandoff";
 import { guidedProgressStore } from "./guidance/progress";
+import { productMatchLifecycle } from "./history/historyRuntime";
 
 // The conditional imports are compile-time: release builds remove every developer module instead
 // of merely hiding their entry buttons.
@@ -74,6 +77,7 @@ type LaunchTransitionState = {
   gameMode: GameMode;
   startedAtMs: number;
   reducedMotion: boolean;
+  historySettled: Promise<unknown>;
 };
 
 type BoardOvertureState = {
@@ -101,14 +105,18 @@ const subscribeGuidedLifecycle = (listener: () => void) => guidedProductLifecycl
 const readGuidedLifecycle = () => guidedProductLifecycle.snapshot();
 const subscribeJourneyLifecycle = (listener: () => void) => learnToPlayJourneyLifecycle.subscribe(listener);
 const readJourneyLifecycle = () => learnToPlayJourneyLifecycle.snapshot();
+const subscribeMatchLifecycle = (listener: () => void) => productMatchLifecycle.subscribe(listener);
+const readMatchLifecycle = () => productMatchLifecycle.snapshot();
 
 export default function App() {
+  const t = useTranslation();
   const reset = useGameStore((state) => state.reset);
   const loadScenario = useGameStore((state) => state.loadScenario);
   const gameSessionId = useGameStore((state) => state.gameSessionId);
   const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
   const playSfx = useAudioStore((state) => state.playSfx);
   const stopMusic = useAudioStore((state) => state.stopMusic);
+  const pushToast = useToastStore((state) => state.pushToast);
   const [screen, setScreen] = useState<AppScreen>("start");
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [bootRevision, setBootRevision] = useState(0);
@@ -133,12 +141,15 @@ export default function App() {
   const destinyIdRef = useRef(0);
   const destinyTransitionRef = useRef<DestinyTransitionState | null>(null);
   const resolvedDestinyIdRef = useRef<number | null>(null);
+  const navigationPendingRef = useRef(false);
+  const seenHistoryWarningRevisionRef = useRef(0);
   const [desktopResume, setDesktopResume] = useState<DesktopResumeLoad>({ status: "none" });
   const [preferencesReady, setPreferencesReady] = useState(false);
   const [requiredTutorialOffered, setRequiredTutorialOffered] = useState(false);
   const [learnToPlayIntroOpen, setLearnToPlayIntroOpen] = useState(false);
   const guidedLifecycle = useSyncExternalStore(subscribeGuidedLifecycle, readGuidedLifecycle, readGuidedLifecycle);
   const journeyLifecycle = useSyncExternalStore(subscribeJourneyLifecycle, readJourneyLifecycle, readJourneyLifecycle);
+  const matchLifecycle = useSyncExternalStore(subscribeMatchLifecycle, readMatchLifecycle, readMatchLifecycle);
   // The generic lesson gate remains available, but the current catalog contains only optional
   // Preparation. Learn to Play does not enter first-open gating until its later handoff phase.
   const requiredLesson = IS_DEV ? undefined : guidedProductLifecycle.nextRequiredLesson();
@@ -155,6 +166,26 @@ export default function App() {
   useEffect(() => {
     return registerDesktopLifecycle();
   }, []);
+
+  useEffect(() => {
+    void productMatchLifecycle.initialize();
+  }, []);
+
+  useEffect(() => {
+    if (!matchLifecycle.lastWarning) return;
+    if (matchLifecycle.warningRevision <= seenHistoryWarningRevisionRef.current) return;
+    seenHistoryWarningRevisionRef.current = matchLifecycle.warningRevision;
+    const messageKey = matchLifecycle.lastWarning.kind === "begin"
+      ? "toast.historyBeginNotDurable"
+      : matchLifecycle.lastWarning.kind === "close"
+        ? "toast.historyCloseNotDurable"
+        : "toast.historyUnavailable";
+    pushToast({
+      title: t("toast.historyNotDurable"),
+      message: t(messageKey),
+      tone: "warning",
+    });
+  }, [matchLifecycle.lastWarning, matchLifecycle.warningRevision, pushToast, t]);
 
   useEffect(() => {
     let active = true;
@@ -260,18 +291,31 @@ export default function App() {
 
   useEffect(() => {
     if (!launchTransition) return;
-    const { id, reducedMotion, startedAtMs } = launchTransition;
+    const { id, reducedMotion, startedAtMs, historySettled } = launchTransition;
+    let active = true;
+    const timers = new Set<number>();
     const remainingUntil = (offsetMs: number) => Math.max(0, startedAtMs + offsetMs - performance.now());
-    const revealTimeout = window.setTimeout(() => {
+    const waitUntil = (offsetMs: number) => new Promise<void>((resolve) => {
+      const timer = window.setTimeout(() => {
+        timers.delete(timer);
+        resolve();
+      }, remainingUntil(offsetMs));
+      timers.add(timer);
+    });
+    void Promise.all([
+      historySettled,
+      waitUntil(reducedMotion ? 80 : ENCOUNTER_IMPACT_MS),
+    ]).then(async () => {
+      if (!active) return;
       startBattleMusic(true);
       setScreen("game");
-    }, reducedMotion ? 80 : remainingUntil(ENCOUNTER_IMPACT_MS));
-    const finishTimeout = window.setTimeout(() => {
+      await waitUntil(reducedMotion ? 180 : ENCOUNTER_TRANSITION_MS);
+      if (!active) return;
       setLaunchTransition((current) => (current?.id === id ? null : current));
-    }, reducedMotion ? 180 : remainingUntil(ENCOUNTER_TRANSITION_MS));
+    });
     return () => {
-      window.clearTimeout(revealTimeout);
-      window.clearTimeout(finishTimeout);
+      active = false;
+      for (const timer of timers) window.clearTimeout(timer);
     };
   }, [launchTransition, startBattleMusic]);
 
@@ -367,55 +411,82 @@ export default function App() {
     return true;
   }, [matchOrigin]);
 
-  const resolveDestinyTransition = useCallback((transitionId: number) => {
+  const resolveDestinyTransition = useCallback((transitionId: number, release: () => void) => {
     const transition = destinyTransitionRef.current;
-    if (!transition || transition.id !== transitionId || resolvedDestinyIdRef.current === transitionId) return;
+    if (!transition || transition.id !== transitionId || resolvedDestinyIdRef.current === transitionId) {
+      release();
+      return;
+    }
     resolvedDestinyIdRef.current = transitionId;
-    if (transition.kind === "rewrite") {
-      if (!transition.origin) return;
-      const origin = transition.origin;
-      setMatchOrigin(origin);
-      setSetupTurns(origin.preparationTurns);
-      setSelectedDeckId(origin.playerDeckId);
-      setSelectedHostDeckId(origin.hostDeckId);
-      reset(
-        origin.rngSeed,
-        origin.preparationTurns,
-        origin.playerDeckId,
-        origin.hostDeckId,
-        origin.difficulty,
-        origin.gameMode,
-      );
-      startBattleMusic(true);
-      return;
-    }
+    void (async () => {
+      try {
+        if (transition.kind === "rewrite") {
+          if (!transition.origin) return;
+          await productMatchLifecycle.closeActive("rewrite");
+          if (destinyTransitionRef.current?.id !== transitionId) return;
+          const origin = transition.origin;
+          const launch = productMatchLifecycle.beginLaunch({
+            source: "rewrite",
+            sessionKind: origin.rngSeed === "developer" ? "developer" : "normal",
+            origin,
+            commit: () => reset(
+              origin.rngSeed,
+              origin.preparationTurns,
+              origin.playerDeckId,
+              origin.hostDeckId,
+              origin.difficulty,
+              origin.gameMode,
+            ),
+          });
+          if (!launch.committed) return;
+          setMatchOrigin(origin);
+          setSetupTurns(origin.preparationTurns);
+          setSelectedDeckId(origin.playerDeckId);
+          setSelectedHostDeckId(origin.hostDeckId);
+          await launch.settled;
+          startBattleMusic(true);
+          return;
+        }
 
-    if (transition.destination === "learn-to-play-first-seed") {
-      clearResumeForProduct();
-      setPreserveMenuMusic(false);
-      const origin = createLearnToPlayFirstMatchOrigin();
-      setMatchOrigin(origin);
-      setSetupTurns(origin.preparationTurns);
-      setSelectedDeckId(origin.playerDeckId);
-      setSelectedHostDeckId(origin.hostDeckId);
-      reset(
-        origin.rngSeed,
-        origin.preparationTurns,
-        origin.playerDeckId,
-        origin.hostDeckId,
-        origin.difficulty,
-        origin.gameMode,
-      );
-      setScreen("game");
-      startBattleMusic(true);
-      return;
-    }
+        await productMatchLifecycle.closeActive("contemplate");
+        if (destinyTransitionRef.current?.id !== transitionId) return;
+        if (transition.destination === "learn-to-play-first-seed") {
+          clearResumeForProduct();
+          setPreserveMenuMusic(false);
+          const origin = createLearnToPlayFirstMatchOrigin();
+          const launch = productMatchLifecycle.beginLaunch({
+            source: "learn-to-play-handoff",
+            sessionKind: "normal",
+            origin,
+            commit: () => reset(
+              origin.rngSeed,
+              origin.preparationTurns,
+              origin.playerDeckId,
+              origin.hostDeckId,
+              origin.difficulty,
+              origin.gameMode,
+            ),
+          });
+          if (!launch.committed) return;
+          setMatchOrigin(origin);
+          setSetupTurns(origin.preparationTurns);
+          setSelectedDeckId(origin.playerDeckId);
+          setSelectedHostDeckId(origin.hostDeckId);
+          setScreen("game");
+          await launch.settled;
+          startBattleMusic(true);
+          return;
+        }
 
-    clearResumeForProduct();
-    setPreserveMenuMusic(false);
-    setMatchOrigin(null);
-    setMenuReturnScreen("setup");
-    setScreen("start");
+        clearResumeForProduct();
+        setPreserveMenuMusic(false);
+        setMatchOrigin(null);
+        setMenuReturnScreen("setup");
+        setScreen("start");
+      } finally {
+        release();
+      }
+    })();
   }, [clearResumeForProduct, reset, startBattleMusic]);
 
   const completeDestinyTransition = useCallback((transitionId: number) => {
@@ -448,6 +519,20 @@ export default function App() {
     setMenuReturnScreen("home");
     setScreen("start");
   }
+
+  const returnNormalMatchToMenu = useCallback(() => {
+    if (navigationPendingRef.current) return;
+    navigationPendingRef.current = true;
+    void productMatchLifecycle.closeActive("menu").then(() => {
+      clearResumeForProduct();
+      setPreserveMenuMusic(false);
+      setMatchOrigin(null);
+      setMenuReturnScreen("home");
+      setScreen("start");
+    }).finally(() => {
+      navigationPendingRef.current = false;
+    });
+  }, [clearResumeForProduct]);
 
   if (loading || !preferencesReady) {
     return <GameLoadingScreen percent={loading ? loadingProgress.percent : 100} label={loading ? loadingProgress.label : "ready"} leaving={loadingLeaving} />;
@@ -671,14 +756,20 @@ export default function App() {
             stopMusic();
             playSfx("draw");
             playSfx("playMonsterHeavy", { rate: 0.92 });
-            reset(
-              options.origin.rngSeed,
-              options.origin.preparationTurns,
-              options.origin.playerDeckId,
-              options.origin.hostDeckId,
-              options.origin.difficulty,
-              options.origin.gameMode,
-            );
+            const launch = productMatchLifecycle.beginLaunch({
+              source: "play",
+              sessionKind: options.origin.rngSeed === "developer" ? "developer" : "normal",
+              origin: options.origin,
+              commit: () => reset(
+                options.origin.rngSeed,
+                options.origin.preparationTurns,
+                options.origin.playerDeckId,
+                options.origin.hostDeckId,
+                options.origin.difficulty,
+                options.origin.gameMode,
+              ),
+            });
+            if (!launch.committed) return;
             const id = ++launchIdRef.current;
             const startedAtMs = performance.now();
             const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -701,6 +792,7 @@ export default function App() {
               gameMode: options.origin.gameMode,
               startedAtMs,
               reducedMotion,
+              historySettled: launch.settled,
             });
           }}
         />
@@ -730,6 +822,7 @@ export default function App() {
         overtureSettling={boardOverture?.phase === "overlap"}
         overtureHandPending={Boolean(boardOverture && !boardOverture.handReady)}
         overtureDialPending={Boolean(boardOverture?.dialPending)}
+        outcomePersistenceReady={productMatchLifecycle.outcomeReady(`game:${gameSessionId}`)}
         sessionPolicy={boardSessionPolicy}
         tutorialInterrupted={screen === "tutorial" && (guidedLifecycle.status === "aborted" || guidedLifecycle.status === "failed")}
         tutorialErrorMessage={screen === "tutorial" ? guidedLifecycle.errorMessage : journeyLifecycle.errorMessage}
@@ -744,13 +837,11 @@ export default function App() {
           : screen === "journey"
             ? continueLearnToPlayIntoFirstCanonFuture
             : undefined}
-        onReturnToMenu={screen === "tutorial" ? leaveGuidedLesson : screen === "journey" ? leaveLearnToPlayJourney : () => {
-          clearResumeForProduct();
-          setPreserveMenuMusic(false);
-          setMatchOrigin(null);
-          setMenuReturnScreen("home");
-          setScreen("start");
-        }}
+        onReturnToMenu={screen === "tutorial"
+          ? leaveGuidedLesson
+          : screen === "journey"
+            ? leaveLearnToPlayJourney
+            : returnNormalMatchToMenu}
       />
       {/* Conserva el mismo slot que ocupa junto a StartMenu. Si la obertura se insertara
           antes, React remontaría EncounterTransition al revelar Board y el choque empezaría

@@ -9,12 +9,12 @@ export type ProductCapabilities = Readonly<{
 export const DEMO_CAPABILITIES: ProductCapabilities = Object.freeze({
   edition: "demo",
   resumeGame: false,
-  seedHistory: false,
+  seedHistory: true,
 });
 
 /**
  * Preserva la vertical vigente de resume para que ocultarla en la demo no la deje sin cobertura.
- * No anticipa el historial ni el enlace futuro entre un checkpoint y un intento.
+ * Mantiene el historial apagado hasta enlazar un futuro checkpoint con su attemptId.
  */
 export const EARLY_ACCESS_RESUME_REGRESSION_CAPABILITIES: ProductCapabilities = Object.freeze({
   edition: "early-access-resume-regression",

@@ -125,7 +125,9 @@ test("the narrative Future control owns normal rewrites outside Settings", async
   const completeCallbackAt = transition.indexOf("completeCallbackRef.current(transitionId);", completeTimerAt);
   assert.match(transition, /coveredCallbackRef\.current = onCovered/u);
   assert.match(transition, /completeCallbackRef\.current = onComplete/u);
-  assert.match(lifecycleEffect, /coveredCallbackRef\.current\(transitionId\)/u);
+  assert.match(lifecycleEffect, /coveredCallbackRef\.current\(transitionId, releaseTransition\)/u);
+  assert.match(lifecycleEffect, /destiny-rewrite-covered/u);
+  assert.match(lifecycleEffect, /phase !== "revealing"/u);
   assert.match(lifecycleEffect, /\}, \[transitionId\]\);/u);
   assert.doesNotMatch(lifecycleEffect, /\[[^\]]*(?:onCovered|onComplete|playSfx)[^\]]*\]/u);
   assert.ok(completeTimerAt >= 0);

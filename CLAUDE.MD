@@ -668,8 +668,20 @@ mutación nueva. Web usa `hostfall-history:v1`, backup, cuarentena, Web Locks y 
 lock queda sólo lectura. Desktop usa `profile/seed-history-v1.json`, IPCs concretos y promoción que
 nunca rota un primario corrupto sobre `.bak`. Corrupción doble congela escrituras y conserva intentos
 rescatables hasta un reset confirmado; desktop guarda diagnósticos y web exige segunda confirmación
-si la cuota impide la cuarentena. `createHistoryServiceForCurrentPlatform` sólo construye la capa:
-la Fase 5 decide cuándo inicializarla y registrar partidas.
+si la cuota impide la cuarentena. `createHistoryServiceForCurrentPlatform` construye la capa y
+`historyRuntime.ts` la conecta al lifecycle de producto.
+
+La Fase 5 está implementada. `MatchLifecycleCoordinator` es la autoridad pura para launches,
+recorder, cierres explícitos, recovery al arrancar y gates con timeout degradado; recibe reloj,
+persistencia, sesión y outcomes por inyección. Sólo `App` declara qué reset corresponde a Jugar,
+Reescribir o al handoff de Aprender a jugar. Un intento nace después del reset comprometido, nunca
+por observar una pantalla ni desde `GameStore.reset`. `game.ended` instala síncronamente un gate
+scoped a `{attemptId, gameSessionId}`, copia turnos/Vida/Archivo y cierra antes de que `Board` revele
+el desenlace. Menú, Reescribir y Contemplar esperan el mismo settle; ante fallo/timeout la acción
+continúa con toast y el servicio conserva su snapshot dirty para retry. El vórtice tiene ahora
+`absorbing -> covered -> revealing`: durante `covered` espera cierre/reset/begin y movimiento
+reducido usa la misma barrera. No hay autosave por turno; un crash conserva `active` sin hechos y el
+siguiente arranque demo lo convierte una sola vez en `startup-recovery`.
 
 La identidad narrativa vive en `docs/plans/seeds_of_destiny.md` y la auditoría con el contrato
 técnico por fases en `docs/plans/seeds_of_destiny_history_implementation_plan.md`. La Fase 1 tiene un prototipo
@@ -681,11 +693,12 @@ del mundo. La voz habla de Ecos, nunca de cartas ni de datos generados/registrad
 conectado a partidas, estado, UI ni persistencia; el usuario aprobó **Relato** como primera versión
 el 2026-08-21 y su integración sigue reservada para la Fase 7.
 
-La Fase 2 está implementada. `src/product/productCapabilities.ts` selecciona
-`DEMO_CAPABILITIES`: **Continuar** no se renderiza y resume no lee, escribe ni borra `resume-v1`.
+La Fase 2 está implementada y la Fase 5 activó su segunda capability.
+`src/product/productCapabilities.ts` selecciona `DEMO_CAPABILITIES`: **Continuar** no se renderiza,
+resume no lee, escribe ni borra `resume-v1`, e historial sí registra partidas normales standard.
 `src/persistence/resumeRuntime.ts` concentra esa frontera con operaciones nulas para demo. El preset
 `EARLY_ACCESS_RESUME_REGRESSION_CAPABILITIES` conserva carga, restore, checkpointing, recuperación y
-borrado detrás de tests, sin habilitar aún historial. No borrar la infraestructura de resume ni
+borrado detrás de tests y mantiene historial apagado. No borrar la infraestructura de resume ni
 volver a llamarla directamente desde `App`. Una partida
 cortada se registra como **Historia interrumpida**, nunca como derrota, y sólo puede reescribirse
 desde la seed,

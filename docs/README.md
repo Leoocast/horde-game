@@ -55,9 +55,9 @@ Estos documentos se conservan porque contienen decisiones o validaciones sin ter
 - [`plans/seeds_of_destiny.md`](plans/seeds_of_destiny.md) — identidad narrativa y biblioteca futura.
 - [`plans/seeds_of_destiny_history_implementation_plan.md`](plans/seeds_of_destiny_history_implementation_plan.md)
   — auditoría y fases verificables para validar el relato, conectar Canon Seed al launcher, ocultar
-  resume en la demo e implementar el historial factual con reescritura exacta.
+  resume en la demo e implementar el historial factual con reescritura exacta; fases 0-5 cerradas.
 - [`plans/seeds_of_destiny_narrative_samples.md`](plans/seeds_of_destiny_narrative_samples.md) —
-  muestras ES/EN generadas por el prototipo aislado de la Fase 1; decisión creativa pendiente.
+  muestras ES/EN generadas por el prototipo aislado de la Fase 1; relato aprobado para la Fase 7.
 - [`plans/game_modes.md`](plans/game_modes.md) — variantes futuras y compatibilidad de Chaos.
 - [`plans/webgl_context_budget.md`](plans/webgl_context_budget.md) — migración implementada con QA
   visual final todavía pendiente.

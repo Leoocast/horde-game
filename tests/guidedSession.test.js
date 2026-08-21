@@ -345,7 +345,9 @@ test("Learn to Play keeps the combat-stat and Harvester interventions reachable 
       summoningAnimationCount: 0,
       autoPaidLandAnimation: undefined,
     });
-    await new Promise((resolve) => setTimeout(resolve, 1_220));
+    // The authored animation resolves at 1200 ms. Keep enough scheduler margin for the full suite;
+    // 20 ms was flaky under concurrent Vite transforms even though the production callback was sound.
+    await new Promise((resolve) => setTimeout(resolve, 1_400));
     assert.equal(guidedSessionStore.snapshot().currentStep.id, "choose-aelyra-target");
     assert.equal(useGameStore.getState().counterTargeting?.sourceId, bindings.aelyra);
     useGameStore.getState().lockCounterTarget(bindings.maela);
@@ -503,7 +505,7 @@ test("the production Learn to Play lifecycle recovers when End Turn commits befo
         await flushMicrotasks();
         useGameStore.getState().castCard(bindings.aelyra);
         useGameStore.setState({ summoningAnimationCount: 0, autoPaidLandAnimation: undefined });
-        await new Promise((resolve) => setTimeout(resolve, 1_220));
+        await new Promise((resolve) => setTimeout(resolve, 1_400));
         useGameStore.getState().lockCounterTarget(bindings.maela);
         useGameStore.getState().confirmCounterTargeting();
         useGameStore.setState({

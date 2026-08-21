@@ -8,12 +8,12 @@ import {
 } from "../src/product/productCapabilities";
 import { createResumeRuntime } from "../src/persistence/resumeRuntime";
 
-test("the active product preset is the demo and Early Access changes only resume", () => {
+test("the demo enables history without resume and the regression preset preserves resume alone", () => {
   assert.equal(PRODUCT_CAPABILITIES, DEMO_CAPABILITIES);
   assert.deepEqual(DEMO_CAPABILITIES, {
     edition: "demo",
     resumeGame: false,
-    seedHistory: false,
+    seedHistory: true,
   });
   assert.deepEqual(EARLY_ACCESS_RESUME_REGRESSION_CAPABILITIES, {
     edition: "early-access-resume-regression",

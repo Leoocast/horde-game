@@ -162,6 +162,22 @@ test("Host reveal, Surge, attacker order, life impact and outcome are projected 
   assert.equal(impactSignals.some((signal) => signal.kind === "game.ended" && signal.winner === "host"), true);
 });
 
+test("the technical end-game control publishes the same committed outcome signal", async () => {
+  await withStoreHarness(async () => {
+    const game = createTestGame("signals-trigger-end-game");
+    load(game);
+    const sessionId = gameplaySignalStream.snapshot().sessionId;
+
+    useGameStore.getState().triggerEndGame("player");
+
+    const ended = gameplaySignalStream.snapshot().signals.find((signal) => signal.kind === "game.ended");
+    assert.deepEqual(ended && { sessionId: ended.sessionId, winner: ended.winner }, {
+      sessionId,
+      winner: "player",
+    });
+  });
+});
+
 test("the first Surge pauses after its animation and before the Host reveals", async () => {
   await withStoreHarness(async () => {
     const game = createTestGame("signals-surge-explanation-seam");

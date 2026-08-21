@@ -22384,6 +22384,11 @@ body.destiny-rewrite-active .main-menu-shell {
 }
 body.destiny-rewrite-absorbing .game-screen,
 body.destiny-rewrite-absorbing .main-menu-shell { animation: destiny-scene-collapse 980ms cubic-bezier(0.42, 0.02, 0.76, 0.2) both; }
+body.destiny-rewrite-covered .game-screen,
+body.destiny-rewrite-covered .main-menu-shell {
+  opacity: 0;
+  transform: scale(0.86);
+}
 body.destiny-rewrite-revealing .game-screen,
 body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-return 860ms cubic-bezier(0.14, 0.78, 0.2, 1) both; }
 
@@ -22460,6 +22465,8 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
 /* La liberación dura 1040 ms: el velo se retira antes para que la escena vuelva bajo las brasas y
    el overlay sólo se apaga al final, cuando el shader ya terminó su descarga. */
 .destiny-vortex-overlay.is-revealing { animation: destiny-overlay-release 1040ms ease-out both; }
+.destiny-vortex-overlay.is-covered .destiny-vortex-veil { opacity: 1; transform: scale(1); }
+.destiny-vortex-overlay.is-covered .destiny-vortex-caption { opacity: 1; }
 .destiny-vortex-overlay.is-revealing .destiny-vortex-veil { animation: destiny-veil-release 760ms ease-out both; }
 .destiny-vortex-overlay.is-revealing .destiny-vortex-still { animation: destiny-still-release 620ms ease-out both; }
 .destiny-vortex-overlay.is-revealing .destiny-vortex-caption { animation: destiny-caption-out 420ms ease-in both; }
