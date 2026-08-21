@@ -585,7 +585,7 @@ Preparación de la identidad, llama `loadScenario` y alterna la propia herramien
 Volver desde el Board conserva shortlist, selección y último resultado. La búsqueda nunca muta
 Zustand; sólo ese handoff explícito toca el Board.
 
-Durante una partida normal, la barra superior coloca **Reescribir** antes de Música y Ajustes. Su
+Durante una partida normal, la barra superior coloca **Reescribir**, **Copiar identidad**, Música y Ajustes, en ese orden. Su
 acción principal vuelve al origen de la misma seed, con los mismos decks, dificultad y modo;
 **Contemplar otro futuro** abandona el intento y abre la preparación con los decks actuales y una
 seed nueva. Ajustes in-game no vuelve a mostrar, editar ni regenerar la seed. Victoria y derrota
@@ -605,8 +605,9 @@ lleva título, raja ni divisor. Copiar y cerrar viven con contraste medio junto 
 derecho de la composición y ganan presencia con hover o foco; copiar expone el `GameTooltip`
 compartido y localizado.
 **Reescribir este
-futuro** reutiliza el botón de Destino establecido por `LOST FUTURE`; sólo invierte el giro de su
-ornamento en este diálogo. **Contemplar
+futuro** reutiliza el botón de Destino establecido por `LOST FUTURE`. El ornamento radial cubre la
+superficie completa y gira hacia la izquierda tanto en la cabecera como en el diálogo, los desenlaces
+y el tutorial. **Contemplar
 otro futuro** queda debajo como salida textual tenue. No recupera el antiguo sigilo centrado.
 
 El vórtice es un agujero negro dibujado por el renderer WebGL compartido: `destinyVortexShader.ts`

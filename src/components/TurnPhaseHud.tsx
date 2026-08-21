@@ -17,7 +17,6 @@ export function TurnPhaseHud({ game, setupTurns }: { game: GameState; setupTurns
 
   if (setup) {
     const stepLabel = t("phase.setupStep", { current: setup.current, total: setup.total });
-    const compactLabel = t("phase.setupStepBanner", { current: setup.current, total: setup.total });
     return (
       <div
         ref={(element) => guidedAnchorRegistry.set(
@@ -28,7 +27,10 @@ export function TurnPhaseHud({ game, setupTurns }: { game: GameState; setupTurns
         className="game-turn-hud is-setup flex h-10 items-center px-4 text-center text-[#f6e6b8]"
         aria-label={`${t("phase.setup")}. ${stepLabel}`}
       >
-        <div className="game-setup-heading whitespace-nowrap text-sm font-black uppercase leading-none">{compactLabel}</div>
+        <div className="game-setup-heading whitespace-nowrap text-sm font-black uppercase leading-none">
+          <span>{t("phase.setup")}</span>
+          <span className="game-setup-progress-numbers">{setup.current}/{setup.total}</span>
+        </div>
       </div>
     );
   }

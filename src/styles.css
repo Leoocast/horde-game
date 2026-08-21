@@ -2349,9 +2349,14 @@
     animation: none;
   }
 
-  .game-screen.is-overture-settling .game-command-bar,
-  .game-screen.is-overture-settling .game-hud-host {
+  .game-screen.is-overture-settling .game-command-bar {
     animation: encounter-board-ui-top 620ms ease-out both;
+  }
+
+  /* Este nodo contiene el panel centrado de la Hueste con `position: fixed`. Darle un
+     `transform` lo posiciona temporalmente contra el HUD derecho en vez del viewport. */
+  .game-screen.is-overture-settling .game-hud-host {
+    animation: encounter-board-ui-top-fade 620ms ease-out both;
   }
 
   .game-screen.is-overture-settling .game-hud-player {
@@ -2394,6 +2399,11 @@
   @keyframes encounter-board-ui-top {
     from { opacity: 0; transform: translateY(-18px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes encounter-board-ui-top-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   @keyframes encounter-board-ui-bottom {
@@ -11942,9 +11952,19 @@
 }
 
 .game-setup-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.48em;
   color: #ead9a3;
   font-family: Georgia, "Times New Roman", serif;
   letter-spacing: 0.09em;
+}
+
+.game-setup-progress-numbers {
+  font-family: var(--hf-ui-font-body);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  line-height: 1;
 }
 
 .game-screen .old-panel,
@@ -22010,13 +22030,15 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
 .destiny-command-button::before {
   position: absolute;
   top: 50%;
-  left: 28px;
-  width: 72px;
-  height: 72px;
+  left: 50%;
+  width: calc(100% + 64px);
+  height: auto;
+  aspect-ratio: 1;
   border-radius: 50%;
   background: conic-gradient(from 20deg, transparent, rgb(108 180 178 / 0.18), transparent 34%, rgb(222 196 116 / 0.16), transparent 68%);
   content: "";
   opacity: 0.65;
+  pointer-events: none;
   transform: translate(-50%, -50%);
   transition: opacity 220ms ease;
   animation: destiny-command-orbit 8s linear infinite;
@@ -22281,8 +22303,6 @@ body.is-destiny-dialog-open.is-destiny-dialog-closing .temporal-backdrop-grid {
   margin: 0 auto;
 }
 
-.destiny-dialog-primary::before { animation-direction: reverse; }
-
 @media (max-width: 560px) {
   .hand-limit-actions { grid-template-columns: 1fr; }
 
@@ -22402,7 +22422,7 @@ body.destiny-rewrite-revealing .main-menu-shell { animation: destiny-scene-retur
 .destiny-vortex-overlay.is-revealing .destiny-vortex-still { animation: destiny-still-release 620ms ease-out both; }
 .destiny-vortex-overlay.is-revealing .destiny-vortex-caption { animation: destiny-caption-out 420ms ease-in both; }
 
-@keyframes destiny-command-orbit { to { transform: translate(-50%, -50%) rotate(1turn); } }
+@keyframes destiny-command-orbit { to { transform: translate(-50%, -50%) rotate(-1turn); } }
 @keyframes destiny-command-shimmer { 0% { left: -35%; opacity: 0; } 22% { opacity: 1; } 100% { left: 120%; opacity: 0; } }
 @keyframes destiny-dialog-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes destiny-dialog-backdrop-out { from { opacity: 1; } to { opacity: 0; } }

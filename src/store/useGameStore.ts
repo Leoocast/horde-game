@@ -1598,7 +1598,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     else if (failure) publishGameplayDenial(intent, failure);
   },
   toggleAttacker: (id) => {
-    const intendedSelected = !get().game.combat.playerAttackers.includes(id);
+    const currentGame = get().game;
+    const intendedSelected = !currentGame.combat.playerAttackers.includes(id);
+    const intendedAttacker = currentGame.player.field.find((card) => card.instanceId === id);
     const intent = { kind: "combat.toggleAttacker", cardId: id, selected: intendedSelected } as const;
     if (!gameplayIntentAllowed(intent)) return;
     let selectionChanged = false;
@@ -1612,7 +1614,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selected = isAttacking;
       if (next.lastActionResult?.ok === false) {
         failure = next.lastActionResult;
-        showActionToast(next.lastActionResult.reason);
+        if (intendedSelected && next.lastActionResult.code === "STABILIZING" && intendedAttacker) {
+          showActionToast(
+            uiText("toast.stabilizingAttack", { card: uiCardName(intendedAttacker) }),
+            "toast.attackUnavailable",
+          );
+        } else {
+          showActionToast(next.lastActionResult.reason);
+        }
       }
       if (!wasAttacking && isAttacking) {
         useAudioStore.getState().playSfx(AUDIO_FEATURE_FLAGS.selectAttacker ? "selectAttacker" : "playLand");

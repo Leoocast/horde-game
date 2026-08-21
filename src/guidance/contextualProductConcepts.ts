@@ -108,7 +108,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
     copy: {
       titleKey: "guided.contextual.product.stabilizingTitle",
       bodyKey: "guided.contextual.product.stabilizingBody",
-      glossaryTerms: ["stabilizing", "action"],
+      glossaryTerms: ["stabilizing"],
     },
     signalKinds: ["action.denied"],
     evaluate: (signal) => signal.kind === "action.denied"

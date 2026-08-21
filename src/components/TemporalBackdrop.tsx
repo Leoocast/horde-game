@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 
+import { useTranslation } from "../i18n/useTranslation";
 import {
   TEMPORAL_BACKDROP_FRAGMENT,
   TEMPORAL_BACKDROP_VERTEX,
@@ -17,7 +18,7 @@ const DIAL_LABELS = [
   { x: 160, y: 163, text: "135°" },
   { x: 0, y: 228, text: "180° · S", textAnchor: "middle" },
   { x: -160, y: 163, text: "225°", textAnchor: "end" },
-  { x: -217, y: 4, text: "270° · O", textAnchor: "end" },
+  { x: -217, y: 4, text: "270°", cardinal: "west", textAnchor: "end" },
   { x: -160, y: -155, text: "315°", textAnchor: "end" },
 ] as const;
 
@@ -75,6 +76,7 @@ export function TemporalBackdrop({
   /** Señala la revisión exacta que ya terminó de presentar. */
   onDialSettled?: (dialRevision: number) => void;
 }) {
+  const t = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const dialRef = useRef<SVGGElement | null>(null);
   const dialLabelRefs = useRef<Array<SVGTextElement | null>>([]);
@@ -380,7 +382,7 @@ export function TemporalBackdrop({
 
           {DIAL_LABELS.map((label, index) => (
             <text
-              key={label.text}
+              key={`${label.x}:${label.y}`}
               ref={(element) => { dialLabelRefs.current[index] = element; }}
               className="dial-label"
               x={label.x}
@@ -388,7 +390,7 @@ export function TemporalBackdrop({
               textAnchor={"textAnchor" in label ? label.textAnchor : undefined}
               transform={uprightTemporalDialLabelTransform(0, label)}
             >
-              {label.text}
+              {"cardinal" in label ? `${label.text} · ${t("destiny.cardinalWest")}` : label.text}
             </text>
           ))}
         </g>

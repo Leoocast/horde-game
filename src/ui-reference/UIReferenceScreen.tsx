@@ -48,6 +48,7 @@ const BUTTON_ENTRY_IDS: readonly string[] = [
   "start-menu",
   "app-header",
   "music-player-menu",
+  "destiny-copy-identity-button",
   "settings-controls",
   "destiny-rewrite-dialog",
   "phase-controls",
@@ -72,6 +73,7 @@ const TEXT_ENTRY_IDS: readonly string[] = [
 const CONTROL_ENTRY_IDS: readonly string[] = [
   "settings-controls",
   "music-player-menu",
+  "destiny-copy-identity-button",
   "settings-menu-modal",
   "destiny-rewrite-dialog",
   "phase-controls",

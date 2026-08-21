@@ -65,6 +65,55 @@ test("Preparation progress preserves the original total across normal play and r
   assert.equal(translate("es", "orb.endTurn"), "Terminar turno");
 });
 
+test("Preparation HUD keeps its numerals aligned with the interface font", () => {
+  const hudSource = readFileSync(new URL("../src/components/TurnPhaseHud.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(hudSource, /className="game-setup-progress-numbers"[^>]*>\{setup\.current\}\/\{setup\.total\}<\/span>/u);
+  assert.match(
+    stylesSource,
+    /\.game-setup-progress-numbers\s*\{[^}]*font-family:\s*var\(--hf-ui-font-body\);[^}]*font-variant-numeric:\s*tabular-nums;/su,
+  );
+});
+
+test("the degree dial localizes West without changing the other cardinal initials", () => {
+  const backdropSource = readFileSync(new URL("../src/components/TemporalBackdrop.tsx", import.meta.url), "utf8");
+
+  assert.equal(translate("es", "destiny.cardinalWest"), "O");
+  assert.equal(translate("en", "destiny.cardinalWest"), "W");
+  assert.match(backdropSource, /t\("destiny\.cardinalWest"\)/u);
+});
+
+test("a Stabilizing attack attempt explains the attack restriction in modal and toast copy", () => {
+  const storeSource = readFileSync(new URL("../src/store/useGameStore.ts", import.meta.url), "utf8");
+  const conceptsSource = readFileSync(new URL("../src/guidance/contextualProductConcepts.ts", import.meta.url), "utf8");
+
+  assert.equal(translate("es", "guided.contextual.product.stabilizingTitle"), "Este Eco todavía no puede atacar");
+  assert.equal(
+    translate("es", "guided.contextual.product.stabilizingBody"),
+    "Fue Invocado este turno y sigue Estabilizándose. Podrá atacar en tu próximo turno.",
+  );
+  assert.equal(translate("es", "toast.attackUnavailable"), "Todavía no puede atacar");
+  assert.equal(
+    translate("es", "toast.stabilizingAttack", { card: "Liora" }),
+    "Liora sigue Estabilizándose. Podrá atacar en tu próximo turno.",
+  );
+  assert.match(conceptsSource, /glossaryTerms:\s*\["stabilizing"\]/u);
+  assert.match(storeSource, /"toast\.stabilizingAttack"/u);
+  assert.match(storeSource, /"toast\.attackUnavailable"/u);
+});
+
+test("the Host Archive HUD fades into its centered fixed position without a transformed ancestor", () => {
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  const hostEntrance = stylesSource.match(/\.game-screen\.is-overture-settling \.game-hud-host\s*\{[^}]*\}/su)?.[0] ?? "";
+  const hostKeyframes = stylesSource.match(/@keyframes encounter-board-ui-top-fade\s*\{[^}]*\}\s*[^}]*\}/su)?.[0] ?? "";
+
+  assert.match(hostEntrance, /animation:\s*encounter-board-ui-top-fade/u);
+  assert.doesNotMatch(hostEntrance, /encounter-board-ui-top(?:\s|;)/u);
+  assert.match(hostKeyframes, /opacity:\s*0/u);
+  assert.doesNotMatch(hostKeyframes, /transform:/u);
+});
+
 // Preparation is taught by the tutorial and labelled by the permanent HUD, so both languages must
 // keep a single name for it. English previously mixed "Setup" and "Extra Turn" with the lesson copy.
 test("Preparation keeps one name per language across HUD, orb and guided copy", () => {
@@ -1642,7 +1691,7 @@ test("UI Reference inventories only real player UI and traces every component to
   assert.match(destinyDialogSource, /<GameTooltip content=\{t\("destiny\.copyIdentity"\)\} side="bottom">[\s\S]*?className="destiny-dialog-copy"/u);
   assert.doesNotMatch(destinyDialogSource, /data-tooltip/u);
   assert.doesNotMatch(gameStyles, /\.destiny-dialog-copy::after/u);
-  assert.match(gameStyles, /\.destiny-dialog-primary::before \{ animation-direction: reverse; \}/u);
+  assert.doesNotMatch(gameStyles, /\.destiny-dialog-primary::before\s*\{[^}]*animation-direction:\s*reverse/u);
   assert.match(gameStyles, /\.destiny-dialog-secondary \{[^}]*border: 0;[^}]*background: transparent;[^}]*font-size: 9px;/su);
   assert.match(temporalBackdropSource, /const presentedDial = dialMix - destinyMix \* 180;[\s\S]*?positionDial\(presentedDial\)/u);
   assert.match(temporalBackdropSource, /uprightTemporalDialLabelTransform\(degrees, DIAL_LABELS\[index\]\)/u);

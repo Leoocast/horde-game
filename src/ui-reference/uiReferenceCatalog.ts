@@ -104,6 +104,14 @@ export const UI_REFERENCE_CATALOG: readonly UiReferenceEntry[] = [
     status: "product-variant",
   },
   {
+    id: "destiny-copy-identity-button",
+    group: "Navegación y ajustes",
+    component: "DestinyCopyIdentityButton",
+    source: "src/components/DestinyCopyIdentityButton.tsx",
+    usedIn: ["Board normal → AppHeader → Copiar identidad del Futuro"],
+    status: "product-variant",
+  },
+  {
     id: "settings-menu-modal",
     group: "Modales y diálogos",
     component: "SettingsMenu",

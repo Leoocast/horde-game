@@ -74,17 +74,23 @@ test("degree labels counter-rotate around their anchors and stay horizontal", ()
 });
 
 test("the narrative Future control owns normal rewrites outside Settings", async () => {
-  const [header, settings, result, transition, shader, warmup, app] = await Promise.all([
+  const [header, copyControl, settings, result, transition, shader, warmup, app, styles] = await Promise.all([
     readFile(new URL("../src/components/AppHeader.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/DestinyCopyIdentityButton.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/SettingsMenu.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/GameOutcomeDialog.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/DestinyRewriteTransition.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/destinyVortexShader.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/components/vfxWarmup.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/styles.css", import.meta.url), "utf8"),
   ]);
 
   assert.ok(header.indexOf("<DestinyRewriteControl") < header.indexOf("<MusicPlayerMenu"));
+  assert.ok(header.indexOf("<DestinyRewriteControl") < header.indexOf("<DestinyCopyIdentityButton"));
+  assert.ok(header.indexOf("<DestinyCopyIdentityButton") < header.indexOf("<MusicPlayerMenu"));
+  assert.match(copyControl, /writeClipboardText\(seed\)/u);
+  assert.match(copyControl, /<GameTooltip content=\{t\("destiny\.copyIdentity"\)\}/u);
   assert.doesNotMatch(header, /futureSeed\?\.trim\(\)\.toLowerCase\(\) !== "developer"/u);
   assert.doesNotMatch(settings, /settings\.battleSeed|game-seed-input|setSeed/u);
   assert.match(settings, /!guided && isDeveloperMode/u);
@@ -103,6 +109,12 @@ test("the narrative Future control owns normal rewrites outside Settings", async
   assert.match(app, /reset\(transition\.seed, transition\.setupTurns\)/u);
   assert.match(app, /\}, \[reset, startBattleMusic\]\);/u);
   assert.match(app, /setMenuReturnScreen\("setup"\)/u);
+  const commandRadial = styles.match(/\.destiny-command-button::before\s*\{[^}]*\}/su)?.[0] ?? "";
+  assert.match(commandRadial, /left:\s*50%/u);
+  assert.match(commandRadial, /width:\s*calc\(100% \+ 64px\)/u);
+  assert.match(commandRadial, /aspect-ratio:\s*1/u);
+  assert.match(styles, /@keyframes destiny-command-orbit\s*\{\s*to\s*\{[^}]*rotate\(-1turn\)/su);
+  assert.doesNotMatch(styles, /\.destiny-dialog-primary::before\s*\{[^}]*animation-direction:\s*reverse/u);
 
   const lifecycleEffectAt = transition.indexOf("  useEffect(() => {");
   const shardEffectAt = transition.indexOf("  /* La escena no cae", lifecycleEffectAt);

@@ -1,0 +1,1436 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hostfall — Semillas del Destino · ChatGPT</title>
+  <style>
+    @font-face {
+      font-family: "HF Cinzel";
+      src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+      font-weight: 500 900;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "HF Cinzel Decorative";
+      src: url("../assets/fonts/cinzel-decorative-latin.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "HF Lora";
+      src: url("../assets/fonts/lora-normal-latin.woff2") format("woff2");
+      font-weight: 400 700;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "HF Outfit";
+      src: url("../assets/fonts/outfit-latin.woff2") format("woff2");
+      font-weight: 400 800;
+      font-display: swap;
+    }
+
+    * { box-sizing: border-box; }
+
+    :root {
+      color-scheme: dark;
+      font-family: "HF Outfit", "Trebuchet MS", sans-serif;
+      background: #030807;
+      color: #dfd8bd;
+      --hf-gold: #c5a867;
+      --hf-gold-bright: #f0dda2;
+      --hf-gold-dim: #796943;
+      --hf-ink: #030807;
+      --hf-panel: rgb(8 17 16 / 0.88);
+      --hf-panel-solid: #08110f;
+      --hf-line: rgb(198 174 104 / 0.28);
+      --hf-line-bright: rgb(226 202 132 / 0.62);
+      --hf-muted: #7e9188;
+      --hf-muted-dark: #52625b;
+      --hf-preserved: #d8bf72;
+      --hf-lost: #c57562;
+      --hf-open: #7aaea6;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-width: 320px;
+      min-height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #030807;
+    }
+
+    button { font: inherit; }
+
+    button:focus-visible {
+      outline: 2px solid #f0dda2;
+      outline-offset: 3px;
+    }
+
+    .mockup-controls {
+      position: fixed;
+      z-index: 100;
+      right: auto;
+      bottom: 10px;
+      left: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px;
+      border: 1px solid rgb(186 167 112 / 0.34);
+      background: rgb(4 9 9 / 0.92);
+      box-shadow: 0 12px 32px rgb(0 0 0 / 0.42);
+      backdrop-filter: blur(12px);
+    }
+
+    .mockup-controls > span {
+      padding: 0 8px;
+      color: #65766e;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .mockup-controls button {
+      min-height: 28px;
+      border: 1px solid transparent;
+      padding: 0 10px;
+      background: transparent;
+      color: #87978f;
+      cursor: pointer;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    .mockup-controls button:hover { color: #e4d6a6; }
+
+    .mockup-controls button[aria-pressed="true"] {
+      border-color: rgb(211 187 117 / 0.52);
+      background: rgb(89 72 36 / 0.34);
+      color: #f0dda2;
+    }
+
+    .product-screen {
+      position: relative;
+      isolation: isolate;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at 50% 38%, rgb(28 76 72 / 0.18), transparent 48%),
+        linear-gradient(180deg, #06100f, #030807 74%);
+    }
+
+    .product-screen[hidden] { display: none; }
+
+    .temporal-sky,
+    .temporal-grid,
+    .temporal-vignette,
+    .star-field {
+      position: absolute;
+      z-index: -3;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .temporal-sky {
+      background:
+        radial-gradient(circle at 18% 18%, rgb(74 127 117 / 0.13), transparent 26%),
+        radial-gradient(circle at 76% 42%, rgb(101 84 47 / 0.12), transparent 32%),
+        radial-gradient(circle at 50% 120%, rgb(19 73 71 / 0.22), transparent 58%),
+        linear-gradient(142deg, #06100f, #020706 65%);
+    }
+
+    .temporal-grid {
+      z-index: -2;
+      opacity: 0.46;
+      background-image:
+        linear-gradient(rgb(143 190 181 / 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(143 190 181 / 0.04) 1px, transparent 1px);
+      background-size: 132px 82px;
+      mask-image: radial-gradient(ellipse at 50% 48%, #000 0 48%, transparent 86%);
+    }
+
+    .star-field {
+      z-index: -1;
+      opacity: 0.7;
+      background-image:
+        radial-gradient(circle at 8% 15%, #c8e6d5 0 1px, transparent 1.5px),
+        radial-gradient(circle at 23% 71%, #d8bd72 0 1px, transparent 1.5px),
+        radial-gradient(circle at 37% 32%, #b7d7cc 0 1px, transparent 1.5px),
+        radial-gradient(circle at 54% 12%, #e2d098 0 1px, transparent 1.5px),
+        radial-gradient(circle at 68% 67%, #a7d2c6 0 1px, transparent 1.5px),
+        radial-gradient(circle at 79% 27%, #d9cc9c 0 1px, transparent 1.5px),
+        radial-gradient(circle at 92% 58%, #b8ddd1 0 1px, transparent 1.5px);
+      background-size: 293px 227px, 331px 271px, 367px 307px, 401px 337px, 439px 373px, 479px 409px, 523px 449px;
+    }
+
+    .temporal-vignette {
+      z-index: 6;
+      background:
+        linear-gradient(90deg, rgb(0 3 3 / 0.58), transparent 12%, transparent 88%, rgb(0 3 3 / 0.58)),
+        linear-gradient(180deg, rgb(0 3 3 / 0.42), transparent 16%, transparent 78%, rgb(0 3 3 / 0.64));
+    }
+
+    .archive-shell {
+      position: relative;
+      z-index: 8;
+      display: grid;
+      grid-template-rows: 96px minmax(0, 1fr) 56px;
+      width: 100%;
+      height: 100%;
+    }
+
+    .archive-header {
+      display: grid;
+      grid-template-columns: minmax(190px, 0.8fr) minmax(430px, 1.4fr) minmax(280px, 0.8fr);
+      align-items: center;
+      gap: 24px;
+      padding: 14px clamp(22px, 3.6vw, 68px) 12px;
+      border-bottom: 1px solid rgb(198 174 104 / 0.19);
+      background: linear-gradient(180deg, rgb(3 8 8 / 0.82), rgb(3 8 8 / 0.24));
+    }
+
+    .archive-back,
+    .quiet-action,
+    .product-action,
+    .copy-action,
+    .outcome-link {
+      border: 0;
+      background: transparent;
+      color: #8c9c94;
+      cursor: pointer;
+    }
+
+    .archive-back {
+      justify-self: start;
+      padding: 8px 0;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .archive-back:hover { color: #ead59b; }
+
+    .archive-heading { text-align: center; }
+
+    .archive-heading p,
+    .detail-kicker,
+    .outcome-kicker,
+    .outcome-summary-kicker,
+    .future-index-title,
+    .history-heading,
+    .future-stat span {
+      margin: 0;
+      color: #8b7650;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    .archive-heading h1 {
+      margin: 3px 0 0;
+      color: #e8dbb1;
+      font-family: "HF Cinzel Decorative", Georgia, serif;
+      font-size: clamp(24px, 2.25vw, 38px);
+      font-weight: 400;
+      letter-spacing: 0.035em;
+      text-shadow: 0 0 24px rgb(190 164 92 / 0.12);
+    }
+
+    .archive-tally {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: clamp(14px, 2vw, 28px);
+    }
+
+    .archive-tally div {
+      display: grid;
+      justify-items: end;
+    }
+
+    .archive-tally span {
+      color: #60736a;
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .archive-tally strong {
+      color: #cab87c;
+      font-family: "HF Lora", Georgia, serif;
+      font-size: 18px;
+      font-weight: 400;
+    }
+
+    .archive-main {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(330px, 28vw) minmax(0, 1fr);
+      padding: clamp(18px, 2.2vw, 38px) clamp(22px, 3.6vw, 68px) 14px;
+    }
+
+    .future-index {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid rgb(198 174 104 / 0.19);
+      padding-right: clamp(16px, 2.1vw, 34px);
+    }
+
+    .future-index-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 0 12px;
+    }
+
+    .future-index-title span:last-child {
+      color: #54655d;
+      letter-spacing: 0.12em;
+    }
+
+    .future-list {
+      min-height: 0;
+      display: grid;
+      align-content: start;
+      gap: 5px;
+    }
+
+    .future-entry {
+      position: relative;
+      display: grid;
+      grid-template-columns: 6px minmax(0, 1fr) auto;
+      gap: 13px;
+      min-height: 72px;
+      border: 1px solid transparent;
+      padding: 9px 11px 9px 0;
+      background: transparent;
+      color: #bdb89f;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+    }
+
+    .future-entry:hover {
+      border-color: rgb(190 170 108 / 0.22);
+      background: rgb(15 26 23 / 0.46);
+      transform: translateX(3px);
+    }
+
+    .future-entry[aria-pressed="true"] {
+      border-color: rgb(203 181 112 / 0.38);
+      background:
+        linear-gradient(90deg, rgb(58 54 35 / 0.42), transparent 72%),
+        rgb(11 21 19 / 0.68);
+    }
+
+    .future-entry-mark {
+      width: 6px;
+      height: 100%;
+      background: var(--entry-color);
+      box-shadow: 0 0 12px color-mix(in srgb, var(--entry-color) 52%, transparent);
+      opacity: 0.8;
+    }
+
+    .future-entry-copy {
+      min-width: 0;
+      display: grid;
+      align-content: center;
+      gap: 4px;
+    }
+
+    .future-entry-copy small {
+      color: var(--entry-color);
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.17em;
+      text-transform: uppercase;
+    }
+
+    .future-entry-copy strong {
+      overflow: hidden;
+      color: #dfd3a8;
+      font-family: "HF Cinzel", Georgia, serif;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .future-entry-copy span {
+      overflow: hidden;
+      color: #6f8178;
+      font-size: 9px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .future-entry-attempts {
+      align-self: center;
+      display: grid;
+      justify-items: center;
+      min-width: 42px;
+      color: #7f8f87;
+    }
+
+    .future-entry-attempts strong {
+      color: #b9ad83;
+      font-family: "HF Lora", Georgia, serif;
+      font-size: 17px;
+      font-weight: 400;
+    }
+
+    .future-entry-attempts span {
+      font-size: 7px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .future-detail {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(260px, 0.9fr) minmax(420px, 1.35fr);
+      gap: clamp(28px, 4vw, 72px);
+      align-items: center;
+      padding: 0 clamp(8px, 2.4vw, 46px) 0 clamp(24px, 3.6vw, 64px);
+    }
+
+    .future-identity {
+      min-width: 0;
+      display: grid;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .destiny-instrument {
+      position: relative;
+      width: min(31vw, 360px);
+      min-width: 230px;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      color: var(--detail-color, var(--hf-preserved));
+      filter: drop-shadow(0 0 28px color-mix(in srgb, currentColor 20%, transparent));
+    }
+
+    .destiny-instrument::before,
+    .destiny-instrument::after {
+      position: absolute;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+      content: "";
+      opacity: 0.18;
+    }
+
+    .destiny-instrument::before { inset: 7%; }
+    .destiny-instrument::after { inset: 19%; border-style: dotted; opacity: 0.28; }
+
+    .destiny-instrument svg {
+      width: 92%;
+      height: 92%;
+      overflow: visible;
+    }
+
+    .dial-ring,
+    .dial-arc,
+    .cardinal-line,
+    .cardinal-cut {
+      fill: none;
+      stroke: currentColor;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .dial-ring { stroke-width: 1; opacity: 0.44; }
+    .dial-arc { stroke-width: 1.3; opacity: 0.72; stroke-dasharray: 3 9; }
+    .cardinal-line { stroke-width: 1.15; opacity: 0.54; }
+    .cardinal-cut { stroke-width: 2; opacity: 0.92; }
+    .cardinal-fill { fill: currentColor; opacity: 0.14; }
+    .cardinal-node { fill: #06100f; stroke: currentColor; stroke-width: 1.4; }
+    .cardinal-heart { fill: currentColor; opacity: 0.92; }
+
+    .instrument-code {
+      position: absolute;
+      display: grid;
+      justify-items: center;
+      pointer-events: none;
+    }
+
+    .instrument-code span {
+      color: #667870;
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .instrument-code strong {
+      margin-top: 2px;
+      color: #ead9a3;
+      font-family: "HF Lora", Georgia, serif;
+      font-size: clamp(23px, 2.5vw, 38px);
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      text-shadow: 0 0 22px rgb(203 178 104 / 0.2);
+    }
+
+    .future-state-line {
+      display: flex;
+      width: min(310px, 100%);
+      align-items: center;
+      gap: 10px;
+      margin-top: -9px;
+      color: var(--detail-color, var(--hf-preserved));
+    }
+
+    .future-state-line::before,
+    .future-state-line::after {
+      height: 1px;
+      flex: 1;
+      background: linear-gradient(90deg, transparent, currentColor);
+      content: "";
+      opacity: 0.48;
+    }
+
+    .future-state-line::after { transform: scaleX(-1); }
+
+    .future-state-line span {
+      font-family: "HF Cinzel", Georgia, serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .future-matchup {
+      margin: 13px 0 0;
+      color: #7f9188;
+      font-family: "HF Lora", Georgia, serif;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .future-matchup strong { color: #cfc59d; font-weight: 400; }
+
+    .future-record {
+      min-width: 0;
+      align-self: stretch;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .detail-kicker { color: var(--detail-color, var(--hf-preserved)); }
+
+    .future-record h2 {
+      margin: 6px 0 0;
+      color: #e4d8ac;
+      font-family: "HF Cinzel", Georgia, serif;
+      font-size: clamp(22px, 2vw, 34px);
+      font-weight: 600;
+      letter-spacing: 0.035em;
+    }
+
+    .future-record > p {
+      max-width: 650px;
+      margin: 7px 0 0;
+      color: #819188;
+      font-family: "HF Lora", Georgia, serif;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .future-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px 30px;
+      margin: 18px 0 0;
+      padding: 13px 0;
+      border-top: 1px solid rgb(198 174 104 / 0.17);
+      border-bottom: 1px solid rgb(198 174 104 / 0.17);
+    }
+
+    .future-stat { display: grid; gap: 3px; }
+    .future-stat span { color: #62736b; letter-spacing: 0.13em; }
+
+    .future-stat strong {
+      color: #cfc39a;
+      font-family: "HF Lora", Georgia, serif;
+      font-size: 13px;
+      font-weight: 400;
+    }
+
+    .history-heading { margin-top: 18px; color: #7f704f; }
+
+    .attempt-history {
+      position: relative;
+      display: grid;
+      gap: 0;
+      margin-top: 7px;
+    }
+
+    .attempt-history::before {
+      position: absolute;
+      top: 15px;
+      bottom: 15px;
+      left: 5px;
+      width: 1px;
+      background: linear-gradient(var(--detail-color, var(--hf-preserved)), rgb(121 105 67 / 0.16));
+      content: "";
+      opacity: 0.55;
+    }
+
+    .attempt-row {
+      position: relative;
+      display: grid;
+      grid-template-columns: 11px minmax(118px, 0.55fr) minmax(0, 1fr);
+      gap: 13px;
+      align-items: baseline;
+      padding: 8px 0;
+    }
+
+    .attempt-row i {
+      position: relative;
+      z-index: 1;
+      width: 11px;
+      height: 11px;
+      border: 1px solid var(--attempt-color, #82948b);
+      background: #07100e;
+      transform: rotate(45deg);
+    }
+
+    .attempt-row:last-child i {
+      background: var(--attempt-color, var(--detail-color));
+      box-shadow: 0 0 10px color-mix(in srgb, var(--attempt-color, var(--detail-color)) 42%, transparent);
+    }
+
+    .attempt-row strong {
+      color: #a9996c;
+      font-family: "HF Cinzel", Georgia, serif;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .attempt-row span {
+      color: #85958d;
+      font-family: "HF Lora", Georgia, serif;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .future-actions,
+    .outcome-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 9px;
+      margin-top: 18px;
+    }
+
+    .product-action {
+      min-height: 42px;
+      border: 1px solid rgb(190 169 106 / 0.38);
+      padding: 0 18px;
+      background: linear-gradient(180deg, rgb(32 41 41 / 0.96), rgb(9 16 17 / 0.98));
+      color: #cfc6a4;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      box-shadow: inset 0 1px rgb(255 255 255 / 0.05), 0 9px 20px rgb(0 0 0 / 0.25);
+    }
+
+    .product-action:hover {
+      border-color: rgb(225 199 119 / 0.68);
+      color: #f0dda2;
+    }
+
+    .product-action.is-primary {
+      border-color: color-mix(in srgb, var(--detail-color, var(--hf-preserved)) 75%, #d9c77d);
+      background:
+        radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--detail-color, var(--hf-preserved)) 19%, transparent), transparent 62%),
+        linear-gradient(180deg, rgb(66 60 36 / 0.96), rgb(27 29 22 / 0.99));
+      color: #f2e2ad;
+    }
+
+    .copy-action {
+      min-height: 38px;
+      padding: 0 7px;
+      color: #71827a;
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .copy-action:hover { color: #cfbf8d; }
+
+    .archive-footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: #4e6058;
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .archive-footer::before,
+    .archive-footer::after {
+      width: min(12vw, 160px);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgb(172 155 100 / 0.32));
+      content: "";
+    }
+
+    .archive-footer::after { transform: scaleX(-1); }
+
+    /* Immediate outcome views */
+    .outcome-screen {
+      --outcome-color: var(--hf-preserved);
+      --outcome-soft: rgb(199 169 88 / 0.12);
+      display: grid;
+      place-items: center;
+    }
+
+    .outcome-screen.is-defeat {
+      --outcome-color: var(--hf-lost);
+      --outcome-soft: rgb(141 56 42 / 0.14);
+    }
+
+    .outcome-atmosphere {
+      position: absolute;
+      z-index: -1;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 43%, var(--outcome-soft), transparent 29%),
+        radial-gradient(ellipse at 50% 120%, rgb(13 61 59 / 0.22), transparent 62%);
+    }
+
+    .outcome-screen.is-defeat .outcome-atmosphere {
+      background:
+        radial-gradient(circle at 50% 42%, rgb(99 43 34 / 0.13), transparent 27%),
+        radial-gradient(ellipse at 50% 120%, rgb(30 45 43 / 0.18), transparent 62%);
+    }
+
+    .outcome-composition {
+      position: relative;
+      z-index: 10;
+      display: grid;
+      grid-template-rows: auto auto auto auto;
+      justify-items: center;
+      width: min(1120px, calc(100vw - 80px));
+      padding-top: 20px;
+      text-align: center;
+    }
+
+    .outcome-kicker {
+      display: flex;
+      width: min(440px, 80vw);
+      align-items: center;
+      gap: 13px;
+      color: var(--outcome-color);
+      letter-spacing: 0.3em;
+    }
+
+    .outcome-kicker::before,
+    .outcome-kicker::after {
+      height: 1px;
+      flex: 1;
+      background: linear-gradient(90deg, transparent, currentColor);
+      content: "";
+      opacity: 0.55;
+    }
+
+    .outcome-kicker::after { transform: scaleX(-1); }
+
+    .outcome-title {
+      margin: 12px 0 0;
+      color: #eee1b4;
+      font-family: "HF Cinzel Decorative", Georgia, serif;
+      font-size: clamp(36px, 5vw, 76px);
+      font-weight: 400;
+      letter-spacing: 0.035em;
+      line-height: 0.96;
+      text-shadow: 0 2px 0 #020504, 0 0 28px var(--outcome-soft);
+    }
+
+    .outcome-subtitle {
+      max-width: 630px;
+      margin: 10px 0 0;
+      color: #7f9188;
+      font-family: "HF Lora", Georgia, serif;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .outcome-seal {
+      position: relative;
+      display: flex;
+      width: min(460px, 70vw);
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-top: 14px;
+      padding: 9px 22px;
+      border-top: 1px solid rgb(198 174 104 / 0.24);
+      border-bottom: 1px solid rgb(198 174 104 / 0.24);
+    }
+
+    .outcome-seal span {
+      color: #63766d;
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.19em;
+      text-transform: uppercase;
+    }
+
+    .outcome-seal strong {
+      color: #decd96;
+      font-family: "HF Lora", Georgia, serif;
+      font-size: 22px;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+    }
+
+    .outcome-seal i {
+      width: 7px;
+      height: 7px;
+      border: 1px solid var(--outcome-color);
+      transform: rotate(45deg);
+    }
+
+    .outcome-memory {
+      width: min(920px, calc(100vw - 96px));
+      margin-top: 20px;
+      border-top: 1px solid rgb(198 174 104 / 0.18);
+      border-bottom: 1px solid rgb(198 174 104 / 0.18);
+      padding: 13px 0 14px;
+      background: linear-gradient(90deg, transparent, rgb(8 18 16 / 0.52) 14%, rgb(8 18 16 / 0.52) 86%, transparent);
+    }
+
+    .outcome-summary-kicker { color: #776844; }
+
+    .outcome-lines {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 9px;
+    }
+
+    .outcome-line {
+      min-width: 0;
+      padding: 0 22px;
+      border-right: 1px solid rgb(198 174 104 / 0.14);
+    }
+
+    .outcome-line:last-child { border-right: 0; }
+
+    .outcome-line strong {
+      display: block;
+      color: var(--outcome-color);
+      font-family: "HF Cinzel", Georgia, serif;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .outcome-line span {
+      display: block;
+      margin-top: 3px;
+      color: #819188;
+      font-family: "HF Lora", Georgia, serif;
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
+    .outcome-actions { justify-content: center; margin-top: 17px; }
+    .outcome-actions .product-action { --detail-color: var(--outcome-color); }
+
+    .outcome-link {
+      min-height: 42px;
+      padding: 0 9px;
+      color: #7c8d84;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .outcome-link:hover { color: #d8ca98; }
+
+    .outcome-cardinal {
+      position: absolute;
+      z-index: 0;
+      top: 50%;
+      left: 50%;
+      width: min(63vh, 45vw);
+      aspect-ratio: 1;
+      color: var(--outcome-color);
+      opacity: 0.12;
+      transform: translate(-50%, -50%);
+      filter: drop-shadow(0 0 44px var(--outcome-soft));
+    }
+
+    .outcome-cardinal svg { width: 100%; height: 100%; }
+
+    .outcome-screen.is-defeat .outcome-cardinal {
+      opacity: 0.08;
+      transform: translate(-50%, -50%) rotate(3deg) scale(1.04);
+      clip-path: polygon(0 0, 48% 0, 51% 46%, 100% 43%, 100% 100%, 0 100%);
+    }
+
+    .outcome-screen.is-defeat::after {
+      position: absolute;
+      z-index: 2;
+      inset: 0;
+      background:
+        linear-gradient(116deg, transparent 0 48.8%, rgb(199 117 98 / 0.17) 49%, transparent 49.25%),
+        linear-gradient(71deg, transparent 0 56.5%, rgb(199 117 98 / 0.12) 56.7%, transparent 57%),
+        linear-gradient(151deg, transparent 0 62%, rgb(199 117 98 / 0.1) 62.2%, transparent 62.4%);
+      content: "";
+      pointer-events: none;
+    }
+
+    .toast {
+      position: fixed;
+      z-index: 120;
+      right: 18px;
+      bottom: 18px;
+      max-width: min(340px, calc(100vw - 36px));
+      border: 1px solid rgb(202 181 113 / 0.42);
+      padding: 11px 14px;
+      background: rgb(7 15 14 / 0.96);
+      color: #d9c99b;
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px);
+      transition: opacity 150ms ease, transform 150ms ease;
+    }
+
+    .toast.is-visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 1120px) {
+      .archive-header {
+        grid-template-columns: 150px minmax(380px, 1fr) 230px;
+        gap: 12px;
+        padding-inline: 22px;
+      }
+
+      .archive-main {
+        grid-template-columns: 300px minmax(0, 1fr);
+        padding-inline: 22px;
+      }
+
+      .future-detail {
+        grid-template-columns: minmax(220px, 0.75fr) minmax(390px, 1.25fr);
+        gap: 22px;
+        padding-inline: 22px 8px;
+      }
+
+      .destiny-instrument { width: min(30vw, 300px); }
+      .future-stats { gap: 12px 20px; }
+      .attempt-row { grid-template-columns: 11px 110px minmax(0, 1fr); gap: 9px; }
+    }
+
+    @media (max-height: 760px) {
+      .archive-shell { grid-template-rows: 82px minmax(0, 1fr) 38px; }
+      .archive-header { padding-block: 10px 8px; }
+      .archive-main { padding-top: 12px; }
+      .future-entry { min-height: 61px; padding-block: 6px; }
+      .destiny-instrument { width: min(39vh, 270px); min-width: 205px; }
+      .future-state-line { margin-top: -4px; }
+      .future-record > p { line-height: 1.4; }
+      .future-stats { margin-top: 11px; padding-block: 9px; }
+      .history-heading { margin-top: 12px; }
+      .attempt-row { padding-block: 5px; }
+      .future-actions { margin-top: 10px; }
+      .product-action { min-height: 37px; }
+      .outcome-composition { padding-top: 28px; }
+      .outcome-title { margin-top: 8px; font-size: clamp(34px, 4.4vw, 58px); }
+      .outcome-subtitle { margin-top: 6px; }
+      .outcome-seal { margin-top: 9px; padding-block: 7px; }
+      .outcome-memory { margin-top: 12px; padding-block: 10px; }
+      .outcome-actions { margin-top: 10px; }
+    }
+
+    @media (max-width: 820px) {
+      html,
+      body { overflow: auto; }
+
+      .mockup-controls {
+        position: sticky;
+        top: 0;
+        bottom: auto;
+        left: 0;
+        justify-content: center;
+        width: 100%;
+        transform: none;
+      }
+
+      .mockup-controls > span { display: none; }
+      .product-screen { width: 100%; height: auto; min-height: calc(100vh - 39px); overflow: visible; }
+      .archive-shell { grid-template-rows: auto auto auto; }
+
+      .archive-header {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 8px;
+        padding: 18px;
+      }
+
+      .archive-back { justify-self: center; }
+      .archive-tally { justify-content: center; }
+      .archive-tally div { justify-items: center; }
+
+      .archive-main {
+        grid-template-columns: 1fr;
+        gap: 28px;
+        padding: 20px 18px 30px;
+      }
+
+      .future-index {
+        border-right: 0;
+        border-bottom: 1px solid rgb(198 174 104 / 0.19);
+        padding: 0 0 22px;
+      }
+
+      .future-detail {
+        grid-template-columns: 1fr;
+        padding: 0;
+      }
+
+      .destiny-instrument { width: min(320px, 78vw); }
+      .future-record { align-items: center; text-align: center; }
+      .future-stats,
+      .future-actions { justify-content: center; }
+      .attempt-history { width: min(590px, 100%); text-align: left; }
+      .archive-footer { padding: 16px 0 22px; }
+
+      .outcome-composition {
+        width: min(100%, calc(100vw - 34px));
+        padding: 80px 0 36px;
+      }
+
+      .outcome-memory { width: 100%; }
+      .outcome-lines { grid-template-columns: 1fr; gap: 12px; }
+      .outcome-line { border-right: 0; }
+      .outcome-cardinal { width: min(84vw, 460px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 1ms !important;
+        transition-duration: 1ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="mockup-controls" aria-label="Estados de la maqueta">
+    <span>Dirección ChatGPT</span>
+    <button type="button" data-view="archive" aria-pressed="true">Archivo</button>
+    <button type="button" data-view="victory" aria-pressed="false">Victoria</button>
+    <button type="button" data-view="defeat" aria-pressed="false">Derrota</button>
+  </nav>
+
+  <main class="product-screen" id="archive-screen" data-screen="archive">
+    <div class="temporal-sky" aria-hidden="true"></div>
+    <div class="temporal-grid" aria-hidden="true"></div>
+    <div class="star-field" aria-hidden="true"></div>
+    <div class="temporal-vignette" aria-hidden="true"></div>
+
+    <div class="archive-shell">
+      <header class="archive-header">
+        <button class="archive-back" type="button" data-demo-action="Volver al menú principal">← Menú principal</button>
+
+        <div class="archive-heading">
+          <p>Archivo del Cronista</p>
+          <h1>Semillas del Destino</h1>
+        </div>
+
+        <div class="archive-tally" aria-label="Resumen del archivo">
+          <div><span>Contemplados</span><strong>4</strong></div>
+          <div><span>Preservados</span><strong>2</strong></div>
+          <div><span>Inconclusos</span><strong>1</strong></div>
+        </div>
+      </header>
+
+      <div class="archive-main">
+        <aside class="future-index" aria-labelledby="future-index-heading">
+          <div class="future-index-title" id="future-index-heading">
+            <span>Futuros contemplados</span>
+            <span>Más reciente primero</span>
+          </div>
+
+          <div class="future-list">
+            <button class="future-entry" type="button" data-future-id="preserved" aria-pressed="true" style="--entry-color: var(--hf-preserved)">
+              <span class="future-entry-mark" aria-hidden="true"></span>
+              <span class="future-entry-copy">
+                <small>Destino preservado</small>
+                <strong>Futuro 482·117</strong>
+                <span>Elarion contra los Sinsepulcro · Veterano</span>
+              </span>
+              <span class="future-entry-attempts"><strong>3</strong><span>intentos</span></span>
+            </button>
+
+            <button class="future-entry" type="button" data-future-id="unfinished" aria-pressed="false" style="--entry-color: var(--hf-open)">
+              <span class="future-entry-mark" aria-hidden="true"></span>
+              <span class="future-entry-copy">
+                <small>Historia inconclusa</small>
+                <strong>Futuro 071·834</strong>
+                <span>Corte Carmesí contra Varka · Condenado</span>
+              </span>
+              <span class="future-entry-attempts"><strong>1</strong><span>intento</span></span>
+            </button>
+
+            <button class="future-entry" type="button" data-future-id="lost" aria-pressed="false" style="--entry-color: var(--hf-lost)">
+              <span class="future-entry-mark" aria-hidden="true"></span>
+              <span class="future-entry-copy">
+                <small>Futuro perdido</small>
+                <strong>Futuro 903·256</strong>
+                <span>Elarion contra Varka · Aventurero</span>
+              </span>
+              <span class="future-entry-attempts"><strong>2</strong><span>intentos</span></span>
+            </button>
+
+            <button class="future-entry" type="button" data-future-id="preservedCrimson" aria-pressed="false" style="--entry-color: var(--hf-preserved)">
+              <span class="future-entry-mark" aria-hidden="true"></span>
+              <span class="future-entry-copy">
+                <small>Destino preservado</small>
+                <strong>Futuro 314·602</strong>
+                <span>Corte Carmesí contra los Sinsepulcro · Veterano</span>
+              </span>
+              <span class="future-entry-attempts"><strong>1</strong><span>intento</span></span>
+            </button>
+          </div>
+        </aside>
+
+        <section class="future-detail" aria-live="polite">
+          <div class="future-identity">
+            <div class="destiny-instrument" id="destiny-instrument" style="--detail-color: var(--hf-preserved)" aria-hidden="true">
+              <svg viewBox="0 0 360 360">
+                <circle class="dial-ring" cx="180" cy="180" r="148"></circle>
+                <circle class="dial-arc" cx="180" cy="180" r="132"></circle>
+                <circle class="dial-ring" cx="180" cy="180" r="94"></circle>
+                <path class="cardinal-line" d="M180 24V336M24 180H336M70 70L290 290M290 70L70 290"></path>
+                <path class="cardinal-fill" d="M180 46L198 152L180 180L162 152ZM314 180L208 198L180 180L208 162ZM180 314L162 208L180 180L198 208ZM46 180L152 162L180 180L152 198Z"></path>
+                <path class="cardinal-cut" d="M180 46L188 151L180 170L172 151ZM314 180L209 188L190 180L209 172ZM180 314L172 209L180 190L188 209ZM46 180L151 172L170 180L151 188Z"></path>
+                <path class="cardinal-cut" d="M84 84L156 156M276 84L204 156M276 276L204 204M84 276L156 204"></path>
+                <circle class="cardinal-node" cx="180" cy="46" r="4"></circle>
+                <circle class="cardinal-node" cx="314" cy="180" r="4"></circle>
+                <circle class="cardinal-node" cx="180" cy="314" r="4"></circle>
+                <circle class="cardinal-node" cx="46" cy="180" r="4"></circle>
+                <rect class="cardinal-heart" x="173" y="173" width="14" height="14" transform="rotate(45 180 180)"></rect>
+              </svg>
+              <span class="instrument-code"><span>Semilla del Destino</span><strong id="detail-code">482·117</strong></span>
+            </div>
+
+            <div class="future-state-line" id="future-state-line" style="--detail-color: var(--hf-preserved)">
+              <span id="detail-state">Destino preservado</span>
+            </div>
+            <p class="future-matchup" id="detail-matchup"><strong>El Pacto de Elarion</strong><br />contra El Alzamiento de los Sinsepulcro</p>
+          </div>
+
+          <div class="future-record" id="future-record" style="--detail-color: var(--hf-preserved)">
+            <p class="detail-kicker" id="detail-kicker">Futuro 482·117 · Tres ramificaciones observadas</p>
+            <h2 id="detail-title">El Futuro que resistió</h2>
+            <p id="detail-description">Dos desenlaces terminaron en tragedia antes de que el Cronista encontrara la secuencia capaz de preservar esta historia.</p>
+
+            <div class="future-stats" id="future-stats">
+              <div class="future-stat"><span>Dificultad</span><strong id="detail-difficulty">Veterano</strong></div>
+              <div class="future-stat"><span>Última página</span><strong id="detail-turn">Turno 9</strong></div>
+              <div class="future-stat"><span>Contemplado</span><strong id="detail-date">Hoy</strong></div>
+            </div>
+
+            <div class="history-heading">Historial de reescrituras</div>
+            <div class="attempt-history" id="attempt-history"></div>
+
+            <div class="future-actions">
+              <button class="product-action is-primary" id="detail-primary" type="button" data-demo-action="Contemplar otro futuro">Contemplar otro futuro</button>
+              <button class="product-action" id="detail-secondary" type="button" data-demo-action="Reescribir este futuro">Reescribir este futuro</button>
+              <button class="copy-action" id="detail-copy" type="button">◇ Copiar identidad</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <footer class="archive-footer">Todo destino comienza como una posibilidad</footer>
+    </div>
+  </main>
+
+  <main class="product-screen outcome-screen" id="victory-screen" data-screen="victory" hidden>
+    <div class="temporal-sky" aria-hidden="true"></div>
+    <div class="temporal-grid" aria-hidden="true"></div>
+    <div class="star-field" aria-hidden="true"></div>
+    <div class="temporal-vignette" aria-hidden="true"></div>
+    <div class="outcome-atmosphere" aria-hidden="true"></div>
+    <div class="outcome-cardinal" aria-hidden="true">
+      <svg viewBox="0 0 360 360">
+        <circle class="dial-ring" cx="180" cy="180" r="148"></circle>
+        <circle class="dial-arc" cx="180" cy="180" r="132"></circle>
+        <path class="cardinal-line" d="M180 24V336M24 180H336M70 70L290 290M290 70L70 290"></path>
+        <path class="cardinal-fill" d="M180 38L198 152L180 180L162 152ZM322 180L208 198L180 180L208 162ZM180 322L162 208L180 180L198 208ZM38 180L152 162L180 180L152 198Z"></path>
+        <path class="cardinal-cut" d="M180 38L188 151L180 170L172 151ZM322 180L209 188L190 180L209 172ZM180 322L172 209L180 190L188 209ZM38 180L151 172L170 180L151 188Z"></path>
+        <rect class="cardinal-heart" x="172" y="172" width="16" height="16" transform="rotate(45 180 180)"></rect>
+      </svg>
+    </div>
+
+    <section class="outcome-composition" aria-labelledby="victory-title">
+      <p class="outcome-kicker">Victoria</p>
+      <h1 class="outcome-title" id="victory-title">Destino<br />preservado</h1>
+      <p class="outcome-subtitle">La Hueste ha sido silenciada. Esta posibilidad deja de ser un presagio y encuentra su lugar en la Crónica.</p>
+
+      <div class="outcome-seal"><i aria-hidden="true"></i><span>Futuro</span><strong>482·117</strong><i aria-hidden="true"></i></div>
+
+      <div class="outcome-memory">
+        <p class="outcome-summary-kicker">La última página</p>
+        <div class="outcome-lines">
+          <div class="outcome-line"><strong>Turno 9</strong><span>La última amenaza cayó antes de una nueva Oleada.</span></div>
+          <div class="outcome-line"><strong>31 recuerdos</strong><span>El Archivo de la Hueste fue enviado por completo a Memoria.</span></div>
+          <div class="outcome-line"><strong>7 de Vida</strong><span>El Cronista sobrevivió para preservar este desenlace.</span></div>
+        </div>
+      </div>
+
+      <div class="outcome-actions">
+        <button class="product-action is-primary" type="button" data-demo-action="Contemplar otro futuro">Contemplar otro futuro</button>
+        <button class="product-action" type="button" data-demo-action="Reescribir este futuro">Reescribir este futuro</button>
+        <button class="outcome-link" type="button" data-open-archive="preserved">Abrir Semillas del Destino →</button>
+      </div>
+    </section>
+  </main>
+
+  <main class="product-screen outcome-screen is-defeat" id="defeat-screen" data-screen="defeat" hidden>
+    <div class="temporal-sky" aria-hidden="true"></div>
+    <div class="temporal-grid" aria-hidden="true"></div>
+    <div class="star-field" aria-hidden="true"></div>
+    <div class="temporal-vignette" aria-hidden="true"></div>
+    <div class="outcome-atmosphere" aria-hidden="true"></div>
+    <div class="outcome-cardinal" aria-hidden="true">
+      <svg viewBox="0 0 360 360">
+        <circle class="dial-ring" cx="180" cy="180" r="148"></circle>
+        <circle class="dial-arc" cx="180" cy="180" r="132"></circle>
+        <path class="cardinal-line" d="M180 24V336M24 180H336M70 70L290 290M290 70L70 290"></path>
+        <path class="cardinal-fill" d="M180 38L198 152L180 180L162 152ZM322 180L208 198L180 180L208 162ZM180 322L162 208L180 180L198 208ZM38 180L152 162L180 180L152 198Z"></path>
+        <path class="cardinal-cut" d="M180 38L188 151L180 170L172 151ZM322 180L209 188L190 180L209 172ZM180 322L172 209L180 190L188 209ZM38 180L151 172L170 180L151 188Z"></path>
+        <rect class="cardinal-heart" x="172" y="172" width="16" height="16" transform="rotate(45 180 180)"></rect>
+      </svg>
+    </div>
+
+    <section class="outcome-composition" aria-labelledby="defeat-title">
+      <p class="outcome-kicker">Derrota</p>
+      <h1 class="outcome-title" id="defeat-title">Futuro<br />perdido</h1>
+      <p class="outcome-subtitle">La historia se quebró, pero su final no desaparece. El Cronista conserva este presagio para no repetirlo a ciegas.</p>
+
+      <div class="outcome-seal"><i aria-hidden="true"></i><span>Futuro</span><strong>903·256</strong><i aria-hidden="true"></i></div>
+
+      <div class="outcome-memory">
+        <p class="outcome-summary-kicker">La última página</p>
+        <div class="outcome-lines">
+          <div class="outcome-line"><strong>Turno 6</strong><span>La línea cayó durante el segundo asalto de la Hueste.</span></div>
+          <div class="outcome-line"><strong>18 recuerdos</strong><span>Más de la mitad del Archivo enemigo alcanzó su Memoria.</span></div>
+          <div class="outcome-line"><strong>4 aliados</strong><span>Cuatro Ecos permanecieron en Memoria al cerrarse este Futuro.</span></div>
+        </div>
+      </div>
+
+      <div class="outcome-actions">
+        <button class="product-action is-primary" type="button" data-demo-action="Reescribir este futuro">Reescribir este futuro</button>
+        <button class="product-action" type="button" data-demo-action="Contemplar otro futuro">Contemplar otro futuro</button>
+        <button class="outcome-link" type="button" data-open-archive="lost">Abrir Semillas del Destino →</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="demo-toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const futures = {
+      preserved: {
+        color: "var(--hf-preserved)",
+        code: "482·117",
+        fullSeed: "HF1-ELA-GRV-082-QC5",
+        state: "Destino preservado",
+        kicker: "Futuro 482·117 · Tres ramificaciones observadas",
+        title: "El Futuro que resistió",
+        description: "Dos desenlaces terminaron en tragedia antes de que el Cronista encontrara la secuencia capaz de preservar esta historia.",
+        matchup: "<strong>El Pacto de Elarion</strong><br />contra El Alzamiento de los Sinsepulcro",
+        difficulty: "Veterano",
+        turn: "Turno 9",
+        date: "Hoy",
+        primary: "Contemplar otro futuro",
+        secondary: "Reescribir este futuro",
+        attempts: [
+          { label: "Primer presagio", text: "La línea cayó en el turno 6.", color: "var(--hf-lost)" },
+          { label: "Segunda reescritura", text: "La Hueste cerró el Futuro en el turno 8.", color: "var(--hf-lost)" },
+          { label: "Tercera reescritura", text: "Destino preservado en el turno 9.", color: "var(--hf-preserved)" }
+        ]
+      },
+      unfinished: {
+        color: "var(--hf-open)",
+        code: "071·834",
+        fullSeed: "HF1-CEC-VRK-47A-1D9",
+        state: "Historia inconclusa",
+        kicker: "Futuro 071·834 · Una ramificación abierta",
+        title: "Una página todavía abierta",
+        description: "La aplicación se cerró en un checkpoint estable. Esta historia puede retomarse sin fingir que su desenlace ya fue observado.",
+        matchup: "<strong>La Corte del Eclipse Carmesí</strong><br />contra La Legión de Varka",
+        difficulty: "Condenado",
+        turn: "Turno 4",
+        date: "Ayer",
+        primary: "Continuar la Crónica",
+        secondary: "Reescribir desde el origen",
+        attempts: [
+          { label: "Primera contemplación", text: "Historia inconclusa al comienzo del turno 4.", color: "var(--hf-open)" }
+        ]
+      },
+      lost: {
+        color: "var(--hf-lost)",
+        code: "903·256",
+        fullSeed: "HF1-ELA-VRK-19S-7M2",
+        state: "Futuro perdido",
+        kicker: "Futuro 903·256 · Dos tragedias observadas",
+        title: "Un presagio aún sin respuesta",
+        description: "La misma posibilidad terminó dos veces bajo el asalto de Varka. El Archivo conserva ambos finales para una futura reescritura.",
+        matchup: "<strong>El Pacto de Elarion</strong><br />contra La Legión de Varka",
+        difficulty: "Aventurero",
+        turn: "Turno 6",
+        date: "Hace 3 días",
+        primary: "Reescribir este futuro",
+        secondary: "Contemplar otro futuro",
+        attempts: [
+          { label: "Primer presagio", text: "El Cronista cayó en el turno 5.", color: "var(--hf-lost)" },
+          { label: "Primera reescritura", text: "Futuro perdido en el turno 6.", color: "var(--hf-lost)" }
+        ]
+      },
+      preservedCrimson: {
+        color: "var(--hf-preserved)",
+        code: "314·602",
+        fullSeed: "HF1-CEC-GRV-6K2-P8Q",
+        state: "Destino preservado",
+        kicker: "Futuro 314·602 · Una ramificación observada",
+        title: "Preservado en el primer intento",
+        description: "La Corte convirtió su primera contemplación en historia. No hubo tragedias anteriores bajo esta misma Semilla.",
+        matchup: "<strong>La Corte del Eclipse Carmesí</strong><br />contra El Alzamiento de los Sinsepulcro",
+        difficulty: "Veterano",
+        turn: "Turno 11",
+        date: "Hace 6 días",
+        primary: "Contemplar otro futuro",
+        secondary: "Reescribir este futuro",
+        attempts: [
+          { label: "Primera contemplación", text: "Destino preservado en el turno 11.", color: "var(--hf-preserved)" }
+        ]
+      }
+    };
+
+    const screens = {
+      archive: document.getElementById("archive-screen"),
+      victory: document.getElementById("victory-screen"),
+      defeat: document.getElementById("defeat-screen")
+    };
+    const viewButtons = Array.from(document.querySelectorAll("[data-view]"));
+    const futureButtons = Array.from(document.querySelectorAll("[data-future-id]"));
+    const toast = document.getElementById("demo-toast");
+    let selectedFutureId = "preserved";
+    let toastTimer;
+
+    function showView(view) {
+      Object.entries(screens).forEach(([id, screen]) => { screen.hidden = id !== view; });
+      viewButtons.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.view === view)));
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+
+    function showToast(message) {
+      window.clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.classList.add("is-visible");
+      toastTimer = window.setTimeout(() => toast.classList.remove("is-visible"), 1800);
+    }
+
+    function renderFuture(id) {
+      const future = futures[id];
+      if (!future) return;
+      selectedFutureId = id;
+      futureButtons.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.futureId === id)));
+
+      document.getElementById("destiny-instrument").style.setProperty("--detail-color", future.color);
+      document.getElementById("future-state-line").style.setProperty("--detail-color", future.color);
+      document.getElementById("future-record").style.setProperty("--detail-color", future.color);
+      document.getElementById("detail-code").textContent = future.code;
+      document.getElementById("detail-state").textContent = future.state;
+      document.getElementById("detail-matchup").innerHTML = future.matchup;
+      document.getElementById("detail-kicker").textContent = future.kicker;
+      document.getElementById("detail-title").textContent = future.title;
+      document.getElementById("detail-description").textContent = future.description;
+      document.getElementById("detail-difficulty").textContent = future.difficulty;
+      document.getElementById("detail-turn").textContent = future.turn;
+      document.getElementById("detail-date").textContent = future.date;
+
+      const primary = document.getElementById("detail-primary");
+      const secondary = document.getElementById("detail-secondary");
+      primary.textContent = future.primary;
+      primary.dataset.demoAction = future.primary;
+      secondary.textContent = future.secondary;
+      secondary.dataset.demoAction = future.secondary;
+
+      const history = document.getElementById("attempt-history");
+      history.replaceChildren(...future.attempts.map((attempt) => {
+        const row = document.createElement("div");
+        row.className = "attempt-row";
+        row.style.setProperty("--attempt-color", attempt.color);
+        row.innerHTML = `<i aria-hidden="true"></i><strong>${attempt.label}</strong><span>${attempt.text}</span>`;
+        return row;
+      }));
+    }
+
+    viewButtons.forEach((button) => button.addEventListener("click", () => showView(button.dataset.view)));
+    futureButtons.forEach((button) => button.addEventListener("click", () => renderFuture(button.dataset.futureId)));
+
+    document.querySelectorAll("[data-open-archive]").forEach((button) => {
+      button.addEventListener("click", () => {
+        renderFuture(button.dataset.openArchive);
+        showView("archive");
+      });
+    });
+
+    document.querySelectorAll("[data-demo-action]").forEach((button) => {
+      button.addEventListener("click", () => showToast(`${button.dataset.demoAction} · acción de maqueta`));
+    });
+
+    document.getElementById("detail-copy").addEventListener("click", async () => {
+      const seed = futures[selectedFutureId].fullSeed;
+      try {
+        await navigator.clipboard.writeText(seed);
+        showToast(`Identidad copiada · ${seed}`);
+      } catch {
+        showToast(`Identidad del Futuro · ${seed}`);
+      }
+    });
+
+    renderFuture("preserved");
+    const requestedView = new URLSearchParams(window.location.search).get("view");
+    if (requestedView && Object.hasOwn(screens, requestedView)) showView(requestedView);
+  </script>
+</body>
+</html>

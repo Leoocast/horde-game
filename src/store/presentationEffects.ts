@@ -45,11 +45,14 @@ export function uiTraitLabel(keyword: string): string {
   return naturalCaseTraitLabel(localizedTraitLabel(keyword, language));
 }
 
-export function showActionToast(message?: string): void {
+export function showActionToast(
+  message?: string,
+  titleKey: TranslationKey = "toast.actionUnavailable",
+): void {
   if (!message) return;
   const language = useLanguageStore.getState().language;
   useToastStore.getState().pushToast({
-    title: uiText("toast.actionUnavailable"),
+    title: uiText(titleKey),
     message: canonicalizeLogText(message, language),
     tone: "warning",
   });

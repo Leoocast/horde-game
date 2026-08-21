@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { DestinyCopyIdentityButton } from "./DestinyCopyIdentityButton";
 import { DestinyRewriteControl } from "./DestinyRewriteControl";
 import { MusicPlayerMenu } from "./MusicPlayerMenu";
 import { SettingsMenu } from "./SettingsMenu";
@@ -30,11 +31,14 @@ export function AppHeader({ left, showSettings = true, onReturnToMenu, onRestart
       <div className="game-command-left min-w-0 justify-self-start">{left}</div>
       <div className="game-command-actions flex items-center gap-2 justify-self-end">
         {showDestinyControl && (
-          <DestinyRewriteControl
-            seed={futureSeed!}
-            onRewrite={onRewriteFuture!}
-            onContemplateAnother={onContemplateFuture!}
-          />
+          <>
+            <DestinyRewriteControl
+              seed={futureSeed!}
+              onRewrite={onRewriteFuture!}
+              onContemplateAnother={onContemplateFuture!}
+            />
+            <DestinyCopyIdentityButton seed={futureSeed!} />
+          </>
         )}
         <MusicPlayerMenu />
         {showSettings && <SettingsMenu onReturnToMenu={onReturnToMenu} onRestartTutorial={onRestartTutorial} sessionKind={sessionKind} restricted={settingsRestricted} setupTurns={setupTurns} />}
