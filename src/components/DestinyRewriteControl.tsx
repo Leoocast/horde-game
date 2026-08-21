@@ -21,7 +21,7 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother, i
   const pushToast = useToastStore((state) => state.pushToast);
   const [open, setOpenState] = useState(initiallyOpen);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const dialogRef = useRef<HTMLElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const primaryActionRef = useRef<HTMLButtonElement>(null);
   const restoreFocusRef = useRef(true);
   const dialogWasMountedRef = useRef(false);
@@ -147,33 +147,30 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother, i
 
       {modalPresence.mounted && (
         <div
+          ref={dialogRef}
           className={["destiny-dialog-backdrop fixed inset-0 z-[450] flex items-center justify-center p-6", modalPresence.closing ? "is-closing" : ""].join(" ")}
-          role="presentation"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("destiny.dialogTitle")}
           onClick={(event) => {
             if (event.target === event.currentTarget) setOpen(false);
           }}
         >
-          <section
-            ref={dialogRef}
-            className={["destiny-dialog hf-ui-panel w-full max-w-[620px]", modalPresence.closing ? "is-closing" : ""].join(" ")}
-            role="dialog"
-            aria-modal="true"
-            aria-label={t("destiny.dialogTitle")}
-          >
-            <div className="destiny-dialog-controls">
-              <button
-                className="destiny-dialog-copy"
-                type="button"
-                onClick={copyIdentity}
-                title={t("destiny.copyIdentity")}
-                aria-label={t("destiny.copyIdentity")}
-              >
-                <Copy size={16} />
-              </button>
-              <button className="destiny-dialog-close" type="button" onClick={() => setOpen(false)} aria-label={t("common.close")}>
-                <X size={18} />
-              </button>
-            </div>
+          <div className="destiny-dialog-controls">
+            <button
+              className="destiny-dialog-copy"
+              type="button"
+              onClick={copyIdentity}
+              data-tooltip={t("destiny.copyIdentity")}
+              aria-label={t("destiny.copyIdentity")}
+            >
+              <Copy size={16} />
+            </button>
+            <button className="destiny-dialog-close" type="button" onClick={() => setOpen(false)} aria-label={t("common.close")}>
+              <X size={18} />
+            </button>
+          </div>
+          <div className={["destiny-dialog hf-ui-panel w-full max-w-[620px]", modalPresence.closing ? "is-closing" : ""].join(" ")}>
             <span className="destiny-dialog-kicker" aria-label={t("destiny.future", { code: futureCode })}>{futureCode}</span>
 
             <div className="destiny-dialog-actions">
@@ -188,7 +185,7 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother, i
                 <span>{t("destiny.contemplateAnother")}</span>
               </button>
             </div>
-          </section>
+          </div>
         </div>
       )}
     </>

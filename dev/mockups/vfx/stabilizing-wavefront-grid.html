@@ -465,21 +465,21 @@
     .gold-patina {
       position: absolute;
       inset: 0;
-      --patina-strength: 0.72;
-      --charge-high: 0.28;
-      --charge-mid: 0.13;
-      --glint-high: 0.2;
-      --glint-mid: 0.09;
+      --patina-strength: 0.56;
+      --charge-high: 0.38;
+      --charge-mid: 0.18;
+      --glint-high: 0.28;
+      --glint-mid: 0.13;
       overflow: hidden;
       mix-blend-mode: screen;
     }
 
     .gold-patina.marked {
-      --patina-strength: 1;
-      --charge-high: 0.46;
-      --charge-mid: 0.22;
-      --glint-high: 0.32;
-      --glint-mid: 0.15;
+      --patina-strength: 0.86;
+      --charge-high: 0.56;
+      --charge-mid: 0.28;
+      --glint-high: 0.4;
+      --glint-mid: 0.2;
     }
 
     .gold-patina::before,
@@ -535,10 +535,10 @@
       inset: -6%;
       border-radius: 50%;
       background: radial-gradient(ellipse at 50% 50%,
-          rgb(255 243 206 / 0.72) 0,
-          rgb(230 181 84 / 0.28) 18%,
-          rgb(177 112 27 / 0.08) 42%,
-          transparent 68%);
+          rgb(255 247 222 / 0.78) 0 5%,
+          rgb(235 190 92 / 0.36) 15%,
+          rgb(183 116 28 / 0.08) 34%,
+          transparent 58%);
       opacity: 0;
       transform-origin: 50% 50%;
       animation: gold-charge-cycle var(--dur, 8.5s) linear var(--delay, 0s) infinite;
@@ -558,19 +558,19 @@
     }
 
     @keyframes gold-charge-cycle {
-      0%, 100% { opacity: var(--charge-high); scale: 1.035; }
-      10% { opacity: 0; scale: 1.075; }
-      74% { opacity: 0; scale: 0.98; }
-      82% { opacity: 0.04; scale: 0.99; }
-      92% { opacity: var(--charge-mid); scale: 1.01; }
+      0%, 100% { opacity: var(--charge-high); scale: 0.92; }
+      7% { opacity: 0; scale: 1.08; }
+      86% { opacity: 0; scale: 1.12; }
+      90% { opacity: 0.045; scale: 1.06; }
+      96% { opacity: var(--charge-mid); scale: 0.98; }
     }
 
     @keyframes gold-glint-cycle {
       0%, 100% { opacity: var(--glint-high); translate: 24% 0; }
-      10% { opacity: 0; translate: 24% 0; }
-      74% { opacity: 0; translate: -28% 0; }
-      84% { opacity: 0.025; translate: -18% 0; }
-      93% { opacity: var(--glint-mid); translate: 8% 0; }
+      7% { opacity: 0; translate: 24% 0; }
+      86% { opacity: 0; translate: -28% 0; }
+      91% { opacity: 0.035; translate: -16% 0; }
+      96% { opacity: var(--glint-mid); translate: 8% 0; }
     }
 
     body[data-anticipation="false"] .gold-charge {
@@ -789,7 +789,7 @@
           <h3>Marcado</h3>
           <p class="says">Para ver el mecanismo</p>
           <p class="how">
-            El mismo material con la pátina casi al doble. Permite ver con claridad la veta y el
+            El mismo material con una pátina más visible. Permite ver con claridad la veta y el
             barrido satinado; para el tablero probablemente ya es demasiado.
           </p>
         </figcaption>
