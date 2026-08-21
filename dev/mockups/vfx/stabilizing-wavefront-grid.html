@@ -444,7 +444,7 @@
       position: absolute;
       left: 50%;
       top: 50%;
-      width: 3.6cqw;
+      width: 4.4cqw;
       aspect-ratio: 1;
       border-radius: 999px;
       background: radial-gradient(circle,
@@ -461,30 +461,138 @@
       100% { translate: 0 0; opacity: 0; scale: 0.35; }
     }
 
-    /* ══ Shader ══════════════════════════════════════════════════════════ */
-    .shader-canvas {
+    /* ══ Oro CSS sobre la carta ══════════════════════════════════════════ */
+    .gold-patina {
       position: absolute;
       inset: 0;
-      width: 100%;
-      height: 100%;
+      --patina-strength: 0.72;
+      --charge-high: 0.28;
+      --charge-mid: 0.13;
+      --glint-high: 0.2;
+      --glint-mid: 0.09;
+      overflow: hidden;
       mix-blend-mode: screen;
     }
 
-    .shader-note {
+    .gold-patina.marked {
+      --patina-strength: 1;
+      --charge-high: 0.46;
+      --charge-mid: 0.22;
+      --glint-high: 0.32;
+      --glint-mid: 0.15;
+    }
+
+    .gold-patina::before,
+    .gold-patina::after {
+      content: "";
+      position: absolute;
+      inset: -8%;
+      pointer-events: none;
+    }
+
+    /* Pátina de fondo: siempre presente, pero con tan poco contraste que se
+       lee como material de la carta y no como una capa amarilla. */
+    .gold-patina::before {
+      background:
+        linear-gradient(118deg,
+          transparent 17%,
+          rgb(166 105 28 / 0.04) 36%,
+          rgb(255 231 169 / 0.09) 49%,
+          rgb(177 116 34 / 0.035) 62%,
+          transparent 84%),
+        radial-gradient(ellipse at 46% 43%, rgb(218 166 76 / 0.08), transparent 66%);
+      opacity: var(--patina-strength);
+      animation: gold-patina-drift 11s ease-in-out infinite alternate;
+    }
+
+    /* Un segundo reflejo, más estrecho y muy lento, evita que la pátina se
+       sienta como un tinte plano sin convertirla en un destello de interfaz. */
+    .gold-patina::after {
+      inset: -24%;
+      background: linear-gradient(116deg,
+          transparent 35%,
+          rgb(255 246 218 / 0.07) 46%,
+          rgb(216 164 69 / 0.025) 54%,
+          transparent 65%);
+      opacity: var(--patina-strength);
+      animation: gold-satin-drift 14s ease-in-out infinite alternate;
+    }
+
+    @keyframes gold-patina-drift {
+      from { translate: -2.5% 0; scale: 1.01; }
+      to { translate: 2.5% 0; scale: 1.035; }
+    }
+
+    @keyframes gold-satin-drift {
+      from { translate: -12% 1%; }
+      to { translate: 12% -1%; }
+    }
+
+    /* Cada carga comparte --dur y --delay con una mota. El estado de 0% es
+       idéntico al de 100%: al reiniciar el ciclo no hay salto de amarillo. */
+    .gold-charge {
+      position: absolute;
+      inset: -6%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at 50% 50%,
+          rgb(255 243 206 / 0.72) 0,
+          rgb(230 181 84 / 0.28) 18%,
+          rgb(177 112 27 / 0.08) 42%,
+          transparent 68%);
+      opacity: 0;
+      transform-origin: 50% 50%;
+      animation: gold-charge-cycle var(--dur, 8.5s) linear var(--delay, 0s) infinite;
+    }
+
+    .gold-charge::after {
+      content: "";
+      position: absolute;
+      inset: -28%;
+      background: linear-gradient(116deg,
+          transparent 37%,
+          rgb(255 247 222 / 0.72) 47%,
+          rgb(224 169 66 / 0.22) 52%,
+          transparent 63%);
+      opacity: 0;
+      animation: gold-glint-cycle var(--dur, 8.5s) linear var(--delay, 0s) infinite;
+    }
+
+    @keyframes gold-charge-cycle {
+      0%, 100% { opacity: var(--charge-high); scale: 1.035; }
+      10% { opacity: 0; scale: 1.075; }
+      74% { opacity: 0; scale: 0.98; }
+      82% { opacity: 0.04; scale: 0.99; }
+      92% { opacity: var(--charge-mid); scale: 1.01; }
+    }
+
+    @keyframes gold-glint-cycle {
+      0%, 100% { opacity: var(--glint-high); translate: 24% 0; }
+      10% { opacity: 0; translate: 24% 0; }
+      74% { opacity: 0; translate: -28% 0; }
+      84% { opacity: 0.025; translate: -18% 0; }
+      93% { opacity: var(--glint-mid); translate: 8% 0; }
+    }
+
+    body[data-anticipation="false"] .gold-charge {
+      visibility: hidden;
+    }
+
+    .implementation-note {
       margin-top: 10px;
       padding: 12px 14px;
-      border-left: 2px solid rgb(214 118 74 / 0.6);
-      background: rgb(30 18 10 / 0.5);
+      border-left: 2px solid rgb(190 151 77 / 0.6);
+      background: rgb(28 22 12 / 0.5);
       font-size: 13px;
     }
   </style>
 </head>
 
-<body data-card="maela" data-size="real" data-paused="false" data-bare="false" data-stats="true">
+<body data-card="maela" data-size="real" data-paused="false" data-bare="false" data-stats="true"
+  data-anticipation="true">
   <main>
     <header>
       <p class="eyebrow">Efectos · Estabilizándose · cuarta ronda</p>
-      <h1>Trama sólo en el frente</h1>
+      <h1>Trama en la onda, oro en la carta</h1>
       <p>
         La retícula <strong>ya no está siempre</strong>: entre onda y onda no existe. Lo único que se
         dibuja es una banda ancha de bordes suaves, así que la cuadrícula <strong>aparece delante del
@@ -492,9 +600,11 @@
         real.
       </p>
       <p>
-        Abajo del todo está la versión con <strong>shader</strong>: un fragment shader de GLSL que
-        calcula la retícula, el frente, las motas y una veta de ruido dorado. Es la única parte de esta
-        carpeta que no es CSS. <code>src/</code> no importa nada de acá.
+        El <strong>oro está hecho sólo con capas CSS sobre toda la carta</strong>, no en la retícula:
+        baña el arte con una veta cálida y un reflejo satinado muy lento. Cuando una mota está por
+        llegar, ese material reúne luz hacia el centro antes de liberarla. La cuadrícula es una capa
+        distinta y sólo se revela dentro de la onda. El botón <strong>Brillo previo</strong> permite
+        comparar ambas lecturas. <code>src/</code> no importa nada de acá.
       </p>
 
       <div class="controls">
@@ -512,6 +622,7 @@
         </div>
         <span class="spacer"></span>
         <div class="group">
+          <button type="button" data-toggle="anticipation" aria-pressed="true">Brillo previo</button>
           <button type="button" data-toggle="paused" aria-pressed="false">Pausar</button>
           <button type="button" data-toggle="bare" aria-pressed="false">Sin efecto</button>
           <button type="button" data-toggle="stats" aria-pressed="true">Stats</button>
@@ -525,6 +636,7 @@
           <img class="art" alt="" />
           <div class="fx">
             <div class="veil"></div>
+            <div class="gold-patina"></div>
             <div class="glow" data-motes="4" data-seed="11">
               <div class="lattice"></div>
             </div>
@@ -544,12 +656,14 @@
               delante y se desvanece por detrás en vez de aparecer y desaparecer de golpe.
             </li>
             <li>
-              <strong>El oro no es plano.</strong> La banda tiene ámbar en los bordes y oro pálido en el
-              filo, de modo que los hilos cambian de tono según por dónde los cruza el frente.
+              <strong>La carta sí conserva oro entre ondas.</strong> Dos degradados CSS muy tenues
+              mantienen ámbar en las sombras, oro cálido en los medios y un reflejo marfil que cruza
+              tan despacio que no parece un destello.
             </li>
             <li>
-              Se conserva todo lo anterior: la onda arranca cuando una mota aterriza, tarda casi la
-              mitad del ciclo en abrirse y sale del encuadre antes de apagarse.
+              <strong>La espera ahora acumula tensión.</strong> En el último tramo de cada mota, el oro
+              gana cuerpo, concentra luz hacia el centro y deja pasar un reflejo diagonal. El aterrizaje
+              corta esa carga y la libera como onda.
             </li>
           </ol>
         </div>
@@ -568,6 +682,7 @@
           <img class="art" alt="" />
           <div class="fx">
             <div class="veil"></div>
+            <div class="gold-patina"></div>
             <div class="glow" data-motes="4" data-seed="11" data-front="narrow">
               <div class="lattice"></div>
             </div>
@@ -589,6 +704,7 @@
           <img class="art" alt="" />
           <div class="fx">
             <div class="veil"></div>
+            <div class="gold-patina"></div>
             <div class="glow" data-motes="4" data-seed="11">
               <div class="lattice"></div>
             </div>
@@ -610,6 +726,7 @@
           <img class="art" alt="" />
           <div class="fx">
             <div class="veil"></div>
+            <div class="gold-patina"></div>
             <div class="glow" data-motes="4" data-seed="11" data-front="wide">
               <div class="lattice"></div>
             </div>
@@ -627,11 +744,10 @@
       </figure>
     </div>
 
-    <h2 class="family">Shader dorado</h2>
+    <h2 class="family">Baño dorado de la carta · CSS</h2>
     <p class="family-lead">
-      Lo mismo resuelto con un fragment shader en GLSL: la retícula, el frente, las motas y una veta de
-      ruido se calculan por píxel. Lo que agrega respecto del CSS es esa veta —el oro deja de ser
-      uniforme y late— y bordes que no dependen de topes de degradado.
+      La intensidad sólo cambia el tratamiento del arte. En ambos casos la retícula mantiene la misma
+      fuerza y continúa limitada estrictamente a la banda de la onda.
     </p>
 
     <div class="grid">
@@ -640,7 +756,10 @@
           <img class="art" alt="" />
           <div class="fx">
             <div class="veil"></div>
-            <canvas class="shader-canvas" data-shader data-intensity="0.55" data-seed="3"></canvas>
+            <div class="gold-patina"></div>
+            <div class="glow" data-motes="4" data-seed="3">
+              <div class="lattice"></div>
+            </div>
           </div>
           <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
         </div>
@@ -648,8 +767,8 @@
           <h3>Sutil</h3>
           <p class="says">Como se pidió</p>
           <p class="how">
-            La veta de ruido apenas se nota: sólo hace que los hilos encendidos no tengan todos el
-            mismo brillo. Es la que menos discute con el arte.
+            El oro vive en el arte como una pátina luminosa. La veta sólo aparece cuando cambia la
+            luz; no lava los colores originales de la ilustración.
           </p>
         </figcaption>
       </figure>
@@ -659,7 +778,10 @@
           <img class="art" alt="" />
           <div class="fx">
             <div class="veil"></div>
-            <canvas class="shader-canvas" data-shader data-intensity="1" data-seed="8"></canvas>
+            <div class="gold-patina marked"></div>
+            <div class="glow" data-motes="4" data-seed="8">
+              <div class="lattice"></div>
+            </div>
           </div>
           <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
         </div>
@@ -667,28 +789,26 @@
           <h3>Marcado</h3>
           <p class="says">Para ver el mecanismo</p>
           <p class="how">
-            El mismo shader con el brillo al doble. Sirve para juzgar la veta y el frente; para el
-            tablero es demasiado.
+            El mismo material con la pátina casi al doble. Permite ver con claridad la veta y el
+            barrido satinado; para el tablero probablemente ya es demasiado.
           </p>
         </figcaption>
       </figure>
     </div>
 
-    <div class="shader-note">
-      <strong>Antes de llevar el shader a producción:</strong> cada carta con shader necesita su propio
-      contexto WebGL, y el contrato del juego dice que <code>sharedVfxRenderer.ts</code> mantiene el
-      <em>único</em> contexto de la sesión. Varios Ecos Estabilizándose a la vez serían varios contextos
-      nuevos, que es justo lo que ese contrato evita. Si el shader gana, hay que resolverlo antes:
-      dibujarlo desde el renderer compartido a una textura por carta, o quedarse con la versión CSS.
+    <div class="implementation-note">
+      <strong>Esta versión ya no crea contextos WebGL ni usa canvas.</strong> La pátina, el reflejo
+      satinado, la acumulación previa, las motas y la retícula son capas CSS. Cada acumulación comparte
+      el reloj de su mota y termina exactamente donde nace su onda.
     </div>
 
     <div class="note">
       <h2>Cómo está hecho</h2>
       <ul>
         <li>
-          <strong>La retícula sigue siendo la máscara del contenedor</strong>, quieta. Lo que cambió es
-          que ya no hay nada permanente debajo: sin frente cerca, no se dibuja nada y la cuadrícula
-          desaparece.
+          <strong>La carta y la retícula son dos máscaras independientes.</strong> La pátina dorada
+          cubre todo el recorte; la retícula multiplica su opacidad por el frente y desaparece por
+          completo donde la onda no está pasando.
         </li>
         <li>
           <strong>El fundido es el propio degradado del frente.</strong> No hace falta animar opacidad
@@ -700,13 +820,13 @@
           <code>--out-3</code>— que sólo mueven los topes del degradado. La animación no cambia.
         </li>
         <li>
-          <strong>El shader no usa Three.js.</strong> Es WebGL crudo, un quad y un fragment shader de
-          unas cuarenta líneas: ruido de valor, la retícula por distancia a la línea más cercana, y el
-          frente como una gaussiana alrededor del radio actual.
+          <strong>La carga dorada también es CSS.</strong> Un radial concentra la luz y un degradado
+          diagonal hace el reflejo. Sus estados de <code>0%</code> y <code>100%</code> son idénticos,
+          así que el color no salta cuando vuelve a comenzar el ciclo.
         </li>
         <li>
-          <strong>Coste.</strong> La versión CSS anima sólo <code>scale</code>, <code>translate</code> y
-          <code>opacity</code>. La del shader dibuja un cuadro por frame por carta.
+          <strong>Coste.</strong> La propuesta anima sólo <code>scale</code>, <code>translate</code> y
+          <code>opacity</code>; no hay un dibujo por frame ni un contexto gráfico por carta.
         </li>
       </ul>
     </div>
@@ -742,6 +862,7 @@
     function buildMotes(glow) {
       const count = Number(glow.dataset.motes || 4);
       const lattice = glow.querySelector(".lattice");
+      const patina = glow.parentElement.querySelector(".gold-patina");
       const frontClass = glow.dataset.front ? ` ${glow.dataset.front}` : "";
       let seed = Number(glow.dataset.seed || 1);
       const random = () => {
@@ -768,161 +889,14 @@
         front.className = "front" + frontClass;
         front.setAttribute("style", timing);
         lattice.appendChild(front);
-      }
-    }
 
-    /* ══ Shader ══════════════════════════════════════════════════════════
-       WebGL crudo, sin Three.js: un quad y un fragment shader. Calcula la
-       retícula por distancia a la línea más cercana, el frente como una
-       gaussiana alrededor del radio actual, las motas cayendo, y una veta de
-       ruido que rompe la uniformidad del oro. */
-    const VERTEX_SRC = `
-      attribute vec2 a_pos;
-      varying vec2 v_uv;
-      void main() {
-        v_uv = a_pos * 0.5 + 0.5;
-        gl_Position = vec4(a_pos, 0.0, 1.0);
-      }
-    `;
-
-    const FRAGMENT_SRC = `
-      precision mediump float;
-      varying vec2 v_uv;
-      uniform float u_time;
-      uniform float u_aspect;
-      uniform float u_intensity;
-      uniform float u_seed;
-
-      float hash(vec2 p) {
-        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-      }
-
-      float noise(vec2 p) {
-        vec2 i = floor(p);
-        vec2 f = fract(p);
-        vec2 u = f * f * (3.0 - 2.0 * f);
-        return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
-                   mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
-      }
-
-      float fbm(vec2 p) {
-        float v = 0.0;
-        float a = 0.5;
-        for (int i = 0; i < 4; i++) {
-          v += a * noise(p);
-          p *= 2.0;
-          a *= 0.5;
+        if (patina) {
+          const charge = document.createElement("div");
+          charge.className = "gold-charge";
+          charge.setAttribute("style", timing);
+          patina.appendChild(charge);
         }
-        return v;
       }
-
-      void main() {
-        vec2 p = (v_uv - 0.5) * vec2(1.0, 1.0 / u_aspect);
-        float dist = length(p);
-
-        // Retícula: distancia a la línea más cercana, en anchos de carta.
-        float cell = 0.07;
-        float thread = 0.0055;
-        vec2 g = abs(fract(p / cell) - 0.5) * cell;
-        float lineDist = min(g.x, g.y);
-        float grid = 1.0 - smoothstep(thread * 0.4, thread * 1.4, lineDist);
-
-        float front = 0.0;
-        float motes = 0.0;
-        for (int i = 0; i < 4; i++) {
-          float fi = float(i);
-          float dur = 8.2 + fract(u_seed * (fi + 1.3)) * 2.6;
-          float phase = fract((u_time + fi * 2.37 + u_seed) / dur);
-
-          // El frente nace en el centro y sale del encuadre: la esquina esta
-          // a 0.669 en estas unidades y el radio llega a 0.95.
-          float radius = phase * 2.1;
-          float life = smoothstep(0.0, 0.04, phase) * smoothstep(0.46, 0.30, phase);
-          front += exp(-pow((dist - radius) / 0.085, 2.0)) * life;
-
-          // La mota cae desde fuera hasta el centro durante todo el ciclo.
-          float angle = fi * 1.9 + u_seed * 3.1;
-          vec2 dir = vec2(cos(angle), sin(angle));
-          vec2 motePos = dir * (1.0 - phase) * 0.62;
-          float moteLife = smoothstep(0.0, 0.16, phase) * smoothstep(1.0, 0.88, phase);
-          motes += exp(-pow(length(p - motePos) / 0.016, 2.0)) * moteLife;
-        }
-
-        // La veta: hace que los hilos encendidos no tengan todos el mismo brillo.
-        float vein = 0.72 + 0.55 * fbm(p * 7.0 + vec2(u_time * 0.06, u_time * -0.04));
-
-        vec3 pale = vec3(1.0, 0.96, 0.84);
-        vec3 amber = vec3(0.86, 0.62, 0.22);
-        float lit = clamp(front, 0.0, 1.0);
-        vec3 color = mix(amber, pale, lit * lit);
-
-        float alpha = grid * lit * vein * 0.85 * u_intensity + motes * 1.1 * u_intensity;
-        alpha = clamp(alpha, 0.0, 1.0);
-        gl_FragColor = vec4(color * alpha, alpha);
-      }
-    `;
-
-    function compile(gl, type, source) {
-      const shader = gl.createShader(type);
-      gl.shaderSource(shader, source);
-      gl.compileShader(shader);
-      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        throw new Error(gl.getShaderInfoLog(shader) || "shader sin compilar");
-      }
-      return shader;
-    }
-
-    function startShader(canvas) {
-      const gl = canvas.getContext("webgl", { premultipliedAlpha: true, antialias: true });
-      if (!gl) {
-        canvas.dataset.shaderState = "sin-webgl";
-        return;
-      }
-      const program = gl.createProgram();
-      gl.attachShader(program, compile(gl, gl.VERTEX_SHADER, VERTEX_SRC));
-      gl.attachShader(program, compile(gl, gl.FRAGMENT_SHADER, FRAGMENT_SRC));
-      gl.linkProgram(program);
-      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-        canvas.dataset.shaderState = "sin-enlazar";
-        return;
-      }
-      gl.useProgram(program);
-
-      const buffer = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-      const attrib = gl.getAttribLocation(program, "a_pos");
-      gl.enableVertexAttribArray(attrib);
-      gl.vertexAttribPointer(attrib, 2, gl.FLOAT, false, 0, 0);
-
-      const uTime = gl.getUniformLocation(program, "u_time");
-      const uAspect = gl.getUniformLocation(program, "u_aspect");
-      const uIntensity = gl.getUniformLocation(program, "u_intensity");
-      const uSeed = gl.getUniformLocation(program, "u_seed");
-      gl.uniform1f(uIntensity, Number(canvas.dataset.intensity || 0.55));
-      gl.uniform1f(uSeed, Number(canvas.dataset.seed || 1));
-
-      const start = performance.now();
-      function frame() {
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const width = Math.max(1, Math.round(canvas.clientWidth * dpr));
-        const height = Math.max(1, Math.round(canvas.clientHeight * dpr));
-        if (canvas.width !== width || canvas.height !== height) {
-          canvas.width = width;
-          canvas.height = height;
-        }
-        gl.viewport(0, 0, canvas.width, canvas.height);
-        gl.uniform1f(uAspect, canvas.width / canvas.height);
-        if (document.body.dataset.paused !== "true") {
-          gl.uniform1f(uTime, (performance.now() - start) / 1000);
-        }
-        gl.clearColor(0, 0, 0, 0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
-        canvas.dataset.shaderState = "ok";
-        requestAnimationFrame(frame);
-      }
-      frame();
     }
 
     document.querySelectorAll("button[data-set]").forEach((button) => {
@@ -946,7 +920,6 @@
     });
 
     document.querySelectorAll(".glow[data-motes]").forEach(buildMotes);
-    document.querySelectorAll("canvas[data-shader]").forEach(startShader);
     applyEcho(document.body.dataset.card);
   </script>
 </body>

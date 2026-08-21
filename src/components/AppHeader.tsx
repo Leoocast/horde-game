@@ -22,7 +22,6 @@ type Props = {
 export function AppHeader({ left, showSettings = true, onReturnToMenu, onRestartTutorial, onRewriteFuture, onContemplateFuture, futureSeed, sessionKind = "normal", settingsRestricted, setupTurns, elevated = false }: Props) {
   const showDestinyControl = sessionKind === "normal"
     && Boolean(futureSeed)
-    && futureSeed?.trim().toLowerCase() !== "developer"
     && Boolean(onRewriteFuture)
     && Boolean(onContemplateFuture);
 

@@ -25,6 +25,13 @@ const DIAL_DAMPING_PER_SECOND = 12;
 const DIAL_SETTLE_EPSILON = 0.05;
 const FRAME_INTERVAL_MS = 1000 / 60;
 
+function destinyDialogMixTarget(): number {
+  return document.body.classList.contains("is-destiny-dialog-open")
+    && !document.body.classList.contains("is-destiny-dialog-closing")
+    ? 1
+    : 0;
+}
+
 /**
  * Fondo espacio/temporal permanente.
  *
@@ -96,7 +103,7 @@ export function TemporalBackdrop({
     if (!dialRef.current) return;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (dialLoopActiveRef.current && !reducedMotion && !settleDialImmediately) return;
-    positionDial(dial);
+    positionDial(dial - destinyDialogMixTarget() * 180);
     onDialSettledRef.current?.(dialRevision);
   }, [dial, dialRevision, settleDialImmediately]);
 
@@ -156,11 +163,13 @@ export function TemporalBackdrop({
     const uRes = gl.getUniformLocation(program, "uRes");
     const uTime = gl.getUniformLocation(program, "uTime");
     const uClimax = gl.getUniformLocation(program, "uClimax");
+    const uDestiny = gl.getUniformLocation(program, "uDestiny");
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     dialLoopActiveRef.current = !reducedMotion;
     const startedAt = performance.now();
     let climaxMix = targetRef.current.climax;
+    let destinyMix = destinyDialogMixTarget();
     let dialMix = targetRef.current.dial;
     let lastDrawAt = startedAt;
     let lastRenderedAt = Number.NEGATIVE_INFINITY;
@@ -171,6 +180,8 @@ export function TemporalBackdrop({
     let contextLost = false;
 
     const draw = (now: number) => {
+      const deltaSeconds = Math.min(Math.max((now - lastDrawAt) / 1000, 0), 0.05);
+      lastDrawAt = now;
       const cssWidth = Math.max(1, canvas.clientWidth);
       const cssHeight = Math.max(1, canvas.clientHeight);
       const ratio = boundedVfxPixelRatio(cssWidth, cssHeight, window.devicePixelRatio || 1);
@@ -183,10 +194,12 @@ export function TemporalBackdrop({
 
       // El cambio de estado se interpola: un salto seco se ve.
       climaxMix += (targetRef.current.climax - climaxMix) * 0.04;
+      const destinyTarget = destinyDialogMixTarget();
+      destinyMix = reducedMotion
+        ? destinyTarget
+        : destinyMix + (destinyTarget - destinyMix) * (1 - Math.exp(-DIAL_DAMPING_PER_SECOND * deltaSeconds));
       // Damping por tiempo, no por frame: el giro conserva velocidad a 60/120/144 Hz y, a
       // diferencia de la aproximación asintótica anterior, hace snap y tiene un final observable.
-      const deltaSeconds = Math.min(Math.max((now - lastDrawAt) / 1000, 0), 0.05);
-      lastDrawAt = now;
       const dialTarget = targetRef.current.dial;
       const targetRevision = targetRef.current.dialRevision;
       const dialDelta = dialTarget - dialMix;
@@ -207,17 +220,26 @@ export function TemporalBackdrop({
       }
       // Se escribe el atributo en vez de usar CSS porque el origen de rotación del grupo ya es
       // su propio centro y así no depende de `fill-box`.
-      if (dialMix !== lastPositionedDial) {
-        positionDial(dialMix);
-        lastPositionedDial = dialMix;
+      const presentedDial = dialMix - destinyMix * 180;
+      if (presentedDial !== lastPositionedDial) {
+        // `positionDial` contrarrota cada etiqueta con el ángulo total. Así el instrumento
+        // completa media vuelta al abrir sin volver ilegibles los grados.
+        positionDial(presentedDial);
+        lastPositionedDial = presentedDial;
       }
 
       gl.viewport(0, 0, width, height);
       gl.uniform2f(uRes, width, height);
       gl.uniform1f(uTime, reducedMotion ? 8 : (now - startedAt) / 1000);
       gl.uniform1f(uClimax, climaxMix);
+      gl.uniform1f(uDestiny, destinyMix);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     };
+
+    const bodyClassObserver = new MutationObserver(() => {
+      if (reducedMotion && !disposed && !contextLost) draw(performance.now());
+    });
+    bodyClassObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
 
     const loop = (now: number) => {
       if (disposed || contextLost) return;
@@ -263,6 +285,7 @@ export function TemporalBackdrop({
       disposed = true;
       dialLoopActiveRef.current = false;
       cancelAnimationFrame(frame);
+      bodyClassObserver.disconnect();
       document.removeEventListener("visibilitychange", onVisibility);
       canvas.removeEventListener("webglcontextlost", onContextLost);
       gl.deleteBuffer(buffer);

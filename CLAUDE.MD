@@ -502,7 +502,6 @@ La sección **Modales y diálogos** abre una sola muestra a tamaño real. Si un 
 controlado, la vista presentacional debe ser la misma que usa su wrapper runtime; los resultados
 exponen el panel de UI sin ejecutar sus animadores. Los diálogos anclados a una sesión viva de Board
 se registran como **Revisar en contexto**.
-
 Sólo el juego ejecutable decide esta referencia. No usar `dev/mockups`, VFX, animadores ni el estilo
 de Playground/Audio Lab/Seed Explorer para diseñar UI player-facing. No añadir `old-*` a UI nueva:
 esas clases son compatibilidad legacy dependiente de contexto. Toda pieza reutilizable nueva o
@@ -594,6 +593,16 @@ reutilizan la misma identidad y las mismas dos salidas. El reset o cambio de pan
 el vórtice global ya cubrió el tablero; la transición vive sobre `App` para sobrevivir al remount de
 `Board` y tiene fallback de movimiento reducido.
 
+El diálogo de **Reescribir** es una decisión narrativa de Destino, no una confirmación genérica:
+retira visualmente tablero y HUD para dejar al descubierto el `TemporalBackdrop` vivo que ya posee
+la partida; no monta otro cielo, renderer ni instrumento. Al abrir, el cosmos adopta una versión
+dorada y hacia la izquierda el mismo campo de flujo procedural que acelera durante Surge, mientras el dial gira 180 grados en
+sentido antihorario; al cerrar, escena, atmósfera y dial recorren la animación inversa. El contenido flota
+sin panel opaco y muestra únicamente el código numérico del Futuro, grande, alto y desvanecido; no
+lleva título, raja ni divisor. La copia vive como botón de icono junto al cierre. **Reescribir este
+futuro** reutiliza sin overrides el botón de Destino establecido por `LOST FUTURE`, y **Contemplar
+otro futuro** queda debajo como salida textual tenue. No recupera el antiguo sigilo centrado.
+
 El vórtice es un agujero negro dibujado por el renderer WebGL compartido: `destinyVortexShader.ts`
 resuelve en un solo plano el horizonte, el disco de acreción, el anillo de fotones, la materia que
 cae en espiral y la descarga de brasas de la liberación. Su reloj llega en dos tiempos separados,
@@ -621,8 +630,9 @@ obliga a repintar todo el árbol en cada frame.
 
 El historial de intentos y la futura biblioteca de Semillas siguen bosquejados en
 `docs/plans/seeds_of_destiny.md`; no están implementados. El seed literal `developer` queda
-expresamente fuera de esta narrativa: oculta el control de Futuro y conserva su reinicio técnico
-dentro de las opciones de desarrollo.
+fuera de la identidad comunitaria, pero muestra el control de Futuro para que el mismo acceso de
+reescritura pueda verificarse durante QA. Conserva además su reinicio técnico dentro de las opciones
+de desarrollo.
 
 Antes de implementar el tutorial obligatorio, la claridad permanente de Preparación, robo, Acción de
 Fuente, Reserva y ataque al Archivo debe seguir el plan de diseño e implementación de

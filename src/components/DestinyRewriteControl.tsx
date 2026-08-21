@@ -25,7 +25,7 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother, i
   const primaryActionRef = useRef<HTMLButtonElement>(null);
   const restoreFocusRef = useRef(true);
   const dialogWasMountedRef = useRef(false);
-  const modalPresence = useAnimatedPresence(open, 220);
+  const modalPresence = useAnimatedPresence(open, 480);
   const futureCode = futureCodeFromSeed(seed);
 
   function setOpen(next: boolean) {
@@ -80,6 +80,22 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother, i
     dialogWasMountedRef.current = false;
     if (restoreFocusRef.current) triggerRef.current?.focus({ preventScroll: true });
   }, [modalPresence.mounted]);
+
+  useEffect(() => {
+    if (!modalPresence.mounted) return;
+    const gameScreen = (triggerRef.current ?? dialogRef.current)?.closest<HTMLElement>(".game-screen");
+    if (!gameScreen?.querySelector(":scope > .temporal-backdrop")) return;
+    document.body.classList.add("is-destiny-dialog-open");
+    document.body.classList.toggle("is-destiny-dialog-closing", modalPresence.closing);
+    gameScreen.classList.add("is-destiny-dialog-open");
+    gameScreen.classList.toggle("is-destiny-dialog-closing", modalPresence.closing);
+    return () => {
+      document.body.classList.remove("is-destiny-dialog-open");
+      document.body.classList.remove("is-destiny-dialog-closing");
+      gameScreen.classList.remove("is-destiny-dialog-open");
+      gameScreen.classList.remove("is-destiny-dialog-closing");
+    };
+  }, [modalPresence.closing, modalPresence.mounted]);
 
   async function copyIdentity() {
     try {
@@ -139,32 +155,28 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother, i
         >
           <section
             ref={dialogRef}
-            className={["destiny-dialog hf-ui-panel w-full max-w-[580px]", modalPresence.closing ? "is-closing" : ""].join(" ")}
+            className={["destiny-dialog hf-ui-panel w-full max-w-[620px]", modalPresence.closing ? "is-closing" : ""].join(" ")}
             role="dialog"
             aria-modal="true"
-            aria-labelledby="destiny-dialog-title"
-            aria-describedby="destiny-dialog-description"
+            aria-label={t("destiny.dialogTitle")}
           >
-            <span className="destiny-dialog-mark" aria-hidden="true" />
-            <header className="destiny-dialog-heading">
-              <div>
-                <div className="destiny-dialog-kicker">{t("destiny.future", { code: futureCode })}</div>
-                <h2 id="destiny-dialog-title">{t("destiny.dialogTitle")}</h2>
-                <button className="destiny-dialog-copy" type="button" onClick={copyIdentity}>
-                  <Copy size={14} />
-                  <span>{t("destiny.copyIdentity")}</span>
-                </button>
-              </div>
+            <div className="destiny-dialog-controls">
+              <button
+                className="destiny-dialog-copy"
+                type="button"
+                onClick={copyIdentity}
+                title={t("destiny.copyIdentity")}
+                aria-label={t("destiny.copyIdentity")}
+              >
+                <Copy size={16} />
+              </button>
               <button className="destiny-dialog-close" type="button" onClick={() => setOpen(false)} aria-label={t("common.close")}>
                 <X size={18} />
               </button>
-            </header>
-            <p id="destiny-dialog-description">{t("destiny.dialogBody")}</p>
+            </div>
+            <span className="destiny-dialog-kicker" aria-label={t("destiny.future", { code: futureCode })}>{futureCode}</span>
 
             <div className="destiny-dialog-actions">
-              <button className="game-dialog-action destiny-dialog-secondary" type="button" onClick={() => choose(onContemplateAnother)}>
-                <span>{t("destiny.contemplateAnother")}</span>
-              </button>
               <DestinyActionButton
                 ref={primaryActionRef}
                 className="destiny-dialog-primary"
@@ -172,6 +184,9 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother, i
                 onClick={() => choose(onRewrite)}
                 autoFocus
               />
+              <button className="destiny-dialog-secondary" type="button" onClick={() => choose(onContemplateAnother)}>
+                <span>{t("destiny.contemplateAnother")}</span>
+              </button>
             </div>
           </section>
         </div>

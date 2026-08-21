@@ -23,6 +23,7 @@ precision highp float;
 uniform vec2 uRes;
 uniform float uTime;
 uniform float uClimax;
+uniform float uDestiny;
 
 float hash21(vec2 p) {
   p = fract(p * vec2(123.34, 345.45));
@@ -124,7 +125,11 @@ void main() {
   p = rot(uTime * 0.0055) * p;
 
   // El campo de deformación se advecta: las nubes se revuelven, no se deslizan.
-  vec2 flow = vec2(uTime * 0.020, -uTime * 0.014) * (1.0 + uClimax * 0.8);
+  vec2 surgeFlow = vec2(uTime * 0.020, -uTime * 0.014) * (1.0 + uClimax * 0.8);
+  // Reescribir altera el mismo campo que acelera al llegar Surge, no mueve el canvas.
+  // Su flujo es más enérgico y espejado en X para que el cosmos cruce hacia la izquierda.
+  vec2 destinyFlow = vec2(-uTime * 0.042, 0.0);
+  vec2 flow = mix(surgeFlow, destinyFlow, uDestiny);
   vec2 warp = vec2(
     fbm(p * 1.32 + vec2(0.0, uTime * 0.022) + 3.7),
     fbm(p * 1.32 + vec2(uTime * 0.018, 0.0) + 11.9)
@@ -141,12 +146,14 @@ void main() {
   float dust = smoothstep(0.70, 0.95, fbm(q * 5.8 + vec2(31.2, 15.7))) * edgeBias;
 
   vec3 teal = mix(vec3(0.026, 0.20, 0.24), vec3(0.16, 0.09, 0.09), uClimax);
+  teal = mix(teal, vec3(0.34, 0.235, 0.075), uDestiny);
   vec3 gold = mix(vec3(0.72, 0.50, 0.18), vec3(0.78, 0.31, 0.14), uClimax);
-  vec3 color = vec3(0.0024, 0.0062, 0.017);
-  color += vec3(0.006, 0.024, 0.058) * (0.22 + broad * 0.62);
+  gold = mix(gold, vec3(0.92, 0.65, 0.20), uDestiny);
+  vec3 color = mix(vec3(0.0024, 0.0062, 0.017), vec3(0.012, 0.009, 0.0025), uDestiny);
+  color += mix(vec3(0.006, 0.024, 0.058), vec3(0.070, 0.040, 0.006), uDestiny) * (0.22 + broad * 0.62);
   color += teal * nebula * 0.92;
-  color += vec3(0.036, 0.34, 0.36) * vein * 0.38;
-  color += gold * dust * 0.26;
+  color += mix(vec3(0.036, 0.34, 0.36), vec3(0.72, 0.38, 0.075), uDestiny) * vein * 0.38;
+  color += gold * dust * mix(0.26, 0.46, uDestiny);
 
   vec2 near = rot(uTime * 0.012) * p + vec2(uTime * 0.0040, -uTime * 0.0015);
   vec2 mid = rot(uTime * 0.007) * p * 1.02 + 5.3;
@@ -154,8 +161,8 @@ void main() {
   // Las puertas son por celda, así que la cuenta real depende de la escala. Y el tono
   // se lleva al oro del HUD (#c7aa69 / #ead59b): en azul las estrellas parecían de otro
   // juego que el marco dorado de las cartas.
-  color += vec3(0.92, 0.86, 0.68) * starLayer(near, 74.0, 0.9979, 0.055) * 0.40;
-  color += vec3(0.78, 0.70, 0.46) * starLayer(mid, 142.0, 0.99945, 0.038) * 0.28;
+  color += mix(vec3(0.92, 0.86, 0.68), vec3(1.0, 0.82, 0.36), uDestiny) * starLayer(near, 74.0, 0.9979, 0.055) * 0.40;
+  color += mix(vec3(0.78, 0.70, 0.46), vec3(0.95, 0.62, 0.20), uDestiny) * starLayer(mid, 142.0, 0.99945, 0.038) * 0.28;
   color += vec3(1.00, 0.72, 0.34) * starLayer(far, 97.0, 0.99935, 0.026) * 0.28;
 
   float glow = fireflies(p + warp * 0.05, 9.0, 0.10, 0.0)
