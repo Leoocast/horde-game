@@ -21,6 +21,7 @@ import { GuidedInteractionGate } from "../src/guidance/interactionGate";
 import { GuidedInterventionOrchestrator } from "../src/guidance/interventionOrchestrator";
 import { GuidedJourneyLifecycle } from "../src/guidance/journeyLifecycle";
 import { JourneyIntentGate, journeyIntentGate } from "../src/guidance/journeyIntentGate";
+import { LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION } from "../src/guidance/learnToPlayPrologue";
 import { translate } from "../src/i18n/translations";
 import {
   LearnToPlayPrologueDirector,
@@ -543,4 +544,17 @@ test("App exposes both launchers, disables Continue, and hands the journey to a 
   assert.match(intro, /<GuidedTutorialDialog/u);
   assert.match(intro, /learn-to-play-intro-progress/u);
   assert.doesNotMatch(intro, /old-panel|old-title|game-home-dialog/u);
+});
+
+test("Learn to Play frames Energy before revealing the nested Reserve", () => {
+  const step = (id) => LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps.find((candidate) => candidate.id === id);
+
+  assert.equal(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.revision, 3);
+  assert.deepEqual(step("player-turn-returned").highlights, [
+    { kind: "surface", anchor: "player.sources" },
+  ]);
+  assert.deepEqual(step("explain-renewed-energy").highlights, [
+    { kind: "surface", anchor: "player.sources" },
+    { kind: "surface", anchor: "player.reserve" },
+  ]);
 });

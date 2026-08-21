@@ -126,7 +126,7 @@ export function SettingsMenu({
           className={["game-settings-popover game-settings-system-layer game-settings-modal-backdrop fixed inset-0 flex items-center justify-center p-5", modalPresence.closing ? "is-closing" : ""].join(" ")}
           role="presentation"
         >
-          <section className={[`game-settings-modal hf-ui-panel flex max-h-[min(860px,calc(100vh-40px))] ${guided ? "w-[min(560px,calc(100vw-40px))]" : "w-[min(1040px,calc(100vw-40px))]"} flex-col overflow-hidden`, modalPresence.closing ? "is-closing" : ""].join(" ")} role="dialog" aria-modal="true" aria-labelledby="battle-settings-title">
+          <section className={[`game-settings-modal hf-ui-panel flex max-h-[min(860px,calc(100vh-40px))] ${guided ? "w-[min(640px,calc(100vw-40px))]" : "w-[min(1040px,calc(100vw-40px))]"} flex-col overflow-hidden`, modalPresence.closing ? "is-closing" : ""].join(" ")} role="dialog" aria-modal="true" aria-labelledby="battle-settings-title">
             <header className="game-settings-modal-header flex items-center justify-between gap-5 px-7 py-5">
               <div>
                 <div className="game-dialog-kicker">{t(journey ? "guided.journey.settingsKicker" : guided ? "guided.settings.kicker" : "settings.battleConfiguration")}</div>
@@ -143,7 +143,7 @@ export function SettingsMenu({
                 <AudioControls />
                 <DisplayControls />
 
-                <section className="hf-ui-panel-soft p-4">
+                {!guided && <section className="hf-ui-panel-soft p-4">
                   <div className="game-settings-section-title">{t("guided.contextual.settingsTitle")}</div>
                   <label className="contextual-help-preference mt-3">
                     <input
@@ -156,7 +156,7 @@ export function SettingsMenu({
                       <small>{t("guided.contextual.hideSeenBody")}</small>
                     </span>
                   </label>
-                </section>
+                </section>}
 
                 {!guided && <ZoneDrawer game={game} />}
 
@@ -175,7 +175,7 @@ export function SettingsMenu({
                   <section className="hf-ui-panel-soft p-4">
                     <div className="game-settings-section-title">{t(journey ? "guided.journey.current" : "guided.settings.lesson")}</div>
                     <p className="mt-2 text-sm text-[#8d9a94]">{t(journey ? "guided.journey.restartDescription" : "guided.settings.restartDescription")}</p>
-                    <button className="game-dialog-action mt-4 flex h-10 w-full items-center justify-center gap-2 text-xs font-bold uppercase" type="button" onClick={openRestartConfirmation}>
+                    <button className="hf-ui-button guided-settings-restart mt-4 flex h-9 w-full items-center justify-center gap-2 text-xs font-black uppercase tracking-wide transition" type="button" onClick={openRestartConfirmation}>
                       <RefreshCcw size={15} /> {t(journey ? "guided.journey.restart" : "guided.lifecycle.restart")}
                     </button>
                   </section>

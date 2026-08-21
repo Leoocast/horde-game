@@ -968,6 +968,7 @@ test("How to Play opens a right-side data-driven tutorial catalog", () => {
 
 test("Settings stays above gameplay while confirmations stay above Settings", () => {
   const settings = readFileSync(new URL("../src/components/SettingsMenu.tsx", import.meta.url), "utf8");
+  const languageSelector = readFileSync(new URL("../src/components/LanguageSelector.tsx", import.meta.url), "utf8");
   const board = readFileSync(new URL("../src/components/Board.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
@@ -978,6 +979,10 @@ test("Settings stays above gameplay while confirmations stay above Settings", ()
   assert.match(settings, /restartPresence\.mounted && createPortal\(/u);
   assert.match(settings, /game-settings-popover game-system-confirmation-layer game-home-backdrop/u);
   assert.match(settings, /onClick=\{onReturnToMenu\}/u);
+  assert.match(settings, /guided \? "w-\[min\(640px,calc\(100vw-40px\)\)\]"/u);
+  assert.match(settings, /\{!guided && <section className="hf-ui-panel-soft p-4">[\s\S]*?guided\.contextual\.settingsTitle/u);
+  assert.match(settings, /className="hf-ui-button guided-settings-restart/u);
+  assert.match(languageSelector, /language-selector is-\$\{variant\}/u);
 
   assert.match(board, /homeConfirmationPresence\.mounted && createPortal\(/u);
   assert.match(board, /game-settings-popover game-system-confirmation-layer game-home-backdrop/u);
@@ -986,6 +991,8 @@ test("Settings stays above gameplay while confirmations stay above Settings", ()
   assert.match(styles, /\.game-system-confirmation-layer\s*\{\s*z-index:\s*40010;/u);
   assert.match(styles, /\.game-settings-popover \.old-panel/u);
   assert.match(styles, /\.game-settings-popover \.game-settings-modal/u);
+  assert.match(styles, /\.language-selector\.is-panel \{[\s\S]*?width: min\(100%, 440px\);[\s\S]*?margin-inline: auto;/u);
+  assert.match(styles, /\.language-selector-option \{[\s\S]*?text-align: center;[\s\S]*?white-space: nowrap;/u);
 });
 
 test("deck detail close buttons inherit their deck palette", () => {

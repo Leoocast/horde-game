@@ -376,7 +376,7 @@ export const LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION = Object.freeze({
 /** First player turn after defending: pause before the hand-off, observe Energy, then set the goal. */
 export const LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION = Object.freeze({
   id: "learn-to-play.player-return",
-  revision: 2,
+  revision: 3,
   startStepId: "player-turn-returned",
   steps: [
     {
@@ -387,7 +387,7 @@ export const LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION = Object.freeze({
         bodyKey: "guided.learnToPlay.playerTurnBody",
         glossaryTerms: ["energy"],
       },
-      highlights: [],
+      highlights: [{ kind: "surface", anchor: "player.sources" }],
       nextStepId: "wait-for-energy-renewal",
     },
     {

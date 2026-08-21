@@ -16,7 +16,7 @@ export function LanguageSelector({ variant = "screen" }: Props) {
   ];
 
   const buttons = (
-    <div className="language-selector" role="radiogroup" aria-label={t("language.title")}>
+    <div className={`language-selector is-${variant}`} role="radiogroup" aria-label={t("language.title")}>
       {options.map((option) => (
         <button
           key={option.id}

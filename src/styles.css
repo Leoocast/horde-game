@@ -15386,8 +15386,15 @@
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
+  text-align: center;
   text-transform: uppercase;
+  white-space: nowrap;
   transition: border-color 150ms ease, background 150ms ease, color 150ms ease, box-shadow 150ms ease;
+}
+
+.language-selector.is-panel {
+  width: min(100%, 440px);
+  margin-inline: auto;
 }
 
 .language-selector-option:hover,
