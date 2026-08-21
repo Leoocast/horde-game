@@ -32,6 +32,7 @@ import { playerAttackHostHitDelay } from "../src/components/playerAttackPresenta
 import { setupJustCompleted, setupPrimaryAction, setupProgress } from "../src/components/setupPresentation";
 import { CardStatsBadge, CardTraitTooltipBadge } from "../src/components/Card";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
+import { StabilizingEffect, stabilizingWaveStyles } from "../src/components/StabilizingEffect";
 import { PreviewStatsBadge, TraitPills } from "../src/components/CardPreview";
 import { VampireBite } from "../src/components/VampireBite";
 import { cardLabelCamelCase } from "../src/i18n/cardLocalization";
@@ -486,6 +487,41 @@ test("debuffed stats render a red downward indicator independently of damage", (
 
   assert.match(markup, /is-debuffed/u);
   assert.match(css, /\.card-stat-badge\.is-debuffed::before\s*\{[^}]*content:\s*"\\25BC"\s*!important;/u);
+});
+
+test("Stabilizing uses synchronized CSS motes, charges and wave-only lattice", () => {
+  const first = stabilizingWaveStyles("echo-alpha");
+  assert.equal(first.length, 4);
+  assert.deepEqual(first, stabilizingWaveStyles("echo-alpha"));
+  assert.notDeepEqual(first, stabilizingWaveStyles("echo-beta"));
+
+  for (const style of first) {
+    const duration = Number.parseFloat(style["--stabilizing-duration"]);
+    const delay = Number.parseFloat(style["--stabilizing-delay"]);
+    assert.ok(duration >= 7.5 && duration <= 11);
+    assert.ok(delay <= 0 && delay >= -duration);
+  }
+
+  const markup = renderToStaticMarkup(createElement(StabilizingEffect, { seedKey: "echo-alpha" }));
+  assert.equal(markup.match(/class="stabilizing-gold-charge"/gu)?.length, 4);
+  assert.equal(markup.match(/class="stabilizing-wave-front"/gu)?.length, 4);
+  assert.equal(markup.match(/class="stabilizing-mote"/gu)?.length, 4);
+
+  const cardSource = readFileSync(new URL("../src/components/Card.tsx", import.meta.url), "utf8");
+  const effectSource = readFileSync(new URL("../src/components/StabilizingEffect.tsx", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  const latticeRule = css.match(/\.stabilizing-lattice\s*\{([\s\S]*?)\n  \}/u)?.[1] ?? "";
+
+  assert.match(cardSource, /<StabilizingEffect seedKey=\{card\.instanceId\}/u);
+  assert.doesNotMatch(effectSource, /canvas|WebGL|shader/iu);
+  assert.match(latticeRule, /repeating-linear-gradient/u);
+  assert.doesNotMatch(latticeRule, /background:/u);
+  assert.match(css, /\.stabilizing-wave-front\s*\{[^}]*background:\s*radial-gradient/su);
+  assert.match(css, /\.stabilizing-mote\s*\{[^}]*width:\s*4\.4cqw;/su);
+  assert.match(css, /@keyframes stabilizing-gold-charge\s*\{\s*0%,\s*100%\s*\{/su);
+  assert.match(css, /@keyframes stabilizing-gold-glint\s*\{\s*0%,\s*100%\s*\{/su);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.stabilizing-wave-front:first-child/su);
+  assert.doesNotMatch(css, /summoning-sickness-rings|summoning-water-/u);
 });
 
 test("a repeated Burn volley lands as one aggregate impact and explicit targets keep their own", () => {
