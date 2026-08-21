@@ -424,6 +424,44 @@ button { cursor: pointer; }
 .m-thin .m-cta:hover { background: var(--action); }
 .m-thin .m-close { top: -34px; right: 0; }
 
+/* ══ G · Umbral grabado ════════════════════════════════════════════════ */
+.m-forge { width: min(460px, 100%); text-align: center; }
+.m-forge .m-kicker { display: block; min-height: 13px; margin-bottom: 18px; transition: color 200ms ease, letter-spacing 200ms ease; }
+.m-forge .m-kicker.is-mark { color: var(--gold); font-size: 8px; letter-spacing: 0.7em; opacity: 0.7; text-indent: 0.7em; }
+.m-forge .m-kicker.is-empty { margin-bottom: 0; min-height: 0; }
+.m-forge .m-title { font-family: var(--serif); font-size: clamp(26px, 3vw, 34px); }
+.m-forge .sweep { position: relative; overflow: hidden; width: 78%; height: 1px; margin: 20px auto 28px; background: var(--line-soft); }
+.m-forge .sweep::after { position: absolute; top: 0; left: -40%; width: 40%; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-bright), transparent); content: ""; animation: sweep 3.4s ease-in-out infinite; }
+.m-forge .field { position: relative; }
+.m-forge .m-input { padding: 8px 0; font-size: 27px; }
+.m-forge .underline { position: relative; width: 100%; height: 1px; margin: 0 auto; background: var(--line-soft); }
+.m-forge .underline i { position: absolute; top: 0; left: 50%; width: 0; height: 1px; background: var(--gold-bright); box-shadow: 0 0 8px rgb(234 213 155 / 0.55); transform: translateX(-50%); transition: width 340ms cubic-bezier(0.16, 1, 0.3, 1); }
+.m-forge .field:focus-within .underline i { width: 100%; }
+/* el grabado necesita salir del renglón: aquí la capa de chispas no recorta */
+.m-forge .sparks { overflow: visible; inset: -12px 0 0; }
+.m-forge .heat {
+  position: absolute;
+  top: 50%;
+  width: 74px;
+  height: 26px;
+  margin-top: -13px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgb(234 213 155 / 0.16), transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%);
+  transition: opacity 240ms ease, left 90ms linear;
+}
+.m-forge .field.is-writing .heat { opacity: 1; }
+.m-forge .count { margin-top: 12px; color: var(--muted-2); font-size: 9.5px; letter-spacing: 0.22em; opacity: 0.7; }
+.m-forge .m-cta { min-width: 180px; height: 42px; margin-top: 22px; border-color: rgb(178 158 95 / 0.34); background: transparent; }
+.m-forge .m-cta:hover { background: var(--action); }
+.m-forge .m-close { top: -36px; right: 0; }
+
+.kicker-picker { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 14px; }
+.kicker-picker > span { margin-right: 4px; color: var(--muted-2); font-size: 10px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; }
+.kicker-picker .chip { font-family: var(--ui); text-transform: none; letter-spacing: 0.08em; }
+
 /* confirmación compartida */
 .stage.is-confirmed .m { filter: brightness(1.06); }
 .confirm-flash {
@@ -479,6 +517,7 @@ button { cursor: pointer; }
       <a href="#d">D · Primera página</a>
       <a href="#e">E · Futuro</a>
       <a href="#f">F · Umbral mínimo</a>
+      <a href="#g">G · Umbral grabado ★</a>
       <a href="../index.html">← Índice</a>
     </nav>
   </header>

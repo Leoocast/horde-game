@@ -126,7 +126,7 @@ export function SettingsMenu({
           className={["game-settings-popover game-settings-system-layer game-settings-modal-backdrop fixed inset-0 flex items-center justify-center p-5", modalPresence.closing ? "is-closing" : ""].join(" ")}
           role="presentation"
         >
-          <section className={[`game-settings-modal hf-ui-panel flex max-h-[min(860px,calc(100vh-40px))] ${guided ? "w-[min(640px,calc(100vw-40px))]" : "w-[min(1040px,calc(100vw-40px))]"} flex-col overflow-hidden`, modalPresence.closing ? "is-closing" : ""].join(" ")} role="dialog" aria-modal="true" aria-labelledby="battle-settings-title">
+          <section className={[`game-settings-modal hf-ui-panel flex max-h-[min(860px,calc(100vh-40px))] ${guided ? "w-[min(640px,calc(100vw-40px))]" : "w-[min(1180px,calc(100vw-40px))]"} flex-col overflow-hidden`, modalPresence.closing ? "is-closing" : ""].join(" ")} role="dialog" aria-modal="true" aria-labelledby="battle-settings-title">
             <header className="game-settings-modal-header flex items-center justify-between gap-5 px-7 py-5">
               <div>
                 <div className="game-dialog-kicker">{t(journey ? "guided.journey.settingsKicker" : guided ? "guided.settings.kicker" : "settings.battleConfiguration")}</div>
@@ -137,7 +137,7 @@ export function SettingsMenu({
               </button>
             </header>
 
-            <div className={`grid min-h-0 flex-1 ${guided ? "grid-cols-1" : "grid-cols-[320px_minmax(0,1fr)]"} gap-5 overflow-hidden p-5`}>
+            <div className={`grid min-h-0 flex-1 ${guided ? "grid-cols-1" : "grid-cols-[360px_minmax(0,1fr)]"} gap-5 overflow-hidden p-5`}>
               <div className="old-scrollbar min-h-0 space-y-4 overflow-y-auto pr-2">
                 <LanguageSelector variant="panel" />
                 <AudioControls />

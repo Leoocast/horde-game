@@ -12015,7 +12015,7 @@
   top: 8px;
   left: calc(50% + 164px);
   z-index: 117;
-  width: 190px;
+  width: 240px;
 }
 
 /* Right of the Host panel is for spells and reveals still resolving (Tribute of the Four Sorrows). Left is the
@@ -16465,28 +16465,18 @@
 
 .game-log-card-preview {
   position: fixed;
-  z-index: 540;
-  width: 190px;
+  /* Settings now lives in a body portal at 40000. Keep the Log's card layer above its
+     owning modal while leaving system confirmations at 40010 in front. */
+  z-index: 40005;
+  width: 270px;
   pointer-events: none;
-  border: 1px solid rgb(196 163 77 / 0.72);
-  background: #080c0c;
-  box-shadow: 0 20px 44px rgb(0 0 0 / 0.78), 0 0 20px rgb(165 125 35 / 0.16);
   animation: game-log-card-preview-in 130ms ease-out both;
 }
 
 .game-log-card-preview img { display: block; width: 100%; aspect-ratio: 488 / 680; object-fit: cover; }
-.game-log-card-preview span {
-  display: block;
-  border-top: 1px solid rgb(163 143 80 / 0.35);
-  padding: 7px 8px;
-  color: #d9cca0;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 11px;
-  text-align: center;
-}
 
 .deck-collection-modal-backdrop.game-log-details-backdrop {
-  z-index: 560;
+  z-index: 40005;
 }
 
 @keyframes game-log-card-preview-in {
@@ -22691,14 +22681,17 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
 
 .defeat-title .line {
   display: block;
-  /* Compensa el espacio que letter-spacing deja después de la última letra. */
-  padding-left: 0.065em;
   opacity: 0;
   clip-path: inset(0 50%);
   transform: translateY(12px);
 }
 
-.defeat-title .line:last-child { margin-top: 0.08em; color: #c7ced0; }
+.defeat-title .line:first-child { padding-left: 0.0268em; }
+.defeat-title .line:last-child { margin-top: 0.08em; padding-left: 0.0378em; color: #c7ced0; }
+/* El centrado del advance box no coincide con el de la tinta visible de Cinzel. Estos valores
+   compensan cada copy real sin mover el bloque ni usar `transform`, y por tanto sirven igual en
+   el desenlace normal, el tutorial y la succión del vórtice. */
+.defeat-title:lang(es) .line { padding-left: 0.0489em; }
 .defeat-title .line:first-child { animation: defeat-title-reveal 920ms 150ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 .defeat-title .line:last-child { animation: defeat-title-reveal 980ms 270ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 

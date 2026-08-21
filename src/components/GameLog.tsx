@@ -13,6 +13,9 @@ type LogKind = "combat" | "spell" | "death" | "life" | "draw" | "turn" | "system
 type LogEntry = { text: string; sourceIndex: number; turn: number; side: Side };
 type PreviewPosition = { left: number; top: number };
 
+const CARD_PREVIEW_WIDTH = 270;
+const CARD_PREVIEW_ASPECT_RATIO = 680 / 488;
+
 const KIND_LABELS: Record<LogKind, TranslationKey> = {
   combat: "log.kindBattle",
   spell: "log.kindAction",
@@ -105,8 +108,8 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
 
   function showCardPreview(event: React.SyntheticEvent<HTMLButtonElement>, card: CardInstance) {
     const rect = event.currentTarget.getBoundingClientRect();
-    const width = 190;
-    const height = width * (680 / 488);
+    const width = CARD_PREVIEW_WIDTH;
+    const height = width * CARD_PREVIEW_ASPECT_RATIO;
     const left = rect.right + 12 + width < window.innerWidth ? rect.right + 12 : Math.max(12, rect.left - width - 12);
     const top = Math.min(window.innerHeight - height - 12, Math.max(12, rect.top - height * 0.42));
     setPreviewCard(card);
@@ -217,7 +220,6 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
       {previewCard && previewPosition && previewDetails.imageUrl && !detailsCard && (
         <div className="game-log-card-preview" style={previewPosition} aria-hidden="true">
           <img src={previewDetails.imageUrl} alt="" />
-          <span>{previewCard.displayName}</span>
         </div>
       )}
       {detailsCard && (

@@ -980,6 +980,8 @@ test("Settings stays above gameplay while confirmations stay above Settings", ()
   assert.match(settings, /game-settings-popover game-system-confirmation-layer game-home-backdrop/u);
   assert.match(settings, /onClick=\{onReturnToMenu\}/u);
   assert.match(settings, /guided \? "w-\[min\(640px,calc\(100vw-40px\)\)\]"/u);
+  assert.match(settings, /: "w-\[min\(1180px,calc\(100vw-40px\)\)\]"/u);
+  assert.match(settings, /guided \? "grid-cols-1" : "grid-cols-\[360px_minmax\(0,1fr\)\]"/u);
   assert.match(settings, /\{!guided && <section className="hf-ui-panel-soft p-4">[\s\S]*?guided\.contextual\.settingsTitle/u);
   assert.match(settings, /className="hf-ui-button guided-settings-restart/u);
   assert.match(languageSelector, /language-selector is-\$\{variant\}/u);
@@ -989,10 +991,23 @@ test("Settings stays above gameplay while confirmations stay above Settings", ()
   assert.match(styles, /\.game-settings-system-layer\s*\{\s*z-index:\s*40000;/u);
   assert.match(styles, /\.game-guided-settings-launcher-layer\s*\{\s*z-index:\s*39990;/u);
   assert.match(styles, /\.game-system-confirmation-layer\s*\{\s*z-index:\s*40010;/u);
+  assert.match(styles, /\.game-log-card-preview\s*\{[\s\S]*?z-index:\s*40005;/u);
+  assert.match(styles, /\.deck-collection-modal-backdrop\.game-log-details-backdrop\s*\{\s*z-index:\s*40005;/u);
   assert.match(styles, /\.game-settings-popover \.old-panel/u);
   assert.match(styles, /\.game-settings-popover \.game-settings-modal/u);
   assert.match(styles, /\.language-selector\.is-panel \{[\s\S]*?width: min\(100%, 440px\);[\s\S]*?margin-inline: auto;/u);
   assert.match(styles, /\.language-selector-option \{[\s\S]*?text-align: center;[\s\S]*?white-space: nowrap;/u);
+});
+
+test("the Log card hover shows only a larger card image", () => {
+  const gameLog = readFileSync(new URL("../src/components/GameLog.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(gameLog, /const CARD_PREVIEW_WIDTH = 270;/u);
+  assert.doesNotMatch(gameLog, /<span>\{previewCard\.displayName\}<\/span>/u);
+  assert.match(styles, /\.game-log-card-preview\s*\{[\s\S]*?width:\s*270px;/u);
+  assert.doesNotMatch(styles, /\.game-log-card-preview\s*\{[^}]*?(?:border|background|box-shadow):/u);
+  assert.doesNotMatch(styles, /\.game-log-card-preview span\s*\{/u);
 });
 
 test("deck detail close buttons inherit their deck palette", () => {
@@ -1282,7 +1297,13 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(styles, /\.defeat-outcome-inner \{[\s\S]*?place-self: center;[\s\S]*?margin-inline: auto;/u);
   assert.doesNotMatch(styles, /\.defeat-title \{[^}]*translate:/su);
   assert.match(styles, /@keyframes defeat-outcome-in \{\s*from \{ opacity: 0; transform: translateY\(10px\); \}/u);
-  assert.match(styles, /\.defeat-title \.line \{[^}]*padding-left: 0\.065em;/su);
+  // Cinzel's tracked advance box is not its visible ink box. The shared Spanish and English
+  // verdicts use measured, locale-specific compensation so both the normal and tutorial title
+  // sit on the viewport center instead of sharing one approximate tracking offset.
+  assert.match(styles, /\.defeat-title \.line:first-child \{[^}]*padding-left: 0\.0268em;/su);
+  assert.match(styles, /\.defeat-title \.line:last-child \{[^}]*padding-left: 0\.0378em;/su);
+  assert.match(styles, /\.defeat-title:lang\(es\) \.line \{[^}]*padding-left: 0\.0489em;/su);
+  assert.doesNotMatch(styles, /\.defeat-title \.line \{[^}]*padding-left: 0\.065em;/su);
   assert.match(modal, /<GameOutcomeDialog/u);
   assert.match(outcomeDialog, /className=\{`\$\{tone\}-outcome-inner`\}/u);
   // TemporalBackdrop and ambience remain alive below the opaque shard geometry.
