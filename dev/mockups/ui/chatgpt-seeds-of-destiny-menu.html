@@ -1,1436 +1,957 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hostfall — Semillas del Destino · ChatGPT</title>
-  <style>
-    @font-face {
-      font-family: "HF Cinzel";
-      src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
-      font-weight: 500 900;
-      font-display: swap;
-    }
-
-    @font-face {
-      font-family: "HF Cinzel Decorative";
-      src: url("../assets/fonts/cinzel-decorative-latin.woff2") format("woff2");
-      font-weight: 400;
-      font-display: swap;
-    }
-
-    @font-face {
-      font-family: "HF Lora";
-      src: url("../assets/fonts/lora-normal-latin.woff2") format("woff2");
-      font-weight: 400 700;
-      font-display: swap;
-    }
-
-    @font-face {
-      font-family: "HF Outfit";
-      src: url("../assets/fonts/outfit-latin.woff2") format("woff2");
-      font-weight: 400 800;
-      font-display: swap;
-    }
-
-    * { box-sizing: border-box; }
-
-    :root {
-      color-scheme: dark;
-      font-family: "HF Outfit", "Trebuchet MS", sans-serif;
-      background: #030807;
-      color: #dfd8bd;
-      --hf-gold: #c5a867;
-      --hf-gold-bright: #f0dda2;
-      --hf-gold-dim: #796943;
-      --hf-ink: #030807;
-      --hf-panel: rgb(8 17 16 / 0.88);
-      --hf-panel-solid: #08110f;
-      --hf-line: rgb(198 174 104 / 0.28);
-      --hf-line-bright: rgb(226 202 132 / 0.62);
-      --hf-muted: #7e9188;
-      --hf-muted-dark: #52625b;
-      --hf-preserved: #d8bf72;
-      --hf-lost: #c57562;
-      --hf-open: #7aaea6;
-    }
-
-    html,
-    body {
-      width: 100%;
-      min-width: 320px;
-      min-height: 100%;
-      margin: 0;
-      overflow: hidden;
-      background: #030807;
-    }
-
-    button { font: inherit; }
-
-    button:focus-visible {
-      outline: 2px solid #f0dda2;
-      outline-offset: 3px;
-    }
-
-    .mockup-controls {
-      position: fixed;
-      z-index: 100;
-      right: auto;
-      bottom: 10px;
-      left: 10px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      padding: 5px;
-      border: 1px solid rgb(186 167 112 / 0.34);
-      background: rgb(4 9 9 / 0.92);
-      box-shadow: 0 12px 32px rgb(0 0 0 / 0.42);
-      backdrop-filter: blur(12px);
-    }
-
-    .mockup-controls > span {
-      padding: 0 8px;
-      color: #65766e;
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    .mockup-controls button {
-      min-height: 28px;
-      border: 1px solid transparent;
-      padding: 0 10px;
-      background: transparent;
-      color: #87978f;
-      cursor: pointer;
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 0.11em;
-      text-transform: uppercase;
-    }
-
-    .mockup-controls button:hover { color: #e4d6a6; }
-
-    .mockup-controls button[aria-pressed="true"] {
-      border-color: rgb(211 187 117 / 0.52);
-      background: rgb(89 72 36 / 0.34);
-      color: #f0dda2;
-    }
-
-    .product-screen {
-      position: relative;
-      isolation: isolate;
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-      background:
-        radial-gradient(ellipse at 50% 38%, rgb(28 76 72 / 0.18), transparent 48%),
-        linear-gradient(180deg, #06100f, #030807 74%);
-    }
-
-    .product-screen[hidden] { display: none; }
-
-    .temporal-sky,
-    .temporal-grid,
-    .temporal-vignette,
-    .star-field {
-      position: absolute;
-      z-index: -3;
-      inset: 0;
-      pointer-events: none;
-    }
-
-    .temporal-sky {
-      background:
-        radial-gradient(circle at 18% 18%, rgb(74 127 117 / 0.13), transparent 26%),
-        radial-gradient(circle at 76% 42%, rgb(101 84 47 / 0.12), transparent 32%),
-        radial-gradient(circle at 50% 120%, rgb(19 73 71 / 0.22), transparent 58%),
-        linear-gradient(142deg, #06100f, #020706 65%);
-    }
-
-    .temporal-grid {
-      z-index: -2;
-      opacity: 0.46;
-      background-image:
-        linear-gradient(rgb(143 190 181 / 0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgb(143 190 181 / 0.04) 1px, transparent 1px);
-      background-size: 132px 82px;
-      mask-image: radial-gradient(ellipse at 50% 48%, #000 0 48%, transparent 86%);
-    }
-
-    .star-field {
-      z-index: -1;
-      opacity: 0.7;
-      background-image:
-        radial-gradient(circle at 8% 15%, #c8e6d5 0 1px, transparent 1.5px),
-        radial-gradient(circle at 23% 71%, #d8bd72 0 1px, transparent 1.5px),
-        radial-gradient(circle at 37% 32%, #b7d7cc 0 1px, transparent 1.5px),
-        radial-gradient(circle at 54% 12%, #e2d098 0 1px, transparent 1.5px),
-        radial-gradient(circle at 68% 67%, #a7d2c6 0 1px, transparent 1.5px),
-        radial-gradient(circle at 79% 27%, #d9cc9c 0 1px, transparent 1.5px),
-        radial-gradient(circle at 92% 58%, #b8ddd1 0 1px, transparent 1.5px);
-      background-size: 293px 227px, 331px 271px, 367px 307px, 401px 337px, 439px 373px, 479px 409px, 523px 449px;
-    }
-
-    .temporal-vignette {
-      z-index: 6;
-      background:
-        linear-gradient(90deg, rgb(0 3 3 / 0.58), transparent 12%, transparent 88%, rgb(0 3 3 / 0.58)),
-        linear-gradient(180deg, rgb(0 3 3 / 0.42), transparent 16%, transparent 78%, rgb(0 3 3 / 0.64));
-    }
-
-    .archive-shell {
-      position: relative;
-      z-index: 8;
-      display: grid;
-      grid-template-rows: 96px minmax(0, 1fr) 56px;
-      width: 100%;
-      height: 100%;
-    }
-
-    .archive-header {
-      display: grid;
-      grid-template-columns: minmax(190px, 0.8fr) minmax(430px, 1.4fr) minmax(280px, 0.8fr);
-      align-items: center;
-      gap: 24px;
-      padding: 14px clamp(22px, 3.6vw, 68px) 12px;
-      border-bottom: 1px solid rgb(198 174 104 / 0.19);
-      background: linear-gradient(180deg, rgb(3 8 8 / 0.82), rgb(3 8 8 / 0.24));
-    }
-
-    .archive-back,
-    .quiet-action,
-    .product-action,
-    .copy-action,
-    .outcome-link {
-      border: 0;
-      background: transparent;
-      color: #8c9c94;
-      cursor: pointer;
-    }
-
-    .archive-back {
-      justify-self: start;
-      padding: 8px 0;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-    }
-
-    .archive-back:hover { color: #ead59b; }
-
-    .archive-heading { text-align: center; }
-
-    .archive-heading p,
-    .detail-kicker,
-    .outcome-kicker,
-    .outcome-summary-kicker,
-    .future-index-title,
-    .history-heading,
-    .future-stat span {
-      margin: 0;
-      color: #8b7650;
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 0.24em;
-      text-transform: uppercase;
-    }
-
-    .archive-heading h1 {
-      margin: 3px 0 0;
-      color: #e8dbb1;
-      font-family: "HF Cinzel Decorative", Georgia, serif;
-      font-size: clamp(24px, 2.25vw, 38px);
-      font-weight: 400;
-      letter-spacing: 0.035em;
-      text-shadow: 0 0 24px rgb(190 164 92 / 0.12);
-    }
-
-    .archive-tally {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: clamp(14px, 2vw, 28px);
-    }
-
-    .archive-tally div {
-      display: grid;
-      justify-items: end;
-    }
-
-    .archive-tally span {
-      color: #60736a;
-      font-size: 8px;
-      font-weight: 800;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-    }
-
-    .archive-tally strong {
-      color: #cab87c;
-      font-family: "HF Lora", Georgia, serif;
-      font-size: 18px;
-      font-weight: 400;
-    }
-
-    .archive-main {
-      min-height: 0;
-      display: grid;
-      grid-template-columns: minmax(330px, 28vw) minmax(0, 1fr);
-      padding: clamp(18px, 2.2vw, 38px) clamp(22px, 3.6vw, 68px) 14px;
-    }
-
-    .future-index {
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-      border-right: 1px solid rgb(198 174 104 / 0.19);
-      padding-right: clamp(16px, 2.1vw, 34px);
-    }
-
-    .future-index-title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 2px 0 12px;
-    }
-
-    .future-index-title span:last-child {
-      color: #54655d;
-      letter-spacing: 0.12em;
-    }
-
-    .future-list {
-      min-height: 0;
-      display: grid;
-      align-content: start;
-      gap: 5px;
-    }
-
-    .future-entry {
-      position: relative;
-      display: grid;
-      grid-template-columns: 6px minmax(0, 1fr) auto;
-      gap: 13px;
-      min-height: 72px;
-      border: 1px solid transparent;
-      padding: 9px 11px 9px 0;
-      background: transparent;
-      color: #bdb89f;
-      cursor: pointer;
-      text-align: left;
-      transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
-    }
-
-    .future-entry:hover {
-      border-color: rgb(190 170 108 / 0.22);
-      background: rgb(15 26 23 / 0.46);
-      transform: translateX(3px);
-    }
-
-    .future-entry[aria-pressed="true"] {
-      border-color: rgb(203 181 112 / 0.38);
-      background:
-        linear-gradient(90deg, rgb(58 54 35 / 0.42), transparent 72%),
-        rgb(11 21 19 / 0.68);
-    }
-
-    .future-entry-mark {
-      width: 6px;
-      height: 100%;
-      background: var(--entry-color);
-      box-shadow: 0 0 12px color-mix(in srgb, var(--entry-color) 52%, transparent);
-      opacity: 0.8;
-    }
-
-    .future-entry-copy {
-      min-width: 0;
-      display: grid;
-      align-content: center;
-      gap: 4px;
-    }
-
-    .future-entry-copy small {
-      color: var(--entry-color);
-      font-size: 8px;
-      font-weight: 800;
-      letter-spacing: 0.17em;
-      text-transform: uppercase;
-    }
-
-    .future-entry-copy strong {
-      overflow: hidden;
-      color: #dfd3a8;
-      font-family: "HF Cinzel", Georgia, serif;
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .future-entry-copy span {
-      overflow: hidden;
-      color: #6f8178;
-      font-size: 9px;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .future-entry-attempts {
-      align-self: center;
-      display: grid;
-      justify-items: center;
-      min-width: 42px;
-      color: #7f8f87;
-    }
-
-    .future-entry-attempts strong {
-      color: #b9ad83;
-      font-family: "HF Lora", Georgia, serif;
-      font-size: 17px;
-      font-weight: 400;
-    }
-
-    .future-entry-attempts span {
-      font-size: 7px;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .future-detail {
-      min-width: 0;
-      min-height: 0;
-      display: grid;
-      grid-template-columns: minmax(260px, 0.9fr) minmax(420px, 1.35fr);
-      gap: clamp(28px, 4vw, 72px);
-      align-items: center;
-      padding: 0 clamp(8px, 2.4vw, 46px) 0 clamp(24px, 3.6vw, 64px);
-    }
-
-    .future-identity {
-      min-width: 0;
-      display: grid;
-      justify-items: center;
-      text-align: center;
-    }
-
-    .destiny-instrument {
-      position: relative;
-      width: min(31vw, 360px);
-      min-width: 230px;
-      aspect-ratio: 1;
-      display: grid;
-      place-items: center;
-      color: var(--detail-color, var(--hf-preserved));
-      filter: drop-shadow(0 0 28px color-mix(in srgb, currentColor 20%, transparent));
-    }
-
-    .destiny-instrument::before,
-    .destiny-instrument::after {
-      position: absolute;
-      border: 1px solid currentColor;
-      border-radius: 50%;
-      content: "";
-      opacity: 0.18;
-    }
-
-    .destiny-instrument::before { inset: 7%; }
-    .destiny-instrument::after { inset: 19%; border-style: dotted; opacity: 0.28; }
-
-    .destiny-instrument svg {
-      width: 92%;
-      height: 92%;
-      overflow: visible;
-    }
-
-    .dial-ring,
-    .dial-arc,
-    .cardinal-line,
-    .cardinal-cut {
-      fill: none;
-      stroke: currentColor;
-      vector-effect: non-scaling-stroke;
-    }
-
-    .dial-ring { stroke-width: 1; opacity: 0.44; }
-    .dial-arc { stroke-width: 1.3; opacity: 0.72; stroke-dasharray: 3 9; }
-    .cardinal-line { stroke-width: 1.15; opacity: 0.54; }
-    .cardinal-cut { stroke-width: 2; opacity: 0.92; }
-    .cardinal-fill { fill: currentColor; opacity: 0.14; }
-    .cardinal-node { fill: #06100f; stroke: currentColor; stroke-width: 1.4; }
-    .cardinal-heart { fill: currentColor; opacity: 0.92; }
-
-    .instrument-code {
-      position: absolute;
-      display: grid;
-      justify-items: center;
-      pointer-events: none;
-    }
-
-    .instrument-code span {
-      color: #667870;
-      font-size: 8px;
-      font-weight: 800;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-    }
-
-    .instrument-code strong {
-      margin-top: 2px;
-      color: #ead9a3;
-      font-family: "HF Lora", Georgia, serif;
-      font-size: clamp(23px, 2.5vw, 38px);
-      font-weight: 400;
-      letter-spacing: 0.08em;
-      text-shadow: 0 0 22px rgb(203 178 104 / 0.2);
-    }
-
-    .future-state-line {
-      display: flex;
-      width: min(310px, 100%);
-      align-items: center;
-      gap: 10px;
-      margin-top: -9px;
-      color: var(--detail-color, var(--hf-preserved));
-    }
-
-    .future-state-line::before,
-    .future-state-line::after {
-      height: 1px;
-      flex: 1;
-      background: linear-gradient(90deg, transparent, currentColor);
-      content: "";
-      opacity: 0.48;
-    }
-
-    .future-state-line::after { transform: scaleX(-1); }
-
-    .future-state-line span {
-      font-family: "HF Cinzel", Georgia, serif;
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    .future-matchup {
-      margin: 13px 0 0;
-      color: #7f9188;
-      font-family: "HF Lora", Georgia, serif;
-      font-size: 12px;
-      line-height: 1.55;
-    }
-
-    .future-matchup strong { color: #cfc59d; font-weight: 400; }
-
-    .future-record {
-      min-width: 0;
-      align-self: stretch;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .detail-kicker { color: var(--detail-color, var(--hf-preserved)); }
-
-    .future-record h2 {
-      margin: 6px 0 0;
-      color: #e4d8ac;
-      font-family: "HF Cinzel", Georgia, serif;
-      font-size: clamp(22px, 2vw, 34px);
-      font-weight: 600;
-      letter-spacing: 0.035em;
-    }
-
-    .future-record > p {
-      max-width: 650px;
-      margin: 7px 0 0;
-      color: #819188;
-      font-family: "HF Lora", Georgia, serif;
-      font-size: 12px;
-      line-height: 1.55;
-    }
-
-    .future-stats {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 18px 30px;
-      margin: 18px 0 0;
-      padding: 13px 0;
-      border-top: 1px solid rgb(198 174 104 / 0.17);
-      border-bottom: 1px solid rgb(198 174 104 / 0.17);
-    }
-
-    .future-stat { display: grid; gap: 3px; }
-    .future-stat span { color: #62736b; letter-spacing: 0.13em; }
-
-    .future-stat strong {
-      color: #cfc39a;
-      font-family: "HF Lora", Georgia, serif;
-      font-size: 13px;
-      font-weight: 400;
-    }
-
-    .history-heading { margin-top: 18px; color: #7f704f; }
-
-    .attempt-history {
-      position: relative;
-      display: grid;
-      gap: 0;
-      margin-top: 7px;
-    }
-
-    .attempt-history::before {
-      position: absolute;
-      top: 15px;
-      bottom: 15px;
-      left: 5px;
-      width: 1px;
-      background: linear-gradient(var(--detail-color, var(--hf-preserved)), rgb(121 105 67 / 0.16));
-      content: "";
-      opacity: 0.55;
-    }
-
-    .attempt-row {
-      position: relative;
-      display: grid;
-      grid-template-columns: 11px minmax(118px, 0.55fr) minmax(0, 1fr);
-      gap: 13px;
-      align-items: baseline;
-      padding: 8px 0;
-    }
-
-    .attempt-row i {
-      position: relative;
-      z-index: 1;
-      width: 11px;
-      height: 11px;
-      border: 1px solid var(--attempt-color, #82948b);
-      background: #07100e;
-      transform: rotate(45deg);
-    }
-
-    .attempt-row:last-child i {
-      background: var(--attempt-color, var(--detail-color));
-      box-shadow: 0 0 10px color-mix(in srgb, var(--attempt-color, var(--detail-color)) 42%, transparent);
-    }
-
-    .attempt-row strong {
-      color: #a9996c;
-      font-family: "HF Cinzel", Georgia, serif;
-      font-size: 10px;
-      font-weight: 600;
-    }
-
-    .attempt-row span {
-      color: #85958d;
-      font-family: "HF Lora", Georgia, serif;
-      font-size: 11px;
-      line-height: 1.4;
-    }
-
-    .future-actions,
-    .outcome-actions {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 9px;
-      margin-top: 18px;
-    }
-
-    .product-action {
-      min-height: 42px;
-      border: 1px solid rgb(190 169 106 / 0.38);
-      padding: 0 18px;
-      background: linear-gradient(180deg, rgb(32 41 41 / 0.96), rgb(9 16 17 / 0.98));
-      color: #cfc6a4;
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 0.13em;
-      text-transform: uppercase;
-      box-shadow: inset 0 1px rgb(255 255 255 / 0.05), 0 9px 20px rgb(0 0 0 / 0.25);
-    }
-
-    .product-action:hover {
-      border-color: rgb(225 199 119 / 0.68);
-      color: #f0dda2;
-    }
-
-    .product-action.is-primary {
-      border-color: color-mix(in srgb, var(--detail-color, var(--hf-preserved)) 75%, #d9c77d);
-      background:
-        radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--detail-color, var(--hf-preserved)) 19%, transparent), transparent 62%),
-        linear-gradient(180deg, rgb(66 60 36 / 0.96), rgb(27 29 22 / 0.99));
-      color: #f2e2ad;
-    }
-
-    .copy-action {
-      min-height: 38px;
-      padding: 0 7px;
-      color: #71827a;
-      font-size: 8px;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .copy-action:hover { color: #cfbf8d; }
-
-    .archive-footer {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      color: #4e6058;
-      font-size: 8px;
-      font-weight: 800;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-    }
-
-    .archive-footer::before,
-    .archive-footer::after {
-      width: min(12vw, 160px);
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgb(172 155 100 / 0.32));
-      content: "";
-    }
-
-    .archive-footer::after { transform: scaleX(-1); }
-
-    /* Immediate outcome views */
-    .outcome-screen {
-      --outcome-color: var(--hf-preserved);
-      --outcome-soft: rgb(199 169 88 / 0.12);
-      display: grid;
-      place-items: center;
-    }
-
-    .outcome-screen.is-defeat {
-      --outcome-color: var(--hf-lost);
-      --outcome-soft: rgb(141 56 42 / 0.14);
-    }
-
-    .outcome-atmosphere {
-      position: absolute;
-      z-index: -1;
-      inset: 0;
-      background:
-        radial-gradient(circle at 50% 43%, var(--outcome-soft), transparent 29%),
-        radial-gradient(ellipse at 50% 120%, rgb(13 61 59 / 0.22), transparent 62%);
-    }
-
-    .outcome-screen.is-defeat .outcome-atmosphere {
-      background:
-        radial-gradient(circle at 50% 42%, rgb(99 43 34 / 0.13), transparent 27%),
-        radial-gradient(ellipse at 50% 120%, rgb(30 45 43 / 0.18), transparent 62%);
-    }
-
-    .outcome-composition {
-      position: relative;
-      z-index: 10;
-      display: grid;
-      grid-template-rows: auto auto auto auto;
-      justify-items: center;
-      width: min(1120px, calc(100vw - 80px));
-      padding-top: 20px;
-      text-align: center;
-    }
-
-    .outcome-kicker {
-      display: flex;
-      width: min(440px, 80vw);
-      align-items: center;
-      gap: 13px;
-      color: var(--outcome-color);
-      letter-spacing: 0.3em;
-    }
-
-    .outcome-kicker::before,
-    .outcome-kicker::after {
-      height: 1px;
-      flex: 1;
-      background: linear-gradient(90deg, transparent, currentColor);
-      content: "";
-      opacity: 0.55;
-    }
-
-    .outcome-kicker::after { transform: scaleX(-1); }
-
-    .outcome-title {
-      margin: 12px 0 0;
-      color: #eee1b4;
-      font-family: "HF Cinzel Decorative", Georgia, serif;
-      font-size: clamp(36px, 5vw, 76px);
-      font-weight: 400;
-      letter-spacing: 0.035em;
-      line-height: 0.96;
-      text-shadow: 0 2px 0 #020504, 0 0 28px var(--outcome-soft);
-    }
-
-    .outcome-subtitle {
-      max-width: 630px;
-      margin: 10px 0 0;
-      color: #7f9188;
-      font-family: "HF Lora", Georgia, serif;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .outcome-seal {
-      position: relative;
-      display: flex;
-      width: min(460px, 70vw);
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      margin-top: 14px;
-      padding: 9px 22px;
-      border-top: 1px solid rgb(198 174 104 / 0.24);
-      border-bottom: 1px solid rgb(198 174 104 / 0.24);
-    }
-
-    .outcome-seal span {
-      color: #63766d;
-      font-size: 8px;
-      font-weight: 800;
-      letter-spacing: 0.19em;
-      text-transform: uppercase;
-    }
-
-    .outcome-seal strong {
-      color: #decd96;
-      font-family: "HF Lora", Georgia, serif;
-      font-size: 22px;
-      font-weight: 400;
-      letter-spacing: 0.08em;
-    }
-
-    .outcome-seal i {
-      width: 7px;
-      height: 7px;
-      border: 1px solid var(--outcome-color);
-      transform: rotate(45deg);
-    }
-
-    .outcome-memory {
-      width: min(920px, calc(100vw - 96px));
-      margin-top: 20px;
-      border-top: 1px solid rgb(198 174 104 / 0.18);
-      border-bottom: 1px solid rgb(198 174 104 / 0.18);
-      padding: 13px 0 14px;
-      background: linear-gradient(90deg, transparent, rgb(8 18 16 / 0.52) 14%, rgb(8 18 16 / 0.52) 86%, transparent);
-    }
-
-    .outcome-summary-kicker { color: #776844; }
-
-    .outcome-lines {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      margin-top: 9px;
-    }
-
-    .outcome-line {
-      min-width: 0;
-      padding: 0 22px;
-      border-right: 1px solid rgb(198 174 104 / 0.14);
-    }
-
-    .outcome-line:last-child { border-right: 0; }
-
-    .outcome-line strong {
-      display: block;
-      color: var(--outcome-color);
-      font-family: "HF Cinzel", Georgia, serif;
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .outcome-line span {
-      display: block;
-      margin-top: 3px;
-      color: #819188;
-      font-family: "HF Lora", Georgia, serif;
-      font-size: 10px;
-      line-height: 1.45;
-    }
-
-    .outcome-actions { justify-content: center; margin-top: 17px; }
-    .outcome-actions .product-action { --detail-color: var(--outcome-color); }
-
-    .outcome-link {
-      min-height: 42px;
-      padding: 0 9px;
-      color: #7c8d84;
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 0.13em;
-      text-transform: uppercase;
-    }
-
-    .outcome-link:hover { color: #d8ca98; }
-
-    .outcome-cardinal {
-      position: absolute;
-      z-index: 0;
-      top: 50%;
-      left: 50%;
-      width: min(63vh, 45vw);
-      aspect-ratio: 1;
-      color: var(--outcome-color);
-      opacity: 0.12;
-      transform: translate(-50%, -50%);
-      filter: drop-shadow(0 0 44px var(--outcome-soft));
-    }
-
-    .outcome-cardinal svg { width: 100%; height: 100%; }
-
-    .outcome-screen.is-defeat .outcome-cardinal {
-      opacity: 0.08;
-      transform: translate(-50%, -50%) rotate(3deg) scale(1.04);
-      clip-path: polygon(0 0, 48% 0, 51% 46%, 100% 43%, 100% 100%, 0 100%);
-    }
-
-    .outcome-screen.is-defeat::after {
-      position: absolute;
-      z-index: 2;
-      inset: 0;
-      background:
-        linear-gradient(116deg, transparent 0 48.8%, rgb(199 117 98 / 0.17) 49%, transparent 49.25%),
-        linear-gradient(71deg, transparent 0 56.5%, rgb(199 117 98 / 0.12) 56.7%, transparent 57%),
-        linear-gradient(151deg, transparent 0 62%, rgb(199 117 98 / 0.1) 62.2%, transparent 62.4%);
-      content: "";
-      pointer-events: none;
-    }
-
-    .toast {
-      position: fixed;
-      z-index: 120;
-      right: 18px;
-      bottom: 18px;
-      max-width: min(340px, calc(100vw - 36px));
-      border: 1px solid rgb(202 181 113 / 0.42);
-      padding: 11px 14px;
-      background: rgb(7 15 14 / 0.96);
-      color: #d9c99b;
-      font-size: 10px;
-      letter-spacing: 0.04em;
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(8px);
-      transition: opacity 150ms ease, transform 150ms ease;
-    }
-
-    .toast.is-visible { opacity: 1; transform: translateY(0); }
-
-    @media (max-width: 1120px) {
-      .archive-header {
-        grid-template-columns: 150px minmax(380px, 1fr) 230px;
-        gap: 12px;
-        padding-inline: 22px;
-      }
-
-      .archive-main {
-        grid-template-columns: 300px minmax(0, 1fr);
-        padding-inline: 22px;
-      }
-
-      .future-detail {
-        grid-template-columns: minmax(220px, 0.75fr) minmax(390px, 1.25fr);
-        gap: 22px;
-        padding-inline: 22px 8px;
-      }
-
-      .destiny-instrument { width: min(30vw, 300px); }
-      .future-stats { gap: 12px 20px; }
-      .attempt-row { grid-template-columns: 11px 110px minmax(0, 1fr); gap: 9px; }
-    }
-
-    @media (max-height: 760px) {
-      .archive-shell { grid-template-rows: 82px minmax(0, 1fr) 38px; }
-      .archive-header { padding-block: 10px 8px; }
-      .archive-main { padding-top: 12px; }
-      .future-entry { min-height: 61px; padding-block: 6px; }
-      .destiny-instrument { width: min(39vh, 270px); min-width: 205px; }
-      .future-state-line { margin-top: -4px; }
-      .future-record > p { line-height: 1.4; }
-      .future-stats { margin-top: 11px; padding-block: 9px; }
-      .history-heading { margin-top: 12px; }
-      .attempt-row { padding-block: 5px; }
-      .future-actions { margin-top: 10px; }
-      .product-action { min-height: 37px; }
-      .outcome-composition { padding-top: 28px; }
-      .outcome-title { margin-top: 8px; font-size: clamp(34px, 4.4vw, 58px); }
-      .outcome-subtitle { margin-top: 6px; }
-      .outcome-seal { margin-top: 9px; padding-block: 7px; }
-      .outcome-memory { margin-top: 12px; padding-block: 10px; }
-      .outcome-actions { margin-top: 10px; }
-    }
-
-    @media (max-width: 820px) {
-      html,
-      body { overflow: auto; }
-
-      .mockup-controls {
-        position: sticky;
-        top: 0;
-        bottom: auto;
-        left: 0;
-        justify-content: center;
-        width: 100%;
-        transform: none;
-      }
-
-      .mockup-controls > span { display: none; }
-      .product-screen { width: 100%; height: auto; min-height: calc(100vh - 39px); overflow: visible; }
-      .archive-shell { grid-template-rows: auto auto auto; }
-
-      .archive-header {
-        grid-template-columns: 1fr;
-        justify-items: center;
-        gap: 8px;
-        padding: 18px;
-      }
-
-      .archive-back { justify-self: center; }
-      .archive-tally { justify-content: center; }
-      .archive-tally div { justify-items: center; }
-
-      .archive-main {
-        grid-template-columns: 1fr;
-        gap: 28px;
-        padding: 20px 18px 30px;
-      }
-
-      .future-index {
-        border-right: 0;
-        border-bottom: 1px solid rgb(198 174 104 / 0.19);
-        padding: 0 0 22px;
-      }
-
-      .future-detail {
-        grid-template-columns: 1fr;
-        padding: 0;
-      }
-
-      .destiny-instrument { width: min(320px, 78vw); }
-      .future-record { align-items: center; text-align: center; }
-      .future-stats,
-      .future-actions { justify-content: center; }
-      .attempt-history { width: min(590px, 100%); text-align: left; }
-      .archive-footer { padding: 16px 0 22px; }
-
-      .outcome-composition {
-        width: min(100%, calc(100vw - 34px));
-        padding: 80px 0 36px;
-      }
-
-      .outcome-memory { width: 100%; }
-      .outcome-lines { grid-template-columns: 1fr; gap: 12px; }
-      .outcome-line { border-right: 0; }
-      .outcome-cardinal { width: min(84vw, 460px); }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
-        scroll-behavior: auto !important;
-        animation-duration: 1ms !important;
-        transition-duration: 1ms !important;
-      }
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hostfall · Semillas del Destino · propuesta ChatGPT</title>
+<style>
+@font-face {
+  font-family: "Cinzel";
+  src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+  font-display: swap;
+}
+@font-face {
+  font-family: "Cinzel Decorative";
+  src: url("../assets/fonts/cinzel-decorative-latin.woff2") format("woff2");
+  font-display: swap;
+}
+@font-face {
+  font-family: "Lora";
+  src: url("../assets/fonts/lora-normal-latin.woff2") format("woff2");
+  font-display: swap;
+}
+@font-face {
+  font-family: "Lora";
+  src: url("../assets/fonts/lora-italic-latin.woff2") format("woff2");
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Oswald";
+  src: url("../assets/fonts/oswald-latin.woff2") format("woff2");
+  font-display: swap;
+}
+
+:root {
+  --void: #020607;
+  --night: #071013;
+  --night-2: #0b1518;
+  --paper: #d9cfb2;
+  --paper-bright: #f3e8c8;
+  --steel: #99a7a9;
+  --muted: #6e7c7f;
+  --gold: #c6a052;
+  --gold-bright: #ecd99e;
+  --gold-line: rgb(203 175 107 / 0.34);
+  --gold-faint: rgb(203 175 107 / 0.1);
+  --ember: #c68155;
+  --ember-line: rgb(198 129 85 / 0.45);
+  --glass-line: rgb(143 157 159 / 0.14);
+  --display: "Cinzel Decorative", Georgia, serif;
+  --title: "Cinzel", Georgia, serif;
+  --body: "Lora", Georgia, serif;
+  --condensed: "Oswald", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  display: grid;
+  place-items: center;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 18% 15%, rgb(31 77 78 / 0.18), transparent 28%),
+    radial-gradient(circle at 85% 80%, rgb(117 75 37 / 0.13), transparent 25%),
+    #010405;
+  color: var(--paper);
+  font-family: var(--body);
+  -webkit-font-smoothing: antialiased;
+}
+
+button { border: 0; padding: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 3px; }
+
+.game-frame {
+  position: relative;
+  width: min(100vw, 177.7778vh);
+  aspect-ratio: 16 / 9;
+  min-height: 620px;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    linear-gradient(108deg, rgb(3 8 10 / 0.9), rgb(5 12 14 / 0.72) 45%, rgb(2 6 8 / 0.94)),
+    radial-gradient(ellipse at 54% 46%, #112528 0, #071013 48%, #020607 100%);
+  box-shadow: 0 0 90px #000;
+}
+
+.game-frame::before,
+.game-frame::after {
+  position: absolute;
+  z-index: -3;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+}
+.game-frame::before {
+  opacity: 0.5;
+  background-image:
+    radial-gradient(circle, rgb(236 217 158 / 0.65) 0 1px, transparent 1.6px),
+    radial-gradient(circle, rgb(147 190 188 / 0.55) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgb(255 255 255 / 0.34) 0 0.7px, transparent 1.2px);
+  background-position: 7% 18%, 32% 76%, 70% 33%;
+  background-size: 190px 190px, 260px 260px, 110px 110px;
+}
+.game-frame::after {
+  z-index: 10;
+  border: 1px solid rgb(225 205 145 / 0.11);
+  box-shadow: inset 0 0 90px rgb(0 0 0 / 0.62);
+}
+
+.shard {
+  position: absolute;
+  z-index: -2;
+  width: 42%;
+  height: 56%;
+  border: 1px solid rgb(146 176 174 / 0.08);
+  background: linear-gradient(145deg, rgb(124 166 166 / 0.035), transparent 65%);
+  transform: skewX(-18deg) rotate(8deg);
+  pointer-events: none;
+}
+.shard.one { top: -27%; left: 12%; }
+.shard.two { right: -18%; bottom: -35%; transform: skewX(15deg) rotate(-10deg); }
+
+.archive {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  padding: clamp(22px, 3vh, 40px) clamp(26px, 3.2vw, 58px) clamp(22px, 2.7vh, 34px);
+}
+
+.archive-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 30px;
+  border-bottom: 1px solid var(--gold-line);
+  padding-bottom: 14px;
+}
+.archive-kicker,
+.index-label,
+.page-kicker,
+.duel-label,
+.history-label {
+  color: var(--muted);
+  font: 600 10px/1 var(--condensed);
+  letter-spacing: 0.31em;
+  text-transform: uppercase;
+}
+.archive-title {
+  margin: 8px 0 0;
+  color: var(--paper-bright);
+  font: 400 clamp(28px, 3vw, 48px)/0.96 var(--display);
+  letter-spacing: -0.025em;
+  text-shadow: 0 5px 24px #000;
+}
+.archive-intro {
+  max-width: 58ch;
+  margin: 10px 0 0;
+  color: var(--steel);
+  font-size: clamp(11px, 0.9vw, 14px);
+  font-style: italic;
+  line-height: 1.55;
+}
+
+.filters {
+  display: flex;
+  align-items: end;
+  gap: 4px;
+}
+.filter {
+  position: relative;
+  min-width: 104px;
+  border-bottom: 1px solid var(--glass-line);
+  padding: 9px 14px 10px;
+  color: var(--muted);
+  font: 600 10px/1 var(--condensed);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  transition: color 160ms ease, background 160ms ease;
+}
+.filter:hover { color: var(--paper); }
+.filter[aria-pressed="true"] {
+  background: linear-gradient(180deg, transparent, var(--gold-faint));
+  color: var(--gold-bright);
+}
+.filter[aria-pressed="true"]::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  background: var(--gold);
+  box-shadow: 0 0 10px rgb(198 160 82 / 0.42);
+  content: "";
+}
+
+.archive-book {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(270px, 28%) minmax(0, 1fr);
+  gap: clamp(20px, 2.7vw, 46px);
+  padding-top: 14px;
+}
+
+.archive-index {
+  position: relative;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 7px clamp(15px, 1.7vw, 28px) 0 1px;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(198 160 82 / 0.28) transparent;
+}
+.archive-index::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(transparent, var(--gold-line) 18%, var(--gold-line) 80%, transparent);
+  content: "";
+  pointer-events: none;
+}
+.index-list { display: grid; margin: 9px 0 0; padding: 0; list-style: none; }
+.index-entry {
+  position: relative;
+  display: grid;
+  width: 100%;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  border-bottom: 1px solid var(--glass-line);
+  padding: 13px 8px 13px 4px;
+  text-align: left;
+  transition: padding 160ms ease, background 160ms ease;
+}
+.index-entry:hover,
+.index-entry[aria-current="true"] {
+  padding-left: 10px;
+  background: linear-gradient(90deg, var(--gold-faint), transparent 88%);
+}
+.state-mark {
+  width: 8px;
+  height: 8px;
+  border: 1px solid currentColor;
+  color: var(--gold);
+  transform: rotate(45deg);
+}
+.state-mark::after {
+  display: block;
+  width: 2px;
+  height: 2px;
+  margin: 2px;
+  background: currentColor;
+  content: "";
+}
+.is-lost .state-mark { color: var(--ember); }
+.entry-copy { display: grid; gap: 4px; min-width: 0; }
+.entry-code {
+  color: var(--paper);
+  font: 600 14px/1 var(--title);
+  letter-spacing: 0.12em;
+}
+.index-entry[aria-current="true"] .entry-code { color: var(--gold-bright); }
+.entry-match {
+  overflow: hidden;
+  color: var(--steel);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.entry-state { display: grid; justify-items: end; gap: 3px; }
+.entry-state strong {
+  color: var(--gold);
+  font: 600 9px/1 var(--condensed);
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+.is-lost .entry-state strong { color: var(--ember); }
+.entry-state small { color: var(--muted); font-size: 10px; font-style: italic; white-space: nowrap; }
+
+.archive-page {
+  position: relative;
+  display: grid;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+}
+.page-head {
+  display: grid;
+  grid-template-columns: minmax(210px, 0.7fr) minmax(360px, 1.3fr);
+  align-items: end;
+  gap: 24px;
+  border-bottom: 1px solid var(--glass-line);
+  padding: 0 0 10px;
+}
+.page-identity { display: grid; gap: 4px; }
+.page-code {
+  margin: 2px 0 0;
+  color: var(--gold-bright);
+  font: 600 clamp(27px, 3.1vw, 45px)/1 var(--title);
+  letter-spacing: 0.11em;
+  text-shadow: 0 0 22px rgb(198 160 82 / 0.26);
+}
+.page-verdict {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--gold);
+  font: 600 10px/1 var(--condensed);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.page-verdict::before {
+  width: 15px;
+  height: 1px;
+  background: currentColor;
+  content: "";
+}
+.page-verdict.lost { color: var(--ember); }
+.page-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px 13px;
+  color: var(--steel);
+  font: 600 9.5px/1.4 var(--condensed);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.page-meta .dot { color: var(--gold); }
+.seed-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-bottom: 1px solid rgb(203 175 107 / 0.35);
+  padding-bottom: 2px;
+  color: var(--gold-bright);
+  font-family: var(--condensed);
+  letter-spacing: 0.1em;
+  text-transform: none;
+}
+
+.page-body {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(340px, 0.95fr) minmax(330px, 1.05fr);
+  gap: clamp(22px, 2.4vw, 38px);
+  padding: 13px 0 10px;
+}
+
+.duel {
+  position: relative;
+  display: grid;
+  min-height: 0;
+  place-items: center;
+  align-content: center;
+  border-right: 1px solid var(--glass-line);
+  padding: 0 clamp(14px, 1.5vw, 24px) 0 0;
+}
+.duel::before {
+  position: absolute;
+  inset: 9% 8% 5% 2%;
+  z-index: -1;
+  border: 1px solid rgb(203 175 107 / 0.09);
+  background:
+    radial-gradient(circle at 50% 48%, rgb(203 175 107 / 0.09), transparent 30%),
+    linear-gradient(135deg, rgb(143 190 185 / 0.045), transparent 55%);
+  clip-path: polygon(8% 0, 92% 0, 100% 11%, 100% 88%, 89% 100%, 10% 100%, 0 88%, 0 10%);
+  content: "";
+}
+.duel-label { justify-self: start; align-self: start; margin: 1px 0 5px 6px; }
+.cards-versus {
+  position: relative;
+  display: grid;
+  width: min(100%, 500px);
+  grid-template-columns: minmax(105px, 1fr) 42px minmax(105px, 1fr);
+  align-items: center;
+  justify-content: center;
+}
+.combatant {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.card-shell {
+  position: relative;
+  width: clamp(112px, 10vw, 168px);
+  filter: drop-shadow(0 16px 17px rgb(0 0 0 / 0.75));
+  transition: transform 180ms ease, filter 180ms ease;
+}
+.combatant:first-child .card-shell { transform: perspective(900px) rotateY(5deg) rotate(-2.5deg); }
+.combatant:last-child .card-shell { transform: perspective(900px) rotateY(-5deg) rotate(2.5deg); }
+.combatant:hover .card-shell { transform: translateY(-5px) scale(1.025); filter: drop-shadow(0 20px 22px rgb(0 0 0 / 0.82)); }
+.card-shell::after {
+  position: absolute;
+  inset: 2.2%;
+  border: 1px solid rgb(240 220 158 / 0.2);
+  border-radius: 4.5% / 3.2%;
+  box-shadow: inset 0 0 15px rgb(255 255 255 / 0.05);
+  content: "";
+  pointer-events: none;
+}
+.card-shell img { display: block; width: 100%; height: auto; border-radius: 4.5% / 3.2%; }
+.combatant-role {
+  color: var(--muted);
+  font: 600 8.5px/1 var(--condensed);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.combatant-name {
+  max-width: 190px;
+  overflow: hidden;
+  color: var(--paper);
+  font: 600 10.5px/1.25 var(--title);
+  letter-spacing: 0.03em;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.versus {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid var(--gold-line);
+  background: #071013;
+  color: var(--gold-bright);
+  font: 600 13px/1 var(--title);
+  box-shadow: 0 0 24px rgb(198 160 82 / 0.16);
+  transform: rotate(45deg);
+}
+.versus span { transform: rotate(-45deg); }
+.deck-match {
+  margin: 8px 0 0;
+  color: var(--steel);
+  font-size: 11px;
+  font-style: italic;
+  text-align: center;
+}
+.deck-match b { color: var(--paper); font-weight: 400; }
+
+.history {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(198 160 82 / 0.25) transparent;
+}
+.history-list {
+  position: relative;
+  display: grid;
+  margin: 10px 0 0;
+  padding: 0 0 0 18px;
+  list-style: none;
+}
+.history-list::before {
+  position: absolute;
+  top: 8px;
+  bottom: 9px;
+  left: 4px;
+  width: 1px;
+  background: linear-gradient(var(--gold-line), rgb(203 175 107 / 0.08));
+  content: "";
+}
+.attempt-button {
+  position: relative;
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  border-bottom: 1px solid var(--glass-line);
+  padding: 8px 5px 8px 2px;
+  text-align: left;
+}
+.attempt-button::before {
+  position: absolute;
+  top: 13px;
+  left: -17px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--ember);
+  background: var(--night);
+  content: "";
+  transform: rotate(45deg);
+}
+.attempt-button.victory::before,
+.attempt-button[aria-current="true"]::before { background: var(--gold); border-color: var(--gold-bright); }
+.attempt-main {
+  color: var(--paper);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.attempt-main b { color: var(--gold-bright); font-weight: 400; }
+.attempt-main .defeat { color: var(--ember); }
+.attempt-main .victory { color: var(--gold); }
+.attempt-when {
+  color: var(--muted);
+  font: 600 8.5px/1.5 var(--condensed);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.attempt-note {
+  position: relative;
+  margin-top: 12px;
+  border: 1px solid rgb(203 175 107 / 0.2);
+  border-left: 2px solid var(--gold);
+  padding: 12px 14px 11px;
+  background: linear-gradient(110deg, rgb(198 160 82 / 0.075), rgb(7 16 19 / 0.42));
+}
+.attempt-note::before {
+  position: absolute;
+  top: -6px;
+  left: 19px;
+  width: 10px;
+  height: 10px;
+  border-top: 1px solid rgb(203 175 107 / 0.2);
+  border-left: 1px solid rgb(203 175 107 / 0.2);
+  background: #0a1416;
+  content: "";
+  transform: rotate(45deg);
+}
+.attempt-note p { margin: 0; color: var(--steel); font-size: 11.5px; line-height: 1.55; }
+.attempt-note .fact {
+  margin-top: 8px;
+  color: var(--paper);
+  font-style: italic;
+}
+.attempt-note .fact::before { color: var(--gold); content: "◆ "; font-style: normal; }
+.history-close {
+  margin: 11px 0 0 18px;
+  color: var(--gold);
+  font: 600 10px/1.35 var(--title);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.history-close.lost { color: var(--ember); }
+.history-close small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font: italic 10.5px/1.35 var(--body);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid var(--gold-line);
+  padding-top: 11px;
+}
+.action-quiet,
+.action-primary {
+  min-width: 210px;
+  height: 42px;
+  padding: 0 21px;
+  font: 600 10px/1 var(--title);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.action-quiet {
+  border: 1px solid var(--glass-line);
+  color: var(--steel);
+}
+.action-quiet:hover { border-color: var(--gold-line); color: var(--paper-bright); }
+.action-primary {
+  position: relative;
+  border: 1px solid rgb(225 197 123 / 0.66);
+  background: linear-gradient(180deg, #604c25, #2c2516);
+  color: #fff0c2;
+  text-shadow: 0 1px #000;
+  box-shadow: inset 0 1px rgb(255 244 205 / 0.12), 0 8px 20px rgb(0 0 0 / 0.28);
+}
+.action-primary::before {
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgb(255 236 174 / 0.14);
+  content: "";
+  pointer-events: none;
+}
+.action-primary:hover { filter: brightness(1.13); }
+
+.toast {
+  position: absolute;
+  z-index: 20;
+  right: 28px;
+  bottom: 26px;
+  min-width: 250px;
+  border: 1px solid var(--gold-line);
+  border-left: 2px solid var(--gold);
+  padding: 10px 14px;
+  background: rgb(5 12 14 / 0.96);
+  color: var(--paper);
+  font: 600 10px/1.4 var(--condensed);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+.toast.show { opacity: 1; transform: none; }
+
+@media (max-width: 1100px) {
+  .game-frame { width: 100vw; min-height: 760px; aspect-ratio: auto; }
+  .archive { position: relative; min-height: 760px; }
+  .archive-book { grid-template-columns: 260px minmax(0, 1fr); }
+  .page-body { grid-template-columns: minmax(300px, 0.95fr) minmax(285px, 1.05fr); }
+  .archive-index::after { display: none; }
+  .card-shell { width: clamp(105px, 12vw, 145px); }
+}
+
+@media (max-width: 780px) {
+  body { display: block; }
+  .game-frame { min-height: 1180px; }
+  .archive { min-height: 1180px; padding: 24px 20px; }
+  .archive-head { grid-template-columns: 1fr; align-items: start; }
+  .filters { justify-content: flex-start; }
+  .filter { min-width: 0; }
+  .archive-book { grid-template-columns: 1fr; }
+  .archive-index { max-height: 250px; padding-right: 0; }
+  .archive-page { overflow: visible; }
+  .page-head { grid-template-columns: 1fr; }
+  .page-meta { justify-content: flex-start; }
+  .page-body { grid-template-columns: 1fr; }
+  .duel { min-height: 430px; border-right: 0; border-bottom: 1px solid var(--glass-line); padding: 0 0 18px; }
+  .page-actions { flex-wrap: wrap; }
+  .action-quiet, .action-primary { flex: 1 1 240px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+}
+</style>
 </head>
 <body>
-  <nav class="mockup-controls" aria-label="Estados de la maqueta">
-    <span>Dirección ChatGPT</span>
-    <button type="button" data-view="archive" aria-pressed="true">Archivo</button>
-    <button type="button" data-view="victory" aria-pressed="false">Victoria</button>
-    <button type="button" data-view="defeat" aria-pressed="false">Derrota</button>
-  </nav>
-
-  <main class="product-screen" id="archive-screen" data-screen="archive">
-    <div class="temporal-sky" aria-hidden="true"></div>
-    <div class="temporal-grid" aria-hidden="true"></div>
-    <div class="star-field" aria-hidden="true"></div>
-    <div class="temporal-vignette" aria-hidden="true"></div>
-
-    <div class="archive-shell">
-      <header class="archive-header">
-        <button class="archive-back" type="button" data-demo-action="Volver al menú principal">← Menú principal</button>
-
-        <div class="archive-heading">
-          <p>Archivo del Cronista</p>
-          <h1>Semillas del Destino</h1>
-        </div>
-
-        <div class="archive-tally" aria-label="Resumen del archivo">
-          <div><span>Contemplados</span><strong>4</strong></div>
-          <div><span>Preservados</span><strong>2</strong></div>
-          <div><span>Inconclusos</span><strong>1</strong></div>
-        </div>
-      </header>
-
-      <div class="archive-main">
-        <aside class="future-index" aria-labelledby="future-index-heading">
-          <div class="future-index-title" id="future-index-heading">
-            <span>Futuros contemplados</span>
-            <span>Más reciente primero</span>
-          </div>
-
-          <div class="future-list">
-            <button class="future-entry" type="button" data-future-id="preserved" aria-pressed="true" style="--entry-color: var(--hf-preserved)">
-              <span class="future-entry-mark" aria-hidden="true"></span>
-              <span class="future-entry-copy">
-                <small>Destino preservado</small>
-                <strong>Futuro 482·117</strong>
-                <span>Elarion contra los Sinsepulcro · Veterano</span>
-              </span>
-              <span class="future-entry-attempts"><strong>3</strong><span>intentos</span></span>
-            </button>
-
-            <button class="future-entry" type="button" data-future-id="unfinished" aria-pressed="false" style="--entry-color: var(--hf-open)">
-              <span class="future-entry-mark" aria-hidden="true"></span>
-              <span class="future-entry-copy">
-                <small>Historia inconclusa</small>
-                <strong>Futuro 071·834</strong>
-                <span>Corte Carmesí contra Varka · Condenado</span>
-              </span>
-              <span class="future-entry-attempts"><strong>1</strong><span>intento</span></span>
-            </button>
-
-            <button class="future-entry" type="button" data-future-id="lost" aria-pressed="false" style="--entry-color: var(--hf-lost)">
-              <span class="future-entry-mark" aria-hidden="true"></span>
-              <span class="future-entry-copy">
-                <small>Futuro perdido</small>
-                <strong>Futuro 903·256</strong>
-                <span>Elarion contra Varka · Aventurero</span>
-              </span>
-              <span class="future-entry-attempts"><strong>2</strong><span>intentos</span></span>
-            </button>
-
-            <button class="future-entry" type="button" data-future-id="preservedCrimson" aria-pressed="false" style="--entry-color: var(--hf-preserved)">
-              <span class="future-entry-mark" aria-hidden="true"></span>
-              <span class="future-entry-copy">
-                <small>Destino preservado</small>
-                <strong>Futuro 314·602</strong>
-                <span>Corte Carmesí contra los Sinsepulcro · Veterano</span>
-              </span>
-              <span class="future-entry-attempts"><strong>1</strong><span>intento</span></span>
-            </button>
-          </div>
-        </aside>
-
-        <section class="future-detail" aria-live="polite">
-          <div class="future-identity">
-            <div class="destiny-instrument" id="destiny-instrument" style="--detail-color: var(--hf-preserved)" aria-hidden="true">
-              <svg viewBox="0 0 360 360">
-                <circle class="dial-ring" cx="180" cy="180" r="148"></circle>
-                <circle class="dial-arc" cx="180" cy="180" r="132"></circle>
-                <circle class="dial-ring" cx="180" cy="180" r="94"></circle>
-                <path class="cardinal-line" d="M180 24V336M24 180H336M70 70L290 290M290 70L70 290"></path>
-                <path class="cardinal-fill" d="M180 46L198 152L180 180L162 152ZM314 180L208 198L180 180L208 162ZM180 314L162 208L180 180L198 208ZM46 180L152 162L180 180L152 198Z"></path>
-                <path class="cardinal-cut" d="M180 46L188 151L180 170L172 151ZM314 180L209 188L190 180L209 172ZM180 314L172 209L180 190L188 209ZM46 180L151 172L170 180L151 188Z"></path>
-                <path class="cardinal-cut" d="M84 84L156 156M276 84L204 156M276 276L204 204M84 276L156 204"></path>
-                <circle class="cardinal-node" cx="180" cy="46" r="4"></circle>
-                <circle class="cardinal-node" cx="314" cy="180" r="4"></circle>
-                <circle class="cardinal-node" cx="180" cy="314" r="4"></circle>
-                <circle class="cardinal-node" cx="46" cy="180" r="4"></circle>
-                <rect class="cardinal-heart" x="173" y="173" width="14" height="14" transform="rotate(45 180 180)"></rect>
-              </svg>
-              <span class="instrument-code"><span>Semilla del Destino</span><strong id="detail-code">482·117</strong></span>
-            </div>
-
-            <div class="future-state-line" id="future-state-line" style="--detail-color: var(--hf-preserved)">
-              <span id="detail-state">Destino preservado</span>
-            </div>
-            <p class="future-matchup" id="detail-matchup"><strong>El Pacto de Elarion</strong><br />contra El Alzamiento de los Sinsepulcro</p>
-          </div>
-
-          <div class="future-record" id="future-record" style="--detail-color: var(--hf-preserved)">
-            <p class="detail-kicker" id="detail-kicker">Futuro 482·117 · Tres ramificaciones observadas</p>
-            <h2 id="detail-title">El Futuro que resistió</h2>
-            <p id="detail-description">Dos desenlaces terminaron en tragedia antes de que el Cronista encontrara la secuencia capaz de preservar esta historia.</p>
-
-            <div class="future-stats" id="future-stats">
-              <div class="future-stat"><span>Dificultad</span><strong id="detail-difficulty">Veterano</strong></div>
-              <div class="future-stat"><span>Última página</span><strong id="detail-turn">Turno 9</strong></div>
-              <div class="future-stat"><span>Contemplado</span><strong id="detail-date">Hoy</strong></div>
-            </div>
-
-            <div class="history-heading">Historial de reescrituras</div>
-            <div class="attempt-history" id="attempt-history"></div>
-
-            <div class="future-actions">
-              <button class="product-action is-primary" id="detail-primary" type="button" data-demo-action="Contemplar otro futuro">Contemplar otro futuro</button>
-              <button class="product-action" id="detail-secondary" type="button" data-demo-action="Reescribir este futuro">Reescribir este futuro</button>
-              <button class="copy-action" id="detail-copy" type="button">◇ Copiar identidad</button>
-            </div>
-          </div>
-        </section>
+<main class="game-frame" aria-label="Maqueta del Archivo de Semillas del Destino">
+  <span class="shard one" aria-hidden="true"></span>
+  <span class="shard two" aria-hidden="true"></span>
+  <section class="archive">
+    <header class="archive-head">
+      <div>
+        <span class="archive-kicker">Archivo del Cronista</span>
+        <h1 class="archive-title">Semillas del Destino</h1>
+        <p class="archive-intro">Aquí reposan los futuros que contemplaste: aquellos que lograste preservar y aquellos que la Hueste reclamó.</p>
       </div>
+      <nav class="filters" aria-label="Filtrar futuros por desenlace" id="filters"></nav>
+    </header>
 
-      <footer class="archive-footer">Todo destino comienza como una posibilidad</footer>
+    <div class="archive-book">
+      <aside class="archive-index" aria-labelledby="index-label">
+        <p class="index-label" id="index-label">Futuros contemplados</p>
+        <ol class="index-list" id="future-list"></ol>
+      </aside>
+      <article class="archive-page" id="future-page" aria-live="polite"></article>
     </div>
-  </main>
+  </section>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</main>
 
-  <main class="product-screen outcome-screen" id="victory-screen" data-screen="victory" hidden>
-    <div class="temporal-sky" aria-hidden="true"></div>
-    <div class="temporal-grid" aria-hidden="true"></div>
-    <div class="star-field" aria-hidden="true"></div>
-    <div class="temporal-vignette" aria-hidden="true"></div>
-    <div class="outcome-atmosphere" aria-hidden="true"></div>
-    <div class="outcome-cardinal" aria-hidden="true">
-      <svg viewBox="0 0 360 360">
-        <circle class="dial-ring" cx="180" cy="180" r="148"></circle>
-        <circle class="dial-arc" cx="180" cy="180" r="132"></circle>
-        <path class="cardinal-line" d="M180 24V336M24 180H336M70 70L290 290M290 70L70 290"></path>
-        <path class="cardinal-fill" d="M180 38L198 152L180 180L162 152ZM322 180L208 198L180 180L208 162ZM180 322L162 208L180 180L198 208ZM38 180L152 162L180 180L152 198Z"></path>
-        <path class="cardinal-cut" d="M180 38L188 151L180 170L172 151ZM322 180L209 188L190 180L209 172ZM180 322L172 209L180 190L188 209ZM38 180L151 172L170 180L151 188Z"></path>
-        <rect class="cardinal-heart" x="172" y="172" width="16" height="16" transform="rotate(45 180 180)"></rect>
-      </svg>
-    </div>
+<script>
+"use strict";
 
-    <section class="outcome-composition" aria-labelledby="victory-title">
-      <p class="outcome-kicker">Victoria</p>
-      <h1 class="outcome-title" id="victory-title">Destino<br />preservado</h1>
-      <p class="outcome-subtitle">La Hueste ha sido silenciada. Esta posibilidad deja de ser un presagio y encuentra su lugar en la Crónica.</p>
+const CARD_ROOT = "../../../public/cards/";
 
-      <div class="outcome-seal"><i aria-hidden="true"></i><span>Futuro</span><strong>482·117</strong><i aria-hidden="true"></i></div>
+const FUTURES = [
+  {
+    code: "980·965",
+    seed: "HF1-ELA-GRV-082-QC5",
+    state: "preserved",
+    difficulty: "Normal",
+    preparation: 3,
+    lastSeen: "Anteayer",
+    chronicle: { deck: "El Pacto de Elarion", short: "Elarion", card: "Aelyra, Heredera de Elarion", image: CARD_ROOT + "pact_of_elarion/aelyra_heir_of_elarion.png" },
+    host: { deck: "El Alzamiento de los Sinsepulcro", short: "Sinsepulcro", card: "Nerezh, Matriarca Sinsepulcro", image: CARD_ROOT + "uprising_of_the_graveless/nerezh_graveless_matriarch.png" },
+    attempts: [
+      { result: "defeat", turn: 6, life: 0, when: "Hace cinco días", title: "Primer presagio", text: "La Preparación terminó con dos Fuentes y ningún Eco en el Campo. La primera Oleada cruzó una línea indefensa.", fact: "Tres Soldados Sinsepulcro atacaron sin defensor en el turno 5." },
+      { result: "defeat", turn: 8, life: 0, when: "Hace cuatro días", title: "Segunda reescritura", text: "Liora sostuvo la arboleda dos turnos más, pero el Titán llegó antes que la cuarta Fuente.", fact: "Escudo de la Heredera salvó a Maela antes de la última Oleada." },
+      { result: "victory", turn: 9, life: 4, when: "Anteayer", title: "Tercera reescritura", text: "Vaelor abrió el frente y Aelyra sostuvo la línea hasta que la última carta abandonó el Archivo de la Hueste.", fact: "El Juicio de Elarion retiró La Lápida Quebrada antes del ataque final." }
+    ]
+  },
+  {
+    code: "566·836",
+    seed: "HF1-CEC-VRK-3M3-R7J",
+    state: "lost",
+    difficulty: "Difícil",
+    preparation: 2,
+    lastSeen: "Esta mañana",
+    chronicle: { deck: "La Corte del Eclipse Carmesí", short: "Corte Carmesí", card: "Mirevna, Condesa del Eclipse Carmesí", image: CARD_ROOT + "court_of_the_crimson_eclipse/mirevna_countess_of_the_crimson_eclipse.png" },
+    host: { deck: "La Legión de Varka", short: "Legión de Varka", card: "Varka, Matriarca Infernal", image: CARD_ROOT + "legion_of_varka/varka_infernal_matriarch.png" },
+    attempts: [
+      { result: "defeat", turn: 7, life: 0, when: "Ayer", title: "Primer presagio", text: "Varka atacó con sus dos bolas de fuego dos turnos seguidos y el frente carmesí nunca llegó a cerrarse.", fact: "Todos contra Uno retiró a la Guardiana del Umbral Nocturno en el turno 5." },
+      { result: "defeat", turn: 9, life: 0, when: "Esta mañana", title: "Segunda reescritura", text: "Mirevna sostuvo la noche hasta el turno 9, pero la tercera carga de la Legión quebró el último pacto.", fact: "Varka sobrevivió al Veredicto del Eclipse con un solo contador." }
+    ]
+  },
+  {
+    code: "257·749",
+    seed: "HF1-ELA-GRV-TV3-X3L",
+    state: "lost",
+    difficulty: "Difícil",
+    preparation: 2,
+    lastSeen: "Hace una semana",
+    chronicle: { deck: "El Pacto de Elarion", short: "Elarion", card: "Vaelor, Guardián Esmeralda", image: CARD_ROOT + "pact_of_elarion/vaelor_emerald_guardian.png" },
+    host: { deck: "El Alzamiento de los Sinsepulcro", short: "Sinsepulcro", card: "Titán Sinsepulcro", image: CARD_ROOT + "uprising_of_the_graveless/graveless_titan.png" },
+    attempts: [
+      { result: "defeat", turn: 5, life: 0, when: "Hace nueve días", title: "Primer presagio", text: "Dos turnos de Preparación no alcanzaron. El Rompemuros del Túmulo apareció en la primera Oleada.", fact: "El Cronista sólo pudo jugar una Fuente antes del primer ataque." },
+      { result: "defeat", turn: 6, life: 0, when: "Hace ocho días", title: "Segunda reescritura", text: "Liora llegó a tiempo, pero cayó frente a Nerezh antes de estabilizar la arboleda.", fact: "El Juicio de Elarion quedó en la Mano cuando cayó la última defensa." },
+      { result: "defeat", turn: 9, life: 0, when: "Hace una semana", title: "Tercera reescritura", text: "Maela sostuvo las alturas cuatro turnos y acercó a la Hueste a su final, pero la última Oleada cerró la historia.", fact: "El Archivo de la Hueste llegó a quedarse en cinco cartas." }
+    ]
+  },
+  {
+    code: "442·832",
+    seed: "HF1-ELA-VRK-QW1-B8N",
+    state: "preserved",
+    difficulty: "Fácil",
+    preparation: 4,
+    lastSeen: "Hace tres días",
+    chronicle: { deck: "El Pacto de Elarion", short: "Elarion", card: "Kaelor, Convocador de Tormentas", image: CARD_ROOT + "pact_of_elarion/kaelor_stormcaller.png" },
+    host: { deck: "La Legión de Varka", short: "Legión de Varka", card: "Varka, Matriarca Infernal", image: CARD_ROOT + "legion_of_varka/varka_infernal_matriarch.png" },
+    attempts: [
+      { result: "victory", turn: 11, life: 21, when: "Hace tres días", title: "Primer presagio", text: "Cuatro turnos de Preparación levantaron la arboleda entera. Vaelor y Kaelor se repartieron el cielo.", fact: "Varka cayó por Reflejos contra Vaelor, Guardián Esmeralda." }
+    ]
+  },
+  {
+    code: "500·362",
+    seed: "HF1-CEC-GRV-H52-K9Q",
+    state: "lost",
+    difficulty: "Normal",
+    preparation: 3,
+    lastSeen: "Hace dos semanas",
+    chronicle: { deck: "La Corte del Eclipse Carmesí", short: "Corte Carmesí", card: "Mirevna, Condesa del Eclipse Carmesí", image: CARD_ROOT + "court_of_the_crimson_eclipse/mirevna_countess_of_the_crimson_eclipse.png" },
+    host: { deck: "El Alzamiento de los Sinsepulcro", short: "Sinsepulcro", card: "Nerezh, Matriarca Sinsepulcro", image: CARD_ROOT + "uprising_of_the_graveless/nerezh_graveless_matriarch.png" },
+    attempts: [
+      { result: "defeat", turn: 4, life: 0, when: "Hace dos semanas", title: "Primer presagio", text: "La caída más rápida del Archivo: tres Hechizos, una sola Fuente y el Campo vacío ante la primera Oleada.", fact: "Tributo de los Cuatro Pesares se resolvió sin oposición." },
+      { result: "defeat", turn: 7, life: 0, when: "Hace dos semanas", title: "Segunda reescritura", text: "El Santuario se levantó a tiempo, pero Nerezh regresó del Osario más rápido de lo que la Corte podía sangrar.", fact: "Drenar la Esencia devolvió 6 de Vida en el turno 5." }
+    ]
+  },
+  {
+    code: "812·492",
+    seed: "HF1-CEC-VRK-NF1-D6W",
+    state: "preserved",
+    difficulty: "Fácil",
+    preparation: 4,
+    lastSeen: "Hace tres semanas",
+    chronicle: { deck: "La Corte del Eclipse Carmesí", short: "Corte Carmesí", card: "Duelista del Eclipse", image: CARD_ROOT + "court_of_the_crimson_eclipse/duelist_of_the_eclipse.png" },
+    host: { deck: "La Legión de Varka", short: "Legión de Varka", card: "Varka, Matriarca Infernal", image: CARD_ROOT + "legion_of_varka/varka_infernal_matriarch.png" },
+    attempts: [
+      { result: "defeat", turn: 8, life: 0, when: "Hace tres semanas", title: "Primer presagio", text: "La Corte llegó al turno 8 con ventaja y perdió el frente entero contra una descarga de la Legión.", fact: "¡Liberen a la Legión! devolvió tres Ecos al Campo." },
+      { result: "victory", turn: 12, life: 6, when: "Hace tres semanas", title: "Segunda reescritura", text: "El Duelista aguantó la Estabilización y desde el turno 6 la Corte no volvió a perder un intercambio.", fact: "Cacería Bajo la Luna Roja abrió el turno 12 y vació el Archivo enemigo." }
+    ]
+  }
+];
 
-      <div class="outcome-memory">
-        <p class="outcome-summary-kicker">La última página</p>
-        <div class="outcome-lines">
-          <div class="outcome-line"><strong>Turno 9</strong><span>La última amenaza cayó antes de una nueva Oleada.</span></div>
-          <div class="outcome-line"><strong>31 recuerdos</strong><span>El Archivo de la Hueste fue enviado por completo a Memoria.</span></div>
-          <div class="outcome-line"><strong>7 de Vida</strong><span>El Cronista sobrevivió para preservar este desenlace.</span></div>
-        </div>
-      </div>
+const state = { filter: "all", code: FUTURES[0].code, attempt: FUTURES[0].attempts.length - 1 };
+const filters = document.getElementById("filters");
+const list = document.getElementById("future-list");
+const page = document.getElementById("future-page");
+const toast = document.getElementById("toast");
+let toastTimer = 0;
 
-      <div class="outcome-actions">
-        <button class="product-action is-primary" type="button" data-demo-action="Contemplar otro futuro">Contemplar otro futuro</button>
-        <button class="product-action" type="button" data-demo-action="Reescribir este futuro">Reescribir este futuro</button>
-        <button class="outcome-link" type="button" data-open-archive="preserved">Abrir Semillas del Destino →</button>
-      </div>
-    </section>
-  </main>
+function futureByCode(code) {
+  return FUTURES.find((future) => future.code === code) || FUTURES[0];
+}
 
-  <main class="product-screen outcome-screen is-defeat" id="defeat-screen" data-screen="defeat" hidden>
-    <div class="temporal-sky" aria-hidden="true"></div>
-    <div class="temporal-grid" aria-hidden="true"></div>
-    <div class="star-field" aria-hidden="true"></div>
-    <div class="temporal-vignette" aria-hidden="true"></div>
-    <div class="outcome-atmosphere" aria-hidden="true"></div>
-    <div class="outcome-cardinal" aria-hidden="true">
-      <svg viewBox="0 0 360 360">
-        <circle class="dial-ring" cx="180" cy="180" r="148"></circle>
-        <circle class="dial-arc" cx="180" cy="180" r="132"></circle>
-        <path class="cardinal-line" d="M180 24V336M24 180H336M70 70L290 290M290 70L70 290"></path>
-        <path class="cardinal-fill" d="M180 38L198 152L180 180L162 152ZM322 180L208 198L180 180L208 162ZM180 322L162 208L180 180L198 208ZM38 180L152 162L180 180L152 198Z"></path>
-        <path class="cardinal-cut" d="M180 38L188 151L180 170L172 151ZM322 180L209 188L190 180L209 172ZM180 322L172 209L180 190L188 209ZM38 180L151 172L170 180L151 188Z"></path>
-        <rect class="cardinal-heart" x="172" y="172" width="16" height="16" transform="rotate(45 180 180)"></rect>
-      </svg>
-    </div>
+function visibleFutures() {
+  return state.filter === "all" ? FUTURES : FUTURES.filter((future) => future.state === state.filter);
+}
 
-    <section class="outcome-composition" aria-labelledby="defeat-title">
-      <p class="outcome-kicker">Derrota</p>
-      <h1 class="outcome-title" id="defeat-title">Futuro<br />perdido</h1>
-      <p class="outcome-subtitle">La historia se quebró, pero su final no desaparece. El Cronista conserva este presagio para no repetirlo a ciegas.</p>
+function stateWord(future) {
+  return future.state === "preserved" ? "Preservado" : "Perdido";
+}
 
-      <div class="outcome-seal"><i aria-hidden="true"></i><span>Futuro</span><strong>903·256</strong><i aria-hidden="true"></i></div>
+function resultWord(attempt) {
+  return attempt.result === "victory" ? "victoria" : "derrota";
+}
 
-      <div class="outcome-memory">
-        <p class="outcome-summary-kicker">La última página</p>
-        <div class="outcome-lines">
-          <div class="outcome-line"><strong>Turno 6</strong><span>La línea cayó durante el segundo asalto de la Hueste.</span></div>
-          <div class="outcome-line"><strong>18 recuerdos</strong><span>Más de la mitad del Archivo enemigo alcanzó su Memoria.</span></div>
-          <div class="outcome-line"><strong>4 aliados</strong><span>Cuatro Ecos permanecieron en Memoria al cerrarse este Futuro.</span></div>
-        </div>
-      </div>
+function attemptCount(future) {
+  return future.attempts.length === 1 ? "1 intento" : future.attempts.length + " intentos";
+}
 
-      <div class="outcome-actions">
-        <button class="product-action is-primary" type="button" data-demo-action="Reescribir este futuro">Reescribir este futuro</button>
-        <button class="product-action" type="button" data-demo-action="Contemplar otro futuro">Contemplar otro futuro</button>
-        <button class="outcome-link" type="button" data-open-archive="lost">Abrir Semillas del Destino →</button>
-      </div>
-    </section>
-  </main>
+function renderFilters() {
+  const options = [
+    ["all", "Todos"],
+    ["preserved", "Preservados"],
+    ["lost", "Perdidos"]
+  ];
+  filters.innerHTML = options.map(([id, label]) =>
+    `<button class="filter" type="button" data-filter="${id}" aria-pressed="${state.filter === id}">${label}</button>`
+  ).join("");
 
-  <div class="toast" id="demo-toast" role="status" aria-live="polite"></div>
-
-  <script>
-    const futures = {
-      preserved: {
-        color: "var(--hf-preserved)",
-        code: "482·117",
-        fullSeed: "HF1-ELA-GRV-082-QC5",
-        state: "Destino preservado",
-        kicker: "Futuro 482·117 · Tres ramificaciones observadas",
-        title: "El Futuro que resistió",
-        description: "Dos desenlaces terminaron en tragedia antes de que el Cronista encontrara la secuencia capaz de preservar esta historia.",
-        matchup: "<strong>El Pacto de Elarion</strong><br />contra El Alzamiento de los Sinsepulcro",
-        difficulty: "Veterano",
-        turn: "Turno 9",
-        date: "Hoy",
-        primary: "Contemplar otro futuro",
-        secondary: "Reescribir este futuro",
-        attempts: [
-          { label: "Primer presagio", text: "La línea cayó en el turno 6.", color: "var(--hf-lost)" },
-          { label: "Segunda reescritura", text: "La Hueste cerró el Futuro en el turno 8.", color: "var(--hf-lost)" },
-          { label: "Tercera reescritura", text: "Destino preservado en el turno 9.", color: "var(--hf-preserved)" }
-        ]
-      },
-      unfinished: {
-        color: "var(--hf-open)",
-        code: "071·834",
-        fullSeed: "HF1-CEC-VRK-47A-1D9",
-        state: "Historia inconclusa",
-        kicker: "Futuro 071·834 · Una ramificación abierta",
-        title: "Una página todavía abierta",
-        description: "La aplicación se cerró en un checkpoint estable. Esta historia puede retomarse sin fingir que su desenlace ya fue observado.",
-        matchup: "<strong>La Corte del Eclipse Carmesí</strong><br />contra La Legión de Varka",
-        difficulty: "Condenado",
-        turn: "Turno 4",
-        date: "Ayer",
-        primary: "Continuar la Crónica",
-        secondary: "Reescribir desde el origen",
-        attempts: [
-          { label: "Primera contemplación", text: "Historia inconclusa al comienzo del turno 4.", color: "var(--hf-open)" }
-        ]
-      },
-      lost: {
-        color: "var(--hf-lost)",
-        code: "903·256",
-        fullSeed: "HF1-ELA-VRK-19S-7M2",
-        state: "Futuro perdido",
-        kicker: "Futuro 903·256 · Dos tragedias observadas",
-        title: "Un presagio aún sin respuesta",
-        description: "La misma posibilidad terminó dos veces bajo el asalto de Varka. El Archivo conserva ambos finales para una futura reescritura.",
-        matchup: "<strong>El Pacto de Elarion</strong><br />contra La Legión de Varka",
-        difficulty: "Aventurero",
-        turn: "Turno 6",
-        date: "Hace 3 días",
-        primary: "Reescribir este futuro",
-        secondary: "Contemplar otro futuro",
-        attempts: [
-          { label: "Primer presagio", text: "El Cronista cayó en el turno 5.", color: "var(--hf-lost)" },
-          { label: "Primera reescritura", text: "Futuro perdido en el turno 6.", color: "var(--hf-lost)" }
-        ]
-      },
-      preservedCrimson: {
-        color: "var(--hf-preserved)",
-        code: "314·602",
-        fullSeed: "HF1-CEC-GRV-6K2-P8Q",
-        state: "Destino preservado",
-        kicker: "Futuro 314·602 · Una ramificación observada",
-        title: "Preservado en el primer intento",
-        description: "La Corte convirtió su primera contemplación en historia. No hubo tragedias anteriores bajo esta misma Semilla.",
-        matchup: "<strong>La Corte del Eclipse Carmesí</strong><br />contra El Alzamiento de los Sinsepulcro",
-        difficulty: "Veterano",
-        turn: "Turno 11",
-        date: "Hace 6 días",
-        primary: "Contemplar otro futuro",
-        secondary: "Reescribir este futuro",
-        attempts: [
-          { label: "Primera contemplación", text: "Destino preservado en el turno 11.", color: "var(--hf-preserved)" }
-        ]
+  filters.querySelectorAll("[data-filter]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.filter = button.dataset.filter;
+      const visible = visibleFutures();
+      if (!visible.some((future) => future.code === state.code)) {
+        state.code = visible[0].code;
+        state.attempt = visible[0].attempts.length - 1;
       }
-    };
-
-    const screens = {
-      archive: document.getElementById("archive-screen"),
-      victory: document.getElementById("victory-screen"),
-      defeat: document.getElementById("defeat-screen")
-    };
-    const viewButtons = Array.from(document.querySelectorAll("[data-view]"));
-    const futureButtons = Array.from(document.querySelectorAll("[data-future-id]"));
-    const toast = document.getElementById("demo-toast");
-    let selectedFutureId = "preserved";
-    let toastTimer;
-
-    function showView(view) {
-      Object.entries(screens).forEach(([id, screen]) => { screen.hidden = id !== view; });
-      viewButtons.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.view === view)));
-      window.scrollTo({ top: 0, behavior: "instant" });
-    }
-
-    function showToast(message) {
-      window.clearTimeout(toastTimer);
-      toast.textContent = message;
-      toast.classList.add("is-visible");
-      toastTimer = window.setTimeout(() => toast.classList.remove("is-visible"), 1800);
-    }
-
-    function renderFuture(id) {
-      const future = futures[id];
-      if (!future) return;
-      selectedFutureId = id;
-      futureButtons.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.futureId === id)));
-
-      document.getElementById("destiny-instrument").style.setProperty("--detail-color", future.color);
-      document.getElementById("future-state-line").style.setProperty("--detail-color", future.color);
-      document.getElementById("future-record").style.setProperty("--detail-color", future.color);
-      document.getElementById("detail-code").textContent = future.code;
-      document.getElementById("detail-state").textContent = future.state;
-      document.getElementById("detail-matchup").innerHTML = future.matchup;
-      document.getElementById("detail-kicker").textContent = future.kicker;
-      document.getElementById("detail-title").textContent = future.title;
-      document.getElementById("detail-description").textContent = future.description;
-      document.getElementById("detail-difficulty").textContent = future.difficulty;
-      document.getElementById("detail-turn").textContent = future.turn;
-      document.getElementById("detail-date").textContent = future.date;
-
-      const primary = document.getElementById("detail-primary");
-      const secondary = document.getElementById("detail-secondary");
-      primary.textContent = future.primary;
-      primary.dataset.demoAction = future.primary;
-      secondary.textContent = future.secondary;
-      secondary.dataset.demoAction = future.secondary;
-
-      const history = document.getElementById("attempt-history");
-      history.replaceChildren(...future.attempts.map((attempt) => {
-        const row = document.createElement("div");
-        row.className = "attempt-row";
-        row.style.setProperty("--attempt-color", attempt.color);
-        row.innerHTML = `<i aria-hidden="true"></i><strong>${attempt.label}</strong><span>${attempt.text}</span>`;
-        return row;
-      }));
-    }
-
-    viewButtons.forEach((button) => button.addEventListener("click", () => showView(button.dataset.view)));
-    futureButtons.forEach((button) => button.addEventListener("click", () => renderFuture(button.dataset.futureId)));
-
-    document.querySelectorAll("[data-open-archive]").forEach((button) => {
-      button.addEventListener("click", () => {
-        renderFuture(button.dataset.openArchive);
-        showView("archive");
-      });
+      render();
+      filters.querySelector(`[data-filter="${state.filter}"]`).focus();
     });
+  });
+}
 
-    document.querySelectorAll("[data-demo-action]").forEach((button) => {
-      button.addEventListener("click", () => showToast(`${button.dataset.demoAction} · acción de maqueta`));
+function renderList() {
+  list.innerHTML = visibleFutures().map((future) => {
+    const selected = future.code === state.code;
+    const lost = future.state === "lost" ? " is-lost" : "";
+    return `<li>
+      <button class="index-entry${lost}" type="button" data-code="${future.code}" aria-current="${selected}">
+        <span class="state-mark" aria-hidden="true"></span>
+        <span class="entry-copy">
+          <span class="entry-code">${future.code}</span>
+          <span class="entry-match">${future.chronicle.short} contra ${future.host.short}</span>
+        </span>
+        <span class="entry-state"><strong>${stateWord(future)}</strong><small>${attemptCount(future)}</small></span>
+      </button>
+    </li>`;
+  }).join("");
+
+  const entries = Array.from(list.querySelectorAll(".index-entry"));
+  entries.forEach((entry, index) => {
+    entry.addEventListener("click", () => selectFuture(entry.dataset.code));
+    entry.addEventListener("keydown", (event) => {
+      let next = -1;
+      if (event.key === "ArrowDown") next = Math.min(index + 1, entries.length - 1);
+      if (event.key === "ArrowUp") next = Math.max(index - 1, 0);
+      if (event.key === "Home") next = 0;
+      if (event.key === "End") next = entries.length - 1;
+      if (next < 0) return;
+      event.preventDefault();
+      selectFuture(entries[next].dataset.code, true);
     });
+  });
+}
 
-    document.getElementById("detail-copy").addEventListener("click", async () => {
-      const seed = futures[selectedFutureId].fullSeed;
-      try {
-        await navigator.clipboard.writeText(seed);
-        showToast(`Identidad copiada · ${seed}`);
-      } catch {
-        showToast(`Identidad del Futuro · ${seed}`);
-      }
+function renderPage() {
+  const future = futureByCode(state.code);
+  const currentAttempt = future.attempts[state.attempt] || future.attempts[future.attempts.length - 1];
+  const lost = future.state === "lost";
+  const closeText = lost
+    ? `Contemplado ${attemptCount(future)}; ninguna reescritura logró preservarlo.`
+    : future.attempts.length === 1
+      ? "Preservado desde el primer presagio."
+      : `Preservado en la ${future.attempts[future.attempts.length - 1].title.toLowerCase()}.`;
+
+  page.innerHTML = `
+    <header class="page-head">
+      <div class="page-identity">
+        <span class="page-kicker">Futuro</span>
+        <h2 class="page-code">${future.code}</h2>
+        <span class="page-verdict${lost ? " lost" : ""}">${lost ? "Futuro perdido" : "Destino preservado"}</span>
+      </div>
+      <div class="page-meta">
+        <span>${future.difficulty}</span><span class="dot">◆</span>
+        <span>Preparación ${future.preparation}</span><span class="dot">◆</span>
+        <span>${future.lastSeen}</span><span class="dot">◆</span>
+        <button type="button" class="seed-copy" data-copy="${future.seed}" title="Copiar semilla">${future.seed} ⧉</button>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <section class="duel" aria-label="Enfrentamiento de este futuro">
+        <p class="duel-label">El enfrentamiento</p>
+        <div class="cards-versus">
+          <div class="combatant">
+            <div class="card-shell"><img src="${future.chronicle.image}" alt="Carta ${future.chronicle.card}" /></div>
+            <span class="combatant-role">Tu Crónica</span>
+            <span class="combatant-name" title="${future.chronicle.card}">${future.chronicle.card}</span>
+          </div>
+          <div class="versus" aria-hidden="true"><span>VS</span></div>
+          <div class="combatant">
+            <div class="card-shell"><img src="${future.host.image}" alt="Carta ${future.host.card}" /></div>
+            <span class="combatant-role">La Hueste</span>
+            <span class="combatant-name" title="${future.host.card}">${future.host.card}</span>
+          </div>
+        </div>
+        <p class="deck-match"><b>${future.chronicle.deck}</b> contra <b>${future.host.deck}</b></p>
+      </section>
+
+      <section class="history" aria-labelledby="history-label">
+        <p class="history-label" id="history-label">Hilo de reescrituras</p>
+        <ol class="history-list">
+          ${future.attempts.map((attempt, index) => `
+            <li>
+              <button class="attempt-button ${attempt.result}" type="button" data-attempt="${index}" aria-current="${index === state.attempt}">
+                <span class="attempt-main"><b>${attempt.title}</b> · <span class="${attempt.result}">${resultWord(attempt)}</span> en el turno ${attempt.turn} · Vida ${attempt.life}</span>
+                <span class="attempt-when">${attempt.when}</span>
+              </button>
+            </li>`).join("")}
+        </ol>
+        <div class="attempt-note">
+          <p>${currentAttempt.text}</p>
+          <p class="fact">${currentAttempt.fact}</p>
+        </div>
+        <p class="history-close${lost ? " lost" : ""}">${lost ? "La Hueste reclamó este futuro" : "Este destino quedó preservado"}<small>${closeText}</small></p>
+      </section>
+    </div>
+
+    <footer class="page-actions">
+      <button type="button" class="action-quiet" data-action="${lost ? "Contemplar otro futuro" : "Reescribir este futuro"}">${lost ? "Contemplar otro futuro" : "Reescribir este futuro"}</button>
+      <button type="button" class="action-primary" data-action="${lost ? "Reescribir este futuro" : "Contemplar otro futuro"}">${lost ? "Reescribir este futuro" : "Contemplar otro futuro"}</button>
+    </footer>`;
+
+  page.querySelectorAll("[data-attempt]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.attempt = Number(button.dataset.attempt);
+      renderPage();
+      page.querySelector(`[data-attempt="${state.attempt}"]`).focus();
     });
+  });
 
-    renderFuture("preserved");
-    const requestedView = new URLSearchParams(window.location.search).get("view");
-    if (requestedView && Object.hasOwn(screens, requestedView)) showView(requestedView);
-  </script>
+  page.querySelector("[data-copy]").addEventListener("click", async (event) => {
+    const value = event.currentTarget.dataset.copy;
+    try { await navigator.clipboard.writeText(value); } catch (_) { /* La maqueta puede abrirse como file://. */ }
+    announce("Semilla copiada · " + value);
+  });
+
+  page.querySelectorAll("[data-action]").forEach((button) => {
+    button.addEventListener("click", () => announce(button.dataset.action + " · acción de maqueta"));
+  });
+}
+
+function selectFuture(code, focusEntry = false) {
+  state.code = code;
+  const future = futureByCode(code);
+  state.attempt = future.attempts.length - 1;
+  renderList();
+  renderPage();
+  if (focusEntry) list.querySelector(`[data-code="${code}"]`).focus();
+}
+
+function announce(message) {
+  window.clearTimeout(toastTimer);
+  toast.textContent = message;
+  toast.classList.add("show");
+  toastTimer = window.setTimeout(() => toast.classList.remove("show"), 2200);
+}
+
+function render() {
+  renderFilters();
+  renderList();
+  renderPage();
+}
+
+render();
+</script>
 </body>
 </html>
