@@ -298,9 +298,12 @@ stats más abajo. No crear variantes copiadas por deck.
 El fade superior de las cartas comunes se controla por carta con `headerFade`; no modifica las
 variantes *full art* ni su fade inferior.
 
-Los Ecos recortados del campo usan directamente el arte fuente cargado en Card Studio. Su encuadre
-independiente (`battlefieldArtFrame`) vive en `dev/tools/Decks/<deck>/game-art.config.json` y se
-proyecta a `src/data/cardStudioGameArt.generated.json`. La referencia canónica es 488×434 px. Este
+Los Ecos recortados y los Apoyos cortos del campo usan directamente el arte fuente cargado en Card
+Studio. Su encuadre independiente (`battlefieldArtFrame`) vive en
+`dev/tools/Decks/<deck>/game-art.config.json` y se proyecta a
+`src/data/cardStudioGameArt.generated.json`. La referencia canónica es 488×434 px. El Taller deriva
+la variante desde `kinds`: los Ecos conservan cabecera y stats; los Apoyos usan el ancho compacto
+del dock (`clamp(92px, 7vw, 118px)`) y sólo arte a sangre completa, sin cabecera ni texto. Este
 sidecar no forma parte de la huella de impresión: mano, hover, detalles, colección y animaciones
 siguen usando el PNG completo.
 

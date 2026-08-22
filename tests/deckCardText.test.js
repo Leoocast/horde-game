@@ -26,6 +26,7 @@ import {
   resolveStudioLanguage,
   resolveStudioFullArt,
   resolveStudioHeaderFade,
+  studioBattlefieldArtKinds,
   studioGameArt,
   studioLanguagesForDeck,
   studioSourceFiles,
@@ -401,8 +402,23 @@ test("Card Studio removes preview chrome and focus-mode overflow", () => {
   );
   assert.match(
     studioShell,
+    /\.game-preview-panel\[data-kind="support"\] \.game-preview-wrap\s*\{[^}]*width:\s*clamp\(92px, 7vw, 118px\);/u,
+    "the Studio Support preview must use the same compact width as the runtime dock",
+  );
+  assert.match(
+    studioShell,
     /\.game-preview-title\s*\{[^}]*background:\s*linear-gradient\(90deg, var\(--game-title-start\) 0%, var\(--game-title-end\) 65%, var\(--game-title-end\) 100%\);/u,
     "the Studio cropped-card header must remain opaque across its full width",
+  );
+  assert.match(
+    studioShell,
+    /\.game-preview\[data-kind="support"\] \.game-preview-title,[\s\S]*?display:\s*none;/u,
+    "the compact Support presentation must not render an Echo header",
+  );
+  assert.doesNotMatch(
+    studioShell,
+    /game-preview-support-(?:copy|type|rules)/u,
+    "the compact Support presentation must contain only the source image",
   );
   assert.match(
     studioShell,
@@ -412,6 +428,8 @@ test("Card Studio removes preview chrome and focus-mode overflow", () => {
   assert.match(studioApp, /fullArtOverrides/u);
   assert.match(studioApp, /headerFadeOverrides/u);
   assert.match(studioApp, /battlefieldArtFrames/u);
+  assert.match(studioApp, /battlefieldArtKind === "support"/u);
+  assert.match(studioApp, /gamePreviewPanel\.dataset\.kind = battlefieldArtKind/u);
   assert.match(
     studioApp,
     /gamePreviewImage\.naturalWidth[\s\S]*--game-art-source-width/u,
@@ -445,6 +463,13 @@ test("Card Studio removes preview chrome and focus-mode overflow", () => {
   assert.match(studioServer, /fullArtOverrides: true/u);
   assert.match(studioServer, /headerFadeOverrides: true/u);
   assert.match(studioServer, /battlefieldArtFrames: true/u);
+  assert.match(studioServer, /studioBattlefieldArtKinds\(deckId\)/u);
+  assert.match(studioServer, /battlefieldArtKind: battlefieldArtKinds\[card\.id\]/u);
+  assert.doesNotMatch(
+    studioServer,
+    /\^Eco/u,
+    "battlefield presentation eligibility must come from authored kinds, not localized copy",
+  );
   assert.match(
     studioServer,
     /path\.resolve\(ROOT, 'public', `\.\$\{decoded\}`\)/u,
@@ -828,6 +853,19 @@ test("battlefield art framing is canonical, bounded and independent from print f
     assert.match(details.imageUrl ?? "", /^\/cards\/.+\.png$/u);
   }
 
+  const compactSupports = Object.entries(STUDIO_DECKS).flatMap(([deckId, definition]) => (
+    definition.previewOnly
+      ? []
+      : Object.entries(studioBattlefieldArtKinds(deckId))
+        .filter(([, kind]) => kind === "support")
+        .map(([cardId]) => `${deckId}/${cardId}`)
+  ));
+  assert.deepEqual(compactSupports, [
+    "uprising_of_the_graveless/the_broken_headstone",
+    "legion_of_varka/the_daunting_front",
+    "legion_of_varka/all_against_one",
+  ]);
+
   const generated = JSON.parse(generatedGameArtData());
   assert.equal(Object.keys(generated.cards).length, 74);
   assert.match(studioGameArt("pact_of_elarion").veiled_dawn_flower.artUrl, /\/art\//u);
@@ -855,7 +893,11 @@ test("battlefield art framing is canonical, bounded and independent from print f
   );
   assert.match(
     battlefieldSource,
-    /useBattlefieldArt=\{!compact && card\.kinds\.includes\("ECHO"\) && cropCreatureCards\}/u,
+    /const usesCompactSupportArt = isOtherPermanent && card\.kinds\.includes\("SUPPORT"\);/u,
+  );
+  assert.match(
+    battlefieldSource,
+    /useBattlefieldArt=\{\s*usesCompactSupportArt \|\| \(!compact && card\.kinds\.includes\("ECHO"\) && cropCreatureCards\)\s*\}/u,
   );
   assert.match(
     cardSource,
@@ -883,6 +925,16 @@ test("battlefield art framing is canonical, bounded and independent from print f
     runtimeCss,
     /\.battlefield-row-overflow \.battlefield-card-slot\s*\{[^}]*height:\s*calc\(var\(--battlefield-card-width\) \* 0\.8893442623\);/u,
     "the runtime crop must use the exact 488x434 Studio viewport ratio",
+  );
+  assert.match(
+    runtimeCss,
+    /\.battlefield-other-permanent-slot\s*\{[^}]*--other-permanent-cropped-height:\s*calc\(var\(--battlefield-compact-card-width, clamp\(92px, 7vw, 118px\)\) \* 0\.8893442623\);/u,
+    "compact Supports must share the Studio viewport ratio at their own dock width",
+  );
+  assert.match(
+    runtimeCss,
+    /\.battlefield-other-permanent-slot \.card-visual\.card-battlefield-cropped:not\(\.card-battlefield-art-fallback\) > img\s*\{[^}]*width:\s*var\(--battlefield-art-source-width, 100%\);[^}]*height:\s*var\(--battlefield-art-source-height, 100%\);/u,
+    "compact Supports must render their authored source-art frame instead of cropping a full PNG",
   );
   assert.match(
     runtimeCss,

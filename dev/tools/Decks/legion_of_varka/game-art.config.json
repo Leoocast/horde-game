@@ -98,6 +98,20 @@
         "x": 2,
         "y": 84
       }
+    },
+    "the_daunting_front": {
+      "battlefieldArtFrame": {
+        "zoom": 1.425,
+        "x": -15,
+        "y": 78
+      }
+    },
+    "all_against_one": {
+      "battlefieldArtFrame": {
+        "zoom": 1.37,
+        "x": -4,
+        "y": 19
+      }
     }
   }
 }

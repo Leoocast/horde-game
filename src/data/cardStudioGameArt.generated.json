@@ -97,7 +97,12 @@
       }
     },
     "the_broken_headstone": {
-      "artUrl": "/cards/uprising_of_the_graveless/art/the_broken_headstone.jpg"
+      "artUrl": "/cards/uprising_of_the_graveless/art/the_broken_headstone.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.803,
+        "x": 2,
+        "y": 2
+      }
     },
     "inexhaustible_ossuary": {
       "artUrl": "/cards/uprising_of_the_graveless/art/inexhaustible_ossuary.jpg",
@@ -239,10 +244,20 @@
       }
     },
     "the_daunting_front": {
-      "artUrl": "/cards/legion_of_varka/art/the_daunting_front.jpg"
+      "artUrl": "/cards/legion_of_varka/art/the_daunting_front.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.425,
+        "x": -15,
+        "y": 78
+      }
     },
     "all_against_one": {
-      "artUrl": "/cards/legion_of_varka/art/all_against_one.jpg"
+      "artUrl": "/cards/legion_of_varka/art/all_against_one.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.37,
+        "x": -4,
+        "y": 19
+      }
     },
     "chief_of_the_double_guard": {
       "artUrl": "/cards/legion_of_varka/art/chief_of_the_double_guard.jpg",

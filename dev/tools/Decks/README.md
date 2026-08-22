@@ -86,19 +86,22 @@ Lo que se guarda son datos, no HTML:
 - `fullArt` por carta como override booleano del diseño predeterminado.
 - `headerFade` por carta para mostrar u ocultar el fade superior de las cartas comunes. No altera
   las cartas *full art* ni el fade inferior.
-- `battlefieldArtFrame` por Eco en `game-art.config.json`: zoom y traslación sobre una ventana
-  canónica de 488×434 px. Este encuadre sólo afecta la carta recortada del campo.
+- `battlefieldArtFrame` por Eco o Apoyo en `game-art.config.json`: zoom y traslación sobre una
+  ventana canónica de 488×434 px. Este encuadre sólo afecta la presentación corta del campo.
 - `motif` por deck, con los slots `head`, `band` y `stats`; cada slot admite `x`, `y`, `zoom` y
   `rotation`.
 
 Una carta sin ajustes no emite datos de encuadre. El estudio no toca los `index.html`: la vista previa es un iframe con el mismo documento
 que fotografía el exportador, así que preview y PNG no pueden divergir.
 
-La pestaña `Arte` separa `Encuadre impreso` de `Encuadre en juego`. La segunda vista aparece sólo
-para Ecos, usa directamente el arte bajo `public/cards/<deck>/art/` y conserva el PNG final para
-mano, hover, detalles, colección y animaciones. En ventanas estrechas baja debajo de la carta para
-no crear overflow. `game-art.config.json` y su proyección runtime están excluidos de la huella de
-impresión: guardar únicamente este encuadre no vuelve obsoletos los PNG.
+La pestaña `Arte` separa `Encuadre impreso` de `Encuadre en juego`. La segunda vista aparece para
+Ecos y Apoyos según su `kinds` runtime, nunca según el texto localizado. Los Ecos conservan su
+cabecera y stats; el **Apoyo corto** usa la misma referencia 488×434, el ancho compacto real del
+dock (`clamp(92px, 7vw, 118px)`) y sólo arte a sangre completa, sin cabecera ni texto. Ambas vistas usan directamente el arte
+bajo `public/cards/<deck>/art/` y conservan el PNG final para mano, hover, detalles, colección y
+animaciones. En ventanas estrechas bajan debajo de la carta para no crear overflow.
+`game-art.config.json` y su proyección runtime están excluidos de la huella de impresión: guardar
+únicamente este encuadre no vuelve obsoletos los PNG.
 
 Mejora futura, no planificada: evaluar un botón `Copiar encuadre` después de validar que traducir el
 marco imprimible a la proporción 488×434 produce un punto de partida útil. No deben vincularse ambos

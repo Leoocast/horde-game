@@ -907,6 +907,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
     const firstTimeOnThisBattlefield = useNewSummoning && newlyArrived;
     const buffAnimationActive = Boolean(buffAnimationEventId && buffAnimationCardIds.includes(card.instanceId));
     const isOtherPermanent = keyPrefix === "other";
+    const usesCompactSupportArt = isOtherPermanent && card.kinds.includes("SUPPORT");
     const selected = side === "player" ? selectedPlayerCreatureId === card.instanceId : selectedHostCreatureId === card.instanceId;
     const assignedAttackerId = findAssignedAttacker(card.instanceId);
     const blocking = Boolean(assignedAttackerId);
@@ -1203,7 +1204,9 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
         card={card}
         compact={compact}
         cropTopHalf={isLand}
-        useBattlefieldArt={!compact && card.kinds.includes("ECHO") && cropCreatureCards}
+        useBattlefieldArt={
+          usesCompactSupportArt || (!compact && card.kinds.includes("ECHO") && cropCreatureCards)
+        }
         preferNativeImageRendering={shouldShowFullCardImage(card.definitionId)}
         showCroppedTitle={!compact && card.kinds.includes("ECHO") && cropCreatureCards}
         selected={selected}

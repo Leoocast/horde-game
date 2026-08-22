@@ -513,6 +513,10 @@
             max-width: 100%;
         }
 
+        .game-preview-panel[data-kind="support"] .game-preview-wrap {
+            width: clamp(92px, 7vw, 118px);
+        }
+
         .game-preview-label {
             margin-bottom: 7px;
             color: var(--muted);
@@ -626,6 +630,11 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+        }
+
+        .game-preview[data-kind="support"] .game-preview-title,
+        .game-preview[data-kind="support"] .game-preview-stats {
+            display: none;
         }
 
         .game-preview-stats {
@@ -1106,7 +1115,7 @@
             <iframe id="preview" title="Vista del deck"></iframe>
             <aside class="game-preview-panel" id="game-preview-panel" hidden>
                 <div class="game-preview-wrap">
-                    <div class="game-preview-label" title="Coordenadas de referencia: 488 × 434 px">
+                    <div class="game-preview-label" id="game-preview-label" title="Coordenadas de referencia: 488 × 434 px">
                         En juego · escala del campo
                     </div>
                     <div class="game-preview" id="game-preview">
@@ -1159,7 +1168,7 @@
                 <div class="control-section-label">Encuadre impreso</div>
                 <div id="art-controls"></div>
                 <div id="game-art-section">
-                    <div class="control-section-label">Encuadre en juego</div>
+                    <div class="control-section-label" id="game-art-section-label">Encuadre en juego</div>
                     <div id="game-art-controls"></div>
                 </div>
             </section>

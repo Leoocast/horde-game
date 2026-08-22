@@ -105,6 +105,13 @@
         "x": -51,
         "y": 99
       }
+    },
+    "the_broken_headstone": {
+      "battlefieldArtFrame": {
+        "zoom": 1.803,
+        "x": 2,
+        "y": 2
+      }
     }
   }
 }

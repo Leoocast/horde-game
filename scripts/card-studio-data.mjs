@@ -449,6 +449,31 @@ export function loadStudioConfig(deckId) {
   return { config, paths };
 }
 
+export function studioBattlefieldArtKinds(deckId) {
+  const { config, paths } = loadStudioConfig(deckId);
+  if (config.previewOnly) {
+    return Object.fromEntries(config.cards.map((card) => [card.id, null]));
+  }
+  if (!config.runtimeDeck) throw new Error(`${deckId}: falta runtimeDeck.`);
+
+  const runtimePath = path.resolve(paths.directory, config.runtimeDeck);
+  const runtimeDeck = readJson(runtimePath);
+  const runtimeById = new Map((runtimeDeck.cards ?? []).map((card) => [card.id, card]));
+  return Object.fromEntries(config.cards.map((presentation) => {
+    const runtimeCard = runtimeById.get(presentation.id);
+    if (!runtimeCard) {
+      throw new Error(`${deckId}: ${presentation.id} no existe en ${relative(runtimePath)}.`);
+    }
+    const kinds = runtimeCard.kinds ?? [];
+    const battlefieldKind = kinds.includes("SUPPORT")
+      ? "support"
+      : kinds.includes("ECHO")
+        ? "echo"
+        : null;
+    return [presentation.id, battlefieldKind];
+  }));
+}
+
 export function loadGameArtConfig(deckId) {
   const paths = deckPaths(deckId);
   const { config: studioConfig } = loadStudioConfig(deckId);

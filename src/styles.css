@@ -8082,7 +8082,7 @@
   }
 
   .battlefield-other-permanent-slot {
-    --other-permanent-cropped-height: calc(var(--battlefield-compact-card-width, clamp(92px, 7vw, 118px)) * 0.89);
+    --other-permanent-cropped-height: calc(var(--battlefield-compact-card-width, clamp(92px, 7vw, 118px)) * 0.8893442623);
     height: var(--other-permanent-cropped-height);
   }
 
@@ -8103,6 +8103,26 @@
     height: 110%;
     object-position: top center;
     transform: translate(-4%, -5%);
+  }
+
+  .battlefield-other-permanent-slot .card-visual.card-battlefield-cropped:not(.card-battlefield-art-fallback) > img {
+    position: absolute;
+    inset: auto;
+    top: 50%;
+    left: 50%;
+    width: var(--battlefield-art-source-width, 100%);
+    height: var(--battlefield-art-source-height, 100%);
+    max-width: none;
+    object-fit: contain;
+    object-position: center;
+    clip-path: none;
+    transform: translate3d(
+      calc(-50% + var(--battlefield-art-x, 0cqw)),
+      calc(-50% + var(--battlefield-art-y, 0cqw)),
+      0
+    )
+      scale(var(--battlefield-art-zoom, 1));
+    transform-origin: center;
   }
 
   .battlefield-other-permanent-slot .card-keyword-stack {
