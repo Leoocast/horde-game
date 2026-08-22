@@ -176,7 +176,7 @@ test("HF1-ELA-GRV-LE2-GPT has a manually fixed deterministic golden state", () =
       "winged_stalker_of_the_crypt", "return_to_memory", "graveless_soldier", "graveless_soldier",
       "graveless_soldier", "spore_infested", "graveless_titan", "graveless_soldier", "graveless_soldier",
       "graveless_soldier", "graveless_soldier", "winged_stalker_of_the_crypt", "return_to_memory",
-      "graveless_soldier", "hound_of_seven_memories", "nerezh_graveless_matriarch", "graveless_soldier",
+      "graveless_soldier", "three_eyed_corpse_gorger", "nerezh_graveless_matriarch", "graveless_soldier",
       "harvester_of_the_fallen", "inexhaustible_ossuary", "graveless_soldier", "graveless_soldier",
       "spore_infested", "graveless_soldier",
     ],

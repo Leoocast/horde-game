@@ -1098,6 +1098,7 @@ test("deck inspection keeps the same temporal sky as the main menu", () => {
 });
 
 test("the Hostfall wordmark and Chronicler name use the bundled decorative face", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.match(
@@ -1106,6 +1107,9 @@ test("the Hostfall wordmark and Chronicler name use the bundled decorative face"
   );
   assert.match(styles, /\.hostfall-wordmark\s*\{[^}]*font-family:\s*"Cinzel Decorative"[^}]*font-weight:\s*400;/u);
   assert.match(styles, /\.main-menu-chronicler-name\s*\{[^}]*font-family:\s*"Cinzel Decorative"[^}]*font-weight:\s*400;/u);
+  assert.match(startMenu, /className="hf-ui-button main-menu-chronicler-edit"[\s\S]*?<Pencil size=\{16\}/u);
+  assert.doesNotMatch(startMenu, /main-menu-chronicler-mark|<Feather/u);
+  assert.doesNotMatch(styles, /\.main-menu-chronicler-mark/u);
 });
 
 test("the Chronicler claims a name over the clean temporal sky", () => {

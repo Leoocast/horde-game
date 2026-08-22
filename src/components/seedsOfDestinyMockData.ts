@@ -86,7 +86,7 @@ export const SEEDS_OF_DESTINY_FIXTURE: readonly SeedFutureFixture[] = [
             en: "Vaelor, Emerald Guardian placed a -1/-1 counter on five enemies when Summoned.",
           },
           {
-            es: "El Juicio de Elarion retiró La Lápida Quebrada antes de la última Estampida.",
+            es: "El Juicio de Elarion retiró El Santuario Quebrado antes de la última Estampida.",
             en: "The Judgment of Elarion removed The Broken Headstone before the last Surge.",
           },
         ],

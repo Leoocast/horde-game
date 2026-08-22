@@ -65,7 +65,7 @@ window.HostfallDeckData = {
         "collectorId": "HFA1016",
         "artist": "Dean Spencer",
         "art_crop": "../../../../public/cards/uprising_of_the_graveless/art/the_broken_headstone.jpg",
-        "nombre": "La Lápida Quebrada",
+        "nombre": "El Santuario Quebrado",
         "tipo": "Apoyo",
         "costo": 1,
         "atk": null,
@@ -74,11 +74,12 @@ window.HostfallDeckData = {
         "lore": "Cuando la piedra se partió, todos los muertos oyeron la misma orden: levantarse.",
         "showFlavorText": true,
         "cantidad": 2,
+        "fullArt": true,
         "headerFade": false,
         "art_frame": {
-          "zoom": 0.889,
-          "x": -7,
-          "y": -269
+          "zoom": 1.37,
+          "x": 1,
+          "y": -176
         }
       },
       {
@@ -261,30 +262,30 @@ window.HostfallDeckData = {
         "cantidad": 1,
         "headerFade": false,
         "art_frame": {
-          "zoom": 0.76,
-          "x": 48,
-          "y": -147
+          "zoom": 1,
+          "x": 8,
+          "y": -132
         }
       },
       {
-        "id": "hound_of_seven_memories",
+        "id": "three_eyed_corpse_gorger",
         "collectorId": "HFA1026",
         "artist": "Dean Spencer",
-        "art_crop": "../../../../public/cards/uprising_of_the_graveless/art/hound_of_seven_memories.jpg",
-        "nombre": "Sabueso de los Siete Recuerdos",
-        "tipo": "Eco — Zombi Sabueso",
+        "art_crop": "../../../../public/cards/uprising_of_the_graveless/art/three_eyed_corpse_gorger.jpg",
+        "nombre": "Tragamuertos de Tres Ojos",
+        "tipo": "Eco — Zombi Gusano",
         "costo": 3,
         "atk": 3,
         "def": 2,
-        "desc": "Mientras la Hueste tenga 7 o más cartas en su Memoria: este Eco gana +1/+1 e Imponente.",
-        "lore": "Nerezh lo alimentó con nombres olvidados. Con el séptimo, dejó de obedecer a la cadena.",
+        "desc": "Mientras la Hueste tenga 3 o más cartas en su Memoria: este Eco gana +1/+1 e Imponente.",
+        "lore": "Cada muerto que devora le abre un ojo. Al tercero, despierta también su hambre.",
         "showFlavorText": false,
         "cantidad": 1,
         "headerFade": false,
         "art_frame": {
           "zoom": 0.731,
-          "x": -6,
-          "y": -97
+          "x": 14,
+          "y": -239
         }
       },
       {
@@ -433,11 +434,12 @@ window.HostfallDeckData = {
         "lore": "When the stone split, all the dead heard the same command: rise.",
         "showFlavorText": true,
         "cantidad": 2,
+        "fullArt": true,
         "headerFade": false,
         "art_frame": {
-          "zoom": 0.889,
-          "x": -7,
-          "y": -269
+          "zoom": 1.37,
+          "x": 1,
+          "y": -176
         }
       },
       {
@@ -620,30 +622,30 @@ window.HostfallDeckData = {
         "cantidad": 1,
         "headerFade": false,
         "art_frame": {
-          "zoom": 0.76,
-          "x": 48,
-          "y": -147
+          "zoom": 1,
+          "x": 8,
+          "y": -132
         }
       },
       {
-        "id": "hound_of_seven_memories",
+        "id": "three_eyed_corpse_gorger",
         "collectorId": "HFA1026",
         "artist": "Dean Spencer",
-        "art_crop": "../../../../public/cards/uprising_of_the_graveless/art/hound_of_seven_memories.jpg",
-        "nombre": "Hound of Seven Memories",
-        "tipo": "Echo — Zombie Hound",
+        "art_crop": "../../../../public/cards/uprising_of_the_graveless/art/three_eyed_corpse_gorger.jpg",
+        "nombre": "Three-Eyed Corpse-Gorger",
+        "tipo": "Echo — Zombie Worm",
         "costo": 3,
         "atk": 3,
         "def": 2,
-        "desc": "While the Host has 7 or more cards in its Memory: this Echo gets +1/+1 and Daunting.",
-        "lore": "Nerezh fed it forgotten names. With the seventh, it ceased to obey the chain.",
+        "desc": "While the Host has 3 or more cards in its Memory: this Echo gets +1/+1 and Daunting.",
+        "lore": "Each corpse it devours opens an eye. With the third, its hunger awakens too.",
         "showFlavorText": false,
         "cantidad": 1,
         "headerFade": false,
         "art_frame": {
           "zoom": 0.731,
-          "x": -6,
-          "y": -97
+          "x": 14,
+          "y": -239
         }
       },
       {

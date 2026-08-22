@@ -3,16 +3,16 @@
   "cards": {
     "graveless_soldier": {
       "battlefieldArtFrame": {
-        "zoom": 1,
+        "zoom": 1.04,
         "x": -2,
-        "y": 86
+        "y": 94
       }
     },
     "graveless_titan": {
       "battlefieldArtFrame": {
         "zoom": 1,
-        "x": 0,
-        "y": 90
+        "x": 2,
+        "y": 87
       }
     },
     "inexhaustible_ossuary": {
@@ -66,44 +66,44 @@
     },
     "nerezh_graveless_matriarch": {
       "battlefieldArtFrame": {
-        "zoom": 1.37,
-        "x": -2,
-        "y": 144
+        "zoom": 1.17,
+        "x": 2,
+        "y": 128
       }
     },
     "harvester_of_the_fallen": {
       "battlefieldArtFrame": {
-        "zoom": 1.17,
-        "x": -2,
-        "y": 108
+        "zoom": 1,
+        "x": 4,
+        "y": 66
       }
     },
     "spore_infested": {
       "battlefieldArtFrame": {
-        "zoom": 1,
-        "x": -8,
-        "y": 36
+        "zoom": 1.04,
+        "x": 7,
+        "y": 32
       }
     },
     "mastiff_of_the_overflowing_ossuary": {
       "battlefieldArtFrame": {
-        "zoom": 1,
-        "x": -10,
-        "y": 73
+        "zoom": 1.04,
+        "x": -2,
+        "y": 65
       }
     },
-    "hound_of_seven_memories": {
+    "three_eyed_corpse_gorger": {
       "battlefieldArtFrame": {
-        "zoom": 1,
-        "x": 0,
-        "y": 92
+        "zoom": 1.04,
+        "x": 4,
+        "y": 56
       }
     },
     "barrow_wallbreaker": {
       "battlefieldArtFrame": {
-        "zoom": 1,
-        "x": 2,
-        "y": 92
+        "zoom": 1.217,
+        "x": -51,
+        "y": 99
       }
     }
   }

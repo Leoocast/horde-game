@@ -93,7 +93,7 @@
       "id": "the_broken_headstone",
       "collectorId": "HFA1016",
       "name": "The Broken Headstone",
-      "displayNameEs": "La Lápida Quebrada",
+      "displayNameEs": "El Santuario Quebrado",
       "gameText": {
         "en": "Allied Zombies gain Daunting.",
         "es": "Los Zombis aliados ganan Imponente."
@@ -616,17 +616,17 @@
       ]
     },
     {
-      "id": "hound_of_seven_memories",
+      "id": "three_eyed_corpse_gorger",
       "collectorId": "HFA1026",
-      "name": "Hound of Seven Memories",
-      "displayNameEs": "Sabueso de los Siete Recuerdos",
+      "name": "Three-Eyed Corpse-Gorger",
+      "displayNameEs": "Tragamuertos de Tres Ojos",
       "gameText": {
-        "en": "While the Host has 7 or more cards in its Memory: this Echo gets +1/+1 and Daunting.",
-        "es": "Mientras la Hueste tenga 7 o más cartas en su Memoria: este Eco gana +1/+1 e Imponente."
+        "en": "While the Host has 3 or more cards in its Memory: this Echo gets +1/+1 and Daunting.",
+        "es": "Mientras la Hueste tenga 3 o más cartas en su Memoria: este Eco gana +1/+1 e Imponente."
       },
       "flavorText": {
-        "en": "Nerezh fed it forgotten names. With the seventh, it ceased to obey the chain.",
-        "es": "Nerezh lo alimentó con nombres olvidados. Con el séptimo, dejó de obedecer a la cadena."
+        "en": "Each corpse it devours opens an eye. With the third, its hunger awakens too.",
+        "es": "Cada muerto que devora le abre un ojo. Al tercero, despierta también su hambre."
       },
       "showFlavorText": false,
       "quantity": 1,
@@ -635,13 +635,13 @@
       },
       "subtypes": [
         "Zombie",
-        "Hound"
+        "Worm"
       ],
       "power": 3,
       "endurance": 2,
       "abilities": [
         {
-          "id": "hound_of_seven_memories_threshold_buff",
+          "id": "three_eyed_corpse_gorger_threshold_buff",
           "kind": "STATIC",
           "zone": "FIELD",
           "effects": [
@@ -652,7 +652,7 @@
               "condition": {
                 "type": "MEMORY_COUNT_AT_LEAST",
                 "controller": "HOST",
-                "amount": 7
+                "amount": 3
               },
               "power": 1,
               "endurance": 1
@@ -660,7 +660,7 @@
           ]
         },
         {
-          "id": "hound_of_seven_memories_threshold_menace",
+          "id": "three_eyed_corpse_gorger_threshold_daunting",
           "kind": "STATIC",
           "zone": "FIELD",
           "effects": [
@@ -671,7 +671,7 @@
               "condition": {
                 "type": "MEMORY_COUNT_AT_LEAST",
                 "controller": "HOST",
-                "amount": 7
+                "amount": 3
               },
               "keyword": "DAUNTING"
             }
@@ -680,7 +680,7 @@
       ],
       "hostErrata": {
         "keyword": "Threshold",
-        "condition": "Seven or more cards in the Host Memory."
+        "condition": "Three or more cards in the Host Memory."
       },
       "kinds": [
         "ECHO"

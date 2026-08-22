@@ -30,6 +30,9 @@
             "height": 91
           }
         },
+        "the_judgment_of_elarion": {
+          "fullArt": true
+        },
         "river_of_elarion": {
           "fullArt": true
         }
@@ -54,6 +57,9 @@
             "width": 158,
             "height": 91
           }
+        },
+        "the_broken_headstone": {
+          "fullArt": true
         },
         "harvester_of_the_fallen": {
           "fullArt": true,

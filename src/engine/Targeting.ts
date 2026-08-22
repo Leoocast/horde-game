@@ -1,6 +1,7 @@
 import type { CardFilter, CardInstance, GameState, Side, TargetRequirement } from "./GameTypes";
 import { getPowerEndurance, matchesFilter } from "./StaticEffects";
 import { pickRandom } from "./RNG";
+import { hasTrait } from "./Traits";
 
 export function allBattlefield(game: GameState): CardInstance[] {
   return [...game.player.field, ...game.host.field];
@@ -23,11 +24,18 @@ export function targetCandidatesWithSelectedTargets(game: GameState, sourceSide:
     const filters = req.filters as (CardFilter & { anyOf?: CardFilter[]; excludeTargetIds?: string[] }) | undefined;
     if (filters?.kinds?.length && !filters.kinds.every((type) => card.kinds.includes(type))) return false;
     if (filters?.subtypes?.length && !filters.subtypes.every((type) => card.subtypes.includes(type))) return false;
-    if (filters?.anyOf?.length && !filters.anyOf.some((filter) => matchesFilter(card, filter))) return false;
+    if (filters?.traits?.length && !filters.traits.every((trait) => hasTrait(game, card, trait))) return false;
+    if (filters?.anyOf?.length && !filters.anyOf.some((filter) => matchesEffectiveTargetFilter(game, card, filter))) return false;
     if (targetExcludedByPreviousSelection(card, filters?.excludeTargetIds, selectedTargets)) return false;
-    if (req.filterAny?.length && !req.filterAny.some((filter) => matchesFilter(card, filter))) return false;
+    if (req.filterAny?.length && !req.filterAny.some((filter) => matchesEffectiveTargetFilter(game, card, filter))) return false;
     return true;
   });
+}
+
+function matchesEffectiveTargetFilter(game: GameState, card: CardInstance, filter: CardFilter): boolean {
+  const { traits, ...structuralFilter } = filter;
+  if (!matchesFilter(card, structuralFilter)) return false;
+  return !traits?.length || traits.every((trait) => hasTrait(game, card, trait));
 }
 
 export function targetRequirementIsBuff(card: CardInstance, requirement: TargetRequirement): boolean {

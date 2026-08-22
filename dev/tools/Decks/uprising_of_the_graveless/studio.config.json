@@ -28,11 +28,12 @@
       "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/the_broken_headstone.jpg",
       "typeLineEs": "Apoyo",
       "artFrame": {
-        "zoom": 0.889,
-        "x": -7,
-        "y": -269
+        "zoom": 1.37,
+        "x": 1,
+        "y": -176
       },
-      "headerFade": false
+      "headerFade": false,
+      "fullArt": true
     },
     {
       "id": "inexhaustible_ossuary",
@@ -126,20 +127,20 @@
       "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/barrow_wallbreaker.jpg",
       "typeLineEs": "Eco — Zombi Minotauro",
       "artFrame": {
-        "zoom": 0.76,
-        "x": 48,
-        "y": -147
+        "zoom": 1,
+        "x": 8,
+        "y": -132
       },
       "headerFade": false
     },
     {
-      "id": "hound_of_seven_memories",
-      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/hound_of_seven_memories.jpg",
-      "typeLineEs": "Eco — Zombi Sabueso",
+      "id": "three_eyed_corpse_gorger",
+      "artCrop": "../../../../public/cards/uprising_of_the_graveless/art/three_eyed_corpse_gorger.jpg",
+      "typeLineEs": "Eco — Zombi Gusano",
       "artFrame": {
         "zoom": 0.731,
-        "x": -6,
-        "y": -97
+        "x": 14,
+        "y": -239
       },
       "headerFade": false
     },
@@ -194,8 +195,7 @@
     "stats": {
       "x": -69,
       "y": 0,
-      "zoom": 4,
-      "rotation": 0
+      "zoom": 4
     }
   }
 }

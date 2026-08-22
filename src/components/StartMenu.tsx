@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowLeft, AudioLines, BookOpen, ChevronLeft, ChevronRight, Construction, Copy, Dices, Eye, Feather, Github, PanelsTopLeft, Play, RefreshCw, RotateCcw, ScanSearch, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, AudioLines, BookOpen, ChevronLeft, ChevronRight, Construction, Copy, Dices, Eye, Github, PanelsTopLeft, Pencil, Play, RefreshCw, RotateCcw, ScanSearch, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
 import { AnimatePresence, motion, useIsPresent } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { contentCatalog } from "../content/bootstrap";
@@ -310,13 +310,12 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         <div className="main-menu-stage">
         {menuScreen === "home" && (
           <div className="main-menu-chronicler" aria-label={t("menu.profileLabel")}>
-            <span className="main-menu-chronicler-mark" aria-hidden="true" />
             <div>
               <strong className="main-menu-chronicler-name">{playerName || "Chronicler"}</strong>
               <span>Chronicler</span>
             </div>
-            <button className="main-menu-chronicler-edit" type="button" onClick={openNameEditor} title={t("menu.editName")} aria-label={t("menu.editName")}>
-              <Feather size={19} />
+            <button className="hf-ui-button main-menu-chronicler-edit" type="button" onClick={openNameEditor} title={t("menu.editName")} aria-label={t("menu.editName")}>
+              <Pencil size={16} strokeWidth={1.7} />
             </button>
           </div>
         )}

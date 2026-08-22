@@ -64,8 +64,9 @@ un conector normativo.
 ### Saltos de línea y listas
 
 Un salto de línea separa habilidades independientes o párrafos de reglas; no significa «después».
-Las viñetas se reservan para modos realmente distintos encabezados por `Elige uno:`. No se usan
-para expresar distintas clases de objetivo de una misma acción.
+Las viñetas se reservan para modos realmente distintos encabezados por `Elige uno:`. También pueden
+separar tres o más clases de objetivo cuando repetir la acción mejora materialmente la lectura. En
+ese caso, elegir el objetivo determina el modo y la interfaz no pide una elección adicional.
 
 ## Elecciones y referencias
 
@@ -116,7 +117,8 @@ es de combate. La redacción canónica es `ese aliado lucha contra ese enemigo`.
 
 ## Elecciones modales
 
-Usar `Elige uno:` seguido de viñetas sólo cuando cada opción sea un efecto distinto.
+Usar `Elige uno:` seguido de viñetas cuando cada opción sea un efecto distinto o cuando tres o más
+clases de objetivo necesiten separación visual.
 
 ```text
 Elige uno:
@@ -129,6 +131,19 @@ Si cambia únicamente qué objeto puede recibir el mismo efecto, se escribe una 
 ```text
 Elige un Apoyo enemigo o un Eco enemigo con Volar; destrúyelo.
 ```
+
+Con tres clases que resulten densas en una sola oración, se permite repetir la acción para que cada
+objetivo se reconozca de inmediato:
+
+```text
+Elige uno:
+• Destruye un Apoyo enemigo.
+• Destruye un Eco enemigo con Imponente.
+• Destruye un Eco enemigo con Volar.
+```
+
+Las tres líneas pueden seguir implementadas como un único requisito de target: elegir una carta
+válida determina el modo y nunca abre una selección redundante.
 
 ## Plantillas preferidas
 

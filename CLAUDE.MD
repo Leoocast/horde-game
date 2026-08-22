@@ -190,9 +190,15 @@ Decks vigentes:
 
 Cazadores es sólo un preview de Card Studio: no tiene deck runtime ni lote final de PNG.
 
+Contrato particular de Elarion: El Juicio de Elarion puede destruir un Apoyo enemigo o un Eco
+enemigo que tenga Imponente o Volar, incluidos Rasgos efectivos concedidos por Pasivas o condiciones.
+
 Contratos particulares de la Corte: Paje de la Sed exige estar preparado en la primera pérdida
 de Vida del turno; Duelista del Eclipse no puede actuar mientras está Estabilizándose; Mirevna
 paga la mitad de la Vida actual redondeada hacia arriba.
+
+Contrato particular de los Sinsepulcro: `the_broken_headstone` conserva su id técnico estable,
+pero su nombre visible español es **El Santuario Quebrado**, acorde a su arte monumental.
 
 Contratos particulares de la Legión: Todos contra uno cuenta sólo Trasgos atacantes con Fuerza 2
 o menos; Vardek crea Esbirros atacando según su Fuerza después de recibir el contador; el daño de

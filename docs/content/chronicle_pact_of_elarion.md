@@ -66,7 +66,7 @@ jugadora que reconstruye la Crónica.
 | `vaelor_emerald_guardian` | **Vaelor, Guardián Esmeralda** | Coste 6, 6/5; Volar; al ser invocado pone un contador -1/-1 sobre cada enemigo. | Dragón protector y culminación de la Crónica. |
 | `clash_of_echoes` | **Choque de Ecos** | Coste 2, Rápido; un aliado hace daño igual a su Fuerza a un enemigo. | Aelyra enfrenta con magia a un recuerdo hostil; sólo uno responde al llamado de Elarion. |
 | `shield_of_the_heir` | **Escudo de la Heredera** | Coste 2; +1/+2 a un aliado y después lucha contra un enemigo. | La protección de Aelyra permite sostener un enfrentamiento directo. |
-| `the_judgment_of_elarion` | **El Juicio de Elarion** | Coste 3, Rápido; destruye un Apoyo enemigo o un Eco enemigo con Volar. | La antigua ley del reino alcanza tanto piedra como alas. |
+| `the_judgment_of_elarion` | **El Juicio de Elarion** | Coste 3, Rápido; destruye un Apoyo enemigo o un Eco enemigo con Imponente o Volar. | La antigua ley del reino alcanza tanto piedra como alas. |
 | `elixir_of_the_first_leaf` | **Elixir de la Primera Hoja** | Coste 1, Rápido; un Eco gana +3/+3 hasta el final del turno. | Poder concentrado de los primeros guardianes élficos. |
 | `river_of_elarion` | **Río de Elarion** | 15 copias; Fuente que se Agota para agregar 1 de Energía. | Camino vivo que todavía recuerda dónde duerme Vaelor. |
 

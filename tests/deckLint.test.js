@@ -284,7 +284,7 @@ test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored 
     vaelor_emerald_guardian: "Al ser invocado: pon un contador -1/-1 sobre cada enemigo.",
     clash_of_echoes: "Elige un aliado. Ese aliado inflige daño igual a su Fuerza a un enemigo que elijas.",
     shield_of_the_heir: "Elige un aliado y un enemigo; el aliado gana +1/+2 hasta el final del turno. Después, ese aliado lucha contra ese enemigo.",
-    the_judgment_of_elarion: "Elige un Apoyo enemigo o un Eco enemigo con Volar; destrúyelo.",
+    the_judgment_of_elarion: "Elige uno:\n• Destruye un Apoyo enemigo.\n• Destruye un Eco enemigo con Imponente.\n• Destruye un Eco enemigo con Volar.",
     elixir_of_the_first_leaf: "Elige un Eco; el Eco elegido gana +3/+3 hasta el final del turno.",
     river_of_elarion: "Agota esta carta; agrega 1 de Energía.",
   });
@@ -297,6 +297,7 @@ test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored 
   const rootsTouchedSkyFilter = byId.the_judgment_of_elarion.abilities[0].targets[0].filters;
   assert.deepEqual(rootsTouchedSkyFilter.anyOf, [
     { kinds: ["SUPPORT"] },
+    { kinds: ["ECHO"], traits: ["DAUNTING"] },
     { kinds: ["ECHO"], traits: ["FLYING"] },
   ]);
 });
@@ -397,7 +398,7 @@ test("Zombies keep Hostfall card kinds and traits through authored normalization
     ossuary_rider: "Sin efecto adicional.",
     return_to_memory: "Al ser invocado o al morir: la Hueste descarta las 2 primeras cartas de su Archivo a su Memoria.",
     barrow_wallbreaker: "Sin efecto adicional.",
-    hound_of_seven_memories: "Mientras la Hueste tenga 7 o más cartas en su Memoria: este Eco gana +1/+1 e Imponente.",
+    three_eyed_corpse_gorger: "Mientras la Hueste tenga 3 o más cartas en su Memoria: este Eco gana +1/+1 e Imponente.",
     mastiff_of_the_overflowing_ossuary: "Mientras la Hueste tenga 7 o más cartas en su Memoria: este Eco gana Imponente.",
     spore_infested: "Sin efecto adicional.",
     harvester_of_the_fallen: "Cada vez que otro Zombi aliado muera: pon un contador +1/+1 sobre esta carta.",

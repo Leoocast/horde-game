@@ -1892,27 +1892,33 @@ test("Elixir de la Primera Hoja keeps +3/+3 through End and loses it when the tu
   assert.deepEqual(getPowerEndurance(passed, restored), { power: 2, endurance: 2 });
 });
 
-test("El Juicio de Elarion only offers legal permanent types and destroys The Broken Headstone", () => {
+test("El Juicio de Elarion offers Supports, Flying Echoes, and effectively Daunting Echoes", () => {
   const game = createTestGame();
   addSources(game, 3);
-  const grafHarvest = addCard(game, cardFromDeck("the_broken_headstone", "host"));
+  const headstone = addCard(game, cardFromDeck("the_broken_headstone", "host"));
   const flyer = addCard(game, customCard("test_flyer", "host", { traits: ["FLYING"] }));
+  const dauntingCreature = addCard(game, customCard("test_daunting_creature", "host", { traits: ["DAUNTING"] }));
+  const auraGrantedDauntingCreature = addCard(game, customCard("test_daunting_zombie", "host", { subtypes: ["Zombie"] }));
   const groundCreature = addCard(game, customCard("test_ground_creature", "host"));
   const alliedSupport = addCard(game, customCard("allied_support", "player", { kinds: ["SUPPORT"] }));
   const alliedFlyer = addCard(game, customCard("allied_flyer", "player", { traits: ["FLYING"] }));
+  const alliedDauntingCreature = addCard(game, customCard("allied_daunting_creature", "player", { traits: ["DAUNTING"] }));
   const spell = addCard(game, cardFromDeck("the_judgment_of_elarion", "player", "hand"), "player", "hand");
   const requirement = spell.requiresTargets[0];
 
   const candidateIds = targetCandidates(game, "player", requirement).map((card) => card.instanceId);
-  assert.equal(candidateIds.includes(grafHarvest.instanceId), true);
+  assert.equal(candidateIds.includes(headstone.instanceId), true);
   assert.equal(candidateIds.includes(flyer.instanceId), true);
+  assert.equal(candidateIds.includes(dauntingCreature.instanceId), true);
+  assert.equal(candidateIds.includes(auraGrantedDauntingCreature.instanceId), true);
   assert.equal(candidateIds.includes(groundCreature.instanceId), false);
   assert.equal(candidateIds.includes(alliedSupport.instanceId), false);
   assert.equal(candidateIds.includes(alliedFlyer.instanceId), false);
+  assert.equal(candidateIds.includes(alliedDauntingCreature.instanceId), false);
 
-  const result = castCard(game, spell.instanceId, { targets: { targetPermanent: grafHarvest.instanceId } });
-  assert.equal(result.host.field.some((card) => card.instanceId === grafHarvest.instanceId), false);
-  assert.equal(result.host.memory.some((card) => card.instanceId === grafHarvest.instanceId), true);
+  const result = castCard(game, spell.instanceId, { targets: { targetPermanent: auraGrantedDauntingCreature.instanceId } });
+  assert.equal(result.host.field.some((card) => card.instanceId === auraGrantedDauntingCreature.instanceId), false);
+  assert.equal(result.host.memory.some((card) => card.instanceId === auraGrantedDauntingCreature.instanceId), true);
 });
 
 test("Choque de Ecos deals source power and preserves deathtouch for death cleanup", () => {
@@ -2456,19 +2462,19 @@ test("destroying a Support does not emit Echo death events", () => {
   assert.deepEqual(game.eventQueue, []);
 });
 
-test("Memory threshold effects turn on exactly at seven Host cards", () => {
+test("Three-Eyed Corpse-Gorger awakens exactly at three Host Memory cards", () => {
   const game = createTestGame("memory-threshold");
-  const seventhMemoryHound = addCard(game, cardFromDeck("hound_of_seven_memories", "host"));
-  for (let index = 0; index < 6; index += 1) {
+  const corpseGorger = addCard(game, cardFromDeck("three_eyed_corpse_gorger", "host"));
+  for (let index = 0; index < 2; index += 1) {
     addCard(game, customCard(`memory_card_${index}`, "host", { zone: "memory" }), "host", "memory");
   }
 
-  assert.deepEqual(getPowerEndurance(game, seventhMemoryHound), { power: 3, endurance: 2 });
-  assert.equal(hasTrait(game, seventhMemoryHound, "DAUNTING"), false);
+  assert.deepEqual(getPowerEndurance(game, corpseGorger), { power: 3, endurance: 2 });
+  assert.equal(hasTrait(game, corpseGorger, "DAUNTING"), false);
 
-  addCard(game, customCard("memory_card_6", "host", { zone: "memory" }), "host", "memory");
-  assert.deepEqual(getPowerEndurance(game, seventhMemoryHound), { power: 4, endurance: 3 });
-  assert.equal(hasTrait(game, seventhMemoryHound, "DAUNTING"), true);
+  addCard(game, customCard("memory_card_2", "host", { zone: "memory" }), "host", "memory");
+  assert.deepEqual(getPowerEndurance(game, corpseGorger), { power: 4, endurance: 3 });
+  assert.equal(hasTrait(game, corpseGorger, "DAUNTING"), true);
 });
 
 test("Rider of the Third Charge and Rear-Guard Firebreather omit their sacrifice modes", () => {
