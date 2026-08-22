@@ -20,7 +20,7 @@ export const IDENTITY_VOCABULARY = {
   CHRONICLE: { en: "Chronicle", es: "Crónica" },
   HOST: { en: "Host", es: "Hueste" },
   CHAPTER: { en: "Chapter", es: "Capítulo" },
-  SURGE: { en: "Surge", es: "Oleada" },
+  SURGE: { en: "Surge", es: "Estampida" },
 } as const satisfies Record<string, LocalizedTerm>;
 
 export const ZONE_VOCABULARY = {

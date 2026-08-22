@@ -43,7 +43,7 @@ Estos documentos se conservan porque contienen decisiones o validaciones sin ter
   aparición de **Contemplar otro futuro**, y aplaza el handoff a una partida real preparada.
 - [`plans/learn_to_play_implementation_plan.md`](plans/learn_to_play_implementation_plan.md) —
   auditoría del framework, motor, producto y persistencia frente a ese flujo; las Fases 1 a 4 están
-  implementadas hasta el comienzo de la primera Oleada y las fases posteriores siguen abiertas.
+  implementadas hasta el comienzo de la primera Estampida y las fases posteriores siguen abiertas.
 - [`plans/guided_tutorial_system_plan.md`](plans/guided_tutorial_system_plan.md) — framework escalable
   de pausa, bloqueo, resaltado y explicación; sus fases están cerradas y la primera versión jugable
   de la Primera Semilla se encuentra en QA e iteración pedagógica.

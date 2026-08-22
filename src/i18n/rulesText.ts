@@ -201,7 +201,7 @@ const SPANISH_LOG_REPLACEMENTS: readonly Replacement[] = [
   [/\bDrain\b/g, "Drenar"],
   [/\bOverflow\b/g, "Desborde"],
   [/\bImpetus\b/g, "Ímpetu"],
-  [/\bSurge\b/g, "Oleada"],
+  [/\bSurge\b/g, "Estampida"],
   [/\bBattle\b/g, "Batalla"],
   [/\bReadies\b/g, "Prepara"],
   [/\bReady\b/g, "Preparar"],

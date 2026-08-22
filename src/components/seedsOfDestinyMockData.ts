@@ -41,7 +41,7 @@ export const SEEDS_OF_DESTINY_FIXTURE: readonly SeedFutureFixture[] = [
         verdict: "defeat",
         turn: 6,
         body: {
-          es: "La Preparación terminó con dos Fuentes y ningún Eco en el Campo. Cuando la primera Oleada cruzó la línea, no había nada que ponerle delante.",
+          es: "La Preparación terminó con dos Fuentes y ningún Eco en el Campo. Cuando la primera Estampida cruzó la línea, no había nada que ponerle delante.",
           en: "Setup ended with two Sources and no Echo on the Field. When the first Surge crossed the line, there was nothing to put in front of it.",
         },
         marks: [
@@ -86,7 +86,7 @@ export const SEEDS_OF_DESTINY_FIXTURE: readonly SeedFutureFixture[] = [
             en: "Vaelor, Emerald Guardian placed a -1/-1 counter on five enemies when Summoned.",
           },
           {
-            es: "El Juicio de Elarion retiró La Lápida Quebrada antes de la última Oleada.",
+            es: "El Juicio de Elarion retiró La Lápida Quebrada antes de la última Estampida.",
             en: "The Judgment of Elarion removed The Broken Headstone before the last Surge.",
           },
         ],
@@ -152,7 +152,7 @@ export const SEEDS_OF_DESTINY_FIXTURE: readonly SeedFutureFixture[] = [
         },
         marks: [
           {
-            es: "El Cronista jugó una sola Fuente antes de la primera Oleada.",
+            es: "El Cronista jugó una sola Fuente antes de la primera Estampida.",
             en: "The Chronicler played a single Source before the first Surge.",
           },
           {
@@ -183,7 +183,7 @@ export const SEEDS_OF_DESTINY_FIXTURE: readonly SeedFutureFixture[] = [
         verdict: "defeat",
         turn: 6,
         body: {
-          es: "El mismo turno, otra caída. El Cronista guardó Energía en la Reserva para el Juicio y la Oleada llegó un turno antes de lo previsto.",
+          es: "El mismo turno, otra caída. El Cronista guardó Energía en la Reserva para el Juicio y la Estampida llegó un turno antes de lo previsto.",
           en: "The same turn, another fall. The Chronicler saved Energy in Reserve for the Judgment and the Surge came a turn earlier than expected.",
         },
         marks: [
@@ -201,7 +201,7 @@ export const SEEDS_OF_DESTINY_FIXTURE: readonly SeedFutureFixture[] = [
         verdict: "defeat",
         turn: 9,
         body: {
-          es: "La reescritura más larga. Maela sostuvo las alturas cuatro turnos y el Archivo de la Hueste bajó hasta cinco cartas antes de que la última Oleada cerrara la historia.",
+          es: "La reescritura más larga. Maela sostuvo las alturas cuatro turnos y el Archivo de la Hueste bajó hasta cinco cartas antes de que la última Estampida cerrara la historia.",
           en: "The longest rewrite. Maela held the heights for four turns and the Host Archive dropped to five cards before the last Surge closed the story.",
         },
         marks: [
@@ -258,7 +258,7 @@ export const SEEDS_OF_DESTINY_FIXTURE: readonly SeedFutureFixture[] = [
         },
         marks: [
           {
-            es: "La primera Oleada llegó con el Campo del Cronista vacío.",
+            es: "La primera Estampida llegó con el Campo del Cronista vacío.",
             en: "The first Surge arrived with the Chronicler Field empty.",
           },
           {

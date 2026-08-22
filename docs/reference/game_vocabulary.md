@@ -30,7 +30,7 @@ reglas por sí misma.
 | Deck del jugador | Chronicle | Crónica |
 | Enemigo automatizado | Host | Hueste |
 | Partida | Chapter | Capítulo |
-| Escalada enemiga | Surge | Oleada |
+| Escalada enemiga | Surge | Estampida |
 
 Una Crónica es un registro incompleto de un episodio. Sus cartas son fragmentos de memoria con los
 que el Cronista reconstruye un Capítulo:

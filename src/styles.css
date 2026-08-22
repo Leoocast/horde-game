@@ -16781,12 +16781,8 @@
 
 .game-result-banner {
   position: relative;
-  display: grid;
-  width: min(980px, 90vw);
+  width: min(1180px, 92vw);
   height: 118px;
-  grid-template-columns: 1fr 1fr;
-  align-items: center;
-  gap: clamp(16px, 2.5vw, 30px);
   margin-top: 48px;
   animation: game-result-banner-in 1100ms cubic-bezier(0.18, 0.86, 0.2, 1) both;
 }
@@ -16796,7 +16792,7 @@
   z-index: -1;
   top: 50%;
   left: 50%;
-  width: min(540px, 62vw);
+  width: min(760px, 64%);
   height: 112px;
   border-top: 1px solid color-mix(in srgb, var(--result-accent) 30%, transparent);
   border-bottom: 1px solid color-mix(in srgb, var(--result-accent) 19%, transparent);
@@ -16808,6 +16804,10 @@
 }
 
 .game-result-line {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  min-width: 0;
   height: 1px;
   background: linear-gradient(90deg, transparent 0%, var(--result-accent) 28%, var(--result-accent) 62%, transparent 96%);
   box-shadow: 0 0 10px color-mix(in srgb, var(--result-accent) 45%, transparent);
@@ -16820,32 +16820,8 @@
   transform-origin: left center;
 }
 
-.game-result-crest {
-  position: absolute;
-  z-index: 2;
-  top: -76px;
-  left: 50%;
-  display: grid;
-  width: 66px;
-  height: 66px;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--result-accent) 78%, transparent);
-  background: linear-gradient(135deg, rgb(39 45 31 / 0.98), rgb(5 12 10 / 0.99));
-  color: var(--result-accent-bright);
-  box-shadow:
-    inset 0 0 0 4px rgb(2 8 6 / 0.84),
-    inset 0 0 0 5px color-mix(in srgb, var(--result-accent) 26%, transparent),
-    0 0 28px var(--result-accent-soft);
-  transform: translateX(-50%) rotate(45deg);
-  animation: game-result-crest-in 950ms cubic-bezier(0.14, 0.9, 0.22, 1.16) both;
-}
-
-.game-result-crest svg {
-  filter: drop-shadow(0 0 8px var(--result-accent-soft));
-  transform: rotate(-45deg);
-}
-
 .game-result-banner h1 {
+  --result-word-gap: 1.1em;
   position: absolute;
   z-index: 1;
   inset: 0;
@@ -16858,7 +16834,7 @@
   margin: 0;
   color: #e8e0c5;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(4rem, 9vw, 7.35rem);
+  font-size: clamp(2.9rem, 6.4vw, 5.3rem);
   font-weight: 500;
   letter-spacing: 0.12em;
   line-height: 1;
@@ -16868,14 +16844,24 @@
   animation: game-result-title-in 1050ms ease-out both;
 }
 
-.game-result-banner h1::before {
+/* El fondo del título se mide contra la palabra, nunca contra un ancho fijo: ESTAMPIDA necesita
+   más plancha que SURGE y una anchura literal dejaba la palabra larga fuera del fondo. El centro
+   es opaco de verdad —no 0.97— porque debajo pasan las reglas encendidas y cualquier resto de
+   transparencia deja ver la línea cruzando las letras. */
+.game-result-word {
+  position: relative;
+  flex: 0 0 auto;
+  margin: 0 var(--result-word-gap);
+}
+
+.game-result-word::before {
   position: absolute;
   z-index: -1;
   top: 50%;
   left: 50%;
-  width: min(760px, 82vw);
-  height: 112px;
-  background: linear-gradient(90deg, transparent, rgb(4 11 9 / 0.97) 14%, rgb(4 11 9 / 0.99) 50%, rgb(4 11 9 / 0.97) 86%, transparent);
+  width: calc(100% + var(--result-word-gap) * 2);
+  height: 1.15em;
+  background: linear-gradient(90deg, transparent, #040b09 24%, #040b09 76%, transparent);
   content: "";
   transform: translate(-50%, -50%);
 }
@@ -16935,12 +16921,6 @@
   to { opacity: 0.9; transform: scaleX(1); }
 }
 
-@keyframes game-result-crest-in {
-  0% { opacity: 0; filter: brightness(1.7); transform: translateX(-50%) rotate(45deg) scale(0.28); }
-  58% { opacity: 1; filter: brightness(1.2); transform: translateX(-50%) rotate(45deg) scale(1.12); }
-  100% { opacity: 1; filter: brightness(1); transform: translateX(-50%) rotate(45deg) scale(1); }
-}
-
 @keyframes game-result-title-in {
   0%, 12% { opacity: 0; filter: blur(6px); transform: translateY(8px); }
   42%, 100% { opacity: 1; filter: blur(0); transform: translateY(0); }
@@ -16949,7 +16929,11 @@
 /* La Victoria ya no usa el estandarte ni el panel genéricos: su desenlace vive con la
    constelación, al final de esta hoja, junto al de la derrota. */
 
-/* One-shot warning shown before the first Host turn that resolves in Surge. */
+/* One-shot warning shown before the first Host turn that resolves in Surge.
+   La variante vigente es «Reglas encendidas»: no se cuelga ningún objeto sobre el estandarte —el
+   medallón de la calavera está retirado— y el fuego lo llevan las dos reglas laterales que ya
+   existían, que además sueltan pavesas por sus extremos. La entrada dejó de usar filter: blur()
+   sobre capas a pantalla completa; ahora entra con escala y opacidad, que resuelve el compositor. */
 .surge-transition {
   --result-accent: #a93f2d;
   --result-accent-bright: #f0a06f;
@@ -16962,16 +16946,20 @@
   isolation: isolate;
   -webkit-backdrop-filter: blur(10px) saturate(0.65);
   backdrop-filter: blur(10px) saturate(0.65);
-  animation: surge-transition-life 2600ms cubic-bezier(0.45, 0, 0.22, 1) both;
+  animation: surge-transition-life 2300ms linear both;
 }
 
 .surge-transition .game-result-atmosphere {
   background:
     radial-gradient(ellipse at 50% 43%, rgb(160 43 25 / 0.42), transparent 34%),
     radial-gradient(ellipse at center, transparent 7%, rgb(8 0 0 / 0.8) 75%);
-  animation: surge-atmosphere-life 2600ms ease-in-out both;
+  animation: surge-atmosphere-life 2300ms ease-in-out both;
 }
 
+/* La grieta diagonal abre la presentación: se dibuja antes que el estandarte y pasa por detrás de
+   él, así que la palabra aterriza dentro del corte y no al lado. El desenfoque se conserva sólo
+   aquí —es un elemento de 3 px de ancho, no una capa a pantalla completa— porque es lo que le da
+   el destello al encenderse. */
 .surge-transition-rift {
   position: absolute;
   z-index: -1;
@@ -16982,63 +16970,127 @@
   background: linear-gradient(180deg, transparent, #d45f37 22%, #ffd09b 50%, #d45f37 78%, transparent);
   box-shadow: 0 0 18px #d34e2f, 0 0 70px rgb(164 38 24 / 0.72);
   transform: translateX(-50%) rotate(7deg);
-  animation: surge-rift-life 2600ms ease-in-out both;
+  animation: surge-rift-life 2300ms ease-in-out both;
 }
 
+/* El estandarte ya no entra como un bloque: placa, título y reglas tienen su propio tiempo, así
+   que el golpe cae en el título y no se reparte entre tres cosas rebotando a la vez. */
 .surge-transition .game-result-banner {
   margin-top: 0;
-  animation: surge-banner-life 2600ms cubic-bezier(0.16, 0.9, 0.26, 1) both;
+  animation: none;
 }
 
 .surge-transition .game-result-banner::before {
   background: linear-gradient(90deg, transparent, rgb(28 5 3 / 0.96) 14%, rgb(12 2 2 / 0.99) 50%, rgb(28 5 3 / 0.96) 86%, transparent);
+  animation: surge-plate-life 2300ms cubic-bezier(0.14, 0.88, 0.2, 1) both;
 }
 
 .surge-transition .game-result-banner h1 {
   color: #ead5c7;
   text-shadow: 0 3px 0 rgb(0 0 0 / 0.95), 0 0 28px rgb(210 67 39 / 0.52);
+  animation: surge-title-life 2300ms cubic-bezier(0.12, 0.9, 0.2, 1) both;
 }
+
+/* Las dos reglas eran un hilo de 1 px casi invisible; aquí son la brasa. El extremo interior
+   queda blanco porque nace junto a la palabra, y el exterior se enfría. */
+.surge-transition .game-result-line {
+  height: 2px;
+  transform-origin: right center;
+  background: linear-gradient(90deg, transparent 0%, rgb(196 74 42 / 0.9) 24%, #ffcf9c 62%, rgb(255 190 130 / 0.92) 100%);
+  box-shadow: 0 0 14px rgb(226 106 62 / 0.85), 0 0 34px rgb(164 38 24 / 0.5);
+  animation: surge-line-life 2300ms cubic-bezier(0.16, 0.86, 0.2, 1) both;
+}
+
+.surge-transition .game-result-line-right {
+  background: linear-gradient(90deg, rgb(255 190 130 / 0.92) 0%, #ffcf9c 38%, rgb(196 74 42 / 0.9) 76%, transparent 100%);
+  transform-origin: left center;
+}
+
+/* Las pavesas viven dentro de la propia regla, así que su reparto es relativo al tramo visible:
+   con ESTAMPIDA las reglas son cortas y las brasas se juntan; con SURGE se estiran. Nunca caen
+   sobre la palabra. Arrancan después de que la regla termine de abrirse, porque el scaleX del
+   padre deformaría una pavesa que ya estuviera en pantalla. */
+.surge-transition .game-result-line i {
+  position: absolute;
+  bottom: 0;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #ffc38b;
+  box-shadow: 0 0 8px 2px rgb(255 150 90 / 0.65);
+  animation: surge-ember-rise 1150ms ease-out both;
+}
+
+.surge-transition .game-result-line i:nth-child(1) { left: 6%;  --surge-ember-x: -11px; animation-delay: 520ms; }
+.surge-transition .game-result-line i:nth-child(2) { left: 27%; --surge-ember-x: 8px;   animation-delay: 760ms; }
+.surge-transition .game-result-line i:nth-child(3) { left: 48%; --surge-ember-x: -6px;  animation-delay: 600ms; }
+.surge-transition .game-result-line i:nth-child(4) { left: 69%; --surge-ember-x: 13px;  animation-delay: 900ms; }
+.surge-transition .game-result-line i:nth-child(5) { left: 89%; --surge-ember-x: -14px; animation-delay: 680ms; }
+
+.surge-transition .game-result-line-right i:nth-child(1) { animation-delay: 640ms; }
+.surge-transition .game-result-line-right i:nth-child(2) { animation-delay: 880ms; }
+.surge-transition .game-result-line-right i:nth-child(3) { animation-delay: 560ms; }
+.surge-transition .game-result-line-right i:nth-child(4) { animation-delay: 820ms; }
+.surge-transition .game-result-line-right i:nth-child(5) { animation-delay: 720ms; }
 
 .surge-transition-message {
   margin: 26px 0 0;
-  color: #c99175;
+  color: #dcac8c;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(0.72rem, 1.2vw, 0.95rem);
+  font-size: clamp(0.8rem, 1.32vw, 1.06rem);
   font-weight: 700;
-  letter-spacing: 0.3em;
-  text-shadow: 0 2px 12px #000, 0 0 14px rgb(183 61 38 / 0.42);
+  letter-spacing: 0.28em;
+  text-shadow: 0 2px 12px #000, 0 0 16px rgb(196 66 38 / 0.44);
   text-transform: uppercase;
-  animation: surge-message-life 2600ms ease-in-out both;
+  animation: surge-message-life 2300ms ease-out both;
 }
 
 @keyframes surge-transition-life {
   0% { opacity: 0; }
-  16%, 76% { opacity: 1; }
+  4%, 78% { opacity: 1; }
   100% { opacity: 0; }
 }
 
 @keyframes surge-atmosphere-life {
-  0% { opacity: 0; transform: scale(1.12); }
-  24%, 72% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.08); }
+  0% { opacity: 0; transform: scale(1.1); }
+  14%, 74% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.06); }
 }
 
 @keyframes surge-rift-life {
-  0%, 8% { opacity: 0; filter: blur(8px); transform: translateX(-50%) rotate(7deg) scaleY(0.1); }
-  30%, 68% { opacity: 0.9; filter: blur(0); transform: translateX(-50%) rotate(7deg) scaleY(1); }
+  0% { opacity: 0; filter: blur(8px); transform: translateX(-50%) rotate(7deg) scaleY(0.1); }
+  22%, 74% { opacity: 0.9; filter: blur(0); transform: translateX(-50%) rotate(7deg) scaleY(1); }
   100% { opacity: 0; filter: blur(9px); transform: translateX(-50%) rotate(7deg) scaleY(0.35); }
 }
 
-@keyframes surge-banner-life {
-  0%, 8% { opacity: 0; filter: blur(7px); transform: translateY(15px) scale(0.88); }
-  28%, 72% { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
-  100% { opacity: 0; filter: blur(8px); transform: translateY(-9px) scale(1.08); }
+@keyframes surge-plate-life {
+  0%, 2% { opacity: 0; transform: translate(-50%, -50%) scaleX(0.42); }
+  17%, 78% { opacity: 1; transform: translate(-50%, -50%) scaleX(1); }
+  100% { opacity: 0; transform: translate(-50%, -54%) scaleX(1.04); }
+}
+
+@keyframes surge-title-life {
+  0%, 4% { opacity: 0; transform: scale(1.2); }
+  15%, 78% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.05); }
+}
+
+@keyframes surge-line-life {
+  0%, 4% { opacity: 0; transform: scaleX(0); }
+  20%, 78% { opacity: 0.95; transform: scaleX(1); }
+  100% { opacity: 0; transform: scaleX(1); }
+}
+
+@keyframes surge-ember-rise {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.55); }
+  16% { opacity: 1; }
+  70%, 100% { opacity: 0; transform: translate(var(--surge-ember-x), -44px) scale(1); }
 }
 
 @keyframes surge-message-life {
-  0%, 24% { opacity: 0; letter-spacing: 0.46em; transform: translateY(8px); }
-  38%, 72% { opacity: 1; letter-spacing: 0.3em; transform: translateY(0); }
-  100% { opacity: 0; letter-spacing: 0.38em; transform: translateY(-5px); }
+  0%, 20% { opacity: 0; letter-spacing: 0.44em; transform: translateY(6px); }
+  33%, 76% { opacity: 1; letter-spacing: 0.28em; transform: translateY(0); }
+  100% { opacity: 0; letter-spacing: 0.36em; transform: translateY(-4px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -17054,18 +17106,15 @@
   .game-result-banner {
     width: 96vw;
     height: 96px;
-    grid-template-columns: 1fr 1fr;
-    gap: 11px;
     margin-top: 36px;
   }
-  .game-result-crest { top: -58px; width: 46px; height: 46px; }
-  .game-result-crest svg { width: 24px; height: 24px; }
   .game-result-banner h1 {
+    --result-word-gap: 0.7em;
     min-width: 0;
-    font-size: clamp(2.9rem, 14vw, 4.6rem);
+    font-size: clamp(1.9rem, 8.4vw, 3rem);
     letter-spacing: 0.07em;
   }
-  .game-result-banner::before { width: 72vw; height: 92px; }
+  .game-result-banner::before { width: 76%; height: 92px; }
 }
 
 /* Deck collection themes — the same accent-driven language used by result dialogs. */

@@ -164,6 +164,11 @@ Contratos principales:
 - Recurso único: Energía, con `energyPool.available` y `energyPool.stored`.
 - Estadísticas: Fuerza y Aguante (`power`, `endurance`).
 - Estados: `exhausted`, `stabilizing`, attacking y defending según el contexto.
+- La escalada de la Hueste se llama `Surge` / **Estampida**, y su escalón previo, `Mini Surge` /
+  **Estampida menor**. «Oleada» quedó retirada del vocabulario el 2026-08-21 por falta de impacto y
+  por pertenecer al campo semántico del mar. El único «Oleada» que sobrevive es el nombre de sabor
+  de `marshal_of_the_wave` —**Mariscal de la Oleada**, traducción de *Marshal of the Wave*—, que no
+  nombra la regla y no debe alinearse con ella.
 - Letal se describe como «Si este Eco hace cualquier cantidad de daño a otro Eco, ese Eco muere»;
   no se usa «daño positivo» ni se define el Rasgo con la propia palabra «letal».
 
@@ -215,7 +220,7 @@ almacenada es 3.
 ### Hueste
 
 No tiene Vida ni Mano. Usa Archivo, Campo, Memoria y Olvido. Su `rulesProfile`, authorizado en el
-JSON del deck, define revelados, Mini Oleada, Oleada, descarte por daño/Veneno e Ímpetu.
+JSON del deck, define revelados, Estampida menor, Estampida, descarte por daño/Veneno e Ímpetu.
 
 - Revela automáticamente y se detiene según el perfil del deck.
 - Ataca con todos los Ecos capaces; no toma decisiones tácticas.
@@ -446,9 +451,21 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   reglas laterales, título en dos líneas que se abren desde el centro con su corte de luz, subtítulo
   y placa de **Futuro** con los dos rombos del canto. Copiar identidad vive en el canto de la placa
   y las dos salidas son las mismas. El estandarte y el panel genéricos de resultado quedaron
-  retirados: sólo la Oleada los conserva.
+  retirados: sólo la Estampida los conserva.
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado
   aunque los impactos visuales se escalonen.
+
+La transición de Estampida usa **Reglas encendidas**: el estandarte no lleva ningún objeto colgado
+—el medallón de la calavera está retirado— y el fuego lo llevan las dos reglas laterales, que suben
+a 2 px, se vuelven brasa y sueltan pavesas desde dentro de su propio tramo. Las reglas son hermanas
+de la palabra dentro del `h1`, no columnas de una rejilla: crecen desde el borde del fondo del
+título hacia fuera, así que su extremo caliente queda siempre visible y el reparto se adapta solo a
+`ESTAMPIDA` o a `SURGE`. El fondo del título se mide contra la palabra —`calc(100% + gap * 2)`— y su
+centro es opaco de verdad; un ancho fijo dejaba fuera la palabra larga y cualquier transparencia
+dejaba ver la regla cruzando las letras. La entrada dura 2300 ms y conserva la **grieta diagonal**
+de 3 px a 7°, que abre la presentación y pasa por detrás del estandarte: la palabra aterriza dentro
+del corte. Su desenfoque de encendido es la única excepción viva a la prohibición de `filter:
+blur()`, porque actúa sobre un elemento de 3 px de ancho y no sobre una capa a pantalla completa.
 
 Consultar `docs/reference/animation_contracts.md` antes de tocar combate, revelados, muerte, buffs, Burn o
 activaciones estáticas.
@@ -565,7 +582,7 @@ robos de Preparación y cinco ventanas potenciales de Hueste. Sus perfiles versi
 objetivo de presión. El analyzer conserva un heap top-K acotado. Sus finalistas se reconstruyen con `createInitialGame` y
 `mulliganOpeningHand`; sólo después pasan de `unchecked` a `structurally-valid`. No simula acciones,
 no usa Zustand y nunca declara una seed ganable, imposible o divertida. La proyección de Hueste usa
-stats impresos y reglas de revelado/Mini Oleada/Oleada, pero no ejecuta efectos que alteran el
+stats impresos y reglas de revelado/Estampida menor/Estampida, pero no ejecuta efectos que alteran el
 Archivo. El benchmark manual vive en `scripts/benchmark-seed-explorer.mjs`; sus tiempos son
 diagnóstico local, no assertions de CI.
 
@@ -767,17 +784,17 @@ de Elarion contra los Sinsepulcro con seed preparada y ayudas contextuales. **Ap
 el tutorial obligatorio y **Preparación** será opcional; ambos podrán repetirse desde **Cómo jugar**.
 El recorrido authored todavía no está completo y no se activará como gate de primera apertura
 hasta completar su handoff. Las Fases técnicas 1 a 3 y la implementación de la Fase 4 hasta el
-comienzo real de la primera Oleada quedaron entregadas el 2026-08-17:
+comienzo real de la primera Estampida quedaron entregadas el 2026-08-17:
 existe un stream semántico pasivo por sesión que observa también
 partidas normales, y el motor tipa los rechazos necesarios para límite de Fuentes, Acción de Fuente
 usada, Estabilizándose, Agotado, Volar/Guardia aérea, Furtivo, defensor ya asignado y fase
 incorrecta. El
-prólogo queda diseñado desde el cold open hasta una derrota predeterminada: la primera Oleada usa
+prólogo queda diseñado desde el cold open hasta una derrota predeterminada: la primera Estampida usa
 ramas equivalentes de Ladrones, Titán y Soldado; el turno posterior enseña Mano vacía y Devolver
 Fuente; y el cierre authored calcula el mejor resultado defensivo antes de Invocar un Titán y los
 Soldados necesarios para que el ataque sea letal. Tres Soldados dentro del Archivo protegen al Titán
 terminal de los descartes opcionales; Choque conserva su ventana legal y la posición del Titán puede
-variar. Esa Invocación terminal no redefine la regla normal de Oleada y cada llegada se presenta una
+variar. Esa Invocación terminal no redefine la regla normal de Estampida y cada llegada se presenta una
 a una mediante el revelado normal, sin agrupación visual. El CTA único se llama **Contemplar otro
 futuro**. Al activarlo registra la finalización, ejecuta el vórtice y carga la Primera Canon Seed
 aprobada `HF1-ELA-GRV-082-QC5`: Elarion contra los Sinsepulcro, Normal y Preparación 3. La
@@ -796,7 +813,7 @@ el schema guiado v1 para **Preparación** y separar: observaciones semánticas s
 runtime/progreso por concepto, director efímero de **Aprender a jugar** y catálogo de producto. El
 builder exacto, anchors, barrera de presentación y overlay estricto se reutilizan. Los receipts
 guiados ahora alimentan el stream mediante un adaptador y las transiciones comprometidas proyectan
-turno, robo, Reserva, Fuentes preparadas, revelados, Oleada, orden de ataque, Vida y resultado sin
+turno, robo, Reserva, Fuentes preparadas, revelados, Estampida, orden de ataque, Vida y resultado sin
 leer el log. `ContextualTutorialRuntime` evalúa un registro de conceptos, ordena por prioridad,
 deduplica por partida y revalida el contexto antes de presentar. Su callout reutiliza anchors,
 geometría y glosario sin instalar el escudo global; las ayudas informativas y reactivas no bloquean,
@@ -806,7 +823,7 @@ añade conceptos, recorridos y la preferencia global de repetición. En partidas
 se confirma al cerrar la ayuda; el modo provisional permite commit atómico o rollback total para el
 futuro prólogo. El registro de producto contiene ya los conceptos contextuales del primer tramo:
 defensa y orden de izquierda a derecha, Volar/Guardia aérea, Vida, Reserva y Fuentes preparadas,
-Estabilizándose, ataque al Archivo, agotamiento del atacante y Oleada. Las ayudas no vistas pueden
+Estabilizándose, ataque al Archivo, agotamiento del atacante y Estampida. Las ayudas no vistas pueden
 aparecer en una partida normal compatible y se confirman globalmente; los fixtures sintéticos del
 Playground siguen aislados en development. Las acciones estructurales imprescindibles reutilizan la
 guía actual. El plan se ejecuta fase por fase con
@@ -829,7 +846,7 @@ Cronista y la cuarta Fuente que completa el contenedor de Energía inferior izqu
 Aelyra con objetivo libre; el director deja defensa libre, exige Vaelor, hace obligatoria una única
 inspección de la Cosechadora y permite Flor antes, después o nunca. Las pruebas enumeran todas las
 defensas legales y esas ramas, que convergen en Cosechadora 7/9, y certifican cero o un descarte
-opcional antes de la primera Oleada. El recorrido ya continúa después de `host.surgeStarted`: los
+opcional antes de la primera Estampida. El recorrido ya continúa después de `host.surgeStarted`: los
 Ladrones vacían la Mano, la regla real roba Choque + Río —Río queda a la derecha—, y jugar la quinta Fuente o intentar
 avanzar activa una intervención estricta breve para **Devolver Fuente**. Ciudad, Choque, Flor y el
 ataque posterior permanecen libres. Tres Soldados authored absorben los descartes opcionales antes
@@ -841,7 +858,7 @@ nunca se enseña que se «Invocan cartas». El glosario usa términos separados 
 Hueste** —la pila de Ecos aún no Invocados— y **Archivo del Cronista** —la pila de Ecos y Fuentes aún
 no robados—, de modo que el subrayado cubre la frase completa. Vida se define sólo como la
 supervivencia del Cronista y Reserva explica que conserva hasta 3 de Energía para el turno siguiente
-y la utiliza antes que las Fuentes. En la primera Oleada el orden es contractual: termina la
+y la utiliza antes que las Fuentes. En la primera Estampida el orden es contractual: termina la
 animación, aparece su ayuda contextual sobre el tablero asentado y sólo al aceptarla se revelan los
 Ecos. La ayuda de Mano vacía no ilumina la Mano. En el desenlace de Aprender a jugar, tanto
 **Futuro perdido** como **Contemplar otro futuro** quedan centrados horizontalmente.

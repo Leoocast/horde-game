@@ -15,7 +15,7 @@ Derrota con presión de combate; el resumidor no atribuye el desenlace a un solo
 Titán Sinsepulcro atravesó el Campo sin defensor e infligió 5 de daño.
 
 - El Cronista perdió 4 de Vida de una sola vez.
-- Cuando comenzó la primera Oleada, el Campo del Cronista albergaba 0 Ecos y 2 Fuentes.
+- Cuando comenzó la primera Estampida, el Campo del Cronista albergaba 0 Ecos y 2 Fuentes.
 
 ### English
 
@@ -122,7 +122,7 @@ Un cierre inesperado conserva hitos observados, pero nunca inventa victoria o de
 
 ### Español
 
-Cuando comenzó la primera Oleada, el Campo del Cronista albergaba 2 Ecos y 3 Fuentes.
+Cuando comenzó la primera Estampida, el Campo del Cronista albergaba 2 Ecos y 3 Fuentes.
 
 - El Archivo de la Hueste llegó a quedarse con apenas 8 Ecos.
 - Vaelor, Guardián Esmeralda hizo daño a 2 objetivos.

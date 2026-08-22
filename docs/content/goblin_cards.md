@@ -74,7 +74,7 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 - Si la Hueste controla al menos una criatura, todas sus criaturas reciben +2/+0 hasta el fin del
   turno. El Hechizo se presenta junto al Archivo y el bono aterriza con el buff compartido.
 - Si no controla criaturas, ejecuta inmediatamente otra ronda normal de revelado dentro del mismo
-  turno, sin sumar otra Mini Oleada u Oleada.
+  turno, sin sumar otra Estampida menor o Estampida.
 
 ## Oso de Guerra Corrompido (`corrupted_war_bear`)
 

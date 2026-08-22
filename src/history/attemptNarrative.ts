@@ -324,7 +324,7 @@ function renderMilestone(milestone: AttemptMilestone, language: NarrativeLanguag
   if (language === "es") {
     switch (milestone.kind) {
       case "first-surge-field":
-        return `Cuando comenzó la primera Oleada, el Campo del Cronista albergaba ${milestone.echoCount} ${plural(milestone.echoCount, "Eco", "Ecos")} y ${milestone.sourceCount} ${plural(milestone.sourceCount, "Fuente", "Fuentes")}.`;
+        return `Cuando comenzó la primera Estampida, el Campo del Cronista albergaba ${milestone.echoCount} ${plural(milestone.echoCount, "Eco", "Ecos")} y ${milestone.sourceCount} ${plural(milestone.sourceCount, "Fuente", "Fuentes")}.`;
       case "unblocked-attack": {
         if (milestone.attackerName) {
           return `${localized(milestone.attackerName, language)} atravesó el Campo sin defensor e infligió ${milestone.totalDamage} de daño.`;
