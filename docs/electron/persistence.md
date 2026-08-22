@@ -27,6 +27,18 @@ candidatos futuros para Steam Auto-Cloud. `local/window-state-v1.json` depende d
 coordenadas, maximizado y pantalla completa de esa PC, por lo que nunca debe sincronizarse. Los logs
 y copias diagnósticas tampoco.
 
+| Dato | Backup local | Candidato Cloud | Política |
+| --- | --- | --- | --- |
+| `profile/preferences-v1.json` | `.bak` contiguo | Sí | Preferencias públicas y progreso mínimo de lecciones. |
+| `profile/seed-history-v1.json` | `.bak` contiguo | Sí | Historial factual y Semillas exactas; independiente de resume. |
+| `profile/saves/resume-v1.json` | `.bak` contiguo | Sí, sólo Early Access | Infraestructura conservada pero inactiva en la demo. |
+| `profile/diagnostics/seed-history-reset-*.json` | No | No | Copia local de recuperación antes de un reset destructivo. |
+| `local/window-state-v1.json` | `.bak` contiguo | No | Estado específico de monitores y ventana. |
+| `logs/` | Según logger | No | Diagnóstico local, nunca estado de producto. |
+
+Esta clasificación documenta intención; no afirma que Steam Auto-Cloud esté configurado. Sus roots,
+filtros y prueba entre máquinas se certifican al congelar la demo.
+
 Los boards y replays del Playground conservan sus namespaces de desarrollo en `localStorage`. No
 se migran a `profile`, no aparecen dentro del envelope de resume y no se empaquetan en release.
 
@@ -66,6 +78,11 @@ diferidos, combate declarado, selección manual con consecuencias ni presentaci�
 cerrar durante Burn, una secuencia de la Hueste o una elección restaura el checkpoint estable
 anterior. Un schema, revisión o deck ausente se rechaza: nunca se sustituye silenciosamente por el
 deck predeterminado.
+
+La demo no lee, escribe ni ofrece este slot mediante su capability de producto. Un futuro
+`resume-v2` deberá enlazar explícitamente el checkpoint con `attemptId` y definir si el recovery
+continúa o cierra ese intento; ambas decisiones pertenecen a Early Access y no se infieren desde el
+historial v1.
 
 ## Preferencias y lifecycle
 

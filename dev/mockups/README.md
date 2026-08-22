@@ -50,6 +50,10 @@ vfx/                exploraciones de efectos
   el icono de `lucide-react` en uso, en tres familias de trazo y en el tamaño real de la insignia de
   24 px y de la píldora del preview.
 
+- `vfx/surge-ember.html` — segunda ronda sobre la brasa elegida: cinco posiciones que apoyan el fuego en el
+  estandarte en vez de colgarlo del hueco del medallón, cuatro direcciones no relacionadas con el fuego y un
+  selector de palabra para comparar «Oleada» con Embate, Tromba, Avalancha, Estampida, Asalto, Desborde y el
+  «Surge» inglés en el tamaño real del cartel.
 - `vfx/surge-crest.html` — la Oleada sin el medallón de la calavera: seis remates para el canto superior
   del estandarte (vacío, muesca del propio marco, la grieta clavada, los rombos de la placa de Futuro, marcas
   de cuenta y una brasa viva), cada uno con su entrada afinada, reloj y control de velocidad. Comparte escenario

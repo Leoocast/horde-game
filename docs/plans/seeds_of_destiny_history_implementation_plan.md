@@ -1,6 +1,6 @@
 # Plan por fases — historial de Semillas del Destino para la demo
 
-Estado: **Fases 1–6 completadas; integración automática de la Fase 7 completada, QA visual pendiente**.
+Estado: **cerrado como feature de desarrollo el 2026-08-21; certificación de release diferida**.
 
 Última actualización: **2026-08-21**.
 
@@ -170,17 +170,18 @@ Una interrupción posterior no borra una victoria previa.
 | --- | --- | --- |
 | Identidad de Futuro | `MatchOrigin` separa la identidad pública de `GameState.seed`; Setup, Header, Reescribir, resultado y biblioteca usan `canonCode`. | Cerrada: el view-model conserva la identidad completa y nunca agrupa por el código cosmético. |
 | Canon Seed reproducible | El producto normal y Seed Explorer decodifican HF1 y entregan sólo su entropía a `createInitialGame`. | Cerrada: la biblioteca resuelve el mismo `MatchOrigin` y lo entrega al launcher compartido. |
-| Reiniciar el mismo origen | `reset` y `DestinyRewriteTransition` ya conservan seed y configuración de la sesión viva. | La pantalla de historial no puede entregar todavía una identidad persistida a `App`. |
-| Detectar resultado | `GameState.winner`, `triggerEndGame` y la señal `game.ended`. | Ningún consumidor crea un registro de intento. |
-| Observar hitos | `gameplaySignalStream` observa también partidas normales y emite turnos, robos, Oleadas, atacantes, Vida y Archivo. | Es efímero, conserva sólo 256 señales y no cubre aún todos los hitos candidatos. |
+| Reiniciar el mismo origen | `DestinyRewriteTransition`, `resolveFutureIdentity` y `App` comparten el `MatchOrigin` exacto de la sesión viva o persistida. | Cerrada: una identidad incompatible permanece visible pero nunca recibe un fallback de replay. |
+| Detectar resultado | `game.ended` instala el gate del `MatchLifecycleCoordinator` antes del desenlace visual. | Cerrada: victoria/derrota, salida explícita y recovery de activos cierran un único `attemptId`. |
+| Observar hitos | `gameplaySignals.ts` fotografía hechos directos y `attemptMilestones.ts` conserva un conjunto acotado por sesión. | Cerrada para el vocabulario aprobado; no pretende cubrir análisis estratégico ni causalidad compleja. |
 | Log | `GameState.log` conserva strings y `GameLog` los clasifica mediante expresiones regulares. | No es un contrato estable ni una fuente aceptable para historial o relato. |
-| Resume desktop | `resume-v1`, checkpoints seguros, backup, recuperación e IPC explícito. | Es un snapshot jugable, no historial. En la UI actual **Continuar** puede aparecer deshabilitado. |
-| Escritura durable | `DesktopJsonStore` serializa escrituras y usa temporal, `fsync`, rename y `.bak`, con límite de 5 MiB. | Falta una ruta y canales explícitos para historial. |
-| Web | Preferencias y progreso guiado tienen adapters `localStorage`. | No existe namespace de historial. |
-| Pantalla | `SeedsOfDestinyScreen` consume el snapshot persistido y conserva índice, duelo, intentos y reescritura. | Sólo queda el QA visual/foco final de la Fase 7. |
+| Resume desktop | `resume-v1`, checkpoints seguros, backup, recuperación e IPC explícito permanecen detrás de una capability. | Cerrada para demo: **Continuar** no se renderiza y resume no se lee ni muta; `resume-v2` pertenece a Early Access. |
+| Escritura durable | `HistoryService`, adapters web/desktop, IPC dedicado, backup, promoción, cuarentena, retry y límite de 5 MiB. | Cerrada; la configuración real de Steam Cloud se hará durante el release. |
+| Web | `hostfall-history:v1`, backup, Web Locks, BroadcastChannel y fallback sólo lectura. | Cerrada. |
+| Pantalla | `SeedsOfDestinyScreen` presenta estados de salud, relato/fallback factual, replay exacto e intento más reciente abierto con rombo activo. | Cerrada como feature de desarrollo. |
 
-Conclusión: no existe ningún historial parcial que deba migrarse. Sí existen las costuras correctas
-para resultado, identidad, observabilidad y persistencia atómica.
+Conclusión: el historial, el relato acotado y la reescritura exacta están integrados; no existe un
+historial parcial previo que deba migrarse. La certificación del paquete distribuible se repite al
+congelar la demo.
 
 ## Arquitectura objetivo
 
@@ -302,8 +303,8 @@ promesa de calendario.
 | 4 | Persistencia, recuperación y corrupción | No |
 | 5 | Grabación completa del lifecycle | No |
 | 6 | Biblioteca factual y replay exacto | No |
-| 7 | Relato/hitos opcionales y QA integrado | Sí: copia/importación Canon, cierre forzado y lectura visual |
-| 8 | Gates de release y documentación | No |
+| 7 | Relato/hitos opcionales y QA integrado | Diferido al freeze: copia/importación Canon, cierre forzado y lectura visual |
+| 8 | Cierre de desarrollo y contrato de recertificación | No |
 
 ### Fase 0 — Auditoría y contrato
 
@@ -633,7 +634,7 @@ El cierre vive en `tests/historyViewModel.test.js` y en los guards actualizados 
 
 ### Fase 7 — Integración opcional del relato y QA de producto
 
-Estado: **integración completada el 2026-08-21; pendiente la validación manual indicada abajo**.
+Estado: **cerrada por decisión del usuario el 2026-08-21**.
 
 Si la Fase 1 terminó en **Relato aprobado**:
 
@@ -662,7 +663,7 @@ la suite completa pasó con 643 pruebas.
 Los escenarios de victoria, derrota, salida explícita, deduplicación y replay exacto son gates
 automáticos de las fases anteriores; no se delegan al usuario.
 
-**Validación del usuario necesaria, en la aplicación desktop:**
+**Matriz manual que se repetirá al congelar la demo:**
 
 1. copiar una Canon Seed desde la partida, importarla en Preparación y confirmar visualmente que
    recupera Crónica, Hueste, dificultad y la misma Mano inicial;
@@ -672,20 +673,28 @@ automáticos de las fases anteriores; no se delegan al usuario.
 3. aprobar la lectura visual final —estado vacío, tres estados, disclosure/chevrón y foco— en
    1024×640; si el relato fue aprobado, confirmar también su tono en contexto.
 
-### Fase 8 — Hardening de demo y documentación
+### Fase 8 — Cierre de desarrollo y futura certificación de release
 
-- Ejecutar tipos, suite completa, `build:web`, `audit:offline`, `electron:package`,
-  `electron:verify` y `electron:smoke`, en ese orden.
-- Verificar que el renderer release conserva historial pero no herramientas dev ni fixtures falsos.
-- Añadir `seed-history-v1.json` a la documentación de datos Cloud-worthy y al inventario de backups.
-- Documentar el launcher Canon player-facing, el registro de compatibilidad HF1 y sus golden vectors.
-- Documentar que el código de resume permanece cubierto, pero vincular `resume-v2` con `attemptId` y
-  decidir el recovery de una partida reanudable son trabajo explícito de Early Access.
-- Actualizar `CLAUDE.md`, `docs/README.md`, `docs/electron/persistence.md` y este tracking con el estado
-  real, sin marcar fases cerradas antes de su verificación.
+Estado: **cierre de desarrollo completado el 2026-08-21; certificación de release diferida**.
 
-**Cierre:** demo sin Continuar, historial durable y reescritura exacta pasan todos los gates de
-release; cualquier narrativa permanece opcional y factual.
+El cierre ejecutado ahora comprende:
+
+- TypeScript, suite completa de 643 pruebas, `build:web` y `audit:offline` con cero blockers;
+- confirmación automática de que el renderer construido conserva historial y excluye tooling dev;
+- documentación de `seed-history-v1.json`, sus backups y su clasificación Cloud-worthy;
+- contrato vigente del launcher Canon, registro HF1 y golden vectors en `CLAUDE.md` y
+  `docs/guides/testing.md`;
+- separación explícita de `resume-v2`/`attemptId` como trabajo de Early Access;
+- actualización de la documentación canónica y cierre de este plan.
+
+No se generó un instalador ni se declaró la demo lista para publicar. Al congelar contenido se deben
+repetir, sobre el árbol definitivo, tipos, suite, `build:web` y `audit:offline`, y completar entonces
+`electron:package`, `electron:verify`, `electron:smoke`, la configuración real de Steam Cloud y la
+matriz manual de la Fase 7.
+
+**Cierre:** Semillas del Destino queda cerrada como feature de desarrollo: demo sin Continuar,
+historial durable, relato factual y reescritura exacta. El hardening comercial permanece en el plan
+general de release, no como una fase abierta de esta feature.
 
 ## Fuera del alcance de la demo
 

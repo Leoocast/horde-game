@@ -687,7 +687,9 @@ mutarlo: ordena intentos por `sequence`, deriva preservado/perdido/interrumpido,
 de `Futuro NNN·NNN` y sólo expone un `replayOrigin` si `resolveFutureIdentity` certifica identidad,
 decks y revisiones. `SeedsOfDestinyScreen` no importa el fixture: muestra carga, vacío, recuperación,
 degradado, lleno y corrupción; sus disclosures presentan resultado, turno, relato estructurado cuando
-existe un hito aprobado y hechos finales como fallback factual. Canon copia `canonCode`; opaque oculta la copia pública y conserva replay
+existe un hito aprobado y hechos finales como fallback factual. Al entrar o cambiar de Futuro abre
+el intento más reciente; sólo el disclosure activo rellena su rombo en dorado. Canon copia
+`canonCode`; opaque oculta la copia pública y conserva replay
 local compatible. `App` lanza la acción por el destino `history-replay` del mismo vórtice y crea un
 intento nuevo únicamente después de cubrir y comprometer el reset exacto. Nunca añadir un fallback
 de decks ni reinterpretar una identidad incompatible. El fixture antiguo queda sólo como laboratorio
@@ -704,8 +706,14 @@ acoplada a `GameState`: `gameplaySignals.ts` fotografía únicamente los hechos 
 commit y `attemptMilestones.ts` conserva por sesión el ejemplar más significativo de cada clase. El
 lifecycle persiste esos hitos al cierre y la biblioteca vuelve a renderizarlos según el idioma
 activo; registros viejos o sin hitos conservan sólo sus hechos finales. El usuario aprobó
-**Relato** como primera versión el 2026-08-21 y la integración automática de la Fase 7 quedó
-completada ese mismo día; falta su QA visual en producto.
+**Relato** como primera versión el 2026-08-21 y cerró la integración como feature de desarrollo ese
+mismo día.
+
+El cierre de desarrollo de Semillas del Destino pasó TypeScript, 643 pruebas, `build:web` y
+`audit:offline` con cero blockers. No equivale a certificación de release: cuando la demo congele
+contenido se repiten esos gates y se ejecutan además `electron:package`, `electron:verify`,
+`electron:smoke`, la matriz manual desktop y la configuración real de Steam Cloud. No generar ni
+actualizar inventarios de release sólo para revalidar esta feature durante desarrollo.
 
 La Fase 2 está implementada y la Fase 5 activó su segunda capability.
 `src/product/productCapabilities.ts` selecciona `DEMO_CAPABILITIES`: **Continuar** no se renderiza,

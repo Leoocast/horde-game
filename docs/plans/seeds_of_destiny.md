@@ -2,8 +2,8 @@
 
 Nota de diseño para la narrativa del tutorial y el historial de partidas de Hostfall.
 El control de reescritura, la identidad Canon, el registro factual, la biblioteca personal y la
-integración automática del relato ya están implementados. Falta validar su lectura visual en la
-aplicación desktop. La auditoría, el
+integración automática del relato quedaron cerrados como feature de desarrollo el 2026-08-21. La
+certificación del paquete distribuible se repetirá cuando la demo congele contenido. La auditoría, el
 contrato de demo y el orden verificable viven en
 [`seeds_of_destiny_history_implementation_plan.md`](seeds_of_destiny_history_implementation_plan.md).
 
@@ -50,6 +50,8 @@ La idea central se resume así:
 - Los intentos nuevos conservan hitos semánticos acotados y los disclosures los convierten en un
   relato ES/EN en el idioma activo; registros viejos o sin un hito claro mantienen el resumen
   factual de Vida y Archivo.
+- Al abrir la biblioteca o cambiar de Futuro se despliega el intento más reciente; el rombo dorado
+  relleno identifica exclusivamente el intento activo.
 
 El relato no analiza el log ni intenta explicar decisiones. Sólo selecciona acontecimientos directos
 capturados durante la transición que los produjo y conserva los hechos finales independientemente.
@@ -73,8 +75,8 @@ capturados durante la transición que los produjo y conserva los hechos finales 
 - La identidad persistida incluye `canonCode`/entropía o seed libre, Crónica, Hueste, dificultad,
   modo, turnos de Preparación y revisiones compatibles de contenido/reglas; el código
   `Futuro NNN·NNN` sigue siendo sólo una etiqueta cosmética.
-- El relato se validó con fixtures aislados y el usuario aprobó su primera voz. La Fase 7 ya lo
-  conecta al runtime sin leer `game.log`; queda pendiente aprobar su lectura visual en contexto.
+- El relato se validó con fixtures aislados, el usuario aprobó su primera voz y la Fase 7 lo conectó
+  al runtime sin leer `game.log`.
 
 Una HF1 generada por el juego es **Canon** y reproducible. **Oficial** queda reservado a códigos
 curados que aparezcan en un catálogo bundled de Hostfall; no es una propiedad de cualquier partida
