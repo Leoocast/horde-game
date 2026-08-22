@@ -3,6 +3,7 @@ import { gameplaySignalStream } from "../guidance/gameplaySignals";
 import { PRODUCT_CAPABILITIES } from "../product/productCapabilities";
 import { useGameStore } from "../store/useGameStore";
 import { createHistoryServiceForCurrentPlatform } from "./createHistoryService";
+import { AttemptMilestoneCollector } from "./attemptMilestones";
 import { createEmptyHistoryEnvelopeV1 } from "./historyDomain";
 import type { HistoryResetResult, HistoryServiceSnapshot } from "./historyService";
 import {
@@ -14,6 +15,7 @@ import {
 const historyService = PRODUCT_CAPABILITIES.seedHistory
   ? createHistoryServiceForCurrentPlatform()
   : undefined;
+const attemptMilestoneCollector = new AttemptMilestoneCollector();
 
 const DISABLED_HISTORY_SNAPSHOT: HistoryServiceSnapshot = Object.freeze({
   phase: "ready",
@@ -51,6 +53,7 @@ export const productMatchLifecycle = new MatchLifecycleCoordinator({
   history: historyService,
   appVersion: APP_VERSION,
   readSession: readMatchSession,
+  readMilestones: (sessionId) => attemptMilestoneCollector.snapshot(sessionId),
   subscribeOutcomes: subscribeToGameplayOutcomes,
 });
 
@@ -65,16 +68,19 @@ function readMatchSession(): MatchSessionFacts {
   });
 }
 
-/** Converts cursor resets into a simple injected outcome source for the pure coordinator. */
+/** Feeds the bounded milestone recorder, then converts the same stream into outcome callbacks. */
 function subscribeToGameplayOutcomes(listener: (event: MatchOutcomeEvent) => void): () => void {
   let { sessionId, cursor } = gameplaySignalStream.snapshot();
+  attemptMilestoneCollector.beginSession(sessionId);
   return gameplaySignalStream.subscribe((snapshot) => {
     if (snapshot.sessionId !== sessionId) {
       sessionId = snapshot.sessionId;
       cursor = 0;
+      attemptMilestoneCollector.beginSession(sessionId);
     }
     for (const signal of gameplaySignalStream.signalsSince(cursor, sessionId)) {
       cursor = Math.max(cursor, signal.cursor);
+      attemptMilestoneCollector.observe(signal);
       if (signal.kind === "game.ended") {
         listener(Object.freeze({ sessionId: signal.sessionId, winner: signal.winner }));
       }

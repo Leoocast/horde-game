@@ -7,6 +7,7 @@ import { resolveFutureIdentity, type FutureResolutionResult } from "./historyFut
 import type { HistoryHealth, HistoryServiceSnapshot } from "./historyService";
 import type {
   AttemptFinalFactsV1,
+  AttemptMilestoneV1,
   AttemptStatus,
   FutureAggregateStatus,
   FutureIdentityV1,
@@ -18,6 +19,7 @@ export type HistoryLibraryAttemptViewModel = Readonly<{
   status: Exclude<AttemptStatus, "active">;
   turnNumber?: number;
   finalFacts?: AttemptFinalFactsV1;
+  milestones: readonly AttemptMilestoneV1[];
   startedAt: string;
   endedAt?: string;
 }>;
@@ -109,6 +111,7 @@ export function buildHistoryLibraryViewModel(
           status: attempt.status === "active" ? "interrupted" as const : attempt.status,
           ...(attempt.turnNumber === undefined ? {} : { turnNumber: attempt.turnNumber }),
           ...(attempt.finalFacts === undefined ? {} : { finalFacts: attempt.finalFacts }),
+          milestones: attempt.milestones ?? Object.freeze([]),
           startedAt: attempt.startedAt,
           ...(attempt.endedAt === undefined ? {} : { endedAt: attempt.endedAt }),
         }))),

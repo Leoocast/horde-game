@@ -52,7 +52,7 @@ function begin(history, attemptId, future) {
   }).history;
 }
 
-function close(history, attemptId, status) {
+function close(history, attemptId, status, milestones) {
   if (status === "interrupted") {
     return closeHistoryAttempt(history, {
       attemptId,
@@ -61,6 +61,7 @@ function close(history, attemptId, status) {
       endedAt: "2026-08-21T12:05:00.000Z",
       turnNumber: 4,
       finalFacts: { playerLife: 9, hostArchiveRemaining: 18 },
+      ...(milestones ? { milestones } : {}),
     }).history;
   }
   return closeHistoryAttempt(history, {
@@ -74,6 +75,7 @@ function close(history, attemptId, status) {
       playerLife: status === "victory" ? 7 : 0,
       hostArchiveRemaining: status === "victory" ? 0 : 14,
     },
+    ...(milestones ? { milestones } : {}),
   }).history;
 }
 
@@ -114,6 +116,21 @@ test("rewrites keep chronological ordinals beyond five and preserve stable final
     "attempt-1", "attempt-2", "attempt-3", "attempt-4", "attempt-5", "attempt-6",
   ]);
   assert.deepEqual(projected.attempts[5].finalFacts, { playerLife: 7, hostArchiveRemaining: 0 });
+});
+
+test("persisted milestones reach the library unchanged so prose can follow the active language", () => {
+  const future = opaqueFuture("narrated-future");
+  let history = begin(createEmptyHistoryEnvelopeV1(), "narrated", future);
+  const milestones = [{
+    kind: "victory-source",
+    turnNumber: 9,
+    sourceKind: "archive-attack",
+    sourceName: { es: "Vaelor, Guardián Esmeralda", en: "Vaelor, Emerald Guardian" },
+  }];
+  history = close(history, "narrated", "victory", milestones);
+  const attempt = buildHistoryLibraryViewModel(snapshot(history)).futures[0].attempts[0];
+  assert.deepEqual(attempt.milestones, milestones);
+  assert.equal(Object.isFrozen(attempt.milestones), true);
 });
 
 test("cosmetic collisions remain separate and expose enough identity to distinguish them", () => {
@@ -173,6 +190,8 @@ test("the product screen consumes real history and routes replay through the sha
   ]);
   assert.match(screen, /productHistoryRuntime/u);
   assert.match(screen, /buildHistoryLibraryViewModel/u);
+  assert.match(screen, /summarizeAttempt/u);
+  assert.match(screen, /narrative\.fallback/u);
   assert.match(screen, /aria-expanded=\{open\}/u);
   assert.match(screen, /seeds-attempt-chevron/u);
   assert.match(screen, /disabled=\{!future\.replayOrigin\}/u);

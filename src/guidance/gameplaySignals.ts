@@ -1,9 +1,14 @@
-import type { ActionFailureCode, GameState, Phase, Side } from "../engine/GameTypes";
+import type { ActionFailureCode, CardInstance, GameState, Phase, Side } from "../engine/GameTypes";
 import { hostInSurge } from "../engine/StaticEffects";
 import { playerDrawForecast } from "../engine/TurnManager";
 import type { GameplayIntent, GameplayReceiptData } from "./interactionGate";
 
 export type GameplaySignalOrigin = "player" | "system";
+
+export type GameplayLocalizedName = Readonly<{
+  es: string;
+  en: string;
+}>;
 
 export type GameplaySignalDraft =
   | Readonly<{
@@ -68,6 +73,9 @@ export type GameplaySignalDraft =
   | Readonly<{
       kind: "host.surgeStarted";
       hostTurnNumber: number;
+      turnNumber: number;
+      playerEchoCount: number;
+      playerSourceCount: number;
     }>
   | Readonly<{
       kind: "host.attackersDeclared";
@@ -78,12 +86,29 @@ export type GameplaySignalDraft =
       amount: number;
       lifeBefore: number;
       lifeAfter: number;
+      turnNumber: number;
       sourceId?: string;
+      sourceName?: GameplayLocalizedName;
+      unblockedAttack: boolean;
+    }>
+  | Readonly<{
+      kind: "effect.multiTargetResolved";
+      turnNumber: number;
+      sourceId: string;
+      sourceName: GameplayLocalizedName;
+      targetIds: readonly string[];
+      effect: "minus-one-counters";
     }>
   | Readonly<{
       kind: "host.archiveDiscarded";
       cardIds: readonly string[];
       amount: number;
+      turnNumber: number;
+      hostArchiveRemaining: number;
+      sourceKind?: "archive-attack";
+      sourceIds?: readonly string[];
+      sourceName?: GameplayLocalizedName;
+      endedGame: boolean;
     }>
   | Readonly<{
       kind: "game.ended";
@@ -269,7 +294,13 @@ export function gameplaySignalsForTransition(
   }
 
   if (!hostInSurge(previous) && hostInSurge(next)) {
-    signals.push({ kind: "host.surgeStarted", hostTurnNumber: next.hostTurnNumber });
+    signals.push({
+      kind: "host.surgeStarted",
+      hostTurnNumber: next.hostTurnNumber,
+      turnNumber: next.turnNumber,
+      playerEchoCount: next.player.field.filter((card) => card.kinds.includes("ECHO")).length,
+      playerSourceCount: next.player.field.filter((card) => card.kinds.includes("SOURCE")).length,
+    });
   }
 
   if (
@@ -280,12 +311,50 @@ export function gameplaySignalsForTransition(
   }
 
   if (next.player.life < previous.player.life) {
+    const sourceId = context.lifeLossSourceId;
+    const sourceWasHostAttacker = sourceId !== undefined
+      && (previous.combat.hostAttackers.includes(sourceId) || next.combat.hostAttackers.includes(sourceId));
+    const assignedBlockers = sourceId === undefined
+      ? []
+      : previous.combat.blockers[sourceId] ?? next.combat.blockers[sourceId] ?? [];
+    const sourceName = sourceId === undefined
+      ? undefined
+      : localizedNameForCard(findCardByInstanceId(previous, sourceId) ?? findCardByInstanceId(next, sourceId));
     signals.push({
       kind: "player.lifeLost",
       amount: previous.player.life - next.player.life,
       lifeBefore: previous.player.life,
       lifeAfter: next.player.life,
-      sourceId: context.lifeLossSourceId,
+      turnNumber: next.turnNumber,
+      ...(sourceId === undefined ? {} : { sourceId }),
+      ...(sourceName === undefined ? {} : { sourceName }),
+      unblockedAttack: sourceWasHostAttacker && assignedBlockers.length === 0,
+    });
+  }
+
+  const nextEventIds = new Set(next.eventQueue.map((event) => event.id));
+  for (const event of previous.eventQueue) {
+    if (
+      event.type !== "COUNTER_VOLLEY"
+      || nextEventIds.has(event.id)
+      || event.payload?.sourceSide !== "player"
+      || String(event.payload?.counterType ?? "") !== "-1/-1"
+      || !event.sourceId
+    ) continue;
+    const targetIds = Array.isArray(event.payload.targetIds)
+      ? event.payload.targetIds
+        .map(String)
+        .filter((targetId) => Boolean(findCardByInstanceId(previous, targetId)))
+      : [];
+    const sourceName = localizedNameForCard(findCardByInstanceId(previous, event.sourceId));
+    if (targetIds.length < 2 || !sourceName) continue;
+    signals.push({
+      kind: "effect.multiTargetResolved",
+      turnNumber: next.turnNumber,
+      sourceId: event.sourceId,
+      sourceName,
+      targetIds,
+      effect: "minus-one-counters",
     });
   }
 
@@ -294,10 +363,26 @@ export function gameplaySignalsForTransition(
     .filter((card) => nextHostMemoryIds.has(card.instanceId) && !revealedHostCardIds.includes(card.instanceId))
     .map((card) => card.instanceId);
   if (discardedHostCardIds.length > 0) {
+    const playerCombatSourceIds = previous.activeSide === "player" && previous.phase === "combat"
+      ? previous.combat.playerAttackers.filter((sourceId) => Boolean(findCardByInstanceId(previous, sourceId)))
+      : [];
+    const sourceName = playerCombatSourceIds.length === 1
+      ? localizedNameForCard(findCardByInstanceId(previous, playerCombatSourceIds[0]))
+      : undefined;
     signals.push({
       kind: "host.archiveDiscarded",
       cardIds: discardedHostCardIds,
       amount: discardedHostCardIds.length,
+      turnNumber: next.turnNumber,
+      hostArchiveRemaining: next.host.archive.length,
+      ...(playerCombatSourceIds.length === 0
+        ? {}
+        : {
+            sourceKind: "archive-attack" as const,
+            sourceIds: playerCombatSourceIds,
+            ...(sourceName === undefined ? {} : { sourceName }),
+          }),
+      endedGame: !previous.winner && next.winner === "player",
     });
   }
 
@@ -332,6 +417,30 @@ function createSnapshot(
 
 function sameOrdered(left: readonly string[], right: readonly string[]): boolean {
   return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
+function findCardByInstanceId(game: GameState, instanceId: string): CardInstance | undefined {
+  const card = [
+    ...game.player.archive,
+    ...game.player.hand,
+    ...game.player.field,
+    ...game.player.memory,
+    ...game.player.oblivion,
+    ...game.host.archive,
+    ...game.host.field,
+    ...game.host.memory,
+    ...game.host.oblivion,
+  ].find((candidate) => candidate.instanceId === instanceId);
+  if (card) return card;
+  return game.host.pendingCard?.instanceId === instanceId ? game.host.pendingCard : undefined;
+}
+
+function localizedNameForCard(card: CardInstance | undefined): GameplayLocalizedName | undefined {
+  if (!card) return undefined;
+  const en = card.displayName.trim();
+  const es = card.displayNameEs?.trim() || en;
+  if (!en || !es) return undefined;
+  return Object.freeze({ es, en });
 }
 
 function deepFreeze<T>(value: T): T {

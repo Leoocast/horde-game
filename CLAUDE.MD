@@ -686,8 +686,8 @@ La Fase 6 conecta la biblioteca real. `historyViewModel.ts` proyecta el snapshot
 mutarlo: ordena intentos por `sequence`, deriva preservado/perdido/interrumpido, detecta colisiones
 de `Futuro NNN·NNN` y sólo expone un `replayOrigin` si `resolveFutureIdentity` certifica identidad,
 decks y revisiones. `SeedsOfDestinyScreen` no importa el fixture: muestra carga, vacío, recuperación,
-degradado, lleno y corrupción; sus disclosures presentan resultado, turno y hechos finales sin
-activar todavía el relato. Canon copia `canonCode`; opaque oculta la copia pública y conserva replay
+degradado, lleno y corrupción; sus disclosures presentan resultado, turno, relato estructurado cuando
+existe un hito aprobado y hechos finales como fallback factual. Canon copia `canonCode`; opaque oculta la copia pública y conserva replay
 local compatible. `App` lanza la acción por el destino `history-replay` del mismo vórtice y crea un
 intento nuevo únicamente después de cubrir y comprometer el reset exacto. Nunca añadir un fallback
 de decks ni reinterpretar una identidad incompatible. El fixture antiguo queda sólo como laboratorio
@@ -695,13 +695,17 @@ sin imports de producto.
 
 La identidad narrativa vive en `docs/plans/seeds_of_destiny.md` y la auditoría con el contrato
 técnico por fases en `docs/plans/seeds_of_destiny_history_implementation_plan.md`. La Fase 1 tiene un prototipo
-aislado en `src/history/attemptNarrative.ts`: selecciona de un vocabulario cerrado de ocho hechos,
+en `src/history/attemptNarrative.ts`: selecciona de un vocabulario cerrado de ocho hechos,
 renderiza templates ES/EN sin leer `game.log` y dispone sus muestras de decisión en
 `docs/plans/seeds_of_destiny_narrative_samples.md`. Resultado, turno y Reserva permanecen como
 metadatos: no se repiten en el párrafo, y si no hay un acontecimiento el fallback permanece dentro
 del mundo. La voz habla de Ecos, nunca de cartas ni de datos generados/registrados. No está
-conectado a partidas, estado, UI ni persistencia; el usuario aprobó **Relato** como primera versión
-el 2026-08-21 y su integración sigue reservada para la Fase 7.
+acoplada a `GameState`: `gameplaySignals.ts` fotografía únicamente los hechos directos durante el
+commit y `attemptMilestones.ts` conserva por sesión el ejemplar más significativo de cada clase. El
+lifecycle persiste esos hitos al cierre y la biblioteca vuelve a renderizarlos según el idioma
+activo; registros viejos o sin hitos conservan sólo sus hechos finales. El usuario aprobó
+**Relato** como primera versión el 2026-08-21 y la integración automática de la Fase 7 quedó
+completada ese mismo día; falta su QA visual en producto.
 
 La Fase 2 está implementada y la Fase 5 activó su segunda capability.
 `src/product/productCapabilities.ts` selecciona `DEMO_CAPABILITIES`: **Continuar** no se renderiza,

@@ -121,12 +121,14 @@ function harness(options = {}) {
     playerLife: 20,
     hostArchiveRemaining: 30,
   };
+  let milestones = options.milestones ?? [];
   const coordinator = new MatchLifecycleCoordinator({
     enabled: options.enabled ?? true,
     recoverActiveOnInitialize: options.recover ?? true,
     history: options.enabled === false ? undefined : history,
     appVersion: "test",
     readSession: () => session,
+    readMilestones: () => milestones,
     subscribeOutcomes: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -153,6 +155,7 @@ function harness(options = {}) {
     },
     readSession: () => session,
     setSession: (patch) => { session = { ...session, ...patch }; },
+    setMilestones: (next) => { milestones = next; },
   };
 }
 
@@ -313,9 +316,35 @@ test("outcomes synchronously install a gate and persist immutable victory or def
   }
 });
 
+test("outcome closure snapshots narrative milestones before the async persistence gate", async () => {
+  const sourceName = { es: "Vaelor, Guardián Esmeralda", en: "Vaelor, Emerald Guardian" };
+  const h = harness({
+    milestones: [{
+      kind: "victory-source",
+      turnNumber: 9,
+      sourceKind: "archive-attack",
+      sourceName,
+    }],
+  });
+  h.history.closeGate = deferred();
+  await launch(h).settled;
+  h.setSession({ turnNumber: 9, hostTurnNumber: 8, playerLife: 7, hostArchiveRemaining: 0 });
+  const endingSession = h.readSession().sessionId;
+  h.emit("player", endingSession);
+  sourceName.es = "changed after outcome";
+  h.setMilestones([]);
+  h.history.closeGate.resolve();
+  await waitFor(() => h.coordinator.outcomeReady(endingSession));
+  const milestones = h.history.history.attempts[0].milestones;
+  assert.equal(milestones[0].sourceName.es, "Vaelor, Guardián Esmeralda");
+  assert.equal(Object.isFrozen(milestones[0].sourceName), true);
+});
+
 test("menu, rewrite and contemplate capture one explicit interruption and no per-turn autosave", async () => {
   for (const reason of ["menu", "rewrite", "contemplate"]) {
-    const h = harness();
+    const h = harness({
+      milestones: [{ kind: "host-archive-threshold", turnNumber: 6, remainingEchoes: 9 }],
+    });
     await launch(h).settled;
     h.setSession({ turnNumber: 6, hostTurnNumber: 5, playerLife: 11, hostArchiveRemaining: 17 });
     assert.equal(h.history.calls.filter((call) => call.startsWith("begin:")).length, 1);
@@ -324,6 +353,7 @@ test("menu, rewrite and contemplate capture one explicit interruption and no per
     assert.equal(attempt.status, "interrupted");
     assert.equal(attempt.endReason, reason);
     assert.equal(attempt.turnNumber, 6);
+    assert.deepEqual(attempt.milestones, [{ kind: "host-archive-threshold", turnNumber: 6, remainingEchoes: 9 }]);
     assert.equal(await h.coordinator.closeActive(reason).then((result) => result.state), "unchanged");
   }
 });

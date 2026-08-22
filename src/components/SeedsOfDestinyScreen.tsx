@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import type { MatchOrigin } from "../content/MatchOrigin";
 import type { InspectableDeck } from "../data/deckCatalog";
 import { findDeckKeyCard } from "../data/deckCatalog";
+import { summarizeAttempt } from "../history/attemptNarrative";
 import type { HistoryHealth } from "../history/historyService";
 import { productHistoryRuntime } from "../history/historyRuntime";
 import {
@@ -403,8 +404,15 @@ function SeedThreadItem({
   onToggle: () => void;
 }>) {
   const t = useTranslation();
+  const language = useLanguageStore((state) => state.language);
   const bodyId = `seed-attempt-${attempt.attemptId.replace(/[^a-zA-Z0-9_-]/gu, "-")}`;
   const label = attemptLabel(attempt.ordinal, t);
+  const narrative = useMemo(() => summarizeAttempt({
+    outcome: attempt.status,
+    ...(attempt.turnNumber === undefined ? {} : { turnNumber: attempt.turnNumber }),
+    milestones: attempt.milestones,
+  }, language), [attempt, language]);
+  const hasNarrative = !narrative.fallback;
   return (
     <li className={`seeds-thread-item is-${attempt.status}`}>
       <button
@@ -422,9 +430,19 @@ function SeedThreadItem({
         <ChevronDown className="seeds-attempt-chevron" size={18} aria-hidden="true" />
       </button>
       <div className="seeds-attempt-detail" id={bodyId} hidden={!open}>
-        {attempt.status === "interrupted" && <p className="seeds-attempt-body">{t("seeds.interruptedAttempt")}</p>}
-        {attempt.finalFacts && (
+        {hasNarrative && <p className="seeds-attempt-body">{narrative.paragraph}</p>}
+        {hasNarrative && narrative.marks.length > 0 && (
           <ul className="seeds-attempt-marks">
+            {narrative.marks.map((mark, index) => (
+              <li key={`${attempt.attemptId}:mark:${index}`}><span>{mark}</span></li>
+            ))}
+          </ul>
+        )}
+        {!hasNarrative && attempt.status === "interrupted" && (
+          <p className="seeds-attempt-body">{t("seeds.interruptedAttempt")}</p>
+        )}
+        {attempt.finalFacts && (
+          <ul className="seeds-attempt-marks seeds-attempt-facts">
             <li><span>{t("seeds.finalLife", { count: attempt.finalFacts.playerLife })}</span></li>
             <li><span>{t("seeds.finalHostArchive", { count: attempt.finalFacts.hostArchiveRemaining })}</span></li>
           </ul>

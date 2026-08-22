@@ -1,8 +1,9 @@
 # Semillas del Destino
 
 Nota de diseño para la narrativa del tutorial y el historial de partidas de Hostfall.
-El control de reescritura, la identidad Canon, el registro factual y la biblioteca personal ya están
-implementados. La prosa opcional del Cronista permanece aislada hasta la Fase 7. La auditoría, el
+El control de reescritura, la identidad Canon, el registro factual, la biblioteca personal y la
+integración automática del relato ya están implementados. Falta validar su lectura visual en la
+aplicación desktop. La auditoría, el
 contrato de demo y el orden verificable viven en
 [`seeds_of_destiny_history_implementation_plan.md`](seeds_of_destiny_history_implementation_plan.md).
 
@@ -46,9 +47,12 @@ La idea central se resume así:
   y las mismas acciones de reescritura o contemplación.
 - **Semillas del Destino** consume el historial persistido real, agrupa por identidad exacta,
   muestra intentos interrumpidos y puede reescribir un origen compatible mediante el mismo vórtice.
+- Los intentos nuevos conservan hitos semánticos acotados y los disclosures los convierten en un
+  relato ES/EN en el idioma activo; registros viejos o sin un hito claro mantienen el resumen
+  factual de Vida y Archivo.
 
-El relato del Cronista no forma parte todavía de la pantalla runtime: la primera versión de la
-biblioteca es deliberadamente factual y muestra resultado, turno y hechos finales.
+El relato no analiza el log ni intenta explicar decisiones. Sólo selecciona acontecimientos directos
+capturados durante la transición que los produjo y conserva los hechos finales independientemente.
 
 ## Decisión de producto para la demo — 2026-08-21
 
@@ -69,8 +73,8 @@ biblioteca es deliberadamente factual y muestra resultado, turno y hechos finale
 - La identidad persistida incluye `canonCode`/entropía o seed libre, Crónica, Hueste, dificultad,
   modo, turnos de Preparación y revisiones compatibles de contenido/reglas; el código
   `Futuro NNN·NNN` sigue siendo sólo una etiqueta cosmética.
-- El relato se validó con fixtures aislados y el usuario aprobó su primera voz. Conectarlo al runtime
-  sin leer `game.log` pertenece a la Fase 7.
+- El relato se validó con fixtures aislados y el usuario aprobó su primera voz. La Fase 7 ya lo
+  conecta al runtime sin leer `game.log`; queda pendiente aprobar su lectura visual en contexto.
 
 Una HF1 generada por el juego es **Canon** y reproducible. **Oficial** queda reservado a códigos
 curados que aparezcan en un catálogo bundled de Hostfall; no es una propiedad de cualquier partida
@@ -174,7 +178,8 @@ futuro terrible, aprendió de él y encontró una ramificación victoriosa.
 - Establecer la política definitiva de retención, archivado o eliminación por Semilla.
 - Diseñar cómo se comunica que repetir una seed conserva sus condiciones deterministas aunque las
   decisiones del jugador creen otra ramificación.
-- Revisar en la Fase 7 cómo conviven los hechos visibles con el relato aprobado.
+- Los hechos finales aparecen como una franja secundaria debajo del relato; cuando no existe un
+  hito aprobado son el contenido principal del intento.
 - Definir en Early Access cómo una partida reanudable se vincula al mismo `attemptId` sin crear un
   intento duplicado.
 

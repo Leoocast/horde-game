@@ -141,7 +141,10 @@ test("Host reveal, Surge, attacker order, life impact and outcome are projected 
   const reveal = revealSignals.find((signal) => signal.kind === "host.cardsRevealed");
   assert.deepEqual(reveal.cardIds, [first.instanceId, second.instanceId, third.instanceId]);
   assert.equal(reveal.reason, "surge");
-  assert.equal(revealSignals.some((signal) => signal.kind === "host.surgeStarted"), true);
+  const surge = revealSignals.find((signal) => signal.kind === "host.surgeStarted");
+  assert.equal(Boolean(surge), true);
+  assert.equal(surge.playerEchoCount, 0);
+  assert.equal(surge.playerSourceCount, 0);
   assert.equal(revealSignals.some((signal) => signal.kind === "turn.started" && signal.side === "host"), true);
 
   const begun = beginHostCombat(afterReveal, { deferTriggeredEvents: true });
@@ -159,7 +162,62 @@ test("Host reveal, Surge, attacker order, life impact and outcome are projected 
   const impact = impactSignals.find((signal) => signal.kind === "player.lifeLost");
   assert.equal(impact.amount, 4);
   assert.equal(impact.sourceId, first.instanceId);
+  assert.equal(impact.unblockedAttack, true);
+  assert.equal(impact.sourceName.en, first.displayName);
   assert.equal(impactSignals.some((signal) => signal.kind === "game.ended" && signal.winner === "host"), true);
+});
+
+test("resolved multi-target effects and decisive Archive attacks carry their causal snapshot", () => {
+  const beforeEffect = createTestGame("signals-narrative-facts");
+  preparePlayerCombat(beforeEffect);
+  beforeEffect.turnNumber = 8;
+  const vaelor = addCard(beforeEffect, cardFromDeck("vaelor_emerald_guardian", "player", "field"));
+  const firstTarget = addCard(beforeEffect, customCard("first-target", "host"));
+  const secondTarget = addCard(beforeEffect, customCard("second-target", "host"));
+  beforeEffect.eventQueue.push({
+    id: "counter-volley",
+    type: "COUNTER_VOLLEY",
+    sourceId: vaelor.instanceId,
+    payload: {
+      sourceSide: "player",
+      targetIds: [firstTarget.instanceId, secondTarget.instanceId],
+      counterType: "-1/-1",
+      amount: 1,
+    },
+  });
+  const afterEffect = structuredClone(beforeEffect);
+  afterEffect.eventQueue = [];
+  const effect = gameplaySignalsForTransition(beforeEffect, afterEffect)
+    .find((signal) => signal.kind === "effect.multiTargetResolved");
+  assert.deepEqual(effect && {
+    turnNumber: effect.turnNumber,
+    sourceId: effect.sourceId,
+    sourceName: effect.sourceName,
+    targetIds: effect.targetIds,
+    effect: effect.effect,
+  }, {
+    turnNumber: 8,
+    sourceId: vaelor.instanceId,
+    sourceName: { es: vaelor.displayNameEs, en: vaelor.displayName },
+    targetIds: [firstTarget.instanceId, secondTarget.instanceId],
+    effect: "minus-one-counters",
+  });
+
+  const beforeAttack = structuredClone(afterEffect);
+  beforeAttack.combat.playerAttackers = [vaelor.instanceId];
+  const archiveCard = addCard(beforeAttack, customCard("last-archive-echo", "host", { zone: "archive" }));
+  const afterAttack = structuredClone(beforeAttack);
+  afterAttack.host.archive = [];
+  afterAttack.host.memory.push({ ...archiveCard, zone: "memory" });
+  afterAttack.combat.playerAttackers = [];
+  afterAttack.winner = "player";
+  const archive = gameplaySignalsForTransition(beforeAttack, afterAttack)
+    .find((signal) => signal.kind === "host.archiveDiscarded");
+  assert.equal(archive.hostArchiveRemaining, 0);
+  assert.equal(archive.sourceKind, "archive-attack");
+  assert.deepEqual(archive.sourceIds, [vaelor.instanceId]);
+  assert.equal(archive.sourceName.es, vaelor.displayNameEs);
+  assert.equal(archive.endedGame, true);
 });
 
 test("the technical end-game control publishes the same committed outcome signal", async () => {

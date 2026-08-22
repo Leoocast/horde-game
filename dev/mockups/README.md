@@ -50,6 +50,11 @@ vfx/                exploraciones de efectos
   el icono de `lucide-react` en uso, en tres familias de trazo y en el tamaño real de la insignia de
   24 px y de la píldora del preview.
 
+- `vfx/surge-crest.html` — la Oleada sin el medallón de la calavera: seis remates para el canto superior
+  del estandarte (vacío, muesca del propio marco, la grieta clavada, los rombos de la placa de Futuro, marcas
+  de cuenta y una brasa viva), cada uno con su entrada afinada, reloj y control de velocidad. Comparte escenario
+  con las rondas anteriores `surge-entrance`, `surge-current-variations`, `surge-variants` y `surge-typographic`.
+
 ### Fuentes
 
 `assets/fonts/` contiene dos grupos. Los `*-latin.woff2` son copias de

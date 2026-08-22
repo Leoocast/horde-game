@@ -1,6 +1,6 @@
 # Plan por fases — historial de Semillas del Destino para la demo
 
-Estado: **Fases 1–6 completadas; siguiente fase: 7**.
+Estado: **Fases 1–6 completadas; integración automática de la Fase 7 completada, QA visual pendiente**.
 
 Última actualización: **2026-08-21**.
 
@@ -633,6 +633,8 @@ El cierre vive en `tests/historyViewModel.test.js` y en los guards actualizados 
 
 ### Fase 7 — Integración opcional del relato y QA de producto
 
+Estado: **integración completada el 2026-08-21; pendiente la validación manual indicada abajo**.
+
 Si la Fase 1 terminó en **Relato aprobado**:
 
 - extender los drafts/proyectores semánticos con fuente, targets y el snapshot mínimo de cada hito
@@ -643,6 +645,19 @@ Si la Fase 1 terminó en **Relato aprobado**:
 
 Si terminó en **Hitos factuales**, hace la misma instrumentación pero renderiza sólo bullets
 estructurados. Si terminó en **Descartado**, no añade señales ni narrativa y no bloquea el historial.
+
+Implementación: `gameplaySignals.ts` captura en el mismo commit el snapshot mínimo de la primera
+Oleada, pérdidas de Vida con fuente, efectos `COUNTER_VOLLEY` multiobjetivo y descartes directos del
+Archivo. `attemptMilestones.ts` los limita por sesión y conserva sólo el ejemplar más significativo
+de cada clase; nunca consulta `GameState` posteriormente ni lee `game.log`. El lifecycle copia esos
+hitos al cerrar por victoria, derrota o salida explícita. La biblioteca vuelve a ejecutar
+`summarizeAttempt` en el idioma activo, muestra el relato sólo cuando el selector encuentra un hecho
+aprobado y mantiene Vida/Archivo como fallback factual para registros antiguos o intentos sin hitos.
+
+El cierre automático vive en `tests/attemptMilestones.test.js`, `tests/gameplaySignals.test.js`,
+`tests/matchLifecycle.test.js` y `tests/historyViewModel.test.js`. Cubre límites por sesión,
+deduplicación, snapshots causales, copia inmutable al cierre y renderizado desde datos persistidos;
+la suite completa pasó con 643 pruebas.
 
 Los escenarios de victoria, derrota, salida explícita, deduplicación y replay exacto son gates
 automáticos de las fases anteriores; no se delegan al usuario.

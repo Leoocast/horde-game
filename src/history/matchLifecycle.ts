@@ -4,7 +4,7 @@ import type { BeginAttemptInput, CloseAttemptInput } from "./historyDomain";
 import { historyEligibility, type HistorySessionKind } from "./historyEligibility";
 import { futureIdentityFromMatchOrigin } from "./historyFuture";
 import type { HistoryOperationResult, HistoryServiceSnapshot } from "./historyService";
-import type { InterruptedAttemptEndReason } from "./historyTypes";
+import type { AttemptMilestoneV1, InterruptedAttemptEndReason } from "./historyTypes";
 
 export type MatchLaunchSource = "play" | "history-replay" | "rewrite" | "learn-to-play-handoff";
 
@@ -79,6 +79,7 @@ export type MatchLifecycleOptions = Readonly<{
   history?: MatchHistoryPort;
   appVersion: string;
   readSession: () => MatchSessionFacts;
+  readMilestones?: (sessionId: string) => readonly AttemptMilestoneV1[];
   subscribeOutcomes: (listener: (event: MatchOutcomeEvent) => void) => () => void;
   now?: () => string;
   createAttemptId?: () => string;
@@ -110,6 +111,7 @@ export class MatchLifecycleCoordinator {
   readonly #history?: MatchHistoryPort;
   readonly #appVersion: string;
   readonly #readSession: () => MatchSessionFacts;
+  readonly #readMilestones: (sessionId: string) => readonly AttemptMilestoneV1[];
   readonly #now: () => string;
   readonly #createAttemptId: () => string;
   readonly #settleTimeoutMs: number;
@@ -137,6 +139,7 @@ export class MatchLifecycleCoordinator {
     this.#history = options.history;
     this.#appVersion = options.appVersion;
     this.#readSession = options.readSession;
+    this.#readMilestones = options.readMilestones ?? (() => Object.freeze([]));
     this.#now = options.now ?? (() => new Date().toISOString());
     this.#createAttemptId = options.createAttemptId ?? createAttemptId;
     this.#settleTimeoutMs = options.settleTimeoutMs ?? 700;
@@ -259,6 +262,7 @@ export class MatchLifecycleCoordinator {
       return Promise.resolve(Object.freeze({ state: "unchanged", reason: "stale-session" }));
     }
     const facts = freezeFacts(this.#readSession());
+    const milestones = freezeMilestones(this.#readMilestones(scope.sessionId));
     this.#active = undefined;
     this.#setSnapshot({ ...this.#snapshot, active: undefined });
     const operation = this.#enqueueHistory(() => this.#history!.close({
@@ -272,6 +276,7 @@ export class MatchLifecycleCoordinator {
         playerLife: facts.playerLife,
         hostArchiveRemaining: facts.hostArchiveRemaining,
       },
+      ...(milestones.length === 0 ? {} : { milestones }),
     }));
     return this.#settleOperation(operation, "close");
   }
@@ -319,6 +324,7 @@ export class MatchLifecycleCoordinator {
     const current = this.#readSession();
     if (current.sessionId !== scope.sessionId) return;
     const facts = freezeFacts(current);
+    const milestones = freezeMilestones(this.#readMilestones(scope.sessionId));
     this.#active = undefined;
     this.#setSnapshot({
       ...this.#snapshot,
@@ -337,6 +343,7 @@ export class MatchLifecycleCoordinator {
         playerLife: facts.playerLife,
         hostArchiveRemaining: facts.hostArchiveRemaining,
       },
+      ...(milestones.length === 0 ? {} : { milestones }),
     }));
     const settled = this.#settleOperation(operation, "close").then((result) => {
       if (this.#snapshot.outcomeGate?.sessionId !== scope.sessionId) return result;
@@ -432,6 +439,10 @@ function freezeFacts(facts: MatchSessionFacts): MatchSessionFacts {
   return Object.freeze({ ...facts });
 }
 
+function freezeMilestones(milestones: readonly AttemptMilestoneV1[]): readonly AttemptMilestoneV1[] {
+  return deepFreeze(structuredClone(milestones));
+}
+
 function freezeSnapshot(snapshot: MatchLifecycleSnapshot): MatchLifecycleSnapshot {
   return Object.freeze({ ...snapshot });
 }
@@ -454,4 +465,10 @@ function createAttemptId(): string {
 function defaultTimeoutScheduler(callback: () => void, delayMs: number): () => void {
   const timeout = globalThis.setTimeout(callback, delayMs);
   return () => globalThis.clearTimeout(timeout);
+}
+
+function deepFreeze<T>(value: T): T {
+  if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
+  for (const nested of Object.values(value as Record<string, unknown>)) deepFreeze(nested);
+  return Object.freeze(value);
 }

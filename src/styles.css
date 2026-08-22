@@ -23878,6 +23878,17 @@ body.is-victory-clearing .game-battlefield-stage {
   transform: rotate(45deg);
 }
 
+.seeds-attempt-facts {
+  margin-top: 2px;
+  border-top: 1px solid rgb(199 170 105 / 0.14);
+  padding-top: 10px;
+}
+
+.seeds-attempt-facts li {
+  color: #8f9a9b;
+  font-size: 15px;
+}
+
 /* El cierre del hilo: la frase que convierte el registro en historia. */
 .seeds-thread-seal {
   display: flex;

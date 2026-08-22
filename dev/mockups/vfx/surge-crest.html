@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hostfall — Oleada: el remate sin calavera</title>
+    <style>
+      @font-face {
+        font-family: "Cinzel";
+        font-style: normal;
+        font-weight: 500 900;
+        font-display: block;
+        src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+      }
+      :root {
+        --gold-bright: #e6d59e;
+        --parchment: #e8dec0;
+        --muted: #9b8f88;
+        --muted-dim: #837771;
+        --rule: rgb(146 116 88 / 0.22);
+        --accent: #a93f2d;
+        --accent-bright: #f0a06f;
+        --serif: Georgia, "Times New Roman", serif;
+        --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; padding: 0 0 90px;
+        background: radial-gradient(ellipse at 50% -8%, rgb(74 27 18 / 0.24), transparent 55%), #0a0605;
+        color: var(--muted); font-family: var(--sans); font-size: 15px; line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      main { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
+
+      header { padding: 54px 0 30px; border-bottom: 1px solid var(--rule); }
+      .eyebrow { color: #b8785a; font-size: 10px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; }
+      h1 {
+        margin: 12px 0 0; color: var(--parchment); font-family: var(--serif);
+        font-size: clamp(30px, 4.4vw, 46px); font-weight: 500; letter-spacing: 0.02em; line-height: 1.06;
+      }
+      header p { max-width: 74ch; margin: 16px 0 0; }
+      header strong, .notes strong, .notes b { color: var(--gold-bright); font-weight: 600; }
+      code { color: #e0b08a; font-family: Consolas, "Courier New", monospace; font-size: 13px; }
+
+      .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 30px 0 10px; }
+      .tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+      button {
+        height: 42px; padding: 0 16px; border: 1px solid rgb(146 116 88 / 0.36); border-radius: 2px;
+        background: linear-gradient(180deg, rgb(33 25 22 / 0.96), rgb(15 10 9 / 0.98));
+        color: var(--muted); font-family: var(--sans); cursor: pointer;
+        font-size: 11px; font-weight: 900; letter-spacing: 0.15em; text-transform: uppercase;
+        transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+      }
+      button:hover { border-color: rgb(214 150 110 / 0.7); color: var(--gold-bright); }
+      button[aria-pressed="true"] {
+        border-color: rgb(214 118 74 / 0.8); background: linear-gradient(180deg, rgb(62 27 18 / 0.96), rgb(24 11 9 / 0.98));
+        color: #f0c39d;
+      }
+      button:focus-visible { outline: 2px solid rgb(234 168 133 / 0.9); outline-offset: 2px; }
+      button.small { height: 34px; padding: 0 13px; font-size: 10px; letter-spacing: 0.12em; }
+      .spacer { flex: 1; }
+      .subcontrol { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 14px; }
+      .subcontrol span.label { color: var(--muted-dim); font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+      label.toggle { display: flex; align-items: center; gap: 8px; color: var(--muted-dim); font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; }
+
+      /* ── Escenario ───────────────────────────────────────────────────
+         El tablero es la captura de referencia; encima va exactamente la
+         pila de hoy: velo con desenfoque, atmósfera roja y estandarte. */
+      .stage {
+        position: relative; overflow: hidden; aspect-ratio: 16 / 9;
+        border: 1px solid var(--rule); border-radius: 2px; background: #050303; isolation: isolate;
+        --k: 1;           /* multiplicador de velocidad */
+        --t: 2100ms;      /* duración base de la variante */
+      }
+      .layer { position: absolute; inset: 0; pointer-events: none; }
+      .board { z-index: 1; background: #0a1413 url("assets/defeat-board-reference.png") center / cover no-repeat; }
+      .stage[data-board="off"] .board { background-image: none; }
+
+      .veil {
+        z-index: 2; opacity: 0; background: rgb(5 1 1 / 0.9);
+        -webkit-backdrop-filter: blur(10px) saturate(0.65); backdrop-filter: blur(10px) saturate(0.65);
+      }
+      .atmosphere {
+        z-index: 3; opacity: 0;
+        background:
+          radial-gradient(ellipse at 50% 43%, rgb(160 43 25 / 0.42), transparent 34%),
+          radial-gradient(ellipse at center, transparent 7%, rgb(8 0 0 / 0.8) 75%);
+      }
+
+      /* La grieta diagonal de hoy sólo vive en la pestaña de referencia. */
+      .rift {
+        position: absolute; z-index: 5; top: -20%; bottom: -20%; left: 50%; width: 3px; display: none; opacity: 0;
+        background: linear-gradient(180deg, transparent, #d45f37 22%, #ffd09b 50%, #d45f37 78%, transparent);
+        box-shadow: 0 0 18px #d34e2f, 0 0 70px rgb(164 38 24 / 0.72);
+        transform: translateX(-50%) rotate(7deg);
+      }
+      .stage[data-variant="current"] .rift { display: block; }
+
+      /* ── El estandarte: idéntico al del juego ─────────────────────────
+         La placa hexagonal pasa a ser un elemento propio para poder animarla
+         aparte del título; en el juego es el ::before de .game-result-banner. */
+      .verdict { z-index: 10; display: grid; align-content: center; justify-items: center; text-align: center; }
+
+      .banner {
+        position: relative; display: grid; width: min(980px, 90%); height: 118px;
+        grid-template-columns: 1fr 1fr; align-items: center; gap: clamp(16px, 2.5vw, 30px);
+      }
+      .plate {
+        position: absolute; z-index: 0; top: 50%; left: 50%; width: min(540px, 62%); height: 112px; opacity: 0;
+        border-top: 1px solid rgb(214 118 74 / 0.32); border-bottom: 1px solid rgb(214 118 74 / 0.2);
+        background: linear-gradient(90deg, transparent, rgb(28 5 3 / 0.86) 17%, rgb(12 2 2 / 0.97) 50%, rgb(28 5 3 / 0.86) 83%, transparent);
+        clip-path: polygon(8% 0, 92% 0, 100% 50%, 92% 100%, 8% 100%, 0 50%);
+        transform: translate(-50%, -50%);
+      }
+      .rule-line {
+        position: relative; z-index: 1; height: 1px; opacity: 0; transform-origin: right center;
+        background: linear-gradient(90deg, transparent 0%, var(--accent) 28%, var(--accent) 62%, transparent 96%);
+        box-shadow: 0 0 10px rgb(169 63 45 / 0.5);
+      }
+      .rule-line.right { transform-origin: left center; background: linear-gradient(90deg, transparent 4%, var(--accent) 38%, var(--accent) 72%, transparent 100%); }
+      .banner h2 {
+        position: absolute; z-index: 2; inset: 0; display: flex; align-items: center; justify-content: center;
+        padding-left: 0.12em; margin: 0; opacity: 0; color: #ead5c7; font-family: "Cinzel", var(--serif);
+        font-size: clamp(3.2rem, 7.6vw, 6.6rem); font-weight: 700; letter-spacing: 0.12em; line-height: 1;
+        text-transform: uppercase; text-shadow: 0 3px 0 rgb(0 0 0 / 0.95), 0 0 28px rgb(210 67 39 / 0.52);
+      }
+      .banner h2::before {
+        position: absolute; z-index: -1; top: 50%; left: 50%; width: min(760px, 82%); height: 112px; content: "";
+        background: linear-gradient(90deg, transparent, rgb(4 11 9 / 0.97) 14%, rgb(4 11 9 / 0.99) 50%, rgb(4 11 9 / 0.97) 86%, transparent);
+        transform: translate(-50%, -50%);
+      }
+      .subtitle {
+        margin: 26px 0 0; opacity: 0; color: #dcac8c; font-family: var(--serif);
+        font-size: clamp(0.8rem, 1.32vw, 1.06rem); font-weight: 700; letter-spacing: 0.28em;
+        text-transform: uppercase; text-shadow: 0 2px 12px #000, 0 0 16px rgb(196 66 38 / 0.44);
+      }
+
+      /* ── Remates: sólo uno visible por variante ───────────────────── */
+      .ornament { display: none; }
+      .stage[data-variant="notch"] .notch,
+      .stage[data-variant="nail"] .nail,
+      .stage[data-variant="rhombi"] .rhombi,
+      .stage[data-variant="ember"] .ember-bar { display: block; }
+      .stage[data-variant="tally"] .tally { display: flex; }
+
+      /* 0 · la calavera de hoy, tal cual */
+      .crest {
+        position: absolute; z-index: 3; top: -76px; left: 50%; width: 66px; height: 66px; opacity: 0;
+        place-items: center;
+        border: 1px solid rgb(169 63 45 / 0.78);
+        background: linear-gradient(135deg, rgb(39 45 31 / 0.98), rgb(5 12 10 / 0.99));
+        color: var(--accent-bright);
+        box-shadow: inset 0 0 0 4px rgb(2 8 6 / 0.84), inset 0 0 0 5px rgb(169 63 45 / 0.26), 0 0 28px rgb(169 48 31 / 0.34);
+        transform: translateX(-50%) rotate(45deg);
+      }
+      .stage[data-variant="current"] .crest { display: grid; }
+      .crest svg { transform: rotate(-45deg); filter: drop-shadow(0 0 8px rgb(169 48 31 / 0.34)); }
+
+      /* B · la placa hace punta: el marco sube, no se le pega un objeto */
+      .notch {
+        position: absolute; z-index: 1; bottom: calc(50% + 55px); left: 50%; width: 96px; height: 26px; opacity: 0;
+        transform: translateX(-50%);
+      }
+      .notch svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+      /* C · la grieta baja y se clava en el canto superior */
+      .nail {
+        position: absolute; z-index: 1; bottom: calc(50% + 55px); left: 50%; width: 2px; height: 60vh; opacity: 0;
+        transform-origin: top center; transform: translateX(-50%);
+        background: linear-gradient(180deg, transparent, rgb(212 95 55 / 0.55) 30%, #ffd09b 100%);
+        box-shadow: 0 0 14px rgb(211 78 47 / 0.85);
+      }
+      .nail::after {
+        position: absolute; bottom: -3px; left: 50%; width: 7px; height: 7px; content: "";
+        background: #ffe0b6; border-radius: 50%; box-shadow: 0 0 16px 5px rgb(255 176 116 / 0.75);
+        transform: translateX(-50%);
+      }
+
+      /* D · los dos rombos del canto, en la línea media de la placa */
+      .rhombi { position: absolute; z-index: 3; top: 50%; left: 50%; width: min(540px, 62%); height: 0; transform: translate(-50%, -50%); }
+      .rhombi i {
+        position: absolute; top: 50%; width: 10px; height: 10px; opacity: 0;
+        border: 1px solid rgb(240 160 111 / 0.9); background: rgb(24 6 4 / 0.9);
+        box-shadow: 0 0 10px rgb(211 78 47 / 0.6); transform: translate(-50%, -50%) rotate(45deg);
+      }
+      .rhombi i.a { left: 0; }
+      .rhombi i.b { left: 100%; }
+
+      /* E · marcas de cuenta sobre el canto superior */
+      .tally {
+        position: absolute; z-index: 3; bottom: calc(50% + 62px); left: 50%; display: flex; gap: 13px;
+        transform: translateX(-50%);
+      }
+      .tally i {
+        width: 2px; height: 16px; opacity: 0;
+        background: linear-gradient(180deg, transparent, var(--accent-bright));
+        box-shadow: 0 0 9px rgb(211 78 47 / 0.75);
+      }
+      .tally i:nth-child(3) { height: 24px; }
+
+      /* F · una brasa horizontal que arde sobre el título */
+      .ember-bar {
+        position: absolute; z-index: 3; bottom: calc(50% + 58px); left: 50%; width: 300px; height: 3px; opacity: 0;
+        background: linear-gradient(90deg, transparent, rgb(212 95 55 / 0.85) 22%, #ffd6a8 50%, rgb(212 95 55 / 0.85) 78%, transparent);
+        box-shadow: 0 0 16px rgb(211 78 47 / 0.8), 0 0 46px rgb(164 38 24 / 0.5);
+        transform: translateX(-50%);
+      }
+      .ember-bar span {
+        position: absolute; bottom: 0; width: 3px; height: 3px; border-radius: 50%; opacity: 0;
+        background: #ffc38b; box-shadow: 0 0 8px 2px rgb(255 150 90 / 0.65);
+      }
+      .ember-bar span:nth-child(1) { left: 22%; --ex: -14px; }
+      .ember-bar span:nth-child(2) { left: 41%; --ex: 8px; }
+      .ember-bar span:nth-child(3) { left: 58%; --ex: -6px; }
+      .ember-bar span:nth-child(4) { left: 77%; --ex: 16px; }
+
+      /* ══ Línea de tiempo común ════════════════════════════════════════
+         Todas las variantes comparten el mismo esqueleto; cada pestaña sólo
+         reescribe la pieza que la distingue. Los porcentajes sobreviven al
+         cambio de duración, así que --t y --k valen para todas. */
+      .stage.run .veil { animation: veil-life calc(var(--t) * var(--k)) linear both; }
+      .stage.run .atmosphere { animation: atmo-life calc(var(--t) * var(--k)) ease-in-out both; }
+      .stage.run .plate { animation: plate-life calc(var(--t) * var(--k)) cubic-bezier(0.14, 0.88, 0.2, 1) both; }
+      .stage.run .rule-line { animation: line-life calc(var(--t) * var(--k)) cubic-bezier(0.16, 0.86, 0.2, 1) both; }
+      .stage.run .banner h2 { animation: title-life calc(var(--t) * var(--k)) cubic-bezier(0.12, 0.9, 0.2, 1) both; }
+      .stage.run .subtitle { animation: subtitle-life calc(var(--t) * var(--k)) ease-out both; }
+
+      @keyframes veil-life { 0% { opacity: 0; } 4%, 78% { opacity: 1; } 100% { opacity: 0; } }
+      @keyframes atmo-life {
+        0% { opacity: 0; transform: scale(1.1); }
+        14%, 74% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(1.06); }
+      }
+      @keyframes plate-life {
+        0%, 2% { opacity: 0; transform: translate(-50%, -50%) scaleX(0.42); }
+        17%, 78% { opacity: 1; transform: translate(-50%, -50%) scaleX(1); }
+        100% { opacity: 0; transform: translate(-50%, -54%) scaleX(1.04); }
+      }
+      @keyframes line-life {
+        0%, 4% { opacity: 0; transform: scaleX(0); }
+        20%, 78% { opacity: 0.9; transform: scaleX(1); }
+        100% { opacity: 0; transform: scaleX(1); }
+      }
+      @keyframes title-life {
+        0%, 4% { opacity: 0; transform: scale(1.2); }
+        15%, 78% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(1.05); }
+      }
+      @keyframes subtitle-life {
+        0%, 20% { opacity: 0; letter-spacing: 0.44em; transform: translateY(6px); }
+        33%, 76% { opacity: 1; letter-spacing: 0.28em; transform: translateY(0); }
+        100% { opacity: 0; letter-spacing: 0.36em; transform: translateY(-4px); }
+      }
+
+      /* ══ 0 · Actual ═══════════════════════════════════════════════════
+         Reconstrucción literal de src/styles.css: 2,6 s, entradas con blur,
+         grieta a 7° y la calavera cayendo desde escala 0,28. */
+      .stage[data-variant="current"] { --t: 2600ms; }
+      .stage.run[data-variant="current"] .veil { animation-name: v0-veil; animation-timing-function: cubic-bezier(0.45, 0, 0.22, 1); }
+      .stage.run[data-variant="current"] .rift { animation: v0-rift calc(var(--t) * var(--k)) ease-in-out both; }
+      .stage.run[data-variant="current"] .plate { animation-name: v0-plate; animation-timing-function: cubic-bezier(0.16, 0.9, 0.26, 1); }
+      .stage.run[data-variant="current"] .banner h2 { animation-name: v0-title; animation-timing-function: cubic-bezier(0.16, 0.9, 0.26, 1); }
+      .stage.run[data-variant="current"] .crest { animation: v0-crest calc(var(--t) * var(--k)) cubic-bezier(0.14, 0.9, 0.22, 1.16) both; }
+
+      @keyframes v0-veil { 0% { opacity: 0; } 16%, 76% { opacity: 1; } 100% { opacity: 0; } }
+      @keyframes v0-rift {
+        0%, 8% { opacity: 0; filter: blur(8px); transform: translateX(-50%) rotate(7deg) scaleY(0.1); }
+        30%, 68% { opacity: 0.9; filter: blur(0); transform: translateX(-50%) rotate(7deg) scaleY(1); }
+        100% { opacity: 0; filter: blur(9px); transform: translateX(-50%) rotate(7deg) scaleY(0.35); }
+      }
+      @keyframes v0-title {
+        0%, 8% { opacity: 0; filter: blur(7px); transform: translateY(15px) scale(0.88); }
+        28%, 72% { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+        100% { opacity: 0; filter: blur(8px); transform: translateY(-9px) scale(1.08); }
+      }
+      /* La placa lleva su propio translate de centrado; el keyframe del título lo pisaría. */
+      @keyframes v0-plate {
+        0%, 8% { opacity: 0; filter: blur(7px); transform: translate(-50%, -50%) translateY(15px) scale(0.88); }
+        28%, 72% { opacity: 1; filter: blur(0); transform: translate(-50%, -50%) scale(1); }
+        100% { opacity: 0; filter: blur(8px); transform: translate(-50%, -50%) translateY(-9px) scale(1.08); }
+      }
+      @keyframes v0-crest {
+        0%, 8% { opacity: 0; filter: brightness(1.7); transform: translateX(-50%) rotate(45deg) scale(0.28); }
+        32% { opacity: 1; filter: brightness(1.2); transform: translateX(-50%) rotate(45deg) scale(1.12); }
+        44%, 72% { opacity: 1; filter: brightness(1); transform: translateX(-50%) rotate(45deg) scale(1); }
+        100% { opacity: 0; transform: translateX(-50%) rotate(45deg) scale(1.06); }
+      }
+
+      /* ══ A · Vacío ════════════════════════════════════════════════════
+         Sólo se retira la calavera y se reequilibra: sin blur de entrada,
+         2,1 s, el título estampa y las reglas se abren detrás de él. */
+      .stage[data-variant="empty"] { --t: 2100ms; }
+      .stage[data-variant="empty"] .plate { height: 104px; }
+      .stage[data-variant="empty"] .banner { height: 110px; }
+
+      /* ══ B · Muesca ═══════════════════════════════════════════════════
+         El canto superior hace punta. Entra dibujándose de fuera hacia
+         dentro, 90 ms después de que la placa termine de abrirse. */
+      .stage[data-variant="notch"] { --t: 2200ms; }
+      .stage.run[data-variant="notch"] .notch { animation: notch-life calc(var(--t) * var(--k)) cubic-bezier(0.16, 0.86, 0.2, 1) both; }
+      .stage.run[data-variant="notch"] .notch path.stroke { animation: notch-draw calc(var(--t) * var(--k)) cubic-bezier(0.16, 0.86, 0.2, 1) both; }
+      @keyframes notch-life {
+        0%, 12% { opacity: 0; transform: translateX(-50%) translateY(9px); }
+        26%, 78% { opacity: 1; transform: translateX(-50%) translateY(0); }
+        100% { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+      }
+      @keyframes notch-draw {
+        0%, 12% { stroke-dashoffset: 132; }
+        30%, 100% { stroke-dashoffset: 0; }
+      }
+
+      /* ══ C · Clavo ════════════════════════════════════════════════════
+         La grieta deja de cruzar la pantalla: baja recta desde arriba y se
+         clava en el canto. El título entra en el impacto, no antes. */
+      .stage[data-variant="nail"] { --t: 2300ms; }
+      .stage.run[data-variant="nail"] .nail { animation: nail-life calc(var(--t) * var(--k)) cubic-bezier(0.5, 0, 0.2, 1) both; }
+      .stage.run[data-variant="nail"] .plate { animation-name: nail-plate; }
+      .stage.run[data-variant="nail"] .banner h2 { animation-name: nail-title; }
+      .stage.run[data-variant="nail"] .rule-line { animation-name: nail-line; }
+      @keyframes nail-life {
+        0% { opacity: 0; transform: translateX(-50%) scaleY(0); }
+        6% { opacity: 1; }
+        22%, 70% { opacity: 1; transform: translateX(-50%) scaleY(1); }
+        100% { opacity: 0; transform: translateX(-50%) scaleY(1); }
+      }
+      @keyframes nail-plate {
+        0%, 20% { opacity: 0; transform: translate(-50%, -50%) scaleX(0.06); }
+        34%, 78% { opacity: 1; transform: translate(-50%, -50%) scaleX(1); }
+        100% { opacity: 0; transform: translate(-50%, -54%) scaleX(1.04); }
+      }
+      @keyframes nail-title {
+        0%, 21% { opacity: 0; transform: scale(1.14); }
+        31%, 78% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(1.04); }
+      }
+      @keyframes nail-line {
+        0%, 22% { opacity: 0; transform: scaleX(0); }
+        36%, 78% { opacity: 0.9; transform: scaleX(1); }
+        100% { opacity: 0; transform: scaleX(1); }
+      }
+
+      /* ══ D · Rombos ═══════════════════════════════════════════════════
+         Nada arriba. Los dos rombos del canto de la placa de Futuro cierran
+         los vértices y devuelven la simetría sin añadir un objeto nuevo. */
+      .stage[data-variant="rhombi"] { --t: 2200ms; }
+      .stage.run[data-variant="rhombi"] .rhombi i { animation: rhombi-life calc(var(--t) * var(--k)) cubic-bezier(0.14, 0.9, 0.22, 1.1) both; }
+      .stage.run[data-variant="rhombi"] .rhombi i.b { animation-delay: calc(70ms * var(--k)); }
+      @keyframes rhombi-life {
+        0%, 16% { opacity: 0; transform: translate(-50%, -50%) rotate(45deg) scale(0.2); }
+        30% { opacity: 1; transform: translate(-50%, -50%) rotate(45deg) scale(1.35); }
+        40%, 76% { opacity: 1; transform: translate(-50%, -50%) rotate(45deg) scale(1); }
+        100% { opacity: 0; transform: translate(-50%, -50%) rotate(45deg) scale(1); }
+      }
+
+      /* ══ E · Cuenta ═══════════════════════════════════════════════════
+         Cinco marcas se encienden una a una sobre el canto; la del centro
+         es más larga y llega con el título. */
+      .stage[data-variant="tally"] { --t: 2400ms; }
+      .stage.run[data-variant="tally"] .tally i { animation: tally-life calc(var(--t) * var(--k)) ease-out both; }
+      .stage.run[data-variant="tally"] .tally i:nth-child(1) { animation-delay: calc(150ms * var(--k)); }
+      .stage.run[data-variant="tally"] .tally i:nth-child(2) { animation-delay: calc(240ms * var(--k)); }
+      .stage.run[data-variant="tally"] .tally i:nth-child(3) { animation-delay: calc(330ms * var(--k)); }
+      .stage.run[data-variant="tally"] .tally i:nth-child(4) { animation-delay: calc(420ms * var(--k)); }
+      .stage.run[data-variant="tally"] .tally i:nth-child(5) { animation-delay: calc(510ms * var(--k)); }
+      @keyframes tally-life {
+        0% { opacity: 0; transform: translateY(-7px) scaleY(0.4); }
+        9%, 66% { opacity: 1; transform: translateY(0) scaleY(1); }
+        94%, 100% { opacity: 0; transform: translateY(0) scaleY(1); }
+      }
+
+      /* ══ F · Brasa ════════════════════════════════════════════════════
+         Ningún objeto: una línea que arde y suelta cuatro pavesas. Es la
+         única que sigue viva mientras el cuadro se sostiene. */
+      .stage[data-variant="ember"] { --t: 2400ms; }
+      .stage.run[data-variant="ember"] .ember-bar { animation: ember-life calc(var(--t) * var(--k)) cubic-bezier(0.16, 0.86, 0.2, 1) both; }
+      .stage.run[data-variant="ember"] .ember-bar span { animation: ember-rise calc(var(--t) * var(--k)) ease-out both; }
+      .stage.run[data-variant="ember"] .ember-bar span:nth-child(1) { animation-delay: calc(340ms * var(--k)); }
+      .stage.run[data-variant="ember"] .ember-bar span:nth-child(2) { animation-delay: calc(520ms * var(--k)); }
+      .stage.run[data-variant="ember"] .ember-bar span:nth-child(3) { animation-delay: calc(700ms * var(--k)); }
+      .stage.run[data-variant="ember"] .ember-bar span:nth-child(4) { animation-delay: calc(880ms * var(--k)); }
+      @keyframes ember-life {
+        0%, 8% { opacity: 0; transform: translateX(-50%) scaleX(0.1); }
+        20% { opacity: 1; transform: translateX(-50%) scaleX(1.06); }
+        28%, 74% { opacity: 0.92; transform: translateX(-50%) scaleX(1); }
+        100% { opacity: 0; transform: translateX(-50%) scaleX(0.86); }
+      }
+      @keyframes ember-rise {
+        0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+        14% { opacity: 1; }
+        60%, 100% { opacity: 0; transform: translate(var(--ex), -46px) scale(1); }
+      }
+
+      /* ── Reloj y notas ───────────────────────────────────────────────── */
+      .scrub { display: flex; align-items: center; gap: 12px; margin: 14px 0 0; }
+      .scrub .track { position: relative; flex: 1; height: 3px; background: rgb(146 116 88 / 0.2); }
+      .scrub .fill { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, #6d2b1c, var(--accent-bright)); }
+      .clock { min-width: 62px; color: var(--muted-dim); font-family: Consolas, "Courier New", monospace; font-size: 12px; }
+
+      .caption { min-height: 150px; padding: 22px 0 0; }
+      .caption h3 { margin: 0 0 8px; color: var(--parchment); font-family: var(--serif); font-size: 20px; font-weight: 500; }
+      .caption p { max-width: 82ch; margin: 0 0 10px; }
+      .caption b { color: var(--gold-bright); font-weight: 600; }
+      .verdict-tag { display: inline-block; margin: 0 0 10px; padding: 3px 9px; border: 1px solid rgb(146 116 88 / 0.4); color: var(--muted-dim); font-size: 10px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; }
+
+      .notes { max-width: 82ch; padding: 34px 0 0; border-top: 1px solid var(--rule); margin-top: 30px; }
+      .notes h2 { margin: 0 0 12px; color: var(--parchment); font-family: var(--serif); font-size: 22px; font-weight: 500; }
+      .notes h3 { margin: 26px 0 8px; color: #c8a982; font-size: 11px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+      .notes ul { margin: 0; padding-left: 20px; }
+      .notes li { margin: 0 0 8px; }
+    </style>
+  </head>
+
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">Hostfall · Maquetas · Efectos</p>
+        <h1>Oleada — el remate sin calavera</h1>
+        <p>
+          La base se queda: <strong>velo negro con desenfoque</strong>, <strong>atmósfera roja</strong>,
+          <strong>placa hexagonal</strong>, las dos reglas laterales, <strong>OLEADA</strong> y el subtítulo.
+          Lo que se retira es el <strong>medallón con la calavera</strong>: un rombo de 66 px pegado por
+          encima del marco, con un icono de librería dentro y ninguna relación con el resto del juego.
+        </p>
+        <p>
+          Quitarlo deja un hueco: la composición se apoyaba en ese pico para no ser una banda horizontal
+          plana. Las seis pestañas son <strong>seis maneras de resolver ese remate</strong> —una de ellas es
+          no poner nada— y todas afinan además la entrada, que hoy pierde nitidez por los
+          <code>blur()</code> de 7 px.
+        </p>
+      </header>
+
+      <div class="controls">
+        <div class="tabs" id="tabs">
+          <button data-variant="current" aria-pressed="true">0 · Actual</button>
+          <button data-variant="empty" aria-pressed="false">A · Vacío</button>
+          <button data-variant="notch" aria-pressed="false">B · Muesca</button>
+          <button data-variant="nail" aria-pressed="false">C · Clavo</button>
+          <button data-variant="rhombi" aria-pressed="false">D · Rombos</button>
+          <button data-variant="tally" aria-pressed="false">E · Cuenta</button>
+          <button data-variant="ember" aria-pressed="false">F · Brasa</button>
+        </div>
+        <span class="spacer"></span>
+        <button id="play">Reproducir</button>
+        <label class="toggle"><input type="checkbox" id="loop" checked /> Bucle</label>
+      </div>
+
+      <div class="subcontrol" id="subcontrol">
+        <span class="label">Velocidad</span>
+        <button class="small" data-speed="1" aria-pressed="true">1×</button>
+        <button class="small" data-speed="2" aria-pressed="false">0,5×</button>
+        <button class="small" data-speed="4" aria-pressed="false">0,25×</button>
+        <span class="spacer"></span>
+        <label class="toggle"><input type="checkbox" id="board" checked /> Tablero debajo</label>
+      </div>
+
+      <div class="stage" id="stage" data-variant="current" data-board="on">
+        <div class="layer board"></div>
+        <div class="layer veil"></div>
+        <div class="layer atmosphere"></div>
+        <div class="rift"></div>
+
+        <div class="layer verdict">
+          <div class="banner">
+            <span class="plate"></span>
+            <span class="rule-line"></span>
+            <h2>Oleada</h2>
+            <span class="rule-line right"></span>
+
+            <span class="ornament crest" aria-hidden="true">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m12.5 17-.5-1-.5 1h1z" />
+                <path d="M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z" />
+                <circle cx="15" cy="12" r="1" />
+                <circle cx="9" cy="12" r="1" />
+              </svg>
+            </span>
+
+            <span class="ornament notch" aria-hidden="true">
+              <svg viewBox="0 0 96 26" preserveAspectRatio="none">
+                <path d="M0 26 L34 2 L62 2 L96 26 Z" fill="rgb(12 2 2 / 0.97)" />
+                <path class="stroke" d="M0 26 L34 2 L62 2 L96 26" fill="none" stroke="rgb(214 118 74 / 0.55)"
+                      stroke-width="1" stroke-dasharray="132" stroke-dashoffset="132" vector-effect="non-scaling-stroke" />
+              </svg>
+            </span>
+
+            <span class="ornament nail" aria-hidden="true"></span>
+
+            <span class="ornament rhombi" aria-hidden="true"><i class="a"></i><i class="b"></i></span>
+
+            <span class="ornament tally" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+
+            <span class="ornament ember-bar" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+          </div>
+          <p class="subtitle">La Hueste ha sido desatada</p>
+        </div>
+      </div>
+
+      <div class="scrub">
+        <span class="clock" id="clock">0.00 s</span>
+        <div class="track"><div class="fill" id="fill"></div></div>
+        <span class="clock" id="total">2.60 s</span>
+      </div>
+
+      <div class="caption" id="caption"></div>
+
+      <section class="notes">
+        <h2>Por qué la calavera sobra</h2>
+        <p>
+          No es sólo que el icono sea de librería. El medallón es la única pieza del cuadro que
+          <b>no comparte material con nada más del juego</b>: su fondo es un degradado verde oliva
+          heredado de la familia de resultados, su borde es un cuadrado girado 45° y el símbolo de
+          dentro se contra-gira para volver a quedar recto. En movimiento hace un rebote propio a
+          escala 1,12 que compite con la estampa del título justo en el frame más importante.
+        </p>
+        <p>
+          Además dice lo mismo dos veces: <b>OLEADA</b> y <b>La Hueste ha sido desatada</b> ya cuentan
+          la noticia. El pico de arriba no tiene que significar nada; sólo tiene que sostener la
+          composición.
+        </p>
+
+        <h3>Qué cambia en código</h3>
+        <ul>
+          <li>Las seis retiran <code>&lt;Skull&gt;</code> y el <code>&lt;span className="game-result-crest"&gt;</code>
+            de <code>src/components/SurgeTransition.tsx</code>, más <code>.game-result-crest</code> y su keyframe en
+            <code>src/styles.css</code>. Ese bloque ya sólo lo usa la Oleada —los dos desenlaces imprimen su propio
+            cuadro—, así que no arrastra a Victoria ni a Derrota.</li>
+          <li><b>A</b> no añade nada: es borrado más un ajuste de altura y de duraciones. <b>D</b> y <b>E</b> añaden
+            elementos vacíos dentro del estandarte. <b>B</b> añade un SVG en línea de dos trazos. <b>F</b> añade una
+            línea y cuatro pavesas.</li>
+          <li><b>C</b> es la única que reescribe una pieza existente: <code>.surge-transition-rift</code> deja de
+            cruzar la pantalla a 7° y pasa a ser vertical, acabada en el canto de la placa.</li>
+          <li>Ninguna cambia la duración del beat en el store ni el momento en que se llama
+            <code>onComplete</code>: eso lo decide <code>onAnimationEnd</code> sobre el contenedor, así que basta con
+            que la animación raíz conserve su papel.</li>
+        </ul>
+
+        <h3>La entrada, aparte del remate</h3>
+        <p>
+          Hoy el estandarte entra con <code>filter: blur(7px)</code> y sale con <code>blur(8px)</code>. Desenfocar
+          una capa a pantalla completa obliga a repintar el árbol en cada frame —la misma regresión que
+          <code>CLAUDE.md</code> ya prohíbe en la succión del vórtice— y encima suaviza el único momento que
+          debería ser duro. Las seis variantes entran con <b>escala y opacidad</b>, que el compositor resuelve
+          solo, y bajan de 2,6 s a 2,1–2,4 s.
+        </p>
+
+        <h3>Contratos que se respetan</h3>
+        <ul>
+          <li>La copy no cambia: <code>surge.title</code> y <code>surge.message</code> se quedan como están.</li>
+          <li>El SFX sigue siendo <code>playMonsterHeavy</code> a <code>rate 0.88</code>; ninguna variante pide
+            un cue nuevo.</li>
+          <li><code>prefers-reduced-motion</code> mantiene el corte a 1 ms que ya existe.</li>
+          <li>Nada de esta carpeta se importa desde <code>src/</code>.</li>
+        </ul>
+      </section>
+    </main>
+
+    <script>
+      const VARIANTS = {
+        current: {
+          ms: 2600,
+          verdict: "Referencia",
+          title: "0 · Actual — lo que hay hoy",
+          body: [
+            "Reconstrucción literal de <code>.surge-transition</code>: 2,6 s, velo con desenfoque, atmósfera roja, la grieta de 3 px inclinada 7° y el medallón cayendo desde escala 0,28 con rebote a 1,12.",
+            "Mirándola a 0,25× se ve el problema: entre el 8 % y el 32 % hay <b>tres cosas rebotando a la vez</b> —placa, título y calavera— y las tres pasan por un desenfoque de 7 px. El golpe se reparte y no golpea."
+          ]
+        },
+        empty: {
+          ms: 2100,
+          verdict: "La más barata",
+          title: "A · Vacío — se quita y ya",
+          body: [
+            "Sin remate. La placa baja de 112 a 104 px para que la banda no se lea alta y vacía, y el título estampa desde escala 1,2 sin blur. Las reglas laterales se abren <b>detrás</b> del título ya puesto, no con él.",
+            "A favor: es borrado puro y medio segundo más corta. En contra: la silueta pasa a ser una banda horizontal simétrica, sin nada que rompa el borde superior. Es la prueba honesta de si el pico hacía falta."
+          ]
+        },
+        notch: {
+          ms: 2200,
+          verdict: "La más continua",
+          title: "B · Muesca — el marco hace punta",
+          body: [
+            "El remate deja de ser un objeto: es <b>el propio canto de la placa</b>, que sube en un trapecio de 26 px y vuelve a bajar. Mismo material, mismo grosor de trazo, misma familia que los biseles laterales del hexágono.",
+            "El trazo se dibuja de fuera hacia dentro, algo después de que la placa termine de abrirse: primero está el marco, después crece. Es la que menos inventa y la que mejor sostiene la silueta."
+          ]
+        },
+        nail: {
+          ms: 2300,
+          verdict: "La más agresiva",
+          title: "C · Clavo — la grieta baja y se clava",
+          body: [
+            "La grieta de hoy cruza toda la pantalla y no toca el estandarte: son dos cosas distintas ocurriendo a la vez. Aquí baja <b>recta</b>, se detiene en el canto superior y ese impacto es lo que abre la placa desde ancho cero.",
+            "El título llega justo después del clavo y las reglas al final. Cuesta reescribir una pieza, pero es la única que convierte los dos elementos sueltos en un solo gesto con causa y efecto."
+          ]
+        },
+        rhombi: {
+          ms: 2200,
+          verdict: "La más del juego",
+          title: "D · Rombos — el canto de la placa de Futuro",
+          body: [
+            "Arriba no va nada. Los dos rombos que ya cierran el canto de la <b>placa de Futuro</b> en los desenlaces se colocan en los vértices izquierdo y derecho del hexágono, sobre la línea media.",
+            "Entran con 70 ms de diferencia, sobrepasan a escala 1,35 y asientan. Vocabulario que el jugador ya vio en Victoria y Derrota, aplicado a la tercera pantalla que usa este estandarte."
+          ]
+        },
+        tally: {
+          ms: 2400,
+          verdict: "La más significativa",
+          title: "E · Cuenta — cinco marcas sobre el canto",
+          body: [
+            "Cinco marcas verticales se encienden una a una cada 90 ms; la del centro es más larga y aterriza con el título. Leen como muescas contadas, no como un emblema.",
+            "Si el número llegara a significar algo —Ecos revelados, por ejemplo— habría que decidirlo en reglas y no en el overlay. Como remate puramente rítmico ya funciona: la mirada sube, cuenta y baja al título."
+          ]
+        },
+        ember: {
+          ms: 2400,
+          verdict: "La más viva",
+          title: "F · Brasa — una línea que arde",
+          body: [
+            "Ningún objeto sólido: una línea de 300 px que se abre desde el centro a escala 0,1, sobrepasa y se queda ardiendo, soltando cuatro pavesas que suben 46 px y se apagan.",
+            "Es la única que <b>sigue viva</b> durante el segundo en que el cuadro se sostiene, en vez de quedarse congelada esperando la salida. También la más cara de las seis, aunque sean cinco elementos y ninguna capa a pantalla completa."
+          ]
+        }
+      };
+
+      const stage = document.getElementById("stage");
+      const tabs = document.getElementById("tabs");
+      const subcontrol = document.getElementById("subcontrol");
+      const playBtn = document.getElementById("play");
+      const loopBox = document.getElementById("loop");
+      const boardBox = document.getElementById("board");
+      const fill = document.getElementById("fill");
+      const clock = document.getElementById("clock");
+      const total = document.getElementById("total");
+      const caption = document.getElementById("caption");
+
+      let variant = "current";
+      let speed = 1;
+      let startedAt = 0;
+      let raf = 0;
+
+      function duration() {
+        return VARIANTS[variant].ms * speed;
+      }
+
+      function renderCaption() {
+        const info = VARIANTS[variant];
+        caption.innerHTML =
+          '<span class="verdict-tag">' + info.verdict + "</span>" +
+          "<h3>" + info.title + "</h3>" +
+          info.body.map((line) => "<p>" + line + "</p>").join("");
+        total.textContent = (duration() / 1000).toFixed(2) + " s";
+      }
+
+      function tick(now) {
+        const ms = duration();
+        const elapsed = Math.min(now - startedAt, ms);
+        fill.style.width = ((elapsed / ms) * 100).toFixed(2) + "%";
+        clock.textContent = (elapsed / 1000).toFixed(2) + " s";
+        if (elapsed < ms) {
+          raf = requestAnimationFrame(tick);
+          return;
+        }
+        stage.classList.remove("run");
+        if (loopBox.checked) window.setTimeout(play, 700);
+      }
+
+      function play() {
+        cancelAnimationFrame(raf);
+        stage.classList.remove("run");
+        void stage.offsetWidth;
+        stage.classList.add("run");
+        startedAt = performance.now();
+        raf = requestAnimationFrame(tick);
+      }
+
+      tabs.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-variant]");
+        if (!button) return;
+        variant = button.dataset.variant;
+        for (const node of tabs.querySelectorAll("button")) {
+          node.setAttribute("aria-pressed", String(node === button));
+        }
+        stage.dataset.variant = variant;
+        renderCaption();
+        play();
+      });
+
+      // La velocidad es un multiplicador de --k: los porcentajes de los keyframes
+      // no cambian, así que ninguna variante se descoloca al mirarla lenta.
+      subcontrol.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-speed]");
+        if (!button) return;
+        speed = Number(button.dataset.speed);
+        stage.style.setProperty("--k", String(speed));
+        for (const node of subcontrol.querySelectorAll("button[data-speed]")) {
+          node.setAttribute("aria-pressed", String(node === button));
+        }
+        renderCaption();
+        play();
+      });
+
+      boardBox.addEventListener("change", () => {
+        stage.dataset.board = boardBox.checked ? "on" : "off";
+      });
+
+      playBtn.addEventListener("click", play);
+      loopBox.addEventListener("change", () => {
+        if (loopBox.checked && !stage.classList.contains("run")) play();
+      });
+
+      renderCaption();
+      play();
+    </script>
+  </body>
+</html>
