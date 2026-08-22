@@ -749,7 +749,7 @@ const english = {
   "guided.firstSeed.readyTitle": "Your first defense is standing",
   "guided.firstSeed.readyBody": "Skyguard lets Maela defend against Flying Echoes. When Preparation ends, Maela stops Stabilizing; Liora remains Exhausted until your next turn.",
   "surge.title": "Surge",
-  "surge.message": "The Host is unleashed — Zombies gain +1 Power",
+  "surge.message": "The Host is unleashed",
 } as const;
 
 export type TranslationKey = keyof typeof english;
@@ -1490,7 +1490,7 @@ const spanish: Record<TranslationKey, string> = {
   "guided.firstSeed.readyTitle": "Tu primera defensa está en pie",
   "guided.firstSeed.readyBody": "Guardia aérea permite a Maela defender contra Ecos con Volar. Al terminar la Preparación, Maela deja de estar Estabilizándose; Liora sigue Agotada hasta tu próximo turno.",
   "surge.title": "Estampida",
-  "surge.message": "La Hueste ha sido desatada — los Zombis ganan +1 de Fuerza",
+  "surge.message": "La Hueste ha sido desatada",
 };
 
 const translations: Record<AppLanguage, Record<TranslationKey, string>> = {
