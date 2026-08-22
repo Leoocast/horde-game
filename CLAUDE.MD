@@ -483,6 +483,12 @@ No lanzar efectos relacionados todos a la vez. No recentrar el campo entre beats
 fuente no debe repetirse cuando el mismo evento continúa inmediatamente con líneas, proyectiles o
 impactos. Los resets incrementan `hostSequenceEpoch` para invalidar callbacks viejos.
 
+Cuando un Eco termina de Estabilizarse, la regla cambia de inmediato y la presentación conserva el
+material continuo bajo un sellado finito de 620 ms. Varias cartas se escalonan 70 ms, el Campo no
+reagrupa sus copias hasta que termina el último sello y el siguiente beat automático espera. Esta
+salida no reutiliza el pulso dorado de activación. El contrato completo vive en
+`docs/reference/animation_contracts.md`.
+
 La Mano separa tres transformaciones que no deben volver a compartir el mismo nodo: el slot exterior
 anima entrada/salida y reorganización; una capa intermedia posee el drag; la carta interior posee el
 abanico y el hover. Toda carta robada después del reparto inicial nace en el centro DOM del Archivo

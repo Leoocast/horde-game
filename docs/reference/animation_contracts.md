@@ -98,6 +98,25 @@ the ETB beat, so this beat does not pulse it again. An instant has no battlefiel
 uses the spell reveal on the right side of the Host panel. Creatures revealed later in the turn
 are not retroactively included.
 
+## Stabilization completion
+
+`stabilizing` is rules state, not an animation clock. When an Echo changes from Stabilizing to
+ready, the engine commits that change immediately and the store derives a finite presentation event
+from the real `true -> false` transition. The continuous material remains mounted beneath a 620ms
+seal: its existing particles keep their current clocks, the lattice contracts into the center, and
+a final interior release clears the veil. Do not replay the generic gold activation pulse; finishing
+Stabilization is not an ability trigger.
+
+- Player and Host Echoes use the same presentation. Several completions are staggered by 70ms in
+  Field order and form one barrier that settles after the final card.
+- The next automatic Host beat and deliberate gameplay input wait for this presentation, while the
+  underlying `GameState` remains fully committed.
+- Battlefield grouping stays frozen during the seal so a newly ready copy cannot jump into another
+  stack halfway through its own finish.
+- `animationend` releases each card. A bounded store watchdog clears a missing callback, and resets
+  invalidate the whole presentation state.
+- Reduced motion replaces the lattice contraction and expanding ring with a 180ms interior fade.
+
 ## Burn
 
 `Burn` is the reusable presentation for targeted non-combat damage.

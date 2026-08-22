@@ -13,6 +13,7 @@ import { useGameStore } from "../store/useGameStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { useAudioStore } from "../store/useAudioStore";
 import { useToastStore } from "../store/useToastStore";
+import { stabilizationCompletionDelayMs } from "../store/stabilizationPresentation";
 import { cardThemeForDefinition, shouldShowFullCardImage } from "../utils/cardImages";
 import { renderCardText } from "../utils/cardTextSymbols";
 import { cardStatState } from "../utils/selectors";
@@ -170,6 +171,8 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
   const resolvingHostCombat = useGameStore((state) => state.resolvingHostCombat);
   const hostAutoTriggerCount = useGameStore((state) => state.hostAutoTriggerCount);
   const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
+  const stabilizationCompletion = useGameStore((state) => state.stabilizationCompletion);
+  const completeStabilizationCard = useGameStore((state) => state.completeStabilizationCard);
   const activeEffectCardId = useGameStore((state) => state.activeEffectCardId);
   const closingEffectCardId = useGameStore((state) => state.closingEffectCardId);
   const activatingEffectCardId = useGameStore((state) => state.activatingEffectCardId);
@@ -238,6 +241,9 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
   // let them all leave at once. This covers both animated Host combat and the Host's own
   // auto-triggers (e.g. Tribute of the Four Sorrows sacrificing its weakest creature), which also kill mid-sequence.
   const holdCasualties = resolvingHostCombat || hostAutoTriggerCount > 0 || playerAutoTriggerCount > 0;
+  const holdStableGrouping = holdCasualties || Boolean(
+    stabilizationCompletion?.cards.some((entry) => entry.side === side),
+  );
   const displayedCards = holdCombatCasualties(cards, holdCasualties, combatCasualties, previousCards, battlefieldCardOrder);
   const casualtyIds = combatCasualties.current;
   const creatures = displayedCards.filter((card) => card.kinds.includes("ECHO"));
@@ -866,7 +872,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
       // Freeze grouping for the whole Host sequence — combat impacts AND trigger/aura beats.
       // The aura beat window (e.g. The Broken Headstone announcing Menace before attackers declare)
       // regrouped rows mid-turn when it sat outside the frozen span.
-      holdCasualties,
+      holdStableGrouping,
     ).map((group) => (
       <div
         key={`${keyPrefix}-stack-${group.key}`}
@@ -924,6 +930,10 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
           (tributeOfTheFourSorrowsSelectionKind === "sacrifice-land" && card.kinds.includes("SOURCE"))),
     );
     const tributeOfTheFourSorrowsTargetLocked = tributeOfTheFourSorrowsSelectionTargetId === card.instanceId;
+    const stabilizationCompletionIndex = stabilizationCompletion?.cards.findIndex(
+      (entry) => entry.side === side && entry.cardId === card.instanceId,
+    ) ?? -1;
+    const stabilizationCompleting = stabilizationCompletionIndex >= 0;
     const playerCombat = game.activeSide === "player" && game.phase === "combat";
     const selectedPlayerAttacker = game.combat.playerAttackers.includes(card.instanceId);
     const legalAttacker = Boolean(playerCombat && side === "player" && card.kinds.includes("ECHO") && (selectedPlayerAttacker || canAttack(game, card)));
@@ -949,6 +959,8 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
         && game.combat.hostAttackers.includes(card.instanceId),
     );
     const selectionDisabled =
+      stabilizationCompleting ||
+      Boolean(stabilizationCompletion) ||
       casualtyIds.has(card.instanceId) ||
       (isLand && !tributeOfTheFourSorrowsTargetable && !tributeOfTheFourSorrowsTargetLocked) ||
       (playerCombat && side === "player" && !attemptablePlayerAttacker) ||
@@ -959,7 +971,7 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
       (playerCombat && side === "player" && !legalAttacker && !selectedPlayerAttacker && !isLand) ||
       (playerCombat && side === "host") ||
       (hostCombat && side === "player" && card.kinds.includes("ECHO") && !selectableBlocker);
-    const actionable = !resolvingHostCombat && (availablePlayerAttacker || legalBlockTarget || (legalBlocker && !selectedPlayerCreatureId));
+    const actionable = !stabilizationCompletion && !resolvingHostCombat && (availablePlayerAttacker || legalBlockTarget || (legalBlocker && !selectedPlayerCreatureId));
     const primaryAbility = card.activatedAbilities[0];
     const effectAvailable = canUseActivatedAbility(card, primaryAbility);
     const showActivatedAbilityChrome = effectAvailable && !isLand;
@@ -1203,8 +1215,15 @@ export function Battlefield({ game, side, cards, hiddenDefenseLinkIds }: Props) 
         accentColor={side === "player" && !hostCombat ? assignedColor ?? attackerColor : undefined}
         linkLabel={defenseBadgeCount}
         selectionDisabled={selectionDisabled}
+        stabilizationCompletion={stabilizationCompleting && stabilizationCompletion
+          ? {
+              eventId: stabilizationCompletion.id,
+              delayMs: stabilizationCompletionDelayMs(stabilizationCompletionIndex),
+              onComplete: () => completeStabilizationCard(stabilizationCompletion.id, card.instanceId),
+            }
+          : undefined}
         muted={muted}
-        suppressContextMenu={effectActive || counterTargetingActive || spellTargetingActive || tributeOfTheFourSorrowsSelectionActive}
+        suppressContextMenu={Boolean(stabilizationCompletion) || effectActive || counterTargetingActive || spellTargetingActive || tributeOfTheFourSorrowsSelectionActive}
         suppressHoverOverlay={counterTargetingActive || spellTargetingActive || tributeOfTheFourSorrowsSelectionActive}
         visualDamageMarked={hostCombatVisualDamage?.[card.instanceId]}
         onPointerDown={(event) => {

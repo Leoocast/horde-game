@@ -116,6 +116,17 @@ import {
 } from "../guidance";
 import { authoredHostTurnGate, type AuthoredHostTurnPlan } from "../guidance/authoredHostTurn";
 import { DESTINY_DIAL_STEP, destinyDialDeathDelta } from "./destinyDial";
+import {
+  completedStabilizationCards,
+  stabilizationCompletionTotalMs,
+  type StabilizationCompletionCard,
+} from "./stabilizationPresentation";
+
+export type StabilizationCompletionAnimation = Readonly<{
+  id: number;
+  cards: readonly StabilizationCompletionCard[];
+  pendingCardIds: readonly string[];
+}>;
 
 export type GameStore = {
   game: GameState;
@@ -147,6 +158,7 @@ export type GameStore = {
   pendingTriggeredEffectSourceId?: string;
   hostAutoTriggerCount: number;
   playerAutoTriggerCount: number;
+  stabilizationCompletion?: StabilizationCompletionAnimation;
   surgeTransitionActive: boolean;
   surgeTransitionShown: boolean;
   surgeRevealPending: boolean;
@@ -275,6 +287,7 @@ export type GameStore = {
   completePlayerDiscardAnimation: (id: string) => void;
   materializeLandPlayAnimation: (id: string) => void;
   completeLandPlayAnimation: (id: string) => void;
+  completeStabilizationCard: (eventId: number, cardId: string) => void;
   resolveHostCombat: () => void;
   finishHostTurn: () => void;
   completeHostMillAnimation: (id: string) => void;
@@ -308,6 +321,7 @@ const POISON_CONSUME_ANIMATION_SAFETY_CLEAR_MS = 1200;
 const DRAIN_ESSENCE_ANIMATION_SAFETY_CLEAR_MS = 3200;
 const FINAL_BANQUET_ANIMATION_SAFETY_CLEAR_MS = 2600;
 const ENERGY_FLOW_ANIMATION_SAFETY_CLEAR_MS = 1500;
+const STABILIZATION_COMPLETION_SAFETY_BUFFER_MS = 360;
 const SPELL_FIGHT_BUFF_LEAD_IN_MS = 1040;
 const SPELL_FIGHT_IMPACT_MS = 520;
 const SPELL_FIGHT_DEATH_FADE_MS = 260;
@@ -335,6 +349,8 @@ let finalBanquetCommit: (() => Partial<GameStore>) | undefined;
 let energyFlowAnimationSafetyTimer: number | undefined;
 let energyFlowCommit: (() => Partial<GameStore>) | undefined;
 let energyFlowAfterCommit: (() => void) | undefined;
+let stabilizationCompletionEventId = 0;
+let stabilizationCompletionSafetyTimer: number | undefined;
 const publishedGuidedTransitionStates = new WeakSet<GameState>();
 let hostCombatSequenceId = 0;
 let playerCombatSequenceId = 0;
@@ -589,6 +605,7 @@ function createCleanUiState(): Partial<GameStore> {
     pendingTriggeredEffectSourceId: undefined,
     hostAutoTriggerCount: 0,
     playerAutoTriggerCount: 0,
+    stabilizationCompletion: undefined,
     surgeTransitionActive: false,
     surgeTransitionShown: false,
     surgeRevealPending: false,
@@ -649,6 +666,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   pendingTriggeredEffectSourceId: undefined,
   hostAutoTriggerCount: 0,
   playerAutoTriggerCount: 0,
+  stabilizationCompletion: undefined,
   surgeTransitionActive: false,
   surgeTransitionShown: false,
   surgeRevealPending: false,
@@ -755,11 +773,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (get().energyRecycleDragActive === active) return;
     set({ energyRecycleDragActive: active });
   },
-  selectHand: (id) => set({ selectedHandId: id }),
-  selectPlayerCreature: (id) => set({ selectedPlayerCreatureId: id }),
-  selectHostCreature: (id) => set({ selectedHostCreatureId: id }),
+  selectHand: (id) => {
+    if (get().stabilizationCompletion) return;
+    set({ selectedHandId: id });
+  },
+  selectPlayerCreature: (id) => {
+    if (get().stabilizationCompletion) return;
+    set({ selectedPlayerCreatureId: id });
+  },
+  selectHostCreature: (id) => {
+    if (get().stabilizationCompletion) return;
+    set({ selectedHostCreatureId: id });
+  },
   selectActiveEffectCard: (id) =>
     set(({ activeEffectCardId }) => {
+      if (get().stabilizationCompletion) return {};
       if (activeEffectCloseTimer) {
         window.clearTimeout(activeEffectCloseTimer);
         activeEffectCloseTimer = undefined;
@@ -1082,14 +1110,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const intent = phaseAdvanceIntent(get().game, phase);
     if (!gameplayIntentAllowed(intent)) return;
     let transition: readonly [GameState, GameState] | undefined;
+    let stabilizationCompletion: StabilizationCompletionAnimation | undefined;
     set((state) => {
-      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.energyFlowAnimation || state.pendingSpellHandId || state.spellFightAnimation || state.playerAutoTriggerCount > 0) return {};
+      if (discardPauseInProgress(state) || state.stabilizationCompletion || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.energyFlowAnimation || state.pendingSpellHandId || state.spellFightAnimation || state.playerAutoTriggerCount > 0) return {};
       const { game } = state;
       const next = advancePhase(game, phase);
       transition = [game, next];
+      stabilizationCompletion = stabilizationCompletionForTransition(game, next);
       playDrawOneIfPlayerDrew(game, next);
       return {
         game: next,
+        stabilizationCompletion,
+        ...stabilizationCompletionInteractionReset(stabilizationCompletion),
         playerAttackDrag: undefined,
         // The hand limit is checked when the player explicitly ends the turn,
         // not merely when combat advances into the end phase.
@@ -1097,13 +1129,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
         handLimitSelectionId: undefined,
       };
     });
+    if (stabilizationCompletion) scheduleStabilizationCompletionSafetyClear(stabilizationCompletion);
     if (transition) publishGuidedTransitionReceipts(...transition);
   },
   endPlayerTurn: (options) => {
     if (!gameplayIntentAllowed(endPlayerTurnIntent(get().game))) return;
     let transition: readonly [GameState, GameState] | undefined;
+    let stabilizationCompletion: StabilizationCompletionAnimation | undefined;
     set((state) => {
-      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.energyFlowAnimation || state.pendingSpellHandId || state.spellFightAnimation || state.poisonConsumeAnimation || state.playerAutoTriggerCount > 0) return {};
+      if (discardPauseInProgress(state) || state.stabilizationCompletion || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.energyFlowAnimation || state.pendingSpellHandId || state.spellFightAnimation || state.poisonConsumeAnimation || state.playerAutoTriggerCount > 0) return {};
       const { game } = state;
       const overflow = playerHandOverflow(game);
       if (overflow > 0) {
@@ -1128,9 +1162,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
       const next = endPlayerTurn(game);
       transition = [game, next];
+      stabilizationCompletion = stabilizationCompletionForTransition(game, next);
       playDrawOneIfPlayerDrew(game, next);
-      return { game: next, handLimitDiscardActive: false, handLimitSelectionId: undefined, hostMillAnimationQueue: appendHostMillAnimations(state, game, next) };
+      return {
+        game: next,
+        stabilizationCompletion,
+        ...stabilizationCompletionInteractionReset(stabilizationCompletion),
+        handLimitDiscardActive: false,
+        handLimitSelectionId: undefined,
+        hostMillAnimationQueue: appendHostMillAnimations(state, game, next),
+      };
     });
+    if (stabilizationCompletion) scheduleStabilizationCompletionSafetyClear(stabilizationCompletion);
     if (transition) publishGuidedTransitionReceipts(...transition);
   },
   playLand: (id) => {
@@ -1357,6 +1400,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     poisonConsumeAnimationSafetyTimer = undefined;
     const previous = get().game;
     const next = endPlayerTurn(previous);
+    const stabilizationCompletion = stabilizationCompletionForTransition(previous, next);
     playDrawOneIfPlayerDrew(previous, next);
     let millAnimationQueued = false;
     set((state) => {
@@ -1364,21 +1408,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
       millAnimationQueued = hostMillAnimationQueue.length > 0;
       return {
         game: next,
+        stabilizationCompletion,
+        ...stabilizationCompletionInteractionReset(stabilizationCompletion),
         poisonConsumeAnimation: undefined,
         handLimitDiscardActive: false,
         handLimitSelectionId: undefined,
         hostMillAnimationQueue,
       };
     });
+    if (stabilizationCompletion) scheduleStabilizationCompletionSafetyClear(stabilizationCompletion);
     if (active.runHostAfter && millAnimationQueued) {
       poisonConsumeRunHostAfterMill = true;
     } else if (active.runHostAfter && typeof window !== "undefined") {
-      window.setTimeout(() => {
-        const latest = useGameStore.getState();
-        if (latest.game.activeSide === "host" && latest.game.phase === "host") {
-          runGuidedSystemAction(() => latest.runHostMain());
-        }
-      }, 0);
+      scheduleHostMainWhenStabilizationSettles();
     }
   },
   resolveDrainEssenceAnimation: (id) => {
@@ -1879,7 +1921,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   runHostMain: () => {
     const state = get();
-    if (discardPauseInProgress(state) || state.surgeTransitionActive || state.surgeRevealPending) return;
+    if (discardPauseInProgress(state) || state.stabilizationCompletion || state.surgeTransitionActive || state.surgeRevealPending) return;
     const { game } = state;
     if (!gameplayIntentAllowed(runHostIntent(game))) return;
     const authoredPlan = authoredHostTurnGate.plan(game);
@@ -1962,7 +2004,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     presentResolvedHostMain(state.game, main, state);
   },
   prepareHostAttackers: () => {
-    if (discardPauseInProgress(get())) return;
+    if (discardPauseInProgress(get()) || get().stabilizationCompletion) return;
     startHostCombatSequence();
   },
   declareBlocker: (blockerId, attackerId) => {
@@ -2051,6 +2093,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
       landPlayAnimationQueue: state.landPlayAnimationQueue.filter((item) => item.id !== id),
       summoningAnimationCount: Math.max(0, state.summoningAnimationCount - 1),
     })),
+  completeStabilizationCard: (eventId, cardId) => {
+    let finished = false;
+    set((state) => {
+      const active = state.stabilizationCompletion;
+      if (!active || active.id !== eventId || !active.pendingCardIds.includes(cardId)) return {};
+      const pendingCardIds = active.pendingCardIds.filter((pendingId) => pendingId !== cardId);
+      if (pendingCardIds.length > 0) {
+        return { stabilizationCompletion: { ...active, pendingCardIds } };
+      }
+      finished = true;
+      return { stabilizationCompletion: undefined };
+    });
+    if (finished) clearStabilizationCompletionTimer();
+  },
   completeHostMillAnimation: (id) => {
     let shouldRunHost = false;
     set((state) => {
@@ -2062,17 +2118,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return { hostMillAnimationQueue };
     });
     if (shouldRunHost && typeof window !== "undefined") {
-      window.setTimeout(() => {
-        const latest = useGameStore.getState();
-        if (latest.game.activeSide === "host" && latest.game.phase === "host") {
-          runGuidedSystemAction(() => latest.runHostMain());
-        }
-      }, 0);
+      scheduleHostMainWhenStabilizationSettles();
     }
   },
   resolveHostCombat: () => {
     const state = get();
-    if (discardPauseInProgress(state)) return;
+    if (discardPauseInProgress(state) || state.stabilizationCompletion) return;
     const { game, hostAttackAnimation, playerAttackAnimation, burnAnimation } = state;
     if (hostAttackAnimation || playerAttackAnimation || burnAnimation) return;
     if (game.activeSide !== "host" || game.combat.hostAttackers.length === 0) return;
@@ -2092,14 +2143,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
   finishHostTurn: () => {
     if (!gameplayIntentAllowed({ kind: "phase.startPlayerTurn" })) return;
     let transition: readonly [GameState, GameState] | undefined;
+    let stabilizationCompletion: StabilizationCompletionAnimation | undefined;
     set((state) => {
-      if (discardPauseInProgress(state)) return {};
+      if (discardPauseInProgress(state) || state.stabilizationCompletion) return {};
       const { game } = state;
       const next = finishHostTurn(game);
       transition = [game, next];
+      stabilizationCompletion = stabilizationCompletionForTransition(game, next);
       playDrawOneIfPlayerDrew(game, next);
-      return { game: next, hostAutoTriggerCount: 0 };
+      return {
+        game: next,
+        stabilizationCompletion,
+        ...stabilizationCompletionInteractionReset(stabilizationCompletion),
+        hostAutoTriggerCount: 0,
+      };
     });
+    if (stabilizationCompletion) scheduleStabilizationCompletionSafetyClear(stabilizationCompletion);
     if (transition) publishGuidedTransitionReceipts(...transition);
   },
   triggerEndGame: (winner) => {
@@ -2785,6 +2844,88 @@ function clearEnergyFlowPresentation(): void {
   energyFlowAfterCommit = undefined;
 }
 
+function stabilizationCompletionForTransition(
+  previous: GameState,
+  next: GameState,
+): StabilizationCompletionAnimation | undefined {
+  const cards = completedStabilizationCards(previous, next);
+  if (cards.length === 0) return undefined;
+  return Object.freeze({
+    id: ++stabilizationCompletionEventId,
+    cards,
+    pendingCardIds: Object.freeze(cards.map(({ cardId }) => cardId)),
+  });
+}
+
+function stabilizationCompletionInteractionReset(
+  animation: StabilizationCompletionAnimation | undefined,
+): Partial<GameStore> {
+  if (!animation) return {};
+  return {
+    selectedHandId: undefined,
+    selectedPlayerCreatureId: undefined,
+    selectedHostCreatureId: undefined,
+    activeEffectCardId: undefined,
+    closingEffectCardId: undefined,
+    hoveredCardId: undefined,
+    focusedCardId: undefined,
+    blockDrag: undefined,
+    playerAttackDrag: undefined,
+    cardContextMenu: undefined,
+  };
+}
+
+function clearStabilizationCompletionTimer(): void {
+  if (stabilizationCompletionSafetyTimer !== undefined && typeof window !== "undefined") {
+    window.clearTimeout(stabilizationCompletionSafetyTimer);
+  }
+  stabilizationCompletionSafetyTimer = undefined;
+}
+
+function finishStabilizationCompletion(eventId: number): void {
+  clearStabilizationCompletionTimer();
+  useGameStore.setState((state) =>
+    state.stabilizationCompletion?.id === eventId
+      ? { stabilizationCompletion: undefined }
+      : {},
+  );
+}
+
+function scheduleStabilizationCompletionSafetyClear(
+  animation: StabilizationCompletionAnimation,
+): void {
+  if (
+    typeof window === "undefined" ||
+    typeof document === "undefined" ||
+    typeof document.createElement !== "function"
+  ) {
+    queueMicrotask(() => finishStabilizationCompletion(animation.id));
+    return;
+  }
+  clearStabilizationCompletionTimer();
+  stabilizationCompletionSafetyTimer = window.setTimeout(
+    () => finishStabilizationCompletion(animation.id),
+    stabilizationCompletionTotalMs(animation.cards.length) + STABILIZATION_COMPLETION_SAFETY_BUFFER_MS,
+  );
+}
+
+function scheduleHostMainWhenStabilizationSettles(): void {
+  if (typeof window === "undefined") return;
+  const sessionId = useGameStore.getState().gameSessionId;
+  const resume = () => {
+    const latest = useGameStore.getState();
+    if (latest.gameSessionId !== sessionId) return;
+    if (latest.stabilizationCompletion) {
+      window.setTimeout(resume, 40);
+      return;
+    }
+    if (latest.game.activeSide === "host" && latest.game.phase === "host") {
+      runGuidedSystemAction(() => latest.runHostMain());
+    }
+  };
+  window.setTimeout(resume, 0);
+}
+
 function cancelScheduledPresentation(): void {
   hostCombatSequenceId += 1;
   playerCombatSequenceId += 1;
@@ -2819,6 +2960,7 @@ function cancelScheduledPresentation(): void {
   clearDrainEssencePresentation();
   clearFinalBanquetPresentation();
   clearEnergyFlowPresentation();
+  clearStabilizationCompletionTimer();
 }
 
 function scheduleBloodPactAnimationSafetyClear(id: string): void {
@@ -2909,6 +3051,7 @@ function combatResolutionInProgress(state: GameStore): boolean {
       state.drainEssenceAnimation ||
       state.finalBanquetAnimation ||
       state.energyFlowAnimation ||
+      state.stabilizationCompletion ||
       state.pendingSpellHandId ||
       state.spellFightAnimation ||
       state.resolvingHostCombat ||

@@ -29,6 +29,7 @@ export function guidedPresentationBlockers(
   if (state.summoningAnimationCount > 0) blockers.push("summoning");
   if (state.hostAutoTriggerCount > 0) blockers.push("host.trigger");
   if (state.playerAutoTriggerCount > 0) blockers.push("player.trigger");
+  if (state.stabilizationCompletion) blockers.push("stabilization.completion");
   if (state.pendingTriggeredEffectCount > 0) blockers.push("trigger.pending");
   if (state.pendingStaticAuras.length > 0) blockers.push("aura.pending");
   if (state.surgeTransitionActive) blockers.push("surge.transition");

@@ -6088,6 +6088,102 @@
     filter: saturate(0.6);
   }
 
+  .stabilizing-effect {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    overflow: hidden;
+    border-radius: inherit;
+  }
+
+  /* The continuous material remains mounted while the finite seal begins. Its particles keep
+     their current clock and crossfade underneath the closing lattice instead of restarting. */
+  .stabilizing-effect.is-completing {
+    animation: stabilizing-completion-lifetime 620ms linear var(--stabilizing-completion-delay, 0ms) both;
+  }
+
+  .stabilizing-effect.is-completing .stabilizing-veil {
+    animation: stabilizing-veil-release 620ms ease-out var(--stabilizing-completion-delay, 0ms) both;
+  }
+
+  .stabilizing-effect.is-completing .stabilizing-gold-patina {
+    animation: stabilizing-material-release 620ms cubic-bezier(0.22, 1, 0.36, 1) var(--stabilizing-completion-delay, 0ms) both;
+  }
+
+  .stabilizing-effect.is-completing .stabilizing-wave-effect {
+    animation: stabilizing-wave-release 620ms ease-out var(--stabilizing-completion-delay, 0ms) both;
+  }
+
+  .stabilizing-completion {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    overflow: hidden;
+    mix-blend-mode: screen;
+  }
+
+  .stabilizing-completion-lattice {
+    position: absolute;
+    inset: -12%;
+    background:
+      repeating-linear-gradient(
+        0deg,
+        transparent 0 6.5cqw,
+        rgb(255 239 190 / 0.74) 6.5cqw calc(6.5cqw + 0.42cqw),
+        transparent calc(6.5cqw + 0.42cqw) 13cqw
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent 0 6.5cqw,
+        rgb(222 171 75 / 0.64) 6.5cqw calc(6.5cqw + 0.42cqw),
+        transparent calc(6.5cqw + 0.42cqw) 13cqw
+      );
+    -webkit-mask: radial-gradient(circle at 50% 50%, #000 0 24%, rgb(0 0 0 / 0.82) 42%, transparent 69%);
+    mask: radial-gradient(circle at 50% 50%, #000 0 24%, rgb(0 0 0 / 0.82) 42%, transparent 69%);
+    opacity: 0;
+    transform-origin: 50% 50%;
+    animation: stabilizing-completion-lattice 620ms cubic-bezier(0.32, 0, 0.2, 1) var(--stabilizing-completion-delay, 0ms) both;
+  }
+
+  .stabilizing-completion-core {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 28%;
+    aspect-ratio: 1;
+    border-radius: 999px;
+    background: radial-gradient(
+      circle,
+      rgb(255 253 240 / 0.98) 0 7%,
+      rgb(255 229 158 / 0.88) 12%,
+      rgb(211 151 48 / 0.34) 34%,
+      transparent 70%
+    );
+    opacity: 0;
+    translate: -50% -50%;
+    transform-origin: 50% 50%;
+    animation: stabilizing-completion-core 620ms ease-out var(--stabilizing-completion-delay, 0ms) both;
+  }
+
+  .stabilizing-completion-release {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 24%;
+    aspect-ratio: 1;
+    border: 0.8cqw solid rgb(255 235 181 / 0.82);
+    border-radius: 999px;
+    box-shadow:
+      0 0 2.4cqw rgb(255 244 210 / 0.62),
+      inset 0 0 2cqw rgb(216 158 57 / 0.48);
+    opacity: 0;
+    translate: -50% -50%;
+    transform-origin: 50% 50%;
+    animation: stabilizing-completion-release 620ms cubic-bezier(0.2, 0.72, 0.24, 1) var(--stabilizing-completion-delay, 0ms) both;
+  }
+
   .summoning-sick-card {
     filter: saturate(1.01) brightness(1.015) contrast(1.02);
   }
@@ -6268,6 +6364,20 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .stabilizing-effect.is-completing,
+    .stabilizing-effect.is-completing .stabilizing-veil,
+    .stabilizing-effect.is-completing .stabilizing-gold-patina,
+    .stabilizing-effect.is-completing .stabilizing-wave-effect,
+    .stabilizing-completion-core {
+      animation-delay: 0ms;
+      animation-duration: 180ms;
+    }
+
+    .stabilizing-completion-lattice,
+    .stabilizing-completion-release {
+      display: none;
+    }
+
     .stabilizing-gold-patina::before,
     .stabilizing-gold-patina::after,
     .stabilizing-gold-glint,
@@ -11592,6 +11702,129 @@
     translate: 0 0;
     opacity: 0;
     scale: 0.35;
+  }
+}
+
+/* The lifecycle keyframe is deliberately visually neutral. It provides one reliable completion
+   event while the child layers own the actual seal and release. */
+@keyframes stabilizing-completion-lifetime {
+  from {
+    transform: translateZ(0);
+  }
+
+  to {
+    transform: translateZ(0);
+  }
+}
+
+@keyframes stabilizing-veil-release {
+  0%,
+  32% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes stabilizing-material-release {
+  0% {
+    opacity: 1;
+  }
+
+  28% {
+    opacity: 0.92;
+  }
+
+  70% {
+    opacity: 0.42;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes stabilizing-wave-release {
+  0%,
+  24% {
+    opacity: 1;
+  }
+
+  72% {
+    opacity: 0.3;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes stabilizing-completion-lattice {
+  0% {
+    opacity: 0;
+    scale: 1.08;
+  }
+
+  14% {
+    opacity: 0.58;
+  }
+
+  48% {
+    opacity: 0.94;
+    scale: 0.38;
+  }
+
+  62% {
+    opacity: 0.72;
+    scale: 0.16;
+  }
+
+  76%,
+  100% {
+    opacity: 0;
+    scale: 0.08;
+  }
+}
+
+@keyframes stabilizing-completion-core {
+  0%,
+  38% {
+    opacity: 0;
+    scale: 0.2;
+  }
+
+  53% {
+    opacity: 0.95;
+    scale: 0.72;
+  }
+
+  72% {
+    opacity: 0.46;
+    scale: 1.18;
+  }
+
+  100% {
+    opacity: 0;
+    scale: 1.55;
+  }
+}
+
+@keyframes stabilizing-completion-release {
+  0%,
+  48% {
+    opacity: 0;
+    scale: 0.16;
+  }
+
+  58% {
+    opacity: 0.9;
+  }
+
+  100% {
+    opacity: 0;
+    scale: 4.2;
   }
 }
 

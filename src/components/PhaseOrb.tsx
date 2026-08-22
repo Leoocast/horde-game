@@ -1,5 +1,5 @@
 import { Check, FastForward, Shield, Swords, X } from "lucide-react";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { GameState } from "../engine/GameTypes";
 import { canAttack, hasTrait } from "../engine/Traits";
 import { useAudioStore } from "../store/useAudioStore";
@@ -71,8 +71,10 @@ export function PhaseOrb({ game, hostStartDelayMs = 0 }: { game: GameState; host
   const pendingTriggeredEffectCount = useGameStore((state) => state.pendingTriggeredEffectCount);
   const hostAutoTriggerCount = useGameStore((state) => state.hostAutoTriggerCount);
   const playerAutoTriggerCount = useGameStore((state) => state.playerAutoTriggerCount);
+  const stabilizationCompletionId = useGameStore((state) => state.stabilizationCompletion?.id);
   const [hostStartPending, setHostStartPending] = useState(false);
   const hostStartTimerRef = useRef<number | undefined>(undefined);
+  const hostStartAfterStabilizationRef = useRef<number | undefined>(undefined);
   const targetingActive = useGameStore((state) => Boolean(state.counterTargeting || state.spellTargeting || state.tributeOfTheFourSorrowsSelection));
   const attackAnimating = hostAttackAnimating || playerAttackAnimating || hostMillAnimating || playerDiscardAnimating || burnAnimating || lifePaymentAnimating || bloodPactAnimating || drainEssenceAnimating || energyFlowAnimating || resolvingHostCombat;
   const defendBlockedReason = getDefendBlockedReason(game, t);
@@ -81,6 +83,7 @@ export function PhaseOrb({ game, hostStartDelayMs = 0 }: { game: GameState; host
     pendingTriggeredEffectCount,
     hostAutoTriggerCount,
     playerAutoTriggerCount,
+    stabilizationCompletionId !== undefined,
     t,
   );
   const contextualTutorialBlocksPhase = [
@@ -118,9 +121,7 @@ export function PhaseOrb({ game, hostStartDelayMs = 0 }: { game: GameState; host
   const showCancelDefense = game.activeSide === "host" && game.combat.hostAttackers.length > 0 && hasAssignedBlocks;
   const showCancelAttack = game.activeSide === "player" && game.phase === "combat" && game.combat.playerAttackers.length > 0;
   const showAttackAll = game.activeSide === "player" && game.phase === "combat" && hasAvailableAttackers(game);
-  useEffect(() => () => window.clearTimeout(hostStartTimerRef.current), []);
-
-  const beginHostAfterAuthoredPause = () => {
+  const beginHostAfterAuthoredPause = useCallback(() => {
     const begin = () => {
       setHostStartPending(false);
       const latest = useGameStore.getState().game;
@@ -135,19 +136,35 @@ export function PhaseOrb({ game, hostStartDelayMs = 0 }: { game: GameState; host
     setHostStartPending(true);
     window.clearTimeout(hostStartTimerRef.current);
     hostStartTimerRef.current = window.setTimeout(begin, hostStartDelayMs);
+  }, [hostStartDelayMs]);
+  useEffect(() => () => window.clearTimeout(hostStartTimerRef.current), []);
+  useEffect(() => {
+    if (stabilizationCompletionId !== undefined || hostStartAfterStabilizationRef.current === undefined) return;
+    hostStartAfterStabilizationRef.current = undefined;
+    const latest = useGameStore.getState().game;
+    if (latest.activeSide === "host" && latest.phase === "host") beginHostAfterAuthoredPause();
+  }, [beginHostAfterAuthoredPause, stabilizationCompletionId]);
+
+  const beginHostAfterStabilization = () => {
+    const latest = useGameStore.getState();
+    if (latest.stabilizationCompletion) {
+      hostStartAfterStabilizationRef.current = latest.stabilizationCompletion.id;
+      return;
+    }
+    beginHostAfterAuthoredPause();
   };
   const finishPlayerTurnAndRunHost = () => {
     endPlayerTurn({ runHostAfter: true });
     const latest = useGameStore.getState().game;
     if (latest.activeSide === "host" && latest.phase === "host") {
-      beginHostAfterAuthoredPause();
+      beginHostAfterStabilization();
     }
   };
   const finishSetupAndRunHost = () => {
     endPlayerTurn({ runHostAfter: true });
     const latest = useGameStore.getState().game;
     if (latest.activeSide === "host" && latest.phase === "host") {
-      beginHostAfterAuthoredPause();
+      beginHostAfterStabilization();
     }
   };
 
@@ -316,8 +333,10 @@ function getPendingActionBlockedReason(
   pendingTriggeredEffectCount: number,
   hostAutoTriggerCount: number,
   playerAutoTriggerCount: number,
+  stabilizationCompletionActive: boolean,
   t: ReturnType<typeof useTranslation>,
 ): string | undefined {
+  if (stabilizationCompletionActive) return t("orb.waitStabilization");
   if (hostAutoTriggerCount > 0) return t("orb.hostResolving");
   if (playerAutoTriggerCount > 0) return t("orb.playerResolving");
   if (pendingTriggeredEffectCount > 0) return t("orb.resolveTrigger");

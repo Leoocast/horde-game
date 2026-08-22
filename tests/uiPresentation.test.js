@@ -46,6 +46,11 @@ import {
   resolvePersonalTargetedAttackAnimation,
 } from "../src/store/combatAnimation";
 import { burnPathCurvature, resolveBurnRenderer } from "../src/store/burnAnimation";
+import {
+  completedStabilizationCards,
+  stabilizationCompletionDelayMs,
+  stabilizationCompletionTotalMs,
+} from "../src/store/stabilizationPresentation";
 import { addCard, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
 
 test("Preparation progress preserves the original total across normal play and resume", () => {
@@ -577,7 +582,7 @@ test("Stabilizing uses synchronized CSS motes, charges and wave-only lattice", (
   const css = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
   const latticeRule = css.match(/\.stabilizing-lattice\s*\{([\s\S]*?)\n  \}/u)?.[1] ?? "";
 
-  assert.match(cardSource, /<StabilizingEffect seedKey=\{card\.instanceId\}/u);
+  assert.match(cardSource, /<StabilizingEffect[\s\S]*?seedKey=\{card\.instanceId\}/u);
   assert.doesNotMatch(effectSource, /canvas|WebGL|shader/iu);
   assert.match(latticeRule, /repeating-linear-gradient/u);
   assert.doesNotMatch(latticeRule, /background:/u);
@@ -596,6 +601,54 @@ test("Stabilizing uses synchronized CSS motes, charges and wave-only lattice", (
   assert.match(css, /@keyframes stabilizing-satin-drift\s*\{\s*0%\s*\{[^}]*transform:\s*translate3d\(-85%, 0, 0\);[^}]*opacity:\s*0;/su);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.stabilizing-wave-front:first-child/su);
   assert.doesNotMatch(css, /summoning-sickness-rings|summoning-water-/u);
+});
+
+test("Stabilizing closes with a finite seal before its presentation state is released", () => {
+  const previous = createTestGame("stabilization-completion");
+  const playerEcho = addCard(previous, customCard("player-stabilizing", "player"));
+  const hostEcho = addCard(previous, customCard("host-stabilizing", "host"));
+  const removedEcho = addCard(previous, customCard("removed-stabilizing", "player"));
+  playerEcho.stabilizing = true;
+  hostEcho.stabilizing = true;
+  removedEcho.stabilizing = true;
+
+  const next = structuredClone(previous);
+  next.player.field.find((card) => card.instanceId === playerEcho.instanceId).stabilizing = false;
+  next.host.field.find((card) => card.instanceId === hostEcho.instanceId).stabilizing = false;
+  next.player.field = next.player.field.filter((card) => card.instanceId !== removedEcho.instanceId);
+
+  assert.deepEqual(completedStabilizationCards(previous, next), [
+    { cardId: playerEcho.instanceId, side: "player" },
+    { cardId: hostEcho.instanceId, side: "host" },
+  ]);
+  assert.equal(stabilizationCompletionDelayMs(0), 0);
+  assert.equal(stabilizationCompletionDelayMs(2), 140);
+  assert.equal(stabilizationCompletionTotalMs(0), 0);
+  assert.equal(stabilizationCompletionTotalMs(3), 760);
+
+  const markup = renderToStaticMarkup(createElement(StabilizingEffect, {
+    seedKey: "echo-alpha",
+    phase: "completing",
+    completionDelayMs: 140,
+  }));
+  const css = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  const storeSource = readFileSync(new URL("../src/store/useGameStore.ts", import.meta.url), "utf8");
+  const battlefieldSource = readFileSync(new URL("../src/components/Battlefield.tsx", import.meta.url), "utf8");
+  const orbSource = readFileSync(new URL("../src/components/PhaseOrb.tsx", import.meta.url), "utf8");
+
+  assert.match(markup, /stabilizing-effect is-completing/u);
+  assert.match(markup, /--stabilizing-completion-delay:140ms/u);
+  assert.match(markup, /stabilizing-completion-lattice/u);
+  assert.match(markup, /stabilizing-completion-core/u);
+  assert.match(markup, /stabilizing-completion-release/u);
+  assert.match(css, /animation:\s*stabilizing-completion-lifetime 620ms[^;]*both;/u);
+  assert.match(css, /@keyframes stabilizing-completion-lattice/u);
+  assert.match(css, /@keyframes stabilizing-completion-release/u);
+  assert.match(css, /prefers-reduced-motion:\s*reduce[\s\S]*?animation-duration:\s*180ms;/u);
+  assert.match(storeSource, /stabilizationCompletionForTransition\(game, next\)/u);
+  assert.match(storeSource, /state\.stabilizationCompletion \|\|[\s\S]*?state\.surgeTransitionActive/u);
+  assert.match(battlefieldSource, /const holdStableGrouping = holdCasualties \|\| Boolean/u);
+  assert.match(orbSource, /hostStartAfterStabilizationRef/u);
 });
 
 test("a repeated Burn volley lands as one aggregate impact and explicit targets keep their own", () => {

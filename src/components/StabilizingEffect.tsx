@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { AnimationEvent, CSSProperties } from "react";
 
 const STABILIZING_MOTE_COUNT = 5;
 
@@ -10,6 +10,10 @@ type StabilizingWaveStyle = CSSProperties & {
   "--stabilizing-sweep-duration": string;
   "--stabilizing-from-x": string;
   "--stabilizing-from-y": string;
+};
+
+type StabilizingEffectStyle = CSSProperties & {
+  "--stabilizing-completion-delay"?: string;
 };
 
 function seedFromKey(seedKey: string): number {
@@ -52,12 +56,40 @@ export function stabilizingWaveStyles(seedKey: string): StabilizingWaveStyle[] {
   }));
 }
 
-export function StabilizingEffect({ seedKey }: { seedKey: string }) {
+export function StabilizingEffect({
+  seedKey,
+  phase = "active",
+  completionDelayMs = 0,
+  onCompletion,
+}: {
+  seedKey: string;
+  phase?: "active" | "completing";
+  completionDelayMs?: number;
+  onCompletion?: () => void;
+}) {
   const waves = stabilizingWaveStyles(seedKey);
   const sweepStyle = waves[0];
+  const completing = phase === "completing";
+  const style = completing
+    ? ({ "--stabilizing-completion-delay": `${completionDelayMs}ms` } as StabilizingEffectStyle)
+    : undefined;
+
+  const handleAnimationEnd = (event: AnimationEvent<HTMLSpanElement>) => {
+    if (
+      !completing ||
+      event.target !== event.currentTarget ||
+      event.animationName !== "stabilizing-completion-lifetime"
+    ) return;
+    onCompletion?.();
+  };
 
   return (
-    <>
+    <span
+      className={completing ? "stabilizing-effect is-completing" : "stabilizing-effect"}
+      style={style}
+      aria-hidden="true"
+      onAnimationEnd={handleAnimationEnd}
+    >
       <span className="stabilizing-veil" aria-hidden="true" />
       <span className="stabilizing-gold-patina" aria-hidden="true">
         <span className="stabilizing-gold-charge" style={sweepStyle} />
@@ -73,6 +105,13 @@ export function StabilizingEffect({ seedKey }: { seedKey: string }) {
           <span key={`mote-${index}`} className="stabilizing-mote" style={style} />
         ))}
       </span>
-    </>
+      {completing && (
+        <span className="stabilizing-completion" aria-hidden="true">
+          <span className="stabilizing-completion-lattice" />
+          <span className="stabilizing-completion-core" />
+          <span className="stabilizing-completion-release" />
+        </span>
+      )}
+    </span>
   );
 }

@@ -34,6 +34,7 @@ export function isSafeResumeCheckpoint(state: GameStore): boolean {
     state.pendingTriggeredEffectCount > 0 ||
     state.hostAutoTriggerCount > 0 ||
     state.playerAutoTriggerCount > 0 ||
+    state.stabilizationCompletion ||
     state.surgeTransitionActive ||
     state.surgeRevealPending ||
     state.hostMillAnimationQueue.length > 0 ||
