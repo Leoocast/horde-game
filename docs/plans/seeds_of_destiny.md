@@ -1,9 +1,9 @@
 # Semillas del Destino
 
-Nota de diseño para la narrativa del tutorial y el futuro historial de partidas de Hostfall.
-El control de reescritura y la identidad básica de cada Futuro ya están implementados; el historial
-y la biblioteca personal descritos más abajo siguen siendo dirección conceptual. La auditoría, el
-contrato de demo y el orden verificable para implementarlos viven en
+Nota de diseño para la narrativa del tutorial y el historial de partidas de Hostfall.
+El control de reescritura, la identidad Canon, el registro factual y la biblioteca personal ya están
+implementados. La prosa opcional del Cronista permanece aislada hasta la Fase 7. La auditoría, el
+contrato de demo y el orden verificable viven en
 [`seeds_of_destiny_history_implementation_plan.md`](seeds_of_destiny_history_implementation_plan.md).
 
 ## Premisa
@@ -26,12 +26,12 @@ La idea central se resume así:
 
 ## Superficie implementada
 
-- La seed técnica se representa mediante un código cosmético estable **Futuro `NNN·NNN`**. El
-  código se deriva hoy de `game.seed`, no es reversible y no sustituye una identidad exacta.
-- **Copiar identidad** todavía copia `game.seed`, normalmente un string `hostfall-...`; no incluye
-  decks, dificultad ni Preparación y, por sí solo, no es una identidad pública autocontenida.
-- El codec Canon `HF1-PPP-HHH-XXD-XXX` ya existe y Seed Explorer entrega sólo su entropía al engine,
-  pero el launcher normal todavía no genera ni importa ese código.
+- La identidad cosmética **Futuro `NNN·NNN`** se deriva de la identidad visual de `MatchOrigin`. No
+  es reversible, puede colisionar y nunca sustituye la clave exacta del historial.
+- **Copiar identidad** copia `canonCode` en las superficies Canon. Las seeds libres no exponen una
+  identidad pública; sólo Developer Mode puede copiar su seed interna bajo un nombre técnico.
+- El launcher normal genera e importa Canon Seeds `HF1-PPP-HHH-XXD-XXX`, aplica Crónica, Hueste,
+  dificultad y Preparación, y entrega sólo los cinco caracteres de entropía al engine.
 - La barra de partida muestra **Reescribir** antes de Música y Ajustes. No aparece en tutoriales ni
   con la seed técnica `developer`.
 - **Reescribir este futuro** reinicia siempre la misma seed y conserva Crónica, Hueste, dificultad
@@ -44,39 +44,39 @@ La idea central se resume así:
   centro ya la cubrió y revela el nuevo estado. Movimiento reducido usa un fundido breve.
 - Victoria y derrota muestran **Destino preservado** o **Futuro perdido**, la identidad del Futuro,
   y las mismas acciones de reescritura o contemplación.
+- **Semillas del Destino** consume el historial persistido real, agrupa por identidad exacta,
+  muestra intentos interrumpidos y puede reescribir un origen compatible mediante el mismo vórtice.
 
-Esta superficie todavía no persiste intentos ni convierte el código compacto en una clave única de
-historial. Esas responsabilidades pertenecen a la futura biblioteca de Semillas.
+El relato del Cronista no forma parte todavía de la pantalla runtime: la primera versión de la
+biblioteca es deliberadamente factual y muestra resultado, turno y hechos finales.
 
 ## Decisión de producto para la demo — 2026-08-21
 
-- **Continuar** se ocultará en la demo y no se leerán ni mutarán checkpoints jugables. La
+- **Continuar** está oculto en la demo y no se leen ni mutan checkpoints jugables. La
   infraestructura actual de resume se conserva detrás de una capability para Early Access.
 - Abandonar, cerrar la aplicación o sufrir un corte eléctrico registra un intento **interrumpido**,
   nunca una derrota. Desde el historial sólo puede reescribirse desde el origen, no retomarse a
   mitad.
-- El historial factual se implementará independientemente de que se apruebe o descarte la prosa del
+- El historial factual se implementó independientemente de la prosa del
   Cronista.
-- Antes del historial, toda partida standard autogenerada recibirá una Canon Seed HF1. **Copiar
-  identidad** copiará ese código, mientras `game.seed` conservará sólo la entropía interna que
+- Toda partida standard autogenerada recibe una Canon Seed HF1. **Copiar identidad** copia ese
+  código, mientras `game.seed` conserva sólo la entropía interna que
   reproduce el shuffle.
-- Preparación tendrá una acción explícita para importar HF1: aplicará decks, dificultad y turnos de
+- Preparación tiene una acción explícita para importar HF1: aplica decks, dificultad y turnos de
   Preparación codificados antes de jugar. Pegar HF1 en el campo de seed libre no la reinterpreta.
-- Las sesiones de seed libre no mostrarán **Copiar identidad**; sólo Developer Mode podrá copiar la
+- Las sesiones de seed libre no muestran **Copiar identidad**; sólo Developer Mode puede copiar la
   seed interna bajo un nombre técnico distinto.
 - La identidad persistida incluye `canonCode`/entropía o seed libre, Crónica, Hueste, dificultad,
   modo, turnos de Preparación y revisiones compatibles de contenido/reglas; el código
   `Futuro NNN·NNN` sigue siendo sólo una etiqueta cosmética.
-- Antes de implementar el historial se validará el relato con fixtures aislados. El usuario elegirá
-  entre relato breve, hitos factuales sin prosa o descarte de esa capa.
+- El relato se validó con fixtures aislados y el usuario aprobó su primera voz. Conectarlo al runtime
+  sin leer `game.log` pertenece a la Fase 7.
 
 Una HF1 generada por el juego es **Canon** y reproducible. **Oficial** queda reservado a códigos
 curados que aparezcan en un catálogo bundled de Hostfall; no es una propiedad de cualquier partida
 aleatoria.
 
-El estado actual del código todavía muestra **Continuar** como opción deshabilitada y no guarda
-historial. La lista anterior es el objetivo aprobado para la demo, no una descripción de trabajo ya
-entregado.
+El código de resume se conserva cubierto para Early Access, pero no entra en el producto demo.
 
 ## Texto propuesto para el tutorial
 
@@ -122,7 +122,7 @@ El seed literal `developer` sigue siendo una herramienta ajena al lore, como est
 
 ## Menú «Semillas del Destino»
 
-El menú principal podrá incluir una opción llamada **Semillas del Destino**. Será a la vez el
+El menú principal incluye una opción llamada **Semillas del Destino**. Es a la vez el
 historial de partidas y el archivo personal del Cronista: una biblioteca de victorias, tragedias e
 historias pendientes.
 
@@ -133,15 +133,15 @@ Texto introductorio propuesto:
 > Aquí reposan los futuros que has contemplado. Algunos fueron preservados. Otros terminaron en
 > tragedia. Ninguno está completamente fuera de tu alcance.
 
-Cada Semilla podría mostrar:
+Cada Semilla muestra:
 
 - su código;
 - la Crónica y la Hueste enfrentadas;
 - el resultado o estado actual;
 - la cantidad de intentos;
-- la fecha del intento más reciente;
 - información relevante de la partida, como el turno del desenlace;
-- una acción para reescribirla desde su origen o contemplar otro Futuro.
+- hechos finales disponibles;
+- una acción para reescribirla desde su origen exacto.
 
 ### Estados y acciones sugeridos
 
@@ -151,7 +151,7 @@ Cada Semilla podría mostrar:
 | Derrota | **Futuro perdido** | **Reescribir destino** |
 | Intento abandonado o cortado | **Historia interrumpida** | **Reescribir desde el origen** |
 
-Estos nombres son copy propuesto y deberán revisarse en contexto cuando se diseñe la pantalla.
+Estos tres nombres son el copy vigente de la biblioteca factual.
 
 ## Historial de reescrituras
 
@@ -174,7 +174,7 @@ futuro terrible, aprendió de él y encontró una ramificación victoriosa.
 - Establecer la política definitiva de retención, archivado o eliminación por Semilla.
 - Diseñar cómo se comunica que repetir una seed conserva sus condiciones deterministas aunque las
   decisiones del jugador creen otra ramificación.
-- Revisar el copy final y qué hechos visibles sobreviven al prototipo de relato.
+- Revisar en la Fase 7 cómo conviven los hechos visibles con el relato aprobado.
 - Definir en Early Access cómo una partida reanudable se vincula al mismo `attemptId` sin crear un
   intento duplicado.
 

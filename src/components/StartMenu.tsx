@@ -64,6 +64,7 @@ type Props = {
   onContinue?: () => void;
   continueDisabled?: boolean;
   onDiscardResume?: () => void;
+  onReplayFuture: (origin: MatchOrigin) => void;
   onStart: (options: { playerName: string; origin: MatchOrigin }) => void;
 };
 
@@ -76,7 +77,7 @@ const modes: Array<{ id: DifficultyMode; setupTurns: number }> = [
   { id: "hard", setupTurns: 2 },
 ];
 
-export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, onOpenSeedExplorer, onOpenUiReference, howToPlayEntries, resumeEnabled = false, resumeStatus = "none", onContinue, continueDisabled = false, onDiscardResume, onStart }: Props) {
+export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onViewDeck, hostDecks, selectedHostDeckId, onSelectHostDeck, onViewHostDeck, initialScreen = "home", preserveMusicOnMount = false, requestInitialName = false, onNameSaved, onRestartFirstTime, onOpenPlayground, onOpenAudioLab, onOpenSeedExplorer, onOpenUiReference, howToPlayEntries, resumeEnabled = false, resumeStatus = "none", onContinue, continueDisabled = false, onDiscardResume, onReplayFuture, onStart }: Props) {
   const t = useTranslation();
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [mode, setMode] = useState<DifficultyMode>("easy");
@@ -496,8 +497,13 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         )}
         </div>
       ) : menuScreen === "seeds" ? (
-        /* Maqueta dentro del juego: monta el Archivo sobre datos falsos y no persiste nada. */
-        <SeedsOfDestinyScreen decks={decks} hostDecks={hostDecks} onBack={closeMenuPanel} closing={closingMenuScreen === "seeds"} />
+        <SeedsOfDestinyScreen
+          decks={decks}
+          hostDecks={hostDecks}
+          onBack={closeMenuPanel}
+          onReplay={onReplayFuture}
+          closing={closingMenuScreen === "seeds"}
+        />
       ) : (
         <ExpeditionSetup
           playerDeck={selectedDeck}

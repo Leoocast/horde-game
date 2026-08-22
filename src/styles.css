@@ -23422,8 +23422,7 @@ body.is-victory-clearing .game-battlefield-stage {
 
 /* ============================================================================
    ARCHIVO DE SEMILLAS DEL DESTINO
-   Maqueta dentro del juego: `SeedsOfDestinyScreen.tsx` monta el diseño sobre
-   datos falsos. La maqueta de decisión es
+   La biblioteca real conserva el diseño aprobado en
    `dev/mockups/ui/claude-seeds-of-destiny-menu.html`.
    ========================================================================= */
 .seeds-panel {
@@ -23459,6 +23458,47 @@ body.is-victory-clearing .game-battlefield-stage {
   gap: 0 clamp(22px, 2.4vw, 42px);
   padding-top: 16px;
 }
+
+.seeds-health {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin: 12px clamp(20px, 2.2vw, 40px) 0;
+  border: 1px solid rgb(199 170 105 / 0.28);
+  padding: 10px 14px;
+  background: rgb(8 16 18 / 0.82);
+  color: var(--seeds-copper);
+}
+
+.seeds-health > span { display: grid; gap: 2px; }
+.seeds-health strong { color: var(--seeds-parchment); font: 700 13px/1.3 "Cinzel", Georgia, serif; letter-spacing: 0.1em; text-transform: uppercase; }
+.seeds-health small { color: var(--seeds-muted); font: 14px/1.45 "Lora", Georgia, serif; }
+.seeds-health button {
+  border: 1px solid rgb(199 170 105 / 0.36);
+  padding: 7px 11px;
+  background: rgb(199 170 105 / 0.07);
+  color: var(--seeds-gold-plate);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.seeds-health-recovered { color: var(--seeds-gold); }
+.seeds-health-corrupt { border-color: rgb(181 87 65 / 0.46); }
+
+.seeds-library-state {
+  display: grid;
+  flex: 1;
+  place-content: center;
+  justify-items: center;
+  min-height: 0;
+  padding: 40px;
+  text-align: center;
+}
+.seeds-library-state > span { color: var(--seeds-gold); font-size: 54px; text-shadow: 0 0 26px rgb(214 164 76 / 0.34); }
+.seeds-library-state h2 { margin: 16px 0 0; color: var(--seeds-gold-bright); font: 700 clamp(24px, 3vw, 38px)/1.2 "Cinzel", Georgia, serif; }
+.seeds-library-state p { max-width: 58ch; margin: 12px 0 0; color: var(--seeds-muted); font: 17px/1.65 "Lora", Georgia, serif; }
 
 .seeds-index {
   position: relative;
@@ -23536,6 +23576,15 @@ body.is-victory-clearing .game-battlefield-stage {
   font-variant-numeric: tabular-nums;
 }
 
+.seeds-entry-identity { display: grid; min-width: 0; gap: 5px; }
+.seeds-entry-identity small {
+  overflow: hidden;
+  color: var(--seeds-muted-2);
+  font: 11px/1.35 "Lora", Georgia, serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .seeds-index-entry[aria-current="true"] .seeds-entry-code { color: var(--seeds-gold-bright); }
 
 .seeds-entry-word {
@@ -23548,6 +23597,7 @@ body.is-victory-clearing .game-battlefield-stage {
 
 .seeds-state-preserved { color: var(--seeds-gold); }
 .seeds-state-lost { color: var(--seeds-copper); }
+.seeds-state-interrupted { color: #9caeb1; }
 
 /* ---- Página derecha: el Futuro abierto ---- */
 .seeds-page { display: grid; min-height: 0; grid-template-rows: auto minmax(0, 1fr) auto; }
@@ -23679,6 +23729,13 @@ body.is-victory-clearing .game-battlefield-stage {
   text-transform: uppercase;
 }
 
+.seeds-identity-note {
+  max-width: 48ch;
+  margin: 9px 0 0;
+  color: var(--seeds-muted);
+  font: italic 13px/1.45 "Lora", Georgia, serif;
+}
+
 /* La semilla no se imprime: el Futuro es el nombre visible y Copiar identidad
    sigue copiando la semilla completa. */
 .seeds-duel-copy { margin-top: 14px; }
@@ -23734,14 +23791,20 @@ body.is-victory-clearing .game-battlefield-stage {
 .seeds-thread-item { position: relative; }
 
 .seeds-thread-line {
-  display: block;
+  display: grid;
   width: 100%;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
   border: 0;
   background: transparent;
   padding: 11px 8px 11px 0;
   text-align: left;
   cursor: pointer;
 }
+
+.seeds-attempt-chevron { color: var(--seeds-muted-2); transition: color 160ms ease, transform 180ms ease; }
+.seeds-thread-line[aria-expanded="true"] .seeds-attempt-chevron { color: var(--seeds-gold); transform: rotate(180deg); }
 
 .seeds-thread-line::before {
   position: absolute;
@@ -23757,6 +23820,7 @@ body.is-victory-clearing .game-battlefield-stage {
 }
 
 .seeds-thread-item.is-victory .seeds-thread-line::before { background: var(--seeds-gold); border-color: #f3dfa8; }
+.seeds-thread-item.is-interrupted .seeds-thread-line::before { border-color: rgb(156 174 177 / 0.72); }
 
 .seeds-thread-title {
   color: var(--seeds-parchment);
@@ -23768,6 +23832,7 @@ body.is-victory-clearing .game-battlefield-stage {
 .seeds-thread-title b { color: var(--seeds-gold-plate); font-weight: 700; }
 .seeds-verdict-word { color: var(--seeds-copper); }
 .seeds-thread-item.is-victory .seeds-verdict-word { color: var(--seeds-gold); }
+.seeds-thread-item.is-interrupted .seeds-verdict-word { color: #9caeb1; }
 .seeds-thread-line:hover .seeds-thread-title,
 .seeds-thread-line:focus-visible .seeds-thread-title { color: var(--seeds-gold-bright); }
 
@@ -23839,7 +23904,7 @@ body.is-victory-clearing .game-battlefield-stage {
   text-transform: none;
 }
 
-/* ---- Las dos salidas ---- */
+/* ---- Acción de reescritura ---- */
 .seeds-page-actions {
   display: flex;
   flex-wrap: wrap;
@@ -23849,6 +23914,14 @@ body.is-victory-clearing .game-battlefield-stage {
   margin-top: 12px;
   border-top: 1px solid rgb(166 151 105 / 0.24);
   padding-top: 14px;
+}
+
+.seeds-replay-unavailable {
+  flex: 1;
+  max-width: 66ch;
+  margin: 0;
+  color: var(--seeds-copper);
+  font: 14px/1.5 "Lora", Georgia, serif;
 }
 
 /* Mismo material que `DestinyActionButton`. Las dos miden lo mismo: comparten
@@ -23921,6 +23994,16 @@ body.is-victory-clearing .game-battlefield-stage {
   transform: translateY(-1px);
 }
 
+.seeds-action:disabled {
+  border-color: rgb(145 154 157 / 0.22);
+  color: var(--seeds-muted-2);
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+.seeds-action:disabled::before { display: none; }
+.seeds-action:disabled:hover { transform: none; }
+
 .seeds-action:hover::before,
 .seeds-action:focus-visible::before { opacity: 1; animation-duration: 1.4s; }
 
@@ -23940,6 +24023,10 @@ body.is-victory-clearing .game-battlefield-stage {
 .seeds-seal[data-state="lost"] .rose { stroke: rgb(168 178 180 / 0.62); }
 .seeds-seal[data-state="lost"] .incision { stroke: rgb(168 178 180 / 0.42); }
 .seeds-seal[data-state="lost"] .heart { fill: rgb(168 178 180 / 0.6); }
+
+.seeds-seal[data-state="interrupted"] .rose { stroke: rgb(151 176 180 / 0.75); stroke-dasharray: 3 2; }
+.seeds-seal[data-state="interrupted"] .incision { stroke: rgb(151 176 180 / 0.48); }
+.seeds-seal[data-state="interrupted"] .heart { fill: rgb(151 176 180 / 0.7); }
 
 .seeds-index-entry[aria-current="true"] .seeds-seal[data-state="preserved"] .rose { stroke: #fff0c4; }
 

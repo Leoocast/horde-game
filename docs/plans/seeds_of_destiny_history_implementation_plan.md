@@ -1,6 +1,6 @@
 # Plan por fases — historial de Semillas del Destino para la demo
 
-Estado: **Fases 1, 2, 2.5, 3 y 4 completadas; siguiente fase: 5**.
+Estado: **Fases 1–6 completadas; siguiente fase: 7**.
 
 Última actualización: **2026-08-21**.
 
@@ -168,8 +168,8 @@ Una interrupción posterior no borra una victoria previa.
 
 | Necesidad | Qué existe | Brecha |
 | --- | --- | --- |
-| Identidad de Futuro | `MatchOrigin` separa la identidad pública de `GameState.seed`; Setup, Header, Reescribir y resultado usan `canonCode`. | La biblioteca real todavía no consume esta identidad porque sigue siendo maqueta. |
-| Canon Seed reproducible | El producto normal y Seed Explorer decodifican HF1 y entregan sólo su entropía a `createInitialGame`. | La reescritura desde historial se conecta en la Fase 6. |
+| Identidad de Futuro | `MatchOrigin` separa la identidad pública de `GameState.seed`; Setup, Header, Reescribir, resultado y biblioteca usan `canonCode`. | Cerrada: el view-model conserva la identidad completa y nunca agrupa por el código cosmético. |
+| Canon Seed reproducible | El producto normal y Seed Explorer decodifican HF1 y entregan sólo su entropía a `createInitialGame`. | Cerrada: la biblioteca resuelve el mismo `MatchOrigin` y lo entrega al launcher compartido. |
 | Reiniciar el mismo origen | `reset` y `DestinyRewriteTransition` ya conservan seed y configuración de la sesión viva. | La pantalla de historial no puede entregar todavía una identidad persistida a `App`. |
 | Detectar resultado | `GameState.winner`, `triggerEndGame` y la señal `game.ended`. | Ningún consumidor crea un registro de intento. |
 | Observar hitos | `gameplaySignalStream` observa también partidas normales y emite turnos, robos, Oleadas, atacantes, Vida y Archivo. | Es efímero, conserva sólo 256 señales y no cubre aún todos los hitos candidatos. |
@@ -177,7 +177,7 @@ Una interrupción posterior no borra una victoria previa.
 | Resume desktop | `resume-v1`, checkpoints seguros, backup, recuperación e IPC explícito. | Es un snapshot jugable, no historial. En la UI actual **Continuar** puede aparecer deshabilitado. |
 | Escritura durable | `DesktopJsonStore` serializa escrituras y usa temporal, `fsync`, rename y `.bak`, con límite de 5 MiB. | Falta una ruta y canales explícitos para historial. |
 | Web | Preferencias y progreso guiado tienen adapters `localStorage`. | No existe namespace de historial. |
-| Pantalla | `SeedsOfDestinyScreen` ya tiene índice, duelo, intentos y acción de reescritura. | Consume `SEEDS_OF_DESTINY_FIXTURE`; no tiene estado vacío ni estado interrumpido. |
+| Pantalla | `SeedsOfDestinyScreen` consume el snapshot persistido y conserva índice, duelo, intentos y reescritura. | Sólo queda el QA visual/foco final de la Fase 7. |
 
 Conclusión: no existe ningún historial parcial que deba migrarse. Sí existen las costuras correctas
 para resultado, identidad, observabilidad y persistencia atómica.
@@ -586,10 +586,22 @@ reapertura repetida y corte después de `winner` pero antes del outro. No requie
 
 El cierre vive en `tests/matchLifecycle.test.js`; `tests/gameplaySignals.test.js` prueba además que
 `triggerEndGame` publica la misma señal comprometida, y los guards vigentes verifican el wiring de
-`App`, `Board` y el vórtice sin montar React. La pantalla todavía consume su fixture: sustituirlo y
-conectar replay desde la biblioteca pertenece a la Fase 6.
+`App`, `Board` y el vórtice sin montar React. La Fase 6 reutiliza esta misma autoridad para replay
+desde la biblioteca.
 
 ### Fase 6 — Biblioteca real y reescritura
+
+Estado: **completada el 2026-08-21**.
+
+Implementación: `historyViewModel.ts` proyecta el snapshot persistido en Futuros separados por su
+identidad exacta, ordena intentos por `sequence`, detecta colisiones cosméticas y resuelve por
+adelantado el `MatchOrigin` de replay. `SeedsOfDestinyScreen` consume esa proyección mediante
+`productHistoryRuntime`, muestra carga, vacío, los tres desenlaces y todos los estados de salud de
+persistencia; el fixture quedó sin imports de producto. Canon copia exclusivamente `canonCode` y
+opaque explica su alcance local. `App` añade el destino `history-replay` al mismo vórtice y sólo
+resetea cuando la identidad completa es compatible; un deck ausente o una revisión incompatible
+conservan lectura y deshabilitan el CTA. El copy de salida aclara que no existe continuación a mitad
+y que el Futuro puede reescribirse desde su inicio.
 
 - Sustituir `SEEDS_OF_DESTINY_FIXTURE` por el snapshot del historial persistido.
 - Implementar estado vacío y el tercer estado visual **Historia interrumpida**.
@@ -615,6 +627,9 @@ conectar replay desde la biblioteca pertenece a la Fase 6.
 identidad incompatible y payload exacto de replay; los guards UI vigentes cubren el wiring estático.
 El runner actual no monta React: foco, teclado y layout permanecen en el QA visual final, sin añadir
 jsdom o Testing Library sólo para esta feature.
+
+El cierre vive en `tests/historyViewModel.test.js` y en los guards actualizados de
+`tests/destinyFuture.test.js`. La suite completa cerró con 636 pruebas.
 
 ### Fase 7 — Integración opcional del relato y QA de producto
 

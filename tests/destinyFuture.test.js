@@ -108,7 +108,7 @@ test("the narrative Future control owns normal rewrites outside Settings", async
   assert.match(app, /seed: origin \? matchOriginVisualSeed\(origin\) : gameStore\.game\.seed/u);
   assert.match(app, /origin,\s*destination,/u);
   assert.match(app, /origin\.rngSeed,[\s\S]*?origin\.preparationTurns/u);
-  assert.match(app, /\}, \[clearResumeForProduct, reset, startBattleMusic\]\);/u);
+  assert.match(app, /\}, \[clearResumeForProduct, reset, startBattleMusic, stopMusic\]\);/u);
   assert.match(app, /setMenuReturnScreen\("setup"\)/u);
   const commandRadial = styles.match(/\.destiny-command-button::before\s*\{[^}]*\}/su)?.[0] ?? "";
   assert.match(commandRadial, /left:\s*50%/u);

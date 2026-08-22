@@ -1,37 +1,32 @@
-import { ArrowLeft, Copy } from "lucide-react";
-import { useMemo, useState } from "react";
+import { AlertTriangle, ArrowLeft, ChevronDown, Copy, RotateCcw } from "lucide-react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 
-import { chronicleSigilPlan } from "./chronicleSigilGeometry";
-import { decodeCanonSeed } from "../content/CanonSeed";
+import type { MatchOrigin } from "../content/MatchOrigin";
 import type { InspectableDeck } from "../data/deckCatalog";
 import { findDeckKeyCard } from "../data/deckCatalog";
+import type { HistoryHealth } from "../history/historyService";
+import { productHistoryRuntime } from "../history/historyRuntime";
+import {
+  buildHistoryLibraryViewModel,
+  type HistoryLibraryAttemptViewModel,
+  type HistoryLibraryFutureViewModel,
+} from "../history/historyViewModel";
 import { localizedCardName } from "../i18n/cardLocalization";
+import type { TranslationKey } from "../i18n/translations";
 import { useTranslation } from "../i18n/useTranslation";
-import type { AppLanguage, TranslationKey } from "../i18n/translations";
-import { useLanguageStore } from "../store/useLanguageStore";
 import { writeClipboardText } from "../platform/desktopBridge";
+import { useLanguageStore } from "../store/useLanguageStore";
 import { useToastStore } from "../store/useToastStore";
 import { useDeckCardDetails } from "../utils/deckCardImages";
-import { futureCodeFromSeed } from "../utils/futureIdentity";
-import {
-  SEEDS_OF_DESTINY_FIXTURE,
-  type SeedAttemptFixture,
-  type SeedFutureFixture,
-} from "./seedsOfDestinyMockData";
-
-/**
- * Archivo de Semillas del Destino.
- *
- * MAQUETA: la pantalla monta el diseño aprobado sobre datos falsos de
- * `seedsOfDestinyMockData`. No lee partidas, no persiste intentos y sus dos
- * salidas todavía no ejecutan nada. La maqueta de decisión es
- * `dev/mockups/ui/claude-seeds-of-destiny-menu.html`.
- */
+import { chronicleSigilPlan } from "./chronicleSigilGeometry";
+import { GameConfirmationDialog } from "./GameConfirmationDialog";
 
 type Props = Readonly<{
   decks: readonly InspectableDeck[];
   hostDecks: readonly InspectableDeck[];
   onBack: () => void;
+  onReplay: (origin: MatchOrigin) => void;
   closing?: boolean;
 }>;
 
@@ -49,17 +44,47 @@ const DIFFICULTY_KEYS = {
   hard: "setup.doomed",
 } as const satisfies Record<string, TranslationKey>;
 
-export function SeedsOfDestinyScreen({ decks, hostDecks, onBack, closing = false }: Props) {
+const subscribeHistory = (listener: () => void) => productHistoryRuntime.subscribe(listener);
+const readHistory = () => productHistoryRuntime.snapshot();
+
+/** Real, factual library backed by the same HistoryService authority that records matches. */
+export function SeedsOfDestinyScreen({ decks, hostDecks, onBack, onReplay, closing = false }: Props) {
   const t = useTranslation();
-  const [selectedSeed, setSelectedSeed] = useState(SEEDS_OF_DESTINY_FIXTURE[0].seed);
-  const [openAttempt, setOpenAttempt] = useState(-1);
+  const pushToast = useToastStore((state) => state.pushToast);
+  const snapshot = useSyncExternalStore(subscribeHistory, readHistory, readHistory);
+  const library = useMemo(() => buildHistoryLibraryViewModel(snapshot), [snapshot]);
+  const [selectedKey, setSelectedKey] = useState("");
+  const [openAttempt, setOpenAttempt] = useState<string>();
+  const [resetPrompt, setResetPrompt] = useState<"confirm" | "unrecoverable">();
+  const [resetting, setResetting] = useState(false);
+  const future = library.futures.find((entry) => entry.key === selectedKey) ?? library.futures[0];
 
-  const future = SEEDS_OF_DESTINY_FIXTURE.find((entry) => entry.seed === selectedSeed)
-    ?? SEEDS_OF_DESTINY_FIXTURE[0];
+  useEffect(() => {
+    if (!future) {
+      if (selectedKey) setSelectedKey("");
+      return;
+    }
+    if (future.key !== selectedKey) setSelectedKey(future.key);
+  }, [future, selectedKey]);
 
-  function selectFuture(seed: string) {
-    if (seed !== selectedSeed) setOpenAttempt(-1);
-    setSelectedSeed(seed);
+  function selectFuture(key: string) {
+    if (key !== selectedKey) setOpenAttempt(undefined);
+    setSelectedKey(key);
+  }
+
+  async function resetHistory(allowWithoutDiagnostic: boolean) {
+    if (resetting) return;
+    setResetting(true);
+    try {
+      const result = await productHistoryRuntime.reset(allowWithoutDiagnostic);
+      if (result.requiresUnrecoverableConfirmation) setResetPrompt("unrecoverable");
+      else if (result.reset) setResetPrompt(undefined);
+      else pushToast({ title: t("seeds.resetFailedTitle"), message: t("seeds.resetFailedBody"), tone: "warning" });
+    } catch {
+      pushToast({ title: t("seeds.resetFailedTitle"), message: t("seeds.resetFailedBody"), tone: "warning" });
+    } finally {
+      setResetting(false);
+    }
   }
 
   return (
@@ -67,9 +92,6 @@ export function SeedsOfDestinyScreen({ decks, hostDecks, onBack, closing = false
       className={`main-settings-screen seeds-panel ${closing ? "is-closing" : ""}`}
       aria-label={t("menu.seedsOfDestiny")}
     >
-      {/* Misma barra que la pantalla de Jugar: reutiliza `expedition-header` y
-          `expedition-back` en lugar de copiar su material, para que las dos
-          cabeceras sigan cambiando juntas. */}
       <header className="expedition-header seeds-header">
         <button className="expedition-back" type="button" onClick={onBack}>
           <ArrowLeft size={17} /> {t("common.mainMenu")}
@@ -80,74 +102,134 @@ export function SeedsOfDestinyScreen({ decks, hostDecks, onBack, closing = false
         </div>
       </header>
 
-      <div className="seeds-book">
-        <div className="seeds-index">
-          <p className="seeds-index-label" id="seeds-index-label">{t("seeds.indexLabel")}</p>
-          <ul className="seeds-index-list" aria-labelledby="seeds-index-label">
-            {SEEDS_OF_DESTINY_FIXTURE.map((entry, position) => (
-              <SeedIndexEntry
-                key={entry.seed}
-                future={entry}
-                current={entry.seed === selectedSeed}
-                onSelect={() => selectFuture(entry.seed)}
-                onMove={(offset) => {
-                  const next = SEEDS_OF_DESTINY_FIXTURE[position + offset];
-                  if (next) selectFuture(next.seed);
-                }}
-              />
-            ))}
-          </ul>
-        </div>
+      <HistoryHealthBanner
+        health={library.health}
+        dirty={library.dirty}
+        resetting={resetting}
+        onRetry={() => void productHistoryRuntime.retryDurability()}
+        onReset={() => setResetPrompt("confirm")}
+      />
 
-        <SeedFuturePage
-          future={future}
-          decks={decks}
-          hostDecks={hostDecks}
-          openAttempt={openAttempt}
-          onToggleAttempt={(index) => setOpenAttempt((current) => (current === index ? -1 : index))}
-        />
-      </div>
+      {library.phase === "loading" ? (
+        <LibraryState icon="◇" title={t("seeds.loadingTitle")} body={t("seeds.loadingBody")} />
+      ) : library.phase === "empty" ? (
+        <LibraryState icon="✦" title={t("seeds.emptyTitle")} body={t("seeds.emptyBody")} />
+      ) : future ? (
+        <div className="seeds-book">
+          <div className="seeds-index">
+            <p className="seeds-index-label" id="seeds-index-label">{t("seeds.indexLabel")}</p>
+            <ul className="seeds-index-list" aria-labelledby="seeds-index-label">
+              {library.futures.map((entry, position) => (
+                <SeedIndexEntry
+                  key={entry.key}
+                  future={entry}
+                  decks={decks}
+                  hostDecks={hostDecks}
+                  current={entry.key === future.key}
+                  onSelect={() => selectFuture(entry.key)}
+                  onMove={(offset) => {
+                    const next = library.futures[position + offset];
+                    if (next) selectFuture(next.key);
+                  }}
+                />
+              ))}
+            </ul>
+          </div>
+
+          <SeedFuturePage
+            future={future}
+            decks={decks}
+            hostDecks={hostDecks}
+            openAttempt={openAttempt}
+            onToggleAttempt={(attemptId) => setOpenAttempt((current) =>
+              current === attemptId ? undefined : attemptId)}
+            onReplay={onReplay}
+          />
+        </div>
+      ) : null}
+
+      {resetPrompt && createPortal(
+        <div className="game-settings-popover game-system-confirmation-layer game-home-backdrop fixed inset-0 flex items-center justify-center p-6 text-[#e4ddc2]">
+          <GameConfirmationDialog
+            titleId="history-reset-title"
+            title={t(resetPrompt === "confirm" ? "seeds.resetTitle" : "seeds.resetUnrecoverableTitle")}
+            body={t(resetPrompt === "confirm" ? "seeds.resetBody" : "seeds.resetUnrecoverableBody")}
+            actions={[
+              { label: t("common.cancel"), onClick: () => setResetPrompt(undefined) },
+              {
+                label: resetting ? t("seeds.resetting") : t("seeds.resetAction"),
+                icon: <RotateCcw size={16} />,
+                onClick: () => void resetHistory(resetPrompt === "unrecoverable"),
+                primary: true,
+              },
+            ]}
+          />
+        </div>,
+        document.body,
+      )}
     </section>
   );
 }
 
-function useFutureDecks(
-  future: SeedFutureFixture,
-  decks: readonly InspectableDeck[],
-  hostDecks: readonly InspectableDeck[],
-) {
-  const chronicle = decks.find((deck) => deck.id === future.chronicleDeckId);
-  const host = hostDecks.find((deck) => deck.id === future.hostDeckId);
-  return { chronicle, host };
+function HistoryHealthBanner({
+  health,
+  dirty,
+  resetting,
+  onRetry,
+  onReset,
+}: Readonly<{
+  health: HistoryHealth;
+  dirty: boolean;
+  resetting: boolean;
+  onRetry: () => void;
+  onReset: () => void;
+}>) {
+  const t = useTranslation();
+  if (health === "healthy") return null;
+  const resettable = health === "full" || health === "corrupt";
+  const titleKey = `seeds.health.${health}Title` as TranslationKey;
+  const bodyKey = `seeds.health.${health}Body` as TranslationKey;
+  return (
+    <aside className={`seeds-health seeds-health-${health}`} role={health === "recovered" ? "status" : "alert"}>
+      <AlertTriangle size={19} aria-hidden="true" />
+      <span><strong>{t(titleKey)}</strong><small>{t(bodyKey)}</small></span>
+      {health === "degraded" && dirty && (
+        <button type="button" onClick={onRetry}>{t("seeds.retrySave")}</button>
+      )}
+      {resettable && (
+        <button type="button" onClick={onReset} disabled={resetting}>{t("seeds.resetAction")}</button>
+      )}
+    </aside>
+  );
 }
 
-/** La dificultad y el código salen de la propia Canon Seed, no del fixture. */
-function useSeedIdentity(seed: string) {
-  return useMemo(() => {
-    const code = futureCodeFromSeed(seed);
-    try {
-      return { code, difficulty: decodeCanonSeed(seed).difficulty };
-    } catch {
-      return { code, difficulty: "normal" as const };
-    }
-  }, [seed]);
+function LibraryState({ icon, title, body }: Readonly<{ icon: string; title: string; body: string }>) {
+  return (
+    <div className="seeds-library-state" role="status">
+      <span aria-hidden="true">{icon}</span>
+      <h2>{title}</h2>
+      <p>{body}</p>
+    </div>
+  );
 }
 
 function SeedIndexEntry({
   future,
+  decks,
+  hostDecks,
   current,
   onSelect,
   onMove,
 }: Readonly<{
-  future: SeedFutureFixture;
+  future: HistoryLibraryFutureViewModel;
+  decks: readonly InspectableDeck[];
+  hostDecks: readonly InspectableDeck[];
   current: boolean;
   onSelect: () => void;
   onMove: (offset: number) => void;
 }>) {
   const t = useTranslation();
-  const { code } = useSeedIdentity(future.seed);
-  const stateWord = future.state === "preserved" ? t("seeds.statePreserved") : t("seeds.stateLost");
-
+  const { chronicle, host } = findFutureDecks(future, decks, hostDecks);
   return (
     <li>
       <button
@@ -160,9 +242,14 @@ function SeedIndexEntry({
           if (event.key === "ArrowUp") { event.preventDefault(); onMove(-1); }
         }}
       >
-        <DestinySeal state={future.state} size={34} />
-        <span className="seeds-entry-code">{code}</span>
-        <span className={`seeds-entry-word seeds-state-${future.state}`}>{stateWord}</span>
+        <DestinySeal state={future.status} size={34} />
+        <span className="seeds-entry-identity">
+          <span className="seeds-entry-code">{future.code}</span>
+          {future.collision && (
+            <small>{chronicle?.label ?? future.playerDeckKey} · {host?.label ?? future.hostDeckKey} · {future.identityRevision}</small>
+          )}
+        </span>
+        <span className={`seeds-entry-word seeds-state-${future.status}`}>{t(statusLabelKey(future.status))}</span>
       </button>
     </li>
   );
@@ -174,25 +261,26 @@ function SeedFuturePage({
   hostDecks,
   openAttempt,
   onToggleAttempt,
+  onReplay,
 }: Readonly<{
-  future: SeedFutureFixture;
+  future: HistoryLibraryFutureViewModel;
   decks: readonly InspectableDeck[];
   hostDecks: readonly InspectableDeck[];
-  openAttempt: number;
-  onToggleAttempt: (index: number) => void;
+  openAttempt?: string;
+  onToggleAttempt: (attemptId: string) => void;
+  onReplay: (origin: MatchOrigin) => void;
 }>) {
   const t = useTranslation();
   const pushToast = useToastStore((state) => state.pushToast);
-  const { code, difficulty } = useSeedIdentity(future.seed);
-  const { chronicle, host } = useFutureDecks(future, decks, hostDecks);
-  const preserved = future.state === "preserved";
+  const { chronicle, host } = findFutureDecks(future, decks, hostDecks);
 
   async function copyIdentity() {
+    if (!future.copyIdentity) return;
     try {
-      await writeClipboardText(future.seed);
-      pushToast({ title: t("destiny.identityCopied"), message: t("destiny.future", { code }), tone: "success" });
+      await writeClipboardText(future.copyIdentity);
+      pushToast({ title: t("destiny.identityCopied"), message: t("destiny.future", { code: future.code }), tone: "success" });
     } catch {
-      pushToast({ title: t("destiny.identityCopyFailed"), message: t("destiny.future", { code }), tone: "warning" });
+      pushToast({ title: t("destiny.identityCopyFailed"), message: t("destiny.future", { code: future.code }), tone: "warning" });
     }
   }
 
@@ -203,21 +291,28 @@ function SeedFuturePage({
 
         <div className="seeds-duel-center">
           <span className="seeds-duel-kicker">{t("destiny.futureWord")}</span>
-          <h3 className="seeds-duel-code">{code}</h3>
-          <span className={`seeds-duel-state seeds-state-${future.state}`}>
-            <DestinySeal state={future.state} size={22} />
-            {t(preserved ? "destiny.destinyPreserved" : "destiny.futureLost")}
+          <h3 className="seeds-duel-code">{future.code}</h3>
+          <span className={`seeds-duel-state seeds-state-${future.status}`}>
+            <DestinySeal state={future.status} size={22} />
+            {t(statusHeadlineKey(future.status))}
           </span>
           <p className="seeds-duel-match">
-            <span>{chronicle?.label ?? future.chronicleDeckId}</span>
+            <span>{chronicle?.label ?? future.playerDeckKey}</span>
             <span className="seeds-versus">{t("seeds.versus")}</span>
-            <span className="seeds-host-side">{host?.label ?? future.hostDeckId}</span>
+            <span className="seeds-host-side">{host?.label ?? future.hostDeckKey}</span>
           </p>
-          <p className="seeds-duel-difficulty">{t(DIFFICULTY_KEYS[difficulty])}</p>
+          <p className="seeds-duel-difficulty">
+            {t(DIFFICULTY_KEYS[future.difficulty])} · {t("seeds.preparationTurns", { count: future.setupTurns })}
+          </p>
+          {future.collision && <p className="seeds-identity-note">{t("seeds.collisionNote", { revision: future.identityRevision })}</p>}
           <div className="seeds-duel-copy">
-            <button type="button" className="seeds-copy-chip" onClick={copyIdentity}>
-              <Copy size={14} /> {t("seeds.copyIdentity")}
-            </button>
+            {future.copyIdentity ? (
+              <button type="button" className="seeds-copy-chip" onClick={copyIdentity}>
+                <Copy size={14} /> {t("seeds.copyIdentity")}
+              </button>
+            ) : (
+              <p className="seeds-identity-note">{t("seeds.localOnly")}</p>
+            )}
           </div>
         </div>
 
@@ -227,8 +322,15 @@ function SeedFuturePage({
       <SeedThread future={future} openAttempt={openAttempt} onToggleAttempt={onToggleAttempt} />
 
       <footer className="seeds-page-actions">
-        {/* Maqueta: la salida todavía no ejecuta nada. */}
-        <button type="button" className="seeds-action is-rewrite">
+        {!future.replayOrigin && (
+          <p className="seeds-replay-unavailable">{t(replayUnavailableKey(future.replayUnavailableReason))}</p>
+        )}
+        <button
+          type="button"
+          className="seeds-action is-rewrite"
+          disabled={!future.replayOrigin}
+          onClick={() => future.replayOrigin && onReplay(future.replayOrigin)}
+        >
           <strong>{t("destiny.rewriteThis")}</strong>
         </button>
       </footer>
@@ -236,14 +338,23 @@ function SeedFuturePage({
   );
 }
 
+function findFutureDecks(
+  future: HistoryLibraryFutureViewModel,
+  decks: readonly InspectableDeck[],
+  hostDecks: readonly InspectableDeck[],
+) {
+  return {
+    chronicle: future.playerDeckId ? decks.find((deck) => deck.id === future.playerDeckId) : undefined,
+    host: future.hostDeckId ? hostDecks.find((deck) => deck.id === future.hostDeckId) : undefined,
+  };
+}
+
 function SeedDuelCard({ deck, side }: Readonly<{ deck: InspectableDeck; side: "player" | "host" }>) {
   const language = useLanguageStore((state) => state.language);
   const keyCard = findDeckKeyCard(deck);
   const details = useDeckCardDetails(keyCard, deck.images);
   const cardName = localizedCardName(keyCard, language) || deck.label;
-
   if (!details.imageUrl) return <span className={`seeds-duel-card seeds-duel-card-${side}`} />;
-
   return (
     <figure className={`seeds-duel-card seeds-duel-card-${side}`}>
       <img src={details.imageUrl} alt={cardName} draggable={false} />
@@ -256,32 +367,26 @@ function SeedThread({
   openAttempt,
   onToggleAttempt,
 }: Readonly<{
-  future: SeedFutureFixture;
-  openAttempt: number;
-  onToggleAttempt: (index: number) => void;
+  future: HistoryLibraryFutureViewModel;
+  openAttempt?: string;
+  onToggleAttempt: (attemptId: string) => void;
 }>) {
   const t = useTranslation();
-  const language = useLanguageStore((state) => state.language);
-  const preserved = future.state === "preserved";
-
   return (
     <div className="seeds-thread-wrap">
       <p className="seeds-thread-label">{t("seeds.threadLabel")}</p>
       <ol className="seeds-thread">
-        {future.attempts.map((attempt, index) => (
+        {future.attempts.map((attempt) => (
           <SeedThreadItem
-            key={`${future.seed}:${index}`}
+            key={attempt.attemptId}
             attempt={attempt}
-            index={index}
-            seed={future.seed}
-            language={language}
-            open={index === openAttempt}
-            onToggle={() => onToggleAttempt(index)}
+            open={attempt.attemptId === openAttempt}
+            onToggle={() => onToggleAttempt(attempt.attemptId)}
           />
         ))}
       </ol>
-      <p className={`seeds-thread-seal seeds-state-${future.state}`}>
-        {t(preserved ? "destiny.destinyPreserved" : "destiny.futureLost")}.
+      <p className={`seeds-thread-seal seeds-state-${future.status}`}>
+        {t(statusHeadlineKey(future.status))}.
         <small>{sealPhrase(future, t)}</small>
       </p>
     </div>
@@ -290,27 +395,18 @@ function SeedThread({
 
 function SeedThreadItem({
   attempt,
-  index,
-  seed,
-  language,
   open,
   onToggle,
 }: Readonly<{
-  attempt: SeedAttemptFixture;
-  index: number;
-  seed: string;
-  language: AppLanguage;
+  attempt: HistoryLibraryAttemptViewModel;
   open: boolean;
   onToggle: () => void;
 }>) {
   const t = useTranslation();
-  const victory = attempt.verdict === "victory";
-  const bodyId = `seed-attempt-${seed}-${index}`;
-  const label = t(ATTEMPT_LABEL_KEYS[Math.min(index, ATTEMPT_LABEL_KEYS.length - 1)]);
-  const verdict = t(victory ? "seeds.verdictVictory" : "seeds.verdictDefeat");
-
+  const bodyId = `seed-attempt-${attempt.attemptId.replace(/[^a-zA-Z0-9_-]/gu, "-")}`;
+  const label = attemptLabel(attempt.ordinal, t);
   return (
-    <li className={`seeds-thread-item ${victory ? "is-victory" : ""}`}>
+    <li className={`seeds-thread-item is-${attempt.status}`}>
       <button
         type="button"
         className="seeds-thread-line"
@@ -320,51 +416,80 @@ function SeedThreadItem({
       >
         <span className="seeds-thread-title">
           <b>{label}</b>{" — "}
-          <span className="seeds-verdict-word">{verdict}</span>{" "}
-          {t("seeds.attemptTurn", { turn: attempt.turn })}
+          <span className="seeds-verdict-word">{t(attemptVerdictKey(attempt.status))}</span>{" "}
+          {attempt.turnNumber === undefined ? "" : t("seeds.attemptTurn", { turn: attempt.turnNumber })}
         </span>
+        <ChevronDown className="seeds-attempt-chevron" size={18} aria-hidden="true" />
       </button>
       <div className="seeds-attempt-detail" id={bodyId} hidden={!open}>
-        <p className="seeds-attempt-body">{attempt.body[language]}</p>
-        <ul className="seeds-attempt-marks">
-          {attempt.marks.map((mark) => (
-            <li key={mark.en}><span>{mark[language]}</span></li>
-          ))}
-        </ul>
+        {attempt.status === "interrupted" && <p className="seeds-attempt-body">{t("seeds.interruptedAttempt")}</p>}
+        {attempt.finalFacts && (
+          <ul className="seeds-attempt-marks">
+            <li><span>{t("seeds.finalLife", { count: attempt.finalFacts.playerLife })}</span></li>
+            <li><span>{t("seeds.finalHostArchive", { count: attempt.finalFacts.hostArchiveRemaining })}</span></li>
+          </ul>
+        )}
       </div>
     </li>
   );
 }
 
-function sealPhrase(future: SeedFutureFixture, t: (key: TranslationKey, params?: Record<string, string | number>) => string) {
-  if (future.state === "preserved") {
-    const index = future.attempts.length - 1;
-    if (index === 0) return t("seeds.sealPreservedFirst");
-    const label = t(ATTEMPT_LABEL_KEYS[Math.min(index, ATTEMPT_LABEL_KEYS.length - 1)]);
-    return t("seeds.sealPreservedOn", { label: label.toLocaleLowerCase() });
+function attemptLabel(
+  ordinal: number,
+  t: (key: TranslationKey, params?: Record<string, string | number>) => string,
+): string {
+  const key = ATTEMPT_LABEL_KEYS[ordinal - 1];
+  return key ? t(key) : t("seeds.attemptNumbered", { number: ordinal });
+}
+
+function sealPhrase(
+  future: HistoryLibraryFutureViewModel,
+  t: (key: TranslationKey, params?: Record<string, string | number>) => string,
+) {
+  if (future.status === "preserved") {
+    const victory = future.attempts.find((attempt) => attempt.status === "victory");
+    if (!victory || victory.ordinal === 1) return t("seeds.sealPreservedFirst");
+    return t("seeds.sealPreservedOn", { label: attemptLabel(victory.ordinal, t).toLocaleLowerCase() });
+  }
+  if (future.status === "interrupted") {
+    return t(future.attempts.length === 1 ? "seeds.sealInterruptedOnce" : "seeds.sealInterruptedMany", {
+      count: future.attempts.length,
+    });
   }
   if (future.attempts.length === 1) return t("seeds.sealLostOnce");
   return t("seeds.sealLostMany", { count: future.attempts.length });
 }
 
-/* ============================================================================
-   Sello del Futuro.
+function statusLabelKey(status: HistoryLibraryFutureViewModel["status"]): TranslationKey {
+  if (status === "preserved") return "seeds.statePreserved";
+  if (status === "lost") return "seeds.stateLost";
+  return "seeds.stateInterrupted";
+}
 
-   No tiene geometría propia: es la misma rosa cardinal de
-   `chronicleSigilGeometry`, la que la victoria enciende sobre el disco de
-   grados. El interior se dibuja con incisiones sin área —de `axis * 0.24` a
-   `axis * 0.68`—; rellenar cuñas macizas dibujaría una segunda estrella dentro
-   de la rosa.
-   ========================================================================= */
+function statusHeadlineKey(status: HistoryLibraryFutureViewModel["status"]): TranslationKey {
+  if (status === "preserved") return "destiny.destinyPreserved";
+  if (status === "lost") return "destiny.futureLost";
+  return "seeds.historyInterrupted";
+}
+
+function attemptVerdictKey(status: HistoryLibraryAttemptViewModel["status"]): TranslationKey {
+  if (status === "victory") return "seeds.verdictVictory";
+  if (status === "defeat") return "seeds.verdictDefeat";
+  return "seeds.verdictInterrupted";
+}
+
+function replayUnavailableKey(reason: HistoryLibraryFutureViewModel["replayUnavailableReason"]): TranslationKey {
+  if (reason === "deck-unavailable") return "seeds.replayDeckUnavailable";
+  if (reason === "identity-mismatch") return "seeds.replayIdentityMismatch";
+  return "seeds.replayIncompatible";
+}
 
 const SEAL_RING_RADIUS = 100;
 const SEAL_PLAN = chronicleSigilPlan(SEAL_RING_RADIUS, 1);
-
 const SEAL_ROSE_PATH = `M${SEAL_PLAN.nodes
   .slice(0, 16)
   .map((node) => `${node.x.toFixed(2)} ${node.y.toFixed(2)}`)
   .join("L")}Z`;
-
 const SEAL_INCISION_PATH = SEAL_PLAN.nodes
   .slice(0, 16)
   .filter((_, index) => index % 2 === 0)
@@ -375,12 +500,10 @@ const SEAL_INCISION_PATH = SEAL_PLAN.nodes
   })
   .join(" ");
 
-/**
- * El sello es sólo la rosa: preservada en oro, perdida en gris. No lleva aro,
- * quebradura ni recortes de trazo — las dos versiones son la misma figura y lo
- * único que cambia entre ellas es el color.
- */
-function DestinySeal({ state, size }: Readonly<{ state: "preserved" | "lost"; size: number }>) {
+function DestinySeal({
+  state,
+  size,
+}: Readonly<{ state: HistoryLibraryFutureViewModel["status"]; size: number }>) {
   return (
     <svg
       className="seeds-seal"

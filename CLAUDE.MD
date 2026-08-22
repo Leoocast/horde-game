@@ -649,8 +649,7 @@ rígido. Volver a animar
 `filter: blur()` o `saturate()` sobre la pantalla completa es una regresión de rendimiento, porque
 obliga a repintar todo el árbol en cada frame.
 
-El dominio y la persistencia independiente del historial están implementados, pero todavía no se
-inicializan desde `App` ni tienen integración de partidas o UI real. `src/history/historyTypes.ts`
+El historial de Semillas del Destino está integrado de extremo a extremo. `src/history/historyTypes.ts`
 fija `FutureIdentityV1`, `AttemptRecordV1` y
 `HistoryEnvelopeV1`; `historyParser.ts` valida estructura e invariantes sin depender del catálogo;
 `historyFuture.ts` mantiene aparte compatibilidad determinista y resolución de decks; y
@@ -682,6 +681,17 @@ continúa con toast y el servicio conserva su snapshot dirty para retry. El vór
 `absorbing -> covered -> revealing`: durante `covered` espera cierre/reset/begin y movimiento
 reducido usa la misma barrera. No hay autosave por turno; un crash conserva `active` sin hechos y el
 siguiente arranque demo lo convierte una sola vez en `startup-recovery`.
+
+La Fase 6 conecta la biblioteca real. `historyViewModel.ts` proyecta el snapshot persistido sin
+mutarlo: ordena intentos por `sequence`, deriva preservado/perdido/interrumpido, detecta colisiones
+de `Futuro NNN·NNN` y sólo expone un `replayOrigin` si `resolveFutureIdentity` certifica identidad,
+decks y revisiones. `SeedsOfDestinyScreen` no importa el fixture: muestra carga, vacío, recuperación,
+degradado, lleno y corrupción; sus disclosures presentan resultado, turno y hechos finales sin
+activar todavía el relato. Canon copia `canonCode`; opaque oculta la copia pública y conserva replay
+local compatible. `App` lanza la acción por el destino `history-replay` del mismo vórtice y crea un
+intento nuevo únicamente después de cubrir y comprometer el reset exacto. Nunca añadir un fallback
+de decks ni reinterpretar una identidad incompatible. El fixture antiguo queda sólo como laboratorio
+sin imports de producto.
 
 La identidad narrativa vive en `docs/plans/seeds_of_destiny.md` y la auditoría con el contrato
 técnico por fases en `docs/plans/seeds_of_destiny_history_implementation_plan.md`. La Fase 1 tiene un prototipo

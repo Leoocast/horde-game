@@ -17,6 +17,7 @@ try {
   await server.ssrLoadModule("/tests/attemptNarrative.test.js");
   await server.ssrLoadModule("/tests/historyDomain.test.js");
   await server.ssrLoadModule("/tests/historyPersistence.test.js");
+  await server.ssrLoadModule("/tests/historyViewModel.test.js");
   await server.ssrLoadModule("/tests/matchLifecycle.test.js");
   await server.ssrLoadModule("/tests/productCapabilities.test.js");
   await server.ssrLoadModule("/tests/hostBeats.test.js");

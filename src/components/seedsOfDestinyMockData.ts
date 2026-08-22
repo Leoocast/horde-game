@@ -1,13 +1,11 @@
 import type { AppLanguage } from "../i18n/translations";
 
 /**
- * Datos falsos del Archivo de Semillas del Destino.
+ * Fixture histórico del laboratorio de Semillas del Destino.
  *
- * Esta pantalla es todavía una MAQUETA dentro del juego: no lee partidas, no
- * persiste nada y no participa del resume. Cuando exista la biblioteca real,
- * este fixture desaparece y `SeedsOfDestinyScreen` recibe los intentos
- * guardados. El copy narrativo vive aquí y no en `translations.ts` a propósito:
- * es contenido de maqueta, no vocabulario del producto.
+ * No tiene imports desde el producto ni participa en persistencia, replay o
+ * resume. Se conserva únicamente como referencia visual/dev del mockup aprobado;
+ * `SeedsOfDestinyScreen` consume el historial real.
  *
  * Las semillas son Canon Seeds `HF1` válidas, así que el código de Futuro y la
  * dificultad se derivan de ellas con el codec real.

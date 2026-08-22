@@ -95,7 +95,7 @@ type DestinyTransitionState = {
   kind: DestinyTransitionKind;
   seed: string;
   origin?: MatchOrigin;
-  destination: "standard" | "learn-to-play-first-seed";
+  destination: "standard" | "history-replay" | "learn-to-play-first-seed";
 };
 
 /** La Mano empieza a subir mientras el último rastro del signo termina de apagarse. */
@@ -392,11 +392,16 @@ export default function App() {
   const beginDestinyTransition = useCallback((
     kind: DestinyTransitionKind,
     destination: DestinyTransitionState["destination"] = "standard",
+    requestedOrigin?: MatchOrigin,
   ): boolean => {
     if (destinyTransitionRef.current) return false;
     const gameStore = useGameStore.getState();
-    const origin = destination === "standard" ? matchOrigin ?? undefined : undefined;
-    if (destination === "standard" && !origin) return false;
+    const origin = destination === "history-replay"
+      ? requestedOrigin
+      : destination === "standard"
+        ? matchOrigin ?? undefined
+        : undefined;
+    if (kind === "rewrite" && !origin) return false;
     gameStore.stopGamePresentation();
     const transition = {
       id: ++destinyIdRef.current,
@@ -425,8 +430,13 @@ export default function App() {
           await productMatchLifecycle.closeActive("rewrite");
           if (destinyTransitionRef.current?.id !== transitionId) return;
           const origin = transition.origin;
+          if (transition.destination === "history-replay") {
+            clearResumeForProduct();
+            setPreserveMenuMusic(false);
+            stopMusic();
+          }
           const launch = productMatchLifecycle.beginLaunch({
-            source: "rewrite",
+            source: transition.destination === "history-replay" ? "history-replay" : "rewrite",
             sessionKind: origin.rngSeed === "developer" ? "developer" : "normal",
             origin,
             commit: () => reset(
@@ -443,6 +453,7 @@ export default function App() {
           setSetupTurns(origin.preparationTurns);
           setSelectedDeckId(origin.playerDeckId);
           setSelectedHostDeckId(origin.hostDeckId);
+          if (transition.destination === "history-replay") setScreen("game");
           await launch.settled;
           startBattleMusic(true);
           return;
@@ -487,7 +498,7 @@ export default function App() {
         release();
       }
     })();
-  }, [clearResumeForProduct, reset, startBattleMusic]);
+  }, [clearResumeForProduct, reset, startBattleMusic, stopMusic]);
 
   const completeDestinyTransition = useCallback((transitionId: number) => {
     if (destinyTransitionRef.current?.id !== transitionId) return;
@@ -732,6 +743,9 @@ export default function App() {
           onDiscardResume={productResumeRuntime.enabled && desktopResume.status === "corrupt"
             ? clearResumeForProduct
             : undefined}
+          onReplayFuture={(origin) => {
+            void beginDestinyTransition("rewrite", "history-replay", origin);
+          }}
           onRestartFirstTime={() => {
             setRequiredTutorialOffered(false);
             setScreen("start");
