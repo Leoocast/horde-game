@@ -16,6 +16,7 @@ import {
 import { OpeningHandModal } from "../components/OpeningHandOverlay";
 import { SettingsMenu } from "../components/SettingsMenu";
 import { ChroniclerNameModal, SetupDeckDrawer } from "../components/StartMenu";
+import { TemporalBackdrop } from "../components/TemporalBackdrop";
 import { createCanonMatchOrigin } from "../content/MatchOrigin";
 import { hostInspectableDecks, playerInspectableDecks } from "../data/deckCatalog";
 import type { CardInstance, GameState } from "../engine/GameTypes";
@@ -209,14 +210,17 @@ function ActiveRuntimeModal({
 
   if (id === "chronicler-name") {
     return (
-      <ChroniclerNameModal
-        value={chroniclerName}
-        onChange={setChroniclerName}
-        onClose={close}
-        onSave={close}
-        closing={false}
-        required={false}
-      />
+      <div className="ui-reference-chronicler-name-context main-menu-shell chronicler-name-open">
+        <TemporalBackdrop />
+        <ChroniclerNameModal
+          value={chroniclerName}
+          onChange={setChroniclerName}
+          onClose={close}
+          onSave={close}
+          closing={false}
+          required={false}
+        />
+      </div>
     );
   }
 

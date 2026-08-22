@@ -1108,6 +1108,22 @@ test("the Hostfall wordmark and Chronicler name use the bundled decorative face"
   assert.match(styles, /\.main-menu-chronicler-name\s*\{[^}]*font-family:\s*"Cinzel Decorative"[^}]*font-weight:\s*400;/u);
 });
 
+test("the Chronicler claims a name over the clean temporal sky", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.equal(translate("es", "name.beforeFirstPage"), "De entre todos los futuros");
+  assert.equal(translate("en", "name.beforeFirstPage"), "Among all possible futures");
+  assert.equal(translate("es", "name.save"), "Que así sea");
+  assert.equal(translate("en", "name.save"), "So shall it be");
+  assert.match(startMenu, /showNameEditor \? "chronicler-name-open"/u);
+  assert.match(startMenu, /className="chronicler-name-divider"/u);
+  assert.doesNotMatch(startMenu, /chronicler-name-(?:ornament|flourish|feather)/u);
+  assert.match(styles, /\.main-menu-shell\.chronicler-name-open > \.main-menu-stage[\s\S]*?opacity:\s*0;/u);
+  assert.match(styles, /\.chronicler-name-modal\s*\{[^}]*border:\s*0;[^}]*background:\s*transparent;/u);
+  assert.match(styles, /\.chronicler-name-input-shell:focus-within::after\s*\{[^}]*width:\s*100%;/u);
+});
+
 test("deck setup panels and deck cards opt into shared click audio", () => {
   const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
   const decksView = readFileSync(new URL("../src/components/DecksView.tsx", import.meta.url), "utf8");

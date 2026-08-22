@@ -304,7 +304,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   }
 
   return (
-    <main className={`main-menu-shell h-screen overflow-hidden text-[#f6e6b8] ${menuScreen === "setup" || menuScreen === "chaos" ? "expedition-active" : ""} ${menuScreen === "seeds" ? "menu-fullscreen-active" : ""} ${menuScreen === "chaos" ? "chaos-active" : ""}`}>
+    <main className={`main-menu-shell h-screen overflow-hidden text-[#f6e6b8] ${menuScreen === "setup" || menuScreen === "chaos" ? "expedition-active" : ""} ${menuScreen === "seeds" ? "menu-fullscreen-active" : ""} ${menuScreen === "chaos" ? "chaos-active" : ""} ${showNameEditor ? "chronicler-name-open" : ""}`}>
       <TemporalBackdrop />
       {!fullScreenMenu ? (
         <div className="main-menu-stage">
@@ -583,6 +583,7 @@ export function ChroniclerNameModal({ value, onChange, onClose, onSave, closing,
   const t = useTranslation();
   const inputIdentity = useRef(`chronicle-alias-${crypto.randomUUID()}`);
   const inputId = `${inputIdentity.current}-field`;
+  const nameLineFill = `${Math.min(1, value.trim().length / 12) * 100}%`;
   return (
     <div
       className={`chronicler-name-backdrop fixed inset-0 z-[520] flex items-center justify-center p-5 ${closing ? "is-closing" : ""}`}
@@ -591,13 +592,20 @@ export function ChroniclerNameModal({ value, onChange, onClose, onSave, closing,
         if (!required && event.target === event.currentTarget) onClose();
       }}
     >
-      <form className="chronicler-name-modal" autoComplete="off" onSubmit={(event) => { event.preventDefault(); onSave(); }} role="dialog" aria-modal="true" aria-labelledby="chronicler-name-title">
-        <span className="chronicler-name-ornament is-top" aria-hidden="true"><i /><b>◆</b><i /></span>
+      <form
+        className="chronicler-name-modal"
+        style={{ "--chronicler-name-fill": nameLineFill } as React.CSSProperties}
+        autoComplete="off"
+        onSubmit={(event) => { event.preventDefault(); onSave(); }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="chronicler-name-title"
+      >
         {!required && <button className="chronicler-name-close" type="button" onClick={onClose} title={t("common.close")}><X size={17} /></button>}
         <p>{t("name.beforeFirstPage")}</p>
         <h2 id="chronicler-name-title">{t("name.claim")}</h2>
-        <span className="chronicler-name-flourish" aria-hidden="true">❦</span>
-        <label htmlFor={inputId}>{t("name.remembered")}</label>
+        <span className="chronicler-name-divider" aria-hidden="true"><i /></span>
+        <label className="sr-only" htmlFor={inputId}>{t("name.placeholder")}</label>
         <div className="chronicler-name-input-shell">
           <input
             id={inputId}
@@ -615,10 +623,8 @@ export function ChroniclerNameModal({ value, onChange, onClose, onSave, closing,
             onChange={(event) => onChange(event.currentTarget.value)}
             placeholder={t("name.placeholder")}
           />
-          <Feather size={21} aria-hidden="true" />
         </div>
         <button className="chronicler-name-save" type="submit">{t("name.save")}</button>
-        <span className="chronicler-name-ornament is-bottom" aria-hidden="true"><i /><b>◆</b><i /></span>
       </form>
     </div>
   );

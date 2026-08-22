@@ -858,6 +858,14 @@
   font-family: var(--hf-ui-font-body);
 }
 
+.ui-reference-chronicler-name-context {
+  position: fixed;
+  z-index: 519;
+  inset: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
 .ui-reference-modal-safety {
   position: fixed;
   z-index: 65000;
