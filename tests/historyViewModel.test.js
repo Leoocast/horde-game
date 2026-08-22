@@ -183,10 +183,11 @@ test("incompatible identities remain visible and never receive a fallback replay
 });
 
 test("the product screen consumes real history and routes replay through the shared vortex launcher", async () => {
-  const [screen, app, menu] = await Promise.all([
+  const [screen, app, menu, styles] = await Promise.all([
     readFile(new URL("../src/components/SeedsOfDestinyScreen.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/styles.css", import.meta.url), "utf8"),
   ]);
   assert.match(screen, /productHistoryRuntime/u);
   assert.match(screen, /buildHistoryLibraryViewModel/u);
@@ -194,6 +195,11 @@ test("the product screen consumes real history and routes replay through the sha
   assert.match(screen, /narrative\.fallback/u);
   assert.match(screen, /aria-expanded=\{open\}/u);
   assert.match(screen, /seeds-attempt-chevron/u);
+  assert.match(screen, /setOpenAttempt\(latestAttemptId\(future\)\)/u);
+  assert.match(screen, /setOpenAttempt\(latestAttemptId\(nextFuture\)\)/u);
+  assert.match(screen, /future\.attempts\[future\.attempts\.length - 1\]\?\.attemptId/u);
+  assert.match(styles, /\.seeds-thread-line\[aria-expanded="true"\]::before\s*\{[^}]*background:\s*var\(--seeds-gold\)/u);
+  assert.doesNotMatch(styles, /\.seeds-thread-item\.is-victory \.seeds-thread-line::before/u);
   assert.match(screen, /disabled=\{!future\.replayOrigin\}/u);
   assert.match(screen, /"confirm" \| "unrecoverable"/u);
   assert.match(screen, /productHistoryRuntime\.reset\(allowWithoutDiagnostic\)/u);

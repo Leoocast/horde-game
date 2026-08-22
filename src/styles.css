@@ -23819,8 +23819,12 @@ body.is-victory-clearing .game-battlefield-stage {
   transition: background-color 170ms ease, border-color 170ms ease;
 }
 
-.seeds-thread-item.is-victory .seeds-thread-line::before { background: var(--seeds-gold); border-color: #f3dfa8; }
 .seeds-thread-item.is-interrupted .seeds-thread-line::before { border-color: rgb(156 174 177 / 0.72); }
+.seeds-thread-line[aria-expanded="true"]::before {
+  border-color: #f3dfa8;
+  background: var(--seeds-gold);
+  box-shadow: 0 0 9px rgb(222 187 93 / 0.34);
+}
 
 .seeds-thread-title {
   color: var(--seeds-parchment);

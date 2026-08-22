@@ -63,13 +63,20 @@ export function SeedsOfDestinyScreen({ decks, hostDecks, onBack, onReplay, closi
   useEffect(() => {
     if (!future) {
       if (selectedKey) setSelectedKey("");
+      if (openAttempt) setOpenAttempt(undefined);
       return;
     }
-    if (future.key !== selectedKey) setSelectedKey(future.key);
-  }, [future, selectedKey]);
+    if (future.key !== selectedKey) {
+      setSelectedKey(future.key);
+      setOpenAttempt(latestAttemptId(future));
+    }
+  }, [future, openAttempt, selectedKey]);
 
   function selectFuture(key: string) {
-    if (key !== selectedKey) setOpenAttempt(undefined);
+    if (key !== selectedKey) {
+      const nextFuture = library.futures.find((entry) => entry.key === key);
+      setOpenAttempt(latestAttemptId(nextFuture));
+    }
     setSelectedKey(key);
   }
 
@@ -458,6 +465,11 @@ function attemptLabel(
 ): string {
   const key = ATTEMPT_LABEL_KEYS[ordinal - 1];
   return key ? t(key) : t("seeds.attemptNumbered", { number: ordinal });
+}
+
+function latestAttemptId(future: HistoryLibraryFutureViewModel | undefined): string | undefined {
+  if (!future || future.attempts.length === 0) return undefined;
+  return future.attempts[future.attempts.length - 1]?.attemptId;
 }
 
 function sealPhrase(
