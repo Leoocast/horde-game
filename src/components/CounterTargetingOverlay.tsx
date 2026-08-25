@@ -1,8 +1,9 @@
 import { Check, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CardInstance, GameState } from "../engine/GameTypes";
-import { findManualInvokedTargetTrigger } from "../engine/EffectResolver";
+import { findManualInvokedTargetTrigger, manualInvokedTargetRequirement } from "../engine/EffectResolver";
 import { getPowerEndurance } from "../engine/StaticEffects";
+import { targetCandidates } from "../engine/Targeting";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useGameStore } from "../store/useGameStore";
@@ -11,6 +12,7 @@ import { shouldShowFullCardImage } from "../utils/cardImages";
 import { targetArrowCurve } from "./tacticalArrowGeometry";
 import { TacticalArrowGlyph } from "./TacticalArrowGlyph";
 import { Card } from "./Card";
+import { shouldRevealOverlappedTargets } from "./targetingGeometry";
 import { guidedAnchorRegistry, guidedCardAnchorKey, guidedSurfaceAnchorKey } from "../guidance";
 
 const ARROW_COLOR = "#4ade80";
@@ -26,19 +28,43 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
   const sourceRef = useRef<HTMLDivElement>(null);
   const [start, setStart] = useState({ x: 0, y: 0 });
   const [lockedEnd, setLockedEnd] = useState<{ x: number; y: number } | undefined>();
+  const [sourceRevealsTargets, setSourceRevealsTargets] = useState(false);
 
   const source = counterTargeting ? findBattlefieldCard(game, counterTargeting.sourceId) : undefined;
+  const requirement = manualInvokedTargetRequirement(source);
   // A manual enters-the-battlefield trigger must resolve — right-click may deselect but never
   // cancel it. Read from the card's own data, never from a card name.
   const preserveRequiredEffect = Boolean(findManualInvokedTargetTrigger(source));
   const target = counterTargeting?.targetId ? findBattlefieldCard(game, counterTargeting.targetId) : undefined;
   const end = lockedEnd ?? (counterTargeting ? { x: counterTargeting.x, y: counterTargeting.y } : undefined);
+  const targetCandidateIds = source && requirement
+    ? targetCandidates(game, source.controller, requirement).map((candidate) => candidate.instanceId)
+    : [];
+  const overlapTargetIds = [...new Set([
+    ...targetCandidateIds,
+    ...(counterTargeting?.targetId ? [counterTargeting.targetId] : []),
+  ])];
+  const overlapTargetSignature = overlapTargetIds.join("|");
+  const targetingActive = Boolean(counterTargeting);
 
   useEffect(() => {
     if (!counterTargeting) return;
+    const currentOverlapTargetIds = overlapTargetIds;
 
     function move(event: MouseEvent) {
       updatePointer(event.clientX, event.clientY);
+      const sourceRect = sourceRef.current?.getBoundingClientRect();
+      const targetRects = currentOverlapTargetIds
+        .map((targetId) => findBattlefieldSlot(targetId)?.getBoundingClientRect())
+        .filter((rect): rect is DOMRect => Boolean(rect));
+      setSourceRevealsTargets(Boolean(
+        sourceRect &&
+        shouldRevealOverlappedTargets(
+          sourceRect,
+          targetRects,
+          { x: event.clientX, y: event.clientY },
+        ),
+      ));
     }
 
     function contextMenu(event: MouseEvent) {
@@ -54,7 +80,11 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
       window.removeEventListener("mousemove", move);
       window.removeEventListener("contextmenu", contextMenu);
     };
-  }, [cancelTargeting, counterTargeting, deselectTarget, preserveRequiredEffect, updatePointer]);
+  }, [cancelTargeting, deselectTarget, overlapTargetSignature, preserveRequiredEffect, targetingActive, updatePointer]);
+
+  useEffect(() => {
+    if (!targetingActive) setSourceRevealsTargets(false);
+  }, [targetingActive]);
 
   useLayoutEffect(() => {
     if (!counterTargeting) return;
@@ -113,7 +143,10 @@ export function CounterTargetingOverlay({ game }: { game: GameState }) {
       <svg className="pointer-events-none fixed inset-0 z-[104] h-screen w-screen overflow-visible">
         <TacticalArrowGlyph curve={arrow} color={ARROW_COLOR} />
       </svg>
-      <aside className="counter-target-source-panel">
+      <aside
+        data-source-overlap={sourceRevealsTargets ? "true" : undefined}
+        className="counter-target-source-panel"
+      >
         <div
           ref={(element) => {
             sourceRef.current = element;
@@ -185,4 +218,9 @@ function findBattlefieldCard(game: GameState, id: string): CardInstance | undefi
 function getBuffedStats(game: GameState, card: CardInstance): { power: number; endurance: number } {
   const stats = getPowerEndurance(game, card);
   return { power: stats.power + 1, endurance: stats.endurance + 1 };
+}
+
+function findBattlefieldSlot(cardId: string): HTMLElement | undefined {
+  return Array.from(document.querySelectorAll<HTMLElement>("[data-card-slot-id]"))
+    .find((element) => element.dataset.cardSlotId === cardId);
 }

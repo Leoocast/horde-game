@@ -1840,3 +1840,15 @@ test("Tribute source selection portals only its arrow above Energy and keeps its
   assert.doesNotMatch(battlefieldSource, /mana-core-target-label/u);
   assert.doesNotMatch(stylesSource, /\.mana-core-target-label/u);
 });
+
+test("manual Invoked targeting reveals and exposes battlefield targets behind its source card", () => {
+  const overlaySource = readFileSync(new URL("../src/components/CounterTargetingOverlay.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(overlaySource, /shouldRevealOverlappedTargets/u);
+  assert.match(overlaySource, /targetCandidates\(game, source\.controller, requirement\)/u);
+  assert.match(overlaySource, /findBattlefieldSlot\(targetId\)\?\.getBoundingClientRect\(\)/u);
+  assert.match(overlaySource, /data-source-overlap=\{sourceRevealsTargets \? "true" : undefined\}/u);
+  assert.match(stylesSource, /\.counter-target-source-panel\[data-source-overlap="true"\] \{[^}]*pointer-events: none;/su);
+  assert.match(stylesSource, /\.counter-target-source-panel\[data-source-overlap="true"\] \.counter-target-source-card \{[^}]*opacity: 0\.34;/su);
+});
