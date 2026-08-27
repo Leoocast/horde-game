@@ -57,8 +57,16 @@ export const UI_REFERENCE_CATALOG: readonly UiReferenceEntry[] = [
     group: "Navegación y ajustes",
     component: "StartMenu",
     source: "src/components/StartMenu.tsx",
-    usedIn: ["Home", "Preparar expedición", "Chaos", "Crónicas", "Huestes", "Cómo jugar", "Ajustes"],
+    usedIn: ["Home", "Umbral de Jugar", "Preparar expedición", "Chaos", "Crónicas", "Huestes", "Cómo jugar", "Ajustes"],
     status: "product-variant",
+  },
+  {
+    id: "play-threshold",
+    group: "Navegación y ajustes",
+    component: "PlayThreshold",
+    source: "src/components/PlayThreshold.tsx",
+    usedIn: ["Home → Jugar → elegir un futuro nuevo o uno inscrito"],
+    status: "context-only",
   },
   {
     id: "chronicler-name-modal",

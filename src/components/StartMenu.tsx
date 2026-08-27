@@ -26,6 +26,7 @@ import { AudioControls } from "./AudioControls";
 import { DeckKeyCard, DecksView } from "./DecksView";
 import { DisplayControls } from "./DisplayControls";
 import { LanguageSelector } from "./LanguageSelector";
+import { PlayThreshold } from "./PlayThreshold";
 import { SeedsOfDestinyScreen } from "./SeedsOfDestinyScreen";
 import { TemporalBackdrop } from "./TemporalBackdrop";
 import { ToastStack } from "./ToastStack";
@@ -68,7 +69,7 @@ type Props = {
   onStart: (options: { playerName: string; origin: MatchOrigin }) => void;
 };
 
-type MenuScreen = "home" | "setup" | "chaos" | "chronicles" | "hosts" | "seeds" | "howToPlay" | "settings";
+type MenuScreen = "home" | "threshold" | "setup" | "chaos" | "chronicles" | "hosts" | "seeds" | "howToPlay" | "settings";
 type ClosingMenuScreen = Extract<MenuScreen, "chronicles" | "hosts" | "seeds" | "howToPlay" | "settings">;
 
 const modes: Array<{ id: DifficultyMode; setupTurns: number }> = [
@@ -90,6 +91,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [launching, setLaunching] = useState(false);
   const [setupClosing, setSetupClosing] = useState(false);
+  const [thresholdClosing, setThresholdClosing] = useState(false);
   const [showDeveloperWarning, setShowDeveloperWarning] = useState(false);
   const [showNameEditor, setShowNameEditor] = useState(requestInitialName);
   const [nameEditorClosing, setNameEditorClosing] = useState(false);
@@ -103,7 +105,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const pushToast = useToastStore((state) => state.pushToast);
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[0];
   /* Pantallas que sustituyen al menú entero en vez de abrirse a su derecha. */
-  const fullScreenMenu = menuScreen === "setup" || menuScreen === "chaos" || menuScreen === "seeds";
+  const fullScreenMenu = menuScreen === "threshold" || menuScreen === "setup" || menuScreen === "chaos" || menuScreen === "seeds";
   const playableDecks = decks.filter((deck) => deck.presentation.playable !== false);
   const selectedDeck = playableDecks.find((deck) => deck.id === selectedDeckId) ?? playableDecks[0];
   const selectedHostDeck = hostDecks.find((deck) => deck.id === selectedHostDeckId) ?? hostDecks[0];
@@ -141,6 +143,16 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   }, [setupClosing]);
 
   useEffect(() => {
+    if (!thresholdClosing) return;
+    // Acompaña a la salida de las puertas y del velo: 240ms de animación más margen.
+    const timeout = window.setTimeout(() => {
+      setMenuScreen("home");
+      setThresholdClosing(false);
+    }, 250);
+    return () => window.clearTimeout(timeout);
+  }, [thresholdClosing]);
+
+  useEffect(() => {
     if (!closingMenuScreen) return;
     // El Archivo se retira por partes como la Expedición, así que necesita el
     // mismo margen: la última pieza sale a 340ms y el fondo la acompaña.
@@ -163,7 +175,8 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
       if (showDeveloperWarning) return;
       if (menuScreen === "home") return;
       // The setup screen owns Escape itself: an open deck drawer has to swallow it before we leave.
-      if (menuScreen === "setup" || menuScreen === "chaos") return;
+      // The threshold owns it too: its inscribe dialog has to swallow it before we leave.
+      if (menuScreen === "threshold" || menuScreen === "setup" || menuScreen === "chaos") return;
       event.preventDefault();
       closeMenuPanel();
     };
@@ -262,6 +275,33 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     }
   }
 
+  function openThreshold() {
+    // Cada visita al umbral propone una línea temporal nueva; entrar por la puerta
+    // izquierda la conserva hasta Preparación.
+    setCanonEntropy(generateCanonSeedEntropy());
+    setSeedKind("canon");
+    setThresholdClosing(false);
+    setMenuScreen("threshold");
+  }
+
+  /** La puerta derecha del umbral: la identidad ya trae mazos, dificultad y Preparación. */
+  function startInscribedFuture(imported: MatchOrigin) {
+    if (launching) return;
+    onSelectDeck(imported.playerDeckId);
+    onSelectHostDeck(imported.hostDeckId);
+    setMode(imported.difficulty);
+    setSeedKind("canon");
+    setCanonEntropy(imported.rngSeed);
+    setCanonImportError(undefined);
+    if (imported.seedKind === "canon") setCanonDraft(imported.canonCode);
+    if (developerMode) updateDeveloperMode(false);
+    setLaunching(true);
+    onStart({
+      playerName: playerName.trim() || "Chronicler",
+      origin: imported,
+    });
+  }
+
   function startGame() {
     if (launching) return;
     persistDeveloperMode(developerMode);
@@ -304,7 +344,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   }
 
   return (
-    <main className={`main-menu-shell h-screen overflow-hidden text-[#f6e6b8] ${menuScreen === "setup" || menuScreen === "chaos" ? "expedition-active" : ""} ${menuScreen === "seeds" ? "menu-fullscreen-active" : ""} ${menuScreen === "chaos" ? "chaos-active" : ""} ${showNameEditor ? "chronicler-name-open" : ""}`}>
+    <main className={`main-menu-shell h-screen overflow-hidden text-[#f6e6b8] ${menuScreen === "threshold" ? "threshold-active" : ""} ${menuScreen === "setup" || menuScreen === "chaos" ? "expedition-active" : ""} ${menuScreen === "seeds" ? "menu-fullscreen-active" : ""} ${menuScreen === "chaos" ? "chaos-active" : ""} ${showNameEditor ? "chronicler-name-open" : ""}`}>
       <TemporalBackdrop />
       {!fullScreenMenu ? (
         <div className="main-menu-stage">
@@ -345,7 +385,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
                 <span>{t("menu.discardCorruptSave")}</span>
               </button>
             )}
-            <button className="main-menu-entry group" type="button" onClick={() => setMenuScreen("setup")}>
+            <button className="main-menu-entry group" type="button" onClick={openThreshold}>
               <span className="main-menu-entry-mark" />
               <span>{t("menu.play")}</span>
             </button>
@@ -503,6 +543,16 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           onReplay={onReplayFuture}
           closing={closingMenuScreen === "seeds"}
         />
+      ) : menuScreen === "threshold" ? (
+        <PlayThreshold
+          origin={activeOrigin}
+          playerDecks={playableDecks}
+          hostDecks={hostDecks}
+          closing={thresholdClosing}
+          onNewFuture={() => setMenuScreen("setup")}
+          onInscribedFuture={startInscribedFuture}
+          onBack={() => setThresholdClosing(true)}
+        />
       ) : (
         <ExpeditionSetup
           playerDeck={selectedDeck}
@@ -535,7 +585,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           onRegenerateOpaqueSeed={() => setOpaqueSeed(generateRandomSeed())}
           onCopyInternalSeed={copyInternalSeed}
           onToggleDeveloperMode={toggleDeveloperMode}
-          onBack={() => setSetupClosing(true)}
+          onBack={() => (menuScreen === "chaos" ? setSetupClosing(true) : setMenuScreen("threshold"))}
           onStart={startGame}
           launching={launching}
           closing={setupClosing}
