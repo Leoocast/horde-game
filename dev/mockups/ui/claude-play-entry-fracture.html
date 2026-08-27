@@ -171,95 +171,83 @@
       inset: 0;
       display: grid;
       align-content: center;
-      padding: 0 clamp(30px, 7vw, 110px);
-      transform-origin: 22% 50%;
+      justify-items: center;
+      padding: clamp(20px, 3vh, 40px) clamp(24px, 5vw, 80px) clamp(34px, 6.5vh, 84px);
+      text-align: center;
+      transform-origin: 50% 30%;
       transition: transform 640ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 460ms ease;
     }
-    body.is-threshold .menu-shell { opacity: 0; transform: translateX(-2.5%) scale(0.985); pointer-events: none; }
-    body.is-away .menu-shell { opacity: 0; transform: scale(0.9) translateX(-6%); pointer-events: none; }
+    body.is-threshold .menu-shell { opacity: 0; transform: translateY(-2%) scale(0.985); pointer-events: none; }
+    body.is-away .menu-shell { opacity: 0; transform: scale(0.92) translateY(-4%); pointer-events: none; }
 
-    .menu-layout { display: grid; gap: clamp(26px, 4vh, 54px); max-width: 470px; }
-    .menu-kicker {
-      color: var(--hf-quiet);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.34em;
-      text-transform: uppercase;
-    }
+    .menu-layout { display: grid; justify-items: center; gap: clamp(30px, 5.6vh, 74px); }
     .menu-title {
-      margin: 10px 0 0;
+      margin: 0;
       color: #ecdfb4;
       font-family: var(--wordmark);
-      font-size: clamp(46px, 6.4vw, 82px);
+      font-size: clamp(48px, min(7.7vw, 13.5vh), 98px);
       font-weight: 700;
       letter-spacing: 0.04em;
       line-height: 1;
-      text-shadow: 0 0 40px rgb(200 182 120 / 0.24);
+      text-shadow: 0 0 46px rgb(200 182 120 / 0.26);
     }
     .menu-subtitle {
       display: flex;
       align-items: center;
-      gap: 9px;
-      margin-top: 12px;
+      justify-content: center;
+      gap: 14px;
+      margin-top: 16px;
       color: var(--hf-muted);
       font-family: var(--serif);
-      font-size: 14px;
+      font-size: min(17px, 2.7vh);
       font-style: italic;
     }
-    .menu-subtitle i { width: 30px; height: 1px; background: linear-gradient(90deg, var(--hf-line-top), transparent); }
+    .menu-subtitle i { width: clamp(32px, 4.8vw, 62px); height: 1px; }
+    .menu-subtitle i:first-child { background: linear-gradient(90deg, transparent, var(--hf-line-top)); }
+    .menu-subtitle i:last-child { background: linear-gradient(90deg, var(--hf-line-top), transparent); }
 
-    .menu-nav { display: grid; gap: 2px; max-width: 320px; }
+    .menu-nav { display: grid; justify-items: center; gap: 3px; }
     .menu-entry {
       position: relative;
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: block;
       border: 0;
-      padding: 11px 6px 11px 2px;
+      padding: 13px 18px;
       background: none;
       color: var(--hf-menu-copy);
       font-family: var(--display);
-      font-size: 19px;
+      font-size: min(23px, 3.7vh);
       letter-spacing: 0.06em;
-      text-align: left;
-      transition: color 160ms ease, transform 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+      text-align: center;
+      transition: color 160ms ease, letter-spacing 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
     }
     .menu-entry::after {
       content: "";
       position: absolute;
-      bottom: 6px;
-      left: 2px;
+      bottom: 5px;
+      left: 50%;
       width: 0;
       height: 1px;
-      background: linear-gradient(90deg, var(--hf-line-strong), transparent);
+      translate: -50% 0;
+      background: linear-gradient(90deg, transparent, var(--hf-line-strong), transparent);
       transition: width 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
     }
-    .menu-entry:hover, .menu-entry:focus-visible { color: var(--hf-menu-hot); outline: none; transform: translateX(5px); }
-    .menu-entry:hover::after, .menu-entry:focus-visible::after { width: 76%; }
-    .menu-mark {
-      width: 7px;
-      height: 7px;
-      rotate: 45deg;
-      border: 1px solid rgb(200 182 120 / 0.5);
-      background: rgb(200 182 120 / 0.08);
-      transition: background 180ms ease, border-color 180ms ease, scale 180ms ease;
-    }
-    .menu-entry:hover .menu-mark, .menu-entry:focus-visible .menu-mark { border-color: var(--hf-gold-bright); background: var(--hf-gold); scale: 1.18; }
-    #play-entry { color: #d8cfa8; font-size: 23px; }
-    #play-entry .menu-mark { width: 9px; height: 9px; }
+    .menu-entry:hover, .menu-entry:focus-visible { color: var(--hf-menu-hot); outline: none; letter-spacing: 0.1em; }
+    .menu-entry:hover::after, .menu-entry:focus-visible::after { width: 86%; }
+    #play-entry { color: #d8cfa8; font-size: min(28px, 4.4vh); }
 
     .menu-chronicler {
       position: absolute;
-      bottom: 26px;
-      left: clamp(30px, 7vw, 110px);
+      top: clamp(18px, 3vh, 30px);
+      right: clamp(20px, 3.4vw, 48px);
       display: flex;
       align-items: center;
       gap: 10px;
       color: var(--hf-quiet);
+      text-align: right;
     }
-    .menu-chronicler::before { content: "◆"; color: var(--hf-gold); font-size: 11px; opacity: 0.7; }
-    .menu-chronicler strong { display: block; color: var(--hf-copy); font-family: var(--display); font-size: 15px; font-weight: 400; }
-    .menu-chronicler span { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; }
+    .menu-chronicler::after { content: "◆"; order: 2; color: var(--hf-gold); font-size: 13px; opacity: 0.7; }
+    .menu-chronicler strong { display: block; color: var(--hf-copy); font-family: var(--display); font-size: 18px; font-weight: 400; }
+    .menu-chronicler span { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; }
 
     /* ═══════════════════════════════════════════════════════════════════════
        UMBRAL — pantalla completa sobre el menú vivo, partida por la fractura
@@ -843,21 +831,18 @@
     <div class="menu-shell" id="menu-shell">
       <div class="menu-layout">
         <div class="menu-brand">
-          <div class="menu-kicker">Crónicas de los Reinos Quebrados</div>
           <h1 class="menu-title">HOstfAll</h1>
-          <div class="menu-subtitle"><i></i> Acto I — Coronas sobre cenizas</div>
+          <div class="menu-subtitle"><i></i>Acto I — Coronas sobre cenizas<i></i></div>
         </div>
 
         <nav class="menu-nav" aria-label="Menú principal">
-          <button class="menu-entry" type="button" id="play-entry"><span class="menu-mark"></span><span>Jugar</span></button>
-          <button class="menu-entry" type="button"><span class="menu-mark"></span><span>Crónicas</span></button>
-          <button class="menu-entry" type="button"><span class="menu-mark"></span><span>Huestes</span></button>
-          <button class="menu-entry" type="button" data-goto="library"><span class="menu-mark"></span><span>Semillas del Destino</span></button>
-          <button class="menu-entry" type="button"><span class="menu-mark"></span><span>Cómo jugar</span></button>
-          <button class="menu-entry" type="button"><span class="menu-mark"></span><span>Ajustes</span></button>
+          <button class="menu-entry" type="button" id="play-entry"><span>Jugar</span></button>
+          <button class="menu-entry" type="button"><span>Crónicas</span></button>
+          <button class="menu-entry" type="button"><span>Huestes</span></button>
+          <button class="menu-entry" type="button" data-goto="library"><span>Semillas del Destino</span></button>
+          <button class="menu-entry" type="button"><span>Cómo jugar</span></button>
+          <button class="menu-entry" type="button"><span>Ajustes</span></button>
         </nav>
-
-        <div></div>
       </div>
 
       <div class="menu-chronicler">
