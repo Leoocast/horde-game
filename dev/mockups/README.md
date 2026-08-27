@@ -34,6 +34,14 @@ vfx/                exploraciones de efectos
 
 ## Contenido
 
+- `ui/claude-play-entry-futures.html` — propuesta de Claude para la entrada a **Jugar**: la bifurcación
+  entre un futuro nuevo y uno inscrito (variante desplegada en el propio menú y variante de umbral a
+  pantalla completa), **Escribir Crónica** sin ningún campo de seed y con el número de Futuro ocupando
+  el centro entre las dos Crónicas —firma determinista incluida y botón **Otro futuro**—, y el modal de
+  inscripción que decodifica el código carácter a carácter y entra directo al choque. Reimplementa
+  `hashSeed`, `futureCodeFromSeed` y el formato `HF1-PPP-HHH-XXD-XXX`, así que los números que muestra
+  son los del juego, y el choque conserva los tiempos de `EncounterTransition` (2450 ms, impacto a
+  1050 ms, apertura a 1666 ms).
 - `ui/play-entry-futures.html` — la bifurcación de **Jugar** en tres profundidades (capa sobre el menú,
   pantalla completa y sin menú intermedio), **Preparación** sin campo de Canon Seed con el número de Futuro
   como protagonista —duelo central y estandarte— y el modal de inscripción en dos formas, con su latido de

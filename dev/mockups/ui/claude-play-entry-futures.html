@@ -1,0 +1,1828 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hostfall — Entrada a Jugar y protagonismo del Futuro (Claude)</title>
+  <style>
+    /* ─────────────────────────────────────────────────────────────────────────
+       Maqueta de decisión. No se importa desde src/ ni entra al paquete Steam.
+       Las fuentes son las que el juego ya empaqueta (public/fonts/pact-of-elarion),
+       copiadas en dev/mockups/assets/fonts. Servir con:  node dev/mockups/serve.mjs
+       ───────────────────────────────────────────────────────────────────────── */
+    @font-face { font-family: "Cinzel"; src: url("../assets/fonts/cinzel-latin.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+    @font-face { font-family: "Cinzel Decorative"; src: url("../assets/fonts/cinzel-decorative-latin.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+    @font-face { font-family: "Lora"; src: url("../assets/fonts/lora-normal-latin.woff2") format("woff2"); font-style: normal; font-weight: 400 700; font-display: swap; }
+    @font-face { font-family: "Lora"; src: url("../assets/fonts/lora-italic-latin.woff2") format("woff2"); font-style: italic; font-weight: 400 700; font-display: swap; }
+    @font-face { font-family: "Oswald"; src: url("../assets/fonts/oswald-latin.woff2") format("woff2"); font-weight: 300 700; font-display: swap; }
+
+    :root {
+      --ink: #050b0c;
+      --gold: #c7aa69;
+      --gold-bright: #ead59b;
+      --gold-plate: #e6d59e;
+      --parchment: #e0d3ad;
+      --muted: #93a0a3;
+      --muted-2: #758386;
+      --rule: rgb(199 170 105 / 0.34);
+      --rule-strong: rgb(221 197 122 / 0.72);
+      --ember: #c9683a;
+      --danger: #d9826c;
+      --accent: #8da96a;
+      --display: "Cinzel", Georgia, "Times New Roman", serif;
+      --deco: "Cinzel Decorative", "Cinzel", Georgia, serif;
+      --body: "Lora", Georgia, "Times New Roman", serif;
+      --label: "Oswald", "Trebuchet MS", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: var(--ink);
+      color: var(--parchment);
+      font-family: var(--body);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button { font: inherit; color: inherit; cursor: pointer; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+    /* ── Barra de la maqueta (no es UI del juego) ───────────────────────────── */
+    .mockup-bar {
+      position: fixed;
+      z-index: 500;
+      top: 0;
+      right: 0;
+      left: 0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      height: 42px;
+      border-bottom: 1px solid rgb(199 170 105 / 0.2);
+      padding: 0 14px;
+      background: rgb(4 8 9 / 0.94);
+      font-family: var(--label);
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .mockup-bar strong { color: var(--gold); font-weight: 500; }
+    .mockup-bar .spacer { flex: 1; }
+    .mockup-bar .hint {
+      font-family: var(--body);
+      font-size: 12px;
+      font-style: italic;
+      letter-spacing: 0.02em;
+      text-transform: none;
+      color: var(--muted-2);
+    }
+
+    .seg { display: flex; border: 1px solid rgb(199 170 105 / 0.24); }
+    .seg button {
+      border: 0;
+      padding: 5px 11px;
+      background: transparent;
+      color: var(--muted);
+      font-family: var(--label);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .seg button + button { border-left: 1px solid rgb(199 170 105 / 0.18); }
+    .seg button[aria-pressed="true"] { background: rgb(199 170 105 / 0.14); color: var(--gold-bright); }
+
+    .mockup-stage { position: absolute; inset: 42px 0 0; overflow: hidden; background: var(--ink); }
+
+    /* ── Cielo temporal compartido por todas las pantallas ──────────────────── */
+    .sky { position: absolute; inset: 0; overflow: hidden; }
+    .sky::before {
+      position: absolute;
+      inset: -20%;
+      background:
+        radial-gradient(58% 44% at 50% 6%, rgb(45 70 74 / 0.46), transparent 68%),
+        radial-gradient(42% 38% at 14% 84%, rgb(30 48 46 / 0.4), transparent 70%),
+        radial-gradient(46% 40% at 88% 76%, rgb(52 44 30 / 0.32), transparent 72%),
+        radial-gradient(120% 100% at 50% 40%, #0b1618, #03080a 78%);
+      content: "";
+    }
+    .sky::after {
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 12% 22%, rgb(226 214 178 / 0.5), transparent),
+        radial-gradient(1px 1px at 78% 14%, rgb(226 214 178 / 0.36), transparent),
+        radial-gradient(1px 1px at 34% 68%, rgb(226 214 178 / 0.3), transparent),
+        radial-gradient(1.4px 1.4px at 62% 46%, rgb(226 214 178 / 0.42), transparent),
+        radial-gradient(1px 1px at 90% 62%, rgb(226 214 178 / 0.28), transparent),
+        radial-gradient(1px 1px at 22% 88%, rgb(226 214 178 / 0.24), transparent),
+        radial-gradient(1.2px 1.2px at 52% 82%, rgb(226 214 178 / 0.3), transparent);
+      content: "";
+      animation: sky-breathe 14s ease-in-out infinite;
+    }
+    @keyframes sky-breathe { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+
+    /* El disco de grados del juego, muy tenue, como retícula del cosmos. */
+    .dial {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: min(148vh, 148vw);
+      height: min(148vh, 148vw);
+      opacity: 0.22;
+      transform: translate(-50%, -50%);
+      animation: dial-turn 420s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes dial-turn { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+    .embers { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+    .embers span {
+      position: absolute;
+      bottom: -8px;
+      left: var(--ember-left);
+      width: var(--ember-size);
+      height: var(--ember-size);
+      border-radius: 50%;
+      background: rgb(226 190 120 / 0.85);
+      box-shadow: 0 0 7px rgb(214 164 76 / 0.75);
+      opacity: 0;
+      animation: ember-rise var(--ember-duration) linear var(--ember-delay) infinite;
+    }
+    @keyframes ember-rise {
+      0% { opacity: 0; transform: translate(0, 0); }
+      12%, 82% { opacity: var(--ember-peak); }
+      100% { opacity: 0; transform: translate(var(--ember-drift), var(--ember-rise)); }
+    }
+
+    /* ── Pantallas ──────────────────────────────────────────────────────────── */
+    .screen { position: absolute; inset: 0; display: none; }
+    .screen.is-active { display: grid; }
+    .screen-pad { padding: clamp(16px, 2.6vh, 34px) clamp(20px, 4vw, 60px); }
+
+    @keyframes screen-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+    .screen.is-active > * { animation: screen-in 340ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+    .eyebrow {
+      margin: 0;
+      color: var(--muted-2);
+      font-family: var(--label);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+    }
+
+    .ruled {
+      display: flex;
+      align-items: center;
+      gap: clamp(12px, 1.6vw, 22px);
+      margin: 0;
+      color: var(--gold-bright);
+      font-family: var(--display);
+      font-size: clamp(17px, 1.9vw, 26px);
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .ruled::before, .ruled::after {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--rule), transparent);
+      content: "";
+    }
+    /* ── Menú principal (silueta suficiente para juzgar la bifurcación) ─────── */
+    .menu {
+      align-content: center;
+      grid-template-columns: minmax(280px, 33%) minmax(0, 1fr);
+      align-items: center;
+      gap: clamp(24px, 5vw, 90px);
+    }
+
+    .menu-brand h1 {
+      margin: 0;
+      color: var(--gold-bright);
+      font-family: var(--deco);
+      font-size: clamp(42px, 5.4vw, 86px);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      line-height: 0.94;
+      text-shadow: 0 0 46px rgb(214 164 76 / 0.22);
+    }
+    .menu-brand p { margin: 14px 0 0; color: var(--muted); font-size: 15px; font-style: italic; }
+    .menu-brand .act { margin-top: 26px; color: var(--muted-2); font-family: var(--label); font-size: 11px; letter-spacing: 0.26em; text-transform: uppercase; }
+
+    .menu-list { display: grid; gap: 9px; max-width: 460px; }
+
+    .menu-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border: 1px solid rgb(199 170 105 / 0.2);
+      border-left: 2px solid rgb(199 170 105 / 0.34);
+      padding: 13px 18px;
+      background: linear-gradient(100deg, rgb(18 26 27 / 0.9), rgb(6 12 14 / 0.86));
+      color: var(--parchment);
+      font-family: var(--display);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.19em;
+      text-align: left;
+      text-transform: uppercase;
+      transition: border-color 180ms, transform 180ms, color 180ms, background 180ms;
+    }
+    .menu-item:hover, .menu-item:focus-visible {
+      border-color: var(--rule-strong);
+      color: var(--gold-bright);
+      outline: none;
+      transform: translateX(5px);
+    }
+    .menu-item.is-primary {
+      border-left-width: 3px;
+      border-left-color: var(--gold);
+      padding: 17px 18px;
+      background: linear-gradient(100deg, rgb(31 42 40 / 0.94), rgb(9 16 17 / 0.9));
+      font-size: 18px;
+      color: var(--gold-bright);
+    }
+    .menu-item.is-open { border-color: var(--rule-strong); color: var(--gold-bright); }
+    .menu-item .chev { margin-left: auto; color: var(--gold); opacity: 0.5; transition: transform 220ms, opacity 220ms; }
+    .menu-item.is-open .chev { transform: rotate(90deg); opacity: 1; }
+    .menu-item.is-quiet { border-left-color: rgb(199 170 105 / 0.18); color: var(--muted); font-size: 13px; }
+
+    /* ── Bifurcación A · en el sitio (se despliega bajo Jugar) ──────────────── */
+    .menu-fork { display: grid; gap: 8px; overflow: hidden; padding-left: 22px; }
+    .menu-fork[hidden] { display: none; }
+    .menu-fork > * { animation: fork-unfold 300ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+    .menu-fork > *:nth-child(2) { animation-delay: 70ms; }
+    .menu-fork > *:nth-child(3) { animation-delay: 130ms; }
+    @keyframes fork-unfold { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+
+    .fork-line {
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 14px;
+      border: 1px solid rgb(199 170 105 / 0.16);
+      padding: 12px 16px;
+      background: linear-gradient(100deg, rgb(14 22 23 / 0.9), rgb(5 11 12 / 0.86));
+      text-align: left;
+      transition: border-color 180ms, background 180ms, transform 180ms;
+    }
+    .fork-line:hover, .fork-line:focus-visible { border-color: var(--rule-strong); outline: none; transform: translateX(4px); }
+    .fork-line strong { display: block; color: var(--gold-plate); font-family: var(--display); font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+    .fork-line small { display: block; margin-top: 3px; color: var(--muted); font-family: var(--body); font-size: 13px; font-style: italic; }
+    .fork-line .glyph { color: var(--gold); opacity: 0.75; }
+    .fork-line .tail { color: var(--gold-plate); font-family: var(--display); font-size: 15px; letter-spacing: 0.1em; }
+    .fork-line .tail small { display: block; color: var(--muted-2); font-family: var(--label); font-size: 9px; font-style: normal; letter-spacing: 0.2em; text-transform: uppercase; }
+    .fork-aside { padding: 2px 4px 0; color: var(--muted-2); font-size: 12.5px; font-style: italic; }
+    .fork-aside button { border: 0; background: none; padding: 0; color: var(--gold); text-decoration: underline dotted; }
+
+    /* ── Bifurcación B · umbral a pantalla completa ─────────────────────────── */
+    .gates { align-content: center; justify-items: center; gap: clamp(18px, 3vh, 40px); }
+    .gates-head { display: grid; justify-items: center; gap: 12px; text-align: center; }
+    .gates-head h1 {
+      margin: 0;
+      color: var(--gold-bright);
+      font-family: var(--display);
+      font-size: clamp(26px, 3.4vw, 46px);
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .gates-head p { max-width: 54ch; margin: 0; color: var(--muted); font-size: clamp(14px, 1.2vw, 17px); font-style: italic; }
+
+    .gate-row { display: grid; grid-template-columns: repeat(2, minmax(280px, 400px)); gap: clamp(18px, 3vw, 46px); }
+
+    .gate {
+      position: relative;
+      display: grid;
+      align-content: start;
+      gap: 14px;
+      min-height: clamp(300px, 42vh, 400px);
+      border: 1px solid rgb(199 170 105 / 0.22);
+      padding: clamp(20px, 2vw, 30px);
+      background: linear-gradient(170deg, rgb(20 29 30 / 0.92), rgb(5 11 13 / 0.94));
+      box-shadow: inset 0 1px 0 rgb(226 205 150 / 0.09), 0 26px 60px rgb(0 0 0 / 0.5);
+      text-align: left;
+      transition: border-color 220ms, transform 220ms, box-shadow 220ms;
+    }
+    .gate::before {
+      position: absolute;
+      inset: 6px;
+      border: 1px solid rgb(199 170 105 / 0.1);
+      content: "";
+      pointer-events: none;
+    }
+    .gate:hover, .gate:focus-visible {
+      border-color: var(--rule-strong);
+      outline: none;
+      transform: translateY(-6px);
+      box-shadow: inset 0 1px 0 rgb(226 205 150 / 0.16), 0 34px 74px rgb(0 0 0 / 0.6), 0 0 44px rgb(214 164 76 / 0.12);
+    }
+    .gate h2 {
+      margin: 0;
+      color: var(--gold-bright);
+      font-family: var(--display);
+      font-size: clamp(20px, 1.9vw, 27px);
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+    .gate p { margin: 0; color: var(--muted); font-size: 15px; font-style: italic; line-height: 1.6; }
+    .gate .gate-figure { display: grid; justify-items: center; gap: 8px; margin: auto 0 0; padding-top: 12px; border-top: 1px solid rgb(199 170 105 / 0.16); }
+    .gate .gate-cta { color: var(--gold-plate); font-family: var(--label); font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; }
+    .gates-back { justify-self: center; border: 0; background: none; color: var(--muted-2); font-family: var(--label); font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; }
+    .gates-back:hover { color: var(--gold-plate); }
+
+    /* Vista previa del Futuro dentro de la puerta izquierda. */
+    .gate-future { color: var(--gold-bright); font-family: var(--display); font-size: clamp(26px, 2.6vw, 38px); font-weight: 700; letter-spacing: 0.08em; }
+    .gate-future .dot { color: var(--gold); opacity: 0.55; }
+    .gate-slots { display: flex; gap: 5px; color: var(--muted-2); font-family: var(--label); font-size: clamp(15px, 1.5vw, 21px); letter-spacing: 0.24em; }
+    .gate-slots b { color: var(--gold-plate); font-weight: 400; }
+
+    /* ── Pantalla Escribir Crónica ──────────────────────────────────────────── */
+    .setup { grid-template-rows: auto minmax(0, 1fr) auto auto; gap: clamp(10px, 1.6vh, 22px); }
+
+    .setup-header { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+    .back-link {
+      justify-self: start;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgb(199 170 105 / 0.18);
+      padding: 8px 14px;
+      background: rgb(6 12 13 / 0.6);
+      color: var(--muted);
+      font-family: var(--label);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .back-link:hover { border-color: var(--rule-strong); color: var(--gold-plate); }
+    .setup-header h1 {
+      margin: 0;
+      color: var(--gold-bright);
+      font-family: var(--display);
+      font-size: clamp(20px, 2.2vw, 30px);
+      font-weight: 700;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    .setup-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 30%) minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr);
+      align-items: stretch;
+      gap: clamp(14px, 2vw, 34px);
+      min-height: 0;
+    }
+
+    /* Panel de mazo. */
+    .combatant {
+      position: relative;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      min-height: 0;
+      overflow: hidden;
+      border: 1px solid rgb(199 170 105 / 0.18);
+      padding: clamp(14px, 1.4vw, 22px);
+      background:
+        radial-gradient(120% 80% at var(--art-x, 50%) 12%, var(--deck-soft), transparent 62%),
+        linear-gradient(170deg, rgb(18 26 27 / 0.9), rgb(5 11 13 / 0.93));
+      text-align: left;
+      transition: border-color 200ms, background 300ms;
+    }
+    .combatant:hover { border-color: var(--rule-strong); }
+    .combatant-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid rgb(199 170 105 / 0.16); padding-bottom: 9px; }
+    .combatant-head span { color: var(--muted-2); font-family: var(--label); font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; }
+    .combatant-head button {
+      border: 1px solid rgb(199 170 105 / 0.22);
+      padding: 5px 10px;
+      background: rgb(199 170 105 / 0.06);
+      color: var(--gold-plate);
+      font-family: var(--label);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    .combatant-head button:hover { border-color: var(--rule-strong); background: rgb(199 170 105 / 0.14); }
+    .combatant-emblem { display: grid; place-items: center; min-height: 0; overflow: hidden; padding: clamp(6px, 1.4vh, 18px) 0; }
+    .combatant-emblem svg { width: min(190px, 58%); max-height: 100%; height: auto; filter: drop-shadow(0 0 26px var(--deck-soft)); }
+    .combatant h2 { margin: 0; color: var(--gold-bright); font-family: var(--display); font-size: clamp(16px, 1.5vw, 22px); font-weight: 700; letter-spacing: 0.08em; }
+    .combatant p { margin: 7px 0 0; color: var(--muted); font-size: 13.5px; font-style: italic; line-height: 1.55; }
+    .combatant small { display: block; margin-top: 9px; color: var(--muted-2); font-family: var(--label); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; }
+
+    /* ── El altar del Futuro: el número es el centro de la pantalla ─────────── */
+    .altar {
+      position: relative;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: 10px;
+      padding: clamp(12px, 2vh, 26px) 10px;
+    }
+    .altar::before, .altar::after {
+      position: absolute;
+      left: 50%;
+      width: 1px;
+      height: clamp(20px, 6vh, 60px);
+      background: linear-gradient(var(--rule), transparent);
+      content: "";
+    }
+    .altar::before { top: 0; }
+    .altar::after { bottom: 0; background: linear-gradient(transparent, var(--rule)); }
+
+    .altar-sigil { position: relative; display: grid; place-items: center; width: clamp(150px, 15vw, 210px); height: clamp(150px, 15vw, 210px); }
+    .altar-sigil svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .altar-sigil .ring-spin { animation: dial-spin 90s linear infinite; transform-origin: 50% 50%; }
+    @keyframes dial-spin { to { transform: rotate(360deg); } }
+
+    .altar-label { color: var(--muted-2); font-family: var(--label); font-size: 11px; letter-spacing: 0.42em; text-indent: 0.42em; text-transform: uppercase; }
+
+    .future-number {
+      display: flex;
+      align-items: baseline;
+      color: var(--gold-bright);
+      font-family: var(--display);
+      font-size: clamp(40px, 5.6vw, 82px);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      text-shadow: 0 0 40px rgb(214 164 76 / 0.28), 0 2px 0 rgb(0 0 0 / 0.6);
+    }
+    .future-number .dot { padding: 0 0.12em; color: var(--gold); opacity: 0.5; }
+    .future-number .d { display: inline-block; }
+    .future-number.is-striking .d { animation: digit-strike 460ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+    .future-number.is-striking .d:nth-child(2) { animation-delay: 55ms; }
+    .future-number.is-striking .d:nth-child(3) { animation-delay: 110ms; }
+    .future-number.is-striking .d:nth-child(5) { animation-delay: 190ms; }
+    .future-number.is-striking .d:nth-child(6) { animation-delay: 245ms; }
+    .future-number.is-striking .d:nth-child(7) { animation-delay: 300ms; }
+    @keyframes digit-strike {
+      0% { opacity: 0; transform: translateY(-14px) scale(1.35); filter: brightness(2.6); }
+      55% { opacity: 1; filter: brightness(1.5); }
+      100% { opacity: 1; transform: none; filter: none; }
+    }
+
+    .altar-caption { max-width: 30ch; color: var(--muted); font-size: 13.5px; font-style: italic; text-align: center; }
+
+    .reroll {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+      border: 1px solid rgb(199 170 105 / 0.3);
+      padding: 9px 18px;
+      background: linear-gradient(180deg, rgb(30 40 40 / 0.9), rgb(9 16 17 / 0.92));
+      color: var(--gold-plate);
+      font-family: var(--label);
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+    .reroll:hover, .reroll:focus-visible { border-color: var(--rule-strong); color: var(--gold-bright); outline: none; }
+    .reroll svg { transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .reroll:hover svg { transform: rotate(-160deg); }
+
+    /* ── Dificultad y pie ───────────────────────────────────────────────────── */
+    .difficulty { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: clamp(12px, 2vw, 28px); border-top: 1px solid rgb(199 170 105 / 0.16); padding-top: clamp(8px, 1.4vh, 16px); }
+    .difficulty > .eyebrow { white-space: nowrap; }
+    .mode-row { display: grid; grid-auto-flow: column; gap: 10px; justify-content: start; }
+    .mode {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgb(199 170 105 / 0.16);
+      padding: 9px 16px;
+      background: linear-gradient(160deg, rgb(16 24 25 / 0.86), rgb(5 11 12 / 0.9));
+      color: var(--muted);
+      font-family: var(--display);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .mode:hover { border-color: rgb(199 170 105 / 0.4); color: var(--parchment); }
+    .mode[aria-pressed="true"] { border-color: var(--rule-strong); background: linear-gradient(160deg, rgb(38 48 44 / 0.92), rgb(11 18 18 / 0.94)); color: var(--gold-bright); }
+    .mode svg { color: var(--gold); opacity: 0.8; }
+
+    .awakening { display: flex; align-items: baseline; gap: 9px; color: var(--muted); font-size: 13px; font-style: italic; white-space: nowrap; }
+    .awakening strong { color: var(--gold-bright); font-family: var(--display); font-size: 26px; font-style: normal; }
+
+    .setup-footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; border-top: 1px solid rgb(199 170 105 / 0.16); padding-top: clamp(8px, 1.4vh, 16px); }
+    .footer-summary { display: flex; align-items: center; gap: 12px; color: var(--muted); font-family: var(--label); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; flex-wrap: wrap; }
+    .footer-summary strong { color: var(--parchment); font-family: var(--display); font-weight: 700; letter-spacing: 0.1em; }
+    .footer-summary i { color: var(--gold); font-style: normal; opacity: 0.5; }
+
+    .begin {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      border: 1px solid var(--rule-strong);
+      padding: 14px 30px;
+      background: linear-gradient(110deg, #3a4240, #1c2828 66%, #2e3836);
+      color: var(--gold-bright);
+      font-family: var(--display);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      box-shadow: inset 0 1px 0 rgb(226 205 150 / 0.16), 0 18px 40px rgb(0 0 0 / 0.5);
+    }
+    .begin:hover { box-shadow: inset 0 1px 0 rgb(226 205 150 / 0.26), 0 18px 46px rgb(0 0 0 / 0.55), 0 0 34px rgb(214 164 76 / 0.2); }
+    /* ── Modal de inscripción de un Futuro ──────────────────────────────────── */
+    .inscription-layer {
+      position: absolute;
+      z-index: 300;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 24px;
+    }
+    .inscription-layer.is-open { display: grid; }
+    .inscription-layer { overflow-y: auto; }
+    .inscription-scrim {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(58% 50% at 50% 46%, rgb(10 20 22 / 0.62), rgb(2 5 6 / 0.94) 72%),
+        rgb(2 5 6 / 0.72);
+      animation: scrim-in 320ms ease-out both;
+    }
+    @keyframes scrim-in { from { opacity: 0; } to { opacity: 1; } }
+    .inscription-layer.is-closing .inscription-scrim { animation: scrim-in 240ms ease-in reverse both; }
+
+    /* Anillo grabado que respira detrás del código; es el "umbral" de la inscripción. */
+    .inscription-halo {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: min(112vh, 112vw);
+      height: min(112vh, 112vw);
+      opacity: 0.5;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      animation: halo-in 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+    @keyframes halo-in { from { opacity: 0; transform: translate(-50%, -50%) scale(1.22) rotate(-10deg); } to { opacity: 0.5; transform: translate(-50%, -50%) scale(1) rotate(0); } }
+    .inscription-halo .ring-spin { animation: dial-spin 140s linear infinite; transform-origin: 50% 50%; }
+
+    .inscription {
+      position: relative;
+      display: grid;
+      justify-items: center;
+      gap: clamp(12px, 2.2vh, 26px);
+      width: min(1020px, 96%);
+      padding: clamp(20px, 3vh, 40px) clamp(20px, 3vw, 54px);
+      text-align: center;
+      animation: inscription-in 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+    @keyframes inscription-in { from { opacity: 0; transform: translateY(22px) scale(0.985); } to { opacity: 1; transform: none; } }
+    .inscription-layer.is-closing .inscription { animation: inscription-out 260ms ease-in both; }
+    @keyframes inscription-out { to { opacity: 0; transform: translateY(-10px) scale(0.99); } }
+
+    .inscription h2 {
+      margin: 0;
+      color: var(--gold-bright);
+      font-family: var(--display);
+      font-size: clamp(24px, 3vw, 40px);
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      text-shadow: 0 0 42px rgb(214 164 76 / 0.24);
+    }
+    .inscription > p { max-width: 56ch; margin: 0; color: var(--muted); font-size: clamp(13.5px, 1.1vw, 16px); font-style: italic; }
+
+    .inscription-close {
+      position: absolute;
+      top: 0;
+      right: 0;
+      border: 1px solid rgb(199 170 105 / 0.2);
+      padding: 7px 10px;
+      background: rgb(4 9 10 / 0.7);
+      color: var(--muted);
+      line-height: 0;
+    }
+    .inscription-close:hover { border-color: var(--rule-strong); color: var(--gold-bright); }
+
+    /* El renglón grabado: HF1 fijo + doce casillas. */
+    .code-rail { display: flex; align-items: flex-end; justify-content: center; gap: clamp(5px, 0.7vw, 11px); flex-wrap: nowrap; cursor: text; }
+    .code-rail .sep { align-self: center; width: clamp(9px, 1vw, 18px); height: 1px; background: var(--rule); }
+
+    .cell {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: clamp(28px, 3.1vw, 52px);
+      height: clamp(40px, 4.4vw, 72px);
+      border-bottom: 2px solid rgb(199 170 105 / 0.28);
+      background: linear-gradient(180deg, transparent 40%, rgb(199 170 105 / 0.05));
+      color: var(--gold-bright);
+      font-family: var(--display);
+      font-size: clamp(19px, 2.3vw, 36px);
+      font-weight: 700;
+      transition: border-color 200ms, color 200ms, background 200ms;
+    }
+    .cell.is-prefix { color: var(--muted-2); border-bottom-color: rgb(199 170 105 / 0.16); }
+    .cell.is-filled { border-bottom-color: var(--rule-strong); text-shadow: 0 0 22px rgb(226 205 150 / 0.45); }
+    .cell.is-filled::after {
+      position: absolute;
+      right: 0;
+      bottom: -2px;
+      left: 0;
+      height: 2px;
+      background: var(--gold-bright);
+      content: "";
+      animation: cell-ignite 520ms ease-out both;
+    }
+    @keyframes cell-ignite { 0% { opacity: 1; box-shadow: 0 0 18px 3px rgb(234 213 155 / 0.8); } 100% { opacity: 0.5; box-shadow: none; } }
+    .cell.is-cursor { border-bottom-color: var(--gold-bright); }
+    .cell.is-cursor::before {
+      position: absolute;
+      bottom: 8px;
+      width: 60%;
+      height: 2px;
+      background: var(--gold-bright);
+      content: "";
+      animation: caret 1100ms steps(1) infinite;
+    }
+    @keyframes caret { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0; } }
+    .cell.is-difficulty { border-bottom-color: rgb(226 205 150 / 0.55); }
+    .cell.is-difficulty::before { position: absolute; top: -14px; color: var(--muted-2); content: "◆"; font-size: 8px; }
+
+    .code-rail.is-wrong .cell { border-bottom-color: rgb(217 130 108 / 0.7); color: var(--danger); }
+    .code-rail.is-wrong { animation: rail-shake 420ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+    @keyframes rail-shake { 10%, 90% { transform: translateX(-3px); } 30%, 70% { transform: translateX(6px); } 50% { transform: translateX(-8px); } }
+
+    .code-hidden-input { position: absolute; width: 1px; height: 1px; padding: 0; border: 0; opacity: 0; }
+
+    /* Lectura en vivo de lo que la identidad ya declara. */
+    .decoded {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: center;
+      gap: clamp(12px, 2vw, 32px);
+      width: 100%;
+      max-width: 780px;
+      border-top: 1px solid rgb(199 170 105 / 0.16);
+      border-bottom: 1px solid rgb(199 170 105 / 0.16);
+      padding: clamp(10px, 1.6vh, 18px) 0;
+    }
+    .decoded-side { display: grid; gap: 4px; text-align: center; }
+    .decoded-side span { color: var(--muted-2); font-family: var(--label); font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; }
+    .decoded-side strong { color: var(--parchment); font-family: var(--display); font-size: clamp(13px, 1.3vw, 18px); font-weight: 700; letter-spacing: 0.06em; transition: color 240ms; }
+    .decoded-side.is-unknown strong { color: var(--muted-2); }
+    .decoded-side.is-known strong { color: var(--gold-bright); }
+    .decoded-mid { display: grid; gap: 4px; justify-items: center; }
+    .decoded-mid span { color: var(--muted-2); font-family: var(--label); font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; }
+    .decoded-mid strong { color: var(--gold-plate); font-family: var(--display); font-size: clamp(12px, 1.1vw, 15px); letter-spacing: 0.12em; text-transform: uppercase; }
+
+    .inscription-result { display: grid; justify-items: center; gap: 8px; min-height: clamp(112px, 15vh, 168px); align-content: center; }
+    .inscription-result .future-number { font-size: clamp(34px, 4.6vw, 68px); }
+    .inscription-error { color: var(--danger); font-size: 14px; font-style: italic; }
+    .inscription-waiting { color: var(--muted-2); font-size: 14px; font-style: italic; }
+
+    .inscription-actions { display: flex; align-items: center; gap: 16px; }
+    .ghost-action {
+      border: 1px solid rgb(199 170 105 / 0.2);
+      padding: 11px 18px;
+      background: rgb(6 12 13 / 0.6);
+      color: var(--muted);
+      font-family: var(--label);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .ghost-action:hover { border-color: var(--rule-strong); color: var(--gold-plate); }
+    .begin:disabled { border-color: rgb(199 170 105 / 0.16); background: linear-gradient(110deg, #1c2120, #12191a); color: var(--muted-2); cursor: not-allowed; box-shadow: none; }
+
+    /* Variante compacta: la misma inscripción encerrada en una placa. */
+    .inscription-layer.is-plate .inscription {
+      width: min(700px, 96%);
+      border: 1px solid rgb(199 170 105 / 0.28);
+      padding: clamp(20px, 3vh, 34px) clamp(18px, 3vw, 40px);
+      background: linear-gradient(170deg, rgb(20 29 30 / 0.97), rgb(5 11 13 / 0.98));
+      box-shadow: inset 0 1px 0 rgb(226 205 150 / 0.1), 0 34px 80px rgb(0 0 0 / 0.62);
+    }
+    .inscription-layer.is-plate .inscription-halo { display: none; }
+    .inscription-layer.is-plate .inscription h2 { font-size: clamp(19px, 2.1vw, 27px); }
+    .inscription-layer.is-plate .cell { width: clamp(22px, 2.2vw, 34px); height: clamp(30px, 3vw, 46px); font-size: clamp(15px, 1.6vw, 23px); }
+    .inscription-layer.is-plate .inscription-result { min-height: clamp(84px, 11vh, 120px); }
+    .inscription-layer.is-plate .inscription-result .future-number { font-size: clamp(28px, 3.2vw, 44px); }
+    .inscription-layer.is-plate .inscription-close { top: 10px; right: 10px; }
+
+    /* ── Choque (EncounterTransition) ───────────────────────────────────────── */
+    .clash {
+      position: absolute;
+      z-index: 400;
+      inset: 0;
+      display: none;
+      overflow: hidden;
+      --clash-accent: #8da96a;
+      --clash-bright: #d4dfa1;
+      --clash-cut: 32deg;
+    }
+    .clash.is-playing { display: block; }
+
+    .clash-curtain { position: absolute; z-index: 1; inset: 0; }
+    .clash-curtain::before, .clash-curtain::after {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(105deg, rgb(5 13 11 / 0.98), rgb(1 4 3 / 0.99)),
+        repeating-linear-gradient(90deg, transparent 0 23px, rgb(201 181 111 / 0.025) 24px);
+      content: "";
+      animation: clash-curtain-player var(--clash-ms) cubic-bezier(0.72, 0, 0.22, 1) both;
+    }
+    .clash-curtain::before { clip-path: polygon(0 0, 0 100%, 100% 100%); }
+    .clash-curtain::after { clip-path: polygon(0 0, 100% 0, 100% 100%); animation-name: clash-curtain-host; }
+    @keyframes clash-curtain-player { 0% { transform: translateX(-102%); } 17%, 68% { transform: translateX(0); } 100% { transform: translateY(104%); } }
+    @keyframes clash-curtain-host { 0% { transform: translateX(102%); } 17%, 68% { transform: translateX(0); } 100% { transform: translateY(-104%); } }
+
+    .clash-content { position: absolute; z-index: 4; inset: 0; display: grid; place-items: center; animation: clash-life var(--clash-ms) ease-in-out both; }
+    @keyframes clash-life { 0%, 7% { opacity: 0; } 18%, 100% { opacity: 1; } }
+
+    .clash-kicker {
+      position: absolute;
+      top: clamp(48px, 14vh, 150px);
+      display: grid;
+      place-items: center;
+      width: min(900px, 88vw);
+      min-height: 64px;
+      padding: 12px clamp(30px, 6vw, 80px);
+      border-top: 1px solid color-mix(in srgb, var(--clash-accent) 28%, transparent);
+      border-bottom: 1px solid color-mix(in srgb, var(--clash-accent) 20%, transparent);
+      background: radial-gradient(ellipse at center, color-mix(in srgb, var(--clash-accent) 16%, transparent), transparent 68%);
+      color: var(--gold-bright);
+      font-family: var(--display);
+      font-size: clamp(15px, 1.8vw, 24px);
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      animation: clash-static-exit 686ms 1764ms ease-in forwards;
+    }
+    .clash-kicker small { display: block; margin-top: 6px; color: var(--muted); font-family: var(--label); font-size: 11px; letter-spacing: 0.3em; }
+    @keyframes clash-static-exit { from { opacity: 1; } to { opacity: 0; } }
+
+    .clash-matchup { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: clamp(20px, 4vw, 70px); width: min(1280px, 94vw); }
+
+    .clash-side { display: grid; justify-items: center; gap: 14px; }
+    .clash-side.player { animation: clash-left 890ms 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both, clash-left-exit 784ms 1666ms cubic-bezier(0.72, 0, 0.22, 1) forwards; }
+    .clash-side.host { animation: clash-right 890ms 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both, clash-right-exit 784ms 1666ms cubic-bezier(0.72, 0, 0.22, 1) forwards; }
+    @keyframes clash-left { from { opacity: 0; transform: translateX(-34px); } to { opacity: 1; transform: none; } }
+    @keyframes clash-right { from { opacity: 0; transform: translateX(34px); } to { opacity: 1; transform: none; } }
+    @keyframes clash-left-exit { to { transform: translateY(104vh); } }
+    @keyframes clash-right-exit { to { transform: translateY(-104vh); } }
+
+    .clash-side svg { width: clamp(120px, 15vw, 220px); height: auto; filter: drop-shadow(0 0 34px var(--deck-soft)); }
+    .clash-side span { color: var(--muted-2); font-family: var(--label); font-size: 11px; letter-spacing: 0.26em; text-transform: uppercase; }
+    .clash-side strong { color: var(--gold-bright); font-family: var(--display); font-size: clamp(15px, 1.7vw, 24px); font-weight: 700; letter-spacing: 0.1em; text-align: center; }
+
+    .clash-versus { position: relative; display: grid; justify-items: center; gap: 6px; color: var(--clash-bright); animation: clash-versus 760ms 300ms cubic-bezier(0.18, 0.9, 0.25, 1.2) both, clash-static-exit 686ms 1764ms ease-in forwards; }
+    .clash-versus b { font-family: var(--display); font-size: clamp(20px, 2.2vw, 30px); letter-spacing: 0.3em; }
+    @keyframes clash-versus {
+      0% { opacity: 0; transform: scale(2.1) rotate(-8deg); }
+      56% { opacity: 1; transform: scale(0.88) rotate(1deg); }
+      72% { transform: scale(1.12) rotate(0); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .clash-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 200px;
+      height: 200px;
+      margin: -100px 0 0 -100px;
+      border: 2px solid color-mix(in srgb, var(--clash-bright) 70%, transparent);
+      border-radius: 50%;
+      animation: clash-ring var(--clash-ms) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      pointer-events: none;
+    }
+    @keyframes clash-ring { 0%, 39% { opacity: 0; transform: scale(0.08); } 43% { opacity: 1; transform: scale(0.7); } 58%, 100% { opacity: 0; transform: scale(9); } }
+
+    .clash-flare {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--clash-bright), transparent);
+      transform-origin: center;
+      animation: clash-flare var(--clash-ms) ease-out both;
+      pointer-events: none;
+    }
+    @keyframes clash-flare {
+      0%, 40% { opacity: 0; transform: rotate(var(--clash-cut)) scaleX(0.04); }
+      44% { opacity: 0.95; transform: rotate(var(--clash-cut)) scaleX(1); }
+      55%, 100% { opacity: 0; transform: rotate(var(--clash-cut)) scaleX(1.18); }
+    }
+
+    /* ── Tablero de destino (silueta) ───────────────────────────────────────── */
+    .board { grid-template-rows: auto minmax(0, 1fr); gap: 14px; }
+    .board-bar { display: flex; align-items: center; gap: 14px; border-bottom: 1px solid rgb(199 170 105 / 0.18); padding-bottom: 10px; }
+    .board-bar .board-future { display: flex; align-items: baseline; gap: 10px; color: var(--gold-bright); font-family: var(--display); font-size: 19px; font-weight: 700; letter-spacing: 0.12em; }
+    .board-bar .board-future span { color: var(--muted-2); font-family: var(--label); font-size: 10px; letter-spacing: 0.26em; text-transform: uppercase; }
+    .board-bar .spacer { flex: 1; }
+
+    .board-field { display: grid; align-content: center; gap: clamp(10px, 2vh, 26px); }
+    .board-row { display: flex; justify-content: center; gap: 12px; }
+    .board-card {
+      width: clamp(64px, 7vw, 104px);
+      aspect-ratio: 488 / 680;
+      border: 1px solid rgb(199 170 105 / 0.24);
+      background: linear-gradient(170deg, rgb(24 33 34 / 0.9), rgb(6 12 14 / 0.94));
+      box-shadow: inset 0 1px 0 rgb(226 205 150 / 0.08);
+      animation: board-card-in 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+    .board-card.is-host { border-color: color-mix(in srgb, var(--deck-accent, #8da96a) 42%, transparent); }
+    @keyframes board-card-in { from { opacity: 0; transform: translateY(16px) scale(0.96); } to { opacity: 1; transform: none; } }
+    .board-note { justify-self: center; max-width: 60ch; color: var(--muted-2); font-size: 13px; font-style: italic; text-align: center; }
+
+    /* ── Notas de diseño ────────────────────────────────────────────────────── */
+    .notes {
+      position: fixed;
+      z-index: 600;
+      top: 42px;
+      right: 0;
+      bottom: 0;
+      width: min(430px, 92vw);
+      overflow-y: auto;
+      border-left: 1px solid rgb(199 170 105 / 0.24);
+      padding: 22px 24px 60px;
+      background: rgb(4 9 10 / 0.97);
+      transform: translateX(101%);
+      transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      scrollbar-width: thin;
+      scrollbar-color: rgb(199 170 105 / 0.28) transparent;
+    }
+    .notes.is-open { transform: none; }
+    .notes h2 { margin: 0 0 4px; color: var(--gold-bright); font-family: var(--display); font-size: 15px; letter-spacing: 0.2em; text-transform: uppercase; }
+    .notes h3 { margin: 22px 0 6px; color: var(--gold-plate); font-family: var(--label); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; }
+    .notes p, .notes li { color: var(--muted); font-size: 13.5px; line-height: 1.62; }
+    .notes ul { margin: 0; padding-left: 18px; }
+    .notes li { margin-bottom: 7px; }
+    .notes strong { color: var(--parchment); }
+    .notes em { color: var(--gold-plate); font-style: italic; }
+    .notes .q { border-left: 2px solid rgb(199 170 105 / 0.4); padding-left: 12px; }
+
+    /* Pantallas bajas: la ceremonia se comprime antes que recortarse. */
+    @media (max-height: 860px) {
+      .inscription { gap: clamp(8px, 1.3vh, 15px); padding-top: clamp(12px, 2vh, 22px); padding-bottom: clamp(12px, 2vh, 22px); }
+      .inscription > p { font-size: 13.5px; }
+      .inscription-result { min-height: clamp(86px, 11vh, 118px); }
+      .cell { height: clamp(34px, 3.6vw, 58px); }
+      .altar-sigil { width: clamp(120px, 12vw, 168px); height: clamp(120px, 12vw, 168px); }
+    }
+
+    @media (max-width: 1080px) {
+      .menu { grid-template-columns: minmax(0, 1fr); }
+      .setup-body { grid-template-columns: minmax(0, 1fr); }
+      .gate-row { grid-template-columns: minmax(0, 1fr); }
+      .difficulty { grid-template-columns: minmax(0, 1fr); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="mockup-bar">
+    <strong>Claude · Jugar → Futuro</strong>
+    <span class="hint">maqueta de decisión · nada de esto está implementado</span>
+    <div class="spacer"></div>
+
+    <span>Bifurcación</span>
+    <div class="seg" id="fork-variant">
+      <button type="button" data-variant="inline" aria-pressed="true">En el sitio</button>
+      <button type="button" data-variant="gates" aria-pressed="false">Umbral</button>
+    </div>
+
+    <span>Inscripción</span>
+    <div class="seg" id="modal-variant">
+      <button type="button" data-variant="threshold" aria-pressed="true">Umbral</button>
+      <button type="button" data-variant="plate" aria-pressed="false">Placa</button>
+    </div>
+
+    <div class="seg" id="tempo">
+      <button type="button" data-tempo="1" aria-pressed="true">1×</button>
+      <button type="button" data-tempo="0.35" aria-pressed="false">0.35×</button>
+    </div>
+
+    <div class="seg">
+      <button type="button" id="restart">Reiniciar</button>
+      <button type="button" id="notes-toggle">Notas</button>
+    </div>
+  </div>
+
+  <div class="mockup-stage">
+    <div class="sky" aria-hidden="true">
+      <div class="dial" id="sky-dial"></div>
+      <div class="embers" id="embers"></div>
+    </div>
+
+    <!-- ── 1 · Menú principal ─────────────────────────────────────────────── -->
+    <section class="screen screen-pad menu is-active" id="screen-menu" aria-label="Menú principal">
+      <div class="menu-brand">
+        <p class="eyebrow">Crónicas de los Reinos Quebrados</p>
+        <h1>Hostfall</h1>
+        <p>Un Cronista contra la Hueste. Cada partida es una línea temporal que puede reescribirse.</p>
+        <p class="act">Acto I — Coronas sobre cenizas</p>
+      </div>
+
+      <div class="menu-list">
+        <button class="menu-item is-primary" type="button" id="menu-play">
+          Jugar
+          <span class="chev" aria-hidden="true">›</span>
+        </button>
+
+        <div class="menu-fork" id="menu-fork" hidden>
+          <button class="fork-line" type="button" data-fork="random">
+            <span class="glyph" aria-hidden="true">✦</span>
+            <span>
+              <strong>Un futuro nuevo</strong>
+              <small>El Destino reparte una línea temporal que nadie ha contemplado.</small>
+            </span>
+            <span class="tail" id="fork-preview">
+              <small>Futuro</small>
+              <span data-role="future-inline">000·000</span>
+            </span>
+          </button>
+
+          <button class="fork-line" type="button" data-fork="seed">
+            <span class="glyph" aria-hidden="true">⌘</span>
+            <span>
+              <strong>Un futuro inscrito</strong>
+              <small>Escribe la identidad de un futuro que alguien ya contempló.</small>
+            </span>
+            <span class="tail">HF1<small>identidad</small></span>
+          </button>
+
+          <p class="fork-aside">¿Buscas uno que ya viviste? Vive en <button type="button" data-fork="library">Semillas del Destino</button>.</p>
+        </div>
+
+        <button class="menu-item" type="button">Cómo jugar</button>
+        <button class="menu-item" type="button">Crónicas</button>
+        <button class="menu-item" type="button">Huestes</button>
+        <button class="menu-item" type="button">Semillas del Destino</button>
+        <button class="menu-item is-quiet" type="button">Ajustes</button>
+      </div>
+    </section>
+
+    <!-- ── 2 · Bifurcación a pantalla completa ────────────────────────────── -->
+    <section class="screen screen-pad gates" id="screen-gates" aria-label="Cómo llegar a este futuro">
+      <div class="gates-head">
+        <p class="eyebrow">Antes de escribir</p>
+        <h1>¿A qué futuro vas?</h1>
+        <p>Toda partida es una línea temporal con nombre propio. Puedes dejar que el Destino elija una, o volver a una que ya fue contemplada.</p>
+      </div>
+
+      <div class="gate-row">
+        <button class="gate" type="button" data-fork="random">
+          <p class="eyebrow">El Destino elige</p>
+          <h2>Un futuro nuevo</h2>
+          <p>Una línea temporal recién barajada. Podrás cambiarla tantas veces como quieras antes de escribir la Crónica.</p>
+          <span class="gate-figure">
+            <span class="eyebrow">Futuro</span>
+            <span class="gate-future" data-role="future-gate">000<span class="dot">·</span>000</span>
+            <span class="gate-cta">Preparar la Crónica →</span>
+          </span>
+        </button>
+
+        <button class="gate" type="button" data-fork="seed">
+          <p class="eyebrow">Tú la eliges</p>
+          <h2>Un futuro inscrito</h2>
+          <p>Escribe la identidad que alguien compartió contigo. Los mazos, la dificultad y la Preparación ya vienen dentro de ella.</p>
+          <span class="gate-figure">
+            <span class="eyebrow">Identidad</span>
+            <span class="gate-slots"><b>H</b><b>F</b><b>1</b>·<span>—</span><span>—</span><span>—</span>·<span>—</span><span>—</span><span>—</span>·<span>—</span><span>—</span><b>?</b>·<span>—</span><span>—</span><span>—</span></span>
+            <span class="gate-cta">Inscribir →</span>
+          </span>
+        </button>
+      </div>
+
+      <button class="gates-back" type="button" data-back="menu">← Menú principal</button>
+    </section>
+
+    <!-- ── 3 · Escribir Crónica, con el Futuro como centro ────────────────── -->
+    <section class="screen screen-pad setup" id="screen-setup" aria-label="Escribir Crónica">
+      <header class="setup-header">
+        <button class="back-link" type="button" data-back="fork">← Volver</button>
+        <h1>Escribir Crónica</h1>
+        <span></span>
+      </header>
+
+      <div class="setup-body">
+        <article class="combatant" id="combatant-player">
+          <div class="combatant-head">
+            <span>Cronista</span>
+            <button type="button" data-cycle="player">Cambiar</button>
+          </div>
+          <div class="combatant-emblem" data-role="emblem-player"></div>
+          <div>
+            <h2 data-role="name-player">—</h2>
+            <p data-role="desc-player">—</p>
+            <small data-role="size-player">—</small>
+          </div>
+        </article>
+
+        <div class="altar">
+          <div class="altar-sigil" data-role="sigil"></div>
+          <p class="altar-label">Futuro</p>
+          <p class="future-number" data-role="future-main">000<span class="dot">·</span>000</p>
+          <p class="altar-caption" data-role="future-caption">Nadie ha contemplado esta línea temporal todavía.</p>
+          <button class="reroll" type="button" id="reroll">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M20 11a8 8 0 1 0-2.3 6" />
+              <path d="M20 5v6h-6" />
+            </svg>
+            Otro futuro
+          </button>
+        </div>
+
+        <article class="combatant" id="combatant-host">
+          <div class="combatant-head">
+            <span>Hueste</span>
+            <button type="button" data-cycle="host">Cambiar</button>
+          </div>
+          <div class="combatant-emblem" data-role="emblem-host"></div>
+          <div>
+            <h2 data-role="name-host">—</h2>
+            <p data-role="desc-host">—</p>
+            <small data-role="size-host">—</small>
+          </div>
+        </article>
+      </div>
+
+      <section class="difficulty" aria-label="Dificultad">
+        <p class="eyebrow">Elige tu destino</p>
+        <div class="mode-row" id="mode-row"></div>
+        <p class="awakening">La Hueste despierta después de <strong data-role="setup-turns">3</strong> turnos</p>
+      </section>
+
+      <footer class="setup-footer">
+        <div class="footer-summary">
+          <span>Cronista</span><strong data-role="foot-player">—</strong>
+          <i aria-hidden="true">◆</i>
+          <span>Hueste</span><strong data-role="foot-host">—</strong>
+          <i aria-hidden="true">◆</i>
+          <span>Dificultad</span><strong data-role="foot-mode">—</strong>
+        </div>
+        <button class="begin" type="button" id="begin">Iniciar Crónica <span aria-hidden="true">▸</span></button>
+      </footer>
+    </section>
+
+    <!-- ── 5 · Tablero de destino (silueta) ───────────────────────────────── -->
+    <section class="screen screen-pad board" id="screen-board" aria-label="Partida">
+      <div class="board-bar">
+        <span class="board-future"><span>Futuro</span><b data-role="future-board">000·000</b></span>
+        <div class="spacer"></div>
+        <button class="ghost-action" type="button">Reescribir</button>
+        <button class="ghost-action" type="button">Copiar identidad</button>
+        <button class="ghost-action" type="button" data-back="menu">Menú</button>
+      </div>
+      <div class="board-field">
+        <div class="board-row" data-role="row-host"></div>
+        <div class="board-row" data-role="row-player"></div>
+        <p class="board-note">Silueta del tablero: aquí termina el recorrido. La identidad sigue visible arriba, que es donde el juego ya la conserva junto a <em>Reescribir</em> y <em>Copiar identidad</em>.</p>
+      </div>
+    </section>
+
+    <!-- ── 4 · Inscripción de un futuro ───────────────────────────────────── -->
+    <div class="inscription-layer" id="inscription" role="dialog" aria-modal="true" aria-label="Inscribir un futuro">
+      <div class="inscription-scrim" data-close="1"></div>
+      <div class="inscription-halo" id="inscription-halo" aria-hidden="true"></div>
+
+      <div class="inscription">
+        <button class="inscription-close" type="button" data-close="1" title="Cerrar">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19" /></svg>
+        </button>
+
+        <p class="eyebrow">Una línea temporal ya contemplada</p>
+        <h2>Inscribe el futuro</h2>
+        <p>Escribe o pega su identidad. En cuanto esté completa, la Crónica y la Hueste que le corresponden se revelarán aquí.</p>
+
+        <div class="code-rail" id="code-rail"></div>
+        <label class="sr-only" for="code-input">Identidad del futuro</label>
+        <input class="code-hidden-input" id="code-input" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" />
+
+        <div class="decoded">
+          <div class="decoded-side is-unknown" data-role="dec-player">
+            <span>Cronista</span>
+            <strong>· · ·</strong>
+          </div>
+          <div class="decoded-mid" data-role="dec-mode">
+            <span>Dificultad</span>
+            <strong>· · ·</strong>
+          </div>
+          <div class="decoded-side is-unknown" data-role="dec-host">
+            <span>Hueste</span>
+            <strong>· · ·</strong>
+          </div>
+        </div>
+
+        <div class="inscription-result" id="inscription-result">
+          <p class="inscription-waiting">Faltan <b data-role="missing">12</b> caracteres.</p>
+        </div>
+
+        <div class="inscription-actions">
+          <button class="ghost-action" type="button" id="paste">Pegar</button>
+          <button class="ghost-action" type="button" id="fill-example">Usar la Primera Semilla</button>
+          <button class="begin" type="button" id="enter-future" disabled>Contemplar este futuro <span aria-hidden="true">▸</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Choque ─────────────────────────────────────────────────────────── -->
+    <div class="clash" id="clash" role="status" aria-live="polite">
+      <div class="clash-curtain"></div>
+      <div class="clash-content">
+        <p class="clash-kicker">La crónica comienza<small data-role="clash-future">FUTURO 000·000</small></p>
+        <div class="clash-matchup">
+          <div class="clash-side player" data-role="clash-player"></div>
+          <div class="clash-versus">
+            <span class="clash-ring" aria-hidden="true"></span>
+            <span class="clash-flare" aria-hidden="true"></span>
+            <b>VS</b>
+          </div>
+          <div class="clash-side host" data-role="clash-host"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="notes" id="notes" aria-label="Notas de diseño">
+    <h2>Qué propone esta maqueta</h2>
+    <p>Tres decisiones encadenadas: <strong>Jugar</strong> deja de llevar directo a la preparación, la
+      preparación deja de mostrar la seed, y la seed pasa a tener su propia ceremonia de entrada.</p>
+
+    <h3>1 · La bifurcación</h3>
+    <ul>
+      <li><strong>En el sitio</strong> (por defecto): Jugar despliega dos renglones bajo el propio botón.
+        Es el camino más corto y el que menos ceremonia gasta en la acción que más se repite.</li>
+      <li><strong>Umbral</strong>: una pantalla completa con dos puertas. Es más solemne y deja sitio para
+        la vista previa del Futuro, pero suma un paso a cada partida.</li>
+      <li>El tercer camino —volver a un futuro ya vivido— ya existe como <em>Semillas del Destino</em>;
+        aquí sólo se menciona para que la bifurcación no parezca incompleta.</li>
+    </ul>
+
+    <h3>2 · Escribir Crónica</h3>
+    <ul>
+      <li>Desaparece el campo de Canon Seed, el importador y el botón de copiar. Nada del código
+        <em>HF1-…</em> se ve aquí.</li>
+      <li>El número de Futuro ocupa el centro, donde estaban las espadas del <em>VS</em>: las dos
+        Crónicas enfrentadas lo flanquean, así que el número se lee como el cruce exacto de ambas.</li>
+      <li>Cada Futuro trae su <em>firma</em> —el sello grabado sobre el número— derivada del mismo hash
+        que ya usa el vórtice del Destino. Cambia con el Futuro, no con el mazo.</li>
+      <li><strong>Otro futuro</strong> vuelve a barajar la entropía y regraba las cifras. Cambiar mazo o
+        dificultad también recompone el número, porque forman parte de la identidad Canon: aquí eso se
+        ve en vivo, igual que ocurriría en el juego.</li>
+    </ul>
+
+    <h3>3 · Inscribir un futuro</h3>
+    <ul>
+      <li>El modal no confirma nada: <strong>decodifica</strong>. Cada casilla que se llena enciende su
+        renglón, y en cuanto los tres primeros grupos existen aparecen la Crónica, la Hueste y la
+        dificultad que trae dentro. Ese panel es lo que sustituye a la pantalla de preparación.</li>
+      <li>La casilla de dificultad va marcada con un rombo: es el único carácter del código que no es
+        entropía.</li>
+      <li>Una identidad inválida no abre un diálogo de error: el renglón se vuelve brasa y explica qué
+        parte no pertenece a este Acto.</li>
+      <li>Al aceptar, no se pasa por preparación: se va directo al choque y a la partida.</li>
+    </ul>
+
+    <h3>Lo que decodifica de verdad</h3>
+    <p>La maqueta reimplementa <em>hashSeed</em>, <em>futureCodeFromSeed</em> y el formato
+      <em>HF1-PPP-HHH-XXD-XXX</em>. Los números que muestra son los que produciría el juego para esa
+      misma identidad, y el choque usa los tiempos reales de <em>EncounterTransition</em>
+      (2450 ms, impacto a 1050 ms, apertura a 1666 ms).</p>
+
+    <h3 class="q">Preguntas abiertas</h3>
+    <ul>
+      <li>Si la seed sale de Preparación, ¿dónde queda <strong>Seed libre</strong> y el
+        <strong>Modo desarrollador</strong>? La propuesta: Ajustes avanzados se queda sólo con el
+        interruptor de desarrollador, y el código interno vuelve a verse únicamente con él encendido.</li>
+      <li>¿Debe el futuro inscrito poder editarse antes de jugar —mazos, dificultad— o eso lo
+        convertiría en otro futuro? Aquí es inmutable a propósito.</li>
+      <li>¿El botón se llama <strong>Otro futuro</strong>, <strong>Otra línea temporal</strong> o
+        reutiliza <em>Contemplar otro futuro</em>? Esa frase ya significa abandonar un intento en curso,
+        así que aquí se evitó.</li>
+    </ul>
+  </aside>
+
+  <script>
+    "use strict";
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       1 · El códec real, reimplementado
+       hashSeed y futureCodeFromSeed son copias literales de src/engine/RNG.ts y
+       src/utils/futureIdentity.ts, y el formato es el de src/content/CanonSeed.ts.
+       Por eso cada número que aparece aquí es el que produciría el juego.
+       ══════════════════════════════════════════════════════════════════════════ */
+    const ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    function hashSeed(seed) {
+      let hash = 2166136261;
+      for (let i = 0; i < seed.length; i += 1) {
+        hash ^= seed.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return hash >>> 0 || 1;
+    }
+
+    function futureCodeFromSeed(seed) {
+      const value = (hashSeed(seed) % 999999) + 1;
+      const digits = String(value).padStart(6, "0");
+      return digits.slice(0, 3) + "·" + digits.slice(3);
+    }
+
+    function futureVisualSignature(seed) {
+      return hashSeed(seed + ":destiny-vortex") / 4294967296;
+    }
+
+    function encodeCanonSeed(player, host, mode, entropy) {
+      return "HF1-" + player + "-" + host + "-" + entropy.slice(0, 2) + mode + "-" + entropy.slice(2);
+    }
+
+    function newEntropy() {
+      const bytes = new Uint8Array(16);
+      let out = "";
+      while (out.length < 5) {
+        crypto.getRandomValues(bytes);
+        for (const byte of bytes) {
+          if (byte >= 252 || out.length >= 5) continue;
+          out += ALPHABET[byte % ALPHABET.length];
+        }
+      }
+      return out;
+    }
+
+    const DECKS = {
+      ELA: {
+        side: "player", accent: "#8fb772", size: 39,
+        name: "El Pacto de Elarion",
+        desc: "Reúne a los antiguos aliados de Elarion y abre el camino para el regreso de Vaelor.",
+      },
+      CEC: {
+        side: "player", accent: "#c0566f", size: 40,
+        name: "La Corte del Eclipse Carmesí",
+        desc: "En la Corte, la Vida es moneda: entrégala para tomar poder y recupérala de tus enemigos.",
+      },
+      GRV: {
+        side: "host", accent: "#8da96a", size: 50,
+        name: "El Alzamiento de los Sinsepulcro",
+        desc: "Nerezh despierta a los muertos sin tumba y convierte los recuerdos de los caídos en nuevas fuerzas.",
+      },
+      VRK: {
+        side: "host", accent: "#c67a41", size: 50,
+        name: "La Legión de Varka",
+        desc: "Varka une Trasgos, Orcos y Bestias en una Legión que crece con cada guerrero que llega y cada cuerpo que cae.",
+      },
+    };
+
+    const MODES = {
+      "1": { id: "easy", label: "Aventurero", turns: 4 },
+      "2": { id: "normal", label: "Veterano", turns: 3 },
+      "3": { id: "hard", label: "Condenado", turns: 2 },
+    };
+
+    const PLAYER_CODES = ["ELA", "CEC"];
+    const HOST_CODES = ["GRV", "VRK"];
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       2 · Marcas grabadas: emblema por mazo y firma por Futuro
+       ══════════════════════════════════════════════════════════════════════════ */
+    function emblem(code) {
+      const accent = DECKS[code].accent;
+      const open = '<svg viewBox="0 0 120 120" fill="none" stroke="' + accent + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">';
+      const halo = '<circle cx="60" cy="60" r="46" stroke-opacity="0.22" /><circle cx="60" cy="60" r="53" stroke-opacity="0.1" />';
+      const marks = {
+        /* Alturas y estrella: el Pacto mira hacia arriba. */
+        ELA: '<path d="M60 22 66 46 90 52 66 58 60 82 54 58 30 52 54 46Z" stroke-opacity="0.92" />'
+          + '<path d="M26 84 46 66 60 78 76 62 94 84" stroke-opacity="0.6" />'
+          + '<path d="M60 14v8M60 90v10" stroke-opacity="0.4" />',
+        /* Eclipse y cáliz: la Corte paga con Vida. */
+        CEC: '<circle cx="60" cy="48" r="20" stroke-opacity="0.9" />'
+          + '<path d="M44 40a20 20 0 0 0 30 22" stroke-opacity="0.45" />'
+          + '<path d="M44 74h32l-6 14a10 10 0 0 1-20 0Z" stroke-opacity="0.9" />'
+          + '<path d="M60 88v10M50 100h20" stroke-opacity="0.6" />',
+        /* Santuario quebrado: la piedra partida de los Sinsepulcro. */
+        GRV: '<path d="M40 96V50a20 20 0 0 1 40 0v46" stroke-opacity="0.9" />'
+          + '<path d="M32 96h56" stroke-opacity="0.7" />'
+          + '<path d="M62 40 54 62l12 6-10 26" stroke-opacity="0.85" />'
+          + '<path d="M46 62h6M70 74h-6" stroke-opacity="0.45" />',
+        /* Yelmo con cuernos: la Legión crece con cada llegada. */
+        VRK: '<path d="M38 56c0-14 10-22 22-22s22 8 22 22v14c0 12-10 22-22 22s-22-10-22-22Z" stroke-opacity="0.9" />'
+          + '<path d="M38 58c-10-4-16-14-14-26 10 2 16 8 18 16M82 58c10-4 16-14 14-26-10 2-16 8-18 16" stroke-opacity="0.75" />'
+          + '<path d="M50 64h8M62 64h8M56 78h8" stroke-opacity="0.55" />',
+      };
+      return open + halo + marks[code] + "</svg>";
+    }
+
+    /* Firma determinista del Futuro: mismo hash que el vórtice, otra lectura. */
+    function futureSigil(seed) {
+      const signature = futureVisualSignature(seed);
+      let state = hashSeed(seed + ":sigil");
+      const random = () => {
+        state ^= state << 13; state >>>= 0;
+        state ^= state >>> 17;
+        state ^= state << 5; state >>>= 0;
+        return (state || 1) / 4294967296;
+      };
+      const cx = 60, cy = 60;
+      let ticks = "";
+      for (let i = 0; i < 36; i += 1) {
+        const angle = (i / 36) * Math.PI * 2;
+        const long = i % 9 === 0;
+        const r1 = long ? 40 : 44;
+        ticks += '<path d="M' + (cx + Math.cos(angle) * r1).toFixed(2) + " " + (cy + Math.sin(angle) * r1).toFixed(2)
+          + "L" + (cx + Math.cos(angle) * 48).toFixed(2) + " " + (cy + Math.sin(angle) * 48).toFixed(2)
+          + '" stroke="#c7aa69" stroke-opacity="' + (long ? 0.6 : 0.26) + '" stroke-width="' + (long ? 1.4 : 0.9) + '" />';
+      }
+      const points = [];
+      const count = 5 + Math.floor(signature * 4);
+      const offset = signature * Math.PI * 2;
+      for (let i = 0; i < count; i += 1) {
+        const angle = offset + (i / count) * Math.PI * 2 + (random() - 0.5) * 0.5;
+        const radius = 16 + random() * 18;
+        points.push([cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius]);
+      }
+      let chords = "";
+      let stars = "";
+      points.forEach((point, index) => {
+        const next = points[(index + 1) % points.length];
+        chords += '<path d="M' + point[0].toFixed(2) + " " + point[1].toFixed(2) + "L" + next[0].toFixed(2) + " " + next[1].toFixed(2)
+          + '" stroke="#ead59b" stroke-opacity="0.3" stroke-width="0.9" />';
+        stars += '<circle cx="' + point[0].toFixed(2) + '" cy="' + point[1].toFixed(2) + '" r="1.7" fill="#ead59b" fill-opacity="0.85" />';
+      });
+      return '<svg viewBox="0 0 120 120" fill="none">'
+        + '<g class="ring-spin">' + ticks + "</g>"
+        + '<circle cx="60" cy="60" r="38" stroke="#c7aa69" stroke-opacity="0.18" stroke-width="1" />'
+        + chords + stars
+        + '<circle cx="60" cy="60" r="2.6" fill="#ead59b" />'
+        + "</svg>";
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       3 · Estado de la maqueta
+       ══════════════════════════════════════════════════════════════════════════ */
+    const state = {
+      player: "ELA",
+      host: "GRV",
+      mode: "2",
+      entropy: newEntropy(),
+      forkVariant: "inline",
+      modalVariant: "threshold",
+      tempo: 1,
+    };
+
+    const inscriptionChars = new Array(12).fill("");
+    let inscriptionCursor = 0;
+
+    const $ = (selector, scope) => (scope || document).querySelector(selector);
+    const $$ = (selector, scope) => Array.from((scope || document).querySelectorAll(selector));
+    const roles = (role) => $$('[data-role="' + role + '"]');
+
+    function canonCode() {
+      return encodeCanonSeed(state.player, state.host, state.mode, state.entropy);
+    }
+
+    /* ── Fondo ─────────────────────────────────────────────────────────────── */
+    function paintSky() {
+      let ticks = "";
+      for (let i = 0; i < 72; i += 1) {
+        const angle = (i / 72) * Math.PI * 2;
+        const long = i % 6 === 0;
+        const r1 = long ? 460 : 478;
+        ticks += '<path d="M' + (500 + Math.cos(angle) * r1).toFixed(1) + " " + (500 + Math.sin(angle) * r1).toFixed(1)
+          + "L" + (500 + Math.cos(angle) * 492).toFixed(1) + " " + (500 + Math.sin(angle) * 492).toFixed(1)
+          + '" stroke="#c7aa69" stroke-opacity="' + (long ? 0.5 : 0.22) + '" stroke-width="' + (long ? 2 : 1) + '" />';
+      }
+      $("#sky-dial").innerHTML = '<svg viewBox="0 0 1000 1000" fill="none">'
+        + '<circle cx="500" cy="500" r="492" stroke="#c7aa69" stroke-opacity="0.18" />'
+        + '<circle cx="500" cy="500" r="340" stroke="#c7aa69" stroke-opacity="0.1" />'
+        + '<circle cx="500" cy="500" r="188" stroke="#c7aa69" stroke-opacity="0.07" />'
+        + ticks + "</svg>";
+
+      const embers = $("#embers");
+      let markup = "";
+      for (let index = 0; index < 22; index += 1) {
+        const random = (salt) => {
+          const value = Math.sin((index + 1) * (9.317 + salt * 23.71)) * 24634.6345;
+          return value - Math.floor(value);
+        };
+        markup += '<span style="--ember-left:' + (2 + random(1) * 96).toFixed(2) + "%;"
+          + "--ember-size:" + (1.2 + random(2) * 2.3).toFixed(2) + "px;"
+          + "--ember-duration:" + (12 + random(3) * 11).toFixed(2) + "s;"
+          + "--ember-delay:" + (-random(4) * 22).toFixed(2) + "s;"
+          + "--ember-drift:" + (-40 + random(5) * 80).toFixed(1) + "px;"
+          + "--ember-rise:" + (-58 - random(6) * 30).toFixed(1) + "vh;"
+          + "--ember-peak:" + (0.22 + random(7) * 0.38).toFixed(2) + '"></span>';
+      }
+      embers.innerHTML = markup;
+    }
+
+    /* ── El número ─────────────────────────────────────────────────────────── */
+    function digitsMarkup(code) {
+      return code.split("").map((character) => (character === "·"
+        ? '<span class="dot">·</span>'
+        : '<span class="d">' + character + "</span>")).join("");
+    }
+
+    function renderFuture(strike) {
+      const seed = canonCode();
+      const code = futureCodeFromSeed(seed);
+      roles("future-main").forEach((node) => {
+        node.innerHTML = digitsMarkup(code);
+        if (!strike) return;
+        node.classList.remove("is-striking");
+        void node.offsetWidth;
+        node.classList.add("is-striking");
+      });
+      roles("future-gate").forEach((node) => { node.innerHTML = digitsMarkup(code); });
+      roles("future-inline").forEach((node) => { node.textContent = code; });
+      roles("future-board").forEach((node) => { node.textContent = code; });
+      roles("clash-future").forEach((node) => { node.textContent = "FUTURO " + code; });
+      $(".altar-sigil").innerHTML = futureSigil(seed);
+      return code;
+    }
+
+    /* ── Preparación ───────────────────────────────────────────────────────── */
+    function renderModes() {
+      const row = $("#mode-row");
+      if (!row.childElementCount) {
+        row.innerHTML = Object.keys(MODES).map((key) => {
+          const glyph = key === "1"
+            ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6Z"/></svg>'
+            : key === "2"
+              ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h4l12 12v4h-4L4 8Z"/><path d="M20 4h-4L4 16v4h4"/></svg>'
+              : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="10" r="7"/><path d="M9 9h.01M15 9h.01M8 20h8l-1-4H9Z"/></svg>';
+          return '<button class="mode" type="button" data-mode="' + key + '">' + glyph + "<span>" + MODES[key].label + "</span></button>";
+        }).join("");
+        $$(".mode", row).forEach((button) => button.addEventListener("click", () => {
+          state.mode = button.dataset.mode;
+          renderAll(true);
+        }));
+      }
+      $$(".mode", row).forEach((button) => {
+        button.setAttribute("aria-pressed", String(button.dataset.mode === state.mode));
+      });
+      roles("setup-turns").forEach((node) => { node.textContent = String(MODES[state.mode].turns); });
+      roles("foot-mode").forEach((node) => { node.textContent = MODES[state.mode].label; });
+    }
+
+    function renderDecks() {
+      [["player", state.player], ["host", state.host]].forEach(([side, code]) => {
+        const deck = DECKS[code];
+        const panel = $("#combatant-" + side);
+        panel.style.setProperty("--deck-soft", deck.accent + "22");
+        panel.style.setProperty("--art-x", side === "player" ? "34%" : "66%");
+        roles("emblem-" + side).forEach((node) => { node.innerHTML = emblem(code); });
+        roles("name-" + side).forEach((node) => { node.textContent = deck.name; });
+        roles("desc-" + side).forEach((node) => { node.textContent = deck.desc; });
+        roles("size-" + side).forEach((node) => { node.textContent = deck.size + " cartas"; });
+        roles("foot-" + side).forEach((node) => { node.textContent = deck.name; });
+      });
+    }
+
+    function renderAll(strike) {
+      renderDecks();
+      renderModes();
+      renderFuture(strike);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       4 · Navegación
+       ══════════════════════════════════════════════════════════════════════════ */
+    function showScreen(id) {
+      $$(".screen").forEach((screen) => screen.classList.toggle("is-active", screen.id === "screen-" + id));
+    }
+
+    function openFork() {
+      if (state.forkVariant === "gates") {
+        showScreen("gates");
+        return;
+      }
+      const fork = $("#menu-fork");
+      const open = fork.hasAttribute("hidden");
+      fork.toggleAttribute("hidden", !open);
+      $("#menu-play").classList.toggle("is-open", open);
+    }
+
+    function backToFork() {
+      showScreen(state.forkVariant === "gates" ? "gates" : "menu");
+      if (state.forkVariant === "inline") {
+        $("#menu-fork").removeAttribute("hidden");
+        $("#menu-play").classList.add("is-open");
+      }
+    }
+
+    function resetDemo() {
+      state.entropy = newEntropy();
+      closeInscription(true);
+      $("#menu-fork").setAttribute("hidden", "");
+      $("#menu-play").classList.remove("is-open");
+      showScreen("menu");
+      renderAll(false);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       5 · Inscripción de un Futuro
+       ══════════════════════════════════════════════════════════════════════════ */
+    function openInscription() {
+      const layer = $("#inscription");
+      layer.classList.add("is-open");
+      layer.classList.toggle("is-plate", state.modalVariant === "plate");
+      $("#inscription-halo").innerHTML = futureSigil("threshold");
+      renderInscription();
+      window.setTimeout(() => $("#code-input").focus(), 40);
+    }
+
+    function closeInscription(immediate) {
+      const layer = $("#inscription");
+      if (!layer.classList.contains("is-open")) return;
+      if (immediate) {
+        layer.classList.remove("is-open", "is-closing");
+        return;
+      }
+      layer.classList.add("is-closing");
+      window.setTimeout(() => layer.classList.remove("is-open", "is-closing"), 240);
+    }
+
+    function inscriptionText() {
+      return inscriptionChars.join("");
+    }
+
+    function setInscription(text) {
+      const clean = text.toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/^HF1/, "");
+      for (let i = 0; i < 12; i += 1) inscriptionChars[i] = clean[i] || "";
+      inscriptionCursor = Math.min(clean.length, 12);
+      renderInscription();
+    }
+
+    function readInscription() {
+      const player = inscriptionChars.slice(0, 3).join("");
+      const host = inscriptionChars.slice(3, 6).join("");
+      const mode = inscriptionChars[8];
+      const entropy = inscriptionChars.slice(6, 8).join("") + inscriptionChars.slice(9, 12).join("");
+      const complete = inscriptionChars.every((character) => character !== "");
+      const knownPlayer = PLAYER_CODES.includes(player) ? player : undefined;
+      const knownHost = HOST_CODES.includes(host) ? host : undefined;
+      const knownMode = MODES[mode] ? mode : undefined;
+      return { player, host, mode, entropy, complete, knownPlayer, knownHost, knownMode };
+    }
+
+    function renderInscription() {
+      const rail = $("#code-rail");
+      const reading = readInscription();
+
+      if (!rail.childElementCount) {
+        let markup = "HF1".split("").map((character) => '<span class="cell is-prefix">' + character + "</span>").join("");
+        [[0, 3], [3, 6], [6, 9], [9, 12]].forEach(([from, to]) => {
+          markup += '<span class="sep" aria-hidden="true"></span>';
+          for (let index = from; index < to; index += 1) {
+            markup += '<span class="cell' + (index === 8 ? " is-difficulty" : "") + '" data-cell="' + index + '"></span>';
+          }
+        });
+        rail.innerHTML = markup;
+        rail.addEventListener("click", () => $("#code-input").focus());
+      }
+
+      $$("[data-cell]", rail).forEach((cell) => {
+        const index = Number(cell.dataset.cell);
+        const character = inscriptionChars[index];
+        if (cell.textContent !== character) cell.textContent = character;
+        cell.classList.toggle("is-filled", character !== "");
+        cell.classList.toggle("is-cursor", index === inscriptionCursor && document.activeElement === $("#code-input"));
+      });
+
+      const decodeSide = (role, code, dictionary) => {
+        const node = roles(role)[0];
+        const known = dictionary.includes(code) ? DECKS[code] : undefined;
+        node.classList.toggle("is-known", Boolean(known));
+        node.classList.toggle("is-unknown", !known);
+        $("strong", node).textContent = known ? known.name : (code.length === 3 ? "Mazo desconocido" : "· · ·");
+      };
+      decodeSide("dec-player", reading.player, PLAYER_CODES);
+      decodeSide("dec-host", reading.host, HOST_CODES);
+      const modeNode = roles("dec-mode")[0];
+      $("strong", modeNode).textContent = reading.knownMode
+        ? MODES[reading.knownMode].label + " · Preparación " + MODES[reading.knownMode].turns
+        : "· · ·";
+
+      const result = $("#inscription-result");
+      const cta = $("#enter-future");
+      const missing = inscriptionChars.filter((character) => character === "").length;
+
+      if (!reading.complete) {
+        result.innerHTML = '<p class="inscription-waiting">Faltan <b>' + missing + "</b> caracteres de la identidad.</p>";
+        cta.disabled = true;
+        rail.classList.remove("is-wrong");
+        return;
+      }
+
+      const problems = [];
+      if (!reading.knownPlayer) problems.push("la Crónica «" + reading.player + "» no existe en este Acto");
+      if (!reading.knownHost) problems.push("la Hueste «" + reading.host + "» no existe en este Acto");
+      if (!reading.knownMode) problems.push("«" + reading.mode + "» no es una dificultad");
+
+      if (problems.length) {
+        result.innerHTML = '<p class="inscription-error">Esta identidad no pertenece a ninguna línea temporal conocida: '
+          + problems.join("; ") + ".</p>";
+        cta.disabled = true;
+        rail.classList.remove("is-wrong");
+        void rail.offsetWidth;
+        rail.classList.add("is-wrong");
+        return;
+      }
+
+      rail.classList.remove("is-wrong");
+      const code = futureCodeFromSeed("HF1-" + reading.player + "-" + reading.host + "-"
+        + reading.entropy.slice(0, 2) + reading.mode + "-" + reading.entropy.slice(2));
+      result.innerHTML = '<p class="altar-label">Este futuro es</p>'
+        + '<p class="future-number is-striking">' + digitsMarkup(code) + "</p>";
+      cta.disabled = false;
+    }
+
+    function commitInscription() {
+      const reading = readInscription();
+      if (!reading.complete || !reading.knownPlayer || !reading.knownHost || !reading.knownMode) return;
+      state.player = reading.knownPlayer;
+      state.host = reading.knownHost;
+      state.mode = reading.knownMode;
+      state.entropy = reading.entropy;
+      renderAll(false);
+      closeInscription();
+      window.setTimeout(playClash, 200);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       6 · Choque y tablero
+       ══════════════════════════════════════════════════════════════════════════ */
+    function playClash() {
+      const clash = $("#clash");
+      const host = DECKS[state.host];
+      clash.style.setProperty("--clash-accent", host.accent);
+      clash.style.setProperty("--clash-bright", "#ead59b");
+      roles("clash-player").forEach((node) => {
+        node.style.setProperty("--deck-soft", DECKS[state.player].accent + "33");
+        node.innerHTML = "<span>Cronista</span>" + emblem(state.player) + "<strong>" + DECKS[state.player].name + "</strong>";
+      });
+      roles("clash-host").forEach((node) => {
+        node.style.setProperty("--deck-soft", host.accent + "33");
+        node.innerHTML = emblem(state.host) + "<span>Hueste</span><strong>" + host.name + "</strong>";
+      });
+      renderFuture(false);
+
+      clash.classList.remove("is-playing");
+      void clash.offsetWidth;
+      clash.style.setProperty("--clash-ms", "2450ms");
+      clash.classList.add("is-playing");
+      clash.getAnimations({ subtree: true }).forEach((animation) => { animation.playbackRate = state.tempo; });
+
+      /* La obertura del tablero se engancha al 68 %, igual que ENCOUNTER_OPEN_MS. */
+      window.setTimeout(() => { showScreen("board"); paintBoard(); }, 1666 / state.tempo);
+      window.setTimeout(() => clash.classList.remove("is-playing"), 2450 / state.tempo);
+    }
+
+    function paintBoard() {
+      const build = (role, count, isHost) => {
+        roles(role).forEach((row) => {
+          row.innerHTML = "";
+          for (let index = 0; index < count; index += 1) {
+            const card = document.createElement("div");
+            card.className = "board-card" + (isHost ? " is-host" : "");
+            card.style.animationDelay = (120 + index * 70) + "ms";
+            row.appendChild(card);
+          }
+        });
+      };
+      $("#screen-board").style.setProperty("--deck-accent", DECKS[state.host].accent);
+      build("row-host", 4, true);
+      build("row-player", 3, false);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       7 · Eventos
+       ══════════════════════════════════════════════════════════════════════════ */
+    paintSky();
+    renderAll(false);
+
+    $("#menu-play").addEventListener("click", openFork);
+
+    $$("[data-fork]").forEach((button) => button.addEventListener("click", () => {
+      const target = button.dataset.fork;
+      if (target === "random") { showScreen("setup"); renderAll(true); }
+      else if (target === "seed") openInscription();
+      else $("#notes").classList.add("is-open");
+    }));
+
+    $$("[data-back]").forEach((button) => button.addEventListener("click", () => {
+      if (button.dataset.back === "menu") resetDemo();
+      else backToFork();
+    }));
+
+    $$("[data-cycle]").forEach((button) => button.addEventListener("click", () => {
+      const side = button.dataset.cycle;
+      const list = side === "player" ? PLAYER_CODES : HOST_CODES;
+      const current = side === "player" ? state.player : state.host;
+      const next = list[(list.indexOf(current) + 1) % list.length];
+      if (side === "player") state.player = next; else state.host = next;
+      renderAll(true);
+    }));
+
+    $("#reroll").addEventListener("click", () => {
+      state.entropy = newEntropy();
+      renderFuture(true);
+      roles("future-caption").forEach((node) => {
+        node.textContent = "Otra línea temporal. Ninguna de las anteriores se pierde: podrás volver desde Semillas del Destino.";
+      });
+    });
+
+    $("#begin").addEventListener("click", playClash);
+    $("#enter-future").addEventListener("click", commitInscription);
+    $("#restart").addEventListener("click", resetDemo);
+    $("#notes-toggle").addEventListener("click", () => $("#notes").classList.toggle("is-open"));
+
+    $$('[data-close="1"]').forEach((node) => node.addEventListener("click", () => closeInscription()));
+
+    $("#fill-example").addEventListener("click", () => {
+      setInscription("HF1-ELA-GRV-082-QC5");
+      $("#code-input").focus();
+    });
+
+    $("#paste").addEventListener("click", async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) setInscription(text);
+      } catch {
+        /* Sin permiso de portapapeles: queda Ctrl+V sobre el propio renglón. */
+      }
+      $("#code-input").focus();
+    });
+
+    const codeInput = $("#code-input");
+    codeInput.addEventListener("keydown", (event) => {
+      if (event.key === "Backspace") {
+        event.preventDefault();
+        const index = inscriptionChars[inscriptionCursor] ? inscriptionCursor : Math.max(0, inscriptionCursor - 1);
+        inscriptionChars[index] = "";
+        inscriptionCursor = index;
+        renderInscription();
+        return;
+      }
+      if (event.key === "ArrowLeft") { event.preventDefault(); inscriptionCursor = Math.max(0, inscriptionCursor - 1); renderInscription(); return; }
+      if (event.key === "ArrowRight") { event.preventDefault(); inscriptionCursor = Math.min(11, inscriptionCursor + 1); renderInscription(); return; }
+      if (event.key === "Enter") { event.preventDefault(); commitInscription(); return; }
+      if (event.key.length !== 1) return;
+      const character = event.key.toUpperCase();
+      if (!ALPHABET.includes(character)) return;
+      event.preventDefault();
+      if (inscriptionCursor > 11) return;
+      inscriptionChars[inscriptionCursor] = character;
+      inscriptionCursor = Math.min(12, inscriptionCursor + 1);
+      renderInscription();
+    });
+    codeInput.addEventListener("paste", (event) => {
+      event.preventDefault();
+      setInscription((event.clipboardData || window.clipboardData).getData("text") || "");
+    });
+    codeInput.addEventListener("focus", renderInscription);
+    codeInput.addEventListener("blur", renderInscription);
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      if ($("#inscription").classList.contains("is-open")) { closeInscription(); return; }
+      if ($("#notes").classList.contains("is-open")) { $("#notes").classList.remove("is-open"); return; }
+      if ($("#screen-setup").classList.contains("is-active")) backToFork();
+      else if ($("#screen-gates").classList.contains("is-active")) resetDemo();
+    });
+
+    $$("#fork-variant button").forEach((button) => button.addEventListener("click", () => {
+      state.forkVariant = button.dataset.variant;
+      $$("#fork-variant button").forEach((other) => other.setAttribute("aria-pressed", String(other === button)));
+      resetDemo();
+      openFork();
+    }));
+
+    $$("#modal-variant button").forEach((button) => button.addEventListener("click", () => {
+      state.modalVariant = button.dataset.variant;
+      $$("#modal-variant button").forEach((other) => other.setAttribute("aria-pressed", String(other === button)));
+      $("#inscription").classList.toggle("is-plate", state.modalVariant === "plate");
+    }));
+
+    $$("#tempo button").forEach((button) => button.addEventListener("click", () => {
+      state.tempo = Number(button.dataset.tempo);
+      $$("#tempo button").forEach((other) => other.setAttribute("aria-pressed", String(other === button)));
+    }));
+  </script>
+</body>
+
+</html>
+
