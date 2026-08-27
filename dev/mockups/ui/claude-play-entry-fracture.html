@@ -1,0 +1,1624 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hostfall — Umbral de Jugar · Fractura</title>
+  <style>
+    /* ─────────────────────────────────────────────────────────────────────────
+       Fractura — versión elegida de `ui/claude-play-entry-threshold-v3.html`.
+
+       El umbral tiene composición de pantalla completa. El fondo de Hostfall
+       —cielo, retícula y disco de grados— NO se tapa ni se abre: permanece y sólo
+       baja un punto. Lo que se va es la UI del menú, y lo que entra es esta otra:
+       las dos puertas salen de la costura central hacia fuera.
+
+       Diferencias con la v3:
+         · sin ornamentos de esquina;
+         · la costura ya no cruza la pantalla entera: sólo separa las cartas, y es
+           la única línea que queda;
+         · el fondo no se cubre con láminas: sólo se atenúa;
+         · sin historial de semillas ni pie de controles;
+         · puertas más grandes y sin el rombo con icono, centradas bajo un título
+           que sube al borde superior;
+         · «Escribir Crónica» queda pendiente: la puerta izquierda lleva a un
+           marcador, no a una pantalla programada.
+
+       Servir con:  node dev/mockups/serve.mjs
+       ───────────────────────────────────────────────────────────────────────── */
+    @font-face { font-family: "Cinzel Decorative"; src: url("../assets/fonts/cinzel-decorative-latin.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+    @font-face { font-family: "Cinzel"; src: url("../assets/fonts/cinzel-latin.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+    @font-face { font-family: "Lora"; src: url("../assets/fonts/lora-normal-latin.woff2") format("woff2"); font-style: normal; font-display: swap; }
+    @font-face { font-family: "Lora"; src: url("../assets/fonts/lora-italic-latin.woff2") format("woff2"); font-style: italic; font-display: swap; }
+
+    :root {
+      color-scheme: dark;
+      /* Tokens del juego (src/ui-system.css, src/styles.css). */
+      --hf-ink: #080c0f;
+      --hf-surface-top: rgb(25 31 32 / 0.97);
+      --hf-surface-bottom: rgb(7 12 14 / 0.99);
+      --hf-raised-top: rgb(36 44 45 / 0.94);
+      --hf-raised-bottom: rgb(12 18 20 / 0.98);
+      --hf-line: rgb(160 148 102 / 0.4);
+      --hf-line-top: rgb(202 182 116 / 0.72);
+      --hf-line-strong: rgb(221 197 122 / 0.72);
+      --hf-gold: #c8b678;
+      --hf-gold-bright: #e6d59e;
+      --hf-title: #d6c58f;
+      --hf-copy: #d9cfaa;
+      --hf-muted: #8d9a94;
+      --hf-quiet: #7f8c87;
+      --hf-action: #aeb9b3;
+      --hf-action-primary: linear-gradient(110deg, #3a4240, #1c2828 66%, #2e3836);
+      --hf-menu-copy: #abb4b6;
+      --hf-menu-hot: #f0e5c4;
+      --hf-teal: #9ec9c2;
+      --display: Georgia, "Times New Roman", ui-serif, serif;
+      --wordmark: "Cinzel Decorative", Georgia, serif;
+      --body: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+      --serif: "Lora", Georgia, serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      /* Acento de la Fractura. */
+      --skin-accent: #f0d9a4;
+      --skin-soft: rgb(240 217 164 / 0.18);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: var(--hf-ink);
+      color: var(--hf-copy);
+      font-family: var(--body);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button { font: inherit; color: inherit; cursor: pointer; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+    /* ── Barra de la maqueta ────────────────────────────────────────────────── */
+    .mockup-bar {
+      position: fixed;
+      z-index: 900;
+      top: 0;
+      right: 0;
+      left: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 40px;
+      border-bottom: 1px solid rgb(160 148 102 / 0.22);
+      padding: 0 13px;
+      background: rgb(3 7 8 / 0.95);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--hf-quiet);
+    }
+    .mockup-bar b { color: var(--hf-gold); font-weight: 800; }
+    .mockup-bar .spacer { flex: 1; }
+    .mockup-bar .hint {
+      font-family: var(--serif);
+      font-size: 12px;
+      font-style: italic;
+      font-weight: 400;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+    .seg { display: flex; overflow: hidden; border: 1px solid rgb(160 148 102 / 0.3); border-radius: 3px; }
+    .seg button {
+      border: 0;
+      border-left: 1px solid rgb(160 148 102 / 0.18);
+      padding: 6px 10px;
+      background: rgb(16 22 24 / 0.9);
+      color: var(--hf-quiet);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      transition: color 140ms ease, background 140ms ease;
+    }
+    .seg button:first-child { border-left: 0; }
+    .seg button:hover { color: var(--hf-gold-bright); background: rgb(30 38 40 / 0.95); }
+    .seg button[aria-pressed="true"] { background: linear-gradient(180deg, rgb(60 54 34 / 0.9), rgb(26 30 30 / 0.95)); color: var(--hf-gold-bright); }
+
+    /* ── Escenario ──────────────────────────────────────────────────────────── */
+    .stage {
+      position: absolute;
+      inset: 40px 0 0;
+      overflow: hidden;
+      isolation: isolate;
+      background: radial-gradient(120% 90% at 50% 6%, #10181b, #060a0c 58%, #040708);
+    }
+
+    /* Cielo temporal: la misma retícula y el mismo disco de grados del juego. */
+    .temporal-backdrop { position: absolute; inset: -6%; pointer-events: none; }
+    .backdrop-grid { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.5; }
+    .backdrop-grid rect { fill: none; stroke: rgb(148 178 172 / 0.07); stroke-width: 1; }
+    .backdrop-dial {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: min(112vh, 96vw);
+      aspect-ratio: 1;
+      translate: -50% -50%;
+      opacity: 0.5;
+    }
+    .backdrop-dial svg { width: 100%; height: 100%; animation: dial-drift 260s linear infinite; }
+    .backdrop-stars { position: absolute; inset: 0; }
+    .backdrop-stars i {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      background: #cfe0da;
+      animation: star-breathe 6s ease-in-out infinite;
+    }
+    @keyframes dial-drift { to { rotate: -360deg; } }
+    @keyframes star-breathe { 0%, 100% { opacity: 0.12; } 50% { opacity: 0.48; } }
+
+    /* Chispas que caen de la costura. */
+    .motes { position: absolute; inset: 0; opacity: 0; pointer-events: none; transition: opacity 800ms ease; }
+    body.is-threshold .motes { opacity: 1; }
+
+    /* ── Menú principal (queda vivo detrás del umbral) ──────────────────────── */
+    .menu-shell {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      align-content: center;
+      padding: 0 clamp(30px, 7vw, 110px);
+      transform-origin: 22% 50%;
+      transition: transform 640ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 460ms ease;
+    }
+    body.is-threshold .menu-shell { opacity: 0; transform: translateX(-2.5%) scale(0.985); pointer-events: none; }
+    body.is-away .menu-shell { opacity: 0; transform: scale(0.9) translateX(-6%); pointer-events: none; }
+
+    .menu-layout { display: grid; gap: clamp(26px, 4vh, 54px); max-width: 470px; }
+    .menu-kicker {
+      color: var(--hf-quiet);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.34em;
+      text-transform: uppercase;
+    }
+    .menu-title {
+      margin: 10px 0 0;
+      color: #ecdfb4;
+      font-family: var(--wordmark);
+      font-size: clamp(46px, 6.4vw, 82px);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      text-shadow: 0 0 40px rgb(200 182 120 / 0.24);
+    }
+    .menu-subtitle {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 12px;
+      color: var(--hf-muted);
+      font-family: var(--serif);
+      font-size: 14px;
+      font-style: italic;
+    }
+    .menu-subtitle i { width: 30px; height: 1px; background: linear-gradient(90deg, var(--hf-line-top), transparent); }
+
+    .menu-nav { display: grid; gap: 2px; max-width: 320px; }
+    .menu-entry {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 0;
+      padding: 11px 6px 11px 2px;
+      background: none;
+      color: var(--hf-menu-copy);
+      font-family: var(--display);
+      font-size: 19px;
+      letter-spacing: 0.06em;
+      text-align: left;
+      transition: color 160ms ease, transform 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .menu-entry::after {
+      content: "";
+      position: absolute;
+      bottom: 6px;
+      left: 2px;
+      width: 0;
+      height: 1px;
+      background: linear-gradient(90deg, var(--hf-line-strong), transparent);
+      transition: width 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .menu-entry:hover, .menu-entry:focus-visible { color: var(--hf-menu-hot); outline: none; transform: translateX(5px); }
+    .menu-entry:hover::after, .menu-entry:focus-visible::after { width: 76%; }
+    .menu-mark {
+      width: 7px;
+      height: 7px;
+      rotate: 45deg;
+      border: 1px solid rgb(200 182 120 / 0.5);
+      background: rgb(200 182 120 / 0.08);
+      transition: background 180ms ease, border-color 180ms ease, scale 180ms ease;
+    }
+    .menu-entry:hover .menu-mark, .menu-entry:focus-visible .menu-mark { border-color: var(--hf-gold-bright); background: var(--hf-gold); scale: 1.18; }
+    #play-entry { color: #d8cfa8; font-size: 23px; }
+    #play-entry .menu-mark { width: 9px; height: 9px; }
+
+    .menu-chronicler {
+      position: absolute;
+      bottom: 26px;
+      left: clamp(30px, 7vw, 110px);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--hf-quiet);
+    }
+    .menu-chronicler::before { content: "◆"; color: var(--hf-gold); font-size: 11px; opacity: 0.7; }
+    .menu-chronicler strong { display: block; color: var(--hf-copy); font-family: var(--display); font-size: 15px; font-weight: 400; }
+    .menu-chronicler span { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       UMBRAL — pantalla completa sobre el menú vivo, partida por la fractura
+       ═══════════════════════════════════════════════════════════════════════ */
+    .threshold {
+      position: absolute;
+      z-index: 40;
+      inset: 0;
+      display: grid;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 220ms ease, visibility 0s linear 220ms;
+    }
+    .threshold.is-open { visibility: visible; opacity: 1; pointer-events: auto; transition: opacity 200ms ease; }
+    .threshold.is-closing { opacity: 0; transition: opacity 190ms ease; }
+
+    .threshold-backdrop { position: absolute; inset: 0; border: 0; padding: 0; background: none; cursor: default; }
+
+    /* El cielo de Hostfall no se tapa ni se abre: es el mismo de siempre y sólo
+       baja un punto para que la nueva UI se lea encima. Lo único que se va es la
+       UI del menú. */
+    .veil {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(120% 92% at 50% 46%, rgb(6 11 13 / 0.3), rgb(4 8 9 / 0.56));
+      pointer-events: none;
+    }
+    .threshold.is-open .veil { animation: veil-dim 620ms ease backwards; }
+    @keyframes veil-dim { from { opacity: 0; } }
+
+    .threshold-body {
+      position: relative;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      justify-items: center;
+      padding: clamp(30px, 6.4vh, 86px) clamp(20px, 3vw, 54px) clamp(18px, 3.2vh, 40px);
+      text-align: center;
+    }
+    .threshold-head { display: grid; justify-items: center; gap: clamp(8px, 1.4vh, 16px); }
+    .threshold-kicker {
+      margin: 0;
+      color: var(--hf-gold);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.36em;
+      text-transform: uppercase;
+    }
+    .threshold-title {
+      margin: 0;
+      color: #ecdfb4;
+      font-family: var(--display);
+      font-size: clamp(34px, 4.9vw, 64px);
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      line-height: 1.05;
+    }
+    .threshold-lead {
+      max-width: 640px;
+      margin: 0;
+      color: var(--hf-muted);
+      font-family: var(--serif);
+      font-size: clamp(13px, 1.15vw, 15.5px);
+      line-height: 1.66;
+    }
+    .threshold.is-open .threshold-kicker { animation: rise 620ms cubic-bezier(0.22, 0.61, 0.36, 1) 120ms backwards; }
+    .threshold.is-open .threshold-title { animation: rise 700ms cubic-bezier(0.22, 0.61, 0.36, 1) 180ms backwards; }
+    .threshold.is-open .threshold-lead { animation: rise 700ms cubic-bezier(0.22, 0.61, 0.36, 1) 240ms backwards; }
+    @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+
+    /* ── Las dos puertas ────────────────────────────────────────────────────── */
+    .gate-row {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-self: center;
+      gap: clamp(22px, 2.9vw, 50px);
+      width: min(1140px, 100%);
+    }
+
+    /* La costura: ahora sólo vive en el hueco entre las dos cartas. */
+    .gate-seam {
+      position: absolute;
+      top: 4%;
+      bottom: 4%;
+      left: 50%;
+      width: 2px;
+      translate: -50% 0;
+      background: linear-gradient(180deg, transparent, rgb(246 232 190 / 0.85) 15%, rgb(246 232 190 / 0.85) 85%, transparent);
+      box-shadow: 0 0 20px 3px rgb(240 217 164 / 0.45);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .threshold.is-open .gate-seam { animation: seam-flash 1500ms ease-out 200ms backwards, seam-breathe 5s ease-in-out 1700ms infinite; }
+    @keyframes seam-flash {
+      0% { opacity: 0; scale: 1 0.15; }
+      36% { opacity: 1; scale: 1 1; }
+      100% { opacity: 0.42; scale: 1 1; }
+    }
+    @keyframes seam-breathe { 0%, 100% { opacity: 0.42; } 50% { opacity: 0.62; } }
+
+    .gate {
+      position: relative;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      align-content: stretch;
+      isolation: isolate;
+      min-height: clamp(320px, 45vh, 470px);
+      gap: 19px;
+      overflow: hidden;
+      border: 1px solid rgb(160 148 102 / 0.3);
+      border-top-color: rgb(202 182 116 / 0.5);
+      border-radius: 4px;
+      padding: clamp(28px, 3.4vw, 48px) clamp(28px, 3.4vw, 48px) 0;
+      background: linear-gradient(180deg, var(--hf-raised-top), var(--hf-raised-bottom));
+      box-shadow: 0 22px 52px rgb(0 0 0 / 0.5), inset 0 1px 0 rgb(255 245 214 / 0.06);
+      text-align: left;
+      transition: border-color 220ms ease, box-shadow 260ms ease, transform 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .gate > * { z-index: 1; }
+    .gate::before {
+      /* Aura que sigue al puntero dentro de la puerta. */
+      content: "";
+      position: absolute;
+      z-index: 0;
+      inset: 0;
+      background: radial-gradient(320px circle at var(--mx, 50%) var(--my, 0%), var(--skin-soft), transparent 70%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 260ms ease;
+    }
+    .gate::after {
+      /* La ilustración de la puerta, con su propio velo encima: el texto se lee
+         sobre el velo, nunca sobre el arte. La ruta la resuelve el script: servida
+         usa el alias del servidor y con doble clic la ruta real del repositorio. */
+      content: "";
+      position: absolute;
+      z-index: 0;
+      inset: 0;
+      background-image:
+        linear-gradient(180deg, rgb(11 17 19 / 0.9), rgb(11 17 19 / 0.66) 40%, rgb(11 17 19 / 0.88)),
+        var(--gate-art, none);
+      background-position: center var(--gate-art-y, 30%);
+      background-size: cover;
+      mask-image: linear-gradient(180deg, transparent, #000 24%);
+      pointer-events: none;
+      transition: filter 320ms ease;
+    }
+    .gate[data-gate="random"] { --gate-art-y: 20%; }
+    .gate[data-gate="seed"] { --gate-art-y: 42%; }
+    .gate:hover, .gate.is-focus { outline: none; border-color: rgb(202 182 116 / 0.6); box-shadow: 0 26px 62px rgb(0 0 0 / 0.58), 0 0 0 1px rgb(202 182 116 / 0.14), inset 0 1px 0 rgb(255 245 214 / 0.1); transform: translateY(-3px); }
+    .gate:hover::before, .gate.is-focus::before { opacity: 1; }
+    .gate:hover::after, .gate.is-focus::after { filter: brightness(1.32) saturate(1.08); }
+    .gate-row:hover .gate:not(:hover) { opacity: 0.72; }
+
+    .gate-head { position: relative; display: grid; gap: 6px; }
+    .gate-kicker { display: block; color: var(--hf-quiet); font-size: 10px; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase; }
+    .gate h3 { margin: 0; color: var(--hf-title); font-family: var(--display); font-size: clamp(25px, 2.7vw, 38px); font-weight: 400; letter-spacing: 0.01em; }
+    .gate p { position: relative; margin: 0; color: var(--hf-muted); font-family: var(--serif); font-size: clamp(14.5px, 1.18vw, 17px); line-height: 1.66; }
+
+    .gate-figure {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      min-height: 102px;
+      border-top: 1px solid rgb(160 148 102 / 0.16);
+      border-bottom: 1px solid rgb(160 148 102 / 0.16);
+      padding: 14px 2px;
+    }
+    .gate-figure .label { color: var(--hf-quiet); font-size: 10px; font-weight: 700; letter-spacing: 0.24em; text-transform: uppercase; }
+
+    /* El número del Futuro con el resplandor del diálogo de Reescribir. */
+    .future-code {
+      display: inline-flex;
+      align-items: baseline;
+      color: #f2e6bd;
+      font-family: var(--display);
+      font-size: 37px;
+      letter-spacing: 0.06em;
+      text-shadow: 0 0 24px rgb(226 205 140 / 0.42), 0 0 60px rgb(226 205 140 / 0.16);
+    }
+    .future-code .dot { padding: 0 2px; opacity: 0.55; }
+    .future-code .d { display: inline-block; }
+    .future-code.is-striking .d { animation: strike 460ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+    .future-code.is-striking .d:nth-child(2) { animation-delay: 45ms; }
+    .future-code.is-striking .d:nth-child(3) { animation-delay: 90ms; }
+    .future-code.is-striking .d:nth-child(5) { animation-delay: 150ms; }
+    .future-code.is-striking .d:nth-child(6) { animation-delay: 195ms; }
+    .future-code.is-striking .d:nth-child(7) { animation-delay: 240ms; }
+    @keyframes strike {
+      0% { opacity: 0; transform: translateY(-9px) scale(1.5); filter: brightness(2.4); }
+      60% { opacity: 1; }
+      100% { opacity: 1; transform: none; filter: none; }
+    }
+
+    .code-preview { display: flex; align-items: center; gap: 3px; color: var(--hf-quiet); font-family: var(--mono); font-size: 17px; letter-spacing: 0.04em; }
+    .code-preview b { color: var(--skin-accent); font-weight: 700; }
+    .code-preview span { opacity: 0.6; }
+
+    .gate-action {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0 calc(-1 * clamp(28px, 3.4vw, 48px));
+      border-top: 1px solid rgb(160 148 102 / 0.24);
+      padding: 17px clamp(28px, 3.4vw, 48px);
+      background: linear-gradient(180deg, rgb(30 37 38 / 0.6), rgb(11 16 18 / 0.7));
+      color: var(--hf-action);
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      transition: background 240ms ease, color 240ms ease;
+    }
+    .gate-action::after { content: "▷"; color: var(--skin-accent); font-size: 12px; opacity: 0.7; transition: transform 240ms ease; }
+    .gate:hover .gate-action, .gate.is-focus .gate-action { background: var(--hf-action-primary); color: var(--hf-menu-hot); }
+    .gate:hover .gate-action::after, .gate.is-focus .gate-action::after { transform: translateX(4px); }
+
+    /* Las puertas nacen de la costura y salen hacia fuera. */
+    .threshold.is-open .gate[data-gate="random"] { animation: gate-from-seam-left 820ms cubic-bezier(0.22, 0.61, 0.36, 1) 260ms backwards; }
+    .threshold.is-open .gate[data-gate="seed"] { animation: gate-from-seam-right 820ms cubic-bezier(0.22, 0.61, 0.36, 1) 320ms backwards; }
+    @keyframes gate-from-seam-left { from { opacity: 0; transform: translateX(38%) scale(0.94); } }
+    @keyframes gate-from-seam-right { from { opacity: 0; transform: translateX(-38%) scale(0.94); } }
+
+    /* ── Marcador de «Escribir Crónica» (pendiente, sin programar) ──────────── */
+    .pending-screen {
+      position: absolute;
+      z-index: 30;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      background: radial-gradient(120% 90% at 50% 30%, rgb(14 21 23 / 0.8), rgb(4 8 9 / 0.96) 62%);
+      transition: opacity 280ms ease, visibility 0s linear 280ms;
+    }
+    .pending-screen.is-open { visibility: visible; opacity: 1; pointer-events: auto; transition: opacity 300ms ease; }
+    .pending-card {
+      display: grid;
+      justify-items: center;
+      gap: 12px;
+      width: min(520px, calc(100% - 40px));
+      border: 1px dashed rgb(160 148 102 / 0.38);
+      border-radius: 4px;
+      padding: 36px 32px;
+      background: linear-gradient(180deg, var(--hf-surface-top), var(--hf-surface-bottom));
+      text-align: center;
+    }
+    .pending-card h2 { margin: 0; color: var(--hf-title); font-family: var(--display); font-size: 27px; font-weight: 400; }
+    .pending-card p { margin: 0; max-width: 380px; color: var(--hf-muted); font-family: var(--serif); font-size: 13.5px; line-height: 1.62; }
+    .pending-card .future-code { font-size: 34px; }
+
+    /* ── Acciones compartidas ───────────────────────────────────────────────── */
+    .primary-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgb(202 182 116 / 0.5);
+      border-radius: 3px;
+      padding: 12px 26px;
+      background: var(--hf-action-primary);
+      color: #eee2be;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      box-shadow: 0 14px 30px rgb(0 0 0 / 0.44), inset 0 1px 0 rgb(255 245 214 / 0.08);
+      transition: border-color 180ms ease, box-shadow 220ms ease, transform 180ms ease;
+    }
+    .primary-action:hover:not(:disabled) { border-color: rgb(226 205 140 / 0.85); box-shadow: 0 16px 36px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(202 182 116 / 0.2); transform: translateY(-1px); }
+    .primary-action:disabled { border-color: rgb(160 148 102 / 0.2); background: rgb(14 19 21 / 0.7); color: rgb(127 140 135 / 0.7); cursor: not-allowed; box-shadow: none; }
+    .quiet-action {
+      border: 1px solid rgb(160 148 102 / 0.24);
+      border-radius: 2px;
+      padding: 9px 14px;
+      background: rgb(11 16 18 / 0.72);
+      color: var(--hf-action);
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      transition: border-color 180ms ease, color 180ms ease;
+    }
+    .quiet-action:hover { border-color: rgb(202 182 116 / 0.5); color: var(--hf-gold-bright); }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       INSCRIPCIÓN
+       ═══════════════════════════════════════════════════════════════════════ */
+    .seed-layer {
+      position: absolute;
+      z-index: 60;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 200ms ease, visibility 0s linear 200ms;
+    }
+    .seed-layer.is-open { visibility: visible; opacity: 1; pointer-events: auto; transition: opacity 200ms ease; }
+    .seed-layer.is-closing { opacity: 0; transition: opacity 180ms ease; }
+    .seed-backdrop { position: absolute; inset: 0; background: rgb(3 6 7 / 0.72); }
+    .seed-dialog {
+      position: relative;
+      display: grid;
+      gap: 14px;
+      width: min(600px, calc(100% - 40px));
+      border: 1px solid rgb(160 148 102 / 0.36);
+      border-top-color: rgb(202 182 116 / 0.62);
+      border-radius: 4px;
+      padding: clamp(22px, 3vw, 32px);
+      background: linear-gradient(180deg, var(--hf-surface-top), var(--hf-surface-bottom));
+      box-shadow: 0 34px 80px rgb(0 0 0 / 0.62), inset 0 1px 0 rgb(255 245 214 / 0.07);
+    }
+    .seed-layer.is-open .seed-dialog { animation: dialog-in 320ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+    @keyframes dialog-in { from { opacity: 0; transform: translateY(16px) scale(0.985); } }
+    .seed-dialog h2 { margin: 0; color: var(--hf-title); font-family: var(--display); font-size: clamp(21px, 2.2vw, 27px); font-weight: 400; }
+    .seed-dialog > p { margin: 0; color: var(--hf-muted); font-family: var(--serif); font-size: 13.5px; line-height: 1.62; }
+    .seed-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border: 1px solid rgb(160 148 102 / 0.24);
+      border-radius: 2px;
+      background: rgb(10 15 17 / 0.7);
+      color: var(--hf-quiet);
+      transition: color 160ms ease, border-color 160ms ease;
+    }
+    .seed-close:hover { border-color: rgb(202 182 116 / 0.55); color: var(--hf-gold-bright); }
+
+    /* El renglón: material de game-seed-input partido en casillas. */
+    .code-rail {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      border: 1px solid rgb(160 148 102 / 0.3);
+      border-radius: 3px;
+      padding: 12px 10px;
+      background: linear-gradient(180deg, rgb(6 10 12 / 0.95), rgb(10 15 17 / 0.9));
+      box-shadow: inset 0 2px 8px rgb(0 0 0 / 0.55);
+      cursor: text;
+      transition: border-color 200ms ease, box-shadow 200ms ease;
+    }
+    .code-rail.is-focus { border-color: rgb(202 182 116 / 0.62); box-shadow: inset 0 2px 8px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(202 182 116 / 0.14); }
+    .code-rail.is-wrong { animation: rail-shake 420ms ease; border-color: rgb(196 110 78 / 0.7); }
+    @keyframes rail-shake { 25% { transform: translateX(-5px); } 55% { transform: translateX(4px); } 80% { transform: translateX(-2px); } }
+    .code-rail .cell {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: clamp(20px, 2.6vw, 27px);
+      height: 34px;
+      border-bottom: 1px solid rgb(160 148 102 / 0.28);
+      color: var(--hf-quiet);
+      font-family: var(--mono);
+      font-size: 17px;
+      transition: color 160ms ease, border-color 160ms ease, background 160ms ease;
+    }
+    .code-rail .cell.is-prefix { border-bottom-color: transparent; color: rgb(200 182 120 / 0.6); }
+    .code-rail .cell.is-filled { border-bottom-color: rgb(202 182 116 / 0.7); color: var(--hf-menu-hot); }
+    .code-rail .cell.is-difficulty::after {
+      content: "◆";
+      position: absolute;
+      top: -7px;
+      color: var(--hf-gold);
+      font-size: 6px;
+      opacity: 0.75;
+    }
+    .code-rail .cell.is-cursor { background: rgb(202 182 116 / 0.1); }
+    .code-rail .cell.is-cursor::before {
+      content: "";
+      position: absolute;
+      bottom: 5px;
+      width: 12px;
+      height: 2px;
+      background: var(--hf-gold-bright);
+      animation: caret 1.05s steps(1) infinite;
+    }
+    @keyframes caret { 50% { opacity: 0; } }
+    .code-rail .sep { width: 9px; color: rgb(160 148 102 / 0.5); text-align: center; }
+    .code-rail .sep::before { content: "·"; }
+    .code-input { position: absolute; width: 1px; height: 1px; border: 0; opacity: 0; }
+
+    .decoded { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .decoded-cell {
+      display: grid;
+      gap: 3px;
+      border: 1px solid rgb(160 148 102 / 0.16);
+      border-radius: 3px;
+      padding: 9px 11px;
+      background: rgb(9 14 16 / 0.6);
+      transition: border-color 220ms ease, background 220ms ease;
+    }
+    .decoded-cell span { color: var(--hf-quiet); font-size: 9px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; }
+    .decoded-cell strong { color: var(--hf-muted); font-family: var(--display); font-size: 13.5px; font-weight: 400; line-height: 1.3; }
+    .decoded-cell.is-known { border-color: rgb(202 182 116 / 0.45); background: rgb(24 28 22 / 0.6); }
+    .decoded-cell.is-known strong { color: var(--hf-menu-hot); }
+    .decoded-cell.is-wrong { border-color: rgb(196 110 78 / 0.5); }
+    .decoded-cell.is-wrong strong { color: #df9a7e; }
+
+    .seed-result { display: grid; justify-items: center; gap: 2px; min-height: 74px; place-content: center; text-align: center; }
+    .result-label { margin: 0; color: var(--hf-gold); font-size: 10px; font-weight: 700; letter-spacing: 0.34em; text-transform: uppercase; }
+    .seed-note { margin: 0; color: var(--hf-quiet); font-family: var(--serif); font-size: 13px; font-style: italic; }
+    .seed-note b { color: var(--hf-copy); font-style: normal; }
+    .seed-error { max-width: 460px; margin: 0; color: #df9a7e; font-family: var(--serif); font-size: 13px; line-height: 1.55; }
+    .seed-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+    .seed-actions .quiet-action:first-child { margin-right: auto; }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       CHOQUE (tiempos reales de EncounterTransition)
+       ═══════════════════════════════════════════════════════════════════════ */
+    .clash {
+      position: absolute;
+      z-index: 80;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .clash.is-playing { visibility: visible; }
+    .clash-curtain { position: absolute; inset: 0; background: radial-gradient(90% 70% at 50% 50%, rgb(8 12 14 / 0.9), #030607 72%); opacity: 0; }
+    .clash.is-playing .clash-curtain { animation: curtain 2450ms ease-in-out forwards; }
+    @keyframes curtain { 0% { opacity: 0; } 16% { opacity: 1; } 74% { opacity: 1; } 100% { opacity: 0; } }
+    .clash-content { position: relative; display: grid; justify-items: center; gap: 22px; opacity: 0; }
+    .clash.is-playing .clash-content { animation: clash-content 2450ms ease forwards; }
+    @keyframes clash-content { 0% { opacity: 0; } 14% { opacity: 1; } 76% { opacity: 1; } 100% { opacity: 0; } }
+    .clash-kicker {
+      display: grid;
+      justify-items: center;
+      gap: 6px;
+      margin: 0;
+      color: var(--hf-gold);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+    }
+    .clash-kicker small { color: var(--hf-quiet); font-family: var(--mono); font-size: 11px; letter-spacing: 0.24em; }
+    .clash-matchup { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: clamp(16px, 4vw, 60px); width: min(1000px, 92vw); }
+    .clash-side { display: grid; justify-items: center; gap: 8px; border: 1px solid rgb(160 148 102 / 0.2); border-radius: 4px; padding: 18px; background: linear-gradient(180deg, var(--deck-soft, transparent), rgb(8 12 14 / 0.6)); }
+    .clash-side svg { width: min(120px, 24vw); }
+    .clash-side span { color: var(--hf-gold); font-size: 9.5px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; }
+    .clash-side strong { color: var(--hf-copy); font-family: var(--display); font-size: clamp(14px, 1.5vw, 19px); font-weight: 400; text-align: center; }
+    .clash.is-playing .clash-side.player { animation: charge-left 1050ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
+    .clash.is-playing .clash-side.host { animation: charge-right 1050ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
+    @keyframes charge-left { from { opacity: 0; transform: translateX(-140px); } 70% { opacity: 1; } to { opacity: 1; transform: translateX(14px); } }
+    @keyframes charge-right { from { opacity: 0; transform: translateX(140px); } 70% { opacity: 1; } to { opacity: 1; transform: translateX(-14px); } }
+    .clash-versus { position: relative; display: grid; place-items: center; width: clamp(70px, 9vw, 110px); aspect-ratio: 1; }
+    .clash-versus b { position: relative; color: #f2e6bd; font-family: var(--display); font-size: clamp(20px, 2.4vw, 30px); letter-spacing: 0.1em; }
+    .clash-ring, .clash-flare { position: absolute; inset: 0; border-radius: 50%; opacity: 0; }
+    .clash-ring { border: 1px solid var(--clash-accent, #e6d59e); }
+    .clash-flare { background: radial-gradient(circle, rgb(255 246 220 / 0.9), rgb(230 213 158 / 0.2) 40%, transparent 68%); }
+    .clash.is-playing .clash-ring { animation: ring-burst 1400ms cubic-bezier(0.16, 0.84, 0.3, 1) 1050ms forwards; }
+    .clash.is-playing .clash-flare { animation: flare-burst 700ms ease-out 1050ms forwards; }
+    @keyframes ring-burst { from { opacity: 0.9; scale: 0.4; } to { opacity: 0; scale: 9; } }
+    @keyframes flare-burst { 0% { opacity: 0; scale: 0.3; } 22% { opacity: 1; scale: 2.4; } 100% { opacity: 0; scale: 5; } }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       TABLERO (silueta)
+       ═══════════════════════════════════════════════════════════════════════ */
+    .board-screen {
+      position: absolute;
+      z-index: 20;
+      inset: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 300ms ease, visibility 0s linear 300ms;
+    }
+    .board-screen.is-open { visibility: visible; opacity: 1; pointer-events: auto; transition: opacity 360ms ease; }
+    .board-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgb(160 148 102 / 0.18);
+      padding: 12px clamp(18px, 3vw, 40px);
+      background: rgb(6 10 12 / 0.86);
+    }
+    .board-identity { display: flex; align-items: baseline; gap: 9px; }
+    .board-identity span { color: var(--hf-gold); font-size: 9.5px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; }
+    .board-identity b { color: var(--hf-copy); font-family: var(--display); font-size: 17px; font-weight: 400; letter-spacing: 0.05em; }
+    .board-bar .spacer { flex: 1; }
+    .board-field { display: grid; align-content: center; gap: clamp(16px, 3vh, 34px); padding: clamp(20px, 4vh, 48px); }
+    .board-row { display: flex; justify-content: center; gap: 12px; min-height: clamp(96px, 16vh, 150px); }
+    .board-card {
+      width: clamp(74px, 9vw, 108px);
+      border: 1px solid rgb(160 148 102 / 0.3);
+      border-radius: 4px;
+      background: linear-gradient(180deg, rgb(30 38 40 / 0.9), rgb(10 15 17 / 0.95));
+      box-shadow: 0 14px 26px rgb(0 0 0 / 0.5);
+      opacity: 0;
+      animation: board-card-in 520ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+    }
+    .board-card.is-host { border-color: color-mix(in srgb, var(--deck-accent, #8da96a) 46%, transparent); }
+    @keyframes board-card-in { from { opacity: 0; transform: translateY(18px) scale(0.96); } to { opacity: 1; transform: none; } }
+    .board-note { margin: 0; color: var(--hf-quiet); font-family: var(--serif); font-size: 12.5px; font-style: italic; text-align: center; }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       NOTAS
+       ═══════════════════════════════════════════════════════════════════════ */
+    .notes {
+      position: fixed;
+      z-index: 950;
+      top: 40px;
+      right: 0;
+      bottom: 0;
+      overflow: auto;
+      width: min(430px, 92vw);
+      border-left: 1px solid rgb(160 148 102 / 0.28);
+      padding: 22px 24px 40px;
+      background: rgb(6 10 11 / 0.97);
+      transform: translateX(100%);
+      transition: transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .notes.is-open { transform: none; }
+    .notes h2 { margin: 0 0 14px; color: var(--hf-title); font-family: var(--display); font-size: 19px; font-weight: 400; }
+    .notes h3 { margin: 20px 0 6px; color: var(--hf-gold); font-size: 10.5px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; }
+    .notes ul { margin: 0; padding-left: 17px; }
+    .notes li { margin-bottom: 8px; color: var(--hf-muted); font-family: var(--serif); font-size: 13px; line-height: 1.6; }
+    .notes strong { color: var(--hf-copy); }
+    .notes em { color: var(--hf-gold-bright); font-style: normal; }
+
+    /* ── Adaptación ─────────────────────────────────────────────────────────── */
+    @media (max-width: 1080px) {
+      .gate-row { grid-template-columns: 1fr; }
+      .gate-seam { top: 50%; right: 4%; bottom: auto; left: 4%; width: auto; height: 2px; translate: 0 -50%; background: linear-gradient(90deg, transparent, rgb(246 232 190 / 0.85) 15%, rgb(246 232 190 / 0.85) 85%, transparent); }
+      .gate p { display: none; }
+    }
+    @media (max-width: 720px) {
+      .threshold-lead { display: none; }
+      .decoded { grid-template-columns: 1fr; }
+      .code-rail .cell { width: 18px; height: 30px; font-size: 14px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="mockup-bar">
+    <b>Claude · Umbral · Fractura</b>
+    <span class="hint">La pantalla se parte por el centro y las puertas salen de la costura</span>
+    <div class="spacer"></div>
+    <div class="seg" id="tempo">
+      <button type="button" data-tempo="1" aria-pressed="true">Choque 1×</button>
+      <button type="button" data-tempo="0.35" aria-pressed="false">0.35×</button>
+    </div>
+    <div class="seg">
+      <button type="button" id="restart">Reiniciar</button>
+      <button type="button" id="notes-toggle">Notas</button>
+    </div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="temporal-backdrop" aria-hidden="true">
+      <svg class="backdrop-grid" id="backdrop-grid" preserveAspectRatio="none"></svg>
+      <div class="backdrop-stars" id="backdrop-stars"></div>
+      <div class="backdrop-dial" id="backdrop-dial"></div>
+    </div>
+    <canvas class="motes" id="motes" aria-hidden="true"></canvas>
+
+    <!-- ── Menú principal: nunca se desmonta ──────────────────────────────── -->
+    <div class="menu-shell" id="menu-shell">
+      <div class="menu-layout">
+        <div class="menu-brand">
+          <div class="menu-kicker">Crónicas de los Reinos Quebrados</div>
+          <h1 class="menu-title">HOstfAll</h1>
+          <div class="menu-subtitle"><i></i> Acto I — Coronas sobre cenizas</div>
+        </div>
+
+        <nav class="menu-nav" aria-label="Menú principal">
+          <button class="menu-entry" type="button" id="play-entry"><span class="menu-mark"></span><span>Jugar</span></button>
+          <button class="menu-entry" type="button"><span class="menu-mark"></span><span>Crónicas</span></button>
+          <button class="menu-entry" type="button"><span class="menu-mark"></span><span>Huestes</span></button>
+          <button class="menu-entry" type="button" data-goto="library"><span class="menu-mark"></span><span>Semillas del Destino</span></button>
+          <button class="menu-entry" type="button"><span class="menu-mark"></span><span>Cómo jugar</span></button>
+          <button class="menu-entry" type="button"><span class="menu-mark"></span><span>Ajustes</span></button>
+        </nav>
+
+        <div></div>
+      </div>
+
+      <div class="menu-chronicler">
+        <div><strong>Leo</strong><span>Cronista</span></div>
+      </div>
+    </div>
+
+    <!-- ── Umbral ─────────────────────────────────────────────────────────── -->
+    <section class="threshold" id="threshold" role="dialog" aria-modal="true" aria-labelledby="threshold-title">
+      <button class="threshold-backdrop" type="button" data-close-threshold tabindex="-1" aria-label="Volver al menú"></button>
+      <div class="veil" aria-hidden="true"></div>
+
+      <div class="threshold-body">
+        <header class="threshold-head">
+          <p class="threshold-kicker">Antes de abrir la Crónica</p>
+          <h2 class="threshold-title" id="threshold-title">¿Qué Futuro contemplarás?</h2>
+          <p class="threshold-lead">Puedes dejar que el Destino baraje una línea temporal nueva, o volver a una que alguien ya contempló y te compartió.</p>
+        </header>
+
+        <div class="gate-row">
+          <span class="gate-seam" aria-hidden="true"></span>
+
+          <button class="gate is-focus" type="button" data-gate="random">
+            <span class="gate-head">
+              <span class="gate-kicker">El Destino elige</span>
+              <h3>Un futuro nuevo</h3>
+            </span>
+            <p>Una línea temporal recién barajada. Eliges Crónica, Hueste y dificultad antes de escribirla, y puedes cambiar de futuro las veces que quieras.</p>
+            <span class="gate-figure">
+              <span class="label">El Destino propone</span>
+              <span class="future-code" data-role="future-gate">000<span class="dot">·</span>000</span>
+            </span>
+            <span class="gate-action">Preparar la Crónica</span>
+          </button>
+
+          <button class="gate" type="button" data-gate="seed">
+            <span class="gate-head">
+              <span class="gate-kicker">Tú la eliges</span>
+              <h3>Un futuro inscrito</h3>
+            </span>
+            <p>Escribe la identidad que te compartieron. Trae dentro los dos mazos, la dificultad y la Preparación, así que abre la partida directamente.</p>
+            <span class="gate-figure">
+              <span class="label">Identidad</span>
+              <span class="code-preview"><b>H</b><b>F</b><b>1</b>·<span>—</span><span>—</span><span>—</span>·<span>—</span><span>—</span><span>—</span>·<span>—</span><span>—</span><b>?</b>·<span>—</span><span>—</span><span>—</span></span>
+            </span>
+            <span class="gate-action">Inscribir el futuro</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Marcador: Escribir Crónica todavía no está programada ───────────── -->
+    <section class="pending-screen" id="pending" aria-label="Escribir Crónica (pendiente)">
+      <div class="pending-card">
+        <p class="threshold-kicker">Siguiente pantalla</p>
+        <h2>Escribir Crónica</h2>
+        <p class="future-code" data-role="future-pending">000<span class="dot">·</span>000</p>
+        <p>Esta pantalla se diseña aparte. El umbral ya entrega el futuro que el Destino propuso, así que llegará con su identidad puesta.</p>
+        <button class="quiet-action" type="button" id="pending-back">← Volver al umbral</button>
+      </div>
+    </section>
+
+    <!-- ── Tablero ────────────────────────────────────────────────────────── -->
+    <section class="board-screen" id="board" aria-label="Partida">
+      <div class="board-bar">
+        <span class="board-identity"><span>Futuro</span><b data-role="future-board">000·000</b></span>
+        <div class="spacer"></div>
+        <button class="quiet-action" type="button">Reescribir</button>
+        <button class="quiet-action" type="button">Copiar identidad</button>
+        <button class="quiet-action" type="button" id="board-back">Menú</button>
+      </div>
+      <div class="board-field">
+        <div class="board-row" data-role="row-host"></div>
+        <div class="board-row" data-role="row-player"></div>
+        <p class="board-note">Silueta del tablero. La identidad vive arriba, junto a Reescribir y Copiar identidad, que es donde el juego la conserva hoy.</p>
+      </div>
+    </section>
+
+    <!-- ── Inscripción ────────────────────────────────────────────────────── -->
+    <div class="seed-layer" id="seed-layer" role="dialog" aria-modal="true" aria-labelledby="seed-title">
+      <div class="seed-backdrop" data-close-seed></div>
+      <div class="seed-dialog">
+        <button class="seed-close" type="button" data-close-seed aria-label="Cerrar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 5 14 14M19 5 5 19"/></svg>
+        </button>
+
+        <p class="threshold-kicker">Una línea temporal ya contemplada</p>
+        <h2 id="seed-title">Inscribe el futuro</h2>
+        <p>Escríbelo o pégalo. En cuanto la identidad esté completa verás qué Crónica, qué Hueste y qué dificultad trae dentro; no hay pantalla de preparación después.</p>
+
+        <div class="code-rail" id="code-rail"></div>
+        <label class="sr-only" for="code-input">Identidad del futuro</label>
+        <input class="code-input" id="code-input" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" />
+
+        <div class="decoded">
+          <div class="decoded-cell" data-role="dec-player"><span>Cronista</span><strong>· · ·</strong></div>
+          <div class="decoded-cell" data-role="dec-mode"><span>Dificultad</span><strong>· · ·</strong></div>
+          <div class="decoded-cell" data-role="dec-host"><span>Hueste</span><strong>· · ·</strong></div>
+        </div>
+
+        <div class="seed-result" id="seed-result">
+          <p class="seed-note">Faltan <b>12</b> caracteres de la identidad.</p>
+        </div>
+
+        <div class="seed-actions">
+          <button class="quiet-action" type="button" id="paste">Pegar</button>
+          <button class="quiet-action" type="button" id="use-approved">Primera Semilla aprobada</button>
+          <button class="primary-action" type="button" id="open-future" disabled>Abrir este futuro <span aria-hidden="true">▷</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Choque ─────────────────────────────────────────────────────────── -->
+    <div class="clash" id="clash" role="status" aria-live="polite">
+      <div class="clash-curtain"></div>
+      <div class="clash-content">
+        <p class="clash-kicker">La crónica comienza<small data-role="clash-future">FUTURO 000·000</small></p>
+        <div class="clash-matchup">
+          <div class="clash-side player" data-role="clash-player"></div>
+          <div class="clash-versus">
+            <span class="clash-ring" aria-hidden="true"></span>
+            <span class="clash-flare" aria-hidden="true"></span>
+            <b>VS</b>
+          </div>
+          <div class="clash-side host" data-role="clash-host"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="notes" id="notes" aria-label="Notas de diseño">
+    <h2>Fractura, ajustada</h2>
+
+    <h3>Qué cambia respecto a la v3</h3>
+    <ul>
+      <li>Sin <strong>ornamentos de esquina</strong>: el marco desaparece y la composición queda sostenida
+        sólo por las dos láminas y la costura.</li>
+      <li>El título es la pregunta: <strong>¿Qué Futuro contemplarás?</strong></li>
+      <li><strong>El fondo se queda.</strong> No hay láminas que cubran la pantalla ni apertura del
+        cielo: el <em>TemporalBackdrop</em> de Hostfall —estrellas, retícula y disco de grados— sigue
+        exactamente donde estaba y sólo baja un punto para que la nueva UI se lea encima. Lo que se
+        retira es la UI del menú; lo que entra son las dos puertas, que siguen naciendo de la costura
+        central.</li>
+      <li>La costura <strong>ya no cruza la pantalla entera</strong>. Vive dentro del hueco entre las dos
+        cartas y sólo las separa. Es además la <strong>única línea</strong> que queda: las láminas
+        perdieron su sombra y su borde interior, que dibujaban una segunda línea negra de arriba abajo.
+        Sigue siendo la misma pieza viva: destella al abrir y respira después.</li>
+      <li>Fuera el <strong>historial de semillas</strong> bajo las puertas. La decisión queda limpia: dos
+        puertas y nada más. Volver a una partida vivida es cosa de <em>Semillas del Destino</em>, que ya
+        tiene su entrada en el menú.</li>
+      <li>Puertas <strong>más grandes</strong> —más ancho, más aire dentro, título y número mayores— y
+        <strong>sin el rombo con icono</strong>: el encabezado es sólo etiqueta y nombre. El título sube
+        al borde superior y las cartas quedan centradas en todo el espacio que deja debajo.</li>
+      <li>Fuera el <strong>pie de controles</strong>. El teclado sigue funcionando igual —flechas, Enter,
+        Esc— y con el ratón se vuelve al menú pulsando fuera de las cartas.</li>
+    </ul>
+
+    <h3>Lo que se mantiene</h3>
+    <ul>
+      <li>El umbral ocupa la pantalla completa y el <strong>menú no se desmonta</strong>: sólo se retira
+        su UI, así que volver es instantáneo y <em>Esc</em> devuelve el foco exacto a
+        <strong>Jugar</strong>.</li>
+      <li>Las puertas <strong>nacen de la costura</strong> y salen hacia fuera, escalonadas.</li>
+      <li>Aura de puntero por puerta, chispas cayendo de la costura, y el número del Futuro grabándose
+        cifra a cifra con el resplandor del diálogo de <em>Reescribir</em>.</li>
+      <li>Códec real: <em>hashSeed</em>, <em>futureCodeFromSeed</em> y el formato
+        <em>HF1-PPP-HHH-XXD-XXX</em>. El choque conserva los tiempos de <em>EncounterTransition</em>
+        (2450 ms, impacto a 1050 ms, apertura a 1666 ms).</li>
+    </ul>
+
+    <h3>Pendiente</h3>
+    <ul>
+      <li><strong>Escribir Crónica</strong> no está programada aquí: la puerta izquierda abre un marcador
+        con el futuro ya propuesto y un camino de vuelta al umbral.</li>
+    </ul>
+  </aside>
+
+  <script>
+    "use strict";
+
+    /* ── Códec real (RNG.ts, futureIdentity.ts, CanonSeed.ts) ───────────────── */
+    const ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    function hashSeed(seed) {
+      let hash = 2166136261;
+      for (let i = 0; i < seed.length; i += 1) {
+        hash ^= seed.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return hash >>> 0 || 1;
+    }
+
+    function futureCodeFromSeed(seed) {
+      const value = (hashSeed(seed) % 999999) + 1;
+      const digits = String(value).padStart(6, "0");
+      return digits.slice(0, 3) + "·" + digits.slice(3);
+    }
+
+    function canonCodeOf(player, host, mode, entropy) {
+      return "HF1-" + player + "-" + host + "-" + entropy.slice(0, 2) + mode + "-" + entropy.slice(2);
+    }
+
+    function newEntropy() {
+      const bytes = new Uint8Array(16);
+      let out = "";
+      while (out.length < 5) {
+        crypto.getRandomValues(bytes);
+        for (const byte of bytes) {
+          if (byte >= 252 || out.length >= 5) continue;
+          out += ALPHABET[byte % ALPHABET.length];
+        }
+      }
+      return out;
+    }
+
+    const DECKS = {
+      ELA: { side: "player", accent: "#8fb772", size: 39, name: "El Pacto de Elarion" },
+      CEC: { side: "player", accent: "#c0566f", size: 40, name: "La Corte del Eclipse Carmesí" },
+      GRV: { side: "host", accent: "#8da96a", size: 50, name: "El Alzamiento de los Sinsepulcro" },
+      VRK: { side: "host", accent: "#c67a41", size: 50, name: "La Legión de Varka" },
+    };
+    const MODES = {
+      "1": { label: "Aventurero", turns: 4 },
+      "2": { label: "Veterano", turns: 3 },
+      "3": { label: "Condenado", turns: 2 },
+    };
+    const PLAYER_CODES = ["ELA", "CEC"];
+    const HOST_CODES = ["GRV", "VRK"];
+    /* La identidad aprobada por el creador, para probar la ruta inscrita. */
+    const APPROVED_CODE = "HF1-ELA-GRV-082-QC5";
+
+    /* ── Marcas grabadas (sólo las usa el choque) ───────────────────────────── */
+    function emblem(code) {
+      const accent = DECKS[code].accent;
+      const marks = {
+        ELA: '<path d="M60 22 66 46 90 52 66 58 60 82 54 58 30 52 54 46Z" stroke-opacity="0.92" />'
+          + '<path d="M26 84 46 66 60 78 76 62 94 84" stroke-opacity="0.58" />'
+          + '<path d="M60 14v8M60 90v10" stroke-opacity="0.38" />',
+        CEC: '<circle cx="60" cy="48" r="20" stroke-opacity="0.9" />'
+          + '<path d="M44 40a20 20 0 0 0 30 22" stroke-opacity="0.45" />'
+          + '<path d="M44 74h32l-6 14a10 10 0 0 1-20 0Z" stroke-opacity="0.9" />'
+          + '<path d="M60 88v10M50 100h20" stroke-opacity="0.58" />',
+        GRV: '<path d="M40 96V50a20 20 0 0 1 40 0v46" stroke-opacity="0.9" />'
+          + '<path d="M32 96h56" stroke-opacity="0.68" />'
+          + '<path d="M62 40 54 62l12 6-10 26" stroke-opacity="0.85" />'
+          + '<path d="M46 62h6M70 74h-6" stroke-opacity="0.42" />',
+        VRK: '<path d="M38 56c0-14 10-22 22-22s22 8 22 22v14c0 12-10 22-22 22s-22-10-22-22Z" stroke-opacity="0.9" />'
+          + '<path d="M38 58c-10-4-16-14-14-26 10 2 16 8 18 16M82 58c10-4 16-14 14-26-10 2-16 8-18 16" stroke-opacity="0.72" />'
+          + '<path d="M50 64h8M62 64h8M56 78h8" stroke-opacity="0.52" />',
+      };
+      return '<svg viewBox="0 0 120 120" fill="none" stroke="' + accent + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'
+        + '<circle cx="60" cy="60" r="46" stroke-opacity="0.2" /><circle cx="60" cy="60" r="53" stroke-opacity="0.09" />'
+        + marks[code] + "</svg>";
+    }
+
+    /* ── Estado ─────────────────────────────────────────────────────────────── */
+    const state = { player: "ELA", host: "GRV", mode: "2", entropy: newEntropy(), tempo: 1, gate: 0 };
+    const cells = new Array(12).fill("");
+    let cursor = 0;
+    let lastFocus = null;
+
+    const $ = (selector, scope) => (scope || document).querySelector(selector);
+    const $$ = (selector, scope) => Array.from((scope || document).querySelectorAll(selector));
+    const roles = (role) => $$('[data-role="' + role + '"]');
+    const canonCode = () => canonCodeOf(state.player, state.host, state.mode, state.entropy);
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    /* ── Fondo ──────────────────────────────────────────────────────────────── */
+    function paintBackdrop() {
+      let grid = "";
+      for (let x = 0; x <= 1600; x += 116) grid += '<rect x="' + x + '" y="0" width="116" height="1000" />';
+      for (let y = 0; y <= 1000; y += 132) grid += '<rect x="0" y="' + y + '" width="1600" height="132" />';
+      const svg = $("#backdrop-grid");
+      svg.setAttribute("viewBox", "0 0 1600 1000");
+      svg.innerHTML = grid;
+
+      let ticks = "";
+      for (let i = 0; i < 72; i += 1) {
+        const angle = (i / 72) * Math.PI * 2;
+        const long = i % 6 === 0;
+        ticks += '<path d="M' + (500 + Math.cos(angle) * (long ? 460 : 478)).toFixed(1) + " " + (500 + Math.sin(angle) * (long ? 460 : 478)).toFixed(1)
+          + "L" + (500 + Math.cos(angle) * 492).toFixed(1) + " " + (500 + Math.sin(angle) * 492).toFixed(1)
+          + '" stroke="#9ec9c2" stroke-opacity="' + (long ? 0.34 : 0.16) + '" stroke-width="' + (long ? 2 : 1) + '" />';
+      }
+      $("#backdrop-dial").innerHTML = '<svg viewBox="0 0 1000 1000" fill="none">'
+        + '<circle cx="500" cy="500" r="492" stroke="#9ec9c2" stroke-opacity="0.14" />'
+        + '<circle cx="500" cy="500" r="340" stroke="#9ec9c2" stroke-opacity="0.09" />'
+        + '<circle cx="500" cy="500" r="188" stroke="#c8b678" stroke-opacity="0.07" />'
+        + ticks + "</svg>";
+
+      /* Estrellas deterministas: la misma semilla da siempre el mismo cielo. */
+      let random = hashSeed("hostfall:threshold:stars");
+      const next = () => {
+        random ^= random << 13; random >>>= 0;
+        random ^= random >>> 17;
+        random ^= random << 5; random >>>= 0;
+        return (random || 1) / 4294967296;
+      };
+      let stars = "";
+      for (let i = 0; i < 70; i += 1) {
+        stars += '<i style="left:' + (next() * 100).toFixed(2) + "%;top:" + (next() * 100).toFixed(2)
+          + "%;animation-delay:" + (next() * 6).toFixed(2) + "s;opacity:" + (0.1 + next() * 0.3).toFixed(2) + '"></i>';
+      }
+      $("#backdrop-stars").innerHTML = stars;
+    }
+
+    /* ── Chispas de la costura ──────────────────────────────────────────────── */
+    const MOTES = { count: 54, color: [246, 232, 190], size: [0.6, 1.8], speed: [0.35, 1.1] };
+    const canvas = $("#motes");
+    const context = canvas.getContext("2d");
+    let particles = [];
+    let motesFrame = 0;
+
+    function sizeCanvas() {
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      const rect = $("#stage").getBoundingClientRect();
+      canvas.width = Math.round(rect.width * ratio);
+      canvas.height = Math.round(rect.height * ratio);
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+
+    function spawnParticle(initial) {
+      const width = canvas.clientWidth || 1;
+      const height = canvas.clientHeight || 1;
+      const speed = MOTES.speed[0] + Math.random() * (MOTES.speed[1] - MOTES.speed[0]);
+      return {
+        size: MOTES.size[0] + Math.random() * (MOTES.size[1] - MOTES.size[0]),
+        alpha: 0.14 + Math.random() * 0.5,
+        life: 0,
+        span: 260 + Math.random() * 620,
+        x: width / 2 + (Math.random() - 0.5) * width * 0.05,
+        y: initial ? Math.random() * height : Math.random() * height * 0.3,
+        vx: (Math.random() - 0.5) * speed * 2.4,
+        vy: speed * (0.4 + Math.random()),
+      };
+    }
+
+    function seedParticles() {
+      particles = [];
+      for (let i = 0; i < MOTES.count; i += 1) particles.push(spawnParticle(true));
+    }
+
+    function stepMotes() {
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      context.clearRect(0, 0, width, height);
+      const [r, g, b] = MOTES.color;
+
+      particles.forEach((particle, index) => {
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.life += 1;
+
+        const fade = Math.min(1, particle.life / 60) * Math.min(1, (particle.span - particle.life) / 90);
+        const alpha = Math.max(0, particle.alpha * fade);
+        context.beginPath();
+        context.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        context.fillStyle = "rgba(" + r + "," + g + "," + b + "," + alpha.toFixed(3) + ")";
+        context.fill();
+        if (particle.size > 1.4) {
+          context.beginPath();
+          context.arc(particle.x, particle.y, particle.size * 3.4, 0, Math.PI * 2);
+          context.fillStyle = "rgba(" + r + "," + g + "," + b + "," + (alpha * 0.08).toFixed(3) + ")";
+          context.fill();
+        }
+
+        const gone = particle.life > particle.span || particle.y < -30 || particle.y > height + 30 || particle.x < -30 || particle.x > width + 30;
+        if (gone) particles[index] = spawnParticle(false);
+      });
+
+      motesFrame = window.requestAnimationFrame(stepMotes);
+    }
+
+    function startMotes() {
+      if (reducedMotion || motesFrame) return;
+      sizeCanvas();
+      seedParticles();
+      motesFrame = window.requestAnimationFrame(stepMotes);
+    }
+
+    function stopMotes() {
+      if (!motesFrame) return;
+      window.cancelAnimationFrame(motesFrame);
+      motesFrame = 0;
+      context.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    }
+
+    /* ── Render ─────────────────────────────────────────────────────────────── */
+    function digitsMarkup(code) {
+      return code.split("").map((character) => (character === "·"
+        ? '<span class="dot">·</span>'
+        : '<span class="d">' + character + "</span>")).join("");
+    }
+
+    function renderFuture(strike) {
+      const code = futureCodeFromSeed(canonCode());
+      roles("future-gate").concat(roles("future-pending")).forEach((node) => {
+        node.innerHTML = digitsMarkup(code);
+        if (!strike) return;
+        node.classList.remove("is-striking");
+        void node.offsetWidth;
+        node.classList.add("is-striking");
+      });
+      roles("future-board").forEach((node) => { node.textContent = code; });
+      roles("clash-future").forEach((node) => { node.textContent = "FUTURO " + code; });
+    }
+
+    /* ── Umbral ─────────────────────────────────────────────────────────────── */
+    function openThreshold(keepEntropy) {
+      /* El umbral siempre devuelve el foco al menú, nunca a una pantalla cerrada. */
+      const active = document.activeElement;
+      lastFocus = active && active.closest && active.closest(".menu-shell") ? active : $("#play-entry");
+      if (!keepEntropy) state.entropy = newEntropy();
+      renderFuture(false);
+      $("#threshold").classList.remove("is-closing");
+      $("#threshold").classList.add("is-open");
+      document.body.classList.add("is-threshold");
+      startMotes();
+      focusGate(state.gate);
+    }
+
+    function closeThreshold() {
+      const threshold = $("#threshold");
+      if (!threshold.classList.contains("is-open")) return;
+      threshold.classList.add("is-closing");
+      window.setTimeout(() => {
+        threshold.classList.remove("is-open", "is-closing");
+        document.body.classList.remove("is-threshold");
+        stopMotes();
+      }, 190);
+      (lastFocus && lastFocus.isConnected ? lastFocus : $("#play-entry")).focus();
+    }
+
+    function gates() { return $$("[data-gate]"); }
+
+    function focusGate(index) {
+      const list = gates();
+      state.gate = (index + list.length) % list.length;
+      list.forEach((gate, position) => gate.classList.toggle("is-focus", position === state.gate));
+      list[state.gate].focus();
+    }
+
+    function enterGate(kind) {
+      if (kind === "random") {
+        /* «Escribir Crónica» se diseña aparte: aquí sólo queda su marcador. */
+        closeThreshold();
+        document.body.classList.add("is-away");
+        renderFuture(true);
+        $("#pending").classList.add("is-open");
+        window.setTimeout(() => $("#pending-back").focus(), 260);
+      } else {
+        openSeedDialog();
+      }
+    }
+
+    /* ── Inscripción ────────────────────────────────────────────────────────── */
+    function openSeedDialog() {
+      $("#seed-layer").classList.remove("is-closing");
+      $("#seed-layer").classList.add("is-open");
+      renderSeed();
+      window.setTimeout(() => $("#code-input").focus(), 40);
+    }
+
+    function closeSeedDialog(immediate) {
+      const layer = $("#seed-layer");
+      if (!layer.classList.contains("is-open")) return;
+      if (immediate) { layer.classList.remove("is-open", "is-closing"); return; }
+      layer.classList.add("is-closing");
+      window.setTimeout(() => layer.classList.remove("is-open", "is-closing"), 190);
+      if ($("#threshold").classList.contains("is-open")) focusGate(state.gate);
+    }
+
+    function setCells(text) {
+      const clean = String(text).toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/^HF1/, "");
+      for (let index = 0; index < 12; index += 1) cells[index] = clean[index] || "";
+      cursor = Math.min(clean.length, 12);
+      renderSeed();
+    }
+
+    function readCells() {
+      const player = cells.slice(0, 3).join("");
+      const host = cells.slice(3, 6).join("");
+      const mode = cells[8];
+      const entropy = cells.slice(6, 8).join("") + cells.slice(9, 12).join("");
+      return {
+        player, host, mode, entropy,
+        complete: cells.every((character) => character !== ""),
+        knownPlayer: PLAYER_CODES.includes(player) ? player : undefined,
+        knownHost: HOST_CODES.includes(host) ? host : undefined,
+        knownMode: MODES[mode] ? mode : undefined,
+      };
+    }
+
+    function renderSeed() {
+      const rail = $("#code-rail");
+      if (!rail.childElementCount) {
+        let markup = "HF1".split("").map((character) => '<span class="cell is-prefix">' + character + "</span>").join("");
+        [[0, 3], [3, 6], [6, 9], [9, 12]].forEach(([from, to]) => {
+          markup += '<span class="sep" aria-hidden="true"></span>';
+          for (let index = from; index < to; index += 1) {
+            markup += '<span class="cell' + (index === 8 ? " is-difficulty" : "") + '" data-cell="' + index + '"></span>';
+          }
+        });
+        rail.innerHTML = markup;
+        rail.addEventListener("click", () => $("#code-input").focus());
+      }
+
+      const focused = document.activeElement === $("#code-input");
+      rail.classList.toggle("is-focus", focused);
+      $$("[data-cell]", rail).forEach((cell) => {
+        const index = Number(cell.dataset.cell);
+        if (cell.textContent !== cells[index]) cell.textContent = cells[index];
+        cell.classList.toggle("is-filled", cells[index] !== "");
+        cell.classList.toggle("is-cursor", focused && index === cursor);
+      });
+
+      const reading = readCells();
+      const paint = (role, text, known, wrong) => {
+        const node = roles(role)[0];
+        node.classList.toggle("is-known", Boolean(known));
+        node.classList.toggle("is-wrong", Boolean(wrong));
+        $("strong", node).textContent = text;
+      };
+      paint("dec-player",
+        reading.knownPlayer ? DECKS[reading.knownPlayer].name : (reading.player.length === 3 ? "Crónica desconocida" : "· · ·"),
+        reading.knownPlayer, reading.player.length === 3 && !reading.knownPlayer);
+      paint("dec-host",
+        reading.knownHost ? DECKS[reading.knownHost].name : (reading.host.length === 3 ? "Hueste desconocida" : "· · ·"),
+        reading.knownHost, reading.host.length === 3 && !reading.knownHost);
+      paint("dec-mode",
+        reading.knownMode ? MODES[reading.knownMode].label + " · Preparación " + MODES[reading.knownMode].turns : "· · ·",
+        reading.knownMode, Boolean(reading.mode) && !reading.knownMode);
+
+      const result = $("#seed-result");
+      const cta = $("#open-future");
+      const missing = cells.filter((character) => character === "").length;
+
+      if (!reading.complete) {
+        result.innerHTML = '<p class="seed-note">Faltan <b>' + missing + "</b> caracteres de la identidad.</p>";
+        cta.disabled = true;
+        rail.classList.remove("is-wrong");
+        return;
+      }
+
+      const problems = [];
+      if (!reading.knownPlayer) problems.push("la Crónica «" + reading.player + "» no existe en este Acto");
+      if (!reading.knownHost) problems.push("la Hueste «" + reading.host + "» no existe en este Acto");
+      if (!reading.knownMode) problems.push("«" + reading.mode + "» no es una dificultad");
+
+      if (problems.length) {
+        result.innerHTML = '<p class="seed-error">Esta identidad no pertenece a ninguna línea temporal conocida: ' + problems.join("; ") + ".</p>";
+        cta.disabled = true;
+        rail.classList.remove("is-wrong");
+        void rail.offsetWidth;
+        rail.classList.add("is-wrong");
+        return;
+      }
+
+      rail.classList.remove("is-wrong");
+      const code = futureCodeFromSeed(canonCodeOf(reading.player, reading.host, reading.mode, reading.entropy));
+      result.innerHTML = '<p class="result-label">Este futuro es</p><p class="future-code is-striking">' + digitsMarkup(code) + "</p>";
+      cta.disabled = false;
+    }
+
+    function commitSeed() {
+      const reading = readCells();
+      if (!reading.complete || !reading.knownPlayer || !reading.knownHost || !reading.knownMode) return;
+      state.player = reading.knownPlayer;
+      state.host = reading.knownHost;
+      state.mode = reading.knownMode;
+      state.entropy = reading.entropy;
+      renderFuture(false);
+      closeSeedDialog();
+      closeThreshold();
+      document.body.classList.add("is-away");
+      window.setTimeout(playClash, 220);
+    }
+
+    /* ── Choque y tablero ───────────────────────────────────────────────────── */
+    function playClash() {
+      const clash = $("#clash");
+      const host = DECKS[state.host];
+      clash.style.setProperty("--clash-accent", host.accent);
+      roles("clash-player").forEach((node) => {
+        node.style.setProperty("--deck-soft", DECKS[state.player].accent + "33");
+        node.innerHTML = "<span>Cronista</span>" + emblem(state.player) + "<strong>" + DECKS[state.player].name + "</strong>";
+      });
+      roles("clash-host").forEach((node) => {
+        node.style.setProperty("--deck-soft", host.accent + "33");
+        node.innerHTML = emblem(state.host) + "<span>Hueste</span><strong>" + host.name + "</strong>";
+      });
+      renderFuture(false);
+
+      clash.classList.remove("is-playing");
+      void clash.offsetWidth;
+      clash.classList.add("is-playing");
+      clash.getAnimations({ subtree: true }).forEach((animation) => { animation.playbackRate = state.tempo; });
+
+      window.setTimeout(() => {
+        $("#pending").classList.remove("is-open");
+        $("#board").classList.add("is-open");
+        paintBoard();
+      }, 1666 / state.tempo);
+      window.setTimeout(() => clash.classList.remove("is-playing"), 2450 / state.tempo);
+    }
+
+    function paintBoard() {
+      $("#board").style.setProperty("--deck-accent", DECKS[state.host].accent);
+      [["row-host", 4, true], ["row-player", 3, false]].forEach(([role, count, isHost]) => {
+        roles(role).forEach((row) => {
+          row.innerHTML = "";
+          for (let index = 0; index < count; index += 1) {
+            const card = document.createElement("div");
+            card.className = "board-card" + (isHost ? " is-host" : "");
+            card.style.animationDelay = (120 + index * 70) + "ms";
+            row.appendChild(card);
+          }
+        });
+      });
+    }
+
+    function resetDemo() {
+      closeSeedDialog(true);
+      $("#threshold").classList.remove("is-open", "is-closing");
+      document.body.classList.remove("is-threshold", "is-away");
+      $("#pending").classList.remove("is-open");
+      $("#board").classList.remove("is-open");
+      $("#clash").classList.remove("is-playing");
+      stopMotes();
+      state.player = "ELA";
+      state.host = "GRV";
+      state.mode = "2";
+      state.entropy = newEntropy();
+      setCells("");
+      renderFuture(false);
+      $("#play-entry").focus();
+    }
+
+    /* ── Ilustración de cada puerta ─────────────────────────────────────────── */
+    const GATE_ART = {
+      random: "art/util/DeanSpencer-LichScryingOutcropCampDriveThruRPG.jpg",
+      seed: "art/util/DeanSpencer-spotcol-magicgateFP-nightshade-intensity-LOW-V1.jpg",
+    };
+
+    /* Servida por serve.mjs vale el alias; abierta con doble clic, la ruta real
+       del repositorio. Se prueban en ese orden, como en las maquetas WebGL. */
+    function resolveGateArt() {
+      Object.keys(GATE_ART).forEach((kind) => {
+        const node = $('[data-gate="' + kind + '"]');
+        if (!node) return;
+        const served = "../" + GATE_ART[kind];
+        const local = "../../../assets/" + GATE_ART[kind];
+        const apply = (path) => node.style.setProperty("--gate-art", 'url("' + path + '")');
+        const probe = new Image();
+        probe.addEventListener("load", () => apply(served));
+        probe.addEventListener("error", () => apply(local));
+        probe.src = served;
+      });
+    }
+
+    /* ── Eventos ────────────────────────────────────────────────────────────── */
+    resolveGateArt();
+    paintBackdrop();
+    renderFuture(false);
+
+    $("#play-entry").addEventListener("click", () => openThreshold(false));
+    $$("[data-close-threshold]").forEach((node) => node.addEventListener("click", closeThreshold));
+    $$("[data-close-seed]").forEach((node) => node.addEventListener("click", () => closeSeedDialog()));
+    gates().forEach((gate, index) => {
+      gate.addEventListener("click", () => enterGate(gate.dataset.gate));
+      gate.addEventListener("focus", () => focusGate(index));
+      gate.addEventListener("pointermove", (event) => {
+        const rect = gate.getBoundingClientRect();
+        gate.style.setProperty("--mx", (((event.clientX - rect.left) / rect.width) * 100).toFixed(1) + "%");
+        gate.style.setProperty("--my", (((event.clientY - rect.top) / rect.height) * 100).toFixed(1) + "%");
+      });
+    });
+
+    $$('[data-goto="library"]').forEach((node) => node.addEventListener("click", () => $("#notes").classList.add("is-open")));
+
+    $("#pending-back").addEventListener("click", () => {
+      $("#pending").classList.remove("is-open");
+      document.body.classList.remove("is-away");
+      openThreshold(true);
+    });
+    $("#board-back").addEventListener("click", resetDemo);
+    $("#open-future").addEventListener("click", commitSeed);
+    $("#restart").addEventListener("click", resetDemo);
+    $("#notes-toggle").addEventListener("click", () => $("#notes").classList.toggle("is-open"));
+    $("#use-approved").addEventListener("click", () => { setCells(APPROVED_CODE); $("#code-input").focus(); });
+    $("#paste").addEventListener("click", async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) setCells(text);
+      } catch {
+        /* Sin permiso de portapapeles queda Ctrl+V sobre el renglón. */
+      }
+      $("#code-input").focus();
+    });
+
+    const codeInput = $("#code-input");
+    codeInput.addEventListener("keydown", (event) => {
+      if (event.key === "Backspace") {
+        event.preventDefault();
+        const index = cells[cursor] ? cursor : Math.max(0, cursor - 1);
+        cells[index] = "";
+        cursor = index;
+        renderSeed();
+        return;
+      }
+      if (event.key === "ArrowLeft") { event.preventDefault(); cursor = Math.max(0, cursor - 1); renderSeed(); return; }
+      if (event.key === "ArrowRight") { event.preventDefault(); cursor = Math.min(11, cursor + 1); renderSeed(); return; }
+      if (event.key === "Enter") { event.preventDefault(); commitSeed(); return; }
+      if (event.key.length !== 1) return;
+      const character = event.key.toUpperCase();
+      if (!ALPHABET.includes(character)) return;
+      event.preventDefault();
+      if (cursor > 11) return;
+      cells[cursor] = character;
+      cursor = Math.min(12, cursor + 1);
+      renderSeed();
+    });
+    codeInput.addEventListener("paste", (event) => {
+      event.preventDefault();
+      setCells((event.clipboardData || window.clipboardData).getData("text") || "");
+    });
+    codeInput.addEventListener("focus", renderSeed);
+    codeInput.addEventListener("blur", renderSeed);
+
+    window.addEventListener("keydown", (event) => {
+      const seedOpen = $("#seed-layer").classList.contains("is-open");
+      const thresholdOpen = $("#threshold").classList.contains("is-open");
+      if (event.key === "Escape") {
+        if (seedOpen) { closeSeedDialog(); return; }
+        if ($("#notes").classList.contains("is-open")) { $("#notes").classList.remove("is-open"); return; }
+        if (thresholdOpen) { closeThreshold(); return; }
+        if ($("#pending").classList.contains("is-open")) {
+          $("#pending").classList.remove("is-open");
+          document.body.classList.remove("is-away");
+          openThreshold(true);
+        }
+        return;
+      }
+      if (!thresholdOpen || seedOpen) return;
+      if (event.key === "ArrowLeft") { event.preventDefault(); focusGate(state.gate - 1); }
+      if (event.key === "ArrowRight") { event.preventDefault(); focusGate(state.gate + 1); }
+      if (event.key === "Enter" && document.activeElement === document.body) {
+        event.preventDefault();
+        enterGate(gates()[state.gate].dataset.gate);
+      }
+    });
+
+    $$("#tempo button").forEach((button) => button.addEventListener("click", () => {
+      state.tempo = Number(button.dataset.tempo);
+      $$("#tempo button").forEach((other) => other.setAttribute("aria-pressed", String(other === button)));
+    }));
+
+    window.addEventListener("resize", () => {
+      if (motesFrame) { sizeCanvas(); seedParticles(); }
+    });
+  </script>
+</body>
+
+</html>

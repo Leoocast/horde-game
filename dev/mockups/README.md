@@ -20,6 +20,11 @@ alias de sólo lectura `/vendor/three.min.js`, que resuelve al Three.js de `node
 relativa `../../../node_modules/...` sirve al abrir con doble clic, pero cae fuera de la raíz del
 servidor. Las maquetas WebGL prueban las dos rutas en ese orden.
 
+El mismo mecanismo expone, archivo por archivo, el arte del repositorio que usa alguna maqueta bajo
+`/art/...` —hoy las dos ilustraciones de `ui/claude-play-entry-fracture.html`—, para no duplicar los
+JPG dentro de `dev/mockups`. Esa maqueta también prueba primero la ruta servida y cae en la relativa
+si se abre con doble clic.
+
 ## Estructura
 
 ```text
@@ -34,6 +39,37 @@ vfx/                exploraciones de efectos
 
 ## Contenido
 
+- `ui/claude-play-entry-fracture.html` — la versión **Fractura** de
+  `ui/claude-play-entry-threshold-v3.html`, aislada y ajustada. El umbral ocupa la pantalla completa sin
+  cubrir el fondo: el cielo de Hostfall permanece y sólo se atenúa, se retira la UI del menú y entra la
+  suya. Se quitan los ornamentos de esquina, el pie de controles y el historial de semillas, el
+  título es **¿Qué Futuro contemplarás?**, las puertas crecen y pierden el rombo con icono, y la costura
+  deja de cruzar la pantalla: vive en el hueco entre las dos cartas y sólo las separa. La ruta inscrita
+  decodifica el `HF1` y lanza el choque; **Escribir Crónica** queda deliberadamente sin programar, como
+  marcador con el futuro ya propuesto.
+- `ui/claude-play-entry-threshold-v3.html` — tercera vuelta sobre `ui/play-entry-futures.html`. **A · Umbral y
+  B · Pantalla dejan de ser alternativas**: el umbral tiene composición de pantalla completa —marco,
+  ornamento radial, pie con teclas— pero el menú nunca se desmonta detrás, así que volver es instantáneo y
+  `Esc` devuelve el foco exacto a **Jugar**. Trae **cuatro versiones** de cómo la pantalla toma el menú,
+  conmutables en caliente con las teclas `1`–`4`: **Eclipse** (el velo crece desde la posición real del
+  botón Jugar, con corona de luz), **Fractura** (dos láminas y una costura viva de la que salen las
+  puertas), **Astrolabio** (el disco de grados del fondo se adelanta y gira hasta su marca) y **Vidrio**
+  (tres láminas frías y una quebradura que se dibuja). Añade aura de puntero por puerta, un campo de
+  pavesas en canvas con tinte y deriva por versión, y conserva el códec real —`hashSeed`,
+  `futureCodeFromSeed`, `HF1-PPP-HHH-XXD-XXX`— y los tiempos de `EncounterTransition`.
+- `ui/claude-play-entry-threshold.html` — segunda vuelta sobre `ui/play-entry-futures.html`. La bifurcación
+  deja de ofrecer tres profundidades y se resuelve en una sola: un **umbral a pantalla completa que se abre
+  sobre el menú vivo**, que sigue detrás atenuado y desplazado un paso. La piel ya no es propia: usa el
+  material real de los modales del juego —`game-home-backdrop`, `game-home-dialog`, `game-dialog-action`,
+  `game-seed-input`, `main-menu-entry` y el resplandor del número del diálogo de Reescribir— con Georgia
+  para títulos y Cinzel Decorative sólo en el wordmark. Añade futuros recientes en el umbral, navegación con
+  flechas/Enter/Esc con devolución de foco, y la inscripción que decodifica el `HF1` carácter a carácter
+  antes de lanzar el choque.
+- `ui/play-entry-threshold-screen-variants.html` — cuatro versiones interactivas del híbrido **Umbral →
+  pantalla completa**, todas nacidas desde la posición real de **Jugar** y con el menú vivo detrás:
+  expansión de placa, fisura cardinal, folio físico y astrolabio del Destino. Cada composición cambia
+  estructura y movimiento —no sólo la piel— y permite recorrer ambas salidas; la ruta aleatoria calcula el
+  número de Futuro con el hash real y la ruta inscrita valida el formato Canon `HF1`.
 - `ui/claude-play-entry-futures.html` — propuesta de Claude para la entrada a **Jugar**: la bifurcación
   entre un futuro nuevo y uno inscrito (variante desplegada en el propio menú y variante de umbral a
   pantalla completa), **Escribir Crónica** sin ningún campo de seed y con el número de Futuro ocupando

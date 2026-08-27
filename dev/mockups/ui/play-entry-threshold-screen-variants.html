@@ -1,0 +1,1416 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hostfall — Umbral × Pantalla · cuatro versiones</title>
+  <style>
+    @font-face {
+      font-family: "Cinzel Decorative";
+      src: url("../assets/fonts/cinzel-decorative-latin.woff2") format("woff2");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Cinzel";
+      src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Lora";
+      src: url("../assets/fonts/lora-normal-latin.woff2") format("woff2");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Outfit";
+      src: url("../assets/fonts/outfit-latin.woff2") format("woff2");
+      font-display: swap;
+    }
+
+    :root {
+      color-scheme: dark;
+      --ink: #030708;
+      --panel: #091113;
+      --raised: #111b1d;
+      --line: rgb(159 148 101 / 0.38);
+      --line-soft: rgb(159 148 101 / 0.17);
+      --gold: #b49350;
+      --gold-bright: #ead79c;
+      --green: #78916b;
+      --green-bright: #c8d2a1;
+      --red: #985646;
+      --red-bright: #d88f76;
+      --text: #dad2b4;
+      --muted: #83908a;
+      --quiet: #5d6964;
+      --display: "Cinzel", Georgia, serif;
+      --wordmark: "Cinzel Decorative", Georgia, serif;
+      --serif: "Lora", Georgia, serif;
+      --sans: "Outfit", "Trebuchet MS", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      min-width: 320px;
+      margin: 0;
+      background:
+        radial-gradient(circle at 54% -12%, rgb(95 75 41 / 0.22), transparent 37%),
+        linear-gradient(180deg, #111719, #050809 48%, #090706);
+      color: var(--text);
+      font-family: var(--sans);
+    }
+
+    button,
+    input { font: inherit; }
+    button { cursor: pointer; }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 1px solid var(--gold-bright);
+      outline-offset: 3px;
+    }
+
+    .document {
+      width: min(1480px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 58px 0 84px;
+    }
+
+    .document-head {
+      display: grid;
+      max-width: 1020px;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .kicker,
+    .lab-label,
+    .choice-eyebrow,
+    .menu-kicker,
+    .route-kicker,
+    .endpoint-kicker,
+    .notes span {
+      color: var(--gold);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    .document-head h1 {
+      margin: 0;
+      color: #eee3c4;
+      font-family: var(--display);
+      font-size: clamp(30px, 4.2vw, 58px);
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      line-height: 1.06;
+    }
+
+    .document-head p {
+      max-width: 920px;
+      margin: 0;
+      color: #9aa59f;
+      font-family: var(--serif);
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    .lab-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+      margin-bottom: 12px;
+      border: 1px solid rgb(176 151 88 / 0.22);
+      background: rgb(6 12 13 / 0.86);
+      padding: 10px 12px 10px 16px;
+      box-shadow: 0 18px 44px rgb(0 0 0 / 0.22);
+    }
+
+    .lab-copy small { display: block; margin-top: 3px; color: var(--quiet); }
+
+    .variant-switch {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .variant-switch button {
+      min-height: 35px;
+      border: 1px solid rgb(135 148 140 / 0.2);
+      background: rgb(7 13 15 / 0.78);
+      padding: 7px 13px;
+      color: #75817c;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .variant-switch button:hover,
+    .variant-switch button.is-active {
+      border-color: rgb(207 175 94 / 0.58);
+      background: linear-gradient(180deg, rgb(86 68 34 / 0.32), rgb(12 17 17 / 0.86));
+      color: var(--gold-bright);
+    }
+
+    .variant-switch button.is-recommended::after {
+      margin-left: 7px;
+      color: #99aa78;
+      content: "Recomendada";
+      font-size: 7px;
+      letter-spacing: 0.1em;
+    }
+
+    .stage {
+      --origin-x: 24%;
+      --origin-y: 49%;
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      min-height: 620px;
+      border: 1px solid rgb(196 165 93 / 0.36);
+      background: #020607;
+      box-shadow: 0 38px 96px rgb(0 0 0 / 0.54), inset 0 0 0 1px rgb(255 239 190 / 0.035);
+      isolation: isolate;
+    }
+
+    .cosmos,
+    .cosmos::before,
+    .cosmos::after,
+    .stage-shade,
+    .grain,
+    .edge-vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .cosmos {
+      z-index: -5;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at 74% 38%, rgb(41 99 93 / 0.24), transparent 29%),
+        radial-gradient(ellipse at 32% 74%, rgb(74 55 98 / 0.14), transparent 29%),
+        linear-gradient(142deg, #061013, #020607 49%, #090b0d);
+    }
+
+    .cosmos::before {
+      background-image:
+        radial-gradient(circle, rgb(232 224 183 / 0.74) 0 0.65px, transparent 1px),
+        radial-gradient(circle, rgb(125 168 157 / 0.56) 0 0.6px, transparent 0.9px),
+        radial-gradient(circle, rgb(223 192 123 / 0.5) 0 0.5px, transparent 0.85px);
+      background-position: 0 0, 29px 37px, 71px 19px;
+      background-size: 91px 73px, 137px 111px, 173px 127px;
+      content: "";
+      opacity: 0.56;
+      animation: star-drift 30s linear infinite alternate;
+    }
+
+    .cosmos::after {
+      inset: -25%;
+      background:
+        conic-gradient(from 210deg at 61% 48%, transparent 0 13%, rgb(41 119 111 / 0.08) 16%, transparent 19% 43%, rgb(121 86 35 / 0.07) 47%, transparent 51%),
+        radial-gradient(circle at 61% 48%, transparent 0 9%, rgb(127 159 139 / 0.075) 11%, transparent 29%);
+      content: "";
+      filter: blur(10px);
+      animation: nebula-spin 42s linear infinite;
+    }
+
+    .stage-shade {
+      z-index: -4;
+      background: linear-gradient(90deg, rgb(3 8 9 / 0.92), transparent 47%), linear-gradient(180deg, transparent 55%, rgb(1 4 5 / 0.72));
+    }
+
+    .grain {
+      z-index: 150;
+      background-image:
+        repeating-radial-gradient(circle at 31% 47%, rgb(255 255 255 / 0.32) 0 0.4px, transparent 0.7px 3px),
+        repeating-linear-gradient(117deg, transparent 0 5px, rgb(255 255 255 / 0.1) 6px, transparent 7px 11px);
+      background-size: 11px 13px, 17px 19px;
+      mix-blend-mode: soft-light;
+      opacity: 0.043;
+    }
+
+    .edge-vignette {
+      z-index: 149;
+      box-shadow: inset 0 0 105px 20px rgb(0 0 0 / 0.72);
+    }
+
+    .demo-badge {
+      position: absolute;
+      z-index: 160;
+      top: 17px;
+      right: 18px;
+      border: 1px solid rgb(185 155 83 / 0.25);
+      background: rgb(3 8 9 / 0.72);
+      padding: 7px 10px;
+      color: #776a4c;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    /* ───────────── menú vivo que queda detrás ───────────── */
+
+    .home {
+      position: absolute;
+      z-index: 2;
+      inset: 0;
+      transition: filter 460ms ease, opacity 460ms ease, transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .home-panel {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      display: grid;
+      width: min(43%, 540px);
+      grid-template-rows: auto 1fr auto;
+      border-right: 1px solid rgb(202 172 98 / 0.24);
+      background:
+        linear-gradient(90deg, rgb(7 13 14 / 0.99), rgb(7 13 14 / 0.92) 82%, rgb(7 13 14 / 0.52)),
+        repeating-linear-gradient(0deg, transparent 0 24px, rgb(190 164 99 / 0.025) 25px);
+      padding: clamp(38px, 5vw, 72px) clamp(30px, 4vw, 62px) 32px;
+      box-shadow: 28px 0 70px rgb(0 0 0 / 0.24);
+    }
+
+    .home-panel::after {
+      position: absolute;
+      top: 0;
+      right: -2px;
+      width: 3px;
+      height: 100%;
+      background: linear-gradient(transparent 8%, rgb(189 156 83 / 0.5) 35%, rgb(189 156 83 / 0.18) 74%, transparent);
+      content: "";
+    }
+
+    .brand h1 {
+      margin: 9px 0 5px;
+      color: #e9dfbd;
+      font-family: var(--wordmark);
+      font-size: clamp(40px, 5vw, 70px);
+      font-weight: 400;
+      letter-spacing: -0.035em;
+      line-height: 1;
+      text-shadow: 0 5px 25px rgb(0 0 0 / 0.8);
+    }
+
+    .brand-act {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #776e53;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .brand-act::before { width: 28px; height: 1px; background: #75623a; content: ""; }
+
+    .menu-nav {
+      display: grid;
+      align-content: center;
+      gap: 6px;
+      margin-block: 18px;
+    }
+
+    .menu-entry {
+      position: relative;
+      display: grid;
+      min-height: 49px;
+      grid-template-columns: 18px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 13px;
+      border: 1px solid transparent;
+      border-bottom-color: rgb(135 147 140 / 0.13);
+      background: transparent;
+      padding: 6px 11px 6px 4px;
+      color: #9ca7a1;
+      font-family: var(--serif);
+      font-size: 17px;
+      text-align: left;
+      transition: color 150ms ease, background 150ms ease, border-color 150ms ease, transform 150ms ease;
+    }
+
+    .menu-entry .mark {
+      width: 8px;
+      height: 8px;
+      border: 1px solid #60684f;
+      transform: rotate(45deg);
+      transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
+    }
+
+    .menu-entry small {
+      color: #58645f;
+      font-family: var(--sans);
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .menu-entry:hover,
+    .menu-entry.is-play {
+      border-color: rgb(181 154 86 / 0.24);
+      background: linear-gradient(90deg, rgb(113 92 47 / 0.13), transparent);
+      color: #e3d9b8;
+      transform: translateX(3px);
+    }
+
+    .menu-entry:hover .mark,
+    .menu-entry.is-play .mark {
+      border-color: #c5a961;
+      background: #806c35;
+      box-shadow: 0 0 13px rgb(197 168 91 / 0.28);
+    }
+
+    .menu-entry.is-play { min-height: 65px; border-left-color: rgb(214 181 96 / 0.5); font-size: 21px; }
+    .menu-entry.is-play::after {
+      position: absolute;
+      right: -2px;
+      bottom: -1px;
+      left: -2px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgb(212 180 93 / 0.7), transparent);
+      content: "";
+      opacity: 0;
+    }
+    .menu-entry.is-play:hover::after { opacity: 1; animation: play-line 1.15s ease-in-out infinite; }
+
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-top: 1px solid rgb(171 147 86 / 0.16);
+      padding-top: 16px;
+    }
+
+    .profile-glyph {
+      display: grid;
+      width: 27px;
+      height: 27px;
+      border: 1px solid #6b6140;
+      place-items: center;
+      color: #b7a168;
+      transform: rotate(45deg);
+    }
+
+    .profile-glyph i { font-style: normal; transform: rotate(-45deg); }
+    .profile strong { display: block; color: #c5bea5; font-family: var(--serif); font-weight: 400; }
+    .profile small { display: block; margin-top: 2px; color: #5c6863; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; }
+
+    .home-sigil {
+      position: absolute;
+      top: 50%;
+      right: 18%;
+      width: min(29vw, 400px);
+      aspect-ratio: 1;
+      border: 1px solid rgb(136 165 150 / 0.075);
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 27px rgb(105 145 133 / 0.025), inset 0 0 0 28px rgb(135 165 150 / 0.055);
+      opacity: 0.72;
+      transform: translate(50%, -50%) rotate(18deg);
+    }
+
+    .home-sigil::before,
+    .home-sigil::after {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      background: linear-gradient(90deg, transparent, rgb(151 179 161 / 0.11), transparent);
+      content: "";
+      transform: translate(-50%, -50%);
+    }
+
+    .home-sigil::before { width: 150%; height: 1px; }
+    .home-sigil::after { width: 1px; height: 150%; }
+
+    .stage.is-open .home {
+      filter: saturate(0.72) brightness(0.5);
+      opacity: 0.76;
+      transform: translateX(-1.4%) scale(0.985);
+    }
+
+    .stage[data-variant="rift"].is-open .home { transform: translate(-2.2%, 1.2%) scale(0.976) rotate(-0.25deg); }
+    .stage[data-variant="folio"].is-open .home { transform: translateY(1.4%) scale(0.97); }
+    .stage[data-variant="dial"].is-open .home { filter: saturate(0.62) brightness(0.42); transform: scale(0.955); }
+
+    /* ───────────── capa híbrida común ───────────── */
+
+    .threshold {
+      position: absolute;
+      z-index: 20;
+      inset: 0;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .stage.is-open .threshold {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .threshold-scrim {
+      position: absolute;
+      z-index: 0;
+      inset: 0;
+      border: 0;
+      background: rgb(0 4 5 / 0.37);
+      cursor: default;
+      backdrop-filter: blur(1.5px);
+    }
+
+    .threshold-close {
+      position: absolute;
+      z-index: 90;
+      top: 24px;
+      left: 28px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      border: 0;
+      background: transparent;
+      color: #77847e;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .threshold-close:hover { color: #d5c9a8; }
+
+    .composition {
+      position: absolute;
+      z-index: 2;
+      inset: 0;
+      display: none;
+    }
+
+    .stage[data-variant="bloom"] .composition-bloom,
+    .stage[data-variant="rift"] .composition-rift,
+    .stage[data-variant="folio"] .composition-folio,
+    .stage[data-variant="dial"] .composition-dial { display: block; }
+
+    .route-button {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgb(137 151 142 / 0.23);
+      background: linear-gradient(145deg, rgb(19 30 31 / 0.9), rgb(4 10 11 / 0.96));
+      color: #9da8a0;
+      text-align: left;
+      transition: border-color 170ms ease, background 170ms ease, box-shadow 170ms ease, transform 170ms ease;
+    }
+
+    .route-button:hover {
+      border-color: rgb(215 182 95 / 0.63);
+      background: linear-gradient(145deg, rgb(34 44 42 / 0.92), rgb(6 12 13 / 0.98));
+      box-shadow: inset 0 0 35px rgb(169 135 58 / 0.07), 0 18px 42px rgb(0 0 0 / 0.28);
+      transform: translateY(-3px);
+    }
+
+    .route-button strong,
+    .route-button small,
+    .route-button span { position: relative; z-index: 2; display: block; }
+    .route-button strong { color: #ded4b2; font-family: var(--serif); font-size: clamp(20px, 2vw, 30px); font-weight: 400; line-height: 1.08; }
+    .route-button small { margin-bottom: 8px; color: #8d7a4d; font-size: 8px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
+    .route-button span { margin-top: 9px; color: #77847d; font-size: 11px; line-height: 1.5; }
+
+    /* ───────── A · expansión del Umbral ───────── */
+
+    .bloom-shell {
+      position: absolute;
+      inset: clamp(42px, 5.5vw, 78px);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 26px;
+      border: 1px solid rgb(203 173 94 / 0.43);
+      background:
+        radial-gradient(circle at 50% 43%, rgb(142 113 49 / 0.1), transparent 40%),
+        linear-gradient(145deg, rgb(13 23 24 / 0.97), rgb(3 8 9 / 0.985));
+      padding: clamp(34px, 5vw, 66px);
+      box-shadow: 0 36px 100px rgb(0 0 0 / 0.64), inset 0 0 70px rgb(166 130 45 / 0.045);
+      transform-origin: var(--origin-x) var(--origin-y);
+    }
+
+    .stage.is-open[data-variant="bloom"] .bloom-shell { animation: bloom-open 620ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+    .bloom-shell::before,
+    .bloom-shell::after {
+      position: absolute;
+      inset: 11px;
+      border: 1px solid rgb(188 159 82 / 0.12);
+      content: "";
+      pointer-events: none;
+    }
+
+    .bloom-shell::after {
+      inset: auto 13% -1px;
+      height: 1px;
+      border: 0;
+      background: linear-gradient(90deg, transparent, #d0ad58, transparent);
+      box-shadow: 0 0 16px rgb(204 166 72 / 0.35);
+      animation: threshold-line 2.5s ease-in-out infinite;
+    }
+
+    .bloom-head { display: grid; justify-items: center; gap: 7px; text-align: center; }
+    .bloom-head h2 { margin: 0; color: #e8ddbb; font-family: var(--display); font-size: clamp(27px, 3.2vw, 46px); font-weight: 400; letter-spacing: 0.03em; }
+    .bloom-head p { margin: 0; color: #77847e; font-family: var(--serif); font-size: 13px; }
+
+    .bloom-routes {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .bloom-routes .route-button { min-height: 220px; align-content: end; padding: 28px; }
+    .bloom-routes .route-button::before {
+      position: absolute;
+      top: -100px;
+      left: 50%;
+      width: 190px;
+      height: 190px;
+      border: 1px solid rgb(188 159 82 / 0.21);
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 23px rgb(180 149 75 / 0.028);
+      content: "";
+      transform: translateX(-50%);
+      transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms ease;
+    }
+    .bloom-routes .route-button:hover::before { border-color: rgb(216 184 99 / 0.5); transform: translateX(-50%) rotate(38deg) scale(1.09); }
+
+    .bloom-foot { display: flex; align-items: center; justify-content: center; gap: 13px; color: #5f6c66; font-family: var(--serif); font-size: 11px; }
+    .bloom-foot::before, .bloom-foot::after { width: 80px; height: 1px; background: linear-gradient(90deg, transparent, rgb(146 130 83 / 0.4)); content: ""; }
+    .bloom-foot::after { transform: scaleX(-1); }
+
+    .bloom-motes { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+    .bloom-motes i { position: absolute; bottom: -10px; left: var(--x); width: var(--s); height: var(--s); border-radius: 50%; background: #d3b662; box-shadow: 0 0 9px #caa750; opacity: 0; animation: mote-rise var(--d) var(--delay) linear infinite; }
+
+    /* ───────── B · fisura cardinal ───────── */
+
+    .rift-field { position: absolute; inset: 0; overflow: hidden; }
+
+    .rift-plane {
+      position: absolute;
+      inset: 4%;
+      border: 1px solid rgb(179 155 92 / 0.22);
+      background: rgb(3 9 10 / 0.94);
+      box-shadow: 0 30px 90px rgb(0 0 0 / 0.58);
+    }
+
+    .rift-plane.player {
+      clip-path: polygon(0 0, 61% 0, 43% 100%, 0 100%);
+      background:
+        radial-gradient(circle at 34% 45%, rgb(72 116 91 / 0.14), transparent 38%),
+        linear-gradient(120deg, rgb(12 26 23 / 0.98), rgb(3 9 10 / 0.98));
+    }
+
+    .rift-plane.seed {
+      clip-path: polygon(61% 0, 100% 0, 100% 100%, 43% 100%);
+      background:
+        radial-gradient(circle at 70% 46%, rgb(129 95 42 / 0.13), transparent 37%),
+        linear-gradient(300deg, rgb(21 19 13 / 0.98), rgb(3 9 10 / 0.98));
+    }
+
+    .stage.is-open[data-variant="rift"] .rift-plane.player { animation: rift-plane-left 680ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .stage.is-open[data-variant="rift"] .rift-plane.seed { animation: rift-plane-right 680ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+    .rift-line {
+      position: absolute;
+      z-index: 5;
+      top: 50%;
+      left: 52%;
+      width: 3px;
+      height: 140vmax;
+      background: linear-gradient(180deg, transparent, #b6c993 18%, #fff3c2 50%, #bd9b51 82%, transparent);
+      box-shadow: 0 0 14px #e8d69e, 0 0 46px rgb(117 148 89 / 0.72), 0 0 90px rgb(184 140 52 / 0.24);
+      opacity: 0;
+      transform: translate(-50%, -50%) rotate(11deg) scaleY(0.05);
+    }
+
+    .stage.is-open[data-variant="rift"] .rift-line { animation: rift-strike 900ms cubic-bezier(0.22, 0.76, 0.18, 1) both; }
+
+    .rift-copy {
+      position: absolute;
+      z-index: 7;
+      top: 12%;
+      left: 50%;
+      width: min(760px, 78%);
+      text-align: center;
+      transform: translateX(-50%);
+    }
+
+    .rift-copy h2 { margin: 8px 0 5px; color: #eadfbd; font-family: var(--display); font-size: clamp(28px, 3.3vw, 48px); font-weight: 400; }
+    .rift-copy p { margin: 0; color: #77847e; font-family: var(--serif); font-size: 13px; }
+
+    .rift-routes { position: absolute; z-index: 8; inset: 0; }
+    .rift-routes .route-button { position: absolute; top: 35%; width: min(34%, 460px); min-height: 260px; border: 0; background: transparent; box-shadow: none; }
+    .rift-routes .route-button:hover { background: rgb(255 255 255 / 0.018); transform: translateY(-3px); }
+    .rift-routes .route-button:first-child { left: 10%; padding: 28px 50px 28px 28px; }
+    .rift-routes .route-button:last-child { right: 9%; padding: 28px 28px 28px 50px; text-align: right; }
+    .rift-routes .route-button::before { position: absolute; top: 0; bottom: 0; width: 1px; background: linear-gradient(transparent, rgb(193 163 85 / 0.5), transparent); content: ""; }
+    .rift-routes .route-button:first-child::before { left: 0; }
+    .rift-routes .route-button:last-child::before { right: 0; }
+    .rift-routes .route-button:hover::before { background: linear-gradient(transparent, #e1c271, transparent); box-shadow: 0 0 16px rgb(205 169 75 / 0.4); }
+
+    .rift-glyph { display: grid; width: 48px; height: 48px; margin-bottom: 25px; border: 1px solid #8c7b4e; place-items: center; color: #c5ac66; font-size: 18px; transform: rotate(45deg); }
+    .rift-glyph i { font-style: normal; transform: rotate(-45deg); }
+    .rift-routes .route-button:last-child .rift-glyph { margin-left: auto; }
+
+    /* ───────── C · folio que se abre ───────── */
+
+    .folio-shadow {
+      position: absolute;
+      inset: 5% 8%;
+      background: rgb(0 0 0 / 0.42);
+      box-shadow: 0 36px 100px #000;
+      opacity: 0;
+    }
+    .stage.is-open[data-variant="folio"] .folio-shadow { animation: folio-shadow-in 580ms ease both; }
+
+    .folio-book {
+      position: absolute;
+      inset: 5% 8%;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      perspective: 1500px;
+    }
+
+    .folio-page {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgb(176 150 87 / 0.34);
+      background:
+        repeating-linear-gradient(0deg, transparent 0 25px, rgb(188 159 91 / 0.021) 26px),
+        linear-gradient(145deg, rgb(20 28 28 / 0.98), rgb(5 11 12 / 0.99));
+      box-shadow: inset 0 0 70px rgb(0 0 0 / 0.36);
+      transform-origin: right center;
+    }
+
+    .folio-page.right {
+      background:
+        repeating-linear-gradient(0deg, transparent 0 25px, rgb(188 159 91 / 0.021) 26px),
+        linear-gradient(215deg, rgb(24 26 21 / 0.98), rgb(5 11 12 / 0.99));
+      transform-origin: left center;
+    }
+
+    .stage.is-open[data-variant="folio"] .folio-page.left { animation: folio-left-open 760ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .stage.is-open[data-variant="folio"] .folio-page.right { animation: folio-right-open 760ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+    .folio-page::after {
+      position: absolute;
+      top: 8%;
+      bottom: 8%;
+      width: 1px;
+      background: linear-gradient(transparent, rgb(188 158 82 / 0.38), transparent);
+      content: "";
+    }
+    .folio-page.left::after { right: 7%; }
+    .folio-page.right::after { left: 7%; }
+
+    .folio-title {
+      position: absolute;
+      z-index: 8;
+      top: 11%;
+      left: 50%;
+      width: min(700px, 70%);
+      text-align: center;
+      transform: translateX(-50%);
+    }
+    .folio-title h2 { margin: 7px 0 4px; color: #e8dcbc; font-family: var(--display); font-size: clamp(26px, 3vw, 43px); font-weight: 400; }
+    .folio-title p { margin: 0; color: #78847e; font-family: var(--serif); font-size: 12px; }
+
+    .folio-routes { position: absolute; z-index: 9; inset: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 25% 12% 11%; }
+    .folio-routes .route-button { min-height: 230px; border: 0; background: transparent; box-shadow: none; padding: 28px 12%; }
+    .folio-routes .route-button:last-child { text-align: right; }
+    .folio-routes .route-button:hover { background: linear-gradient(90deg, transparent, rgb(208 176 92 / 0.035), transparent); transform: translateY(-2px); }
+    .folio-route-number { margin-bottom: 18px; color: #7c6a43; font-family: var(--display); font-size: 44px; line-height: 1; }
+
+    .folio-spine {
+      position: absolute;
+      z-index: 10;
+      top: 5%;
+      bottom: 5%;
+      left: 50%;
+      width: 1px;
+      background: linear-gradient(transparent, #bba05a 12%, #e8d38e 50%, #bba05a 88%, transparent);
+      box-shadow: 0 0 20px rgb(200 164 74 / 0.35), -12px 0 24px rgb(0 0 0 / 0.44), 12px 0 24px rgb(0 0 0 / 0.44);
+    }
+
+    .folio-spine::before {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 16px;
+      height: 16px;
+      border: 1px solid #c9aa59;
+      background: #43371e;
+      box-shadow: 0 0 18px rgb(206 172 81 / 0.4);
+      content: "";
+      transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    /* ───────── D · instrumento del Destino ───────── */
+
+    .dial-veil {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgb(7 15 15 / 0.94), rgb(1 5 6 / 0.88) 58%, rgb(0 2 3 / 0.58));
+      opacity: 0;
+    }
+    .stage.is-open[data-variant="dial"] .dial-veil { animation: dial-veil-in 620ms ease both; }
+
+    .dial-instrument {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: min(68vw, 760px);
+      aspect-ratio: 1;
+      border: 1px solid rgb(183 157 91 / 0.38);
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 34px rgb(162 134 69 / 0.025), inset 0 0 0 35px rgb(183 157 91 / 0.12), 0 0 70px rgb(123 98 43 / 0.08);
+      transform: translate(-50%, -50%);
+    }
+    .stage.is-open[data-variant="dial"] .dial-instrument { animation: dial-grow 760ms cubic-bezier(0.16, 1, 0.3, 1) both, dial-idle 30s 760ms linear infinite; }
+
+    .dial-instrument::before,
+    .dial-instrument::after {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      content: "";
+      transform: translate(-50%, -50%);
+    }
+    .dial-instrument::before { width: 72%; height: 72%; border: 1px dashed rgb(190 160 83 / 0.28); border-radius: 50%; }
+    .dial-instrument::after { width: 138%; height: 1px; background: linear-gradient(90deg, transparent, rgb(190 160 83 / 0.3), transparent); }
+
+    .dial-axis-y {
+      position: absolute;
+      top: -19%;
+      bottom: -19%;
+      left: 50%;
+      width: 1px;
+      background: linear-gradient(transparent, rgb(190 160 83 / 0.27), transparent);
+    }
+
+    .dial-heart {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      border: 1px solid #d2b663;
+      background: #42361d;
+      box-shadow: 0 0 22px rgb(216 179 79 / 0.5);
+      transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    .dial-copy {
+      position: absolute;
+      z-index: 7;
+      top: 10%;
+      left: 50%;
+      width: min(760px, 78%);
+      text-align: center;
+      transform: translateX(-50%);
+    }
+    .dial-copy h2 { margin: 7px 0 4px; color: #e9ddba; font-family: var(--display); font-size: clamp(27px, 3vw, 44px); font-weight: 400; }
+    .dial-copy p { margin: 0; color: #74817b; font-family: var(--serif); font-size: 12px; }
+
+    .dial-routes { position: absolute; z-index: 8; inset: 0; }
+    .dial-routes .route-button { position: absolute; top: 42%; width: min(30%, 380px); min-height: 170px; border: 0; background: radial-gradient(circle at center, rgb(14 26 24 / 0.88), transparent 72%); box-shadow: none; }
+    .dial-routes .route-button:hover { background: radial-gradient(circle at center, rgb(37 47 38 / 0.88), transparent 72%); transform: translateY(-3px); }
+    .dial-routes .route-button:first-child { left: 8%; padding: 24px 42px 24px 24px; text-align: right; }
+    .dial-routes .route-button:last-child { right: 8%; padding: 24px 24px 24px 42px; }
+    .dial-route-mark { display: grid; width: 42px; height: 42px; margin-bottom: 18px; border: 1px solid #8c794b; border-radius: 50%; place-items: center; color: #c1a85e; }
+    .dial-routes .route-button:first-child .dial-route-mark { margin-left: auto; }
+
+    .dial-north,
+    .dial-south { position: absolute; z-index: 9; left: 50%; color: #776746; font-family: var(--display); font-size: 10px; letter-spacing: 0.16em; transform: translateX(-50%); }
+    .dial-north { top: 29%; }
+    .dial-south { bottom: 12%; }
+
+    /* ───────── resultado pequeño de cada ruta ───────── */
+
+    .endpoint {
+      position: absolute;
+      z-index: 120;
+      inset: 0;
+      display: grid;
+      visibility: hidden;
+      place-items: center;
+      background: rgb(0 4 5 / 0.78);
+      opacity: 0;
+      backdrop-filter: blur(6px);
+      transition: opacity 180ms ease, visibility 180ms;
+    }
+    .endpoint.is-open { visibility: visible; opacity: 1; }
+
+    .endpoint-panel {
+      position: relative;
+      display: none;
+      width: min(720px, 86%);
+      min-height: 390px;
+      align-content: center;
+      justify-items: center;
+      overflow: hidden;
+      border: 1px solid rgb(204 172 90 / 0.47);
+      background:
+        radial-gradient(circle at 50% 38%, rgb(145 114 48 / 0.12), transparent 39%),
+        linear-gradient(145deg, rgb(13 22 23 / 0.99), rgb(3 8 9 / 0.99));
+      padding: 52px clamp(32px, 5vw, 74px);
+      box-shadow: 0 40px 110px #000, inset 0 0 60px rgb(154 118 39 / 0.05);
+      text-align: center;
+      animation: endpoint-in 430ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .endpoint[data-route="random"] .endpoint-random,
+    .endpoint[data-route="seed"] .endpoint-seed { display: grid; }
+
+    .endpoint-panel::before,
+    .endpoint-panel::after { position: absolute; left: 10%; width: 80%; height: 1px; background: linear-gradient(90deg, transparent, rgb(205 171 82 / 0.58), transparent); content: ""; }
+    .endpoint-panel::before { top: 12px; }
+    .endpoint-panel::after { bottom: 12px; }
+
+    .endpoint-panel h2 { margin: 8px 0; color: #eadfbc; font-family: var(--display); font-size: clamp(28px, 3.4vw, 46px); font-weight: 400; }
+    .endpoint-panel p { max-width: 540px; margin: 0 0 22px; color: #7d8983; font-family: var(--serif); font-size: 13px; line-height: 1.55; }
+    .endpoint-future { margin: 6px 0 16px; color: #eedb9c; font-family: var(--display); font-size: clamp(38px, 5vw, 62px); letter-spacing: 0.07em; text-shadow: 0 0 24px rgb(190 150 59 / 0.25); }
+
+    .seed-field {
+      display: grid;
+      width: min(560px, 100%);
+      grid-template-columns: 15px minmax(0, 1fr) 15px;
+      align-items: center;
+      border-top: 1px solid rgb(199 168 88 / 0.55);
+      border-bottom: 1px solid rgb(199 168 88 / 0.55);
+      background: linear-gradient(90deg, transparent, rgb(73 60 31 / 0.16) 20%, rgb(5 11 12 / 0.84) 50%, rgb(73 60 31 / 0.16) 80%, transparent);
+      padding: 7px 3px;
+    }
+    .seed-field::before, .seed-field::after { width: 8px; height: 8px; border: 1px solid #a58c4f; content: ""; transform: rotate(45deg); }
+    .seed-field.is-valid { border-color: rgb(136 170 113 / 0.68); }
+    .seed-field.is-invalid { border-color: rgb(182 86 68 / 0.72); animation: reject 280ms ease; }
+    .seed-field input { min-width: 0; border: 0; background: transparent; padding: 8px 14px; color: #e8d8a7; font-family: var(--display); font-size: clamp(15px, 2vw, 23px); letter-spacing: 0.11em; text-align: center; text-transform: uppercase; }
+    .seed-field input::placeholder { color: #4d5a55; }
+    .seed-field input:focus { outline: none; }
+    .seed-help { min-height: 36px; margin: 11px 0 5px !important; color: #68756f !important; font-family: var(--sans) !important; font-size: 10px !important; }
+    .seed-help.is-valid { color: #a7b68e !important; }
+    .seed-help.is-invalid { color: #c08372 !important; }
+
+    .endpoint-actions { display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .endpoint-actions button {
+      min-height: 43px;
+      border: 1px solid rgb(183 157 87 / 0.45);
+      background: linear-gradient(115deg, #303b38, #15201f 66%, #26302e);
+      padding: 8px 20px;
+      color: #dccfab;
+      font-family: var(--serif);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .endpoint-actions button:hover:not(:disabled) { border-color: #d8b96b; filter: brightness(1.1); }
+    .endpoint-actions button:disabled { cursor: not-allowed; opacity: 0.3; }
+    .endpoint-actions .quiet { border-color: transparent; background: transparent; color: #6d7a74; font-family: var(--sans); font-size: 9px; }
+
+    /* ───────── notas ───────── */
+
+    .notes {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .note {
+      border: 1px solid rgb(154 137 88 / 0.18);
+      background: linear-gradient(145deg, rgb(10 16 17 / 0.84), rgb(5 9 10 / 0.74));
+      padding: 20px 22px;
+    }
+    .note h2 { margin: 7px 0 7px; color: #cbc3a8; font-family: var(--serif); font-size: 18px; font-weight: 400; }
+    .note p { margin: 0; color: #74817b; font-size: 12px; line-height: 1.58; }
+    .note b { color: #aab49d; font-weight: 500; }
+
+    @keyframes star-drift { to { transform: translate3d(-18px, 12px, 0); } }
+    @keyframes nebula-spin { to { transform: rotate(360deg); } }
+    @keyframes play-line { 0%, 100% { opacity: 0.2; transform: scaleX(0.4); } 50% { opacity: 1; transform: scaleX(1); } }
+    @keyframes bloom-open { 0% { opacity: 0; clip-path: inset(44% 60% 44% 12%); transform: scale(0.84); } 48% { opacity: 1; clip-path: inset(7% 8% 7% 8%); } 100% { opacity: 1; clip-path: inset(0); transform: scale(1); } }
+    @keyframes threshold-line { 0%, 100% { opacity: 0.3; transform: scaleX(0.35); } 50% { opacity: 1; transform: scaleX(1); } }
+    @keyframes mote-rise { 0% { opacity: 0; transform: translate(0, 0) scale(0.7); } 18% { opacity: 0.75; } 82% { opacity: 0.22; } 100% { opacity: 0; transform: translate(var(--drift), -68vh) scale(1.2); } }
+    @keyframes rift-plane-left { from { opacity: 0; transform: translate(-32%, 25%); } to { opacity: 1; transform: none; } }
+    @keyframes rift-plane-right { from { opacity: 0; transform: translate(32%, -25%); } to { opacity: 1; transform: none; } }
+    @keyframes rift-strike { 0% { opacity: 0; transform: translate(-50%, -50%) rotate(11deg) scaleY(0.03); } 30% { opacity: 1; transform: translate(-50%, -50%) rotate(11deg) scaleY(1); } 100% { opacity: 0.64; transform: translate(-50%, -50%) rotate(11deg) scaleY(1.03); } }
+    @keyframes folio-shadow-in { from { opacity: 0; transform: scale(0.82); } to { opacity: 1; transform: none; } }
+    @keyframes folio-left-open { from { opacity: 0; transform: perspective(1400px) rotateY(78deg) translateX(28%); } to { opacity: 1; transform: none; } }
+    @keyframes folio-right-open { from { opacity: 0; transform: perspective(1400px) rotateY(-78deg) translateX(-28%); } to { opacity: 1; transform: none; } }
+    @keyframes dial-veil-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes dial-grow { from { opacity: 0; transform: translate(-50%, -50%) scale(0.12) rotate(-32deg); } 62% { opacity: 1; transform: translate(-50%, -50%) scale(1.05) rotate(3deg); } to { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); } }
+    @keyframes dial-idle { to { transform: translate(-50%, -50%) rotate(360deg); } }
+    @keyframes endpoint-in { from { opacity: 0; transform: translateY(20px) scale(0.975); } to { opacity: 1; transform: none; } }
+    @keyframes reject { 25% { transform: translateX(-4px); } 55% { transform: translateX(4px); } 80% { transform: translateX(-2px); } }
+
+    @media (max-width: 980px) {
+      .document { width: min(100% - 20px, 1480px); padding-top: 34px; }
+      .lab-controls { align-items: flex-start; flex-direction: column; }
+      .stage { min-height: 700px; aspect-ratio: auto; }
+      .home-panel { width: 52%; }
+      .bloom-shell { inset: 42px; }
+      .notes { grid-template-columns: 1fr; }
+      .dial-instrument { width: 670px; }
+    }
+
+    @media (max-width: 720px) {
+      .stage { min-height: 790px; }
+      .home-panel { width: 100%; padding-inline: 28px; }
+      .home-sigil { display: none; }
+      .bloom-shell { inset: 24px 14px; padding: 50px 22px 30px; }
+      .bloom-routes { grid-template-columns: 1fr; }
+      .bloom-routes .route-button { min-height: 170px; }
+      .rift-copy, .folio-title, .dial-copy { top: 12%; width: 88%; }
+      .rift-routes .route-button { top: 31%; width: 43%; min-height: 330px; }
+      .rift-routes .route-button:first-child { left: 3%; padding: 22px 20px; }
+      .rift-routes .route-button:last-child { right: 3%; padding: 22px 20px; }
+      .folio-book, .folio-shadow { inset: 7% 3%; }
+      .folio-routes { padding: 31% 5% 11%; }
+      .folio-routes .route-button { padding: 20px; }
+      .dial-instrument { width: 620px; }
+      .dial-routes .route-button { top: 35%; width: 43%; min-height: 280px; }
+      .dial-routes .route-button:first-child { left: 3%; padding: 22px 15px; }
+      .dial-routes .route-button:last-child { right: 3%; padding: 22px 15px; }
+      .dial-north { top: 25%; }
+      .endpoint-panel { width: 94%; padding-inline: 24px; }
+      .endpoint-actions { align-items: stretch; flex-direction: column; width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="document">
+    <header class="document-head">
+      <span class="kicker">Maqueta interactiva · Segunda exploración</span>
+      <h1>Umbral y pantalla, en un solo gesto</h1>
+      <p>
+        En las cuatro versiones, el Umbral nace desde la entrada <b>Jugar</b>, ocupa progresivamente el
+        viewport y conserva el menú vivo detrás. Cambia la gramática del movimiento: expansión de placa,
+        fisura, folio físico o instrumento del Destino.
+      </p>
+    </header>
+
+    <section class="lab-controls" aria-label="Selector de versión">
+      <div class="lab-copy">
+        <span class="lab-label">Versión del Umbral</span>
+        <small>Elige una versión y pulsa Jugar dentro del marco para repetir su entrada.</small>
+      </div>
+      <div class="variant-switch" role="group" aria-label="Versiones del Umbral">
+        <button class="is-active is-recommended" type="button" data-variant-choice="bloom">A · Expansión</button>
+        <button type="button" data-variant-choice="rift">B · Fisura</button>
+        <button type="button" data-variant-choice="folio">C · Folio</button>
+        <button type="button" data-variant-choice="dial">D · Astrolabio</button>
+      </div>
+    </section>
+
+    <section class="stage" id="stage" data-variant="bloom">
+      <div class="cosmos"></div>
+      <div class="stage-shade"></div>
+      <div class="grain"></div>
+      <div class="edge-vignette"></div>
+      <span class="demo-badge">Interactiva · Jugar / Esc</span>
+
+      <section class="home" id="home" aria-label="Menú principal">
+        <aside class="home-panel">
+          <div class="brand">
+            <span class="menu-kicker">Crónicas de los Reinos Quebrados</span>
+            <h1>Hostfall</h1>
+            <div class="brand-act">Acto I — Coronas sobre cenizas</div>
+          </div>
+
+          <nav class="menu-nav" aria-label="Menú principal de la maqueta">
+            <button class="menu-entry is-play" id="play-button" type="button">
+              <span class="mark"></span><span>Jugar</span><small>Abrir Umbral</small>
+            </button>
+            <button class="menu-entry" type="button"><span class="mark"></span><span>Crónicas</span></button>
+            <button class="menu-entry" type="button"><span class="mark"></span><span>Huestes</span></button>
+            <button class="menu-entry" type="button"><span class="mark"></span><span>Semillas del Destino</span></button>
+            <button class="menu-entry" type="button"><span class="mark"></span><span>Cómo jugar</span></button>
+            <button class="menu-entry" type="button"><span class="mark"></span><span>Ajustes</span></button>
+          </nav>
+
+          <div class="profile">
+            <span class="profile-glyph"><i>◆</i></span>
+            <div><strong>Leo</strong><small>Cronista</small></div>
+          </div>
+        </aside>
+        <div class="home-sigil" aria-hidden="true"></div>
+      </section>
+
+      <section class="threshold" id="threshold" role="dialog" aria-modal="true" aria-label="Elegir cómo abrir el próximo Futuro" aria-hidden="true">
+        <button class="threshold-scrim" type="button" data-close-threshold tabindex="-1" aria-label="Cerrar Umbral"></button>
+        <button class="threshold-close" type="button" data-close-threshold>← Volver al menú</button>
+
+        <article class="composition composition-bloom" aria-label="Versión A, expansión del Umbral">
+          <div class="bloom-shell">
+            <div class="bloom-motes" aria-hidden="true">
+              <i style="--x:9%;--s:2px;--d:8s;--delay:-2s;--drift:22px"></i>
+              <i style="--x:21%;--s:3px;--d:11s;--delay:-7s;--drift:-17px"></i>
+              <i style="--x:38%;--s:2px;--d:9s;--delay:-4s;--drift:31px"></i>
+              <i style="--x:58%;--s:2px;--d:10s;--delay:-8s;--drift:-24px"></i>
+              <i style="--x:76%;--s:3px;--d:12s;--delay:-5s;--drift:18px"></i>
+              <i style="--x:91%;--s:2px;--d:8.5s;--delay:-6s;--drift:-28px"></i>
+            </div>
+            <header class="bloom-head">
+              <span class="choice-eyebrow">El Umbral está abierto</span>
+              <h2>¿Qué Futuro contemplarás?</h2>
+              <p>El menú permanece detrás; la decisión ocupa ahora toda la atención.</p>
+            </header>
+            <div class="bloom-routes">
+              <button class="route-button" type="button" data-route="random">
+                <small>Descubrir</small><strong>Un Futuro aleatorio</strong>
+                <span>Abre una línea temporal nueva y decide sus fuerzas en Preparación.</span>
+              </button>
+              <button class="route-button" type="button" data-route="seed">
+                <small>Reproducir</small><strong>Inscribir una Seed</strong>
+                <span>Escribe una identidad conocida y viaja directamente hacia su choque.</span>
+              </button>
+            </div>
+            <div class="bloom-foot">Dos puertas, un mismo Destino</div>
+          </div>
+        </article>
+
+        <article class="composition composition-rift" aria-label="Versión B, fisura cardinal">
+          <div class="rift-field">
+            <div class="rift-plane player"></div>
+            <div class="rift-plane seed"></div>
+            <span class="rift-line"></span>
+            <header class="rift-copy">
+              <span class="choice-eyebrow">El Destino se ha partido</span>
+              <h2>Dos caminos cruzan el Umbral</h2>
+              <p>La fisura separa lo desconocido de lo ya inscrito.</p>
+            </header>
+            <div class="rift-routes">
+              <button class="route-button" type="button" data-route="random">
+                <span class="rift-glyph"><i>✦</i></span>
+                <small>Izquierda · Lo desconocido</small><strong>Futuro aleatorio</strong>
+                <span>Contempla una posibilidad que todavía no tiene historia.</span>
+              </button>
+              <button class="route-button" type="button" data-route="seed">
+                <span class="rift-glyph"><i>◆</i></span>
+                <small>Derecha · Lo inscrito</small><strong>Jugar una Seed</strong>
+                <span>Convoca una línea temporal que ya tiene identidad.</span>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article class="composition composition-folio" aria-label="Versión C, folio del Cronista">
+          <div class="folio-shadow"></div>
+          <div class="folio-book">
+            <div class="folio-page left"></div>
+            <div class="folio-page right"></div>
+          </div>
+          <header class="folio-title">
+            <span class="choice-eyebrow">Una página todavía en blanco</span>
+            <h2>¿Cómo comienza esta Crónica?</h2>
+            <p>El Umbral se despliega como dos hojas físicas sobre el menú.</p>
+          </header>
+          <div class="folio-routes">
+            <button class="route-button" type="button" data-route="random">
+              <span class="folio-route-number">I</span>
+              <small>Escribir</small><strong>Contemplar un Futuro</strong>
+              <span>Deja que el Destino trace la primera línea.</span>
+            </button>
+            <button class="route-button" type="button" data-route="seed">
+              <span class="folio-route-number">II</span>
+              <small>Recordar</small><strong>Inscribir una Seed</strong>
+              <span>Abre una página cuya identidad ya conoces.</span>
+            </button>
+          </div>
+          <span class="folio-spine" aria-hidden="true"></span>
+        </article>
+
+        <article class="composition composition-dial" aria-label="Versión D, astrolabio del Destino">
+          <div class="dial-veil"></div>
+          <div class="dial-instrument" aria-hidden="true">
+            <span class="dial-axis-y"></span><span class="dial-heart"></span>
+          </div>
+          <header class="dial-copy">
+            <span class="choice-eyebrow">Instrumento del Destino</span>
+            <h2>Orienta el próximo Futuro</h2>
+            <p>El Umbral crece desde Jugar y convierte la pantalla en una brújula temporal.</p>
+          </header>
+          <span class="dial-north">000° · N</span>
+          <div class="dial-routes">
+            <button class="route-button" type="button" data-route="random">
+              <span class="dial-route-mark">✦</span>
+              <small>Oeste · Descubrir</small><strong>Futuro aleatorio</strong>
+              <span>Una nueva coordenada del Destino.</span>
+            </button>
+            <button class="route-button" type="button" data-route="seed">
+              <span class="dial-route-mark">◆</span>
+              <small>Este · Reproducir</small><strong>Jugar una Seed</strong>
+              <span>Una coordenada ya inscrita.</span>
+            </button>
+          </div>
+          <span class="dial-south">180° · S</span>
+        </article>
+      </section>
+
+      <section class="endpoint" id="endpoint" data-route="random" role="dialog" aria-modal="true" aria-label="Continuar la ruta elegida" aria-hidden="true">
+        <article class="endpoint-panel endpoint-random">
+          <span class="endpoint-kicker">Siguiente paso · Preparación</span>
+          <h2>El Futuro ha sido contemplado</h2>
+          <strong class="endpoint-future">Futuro <span id="random-future-code">980·965</span></strong>
+          <p>Desde aquí aparecería la nueva Preparación: sin seed visible, con este número como protagonista y la opción de regenerarlo.</p>
+          <div class="endpoint-actions">
+            <button class="quiet" type="button" data-close-endpoint>Volver al Umbral</button>
+            <button type="button" data-rewrite-future>Regenerar este Futuro</button>
+          </div>
+        </article>
+
+        <article class="endpoint-panel endpoint-seed">
+          <span class="endpoint-kicker">Siguiente paso · Inscripción</span>
+          <h2>Inscribir una Seed</h2>
+          <p>Este paso conserva el dramatismo del Umbral, valida una Canon Seed y después abre directamente el choque.</p>
+          <label class="seed-field" id="seed-field" for="seed-input">
+            <input id="seed-input" aria-label="Canon Seed" autocomplete="off" spellcheck="false" placeholder="HF1-ELA-GRV-XX2-XXX" />
+          </label>
+          <p class="seed-help" id="seed-help">Prueba con HF1-ELA-GRV-082-QC5</p>
+          <div class="endpoint-actions">
+            <button class="quiet" type="button" data-close-endpoint>Volver al Umbral</button>
+            <button id="seed-confirm" type="button" disabled>Ir al choque</button>
+          </div>
+        </article>
+      </section>
+    </section>
+
+    <section class="notes" aria-label="Lectura de las versiones">
+      <article class="note">
+        <span id="note-label">A · Dirección recomendada</span>
+        <h2 id="note-title">Expansión del Umbral</h2>
+        <p id="note-body">La placa nace visualmente desde <b>Jugar</b> y termina como pantalla completa. Es la transición más clara: mantiene la continuidad espacial sin competir con las dos opciones.</p>
+      </article>
+      <article class="note">
+        <span>A favor</span>
+        <h2 id="note-pro-title">Jerarquía inmediata</h2>
+        <p id="note-pro-body">El jugador entiende que sigue dentro de Jugar y que sólo ha abierto una decisión adicional.</p>
+      </article>
+      <article class="note">
+        <span>A vigilar</span>
+        <h2 id="note-risk-title">No volverlo otro modal</h2>
+        <p id="note-risk-body">Necesita ocupar casi todo el viewport y conservar aire en los bordes para sentirse Umbral, no cuadro de confirmación.</p>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const stage = document.getElementById("stage");
+      const threshold = document.getElementById("threshold");
+      const playButton = document.getElementById("play-button");
+      const endpoint = document.getElementById("endpoint");
+      const randomFutureCode = document.getElementById("random-future-code");
+      const seedInput = document.getElementById("seed-input");
+      const seedField = document.getElementById("seed-field");
+      const seedHelp = document.getElementById("seed-help");
+      const seedConfirm = document.getElementById("seed-confirm");
+
+      const notes = {
+        bloom: {
+          label: "A · Dirección recomendada",
+          title: "Expansión del Umbral",
+          body: "La placa nace visualmente desde <b>Jugar</b> y termina como pantalla completa. Es la transición más clara: mantiene la continuidad espacial sin competir con las dos opciones.",
+          proTitle: "Jerarquía inmediata",
+          proBody: "El jugador entiende que sigue dentro de Jugar y que sólo ha abierto una decisión adicional.",
+          riskTitle: "No volverlo otro modal",
+          riskBody: "Necesita ocupar casi todo el viewport y conservar aire en los bordes para sentirse Umbral, no cuadro de confirmación."
+        },
+        rift: {
+          label: "B · Mayor impacto",
+          title: "Fisura cardinal",
+          body: "La pantalla se parte en dos territorios: lo desconocido y lo inscrito. Es la versión más enérgica y anticipa el lenguaje del choque sin reproducirlo literalmente.",
+          proTitle: "Las rutas son opuestas",
+          proBody: "La geometría explica la diferencia entre descubrir y reproducir antes de leer el texto.",
+          riskTitle: "Puede prometer conflicto",
+          riskBody: "La fisura tiene tanta fuerza que debe reservarse para esta decisión; repetirla en otros menús diluiría el choque real."
+        },
+        folio: {
+          label: "C · Más táctil",
+          title: "Folio del Cronista",
+          body: "Dos hojas oscuras se despliegan sobre el menú y convierten la elección en el inicio material de una Crónica. Es la versión más cercana al tono de estrategia de principios de los 2000.",
+          proTitle: "Objeto reconocible",
+          proBody: "El gesto de abrir páginas conecta Jugar con escribir la Crónica sin explicar mecánicas.",
+          riskTitle: "Menos cósmica",
+          riskBody: "Si el material se vuelve demasiado pergamino, pierde continuidad con el TemporalBackdrop y con Semillas del Destino."
+        },
+        dial: {
+          label: "D · Mayor identidad",
+          title: "Astrolabio del Destino",
+          body: "El instrumento de grados crece desde Jugar y orienta las dos rutas en puntos opuestos. Une el menú con el lenguaje visual del tablero y de los desenlaces.",
+          proTitle: "Pertenece a Hostfall",
+          proBody: "No parece un selector genérico: reutiliza una pieza narrativa que ya significa Futuro.",
+          riskTitle: "Demasiado protagonista",
+          riskBody: "La animación y el aro pueden robar atención a las opciones; conviene usarla sólo si el número de Futuro mantiene el protagonismo después."
+        }
+      };
+
+      function hashSeed(seed) {
+        let hash = 2166136261;
+        for (let index = 0; index < seed.length; index += 1) {
+          hash ^= seed.charCodeAt(index);
+          hash = Math.imul(hash, 16777619);
+        }
+        return hash >>> 0 || 1;
+      }
+
+      function futureCodeFromSeed(seed) {
+        const value = (hashSeed(seed) % 999999) + 1;
+        const digits = String(value).padStart(6, "0");
+        return `${digits.slice(0, 3)}·${digits.slice(3)}`;
+      }
+
+      function randomCanonCode() {
+        const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        let entropy = "";
+        while (entropy.length < 5) {
+          const bytes = new Uint8Array(1);
+          if (window.crypto && window.crypto.getRandomValues) window.crypto.getRandomValues(bytes);
+          else bytes[0] = Math.floor(Math.random() * 252);
+          if (bytes[0] >= 252) continue;
+          entropy += alphabet[bytes[0] % alphabet.length];
+        }
+        return `HF1-ELA-GRV-${entropy.slice(0, 2)}2-${entropy.slice(2)}`;
+      }
+
+      function validCanonSeed(value) {
+        return /^HF1-(ELA|CEC)-(GRV|VRK)-[A-Z0-9]{2}[123]-[A-Z0-9]{3}$/.test(value.trim().toUpperCase());
+      }
+
+      function openThreshold() {
+        const stageRect = stage.getBoundingClientRect();
+        const buttonRect = playButton.getBoundingClientRect();
+        const originX = ((buttonRect.left + buttonRect.width / 2 - stageRect.left) / stageRect.width) * 100;
+        const originY = ((buttonRect.top + buttonRect.height / 2 - stageRect.top) / stageRect.height) * 100;
+        stage.style.setProperty("--origin-x", `${originX}%`);
+        stage.style.setProperty("--origin-y", `${originY}%`);
+        stage.classList.remove("is-open");
+        void stage.offsetWidth;
+        stage.classList.add("is-open");
+        threshold.setAttribute("aria-hidden", "false");
+        window.setTimeout(() => threshold.querySelector("[data-route]")?.focus(), 160);
+      }
+
+      function closeThreshold() {
+        closeEndpoint();
+        stage.classList.remove("is-open");
+        threshold.setAttribute("aria-hidden", "true");
+        window.setTimeout(() => playButton.focus(), 40);
+      }
+
+      function openEndpoint(route) {
+        endpoint.dataset.route = route;
+        endpoint.classList.add("is-open");
+        endpoint.setAttribute("aria-hidden", "false");
+        if (route === "random") {
+          randomFutureCode.textContent = futureCodeFromSeed(randomCanonCode());
+          window.setTimeout(() => endpoint.querySelector("[data-rewrite-future]")?.focus(), 100);
+        } else {
+          seedInput.value = "";
+          updateSeedState();
+          window.setTimeout(() => seedInput.focus(), 100);
+        }
+      }
+
+      function closeEndpoint() {
+        endpoint.classList.remove("is-open");
+        endpoint.setAttribute("aria-hidden", "true");
+      }
+
+      function updateSeedState() {
+        const value = seedInput.value.trim().toUpperCase();
+        const valid = validCanonSeed(value);
+        seedField.classList.toggle("is-valid", valid);
+        seedField.classList.toggle("is-invalid", value.length > 0 && !valid);
+        seedHelp.className = `seed-help${valid ? " is-valid" : value.length ? " is-invalid" : ""}`;
+        seedConfirm.disabled = !valid;
+        if (!value) seedHelp.textContent = "Prueba con HF1-ELA-GRV-082-QC5";
+        else if (!valid) seedHelp.textContent = "La identidad no coincide con una Canon Seed HF1 disponible.";
+        else seedHelp.textContent = `Futuro ${futureCodeFromSeed(value)} · identidad lista para el choque`;
+      }
+
+      function updateNotes(variant) {
+        const copy = notes[variant];
+        document.getElementById("note-label").textContent = copy.label;
+        document.getElementById("note-title").textContent = copy.title;
+        document.getElementById("note-body").innerHTML = copy.body;
+        document.getElementById("note-pro-title").textContent = copy.proTitle;
+        document.getElementById("note-pro-body").textContent = copy.proBody;
+        document.getElementById("note-risk-title").textContent = copy.riskTitle;
+        document.getElementById("note-risk-body").textContent = copy.riskBody;
+      }
+
+      playButton.addEventListener("click", openThreshold);
+      document.querySelectorAll("[data-close-threshold]").forEach((button) => button.addEventListener("click", closeThreshold));
+      document.querySelectorAll("[data-close-endpoint]").forEach((button) => button.addEventListener("click", closeEndpoint));
+      document.querySelectorAll("[data-route]").forEach((button) => button.addEventListener("click", () => openEndpoint(button.dataset.route)));
+
+      document.querySelectorAll("[data-variant-choice]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const variant = button.dataset.variantChoice;
+          closeThreshold();
+          stage.dataset.variant = variant;
+          document.querySelectorAll("[data-variant-choice]").forEach((item) => item.classList.toggle("is-active", item === button));
+          updateNotes(variant);
+        });
+      });
+
+      document.querySelector("[data-rewrite-future]").addEventListener("click", () => {
+        randomFutureCode.textContent = futureCodeFromSeed(randomCanonCode());
+        randomFutureCode.animate(
+          [{ opacity: 1, transform: "translateY(0)" }, { opacity: 0, transform: "translateY(-7px)" }, { opacity: 0, transform: "translateY(7px)" }, { opacity: 1, transform: "translateY(0)" }],
+          { duration: 430, easing: "cubic-bezier(.16,1,.3,1)" }
+        );
+      });
+
+      seedInput.addEventListener("input", () => {
+        seedInput.value = seedInput.value.toUpperCase().replace(/\s+/g, "");
+        updateSeedState();
+      });
+
+      seedInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && validCanonSeed(seedInput.value)) seedConfirm.click();
+      });
+
+      seedConfirm.addEventListener("click", () => {
+        if (!validCanonSeed(seedInput.value)) return;
+        seedHelp.textContent = `Futuro ${futureCodeFromSeed(seedInput.value.trim().toUpperCase())} · el choque comenzaría ahora`;
+        seedConfirm.textContent = "Identidad aceptada";
+        window.setTimeout(() => { seedConfirm.textContent = "Ir al choque"; }, 1100);
+      });
+
+      window.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return;
+        if (endpoint.classList.contains("is-open")) closeEndpoint();
+        else if (stage.classList.contains("is-open")) closeThreshold();
+      });
+
+      randomFutureCode.textContent = futureCodeFromSeed("HF1-ELA-GRV-082-QC5");
+      updateSeedState();
+    })();
+  </script>
+</body>
+</html>
