@@ -30,6 +30,7 @@ import { hostAttackPlayerHitDelay } from "../src/components/hostAttackPresentati
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { playerAttackHostHitDelay } from "../src/components/playerAttackPresentation";
 import { setupJustCompleted, setupPrimaryAction, setupProgress } from "../src/components/setupPresentation";
+import { tooltipCenterWithinViewport } from "../src/components/tooltipGeometry";
 import { CardStatsBadge, CardTraitTooltipBadge } from "../src/components/Card";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
 import { StabilizingEffect, stabilizingWaveStyles } from "../src/components/StabilizingEffect";
@@ -52,6 +53,20 @@ import {
   stabilizationCompletionTotalMs,
 } from "../src/store/stabilizationPresentation";
 import { addCard, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
+
+test("compact command-bar tooltips stay centered on their own control", () => {
+  assert.equal(
+    tooltipCenterWithinViewport(1772, 112, 1920),
+    1772,
+    "a short tooltip with enough room should not inherit the maximum tooltip width",
+  );
+  assert.equal(tooltipCenterWithinViewport(1890, 112, 1920), 1852);
+  assert.equal(tooltipCenterWithinViewport(36, 336, 1920), 180);
+
+  const tooltipSource = readFileSync(new URL("../src/components/GameTooltip.tsx", import.meta.url), "utf8");
+  assert.match(tooltipSource, /tooltipRef\.current\?\.getBoundingClientRect\(\)\.width/u);
+  assert.match(tooltipSource, /ref=\{tooltipRef\}/u);
+});
 
 test("Preparation progress preserves the original total across normal play and resume", () => {
   assert.deepEqual(setupProgress(4, 4), { completed: 1, current: 1, total: 4 });

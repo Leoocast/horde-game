@@ -34,6 +34,12 @@ vfx/                exploraciones de efectos
 
 ## Contenido
 
+- `ui/play-entry-futures.html` — la bifurcación de **Jugar** en tres profundidades (capa sobre el menú,
+  pantalla completa y sin menú intermedio), **Preparación** sin campo de Canon Seed con el número de Futuro
+  como protagonista —duelo central y estandarte— y el modal de inscripción en dos formas, con su latido de
+  confirmación y el choque simplificado a los tiempos reales de `EncounterTransition`. Reimplementa
+  `hashSeed`, `futureCodeFromSeed` y el formato `HF1-PPP-HHH-XXD-XXX`, así que cada Futuro que muestra es el
+  que produciría el juego; cambiar dificultad o Hueste recompone el número, igual que hará el runtime.
 - `ui/chronicler-name-modal.html` — siete reemplazos interactivos de `ChroniclerNameModal`, construidos sólo
   con los tokens vigentes (`--hf-ui-*` y el material del menú principal) para retirar la paleta oliva del
   modal actual. Cada variante se escribe, se enfoca, se confirma y se vuelve a abrir sobre una silueta del

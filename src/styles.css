@@ -7660,7 +7660,7 @@
     left: 50%;
     z-index: 10000;
     width: max-content;
-    max-width: 21rem;
+    max-width: min(21rem, calc(100vw - 24px));
     visibility: hidden;
     transform: translateX(-50%) translateY(var(--tooltip-shift-y)) scale(0.985);
     border: 1px solid rgb(190 174 112 / 0.62);
