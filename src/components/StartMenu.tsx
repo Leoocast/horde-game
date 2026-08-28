@@ -105,8 +105,8 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   const playSfx = useAudioStore((state) => state.playSfx);
   const pushToast = useToastStore((state) => state.pushToast);
   const selectedMode = modes.find((item) => item.id === mode) ?? modes[0];
-  /* Pantallas que sustituyen al menú entero en vez de abrirse a su derecha. */
-  const fullScreenMenu = menuScreen === "threshold" || menuScreen === "setup" || menuScreen === "chaos" || menuScreen === "seeds";
+  /* Toda pantalla secundaria sustituye al frontispicio; ninguna vuelve a vivir como panel lateral. */
+  const fullScreenMenu = menuScreen !== "home";
   const playableDecks = decks.filter((deck) => deck.presentation.playable !== false);
   const selectedDeck = playableDecks.find((deck) => deck.id === selectedDeckId) ?? playableDecks[0];
   const selectedHostDeck = hostDecks.find((deck) => deck.id === selectedHostDeckId) ?? hostDecks[0];
@@ -346,7 +346,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   }
 
   return (
-    <main className={`main-menu-shell h-screen overflow-hidden text-[#f6e6b8] ${menuScreen === "threshold" ? "threshold-active" : ""} ${menuScreen === "setup" || menuScreen === "chaos" ? "expedition-active" : ""} ${menuScreen === "seeds" ? "menu-fullscreen-active" : ""} ${menuScreen === "chaos" ? "chaos-active" : ""} ${showNameEditor ? "chronicler-name-open" : ""}`}>
+    <main className={`main-menu-shell h-screen overflow-hidden text-[#f6e6b8] ${menuScreen === "threshold" ? "threshold-active" : ""} ${menuScreen === "setup" || menuScreen === "chaos" ? "expedition-active" : ""} ${fullScreenMenu ? "menu-fullscreen-active" : ""} ${menuScreen === "chaos" ? "chaos-active" : ""} ${showNameEditor ? "chronicler-name-open" : ""}`}>
       <TemporalBackdrop />
       {!fullScreenMenu ? (
         <div className="main-menu-stage">
@@ -363,9 +363,8 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         )}
         <div className="main-menu-layout">
           <div className="main-menu-brand">
-            <div className="main-menu-kicker">{t("menu.kicker")}</div>
             <h1 className="main-menu-title hostfall-wordmark">HOstfAll</h1>
-            <div className="main-menu-subtitle"><span /> {t("menu.act")}</div>
+            <div className="main-menu-subtitle"><span /><em>{t("menu.act")}</em><span /></div>
           </div>
 
           <nav className="main-menu-nav" aria-label={t("menu.mainAria")}>
@@ -377,38 +376,30 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
                 disabled={continueDisabled || !onContinue}
                 title={continueDisabled ? t("menu.continueUnavailable") : undefined}
               >
-                <span className="main-menu-entry-mark" />
                 <span>{resumeStatus === "recovered" ? t("menu.continueRecovered") : t("menu.continue")}</span>
               </button>
             )}
             {resumeEnabled && resumeStatus === "corrupt" && onDiscardResume && (
               <button className="main-menu-entry group" type="button" onClick={onDiscardResume} title={t("menu.corruptSaveDescription")}>
-                <span className="main-menu-entry-mark" />
                 <span>{t("menu.discardCorruptSave")}</span>
               </button>
             )}
-            <button className="main-menu-entry group" type="button" onClick={openThreshold}>
-              <span className="main-menu-entry-mark" />
+            <button className="main-menu-entry is-primary group" type="button" onClick={openThreshold}>
               <span>{t("menu.play")}</span>
             </button>
-            <button className={`main-menu-entry group ${menuScreen === "chronicles" ? "is-active" : ""}`} type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("chronicles"); }}>
-              <span className="main-menu-entry-mark" />
+            <button className="main-menu-entry group" type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("chronicles"); }}>
               <span>{t("menu.chronicles")}</span>
             </button>
-            <button className={`main-menu-entry group ${menuScreen === "hosts" ? "is-active" : ""}`} type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("hosts"); }}>
-              <span className="main-menu-entry-mark" />
+            <button className="main-menu-entry group" type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("hosts"); }}>
               <span>{t("menu.hosts")}</span>
             </button>
             <button className="main-menu-entry group" type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("seeds"); }}>
-              <span className="main-menu-entry-mark" />
               <span>{t("menu.seedsOfDestiny")}</span>
             </button>
-            <button className={`main-menu-entry group ${menuScreen === "howToPlay" ? "is-active" : ""}`} type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("howToPlay"); }}>
-              <span className="main-menu-entry-mark" />
+            <button className="main-menu-entry group" type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("howToPlay"); }}>
               <span>{t("menu.howToPlay")}</span>
             </button>
-            <button className={`main-menu-entry group ${menuScreen === "settings" ? "is-active" : ""}`} type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("settings"); }}>
-              <span className="main-menu-entry-mark" />
+            <button className="main-menu-entry group" type="button" onClick={() => { setClosingMenuScreen(undefined); setMenuScreen("settings"); }}>
               <span>{t("menu.settings")}</span>
             </button>
           </nav>
@@ -445,19 +436,22 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
             </div>
           </aside>
         )}
-        {menuScreen === "settings" && (
-          <section className={`main-settings-screen ${closingMenuScreen === "settings" ? "is-closing" : ""}`} aria-label={t("menu.settings")}>
-            <header className="main-settings-header">
-              <button className="menu-screen-back" type="button" onClick={closeMenuPanel}><ArrowLeft size={16} /> {t("common.back")}</button>
-              <h2>{t("menu.settings")}</h2>
-              <span>{t("settings.description")}</span>
-            </header>
+        </div>
+      ) : menuScreen === "settings" ? (
+        <section className={`main-settings-screen ${closingMenuScreen === "settings" ? "is-closing" : ""}`} aria-label={t("menu.settings")}>
+          <header className="main-settings-header">
+            <button className="menu-screen-back" type="button" onClick={closeMenuPanel}><ArrowLeft size={16} /> {t("common.back")}</button>
+            <h2>{t("menu.settings")}</h2>
+            <span>{t("settings.description")}</span>
+          </header>
 
-            <div className="main-settings-content old-scrollbar">
+          <div className="main-settings-content main-settings-content-columns old-scrollbar">
+            <div className="main-settings-column">
               <LanguageSelector />
               <AudioControls variant="screen" />
+            </div>
+            <div className="main-settings-column">
               <DisplayControls variant="screen" />
-
               <section className="main-settings-section">
                 <div className="main-settings-section-title">{t("settings.game")}</div>
                 <div className="main-settings-row">
@@ -491,52 +485,48 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
                 )}
               </section>
             </div>
-          </section>
-        )}
-        {menuScreen === "howToPlay" && (
-          <section className={`main-settings-screen how-to-play-screen ${closingMenuScreen === "howToPlay" ? "is-closing" : ""}`} aria-label={t("menu.howToPlay")}>
-            <header className="main-settings-header">
-              <button className="menu-screen-back" type="button" onClick={closeMenuPanel}><ArrowLeft size={16} /> {t("common.back")}</button>
-              <h2>{t("menu.howToPlay")}</h2>
-              <span>{t("howToPlay.description")}</span>
-            </header>
+          </div>
+        </section>
+      ) : menuScreen === "howToPlay" ? (
+        <section className={`main-settings-screen how-to-play-screen ${closingMenuScreen === "howToPlay" ? "is-closing" : ""}`} aria-label={t("menu.howToPlay")}>
+          <header className="main-settings-header">
+            <button className="menu-screen-back" type="button" onClick={closeMenuPanel}><ArrowLeft size={16} /> {t("common.back")}</button>
+            <h2>{t("menu.howToPlay")}</h2>
+            <span>{t("howToPlay.description")}</span>
+          </header>
 
-            <div className="main-settings-content old-scrollbar">
-              <section className="main-settings-section how-to-play-lessons">
-                <div className="main-settings-section-title">{t("howToPlay.tutorials")}</div>
-                {howToPlayEntries.map((entry) => {
-                  const Icon = entry.icon === "learn" ? Sparkles : BookOpen;
-                  return (
-                    <button
-                      key={entry.id}
-                      className="how-to-play-lesson"
-                      type="button"
-                      disabled={!entry.onLaunch}
-                      onClick={entry.onLaunch}
-                    >
-                      <span className="how-to-play-lesson-icon" aria-hidden="true"><Icon size={25} /></span>
-                      <span className="how-to-play-lesson-copy">
-                        <small>{t(entry.kickerKey)}</small>
-                        <strong>{t(entry.titleKey)}</strong>
-                        <span>{t(entry.descriptionKey)}</span>
-                      </span>
-                      <span className={`how-to-play-lesson-status ${entry.onLaunch ? "is-ready" : ""}`}>
-                        {t(entry.onLaunch ? "howToPlay.start" : "howToPlay.comingSoon")}
-                      </span>
-                    </button>
-                  );
-                })}
-              </section>
-            </div>
-          </section>
-        )}
-        {menuScreen === "chronicles" && (
-          <DecksView collection="chronicles" decks={decks} onOpenDeck={onOpenDeck} onBack={closeMenuPanel} closing={closingMenuScreen === "chronicles"} />
-        )}
-        {menuScreen === "hosts" && (
-          <DecksView collection="hosts" decks={hostDecks} onOpenDeck={onOpenDeck} onBack={closeMenuPanel} closing={closingMenuScreen === "hosts"} />
-        )}
-        </div>
+          <div className="main-settings-content old-scrollbar">
+            <section className="main-settings-section how-to-play-lessons">
+              <div className="main-settings-section-title">{t("howToPlay.tutorials")}</div>
+              {howToPlayEntries.map((entry) => {
+                const Icon = entry.icon === "learn" ? Sparkles : BookOpen;
+                return (
+                  <button
+                    key={entry.id}
+                    className="how-to-play-lesson"
+                    type="button"
+                    disabled={!entry.onLaunch}
+                    onClick={entry.onLaunch}
+                  >
+                    <span className="how-to-play-lesson-icon" aria-hidden="true"><Icon size={25} /></span>
+                    <span className="how-to-play-lesson-copy">
+                      <small>{t(entry.kickerKey)}</small>
+                      <strong>{t(entry.titleKey)}</strong>
+                      <span>{t(entry.descriptionKey)}</span>
+                    </span>
+                    <span className={`how-to-play-lesson-status ${entry.onLaunch ? "is-ready" : ""}`}>
+                      {t(entry.onLaunch ? "howToPlay.start" : "howToPlay.comingSoon")}
+                    </span>
+                  </button>
+                );
+              })}
+            </section>
+          </div>
+        </section>
+      ) : menuScreen === "chronicles" ? (
+        <DecksView collection="chronicles" decks={decks} onOpenDeck={onOpenDeck} onBack={closeMenuPanel} closing={closingMenuScreen === "chronicles"} />
+      ) : menuScreen === "hosts" ? (
+        <DecksView collection="hosts" decks={hostDecks} onOpenDeck={onOpenDeck} onBack={closeMenuPanel} closing={closingMenuScreen === "hosts"} />
       ) : menuScreen === "seeds" ? (
         <SeedsOfDestinyScreen
           decks={decks}

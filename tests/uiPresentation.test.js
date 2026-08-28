@@ -1122,10 +1122,38 @@ test("deck collections do not clip a raised key card or its glow", () => {
   );
 });
 
-test("main menu reserves enough width and breathing room for the Hostfall title", () => {
+test("main menu uses the centered fracture frontispiece over the temporal sky", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
-  assert.match(styles, /--main-menu-panel-width:\s*clamp\(380px, 34vw, 590px\)/u);
-  assert.match(styles, /\.main-menu-title\s*\{[^}]*margin:\s*16px 0 0;/u);
+
+  assert.match(styles, /\.main-menu-layout\s*\{[^}]*width:\s*100%;[^}]*place-content:\s*center;[^}]*justify-items:\s*center;/u);
+  assert.match(styles, /\.main-menu-title\s*\{[^}]*margin:\s*0;[^}]*font-size:\s*clamp\(54px, min\(7\.7vw, 13\.5vh\), 102px\);/u);
+  assert.match(styles, /\.main-menu-entry\.is-primary\s*\{[^}]*font-size:\s*clamp\(22px,/u);
+  assert.match(startMenu, /className="main-menu-subtitle"><span \/><em>\{t\("menu\.act"\)\}<\/em><span \/><\/div>/u);
+  assert.match(startMenu, /className="main-menu-entry is-primary group"[^>]*onClick=\{openThreshold\}/u);
+  assert.doesNotMatch(startMenu, /main-menu-entry-mark/u);
+});
+
+test("main menu collections, help and settings replace the menu at full screen", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(startMenu, /const fullScreenMenu = menuScreen !== "home";/u);
+  assert.match(startMenu, /\) : menuScreen === "settings" \? \(/u);
+  assert.match(startMenu, /\) : menuScreen === "howToPlay" \? \(/u);
+  assert.match(startMenu, /\) : menuScreen === "chronicles" \? \(/u);
+  assert.match(startMenu, /\) : menuScreen === "hosts" \? \(/u);
+  assert.match(styles, /\.main-settings-screen\s*\{[^}]*width:\s*100%;[^}]*height:\s*100vh;/u);
+});
+
+test("main menu settings are grouped into two responsive columns", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(startMenu, /main-settings-content main-settings-content-columns old-scrollbar/u);
+  assert.equal(startMenu.match(/className="main-settings-column"/gu)?.length, 2);
+  assert.match(styles, /\.main-settings-content-columns\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/u);
+  assert.match(styles, /@media \(max-width: 980px\)[\s\S]*?\.main-settings-content-columns\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/u);
 });
 
 test("deck inspection keeps the same temporal sky as the main menu", () => {
@@ -1288,7 +1316,7 @@ test("the Future threshold keeps Main menu aligned with Back to the threshold", 
   assert.match(styles, /@media \(max-height: 760px\)\s*\{\s*\.play-threshold-back \{ top: 14px; \}/u);
 });
 
-test("How to Play opens a right-side data-driven tutorial catalog", () => {
+test("How to Play opens a full-screen data-driven tutorial catalog", () => {
   const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 

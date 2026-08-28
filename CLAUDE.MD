@@ -525,6 +525,15 @@ antes de crear otra implementación.
   individual mediante `AUDIO_FEATURE_FLAGS`; apagar un flag no debe ocultar su clip del Taller.
 - La música cambia al tema de clímax cuando la Vida del Cronista baja del umbral configurado.
 
+El menú principal es un frontispicio centrado sobre el `TemporalBackdrop` y el fondo real del juego:
+la marca **Hostfall**, el subtítulo de Acto entre dos líneas y una navegación vertical de texto ocupan
+el eje central. **Jugar** tiene mayor jerarquía que el resto de entradas; no se recuperan filas,
+marcadores geométricos ni una placa lateral detrás del menú. La identidad editable del Cronista se
+mantiene arriba a la derecha y las herramientas dev conservan su dock discreto. Crónicas, Huestes,
+Semillas del Destino, Cómo jugar y Ajustes sustituyen el frontispicio y ocupan el lienzo completo,
+siempre dejando ver el ambiente real por debajo. En escritorio, Ajustes agrupa sus secciones en dos
+columnas editoriales —Idioma/Audio y Pantalla/Juego— y colapsa a una sola columna en anchos estrechos.
+
 La Preparación standard usa el frontispicio de **Escribir Crónica** sobre el `TemporalBackdrop` real:
 la cifra fija de **Futuro** domina el centro, las cartas clave flanquean el enfrentamiento y el pie
 reúne las tres dificultades, la frase completa del despertar y **Iniciar Crónica**. La anchura del
