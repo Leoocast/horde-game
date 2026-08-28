@@ -1161,6 +1161,7 @@ export function SetupDeckDrawer({ side, eyebrow, decks, selectedDeckId, onSelect
   const titleId = `expedition-${side}-deck-drawer-title`;
   const selectedDeck = decks.find((deck) => deck.id === selectedDeckId) ?? decks[0];
   const deckTheme = selectedDeck?.presentation.theme ?? "ramp";
+  const drawerTitle = t(side === "player" ? "setup.chooseChronicle" : "setup.chooseHost");
 
   useEffect(() => {
     const focusTimer = window.setTimeout(() => closeButtonRef.current?.focus({ preventScroll: true }), 460);
@@ -1177,10 +1178,10 @@ export function SetupDeckDrawer({ side, eyebrow, decks, selectedDeckId, onSelect
       style={side === "player" ? { left: 0, right: "auto" } : { left: "auto", right: 0 }}
     >
       <header>
-        <div><small>{eyebrow}</small><h2 id={titleId}>{t(side === "player" ? "menu.chronicles" : "menu.hosts")}</h2></div>
+        <h2 id={titleId}>{drawerTitle}</h2>
         <button ref={closeButtonRef} type="button" aria-label={t("common.close")} onClick={onClose}><X size={20} /></button>
       </header>
-      <div className="expedition-deck-drawer-cards" role="group" aria-label={`${eyebrow}: ${t("common.chooseDeck")}`}>
+      <div className="expedition-deck-drawer-cards" role="group" aria-label={`${eyebrow}: ${drawerTitle}`}>
         {decks.map((item) => (
           <DeckKeyCard
             key={item.id}

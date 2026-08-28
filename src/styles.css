@@ -845,28 +845,31 @@
     z-index: 1;
     inset: 0;
     border: 0;
-    background: linear-gradient(90deg, rgb(0 0 0 / 0.5), rgb(0 0 0 / 0.3) 50%, rgb(0 0 0 / 0.5));
+    background:
+      radial-gradient(ellipse at 50% 46%, rgb(5 11 13 / 0.38), rgb(0 0 0 / 0.78) 78%),
+      rgb(0 0 0 / 0.48);
     cursor: default;
     pointer-events: auto;
   }
 
   .expedition-deck-drawer {
-    --deck-key-card-width: clamp(145px, 11vw, 184px);
+    --deck-key-card-width: clamp(158px, 13vw, 214px);
     position: absolute;
     z-index: 2;
     top: 0;
     bottom: 0;
     display: grid;
-    width: clamp(440px, 36vw, 560px);
+    width: clamp(500px, 43vw, 690px);
     grid-template-rows: auto minmax(0, 1fr);
     overflow: hidden;
     isolation: isolate;
-    border: 1px solid color-mix(in srgb, var(--deck-accent) 58%, #7e8b87);
+    border: 1px solid color-mix(in srgb, var(--deck-accent) 42%, #9ba49e);
     background:
-      radial-gradient(circle at 78% 4%, var(--deck-accent-soft), transparent 36%),
-      linear-gradient(145deg, rgb(24 32 36 / 0.92), rgb(6 10 13 / 0.86));
-    -webkit-backdrop-filter: blur(18px) saturate(1.08);
-    backdrop-filter: blur(18px) saturate(1.08);
+      linear-gradient(135deg, transparent 0 49.87%, rgb(203 182 117 / 0.035) 49.94% 50.06%, transparent 50.13%),
+      radial-gradient(ellipse at 76% 20%, var(--deck-accent-soft), transparent 45%),
+      linear-gradient(145deg, #111a1d, #050a0c 64%, #020608);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
     color: #d8d2ba;
     will-change: transform;
   }
@@ -876,8 +879,18 @@
     z-index: 0;
     inset: 0;
     background:
-      linear-gradient(115deg, rgb(255 255 255 / 0.045), transparent 18% 78%, rgb(255 255 255 / 0.02)),
-      repeating-linear-gradient(0deg, rgb(255 255 255 / 0.012) 0 1px, transparent 1px 4px);
+      linear-gradient(115deg, rgb(255 255 255 / 0.034), transparent 19% 78%, rgb(255 255 255 / 0.015)),
+      repeating-linear-gradient(0deg, rgb(255 255 255 / 0.01) 0 1px, transparent 1px 5px);
+    content: "";
+    pointer-events: none;
+  }
+
+  /* El selector es una lámina del mismo frontispicio, no otra ventana de cristal. */
+  .expedition-deck-drawer::after {
+    position: absolute;
+    z-index: 0;
+    inset: 15px;
+    border: 1px solid color-mix(in srgb, var(--deck-accent-bright) 15%, transparent);
     content: "";
     pointer-events: none;
   }
@@ -893,15 +906,16 @@
 
   .expedition-deck-drawer-player {
     border-width: 0 1px 0 0;
-    box-shadow: inset -1px 0 color-mix(in srgb, var(--deck-accent-bright) 18%, transparent), 24px 0 58px rgb(0 0 0 / 0.62), 0 0 34px var(--deck-accent-soft);
+    box-shadow: inset -1px 0 color-mix(in srgb, var(--deck-accent-bright) 18%, transparent), 28px 0 70px rgb(0 0 0 / 0.72), 0 0 34px var(--deck-accent-soft);
   }
 
   .expedition-deck-drawer-host {
     border-width: 0 0 0 1px;
     background:
-      radial-gradient(circle at 22% 4%, var(--deck-accent-soft), transparent 36%),
-      linear-gradient(215deg, rgb(24 32 36 / 0.92), rgb(6 10 13 / 0.86));
-    box-shadow: inset 1px 0 color-mix(in srgb, var(--deck-accent-bright) 18%, transparent), -24px 0 58px rgb(0 0 0 / 0.62), 0 0 34px var(--deck-accent-soft);
+      linear-gradient(45deg, transparent 0 49.87%, rgb(203 182 117 / 0.035) 49.94% 50.06%, transparent 50.13%),
+      radial-gradient(ellipse at 24% 20%, var(--deck-accent-soft), transparent 45%),
+      linear-gradient(215deg, #111a1d, #050a0c 64%, #020608);
+    box-shadow: inset 1px 0 color-mix(in srgb, var(--deck-accent-bright) 18%, transparent), -28px 0 70px rgb(0 0 0 / 0.72), 0 0 34px var(--deck-accent-soft);
   }
 
   .expedition-deck-drawer-player.is-entering {
@@ -944,57 +958,70 @@
   .expedition-deck-drawer > header {
     position: relative;
     z-index: 1;
-    display: flex;
-    min-height: 94px;
+    display: grid;
+    min-height: 116px;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
     align-items: center;
-    justify-content: space-between;
     gap: 18px;
-    border-bottom: 1px solid color-mix(in srgb, var(--deck-accent) 34%, transparent);
-    padding: 14px 24px 13px 30px;
-    background: linear-gradient(180deg, rgb(30 39 42 / 0.8), rgb(9 14 17 / 0.5));
-    box-shadow: inset 0 1px rgb(236 221 167 / 0.07), 0 14px 34px rgb(0 0 0 / 0.16);
+    border-bottom: 1px solid color-mix(in srgb, var(--deck-accent) 28%, transparent);
+    padding: 24px 28px 20px;
+    background: linear-gradient(180deg, rgb(15 24 27 / 0.72), transparent);
   }
 
   .expedition-deck-drawer-host > header {
-    padding-right: 30px;
-    padding-left: 24px;
+    padding-inline: 28px;
   }
 
-  .expedition-deck-drawer > header small,
-  .expedition-deck-drawer > header h2 {
-    display: block;
-  }
-
-  .expedition-deck-drawer > header small {
-    margin-bottom: 5px;
-    color: color-mix(in srgb, var(--deck-accent-bright) 58%, #8b9a94);
-    font-size: 9px;
-    font-weight: 900;
-    letter-spacing: 0.24em;
-    text-transform: uppercase;
+  .expedition-deck-drawer > header::after {
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    width: 9px;
+    height: 9px;
+    border: 1px solid color-mix(in srgb, var(--deck-accent-bright) 62%, #c7aa69);
+    background: #091012;
+    content: "";
+    rotate: 45deg;
+    translate: -50% 0;
   }
 
   .expedition-deck-drawer > header h2 {
+    grid-column: 2;
+    grid-row: 1;
     margin: 0;
-    color: var(--deck-accent-bright);
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 28px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    color: color-mix(in srgb, var(--deck-accent-bright) 76%, #e7d7a4);
+    font-family: "Cinzel Decorative", Georgia, "Times New Roman", serif;
+    font-size: clamp(22px, 2vw, 31px);
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    line-height: 1.12;
+    text-align: center;
+    text-shadow: 0 3px 18px rgb(0 0 0 / 0.82), 0 0 22px var(--deck-accent-soft);
   }
 
   .expedition-deck-drawer > header button {
+    grid-column: 3;
+    grid-row: 1;
     display: grid;
     width: 41px;
     height: 41px;
     flex: 0 0 auto;
-    border: 1px solid rgb(224 205 140 / 0.34);
-    border-radius: 2px;
-    background: linear-gradient(180deg, rgb(56 67 54 / 0.42), rgb(10 22 18 / 0.56));
+    border: 1px solid color-mix(in srgb, var(--deck-accent-bright) 30%, rgb(158 168 161 / 0.24));
+    border-radius: 0;
+    background: rgb(6 13 15 / 0.66);
     place-items: center;
     color: #bbb59e;
     box-shadow: inset 0 1px rgb(255 255 255 / 0.06), 0 8px 20px rgb(0 0 0 / 0.24);
+    rotate: 45deg;
+    transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, rotate 220ms ease;
+  }
+
+  .expedition-deck-drawer > header button svg {
+    rotate: -45deg;
+  }
+
+  .expedition-deck-drawer-host > header button {
+    grid-column: 1;
   }
 
   .expedition-deck-drawer > header button:hover,
@@ -1003,6 +1030,7 @@
     background: rgb(41 54 46 / 0.66);
     color: #f0dda4;
     outline: none;
+    rotate: 135deg;
   }
 
   .expedition-deck-drawer-cards {
@@ -1012,21 +1040,42 @@
     min-height: 0;
     grid-template-columns: repeat(2, var(--deck-key-card-width));
     align-content: start;
-    justify-content: start;
-    gap: clamp(30px, 4vh, 48px) 26px;
+    justify-content: center;
+    gap: clamp(34px, 5vh, 58px) clamp(32px, 3vw, 50px);
     overflow-y: auto;
-    padding: clamp(36px, 5vh, 60px) 30px 40px;
+    padding: clamp(30px, 4vh, 44px) 42px 50px;
     scrollbar-color: #71684e rgb(5 12 12 / 0.28);
     scrollbar-width: thin;
   }
 
   .expedition-deck-drawer-host .expedition-deck-drawer-cards {
-    justify-content: start;
+    justify-content: center;
   }
 
   .expedition-deck-drawer-cards .deck-key-card {
     position: relative;
     justify-self: center;
+  }
+
+  .expedition-deck-drawer.is-entering .deck-key-card {
+    animation: expedition-drawer-card-in 520ms 150ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .expedition-deck-drawer.is-entering .deck-key-card:nth-child(2) { animation-delay: 220ms; }
+  .expedition-deck-drawer.is-entering .deck-key-card:nth-child(3) { animation-delay: 290ms; }
+  .expedition-deck-drawer.is-entering .deck-key-card:nth-child(4) { animation-delay: 360ms; }
+
+  .expedition-deck-drawer.is-leaving .deck-key-card {
+    animation: expedition-drawer-card-out 210ms ease-in both;
+  }
+
+  @keyframes expedition-drawer-card-in {
+    from { opacity: 0; transform: translateY(30px) scale(0.9); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes expedition-drawer-card-out {
+    to { opacity: 0; transform: translateY(18px) scale(0.96); }
   }
 
   .expedition-versus {
@@ -2503,7 +2552,10 @@
     }
 
     .expedition-deck-drawer,
+    .expedition-deck-drawer .deck-key-card,
     .expedition-deck-drawer-scrim {
+      animation-duration: 1ms !important;
+      animation-delay: 0ms !important;
       transition-duration: 1ms !important;
       transition-delay: 0ms !important;
     }
@@ -2541,20 +2593,22 @@
 
   @media (max-width: 560px) {
     .expedition-deck-drawer {
-      --deck-key-card-width: min(210px, 62vw);
+      --deck-key-card-width: min(150px, 34vw);
     }
 
     .expedition-deck-drawer-cards {
-      grid-template-columns: 1fr;
-      justify-content: start;
+      grid-template-columns: repeat(2, var(--deck-key-card-width));
+      justify-content: center;
+      gap: 30px 18px;
+      padding-inline: 24px;
     }
 
     .expedition-deck-drawer-host .expedition-deck-drawer-cards {
-      justify-content: start;
+      justify-content: center;
     }
 
     .expedition-deck-drawer-cards .deck-key-card {
-      justify-self: start;
+      justify-self: center;
     }
   }
 
@@ -25343,11 +25397,13 @@ body.is-victory-clearing .game-battlefield-stage {
 }
 
 .preparation-frontispiece-kicker {
-  margin: 0 0 9px;
-  color: #7d8987;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.3em;
+  margin: 0 0 15px;
+  color: #91a29e;
+  font-family: "Cinzel", Georgia, "Times New Roman", serif;
+  font-size: clamp(15px, 1.25vw, 21px);
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  text-shadow: 0 2px 12px rgb(0 0 0 / 0.72);
   text-transform: uppercase;
   animation: preparation-center-reveal 360ms 110ms ease-out both;
 }
@@ -25361,26 +25417,31 @@ body.is-victory-clearing .game-battlefield-stage {
   align-items: center;
   justify-content: center;
   margin: 0;
-  color: #f0e5c4;
+  color: #f4dc91;
   font-family: "Cinzel", Georgia, "Times New Roman", serif;
   font-size: clamp(54px, min(7vw, 15vh), 118px);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   line-height: 0.94;
-  text-shadow: 0 0 30px rgb(220 185 94 / 0.34), 0 0 90px rgb(220 185 94 / 0.14);
+  text-shadow:
+    0 0 10px rgb(255 236 170 / 0.4),
+    0 0 34px rgb(222 188 103 / 0.34),
+    0 0 82px rgb(190 144 55 / 0.24);
   white-space: nowrap;
+  animation: preparation-future-halo 3.6s 720ms ease-in-out infinite alternate;
 }
 
 .preparation-frontispiece-future > span {
   display: inline-grid;
   width: 0.72em;
   place-items: center;
+  color: inherit;
   animation: preparation-future-digit-in 520ms calc(70ms + var(--future-index) * 45ms) cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
 .preparation-frontispiece-future > span.is-separator {
   width: 0.42em;
-  color: #d6a44c;
+  color: inherit;
 }
 
 .preparation-frontispiece-rule {
@@ -25544,16 +25605,18 @@ body.is-victory-clearing .game-battlefield-stage {
 
 .expedition-frontispiece .expedition-deck-drawer {
   background:
-    radial-gradient(circle at 78% 4%, var(--deck-accent-soft), transparent 36%),
-    linear-gradient(145deg, rgb(22 30 33 / 0.99), rgb(5 10 12 / 0.995));
+    linear-gradient(135deg, transparent 0 49.87%, rgb(203 182 117 / 0.035) 49.94% 50.06%, transparent 50.13%),
+    radial-gradient(ellipse at 76% 20%, var(--deck-accent-soft), transparent 45%),
+    linear-gradient(145deg, #111a1d, #050a0c 64%, #020608);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 
 .expedition-frontispiece .expedition-deck-drawer-host {
   background:
-    radial-gradient(circle at 22% 4%, var(--deck-accent-soft), transparent 36%),
-    linear-gradient(215deg, rgb(22 30 33 / 0.99), rgb(5 10 12 / 0.995));
+    linear-gradient(45deg, transparent 0 49.87%, rgb(203 182 117 / 0.035) 49.94% 50.06%, transparent 50.13%),
+    radial-gradient(ellipse at 24% 20%, var(--deck-accent-soft), transparent 45%),
+    linear-gradient(215deg, #111a1d, #050a0c 64%, #020608);
 }
 
 .expedition-frontispiece.is-closing .preparation-frontispiece-center {
@@ -25581,9 +25644,24 @@ body.is-victory-clearing .game-battlefield-stage {
 }
 
 @keyframes preparation-future-digit-in {
-  0% { opacity: 0; filter: brightness(2.2); transform: translateY(-16px) scale(1.38); }
-  68% { opacity: 1; filter: brightness(1.35); transform: translateY(2px) scale(0.96); }
-  100% { opacity: 1; filter: brightness(1); transform: translateY(0) scale(1); }
+  0% { opacity: 0; transform: translateY(-16px) scale(1.38); }
+  68% { opacity: 1; transform: translateY(2px) scale(0.96); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes preparation-future-halo {
+  from {
+    text-shadow:
+      0 0 10px rgb(255 236 170 / 0.4),
+      0 0 34px rgb(222 188 103 / 0.34),
+      0 0 82px rgb(190 144 55 / 0.24);
+  }
+  to {
+    text-shadow:
+      0 0 13px rgb(255 240 183 / 0.52),
+      0 0 42px rgb(228 193 103 / 0.42),
+      0 0 104px rgb(190 144 55 / 0.3);
+  }
 }
 
 @keyframes preparation-rule-draw {
@@ -25735,6 +25813,7 @@ body.is-victory-clearing .game-battlefield-stage {
 @media (prefers-reduced-motion: reduce) {
   .preparation-frontispiece-card-art,
   .preparation-frontispiece-kicker,
+  .preparation-frontispiece-future,
   .preparation-frontispiece-future > span,
   .preparation-frontispiece-rule,
   .preparation-frontispiece-match,

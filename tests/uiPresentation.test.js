@@ -1179,6 +1179,8 @@ test("standard Preparation uses a fixed Future frontispiece and keeps the real d
 
   assert.equal(translate("es", "common.viewDeck"), "Ver mazo");
   assert.equal(translate("es", "common.changeDeck"), "Cambiar mazo");
+  assert.equal(translate("es", "setup.chooseChronicle"), "Elige una Crónica");
+  assert.equal(translate("es", "setup.chooseHost"), "Elige una Hueste");
   assert.match(startMenu, /props\.chaos \? "chaos-setup" : "expedition-frontispiece"/u);
   assert.match(startMenu, /<FutureCode key=\{futureCode\} code=\{futureCode\} \/>/u);
   assert.match(startMenu, /className="preparation-frontispiece-future"/u);
@@ -1194,12 +1196,30 @@ test("standard Preparation uses a fixed Future frontispiece and keeps the real d
     startMenu.indexOf("function PreparationCombatant"),
     startMenu.indexOf("function ChaosRules"),
   );
+  const drawerMarkup = startMenu.slice(
+    startMenu.indexOf("export function SetupDeckDrawer"),
+    startMenu.indexOf("function DeveloperWarningModal"),
+  );
   assert.doesNotMatch(modeMarkup, /setupTurns|phase\.setup|Preparation|Preparación/u);
   assert.equal(combatantMarkup.match(/\{eyebrow\}/gu)?.length, 1);
+  assert.match(drawerMarkup, /const drawerTitle = t\(side === "player" \? "setup\.chooseChronicle" : "setup\.chooseHost"\);/u);
+  assert.doesNotMatch(drawerMarkup, /<small>\{eyebrow\}<\/small>|menu\.(?:chronicles|hosts)/u);
 
   assert.match(styles, /\.preparation-frontispiece-stage\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) clamp\(300px, 35vw, 560px\) minmax\(0, 1fr\);/u);
   assert.match(styles, /\.preparation-frontispiece-future\s*\{[^}]*width:\s*100%;[^}]*font-variant-numeric:\s*tabular-nums;/u);
+  assert.match(styles, /\.preparation-frontispiece-future\s*\{[^}]*color:\s*#f4dc91;[^}]*0 0 82px rgb\(190 144 55 \/ 0\.24\);/u);
   assert.match(styles, /\.preparation-frontispiece-future > span\s*\{[^}]*width:\s*0\.72em;[^}]*preparation-future-digit-in/u);
+  assert.match(styles, /\.preparation-frontispiece-kicker\s*\{[^}]*color:\s*#91a29e;[^}]*font-size:\s*clamp\(15px, 1\.25vw, 21px\);/u);
+  assert.match(styles, /\.preparation-frontispiece-future > span\.is-separator\s*\{[^}]*color:\s*inherit;/u);
+  assert.doesNotMatch(startMenu, /preparation-frontispiece-diamond|frontispiece-active/u);
+  const futureDigitKeyframes = styles.slice(
+    styles.indexOf("@keyframes preparation-future-digit-in"),
+    styles.indexOf("@keyframes preparation-future-halo"),
+  );
+  assert.doesNotMatch(futureDigitKeyframes, /brightness/u);
+  assert.match(styles, /\.expedition-deck-drawer > header h2\s*\{[^}]*grid-column:\s*2;[^}]*text-align:\s*center;/u);
+  assert.match(styles, /\.expedition-deck-drawer-cards\s*\{[^}]*grid-template-columns:\s*repeat\(2, var\(--deck-key-card-width\)\);[^}]*align-content:\s*start;/u);
+  assert.match(styles, /@keyframes expedition-drawer-card-in/u);
   assert.match(styles, /\.preparation-frontispiece-fate \.expedition-awakening\s*\{[^}]*flex-wrap:\s*nowrap;[^}]*white-space:\s*nowrap;/u);
   assert.match(styles, /@keyframes preparation-cta-orbit-clockwise\s*\{\s*to \{ transform: translate\(-50%, -50%\) rotate\(360deg\); \}/u);
   assert.match(styles, /@keyframes preparation-card-player-in/u);
