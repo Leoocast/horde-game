@@ -525,6 +525,15 @@ antes de crear otra implementación.
   individual mediante `AUDIO_FEATURE_FLAGS`; apagar un flag no debe ocultar su clip del Taller.
 - La música cambia al tema de clímax cuando la Vida del Cronista baja del umbral configurado.
 
+La Preparación standard usa el frontispicio de **Escribir Crónica** sobre el `TemporalBackdrop` real:
+la cifra fija de **Futuro** domina el centro, las cartas clave flanquean el enfrentamiento y el pie
+reúne las tres dificultades, la frase completa del despertar y **Iniciar Crónica**. La anchura del
+número no puede desplazar la composición; sus glifos viven en celdas tabulares dentro de una columna
+central fija. Las dificultades no repiten «Preparación», y «Cronista»/«Hueste» no se imprimen encima
+de las cartas. Cada ala conserva **Ver mazo** y **Cambiar mazo** mediante el drawer real compartido.
+La entrada y la salida enfatizan primero el número y las dos cartas; el ornamento del CTA gira hacia
+la derecha. Caos conserva su pantalla de paneles y sus herramientas avanzadas.
+
 ## Sistema de UI player-facing
 
 La referencia canónica está en `docs/reference/ui_system.md`. `src/ui-system.css` contiene los
@@ -581,8 +590,8 @@ reinterpretar silenciosamente una Canon Seed `HF1` publicada.
 La Fase 2.5 de `docs/plans/seeds_of_destiny_history_implementation_plan.md` ya conectó el codec al
 producto. `src/content/MatchOrigin.ts` conserva fuera de `GameState` la identidad, configuración y
 revisiones deterministas de cada origen. Las partidas standard autogeneradas crean HF1 y el engine
-recibe sólo su entropía; Preparación puede importar una Canon Seed y aplica decks, dificultad y
-Preparación antes de jugar. **Copiar identidad** escribe siempre `canonCode`, y `Futuro NNN·NNN` y
+recibe sólo su entropía; el Umbral importa una Canon Seed y abre **Escribir Crónica** con sus decks,
+dificultad y Preparación ya aplicados. **Copiar identidad** escribe siempre `canonCode`, y `Futuro NNN·NNN` y
 su firma visual también parten de ese código. El campo libre conserva semántica opaca aunque su
 texto parezca HF1: no muestra controles públicos de copia. Sólo Developer Mode expone **Copiar seed
 interna**. `CANON_SEED_COMPATIBILITY` versiona HF1 sin depender de `contentCatalog.revision`, y los

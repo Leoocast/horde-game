@@ -1173,6 +1173,39 @@ test("deck setup panels and deck cards opt into shared click audio", () => {
   assert.match(decksView, /onClick=\{\(\) => \{\s*playSfx\("click"\);\s*onOpen\(\);/u);
 });
 
+test("standard Preparation uses a fixed Future frontispiece and keeps the real deck drawer", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.equal(translate("es", "common.viewDeck"), "Ver mazo");
+  assert.equal(translate("es", "common.changeDeck"), "Cambiar mazo");
+  assert.match(startMenu, /props\.chaos \? "chaos-setup" : "expedition-frontispiece"/u);
+  assert.match(startMenu, /<FutureCode key=\{futureCode\} code=\{futureCode\} \/>/u);
+  assert.match(startMenu, /className="preparation-frontispiece-future"/u);
+  assert.match(startMenu, /className="preparation-frontispiece-modes"[\s\S]*?<HostAwakening turns=\{props\.selectedMode\.setupTurns\} \/>/u);
+  assert.match(startMenu, /<SetupDeckDrawer[\s\S]*?selectedDeckId=/u);
+  assert.doesNotMatch(startMenu, /expedition-future-identity/u);
+
+  const modeMarkup = startMenu.slice(
+    startMenu.indexOf('<div className="preparation-frontispiece-modes"'),
+    startMenu.indexOf("<HostAwakening", startMenu.indexOf('<div className="preparation-frontispiece-modes"')),
+  );
+  const combatantMarkup = startMenu.slice(
+    startMenu.indexOf("function PreparationCombatant"),
+    startMenu.indexOf("function ChaosRules"),
+  );
+  assert.doesNotMatch(modeMarkup, /setupTurns|phase\.setup|Preparation|Preparación/u);
+  assert.equal(combatantMarkup.match(/\{eyebrow\}/gu)?.length, 1);
+
+  assert.match(styles, /\.preparation-frontispiece-stage\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) clamp\(300px, 35vw, 560px\) minmax\(0, 1fr\);/u);
+  assert.match(styles, /\.preparation-frontispiece-future\s*\{[^}]*width:\s*100%;[^}]*font-variant-numeric:\s*tabular-nums;/u);
+  assert.match(styles, /\.preparation-frontispiece-future > span\s*\{[^}]*width:\s*0\.72em;[^}]*preparation-future-digit-in/u);
+  assert.match(styles, /\.preparation-frontispiece-fate \.expedition-awakening\s*\{[^}]*flex-wrap:\s*nowrap;[^}]*white-space:\s*nowrap;/u);
+  assert.match(styles, /@keyframes preparation-cta-orbit-clockwise\s*\{\s*to \{ transform: translate\(-50%, -50%\) rotate\(360deg\); \}/u);
+  assert.match(styles, /@keyframes preparation-card-player-in/u);
+  assert.match(styles, /@keyframes preparation-card-host-in/u);
+});
+
 test("How to Play opens a right-side data-driven tutorial catalog", () => {
   const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");

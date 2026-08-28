@@ -770,142 +770,166 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
   }, [openDeckSide, props.overlayOpen, props.onBack]);
 
   return (
-    <section className={`expedition-setup ${props.chaos ? "chaos-setup" : ""} ${props.closing ? "is-closing" : ""}`} aria-label={props.chaos ? t("setup.prepareChaosAria") : t("setup.prepareAria")}>
-      {props.chaos && <ChaosSigils />}
+    <section className={`expedition-setup ${props.chaos ? "chaos-setup" : "expedition-frontispiece"} ${props.closing ? "is-closing" : ""}`} aria-label={props.chaos ? t("setup.prepareChaosAria") : t("setup.prepareAria")}>
       <SetupEmbers />
-      <header className="expedition-header" inert={openDeckSide !== null}>
-        <button className="expedition-back" type="button" onClick={props.onBack}>
-          <ArrowLeft size={17} /> {t("common.mainMenu")}
-        </button>
-        <div>
-          {props.chaos && <p className="chaos-header-kicker">{t("setup.chaosKicker")}</p>}
-          <h1>{props.chaos ? t("setup.invokeChaos") : t("setup.prepare")}</h1>
-          {!props.chaos && props.origin.seedKind === "canon" && (
-            <p className="expedition-future-identity"><Sparkles size={13} aria-hidden="true" /> {t("destiny.future", { code: futureCode })}</p>
-          )}
-        </div>
-      </header>
-
-      <div className="expedition-body" inert={openDeckSide !== null}>
-        <div className="expedition-combatants">
-          <SetupCombatant
-            eyebrow={t("setup.playerSide")}
-            side="player"
-            deck={props.playerDeck}
-            onInspect={props.onInspectPlayerDeck}
-            drawerOpen={openDeckSide === "player"}
-            onChangeDeck={() => setOpenDeckSide("player")}
-          />
-
-          <div className="expedition-versus" aria-hidden="true"><span /><Swords size={27} /><strong>VS</strong><span /></div>
-
-          <SetupCombatant
-            eyebrow={t("setup.hostSide")}
-            side="host"
-            deck={props.hostDeck}
-            onInspect={props.onInspectHostDeck}
-            drawerOpen={openDeckSide === "host"}
-            onChangeDeck={() => setOpenDeckSide("host")}
-            accessory={props.chaos ? undefined : <HostAwakening turns={props.selectedMode.setupTurns} />}
-          />
-        </div>
-
-        {props.chaos ? (
-          <ChaosRules />
-        ) : (
-          <section className="expedition-difficulty" aria-labelledby="difficulty-heading">
-            <div className="expedition-section-heading">
-              <div><p>{t("setup.chooseFate")}</p><h2 id="difficulty-heading">{t("setup.difficulty")}</h2></div>
+      {props.chaos ? (
+        <>
+          <ChaosSigils />
+          <header className="expedition-header" inert={openDeckSide !== null}>
+            <button className="expedition-back" type="button" onClick={props.onBack}>
+              <ArrowLeft size={17} /> {t("common.mainMenu")}
+            </button>
+            <div>
+              <p className="chaos-header-kicker">{t("setup.chaosKicker")}</p>
+              <h1>{t("setup.invokeChaos")}</h1>
             </div>
-            <div className="expedition-mode-grid">
-              {modes.map((item) => (
-                <button key={item.id} data-difficulty={item.id} className={`expedition-mode ${item.id === props.mode ? "is-selected" : ""}`} type="button" aria-pressed={item.id === props.mode} onClick={() => props.onModeChange(item.id)} data-audio-click="off">
-                  <span className="expedition-mode-glyph">{item.id === "easy" ? <Shield size={20} /> : item.id === "normal" ? <Swords size={20} /> : <Skull size={20} />}</span>
-                  <span><strong>{t(item.id === "easy" ? "setup.adventurer" : item.id === "normal" ? "setup.veteran" : "setup.doomed")}</strong></span>
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
+          </header>
 
-        <section className={`expedition-advanced ${props.showAdvanced ? "is-open" : ""}`}>
-          <button className="expedition-advanced-toggle" type="button" onClick={props.onToggleAdvanced} aria-expanded={props.showAdvanced}>
-            <Settings size={16} /> {t("setup.advanced")} <span>{props.showAdvanced ? t("setup.hide") : t("setup.seedTools")}</span>
-          </button>
-          {props.showAdvanced && (
-            <div className="expedition-advanced-content">
-              {!props.chaos && !props.developerMode && (
-                <div className="expedition-seed-kind">
-                  <div className="expedition-seed-kind-actions">
-                    <button className={`main-settings-action ${props.seedKind === "canon" ? "is-active" : ""}`} type="button" onClick={() => props.onSeedKindChange("canon")}>{t("setup.canonSeed")}</button>
-                    <button className={`main-settings-action ${props.seedKind === "opaque" ? "is-active" : ""}`} type="button" onClick={() => props.onSeedKindChange("opaque")}>{t("setup.freeSeed")}</button>
+          <div className="expedition-body" inert={openDeckSide !== null}>
+            <div className="expedition-combatants">
+              <SetupCombatant
+                eyebrow={t("setup.playerSide")}
+                side="player"
+                deck={props.playerDeck}
+                onInspect={props.onInspectPlayerDeck}
+                drawerOpen={openDeckSide === "player"}
+                onChangeDeck={() => setOpenDeckSide("player")}
+              />
+
+              <div className="expedition-versus" aria-hidden="true"><span /><Swords size={27} /><strong>VS</strong><span /></div>
+
+              <SetupCombatant
+                eyebrow={t("setup.hostSide")}
+                side="host"
+                deck={props.hostDeck}
+                onInspect={props.onInspectHostDeck}
+                drawerOpen={openDeckSide === "host"}
+                onChangeDeck={() => setOpenDeckSide("host")}
+              />
+            </div>
+
+            <ChaosRules />
+
+            <section className={`expedition-advanced ${props.showAdvanced ? "is-open" : ""}`}>
+              <button className="expedition-advanced-toggle" type="button" onClick={props.onToggleAdvanced} aria-expanded={props.showAdvanced}>
+                <Settings size={16} /> {t("setup.advanced")} <span>{props.showAdvanced ? t("setup.hide") : t("setup.seedTools")}</span>
+              </button>
+              {props.showAdvanced && (
+                <div className="expedition-advanced-content">
+                  <div>
+                    <label htmlFor="expedition-free-seed">{t("setup.freeSeed")}</label>
+                    <div className="expedition-seed-field is-single-action">
+                      <input id="expedition-free-seed" value={props.origin.rngSeed} onChange={(event) => props.onOpaqueSeedChange(event.target.value)} />
+                      <button type="button" onClick={props.onRegenerateOpaqueSeed} title={t("common.new")}><RefreshCw size={16} /></button>
+                    </div>
+                    <p className="expedition-seed-note">{t("setup.freeSeedDescription")}</p>
+                  </div>
+                  {props.developerMode && (
+                    <div>
+                      <label>{t("setup.internalSeed")}</label>
+                      <div className="expedition-seed-field is-single-action">
+                        <input value={props.origin.rngSeed} readOnly />
+                        <button type="button" onClick={props.onCopyInternalSeed} title={t("setup.copyInternalSeed")}><Copy size={16} /></button>
+                      </div>
+                    </div>
+                  )}
+                  <div className="expedition-developer-setting">
+                    <span><strong>{t("settings.developerMode")}</strong><small>{t("setup.developerDescription")}</small></span>
+                    <button className={`main-settings-toggle ${props.developerMode ? "is-on" : ""}`} type="button" role="switch" aria-checked={props.developerMode} onClick={props.onToggleDeveloperMode}><span /></button>
                   </div>
                 </div>
               )}
-              {!props.chaos && !props.developerMode && props.seedKind === "canon" && props.origin.seedKind === "canon" && (
-                <div>
-                  <label htmlFor="expedition-canon-seed">{t("setup.canonSeed")}</label>
-                  <div className="expedition-seed-field">
-                    <input id="expedition-canon-seed" value={props.origin.canonCode} readOnly />
-                    <button type="button" onClick={props.onCopyCanonIdentity} title={t("destiny.copyIdentity")}><Copy size={16} /></button>
-                    <button type="button" onClick={props.onRegenerateCanon} title={t("common.new")}><RefreshCw size={16} /></button>
-                  </div>
-                  <label className="mt-3" htmlFor="expedition-canon-import">{t("setup.importCanon")}</label>
-                  <div className="expedition-seed-field is-import">
-                    <input id="expedition-canon-import" value={props.canonDraft} placeholder="HF1-ELA-GRV-XX1-XXX" onChange={(event) => props.onCanonDraftChange(event.target.value)} />
-                    <button type="button" onClick={props.onUseCanonSeed}>{t("setup.useCanon")}</button>
-                  </div>
-                  {props.canonImportError && <p className="expedition-seed-error" role="alert">{props.canonImportError}</p>}
-                </div>
-              )}
-              {(props.chaos || (!props.developerMode && props.seedKind === "opaque")) && (
-                <div>
-                  <label htmlFor="expedition-free-seed">{t("setup.freeSeed")}</label>
-                  <div className="expedition-seed-field is-single-action">
-                    <input id="expedition-free-seed" value={props.origin.rngSeed} onChange={(event) => props.onOpaqueSeedChange(event.target.value)} />
-                    <button type="button" onClick={props.onRegenerateOpaqueSeed} title={t("common.new")}><RefreshCw size={16} /></button>
-                  </div>
-                  <p className="expedition-seed-note">{t("setup.freeSeedDescription")}</p>
-                </div>
-              )}
-              {props.developerMode && (
-                <div>
-                  <label>{t("setup.internalSeed")}</label>
-                  <div className="expedition-seed-field is-single-action">
-                    <input value={props.origin.rngSeed} readOnly />
-                    <button type="button" onClick={props.onCopyInternalSeed} title={t("setup.copyInternalSeed")}><Copy size={16} /></button>
-                  </div>
-                </div>
-              )}
-              <div className="expedition-developer-setting">
-                <span><strong>{t("settings.developerMode")}</strong><small>{t("setup.developerDescription")}</small></span>
-                <button className={`main-settings-toggle ${props.developerMode ? "is-on" : ""}`} type="button" role="switch" aria-checked={props.developerMode} onClick={props.onToggleDeveloperMode}><span /></button>
+            </section>
+          </div>
+
+          <footer className="expedition-footer" inert={openDeckSide !== null}>
+            <div className="expedition-footer-summary">
+              <span>{t("setup.playerSide")}</span>
+              <strong>{props.playerDeck?.deck.name ?? "—"}</strong>
+              <i aria-hidden="true">◆</i>
+              <span>{t("setup.hostSide")}</span>
+              <strong>{props.hostDeck?.deck.name ?? "—"}</strong>
+            </div>
+            <button className="expedition-begin" type="button" onClick={props.onStart} disabled={props.launching}>
+              <span>{t("setup.unleashChaos")}</span>
+              <Dices size={22} />
+            </button>
+          </footer>
+        </>
+      ) : (
+        <>
+          <header className="expedition-header preparation-frontispiece-header" inert={openDeckSide !== null}>
+            <button className="expedition-back" type="button" onClick={props.onBack}>
+              <ArrowLeft size={17} /> {t("setup.backToThreshold")}
+            </button>
+            <h1>{t("setup.prepare")}</h1>
+            <span aria-hidden="true" />
+          </header>
+
+          <div className="preparation-frontispiece-stage" inert={openDeckSide !== null}>
+            <PreparationCombatant
+              eyebrow={t("setup.playerSide")}
+              side="player"
+              deck={props.playerDeck}
+              onInspect={props.onInspectPlayerDeck}
+              drawerOpen={openDeckSide === "player"}
+              onChangeDeck={() => setOpenDeckSide("player")}
+            />
+
+            <div className="preparation-frontispiece-center">
+              <p className="preparation-frontispiece-kicker">{t("destiny.futureWord")}</p>
+              <FutureCode key={futureCode} code={futureCode} />
+              <span className="preparation-frontispiece-rule" aria-hidden="true" />
+              <div className="preparation-frontispiece-match" aria-live="polite">
+                <span>{props.playerDeck?.deck.name ?? "—"}</span>
+                <small>VS</small>
+                <span>{props.hostDeck?.deck.name ?? "—"}</span>
               </div>
             </div>
-          )}
-        </section>
-      </div>
 
-      <footer className="expedition-footer" inert={openDeckSide !== null}>
-        <div className="expedition-footer-summary">
-          <span>{t("setup.playerSide")}</span>
-          <strong>{props.playerDeck?.deck.name ?? "—"}</strong>
-          <i aria-hidden="true">◆</i>
-          <span>{t("setup.hostSide")}</span>
-          <strong>{props.hostDeck?.deck.name ?? "—"}</strong>
-          {!props.chaos && (
-            <>
-              <i aria-hidden="true">◆</i>
-              <span>{t("setup.difficulty")}</span>
-              <strong>{t(props.mode === "easy" ? "setup.adventurer" : props.mode === "normal" ? "setup.veteran" : "setup.doomed")}</strong>
-            </>
-          )}
-        </div>
-        <button className="expedition-begin" type="button" onClick={props.onStart} disabled={props.launching}>
-          <span>{props.chaos ? t("setup.unleashChaos") : t("setup.beginChronicle")}</span>
-          {props.chaos ? <Dices size={22} /> : <Play size={22} />}
-        </button>
-      </footer>
+            <PreparationCombatant
+              eyebrow={t("setup.hostSide")}
+              side="host"
+              deck={props.hostDeck}
+              onInspect={props.onInspectHostDeck}
+              drawerOpen={openDeckSide === "host"}
+              onChangeDeck={() => setOpenDeckSide("host")}
+            />
+          </div>
+
+          <footer className="expedition-footer preparation-frontispiece-footer" inert={openDeckSide !== null}>
+            <div className="preparation-frontispiece-fate">
+              <div className="preparation-frontispiece-modes" role="group" aria-label={t("setup.difficulty")}>
+                {modes.map((item) => (
+                  <button
+                    key={item.id}
+                    data-difficulty={item.id}
+                    className={`preparation-frontispiece-mode ${item.id === props.mode ? "is-selected" : ""}`}
+                    type="button"
+                    aria-pressed={item.id === props.mode}
+                    onClick={() => props.onModeChange(item.id)}
+                    data-audio-click="off"
+                  >
+                    {t(item.id === "easy" ? "setup.adventurer" : item.id === "normal" ? "setup.veteran" : "setup.doomed")}
+                  </button>
+                ))}
+              </div>
+              <HostAwakening turns={props.selectedMode.setupTurns} />
+            </div>
+            <div className="preparation-frontispiece-actions">
+              {props.origin.seedKind === "canon" && (
+                <button className="preparation-frontispiece-copy" type="button" onClick={props.onCopyCanonIdentity} title={t("destiny.copyIdentity")}>
+                  <Copy size={14} /> {t("destiny.copyIdentity")}
+                </button>
+              )}
+              <button className="expedition-begin" type="button" onClick={props.onStart} disabled={props.launching}>
+                <span>{t("setup.beginChronicle")}</span>
+                <Play size={22} />
+              </button>
+            </div>
+          </footer>
+        </>
+      )}
 
       <AnimatePresence>
         {openDeckSide && (
@@ -933,6 +957,83 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
         )}
       </AnimatePresence>
 
+    </section>
+  );
+}
+
+function FutureCode({ code }: { code: string }) {
+  const t = useTranslation();
+  return (
+    <p
+      className="preparation-frontispiece-future"
+      aria-label={t("destiny.future", { code })}
+    >
+      {Array.from(code).map((character, index) => (
+        <span
+          key={`${index}-${character}`}
+          className={character === "·" ? "is-separator" : undefined}
+          style={{ "--future-index": index } as React.CSSProperties}
+          aria-hidden="true"
+        >
+          {character}
+        </span>
+      ))}
+    </p>
+  );
+}
+
+function PreparationCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onChangeDeck }: {
+  eyebrow: string;
+  side: "player" | "host";
+  deck?: InspectableDeck;
+  onInspect: () => void;
+  drawerOpen: boolean;
+  onChangeDeck: () => void;
+}) {
+  const t = useTranslation();
+  const language = useLanguageStore((state) => state.language);
+  const keyCard = deck ? findDeckKeyCard(deck) : undefined;
+  const details = useDeckCardDetails(keyCard, deck?.images ?? { cards: {} });
+  const keyCardName = localizedCardName(keyCard, language);
+  const deckTheme = deck?.presentation.theme ?? "ramp";
+  const cardCount = deck?.deck.deckSize ?? deck?.deck.cards.length ?? 0;
+
+  return (
+    <section className={`preparation-frontispiece-wing is-${side} deck-theme-${deckTheme}`} aria-label={eyebrow}>
+      <button
+        className={`preparation-frontispiece-card is-${side} ${drawerOpen ? "is-active" : ""}`}
+        type="button"
+        onClick={onChangeDeck}
+        aria-label={`${t("common.changeDeck")}: ${deck?.deck.name ?? t("common.chooseDeck")}`}
+        aria-expanded={drawerOpen}
+        aria-controls={`expedition-${side}-deck-drawer`}
+        data-audio-click="valid"
+      >
+        <span className="preparation-frontispiece-card-art" key={`frontispiece-art-${deck?.id ?? "empty"}`}>
+          {details.imageUrl ? (
+            <img src={details.imageUrl} alt={keyCardName || deck?.label} draggable={false} />
+          ) : (
+            <span>{side === "player" ? <Shield size={42} /> : <Skull size={42} />}</span>
+          )}
+        </span>
+      </button>
+      <div className="preparation-frontispiece-wing-foot">
+        <span>{cardCount} {t("common.cards")}</span>
+        <div>
+          <button type="button" onClick={onInspect}><Eye size={14} /> {t("common.viewDeck")}</button>
+          <button
+            id={`expedition-${side}-change-deck`}
+            className={drawerOpen ? "is-active" : ""}
+            type="button"
+            onClick={onChangeDeck}
+            aria-expanded={drawerOpen}
+            aria-controls={`expedition-${side}-deck-drawer`}
+          >
+            {side === "player" ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
+            {t("common.changeDeck")}
+          </button>
+        </div>
+      </div>
     </section>
   );
 }

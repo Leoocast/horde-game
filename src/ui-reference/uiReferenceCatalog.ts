@@ -57,7 +57,7 @@ export const UI_REFERENCE_CATALOG: readonly UiReferenceEntry[] = [
     group: "Navegación y ajustes",
     component: "StartMenu",
     source: "src/components/StartMenu.tsx",
-    usedIn: ["Home", "Umbral de Jugar", "Preparar expedición", "Chaos", "Crónicas", "Huestes", "Cómo jugar", "Ajustes"],
+    usedIn: ["Home", "Umbral de Jugar", "Escribir Crónica", "Chaos", "Crónicas", "Huestes", "Cómo jugar", "Ajustes"],
     status: "product-variant",
   },
   {
@@ -82,7 +82,7 @@ export const UI_REFERENCE_CATALOG: readonly UiReferenceEntry[] = [
     group: "Modales y diálogos",
     component: "SetupDeckDrawer",
     source: "src/components/StartMenu.tsx",
-    usedIn: ["Preparar expedición → cambiar Crónica", "Preparar expedición → cambiar Hueste"],
+    usedIn: ["Escribir Crónica → Cambiar mazo de Crónica", "Escribir Crónica → Cambiar mazo de Hueste"],
     status: "product-variant",
     specimen: "modal-gallery",
   },
