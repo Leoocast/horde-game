@@ -24578,6 +24578,20 @@ body.is-victory-clearing .game-battlefield-stage {
   animation: play-threshold-exit 240ms ease-in both;
 }
 
+.play-threshold.is-inscribing .play-threshold-back,
+.play-threshold.is-inscribing .play-threshold-body {
+  pointer-events: none;
+}
+
+.play-threshold.is-inscribing :is(
+  .play-threshold-back,
+  .play-threshold-head,
+  .play-threshold-seam,
+  .play-threshold-gate
+) {
+  animation: play-threshold-fade-out 220ms ease-in both;
+}
+
 /* Atenuación, no cobertura: el fondo del menú tiene que seguir leyéndose. */
 .play-threshold-veil {
   position: absolute;
@@ -24824,26 +24838,25 @@ body.is-victory-clearing .game-battlefield-stage {
   align-items: center;
   justify-content: center;
   padding: 20px;
+  background:
+    radial-gradient(circle at 50% 52%, rgb(80 76 48 / 0.08), transparent 30%),
+    radial-gradient(circle at 50% 50%, rgb(1 4 5 / 0.58) 0 26%, rgb(1 4 5 / 0.78) 60%, rgb(1 4 5 / 0.95) 100%);
+  -webkit-backdrop-filter: blur(5px) saturate(0.86);
+  backdrop-filter: blur(5px) saturate(0.86);
 }
 
 .play-inscribe-dialog {
   position: relative;
   display: grid;
-  width: min(700px, 100%);
+  width: min(860px, 100%);
   justify-items: center;
-  gap: 16px;
-  padding: clamp(34px, 4.2vw, 54px) clamp(28px, 5vw, 66px) clamp(30px, 3.8vw, 46px);
+  gap: 18px;
+  border: 0;
+  padding: clamp(32px, 4vh, 48px) clamp(24px, 4vw, 54px);
+  background: transparent;
+  box-shadow: none;
   text-align: center;
-}
-
-.play-inscribe-dialog::before {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 58% 42% at 50% 58%, rgb(211 187 112 / 0.1), transparent 70%),
-    linear-gradient(90deg, transparent 7%, rgb(206 183 111 / 0.07) 50%, transparent 93%);
-  content: "";
-  pointer-events: none;
+  animation: game-home-dialog-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .play-inscribe-dialog > * {
@@ -24851,60 +24864,64 @@ body.is-victory-clearing .game-battlefield-stage {
   z-index: 1;
 }
 
-.play-inscribe-dialog .hf-ui-title {
+.play-inscribe-dialog.is-closing {
+  animation: game-home-dialog-out 180ms ease-in both;
+}
+
+.play-inscribe-title {
   margin: 0;
   color: #eee1ba;
-  font-size: clamp(30px, 3.3vw, 42px);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(38px, 4.6vw, 58px);
   font-weight: 400;
-  letter-spacing: 0.035em;
-  text-shadow: 0 0 26px rgb(214 190 116 / 0.14);
+  letter-spacing: 0.045em;
+  line-height: 1;
+  text-shadow:
+    0 0 18px rgb(244 222 153 / 0.18),
+    0 0 54px rgb(190 144 55 / 0.12);
 }
 
-.play-inscribe-dialog .game-dialog-kicker {
-  margin: 0;
-  color: #b4a56f;
-  font-size: 9px;
-  letter-spacing: 0.34em;
-}
-
-.play-inscribe-lead {
-  max-width: 550px;
-  margin: 0 auto;
-  color: #aeb8b2;
-  font-family: "Lora", Georgia, serif;
-  font-size: 15px;
-  line-height: 1.66;
+.play-inscribe-seed-heading {
+  margin: 10px 0 -8px;
+  color: #c8b678;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.4em;
+  padding-left: 0.4em;
+  text-shadow: 0 0 16px rgb(218 194 120 / 0.18);
+  text-transform: uppercase;
 }
 
 .play-inscribe-close {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 0;
+  right: 0;
   display: grid;
-  width: 28px;
-  height: 28px;
-  border: 1px solid rgb(160 148 102 / 0.24);
-  background: rgb(10 15 17 / 0.7);
-  color: #7f8c87;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: transparent;
+  color: #73817c;
+  opacity: 0.78;
   place-items: center;
-  transition: border-color 150ms ease, color 150ms ease;
+  transition: color 150ms ease, opacity 150ms ease, transform 150ms ease;
 }
 
 .play-inscribe-close:hover,
 .play-inscribe-close:focus-visible {
-  border-color: rgb(202 182 116 / 0.55);
   color: #e6d59e;
+  opacity: 1;
   outline: none;
+  transform: rotate(8deg);
 }
 
 .play-inscribe-seed {
   position: relative;
   display: grid;
-  width: 100%;
-  gap: 12px;
-  margin-top: 6px;
-  padding: 24px 0 26px;
-  background: radial-gradient(ellipse at 50% 54%, rgb(215 192 118 / 0.08), transparent 67%);
+  width: min(760px, 100%);
+  margin-top: 12px;
+  padding: 28px 34px 30px;
+  background: radial-gradient(ellipse at 50% 52%, rgb(221 195 112 / 0.1), transparent 68%);
 }
 
 .play-inscribe-seed::before,
@@ -24913,8 +24930,8 @@ body.is-victory-clearing .game-battlefield-stage {
   right: 0;
   left: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgb(207 185 114 / 0.52) 22%, rgb(239 218 151 / 0.78) 50%, rgb(207 185 114 / 0.52) 78%, transparent);
-  box-shadow: 0 0 14px rgb(213 189 111 / 0.12);
+  background: linear-gradient(90deg, transparent, rgb(207 185 114 / 0.42) 18%, rgb(239 218 151 / 0.84) 49.6%, rgb(239 218 151 / 0.84) 50.4%, rgb(207 185 114 / 0.42) 82%, transparent);
+  box-shadow: 0 0 18px rgb(213 189 111 / 0.15);
   content: "";
   pointer-events: none;
 }
@@ -24922,32 +24939,41 @@ body.is-victory-clearing .game-battlefield-stage {
 .play-inscribe-seed::before { top: 0; }
 .play-inscribe-seed::after { bottom: 0; }
 
-.play-inscribe-seed-label {
-  color: #c8b678;
-  font-size: 10px;
-  font-weight: 850;
-  letter-spacing: 0.36em;
-  text-transform: uppercase;
-}
-
-.play-inscribe-input {
+.play-inscribe-input,
+.play-inscribe-input-glow {
+  grid-area: 1 / 1;
   width: 100%;
-  border-color: rgb(196 174 105 / 0.5) !important;
-  padding: 18px clamp(12px, 2vw, 22px);
-  background:
-    radial-gradient(ellipse at 50% 50%, rgb(43 44 34 / 0.64), rgb(5 10 12 / 0.9) 72%) !important;
-  color: #f3e5b8 !important;
-  box-shadow:
-    inset 0 1px 10px rgb(0 0 0 / 0.58),
-    0 0 0 1px rgb(212 190 119 / 0.04),
-    0 0 32px rgb(205 179 94 / 0.08) !important;
-  font-size: clamp(21px, 3vw, 32px);
-  letter-spacing: 0.09em;
+  padding: 14px 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: clamp(25px, 3.7vw, 40px);
+  letter-spacing: 0.11em;
   line-height: 1.2;
   text-align: center;
-  text-shadow: 0 0 18px rgb(226 204 134 / 0.22);
   text-transform: uppercase;
-  transition: border-color 180ms ease, box-shadow 220ms ease, color 180ms ease;
+  white-space: nowrap;
+}
+
+.play-inscribe-input-glow {
+  align-self: center;
+  color: transparent;
+  pointer-events: none;
+  text-shadow:
+    0 0 14px rgb(226 204 134 / 0.32),
+    0 0 38px rgb(202 167 74 / 0.16);
+  user-select: none;
+}
+
+.play-inscribe-input-glow.is-empty { opacity: 0; }
+
+.play-inscribe-input {
+  position: relative;
+  z-index: 1;
+  border: 0;
+  background: transparent;
+  caret-color: #efd994;
+  color: #f3e5b8;
+  text-shadow: 0 0 2px rgb(255 234 167 / 0.2);
+  transition: color 180ms ease, text-shadow 220ms ease;
 }
 
 .play-inscribe-input::placeholder {
@@ -24956,27 +24982,32 @@ body.is-victory-clearing .game-battlefield-stage {
 }
 
 .play-inscribe-input:focus {
-  border-color: rgb(226 203 129 / 0.82) !important;
-  box-shadow:
-    inset 0 1px 10px rgb(0 0 0 / 0.58),
-    0 0 0 1px rgb(222 198 122 / 0.12),
-    0 0 38px rgb(205 179 94 / 0.16) !important;
+  color: #fff0bd;
   outline: none;
+  text-shadow: 0 0 2px rgb(255 238 181 / 0.34);
 }
 
 .play-inscribe-seed.is-ready .play-inscribe-input {
-  border-color: rgb(226 203 129 / 0.82) !important;
-  color: #fff0bd !important;
-  box-shadow:
-    inset 0 1px 10px rgb(0 0 0 / 0.5),
-    0 0 0 1px rgb(226 203 129 / 0.14),
-    0 0 42px rgb(205 179 94 / 0.2) !important;
+  color: #fff0bd;
+}
+
+.play-inscribe-seed.is-ready .play-inscribe-input-glow {
+  text-shadow:
+    0 0 15px rgb(245 221 145 / 0.54),
+    0 0 52px rgb(205 179 94 / 0.3);
 }
 
 .play-inscribe-seed.is-invalid .play-inscribe-input {
-  border-color: rgb(184 103 78 / 0.72) !important;
-  color: #e7b29e !important;
-  box-shadow: inset 0 1px 10px rgb(0 0 0 / 0.58), 0 0 26px rgb(151 61 40 / 0.12) !important;
+  color: #e7a58d;
+}
+
+.play-inscribe-seed.is-invalid .play-inscribe-input-glow {
+  text-shadow: 0 0 20px rgb(159 66 43 / 0.24);
+}
+
+.play-inscribe-seed.is-invalid::before,
+.play-inscribe-seed.is-invalid::after {
+  background: linear-gradient(90deg, transparent, rgb(164 83 62 / 0.4) 18%, rgb(207 124 93 / 0.68) 50%, rgb(164 83 62 / 0.4) 82%, transparent);
 }
 
 .play-inscribe-result {
@@ -24988,17 +25019,8 @@ body.is-victory-clearing .game-battlefield-stage {
   text-align: center;
 }
 
-.play-inscribe-result-label {
-  margin: 0;
-  color: #c8b678;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.34em;
-  text-transform: uppercase;
-}
-
 .play-inscribe-result .play-threshold-future {
-  font-size: 30px;
+  font-size: clamp(36px, 3.4vw, 44px);
 }
 
 .play-inscribe-note {
@@ -25019,38 +25041,18 @@ body.is-victory-clearing .game-battlefield-stage {
 }
 
 .play-inscribe-actions {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
+  display: grid;
+  width: min(380px, 100%);
+  justify-items: stretch;
+  gap: 5px;
 }
 
-.play-inscribe-action {
-  display: flex;
-  min-width: 230px;
-  height: 48px;
-  align-items: center;
-  justify-content: center;
-  font-size: 11.5px;
-  font-weight: 900;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+.play-inscribe-submit {
+  height: 52px;
 }
 
-.play-inscribe-action:first-child {
-  min-width: auto;
-  border-color: transparent;
-  background: transparent;
-  box-shadow: none;
-  color: #82908a;
-}
-
-.play-inscribe-action:first-child:hover,
-.play-inscribe-action:first-child:focus-visible {
-  border-color: transparent;
-  background: transparent;
-  color: #ddd1ad;
+.play-inscribe-submit::before {
+  animation-direction: reverse;
 }
 
 @keyframes play-threshold-enter {
@@ -25078,6 +25080,10 @@ body.is-victory-clearing .game-battlefield-stage {
 
 @keyframes play-threshold-gate-right {
   from { opacity: 0; transform: translateX(-38%) scale(0.94); }
+}
+
+@keyframes play-threshold-fade-out {
+  to { opacity: 0; }
 }
 
 @keyframes play-threshold-seam-flash {
@@ -25113,20 +25119,10 @@ body.is-victory-clearing .game-battlefield-stage {
     padding-inline: 22px;
   }
 
-  .play-inscribe-input {
+  .play-inscribe-input,
+  .play-inscribe-input-glow {
     font-size: clamp(16px, 5vw, 23px);
     letter-spacing: 0.04em;
-  }
-}
-
-@media (max-width: 520px) {
-  .play-inscribe-actions {
-    flex-direction: column-reverse;
-    gap: 8px;
-  }
-
-  .play-inscribe-action {
-    width: 100%;
   }
 }
 
@@ -25135,7 +25131,8 @@ body.is-victory-clearing .game-battlefield-stage {
   .play-threshold-veil,
   .play-threshold-head,
   .play-threshold-seam,
-  .play-threshold-gate {
+  .play-threshold-gate,
+  .play-inscribe-dialog {
     animation-duration: 1ms !important;
     animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;

@@ -29,6 +29,14 @@ import {
 import { hostAttackPlayerHitDelay } from "../src/components/hostAttackPresentation";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { playerAttackHostHitDelay } from "../src/components/playerAttackPresentation";
+import {
+  CANON_SEED_COMPACT_LENGTH,
+  CANON_SEED_FORMATTED_LENGTH,
+  canonSeedCharacterCount,
+  formatCanonSeedDraft,
+  formattedCanonSeedCaret,
+  removeCanonSeedCharacter,
+} from "../src/components/playThresholdSeedInput";
 import { setupJustCompleted, setupPrimaryAction, setupProgress } from "../src/components/setupPresentation";
 import { tooltipCenterWithinViewport } from "../src/components/tooltipGeometry";
 import { CardStatsBadge, CardTraitTooltipBadge } from "../src/components/Card";
@@ -53,6 +61,19 @@ import {
   stabilizationCompletionTotalMs,
 } from "../src/store/stabilizationPresentation";
 import { addCard, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
+
+test("inscribed Future entry groups, caps, pastes, and deletes Canon Seed characters", () => {
+  assert.equal(CANON_SEED_COMPACT_LENGTH, 15);
+  assert.equal(CANON_SEED_FORMATTED_LENGTH, 19);
+  assert.equal(formatCanonSeedDraft("123232232"), "123-232-232");
+  assert.equal(formatCanonSeedDraft("hf1elagrvxx1xxx"), "HF1-ELA-GRV-XX1-XXX");
+  assert.equal(formatCanonSeedDraft("hf1-ela-grv-xx1-xxx"), "HF1-ELA-GRV-XX1-XXX");
+  assert.equal(formatCanonSeedDraft("HF1-ELA-GRV-XX1-XXX-TOO-LONG"), "HF1-ELA-GRV-XX1-XXX");
+  assert.equal(canonSeedCharacterCount("HF1-ELA"), 6);
+  assert.equal(formattedCanonSeedCaret(4), 5);
+  assert.equal(formattedCanonSeedCaret(15), 19);
+  assert.equal(removeCanonSeedCharacter("123-232-232", 2), "122-322-32");
+});
 
 test("compact command-bar tooltips stay centered on their own control", () => {
   assert.equal(

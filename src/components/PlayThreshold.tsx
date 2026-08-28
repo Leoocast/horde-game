@@ -4,9 +4,14 @@ import { importCanonMatchOrigin, matchOriginVisualSeed, type MatchOrigin } from 
 import type { InspectableDeck } from "../data/deckCatalog";
 import { useTranslation } from "../i18n/useTranslation";
 import { futureCodeFromSeed } from "../utils/futureIdentity";
-
-/** A Canon code is always `HF1-PPP-HHH-XXD-XXX`: below that length it is still being written. */
-const CANON_CODE_LENGTH = 19;
+import { DestinyActionButton } from "./DestinyActionButton";
+import {
+  CANON_SEED_FORMATTED_LENGTH,
+  canonSeedCharacterCount,
+  formatCanonSeedDraft,
+  formattedCanonSeedCaret,
+  removeCanonSeedCharacter,
+} from "./playThresholdSeedInput";
 
 type DecodedDraft =
   | Readonly<{ status: "empty" }>
@@ -34,6 +39,7 @@ export function PlayThreshold({ playerDecks, hostDecks, closing, onNewFuture, on
   const [inscribeClosing, setInscribeClosing] = useState(false);
   const [draft, setDraft] = useState("");
   const gatesRef = useRef<HTMLDivElement>(null);
+  const seedInputRef = useRef<HTMLInputElement>(null);
 
   const decoded = useMemo<DecodedDraft>(() => {
     const code = draft.trim();
@@ -45,7 +51,7 @@ export function PlayThreshold({ playerDecks, hostDecks, closing, onNewFuture, on
       if (!playerDeckAvailable || !hostDeckAvailable) return { status: "invalid" };
       return { status: "ready", origin: imported };
     } catch {
-      return { status: code.length >= CANON_CODE_LENGTH ? "invalid" : "partial" };
+      return { status: code.length >= CANON_SEED_FORMATTED_LENGTH ? "invalid" : "partial" };
     }
   }, [draft, hostDecks, playerDecks]);
 
@@ -89,6 +95,44 @@ export function PlayThreshold({ playerDecks, hostDecks, closing, onNewFuture, on
     onInscribedFuture(decoded.origin);
   }
 
+  function placeSeedCaret(position: number) {
+    window.requestAnimationFrame(() => {
+      const input = seedInputRef.current;
+      if (!input || document.activeElement !== input) return;
+      input.setSelectionRange(position, position);
+    });
+  }
+
+  function updateSeedDraft(event: React.ChangeEvent<HTMLInputElement>) {
+    const entered = event.currentTarget.value;
+    const enteredCaret = event.currentTarget.selectionStart ?? entered.length;
+    const rawCharactersBeforeCaret = canonSeedCharacterCount(entered.slice(0, enteredCaret));
+    const formatted = formatCanonSeedDraft(entered);
+    let formattedCaret = formattedCanonSeedCaret(rawCharactersBeforeCaret);
+    if (entered[enteredCaret - 1] === "-" && formatted[formattedCaret] === "-") formattedCaret += 1;
+    setDraft(formatted);
+    placeSeedCaret(formattedCaret);
+  }
+
+  function handleSeedKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    if (start === null || end === null || start !== end) return;
+
+    const deletingBackwardAcrossSeparator = event.key === "Backspace" && start > 0 && draft[start - 1] === "-";
+    const deletingForwardAcrossSeparator = event.key === "Delete" && draft[start] === "-";
+    if (!deletingBackwardAcrossSeparator && !deletingForwardAcrossSeparator) return;
+
+    event.preventDefault();
+    const rawCharactersBeforeSeparator = canonSeedCharacterCount(draft.slice(0, start));
+    const rawCharacterIndex = deletingBackwardAcrossSeparator
+      ? rawCharactersBeforeSeparator - 1
+      : rawCharactersBeforeSeparator;
+    setDraft(removeCanonSeedCharacter(draft, rawCharacterIndex));
+    placeSeedCaret(formattedCanonSeedCaret(Math.max(0, rawCharacterIndex)));
+  }
+
   /* The aura follows the pointer inside its own door; the other one steps back. */
   function trackAura(event: React.PointerEvent<HTMLButtonElement>) {
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -97,7 +141,7 @@ export function PlayThreshold({ playerDecks, hostDecks, closing, onNewFuture, on
   }
 
   return (
-    <section className={`play-threshold ${closing ? "is-closing" : ""}`} aria-label={t("threshold.aria")}>
+    <section className={`play-threshold ${closing ? "is-closing" : ""} ${inscribing ? "is-inscribing" : ""}`} aria-label={t("threshold.aria")}>
       <div className="play-threshold-veil" aria-hidden="true" />
 
       <button className="play-threshold-back expedition-back" type="button" onClick={onBack}>
@@ -141,7 +185,7 @@ export function PlayThreshold({ playerDecks, hostDecks, closing, onNewFuture, on
           onPointerDown={(event) => { if (event.target === event.currentTarget) closeInscribe(); }}
         >
           <form
-            className={`play-inscribe-dialog hf-ui-panel game-dialog game-home-dialog ${inscribeClosing ? "is-closing" : ""}`}
+            className={`play-inscribe-dialog ${inscribeClosing ? "is-closing" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="play-inscribe-title"
@@ -152,33 +196,35 @@ export function PlayThreshold({ playerDecks, hostDecks, closing, onNewFuture, on
               <X size={16} />
             </button>
 
-            <p className="game-dialog-kicker">{t("threshold.inscribeKicker")}</p>
-            <h2 id="play-inscribe-title" className="hf-ui-title">{t("threshold.inscribeTitle")}</h2>
-            <p className="play-inscribe-lead">{t("threshold.inscribeDescription")}</p>
+            <h2 id="play-inscribe-title" className="play-inscribe-title">{t("threshold.inscribeTitle")}</h2>
+            <p className="play-inscribe-seed-heading">{t("threshold.seedLabel")}</p>
 
             <div className={`play-inscribe-seed is-${decoded.status}`}>
-              <label className="play-inscribe-seed-label" htmlFor="play-inscribe-code">{t("threshold.seedLabel")}</label>
+              <span className={`play-inscribe-input-glow ${draft ? "" : "is-empty"}`} aria-hidden="true">
+                {draft || "HF1-ELA-GRV-XX1-XXX"}
+              </span>
               <input
+                ref={seedInputRef}
                 id="play-inscribe-code"
-                className="play-inscribe-input game-seed-input"
+                className="play-inscribe-input"
                 value={draft}
                 placeholder="HF1-ELA-GRV-XX1-XXX"
+                aria-label={t("threshold.seedLabel")}
                 aria-describedby="play-inscribe-result"
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="characters"
                 spellCheck={false}
+                maxLength={CANON_SEED_FORMATTED_LENGTH}
                 autoFocus
-                onChange={(event) => setDraft(event.currentTarget.value.toUpperCase())}
+                onChange={updateSeedDraft}
+                onKeyDown={handleSeedKeyDown}
               />
             </div>
 
             <div id="play-inscribe-result" className="play-inscribe-result" aria-live="polite">
               {decoded.status === "ready" ? (
-                <>
-                  <p className="play-inscribe-result-label">{t("threshold.thisFutureIs")}</p>
-                  <p className="play-threshold-future">{futureCodeFromSeed(matchOriginVisualSeed(decoded.origin))}</p>
-                </>
+                <p className="play-threshold-future">{futureCodeFromSeed(matchOriginVisualSeed(decoded.origin))}</p>
               ) : decoded.status === "invalid" ? (
                 <p className="play-inscribe-error" role="alert">{t("threshold.seedRejected")}</p>
               ) : (
@@ -187,14 +233,12 @@ export function PlayThreshold({ playerDecks, hostDecks, closing, onNewFuture, on
             </div>
 
             <div className="play-inscribe-actions">
-              <button className="game-dialog-action play-inscribe-action" type="button" onClick={closeInscribe}>{t("common.cancel")}</button>
-              <button
-                className="game-dialog-action game-dialog-action-primary play-inscribe-action"
+              <DestinyActionButton
+                className="play-inscribe-submit"
                 type="submit"
                 disabled={decoded.status !== "ready"}
-              >
-                {t("threshold.openFuture")}
-              </button>
+                label={t("threshold.openFuture")}
+              />
             </div>
           </form>
         </div>
