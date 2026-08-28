@@ -39,6 +39,13 @@ vfx/                exploraciones de efectos
 
 ## Contenido
 
+- `ui/claude-preparation-frontispiece.html` — segunda vuelta sobre la maqueta 4 de
+  `ui/claude-preparation-book.html`. Fija el frontispicio —sin rosa de los vientos, sin ajustes
+  avanzados, con el número del Futuro como lo más grande de la pantalla y el centro leyéndose
+  *Futuro · número · Crónica · vs · Hueste*— y prueba **cuatro sitios para la dificultad**, conmutables
+  con `1`-`4`: al **pie** junto a Iniciar Crónica, como **cinta** de sólo texto bajo el enfrentamiento,
+  en un **riel** vertical del margen izquierdo, o colgando de la **Hueste**, que es quien despierta. Las
+  cartas conservan el tamaño aprobado y el códec sigue siendo el del juego.
 - `ui/claude-preparation-book.html` — cuatro maquetas de **Preparación** (`ExpeditionSetup`) en la lengua
   visual del Archivo de Semillas: Cinzel Decorative en el título, hilos dorados en vez de paneles, cartas
   sin marco con sombra por alfa y halo del bando, el sello de la rosa cardinal como firma del Futuro y el
