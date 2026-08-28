@@ -9,7 +9,6 @@ export type HowToPlayLauncher =
 
 export type HowToPlayCatalogEntry = Readonly<{
   id: string;
-  icon: "learn" | "preparation";
   kickerKey: TranslationKey;
   titleKey: TranslationKey;
   descriptionKey: TranslationKey;
@@ -20,7 +19,6 @@ export type HowToPlayCatalogEntry = Readonly<{
 export const HOW_TO_PLAY_CATALOG: readonly HowToPlayCatalogEntry[] = Object.freeze([
   Object.freeze({
     id: LEARN_TO_PLAY_JOURNEY_ID,
-    icon: "learn",
     kickerKey: "howToPlay.learnToPlayKicker",
     titleKey: "howToPlay.learnToPlayTitle",
     descriptionKey: "howToPlay.learnToPlayDescription",
@@ -28,7 +26,6 @@ export const HOW_TO_PLAY_CATALOG: readonly HowToPlayCatalogEntry[] = Object.free
   }),
   Object.freeze({
     id: PREPARATION_LESSON_ID,
-    icon: "preparation",
     kickerKey: "howToPlay.preparationKicker",
     titleKey: "howToPlay.preparationTitle",
     descriptionKey: "howToPlay.preparationDescription",

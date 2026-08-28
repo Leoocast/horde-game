@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hostfall — Preparación · Frontispicio: dónde vive la dificultad</title>
+  <style>
+    /* ─────────────────────────────────────────────────────────────────────────
+       Segunda vuelta sobre `ui/claude-preparation-book.html`, quedándose con la
+       cuarta maqueta: el FRONTISPICIO.
+
+       Lo fijo en las cuatro versiones:
+         · sin rosa de los vientos;
+         · sin ajustes avanzados —esa sección desaparece de Preparación;
+         · el número del Futuro es lo más grande de la pantalla;
+         · el centro se lee de arriba abajo: Futuro · número · Crónica · vs · Hueste;
+         · las cartas conservan el tamaño de la maqueta 4.
+
+       Lo único que cambia es DÓNDE vive la dificultad, porque nada puede
+       robarle protagonismo al número:
+         1 · Pie        — al pie, junto a Iniciar Crónica.
+         2 · Cinta      — un renglón fino bajo el enfrentamiento, sólo texto.
+         3 · Riel       — un riel vertical en el margen izquierdo.
+         4 · Hueste     — colgando de la Hueste, que es quien despierta.
+
+       Servir con:  node dev/mockups/serve.mjs
+       ───────────────────────────────────────────────────────────────────────── */
+    @font-face { font-family: "Cinzel Decorative Local"; src: url("../assets/fonts/cinzel-decorative-latin.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+    @font-face { font-family: "Cinzel Local"; src: url("../assets/fonts/cinzel-latin.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+    @font-face { font-family: "Lora Local"; src: url("../assets/fonts/lora-normal-latin.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+    @font-face { font-family: "Lora Italic Local"; src: url("../assets/fonts/lora-italic-latin.woff2") format("woff2"); font-style: italic; font-weight: 400 700; font-display: swap; }
+
+    :root {
+      color-scheme: dark;
+      --ink: #030608;
+      --gold: #d6a44c;
+      --gold-soft: #a3905e;
+      --gold-bright: #f0e5c4;
+      --gold-plate: #e6d59e;
+      --gold-rule: rgb(199 170 105 / 0.34);
+      --gold-rule-strong: rgb(207 183 105 / 0.62);
+      --teal: #9ec9c2;
+      --parchment: #e0d3ad;
+      --text: #c8cdcb;
+      --steel: #abb4b6;
+      --muted: #93a0a3;
+      --muted-2: #7b888c;
+      --hairline: rgb(145 154 157 / 0.15);
+      --hairline-warm: rgb(166 151 105 / 0.24);
+      --display: "Cinzel Decorative Local", Georgia, "Times New Roman", serif;
+      --title: "Cinzel Local", Georgia, "Times New Roman", serif;
+      --serif: "Lora Local", Georgia, "Times New Roman", serif;
+      --serif-i: "Lora Italic Local", Georgia, "Times New Roman", serif;
+      --ui: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+      --deck-ela: #8fb772;
+      --deck-cec: #c0566f;
+      --deck-grv: #8da96a;
+      --deck-vrk: #c67a41;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: var(--ink);
+      color: var(--text);
+      font-family: var(--ui);
+      -webkit-font-smoothing: antialiased;
+    }
+    button { border: none; background: none; color: inherit; cursor: pointer; font: inherit; }
+    :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+    /* ── Barra de la maqueta ────────────────────────────────────────────────── */
+    .mock-bar {
+      position: fixed;
+      z-index: 900;
+      top: 0;
+      right: 0;
+      left: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 40px;
+      border-bottom: 1px solid var(--hairline-warm);
+      padding: 0 13px;
+      background: rgb(3 7 8 / 0.96);
+      color: var(--muted-2);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    .mock-bar b { color: var(--gold); }
+    .mock-bar .spacer { flex: 1; }
+    .mock-bar .hint { font-family: var(--serif-i); font-size: 12px; font-style: italic; font-weight: 400; letter-spacing: 0; text-transform: none; }
+    .seg { display: flex; overflow: hidden; border: 1px solid var(--gold-rule); border-radius: 3px; }
+    .seg button {
+      border-left: 1px solid rgb(160 148 102 / 0.18);
+      padding: 6px 11px;
+      background: rgb(16 22 24 / 0.9);
+      color: var(--muted-2);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      transition: color 140ms ease, background-color 140ms ease;
+    }
+    .seg button:first-child { border-left: 0; }
+    .seg button:hover { background: rgb(30 38 40 / 0.95); color: var(--gold-bright); }
+    .seg button[aria-pressed="true"] { background: linear-gradient(180deg, rgb(60 54 34 / 0.9), rgb(26 30 30 / 0.95)); color: var(--gold-bright); }
+
+    /* ── Escenario: el fondo del juego ──────────────────────────────────────── */
+    .frame {
+      position: absolute;
+      inset: 40px 0 0;
+      overflow: hidden;
+      isolation: isolate;
+      background:
+        linear-gradient(90deg, rgb(4 7 9 / 0.95), rgb(11 17 20 / 0.8) 48%, rgb(4 7 9 / 0.94)),
+        linear-gradient(0deg, rgb(3 6 8 / 0.94), rgb(0 0 0 / 0.14) 60%),
+        radial-gradient(120% 90% at 50% 8%, #10181b, #060a0c 58%, #040708);
+    }
+    .backdrop { position: absolute; inset: -6%; pointer-events: none; }
+    .backdrop-grid { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.5; }
+    .backdrop-grid rect { fill: none; stroke: rgb(148 178 172 / 0.06); stroke-width: 1; }
+    .backdrop-dial {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: min(112vh, 96vw);
+      aspect-ratio: 1;
+      translate: -50% -50%;
+      opacity: 0.4;
+    }
+    .backdrop-dial svg { width: 100%; height: 100%; animation: dial-drift 260s linear infinite; }
+    .backdrop-stars i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #cfe0da; animation: star-breathe 6s ease-in-out infinite; }
+    @keyframes dial-drift { to { rotate: -360deg; } }
+    @keyframes star-breathe { 0%, 100% { opacity: 0.12; } 50% { opacity: 0.45; } }
+    .screen-ambience {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 46%, rgb(8 13 16 / 0.26), rgb(3 6 8 / 0.62) 76%);
+      pointer-events: none;
+    }
+
+    /* ── Armazón ────────────────────────────────────────────────────────────── */
+    .prep {
+      position: absolute;
+      z-index: 2;
+      inset: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      padding: clamp(18px, 2.6vh, 32px) clamp(24px, 3vw, 54px) clamp(16px, 2.2vh, 28px);
+      animation: prep-in 320ms ease-out both;
+    }
+    @keyframes prep-in { from { opacity: 0; transform: translateY(8px); } }
+
+    .prep-head {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 18px;
+      border-bottom: 1px solid var(--hairline-warm);
+      padding-bottom: 12px;
+    }
+    .prep-back {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--muted-2);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      transition: color 150ms ease, transform 150ms ease;
+    }
+    .prep-back:hover { color: var(--gold-bright); transform: translateX(-3px); }
+    .prep-title {
+      margin: 0;
+      color: var(--parchment);
+      font-family: var(--display);
+      font-size: clamp(20px, 2.1vw, 30px);
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      text-align: center;
+      text-shadow: 0 4px 22px rgb(0 0 0 / 0.85);
+    }
+    .prep-head-note { color: var(--muted-2); font-family: var(--serif-i); font-size: 12.5px; font-style: italic; text-align: right; }
+
+    .kicker { color: var(--muted-2); font-size: 11px; font-weight: 800; letter-spacing: 0.28em; text-transform: uppercase; }
+
+    /* ── Lámina: dos cartas y el Futuro entre ellas ─────────────────────────── */
+    .stage {
+      position: relative;
+      display: grid;
+      min-height: 0;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: center;
+      gap: clamp(10px, 2vw, 44px);
+      padding: clamp(10px, 2vh, 26px) 0;
+    }
+
+    .wing { display: grid; min-height: 0; justify-items: center; gap: 12px; }
+    .wing[data-side="player"] { justify-items: end; text-align: right; }
+    .wing[data-side="host"] { justify-items: start; text-align: left; }
+
+    /* El tamaño de carta aprobado en la maqueta 4. */
+    .duel-card { position: relative; display: block; isolation: isolate; width: min(clamp(180px, 19vw, 300px), 40vh); margin: 0; }
+    .duel-card img {
+      display: block;
+      width: 100%;
+      height: auto;
+      filter:
+        drop-shadow(0 1px 1px rgb(0 0 0 / 0.6))
+        drop-shadow(0 10px 16px rgb(0 0 0 / 0.5))
+        drop-shadow(0 26px 40px rgb(0 0 0 / 0.42));
+      transition: transform 340ms cubic-bezier(0.16, 1, 0.3, 1), filter 340ms ease;
+    }
+    .duel-card[data-side="player"] img { transform: perspective(1000px) rotateY(9deg) rotate(-3deg); }
+    .duel-card[data-side="host"] img { transform: perspective(1000px) rotateY(-9deg) rotate(3deg); }
+    .duel-card[data-side="player"]:hover img { transform: perspective(1000px) rotateY(4deg) rotate(-1.2deg) translateY(-9px) scale(1.045); }
+    .duel-card[data-side="host"]:hover img { transform: perspective(1000px) rotateY(-4deg) rotate(1.2deg) translateY(-9px) scale(1.045); }
+    .duel-card::before {
+      position: absolute;
+      z-index: -1;
+      inset: 12% 0 6%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, color-mix(in srgb, var(--deck-accent) 46%, transparent), transparent 68%);
+      content: "";
+      filter: blur(30px);
+      opacity: 0.4;
+      transition: opacity 340ms ease;
+    }
+    .duel-card:hover::before { opacity: 0.7; }
+
+    .wing-foot { display: grid; justify-items: inherit; gap: 8px; }
+    .deck-count { color: var(--muted-2); font-family: var(--title); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; }
+    .plate-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .plate-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid rgb(158 151 110 / 0.28);
+      padding: 7px 13px;
+      background: rgb(4 12 14 / 0.7);
+      color: #a8ad98;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+    }
+    .plate-button:hover { border-color: rgb(214 192 122 / 0.7); background: rgb(12 20 22 / 0.8); color: var(--gold-bright); }
+
+    /* ── El centro: Futuro · número · Crónica · vs · Hueste ─────────────────── */
+    .center { display: grid; justify-items: center; gap: 0; text-align: center; }
+    .center .kicker { margin-bottom: 10px; }
+
+    /* Lo más grande de la pantalla, y por eso lo único que crece con el ancho. */
+    .future-code {
+      margin: 0;
+      color: var(--gold-bright);
+      font-family: var(--title);
+      font-size: clamp(52px, min(7vw, 15vh), 118px);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      line-height: 0.94;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 30px rgb(220 185 94 / 0.34), 0 0 90px rgb(220 185 94 / 0.14);
+      white-space: nowrap;
+    }
+    .future-code.is-striking span { display: inline-block; animation: strike 440ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+    .future-code.is-striking span:nth-child(2) { animation-delay: 45ms; }
+    .future-code.is-striking span:nth-child(3) { animation-delay: 90ms; }
+    .future-code.is-striking span:nth-child(5) { animation-delay: 150ms; }
+    .future-code.is-striking span:nth-child(6) { animation-delay: 195ms; }
+    .future-code.is-striking span:nth-child(7) { animation-delay: 240ms; }
+    @keyframes strike {
+      0% { opacity: 0; transform: translateY(-10px) scale(1.4); filter: brightness(2.2); }
+      70% { opacity: 1; }
+      100% { opacity: 1; transform: none; filter: none; }
+    }
+
+    /* Un hilo corto separa la identidad del enfrentamiento. */
+    .center-rule { width: clamp(120px, 14vw, 230px); height: 1px; margin: 18px 0 16px; background: linear-gradient(90deg, transparent, var(--gold-rule-strong), transparent); }
+
+    .match { display: grid; gap: 5px; }
+    .match span {
+      color: var(--parchment);
+      font-family: var(--serif);
+      font-size: clamp(15px, 1.25vw, 19px);
+      line-height: 1.3;
+    }
+    .match .vs {
+      color: var(--muted-2);
+      font-family: var(--title);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+    .match .host { color: #d9cfc0; }
+
+    .awakening {
+      margin: 0;
+      color: var(--muted);
+      font-family: var(--serif-i);
+      font-size: clamp(12.5px, 1vw, 14.5px);
+      font-style: italic;
+    }
+    .awakening strong { color: var(--gold-plate); font-family: var(--title); font-style: normal; font-weight: 700; letter-spacing: 0.06em; }
+
+    /* ── Dificultad: dos presentaciones, cuatro sitios ──────────────────────── */
+    .fate-plate {
+      position: relative;
+      display: grid;
+      gap: 2px;
+      border: 1px solid rgb(145 154 157 / 0.16);
+      padding: 9px 14px;
+      background: rgb(6 12 14 / 0.55);
+      text-align: left;
+      transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
+    }
+    .fate-plate strong { color: var(--steel); font-family: var(--title); font-size: 13.5px; font-weight: 700; letter-spacing: 0.06em; }
+    .fate-plate small { color: var(--muted-2); font-family: var(--serif); font-size: 11.5px; }
+    .fate-plate:hover { border-color: rgb(199 170 105 / 0.42); transform: translateY(-1px); }
+    .fate-plate[aria-pressed="true"] { border-color: var(--gold-rule-strong); background: linear-gradient(180deg, rgb(38 34 20 / 0.66), rgb(8 13 15 / 0.8)); }
+    .fate-plate[aria-pressed="true"] strong { color: var(--gold-bright); }
+
+    /* Sólo texto: la presentación más callada, para no competir con el número. */
+    .fate-ribbon { display: flex; align-items: center; gap: 14px; }
+    .fate-ribbon button {
+      color: var(--muted-2);
+      font-family: var(--title);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      transition: color 160ms ease;
+    }
+    .fate-ribbon button:hover { color: var(--parchment); }
+    .fate-ribbon button[aria-pressed="true"] { color: var(--gold-bright); }
+    .fate-ribbon button[aria-pressed="true"]::before { color: var(--gold); content: "◆ "; font-size: 8px; vertical-align: middle; }
+    .fate-ribbon i { color: rgb(145 154 157 / 0.3); font-size: 7px; font-style: normal; }
+    .fate-label { color: var(--muted-2); font-size: 10px; font-weight: 800; letter-spacing: 0.24em; text-transform: uppercase; }
+
+    /* ── Pie ────────────────────────────────────────────────────────────────── */
+    .prep-foot {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: clamp(12px, 2vw, 28px);
+      border-top: 1px solid var(--hairline-warm);
+      padding-top: 14px;
+    }
+    .foot-left { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-right: auto; }
+
+    .action-destiny {
+      position: relative;
+      display: flex;
+      min-width: 296px;
+      height: 50px;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border: 1px solid var(--gold-rule-strong);
+      border-radius: 2px;
+      padding: 0 22px;
+      background:
+        linear-gradient(105deg, rgb(10 18 21 / 0.98), rgb(26 35 36 / 0.98) 52%, rgb(8 15 18 / 0.99)),
+        radial-gradient(circle at 18% 50%, rgb(89 146 147 / 0.2), transparent 42%);
+      color: var(--gold-plate);
+      box-shadow: inset 0 1px 0 rgb(251 235 177 / 0.1), inset 0 -1px 0 rgb(0 0 0 / 0.62), 0 8px 22px rgb(0 0 0 / 0.34);
+      transition: border-color 180ms ease, color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+    }
+    .action-destiny strong {
+      position: relative;
+      z-index: 2;
+      font-family: var(--serif);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .action-destiny::before {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: calc(100% + 64px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: conic-gradient(from 20deg, transparent, rgb(108 180 178 / 0.18), transparent 34%, rgb(222 196 116 / 0.16), transparent 68%);
+      content: "";
+      opacity: 0.65;
+      transform: translate(-50%, -50%);
+      animation: destiny-orbit 8s linear infinite reverse;
+    }
+    .action-destiny::after { position: absolute; inset: 3px; border: 1px solid rgb(218 196 126 / 0.1); content: ""; }
+    .action-destiny:hover {
+      border-color: rgb(234 210 133 / 0.92);
+      color: #fff0bc;
+      transform: translateY(-1px);
+      box-shadow: inset 0 1px 0 rgb(255 239 184 / 0.14), 0 10px 26px rgb(0 0 0 / 0.42), 0 0 25px rgb(83 153 151 / 0.18);
+    }
+    .action-destiny:hover::before { opacity: 1; animation-duration: 1.4s; }
+    @keyframes destiny-orbit { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       1 · PIE — la dificultad baja al pie, junto a Iniciar Crónica
+       ═══════════════════════════════════════════════════════════════════════ */
+    .p-foot .fate-row { display: flex; gap: 8px; }
+    .p-foot .foot-left { gap: 18px; }
+    .p-foot .foot-left .awakening { max-width: 26ch; }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       2 · CINTA — un renglón fino bajo el enfrentamiento, sólo texto
+       ═══════════════════════════════════════════════════════════════════════ */
+    .p-ribbon .fate-strip { display: grid; justify-items: center; gap: 10px; margin-top: 22px; }
+    .p-ribbon .fate-strip::before {
+      width: clamp(90px, 10vw, 170px);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgb(145 154 157 / 0.32), transparent);
+      content: "";
+    }
+    .p-ribbon .fate-strip .awakening { margin-top: 2px; }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       3 · RIEL — un riel vertical en el margen izquierdo, fuera de la lámina
+       ═══════════════════════════════════════════════════════════════════════ */
+    .p-rail .stage { padding-left: clamp(132px, 14vw, 205px); }
+    .p-rail .rail {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      display: grid;
+      width: clamp(112px, 12vw, 176px);
+      gap: 8px;
+      padding-right: clamp(14px, 1.6vw, 26px);
+      translate: 0 -50%;
+    }
+    .p-rail .rail::after {
+      position: absolute;
+      top: -6%;
+      right: 0;
+      bottom: -6%;
+      width: 1px;
+      background: linear-gradient(transparent, rgb(156 137 89 / 0.28) 18% 82%, transparent);
+      content: "";
+    }
+    .p-rail .rail .fate-label { margin-bottom: 2px; }
+    .p-rail .rail .fate-plate { padding: 8px 12px; }
+    .p-rail .rail .awakening { margin-top: 6px; font-size: 12.5px; }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       4 · HUESTE — la dificultad cuelga de quien despierta
+       ═══════════════════════════════════════════════════════════════════════ */
+    .p-host .host-fate {
+      display: grid;
+      width: 100%;
+      max-width: 340px;
+      gap: 9px;
+      border-top: 1px solid var(--hairline-warm);
+      padding-top: 11px;
+    }
+    .p-host .host-fate-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .p-host .host-fate .fate-row { display: flex; gap: 6px; }
+    .p-host .host-fate .fate-plate { flex: 1 1 0; padding: 8px 10px; text-align: center; }
+    .p-host .host-fate .fate-plate strong { font-size: 12.5px; }
+    .p-host .host-fate .fate-plate small { font-size: 11px; }
+    /* La cartela hace más alta el ala de la Hueste, así que la lámina cede un
+       punto de carta para que la composición siga entrando entera. */
+    .p-host .stage { align-items: start; gap: clamp(10px, 1.6vw, 34px); padding-top: clamp(6px, 1.4vh, 16px); }
+    .p-host .duel-card { width: min(clamp(180px, 19vw, 300px), 34vh); }
+    .p-host .wing { align-content: start; }
+    .p-host .center { align-self: center; }
+
+    /* ── Notas ──────────────────────────────────────────────────────────────── */
+    .notes {
+      position: fixed;
+      z-index: 950;
+      top: 40px;
+      right: 0;
+      bottom: 0;
+      overflow: auto;
+      width: min(440px, 92vw);
+      border-left: 1px solid var(--gold-rule);
+      padding: 22px 24px 40px;
+      background: rgb(6 10 11 / 0.97);
+      transform: translateX(100%);
+      transition: transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .notes.is-open { transform: none; }
+    .notes h2 { margin: 0 0 14px; color: var(--parchment); font-family: var(--title); font-size: 19px; font-weight: 700; }
+    .notes h3 { margin: 20px 0 6px; color: var(--gold); font-size: 10.5px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+    .notes ul { margin: 0; padding-left: 17px; }
+    .notes li { margin-bottom: 8px; color: var(--muted); font-family: var(--serif); font-size: 13px; line-height: 1.6; }
+    .notes strong { color: var(--text); }
+    .notes em { color: var(--gold-bright); font-style: normal; }
+
+    @media (max-width: 1180px) {
+      .stage { grid-template-columns: 1fr; gap: 18px; }
+      .wing[data-side="player"], .wing[data-side="host"] { justify-items: center; text-align: center; }
+      .duel-card { width: min(38vw, 26vh); }
+      .p-rail .stage { padding-left: 0; }
+      .p-rail .rail { position: static; width: 100%; translate: none; padding-right: 0; }
+      .p-rail .rail::after { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="mock-bar">
+    <b>Claude · Preparación · Frontispicio</b>
+    <div class="seg" id="variants">
+      <button type="button" data-variant="foot" aria-pressed="true">1 · Pie</button>
+      <button type="button" data-variant="ribbon" aria-pressed="false">2 · Cinta</button>
+      <button type="button" data-variant="rail" aria-pressed="false">3 · Riel</button>
+      <button type="button" data-variant="host" aria-pressed="false">4 · Hueste</button>
+    </div>
+    <span class="hint" id="variant-hint">La dificultad baja al pie, junto a Iniciar Crónica.</span>
+    <div class="spacer"></div>
+    <div class="seg">
+      <button type="button" id="reroll">Otro futuro</button>
+      <button type="button" id="notes-toggle">Notas</button>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="backdrop" aria-hidden="true">
+      <svg class="backdrop-grid" id="backdrop-grid" preserveAspectRatio="none"></svg>
+      <div class="backdrop-stars" id="backdrop-stars"></div>
+      <div class="backdrop-dial" id="backdrop-dial"></div>
+    </div>
+    <div class="screen-ambience" aria-hidden="true"></div>
+    <section class="prep" id="prep" aria-label="Escribir Crónica"></section>
+  </div>
+
+  <aside class="notes" id="notes" aria-label="Notas de diseño">
+    <h2>Frontispicio: dónde vive la dificultad</h2>
+
+    <h3>Lo que ya no cambia</h3>
+    <ul>
+      <li>Fuera la <strong>rosa de los vientos</strong>: el sello dejaba dos centros de atención en el
+        mismo eje. Ahora el centro sólo tiene una jerarquía.</li>
+      <li>Fuera los <strong>ajustes avanzados</strong>. La Canon Seed se inscribe en el umbral y el Modo
+        desarrollador vive en Ajustes; Preparación deja de ser un formulario.</li>
+      <li>El <strong>número es lo más grande de la pantalla</strong> —hasta 118 px— y lo único que crece
+        con el ancho. Todo lo demás está por debajo de 20 px.</li>
+      <li>El centro se lee de arriba abajo: <em>Futuro · número · hilo · Crónica · vs · Hueste</em>.</li>
+      <li>Las cartas conservan el tamaño aprobado y las Crónicas ya no repiten su nombre bajo la carta:
+        se leen una sola vez, en el centro.</li>
+    </ul>
+
+    <h3>Las cuatro colocaciones</h3>
+    <ul>
+      <li><strong>1 · Pie.</strong> Las tres dificultades bajan a la barra inferior, a la izquierda de
+        <em>Iniciar Crónica</em>, con el despertar de la Hueste al lado. La lámina queda intacta y la
+        decisión se toma justo antes de pulsar. Es la más segura.</li>
+      <li><strong>2 · Cinta.</strong> Un renglón de sólo texto bajo el enfrentamiento, separado por un
+        hilo corto: <em>Aventurero · Veterano · Condenado</em>, con la elegida en oro. Es la que menos pesa
+        —no hay ni una placa— pero es la única que ocupa el eje central.</li>
+      <li><strong>3 · Riel.</strong> Un riel vertical en el margen izquierdo, fuera de la lámina, con su
+        propio hilo. Deja el centro absolutamente limpio y da sitio de sobra si algún día hay más
+        dificultades o un modo nuevo.</li>
+      <li><strong>4 · Hueste.</strong> La dificultad cuelga de la carta de la Hueste, que es quien
+        despierta: elegirla es decir cuándo llega. Es la más narrativa; a cambio rompe la simetría de la
+        lámina, porque un lado pesa más que el otro.</li>
+    </ul>
+
+    <h3>Abierto</h3>
+    <ul>
+      <li>Con el nombre de las Crónicas ya en el centro, ¿las alas necesitan algo más que
+        <em>Ver mazo</em> y <em>Cambiar</em>?</li>
+      <li>¿El despertar de la Hueste viaja siempre con la dificultad, como aquí, o merece un sitio fijo?</li>
+    </ul>
+  </aside>
+
+  <script>
+    "use strict";
+
+    /* ── Códec real (RNG.ts, futureIdentity.ts, CanonSeed.ts) ───────────────── */
+    const ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    function hashSeed(seed) {
+      let hash = 2166136261;
+      for (let i = 0; i < seed.length; i += 1) {
+        hash ^= seed.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return hash >>> 0 || 1;
+    }
+
+    function futureCodeFromSeed(seed) {
+      const value = (hashSeed(seed) % 999999) + 1;
+      const digits = String(value).padStart(6, "0");
+      return digits.slice(0, 3) + "·" + digits.slice(3);
+    }
+
+    function canonCodeOf(player, host, mode, entropy) {
+      return "HF1-" + player + "-" + host + "-" + entropy.slice(0, 2) + mode + "-" + entropy.slice(2);
+    }
+
+    function newEntropy() {
+      const bytes = new Uint8Array(16);
+      let out = "";
+      while (out.length < 5) {
+        crypto.getRandomValues(bytes);
+        for (const byte of bytes) {
+          if (byte >= 252 || out.length >= 5) continue;
+          out += ALPHABET[byte % ALPHABET.length];
+        }
+      }
+      return out;
+    }
+
+    /* ── Contenido real ─────────────────────────────────────────────────────── */
+    const DECKS = {
+      ELA: { side: "player", size: 39, accent: "var(--deck-ela)", name: "El Pacto de Elarion", card: "pact_of_elarion/aelyra_heir_of_elarion.png" },
+      CEC: { side: "player", size: 40, accent: "var(--deck-cec)", name: "La Corte del Eclipse Carmesí", card: "court_of_the_crimson_eclipse/mirevna_countess_of_the_crimson_eclipse.png" },
+      GRV: { side: "host", size: 50, accent: "var(--deck-grv)", name: "El Alzamiento de los Sinsepulcro", card: "uprising_of_the_graveless/nerezh_graveless_matriarch.png" },
+      VRK: { side: "host", size: 50, accent: "var(--deck-vrk)", name: "La Legión de Varka", card: "legion_of_varka/varka_infernal_matriarch.png" },
+    };
+    const MODES = {
+      "1": { label: "Aventurero", turns: 4 },
+      "2": { label: "Veterano", turns: 3 },
+      "3": { label: "Condenado", turns: 2 },
+    };
+    const PLAYER_CODES = ["ELA", "CEC"];
+    const HOST_CODES = ["GRV", "VRK"];
+    const VARIANT_HINTS = {
+      foot: "La dificultad baja al pie, junto a Iniciar Crónica.",
+      ribbon: "Un renglón fino bajo el enfrentamiento, sólo texto.",
+      rail: "Un riel vertical en el margen izquierdo, fuera de la lámina.",
+      host: "La dificultad cuelga de la Hueste, que es quien despierta.",
+    };
+
+    const state = { player: "CEC", host: "GRV", mode: "2", entropy: newEntropy(), variant: "foot", strike: false };
+
+    const $ = (selector, scope) => (scope || document).querySelector(selector);
+    const $$ = (selector, scope) => Array.from((scope || document).querySelectorAll(selector));
+    const canonCode = () => canonCodeOf(state.player, state.host, state.mode, state.entropy);
+    const futureCode = () => futureCodeFromSeed(canonCode());
+    const playerDeck = () => DECKS[state.player];
+    const hostDeck = () => DECKS[state.host];
+
+    function cardImage(path, alt) {
+      return '<img src="../cards/' + path + '" alt="' + alt + '" draggable="false"'
+        + ' onerror="this.onerror=null;this.src=\'../../../public/cards/' + path + '\'" />';
+    }
+
+    function digits(code) {
+      return code.split("").map((character) => (character === "·" ? "<span>·</span>" : "<span>" + character + "</span>")).join("");
+    }
+
+    /* ── Piezas ─────────────────────────────────────────────────────────────── */
+    function headHtml() {
+      return '<header class="prep-head">'
+        + '<button class="prep-back" type="button" data-action="back">← Volver al umbral</button>'
+        + '<h1 class="prep-title">Escribir Crónica</h1>'
+        + '<p class="prep-head-note">El Futuro ya viene contigo</p>'
+        + "</header>";
+    }
+
+    function wingFootHtml(side, deck) {
+      return '<span class="deck-count">' + deck.size + " cartas</span>"
+        + '<div class="plate-actions">'
+        + '<button class="plate-button" type="button" data-action="inspect" data-side="' + side + '">Ver mazo</button>'
+        + '<button class="plate-button" type="button" data-action="cycle" data-side="' + side + '">Cambiar</button>'
+        + "</div>";
+    }
+
+    function wingHtml(side) {
+      const deck = side === "player" ? playerDeck() : hostDeck();
+      /* En la version 4 la cartela sustituye al pie del ala en vez de sumarse a
+         el: apilados, el ala de la Hueste ya no cabe en la lamina. */
+      const cartela = side === "host" && state.variant === "host";
+      return '<div class="wing" data-side="' + side + '">'
+        + '<p class="kicker">' + (side === "player" ? "Cronista" : "Hueste") + "</p>"
+        + '<figure class="duel-card" data-side="' + side + '" style="--deck-accent: ' + deck.accent + '">'
+        + cardImage(deck.card, deck.name) + "</figure>"
+        + (cartela
+          ? hostFateHtml(side, deck)
+          : '<div class="wing-foot">' + wingFootHtml(side, deck) + "</div>")
+        + "</div>";
+    }
+
+    function centerHtml() {
+      return '<div class="center">'
+        + '<p class="kicker">Futuro</p>'
+        + '<p class="future-code' + (state.strike ? " is-striking" : "") + '">' + digits(futureCode()) + "</p>"
+        + '<span class="center-rule" aria-hidden="true"></span>'
+        + '<div class="match"><span class="player">' + playerDeck().name + "</span>"
+        + '<span class="vs">vs</span>'
+        + '<span class="host">' + hostDeck().name + "</span></div>"
+        + (state.variant === "ribbon" ? ribbonHtml() : "")
+        + "</div>";
+    }
+
+    function platesHtml() {
+      return '<div class="fate-row">'
+        + Object.keys(MODES).map((key) => '<button class="fate-plate" type="button" data-action="mode" data-mode="' + key + '"'
+          + ' aria-pressed="' + (key === state.mode) + '"><strong>' + MODES[key].label + "</strong>"
+          + "<small>Preparación " + MODES[key].turns + "</small></button>").join("")
+        + "</div>";
+    }
+
+    function ribbonHtml() {
+      const keys = Object.keys(MODES);
+      return '<div class="fate-strip">'
+        + '<div class="fate-ribbon">'
+        + keys.map((key, index) => (index ? "<i>◆</i>" : "")
+          + '<button type="button" data-action="mode" data-mode="' + key + '" aria-pressed="' + (key === state.mode) + '">'
+          + MODES[key].label + "</button>").join("")
+        + "</div>"
+        + awakeningHtml()
+        + "</div>";
+    }
+
+    function railHtml() {
+      return '<div class="rail"><p class="fate-label">Elige tu destino</p>'
+        + Object.keys(MODES).map((key) => '<button class="fate-plate" type="button" data-action="mode" data-mode="' + key + '"'
+          + ' aria-pressed="' + (key === state.mode) + '"><strong>' + MODES[key].label + "</strong>"
+          + "<small>Preparación " + MODES[key].turns + "</small></button>").join("")
+        + awakeningHtml()
+        + "</div>";
+    }
+
+    function hostFateHtml(side, deck) {
+      return '<div class="host-fate">'
+        + '<div class="host-fate-top">' + wingFootHtml(side, deck) + "</div>"
+        + platesHtml()
+        + awakeningHtml()
+        + "</div>";
+    }
+
+    function awakeningHtml() {
+      return '<p class="awakening">La Hueste despierta después de <strong>' + MODES[state.mode].turns + "</strong> turnos</p>";
+    }
+
+    function footHtml() {
+      return '<footer class="prep-foot">'
+        + '<div class="foot-left">'
+        + (state.variant === "foot" ? platesHtml() + awakeningHtml() : "")
+        + "</div>"
+        + '<button class="plate-button" type="button" data-action="copy">Copiar identidad</button>'
+        + '<button class="action-destiny" type="button" data-action="start"><strong>Iniciar Crónica</strong></button>'
+        + "</footer>";
+    }
+
+    function render(strike) {
+      state.strike = Boolean(strike);
+      $("#prep").innerHTML = headHtml()
+        + '<div class="stage">'
+        + (state.variant === "rail" ? railHtml() : "")
+        + wingHtml("player") + centerHtml() + wingHtml("host")
+        + "</div>"
+        + footHtml();
+      $("#prep").className = "prep p-" + state.variant;
+      state.strike = false;
+    }
+
+    /* ── Fondo ──────────────────────────────────────────────────────────────── */
+    function paintBackdrop() {
+      let grid = "";
+      for (let x = 0; x <= 1600; x += 116) grid += '<rect x="' + x + '" y="0" width="116" height="1000" />';
+      for (let y = 0; y <= 1000; y += 132) grid += '<rect x="0" y="' + y + '" width="1600" height="132" />';
+      const svg = $("#backdrop-grid");
+      svg.setAttribute("viewBox", "0 0 1600 1000");
+      svg.innerHTML = grid;
+
+      let ticks = "";
+      for (let i = 0; i < 72; i += 1) {
+        const angle = (i / 72) * Math.PI * 2;
+        const long = i % 6 === 0;
+        ticks += '<path d="M' + (500 + Math.cos(angle) * (long ? 460 : 478)).toFixed(1) + " " + (500 + Math.sin(angle) * (long ? 460 : 478)).toFixed(1)
+          + "L" + (500 + Math.cos(angle) * 492).toFixed(1) + " " + (500 + Math.sin(angle) * 492).toFixed(1)
+          + '" stroke="#9ec9c2" stroke-opacity="' + (long ? 0.28 : 0.13) + '" stroke-width="' + (long ? 2 : 1) + '" />';
+      }
+      $("#backdrop-dial").innerHTML = '<svg viewBox="0 0 1000 1000" fill="none">'
+        + '<circle cx="500" cy="500" r="492" stroke="#9ec9c2" stroke-opacity="0.11" />'
+        + '<circle cx="500" cy="500" r="340" stroke="#9ec9c2" stroke-opacity="0.07" />'
+        + '<circle cx="500" cy="500" r="188" stroke="#c8b678" stroke-opacity="0.05" />'
+        + ticks + "</svg>";
+
+      let random = hashSeed("hostfall:preparation:stars");
+      const next = () => {
+        random ^= random << 13; random >>>= 0;
+        random ^= random >>> 17;
+        random ^= random << 5; random >>>= 0;
+        return (random || 1) / 4294967296;
+      };
+      let stars = "";
+      for (let i = 0; i < 66; i += 1) {
+        stars += '<i style="left:' + (next() * 100).toFixed(2) + "%;top:" + (next() * 100).toFixed(2)
+          + "%;animation-delay:" + (next() * 6).toFixed(2) + 's"></i>';
+      }
+      $("#backdrop-stars").innerHTML = stars;
+    }
+
+    /* ── Eventos ────────────────────────────────────────────────────────────── */
+    function cycleDeck(side) {
+      const list = side === "player" ? PLAYER_CODES : HOST_CODES;
+      const current = side === "player" ? state.player : state.host;
+      const next = list[(list.indexOf(current) + 1) % list.length];
+      if (side === "player") state.player = next; else state.host = next;
+      render(true);
+    }
+
+    function setVariant(variant) {
+      state.variant = variant;
+      $("#variant-hint").textContent = VARIANT_HINTS[variant];
+      $$("#variants button").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.variant === variant)));
+      render(false);
+    }
+
+    $("#prep").addEventListener("click", async (event) => {
+      const target = event.target.closest("[data-action]");
+      if (!target) return;
+      const action = target.dataset.action;
+      if (action === "cycle") { cycleDeck(target.dataset.side); return; }
+      if (action === "mode") { state.mode = target.dataset.mode; render(true); return; }
+      if (action === "copy") {
+        try { await navigator.clipboard.writeText(canonCode()); } catch { /* sin portapapeles, nada que hacer */ }
+        return;
+      }
+      /* `back`, `inspect` y `start` pertenecen al juego: aquí no llevan a ninguna parte. */
+    });
+
+    $$("#variants button").forEach((button) => button.addEventListener("click", () => setVariant(button.dataset.variant)));
+    $("#reroll").addEventListener("click", () => { state.entropy = newEntropy(); render(true); });
+    $("#notes-toggle").addEventListener("click", () => $("#notes").classList.toggle("is-open"));
+
+    window.addEventListener("keydown", (event) => {
+      const order = ["foot", "ribbon", "rail", "host"];
+      if (event.key >= "1" && event.key <= "4") { setVariant(order[Number(event.key) - 1]); return; }
+      if (event.key === "Escape") $("#notes").classList.remove("is-open");
+    });
+
+    paintBackdrop();
+    render(false);
+  </script>
+</body>
+
+</html>

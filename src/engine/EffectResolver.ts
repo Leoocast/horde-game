@@ -81,7 +81,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
   },
   DRAW_CARD: (game, effect) => {
     drawCards(game, "player", Number(effect.amount ?? 1));
-    game.log.unshift(`Player draws ${Number(effect.amount ?? 1)} card(s).`);
+    game.log.unshift(`Chronicler draws ${Number(effect.amount ?? 1)} card(s).`);
   },
   CREATE_TOKEN: (game, effect, context) => {
     createTokens(game, effect, context);
@@ -250,7 +250,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     const amount = Number(effect.amount ?? 1);
     if (side === "player") {
       game.player.life += amount;
-      game.log.unshift(`Player gains ${amount} life.`);
+      game.log.unshift(`Chronicler gains ${amount} Life.`);
     }
   },
   LOSE_LIFE: (game, effect, context) => {
@@ -258,7 +258,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
     if (side !== "player") return;
     const amount = Math.max(0, resolveNumericAmount(game, effect.amount ?? 1, context));
     losePlayerLife(game, amount, context.source?.instanceId);
-    game.log.unshift(`Player loses ${amount} life.`);
+    game.log.unshift(`Chronicler loses ${amount} Life.`);
   },
   PUMP_UNTIL_END_OF_TURN: (game, effect, context) => {
     const targets = resolveTargetCards(game, effect, context);
@@ -282,7 +282,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
       target.untilNextPlayerTurnEndurance =
         (target.untilNextPlayerTurnEndurance ?? 0) + Number(effect.endurance ?? 0);
       game.log.unshift(
-        `${target.name} gets +${Number(effect.power ?? 0)}/+${Number(effect.endurance ?? 0)} until the next player turn.`,
+        `${target.name} gets +${Number(effect.power ?? 0)}/+${Number(effect.endurance ?? 0)} until the next Chronicler Turn.`,
       );
     }
   },
@@ -369,7 +369,7 @@ const EFFECT_HANDLERS: Record<string, EffectHandler> = {
       return;
     }
     losePlayerLife(game, amount, context.source?.instanceId);
-    game.log.unshift(`Player loses ${amount} life.`);
+    game.log.unshift(`Chronicler loses ${amount} Life.`);
   },
 };
 
@@ -793,7 +793,7 @@ function createTokens(game: GameState, effect: EffectDefinition, context: Resolv
       token.exhausted = true;
       game.combat.hostAttackers.push(token.instanceId);
     }
-    game.log.unshift(`${controller === "player" ? "Player" : "Host"} creates ${token.name}.`);
+    game.log.unshift(`${controller === "player" ? "Chronicler" : "Host"} creates ${token.name}.`);
   }
 }
 
@@ -852,7 +852,7 @@ function discardPlayer(game: GameState, amount: number): void {
     const [card] = game.player.hand.splice(randomIndex, 1);
     card.zone = "memory";
     game.player.memory.push(card);
-    game.log.unshift(`Player discards ${card.name}.`);
+    game.log.unshift(`Chronicler discards ${card.name}.`);
   }
 }
 
@@ -862,7 +862,7 @@ export function discardChosenCard(game: GameState, instanceId: string): void {
   const [card] = game.player.hand.splice(index, 1);
   card.zone = "memory";
   game.player.memory.push(card);
-  game.log.unshift(`Player discards ${card.name}.`);
+  game.log.unshift(`Chronicler discards ${card.name}.`);
 }
 
 export function triggerConditionMet(game: GameState, condition: Record<string, unknown> | undefined, source: CardInstance, event: EventItem): boolean {
@@ -951,7 +951,7 @@ function dealDamageToOpponent(game: GameState, sourceSide: Side, amount: number)
   if (amount <= 0) return;
   if (sourceSide === "host") {
     losePlayerLife(game, amount);
-    game.log.unshift(`Host deals ${amount} damage to Player.`);
+    game.log.unshift(`Host deals ${amount} damage to the Chronicler.`);
   }
 }
 
@@ -1038,7 +1038,7 @@ function resolveBurnPlayerLifeLossEvent(game: GameState, event: EventItem): void
   losePlayerLife(game, amount, event.sourceId);
   const source = [...game.player.field, ...game.host.field, ...game.player.memory, ...game.host.memory]
     .find((card) => card.instanceId === event.sourceId);
-  game.log.unshift(`${source?.name ?? "Host effect"} causes Player to lose ${amount} life.`);
+  game.log.unshift(`${source?.name ?? "Host effect"} causes the Chronicler to lose ${amount} Life.`);
 }
 
 function resolveCounterVolleyEvent(game: GameState, event: EventItem): void {

@@ -14,7 +14,7 @@ export function temporalDialTransform(degrees: number): string {
 /**
  * Ángulo con 000°·N otra vez arriba, por el camino más corto.
  *
- * El disco acumula grados durante la partida, así que al terminar sus marcas están giradas. La
+ * El disco acumula grados durante la Visión, así que al terminar sus marcas están giradas. La
  * constelación de la Victoria es cardinal y fija: sus puntas caen siempre en N, E, S y O, de modo
  * que si el instrumento no vuelve a su Norte las puntas se clavan al lado de las marcas en vez de
  * encima. Se devuelve el múltiplo de 360 más cercano, no el cero absoluto: girar cuatro vueltas

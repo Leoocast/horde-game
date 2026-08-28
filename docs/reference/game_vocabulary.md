@@ -1,6 +1,6 @@
 # Hostfall: vocabulario canónico
 
-Estado: **vigente, versión 1.0**.
+Estado: **vigente, versión 1.1**.
 
 Este documento define el lenguaje de reglas y la identidad que usa el producto. La fuente técnica
 de ids vive en `src/engine/hostfallVocabulary.ts` y `src/engine/hostfallZones.ts`; la presentación
@@ -22,18 +22,21 @@ La revisión de licencias necesaria para una publicación comercial es un trabaj
 Hostfall no usa Palabras de habilidad actualmente. Una etiqueta temática futura no puede aportar
 reglas por sí misma.
 
-## Identidad
+## Identidad y continuidad
 
 | Concepto | English | Español |
 | --- | --- | --- |
 | Persona jugadora | Chronicler | Cronista |
 | Deck del jugador | Chronicle | Crónica |
-| Enemigo automatizado | Host | Hueste |
-| Partida | Chapter | Capítulo |
-| Escalada enemiga | Surge | Oleada |
+| Fuerza enemiga automatizada | Host | Hueste |
+| Código Canon público y compartible | Inscription | Inscripción |
+| Escenario determinista persistente | Future | Futuro |
+| Partida o intento individual | Vision | Visión |
+| Iniciar una Visión | Contemplate | Contemplar |
+| Escalada enemiga | Surge | Estampida |
 
-Una Crónica es un registro incompleto de un episodio. Sus cartas son fragmentos de memoria con los
-que el Cronista reconstruye un Capítulo:
+Una **Crónica** es siempre el deck del jugador. Sus cartas son fragmentos de memoria con los que el
+Cronista afronta una Visión:
 
 - un Eco da forma a una persona o criatura;
 - el Archivo contiene fragmentos aún no recordados;
@@ -42,8 +45,64 @@ que el Cronista reconstruye un Capítulo:
 - el Olvido contiene fragmentos separados de la reconstrucción;
 - Estabilizándose representa el tiempo que necesita un Eco recién Invocado para actuar.
 
-`Carta`, `deck` y `mazo` siguen siendo términos genéricos válidos fuera de una partida. Dentro de un
-Capítulo se usa `Archivo` para la pila de cartas.
+`Carta`, `deck` y `mazo` siguen siendo términos genéricos válidos fuera de una Visión. Dentro de una
+Visión se usa `Archivo` para la pila de cartas.
+
+Una **Inscripción** es el código `HF1-PPP-HHH-XXD-XXX` completo que el producto permite copiar,
+compartir e importar. Es la presentación player-facing de una `CanonSeed`; no es el número corto del
+Futuro ni la entropía que recibe el engine. Las seeds opacas o técnicas no son Inscripciones y no
+ofrecen copia pública.
+
+Un **Futuro** es un escenario determinista persistente: reúne la Inscripción u origen compatible,
+Crónica, Hueste, dificultad, Preparación, modo y revisiones necesarias para reproducirlo. La etiqueta
+`Futuro NNN·NNN` es sólo su nombre cosmético; puede colisionar y nunca sustituye la Inscripción o la
+identidad persistida.
+
+Una **Visión** es cada partida o intento individual de un Futuro. Varias Visiones pueden partir del
+mismo Futuro y terminar en victoria, derrota o interrupción distintas. Una victoria es una Visión
+que preserva el Futuro; una derrota es una Visión perdida; una interrupción, una Visión interrumpida.
+Los estados agregados pueden marcar el Futuro como preservado cuando contiene una victoria, pero
+nunca presentarlo como un «Futuro perdido».
+
+**Contemplar** crea una Visión. Se contempla un Futuro por primera vez o de nuevo desde su mismo
+origen; preparar o buscar otro Futuro todavía no es contemplarlo. `Chapter` / `Capítulo` y
+`Rewrite` / `Reescribir` quedan retirados del lenguaje player-facing. Sus nombres pueden sobrevivir
+en ids, schemas, componentes o documentos históricos, pero la UI no los usa como sinónimos de
+Visión o Contemplar. Una acción de mulligan debe describirse como cambiar la Mano, no como
+reescribirla.
+
+**Battle** / **Batalla** designa exclusivamente la fase de combate. No es sinónimo de Visión,
+partida, encuentro completo ni Hueste.
+
+**Seeds of Destiny** / **Semillas del Destino** es el nombre propio de la colección de Futuros y sus
+Visiones. No se llama `Archive` / `Archivo`: Archivo queda reservado a la zona de cartas. El singular
+`Seed of Destiny` / `Semilla del Destino` no nombra ningún objeto player-facing; `seed`, `CanonSeed`,
+`rngSeed` y nombres semejantes permanecen como vocabulario técnico.
+
+Este contrato rige el producto standard. Chaos está deprecated: conserva su copy, ids y contratos
+técnicos hasta que se retire, pero no sirve como precedente para nombrar superficies nuevas.
+
+### Copy de continuidad
+
+Las superficies nuevas y las homologaciones usan estas formas; no introducen sinónimos narrativos
+para los mismos objetos:
+
+| Uso | English | Español |
+| --- | --- | --- |
+| Abrir el ingreso de un HF1 | Enter an Inscription | Introducir una Inscripción |
+| Copiar el HF1 | Copy Inscription | Copiar Inscripción |
+| Configurar un escenario nuevo | Prepare a Future | Preparar un Futuro |
+| Empezar la primera Visión | Contemplate this Future | Contemplar este Futuro |
+| Empezar otra Visión del mismo Futuro | Contemplate again | Contemplar de nuevo |
+| Ir a preparar otro escenario | Seek another Future | Buscar otro Futuro |
+| Partida activa | Vision in progress | Visión en curso |
+| Resultado de derrota | Lost Vision | Visión perdida |
+| Resultado de victoria | Future Preserved | Futuro preservado |
+| Lista de partidas de un Futuro | Visions | Visiones |
+
+**Seek another Future / Buscar otro Futuro** sólo navega a Preparación. Si una ruta crea la Visión
+directamente —por ejemplo, al confirmar una Inscripción ya completa— su CTA sí usa **Contemplate /
+Contemplar**.
 
 ## Zonas
 
@@ -62,8 +121,8 @@ los consumidores runtime. No existen zonas paralelas ni aliases en el estado del
 
 | Id | English | Español | Comportamiento |
 | --- | --- | --- | --- |
-| `ECHO` | Echo | Eco | Puede atacar y defender; tiene Fuerza y Aguante. |
-| `SOURCE` | Source | Fuente | Permanece en el Campo y normalmente genera Energía. |
+| `ECHO` | Echo | Eco | Combatiente Invocado al Campo; puede atacar y defender. |
+| `SOURCE` | Source | Fuente | Al jugarla, su Energía se acumula en el contenedor del Cronista. |
 | `SPELL` | Spell | Hechizo | Produce un efecto y después pasa a la Memoria. |
 | `SUPPORT` | Support | Apoyo | Permanece en el Campo y modifica reglas o produce efectos. |
 | `TOKEN` | Token | Ficha | Objeto creado por un efecto que no pertenece a un Archivo. |
@@ -72,8 +131,10 @@ Modificadores:
 
 - `QUICK` / Rápido modifica un Hechizo y enumera sus ventanas reales: Principal, Batalla y
   Defender. Hostfall no promete pila ni prioridad libre.
-- `CHRONICLE` convierte la línea visible en `Chronicle Echo / Eco de Crónica`. Es una distinción
-  narrativa y visual; no limita copias ni añade una regla de unicidad.
+- `CHRONICLE` es un id técnico heredado usado por datos y herramientas; puede aparecer en cartas de
+  cualquier bando y no aporta reglas, unicidad ni pertenencia a la Crónica del jugador. No se traduce
+  ni se muestra como `Chronicle Echo / Eco de Crónica`: **Chronicle / Crónica** queda reservado al
+  deck del jugador.
 
 Los subtipos como Vampiro, Druida, Zombi o Trasgo son lore y filtros, no tipos de carta.
 
@@ -81,17 +142,17 @@ Los subtipos como Vampiro, Druida, Zombi o Trasgo son lore y filtros, no tipos d
 
 | English | Español | Regla |
 | --- | --- | --- |
-| Energy | Energía | Recurso numérico que paga cartas y Acciones. |
+| Energy | Energía | Fuerza que se canaliza para Invocar Ecos o lanzar Hechizos. |
 | Energy cost | Coste de Energía | Cantidad indicada por el orbe de coste. |
-| Power | Fuerza | Daño base que hace un Eco. |
+| Power | Fuerza | Daño base que inflige un Eco. |
 | Endurance | Aguante | Daño que soporta un Eco antes de morir. |
-| Life | Vida | Recurso de supervivencia del Cronista. |
+| Life | Vida | La supervivencia del Cronista. |
 | +1/+1 counter | Contador +1/+1 | Aumento persistente de Fuerza y Aguante. |
 | -1/-1 counter | Contador -1/-1 | Reducción persistente de Fuerza y Aguante. |
 | Poison | Veneno | Presión acumulada que hace perder cartas del Archivo a la Hueste. |
 
-Una Fuente es una carta permanente; Energía es el recurso que produce. Se escribe `Sacrifica una
-Fuente`, nunca `Sacrifica una Energía`.
+Una Fuente aporta Energía al contenedor de la esquina inferior izquierda; Energía es la fuerza que
+el Cronista canaliza. Se escribe `Sacrifica una Fuente`, nunca `Sacrifica una Energía`.
 
 En `+N/+N` y `-N/-N`, el primer valor siempre es Fuerza y el segundo Aguante. La Energía generada se imprime
 como `Agrega {E}` o `Agrega {E}{E}`, sin un número junto al símbolo.
@@ -113,7 +174,7 @@ como `Agrega {E}` o `Agrega {E}{E}`, sin un número junto al símbolo.
 | Id | English | Español | Definición breve |
 | --- | --- | --- | --- |
 | `PLAY` | Play | Jugar | Pagar costes y usar una carta de la Mano. |
-| `INVOKE` | Invoke | Invocar | Poner la carta indicada en el Campo. |
+| `INVOKE` | Invoke | Invocar | Traer un Eco al Campo. |
 | `EXHAUST` | Exhaust | Agotar | Girar una carta preparada para pagar o atacar. |
 | `READY` | Ready | Preparar | Devolver una carta agotada a su orientación disponible. |
 | `DRAW` | Draw | Robar | Mover la carta superior del Archivo a la Mano. |
@@ -124,7 +185,7 @@ como `Agrega {E}` o `Agrega {E}{E}`, sin un número junto al símbolo.
 | `BANISH` | Banish | Desterrar | Mover una carta al Olvido. |
 | `REVEAL` | Reveal | Revelar | Mostrar una carta sin cambiar necesariamente su zona. |
 
-Una carta es Invocada cada vez que entra al Campo, sin importar su origen. Hostfall no tiene una
+Un Eco es Invocado cada vez que entra al Campo, sin importar su origen. Hostfall no tiene una
 keyword equivalente a mill: se escribe la instrucción completa, por ejemplo `Descarta las 2
 primeras cartas del Archivo de la Hueste a su Memoria`.
 
@@ -151,7 +212,7 @@ La UI no usa jerga interna como ETB, triggered effect, static ability o resolves
 | `SKYGUARD` | Skyguard | Guardia aérea | Puede defender contra Volar. |
 | `ALERT` | Alert | Alerta | Atacar no Agota este Eco. |
 | `DAUNTING` | Daunting | Imponente | Requiere dos o más defensores. |
-| `LETHAL` | Lethal | Letal | Cualquier daño positivo que haga a otro Eco es letal. |
+| `LETHAL` | Lethal | Letal | Si este Eco hace cualquier cantidad de daño a otro Eco, ese Eco muere. |
 | `REFLEX` | Reflex | Reflejos | Hace daño de combate antes que un Eco sin Reflejos. |
 | `FURTIVE` | Furtive | Furtivo | No puede ser defendido por un Eco con mayor Fuerza. |
 | `DRAIN` | Drain | Drenar | Su daño de combate recupera la misma cantidad de Vida. |

@@ -201,7 +201,7 @@ const SPANISH_LOG_REPLACEMENTS: readonly Replacement[] = [
   [/\bDrain\b/g, "Drenar"],
   [/\bOverflow\b/g, "Desborde"],
   [/\bImpetus\b/g, "Ímpetu"],
-  [/\bSurge\b/g, "Oleada"],
+  [/\bSurge\b/g, "Estampida"],
   [/\bBattle\b/g, "Batalla"],
   [/\bReadies\b/g, "Prepara"],
   [/\bReady\b/g, "Preparar"],
@@ -234,6 +234,10 @@ const SPANISH_LOG_REPLACEMENTS: readonly Replacement[] = [
 ];
 
 const SPANISH_SENTENCE_REPLACEMENTS: readonly Replacement[] = [
+  [/^Vision begins\. Chronicler draws (\d+) card\(s\)\. Preparation turns: (\d+)\.$/i, "La Visión comienza. El Cronista roba $1 carta(s). Turnos de Preparación: $2."],
+  [/^Chronicler keeps an opening Hand of (\d+) card\(s\)\.$/i, "El Cronista conserva una Mano inicial de $1 carta(s)."],
+  [/^Chronicler redraws the opening Hand for the (\d+)(?:st|nd|rd|th) time and draws (\d+) card\(s\)\.$/i, "El Cronista vuelve a robar la Mano inicial por $1.ª vez y roba $2 carta(s)."],
+  [/^Host attack volley deals (\d+) damage to the Chronicler\.$/i, "La descarga del ataque de la Hueste hace $1 de daño al Cronista."],
   [/^Process the Reaction before playing another card\.$/i, "Procesa la Reacción antes de jugar otra carta."],
   [/^Sources can only be played during your Main phase\.$/i, "Las Fuentes solo pueden jugarse durante tu fase Principal."],
   [/^Choose a Source to play\.$/i, "Elige una Fuente para jugar."],

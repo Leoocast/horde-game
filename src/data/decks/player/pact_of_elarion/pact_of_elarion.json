@@ -2,6 +2,7 @@
   "schemaVersion": "1.0.0",
   "id": "pact_of_elarion",
   "name": "El Pacto de Elarion",
+  "displayNameEn": "The Pact of Elarion",
   "format": "casual",
   "side": "CHRONICLER",
   "deckSize": 39,
@@ -403,7 +404,7 @@
       "displayNameEs": "Choque de Ecos",
       "gameText": {
         "en": "Choose an ally and an enemy; the ally deals damage to the enemy equal to its Power.",
-        "es": "Elige un aliado y un enemigo; el aliado inflige al enemigo daño igual a su Fuerza."
+        "es": "Elige un aliado. Ese aliado inflige daño igual a su Fuerza a un enemigo que elijas."
       },
       "flavorText": {
         "en": "At the pact's call, each Echo revealed what it still fought for.",
@@ -578,8 +579,8 @@
       "name": "The Judgment of Elarion",
       "displayNameEs": "El Juicio de Elarion",
       "gameText": {
-        "en": "Choose an enemy Support or an enemy Echo with Flying; destroy it.",
-        "es": "Elige un Apoyo enemigo o un Eco enemigo con Volar; destrúyelo."
+        "en": "Choose one:\n• Destroy an enemy Support.\n• Destroy an enemy Echo with Daunting.\n• Destroy an enemy Echo with Flying.",
+        "es": "Elige uno:\n• Destruye un Apoyo enemigo.\n• Destruye un Eco enemigo con Imponente.\n• Destruye un Eco enemigo con Volar."
       },
       "flavorText": {
         "en": "Neither wing nor stone stood beyond the judgment of the ancient realm.",
@@ -609,6 +610,14 @@
                   {
                     "kinds": [
                       "SUPPORT"
+                    ]
+                  },
+                  {
+                    "kinds": [
+                      "ECHO"
+                    ],
+                    "traits": [
+                      "DAUNTING"
                     ]
                   },
                   {

@@ -1,0 +1,927 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hostfall — Estabilizándose: trama sólo en el frente</title>
+  <style>
+    @font-face {
+      font-family: "Cinzel";
+      font-style: normal;
+      font-weight: 500 900;
+      font-display: block;
+      src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+    }
+
+    :root {
+      --stage: #0a0605;
+      --gold-bright: #e6d59e;
+      --parchment: #e8dec0;
+      --muted: #9b8f88;
+      --muted-dim: #837771;
+      --rule: rgb(146 116 88 / 0.22);
+      --serif: Georgia, "Times New Roman", serif;
+      --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+      --card-w: 212px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0 0 90px;
+      background: radial-gradient(ellipse at 50% -8%, rgb(74 27 18 / 0.24), transparent 55%), var(--stage);
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 28px;
+    }
+
+    header {
+      padding: 54px 0 30px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .eyebrow {
+      color: #b8785a;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 12px 0 0;
+      color: var(--parchment);
+      font-family: var(--serif);
+      font-size: clamp(30px, 4.4vw, 46px);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      line-height: 1.06;
+    }
+
+    header p {
+      max-width: 74ch;
+      margin: 16px 0 0;
+    }
+
+    header strong {
+      color: var(--gold-bright);
+      font-weight: 600;
+    }
+
+    code {
+      color: #e0b08a;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin: 28px 0 10px;
+    }
+
+    .group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .group-label {
+      align-self: center;
+      margin-right: 2px;
+      color: var(--muted-dim);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    button {
+      height: 40px;
+      padding: 0 16px;
+      border: 1px solid rgb(146 116 88 / 0.36);
+      border-radius: 2px;
+      background: linear-gradient(180deg, rgb(33 25 22 / 0.96), rgb(15 10 9 / 0.98));
+      color: var(--muted);
+      font-family: var(--sans);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+    }
+
+    button:hover {
+      border-color: rgb(214 150 110 / 0.7);
+      color: var(--gold-bright);
+    }
+
+    button[aria-pressed="true"] {
+      border-color: rgb(214 118 74 / 0.8);
+      background: linear-gradient(180deg, rgb(62 27 18 / 0.96), rgb(24 11 9 / 0.98));
+      color: #f0c39d;
+    }
+
+    button:focus-visible {
+      outline: 2px solid rgb(234 168 133 / 0.9);
+      outline-offset: 2px;
+    }
+
+    .spacer {
+      flex: 1;
+    }
+
+    h2.family {
+      margin: 46px 0 0;
+      padding-top: 26px;
+      border-top: 1px solid var(--rule);
+      color: var(--gold-bright);
+      font-family: "Cinzel", var(--serif);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    p.family-lead {
+      max-width: 74ch;
+      margin: 8px 0 0;
+      font-size: 14px;
+    }
+
+    .hero {
+      --card-w: 320px;
+      margin-top: 26px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 30px 24px;
+      margin-top: 24px;
+    }
+
+    figure {
+      margin: 0;
+    }
+
+    /* ══ La carta tal como vive en el Campo ══════════════════════════════ */
+    .card {
+      position: relative;
+      width: var(--card-w);
+      height: calc(var(--card-w) * 0.8893442623);
+      margin: 0 auto;
+      container-type: inline-size;
+      overflow: hidden;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: #1c1712;
+      box-shadow: 0 10px 24px rgb(0 0 0 / 0.55);
+      isolation: isolate;
+    }
+
+    .hero .card {
+      margin: 0;
+    }
+
+    .art {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: var(--art-w, 100%);
+      height: var(--art-h, 100%);
+      max-width: none;
+      object-fit: contain;
+      object-position: center;
+      transform: translate3d(calc(-50% + var(--art-x, 0cqw)), calc(-50% + var(--art-y, 0cqw)), 0) scale(var(--art-zoom, 1));
+      transform-origin: center;
+      user-select: none;
+    }
+
+    .stat-plate {
+      position: absolute;
+      right: 3px;
+      bottom: 3px;
+      z-index: 12;
+      display: flex;
+      height: clamp(25px, 15cqw, 31px);
+      min-width: clamp(76px, 46cqw, 94px);
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      overflow: hidden;
+      border: 1px solid rgb(183 169 118 / 0.62);
+      background: linear-gradient(180deg, rgb(27 35 34 / 0.96), rgb(7 13 13 / 0.98));
+      color: #e9e1c4;
+      font-family: var(--serif);
+      font-size: clamp(11px, 7cqw, 14px);
+      font-weight: 700;
+      box-shadow: inset 0 1px 0 rgb(255 247 208 / 0.1), 0 4px 12px rgb(0 0 0 / 0.68);
+      clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+    }
+
+    .stat-plate i {
+      width: 1px;
+      height: 58%;
+      background: rgb(183 169 118 / 0.45);
+    }
+
+    body[data-size="comprimido"] { --card-w: 156px; }
+    body[data-size="detalle"] { --card-w: 320px; }
+
+    body[data-paused="true"] .card *,
+    body[data-paused="true"] .card *::before,
+    body[data-paused="true"] .card *::after {
+      animation-play-state: paused !important;
+    }
+
+    body[data-bare="true"] .fx { display: none; }
+    body[data-stats="false"] .stat-plate { display: none; }
+
+    figcaption { margin-top: 14px; }
+
+    figcaption h3 {
+      margin: 0;
+      color: var(--parchment);
+      font-family: "Cinzel", var(--serif);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    figcaption .says {
+      margin: 5px 0 0;
+      color: #c08d63;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    figcaption p.how {
+      margin: 7px 0 0;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .hero-layout {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      align-items: flex-start;
+    }
+
+    .hero-text { flex: 1 1 300px; max-width: 56ch; }
+
+    .hero-text h3 {
+      margin: 0;
+      color: var(--parchment);
+      font-family: "Cinzel", var(--serif);
+      font-size: 19px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .hero-text ol { margin: 12px 0 0; padding-left: 20px; font-size: 13.5px; }
+    .hero-text li { margin-bottom: 8px; }
+
+    .note {
+      margin-top: 46px;
+      padding-top: 22px;
+      border-top: 1px solid var(--rule);
+      max-width: 78ch;
+      font-size: 13.5px;
+    }
+
+    .note h2 {
+      margin: 0 0 10px;
+      color: var(--gold-bright);
+      font-family: "Cinzel", var(--serif);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .note li { margin-bottom: 7px; }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       TRAMA SÓLO EN EL FRENTE
+
+       No hay rescoldo permanente: entre onda y onda la retícula no existe.
+       Lo único que se dibuja es una banda ancha de bordes suaves, así que la
+       cuadrícula aparece delante del frente y se apaga detrás.
+       ══════════════════════════════════════════════════════════════════════ */
+    .fx {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      pointer-events: none;
+    }
+
+    .veil {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(farthest-corner circle at 50% 50%,
+          rgb(20 12 2 / 0.16) 0 30%,
+          rgb(12 7 1 / 0.28) 68%,
+          rgb(6 3 0 / 0.4) 100%);
+    }
+
+    .glow {
+      position: absolute;
+      inset: 0;
+      mix-blend-mode: screen;
+    }
+
+    .lattice {
+      position: absolute;
+      inset: 0;
+      --cell: 7cqw;
+      --thread: 0.46cqw;
+      --gap: calc(var(--cell) - var(--thread));
+      -webkit-mask:
+        repeating-linear-gradient(0deg,
+          transparent 0 var(--gap),
+          rgb(0 0 0 / 0.5) calc(var(--gap) + var(--thread) * 0.3),
+          #000 calc(var(--gap) + var(--thread) * 0.5),
+          rgb(0 0 0 / 0.5) calc(var(--gap) + var(--thread) * 0.7),
+          transparent var(--cell)),
+        repeating-linear-gradient(90deg,
+          transparent 0 var(--gap),
+          rgb(0 0 0 / 0.5) calc(var(--gap) + var(--thread) * 0.3),
+          #000 calc(var(--gap) + var(--thread) * 0.5),
+          rgb(0 0 0 / 0.5) calc(var(--gap) + var(--thread) * 0.7),
+          transparent var(--cell));
+      mask:
+        repeating-linear-gradient(0deg,
+          transparent 0 var(--gap),
+          rgb(0 0 0 / 0.5) calc(var(--gap) + var(--thread) * 0.3),
+          #000 calc(var(--gap) + var(--thread) * 0.5),
+          rgb(0 0 0 / 0.5) calc(var(--gap) + var(--thread) * 0.7),
+          transparent var(--cell)),
+        repeating-linear-gradient(90deg,
+          transparent 0 var(--gap),
+          rgb(0 0 0 / 0.5) calc(var(--gap) + var(--thread) * 0.3),
+          #000 calc(var(--gap) + var(--thread) * 0.5),
+          rgb(0 0 0 / 0.5) calc(var(--gap) + var(--thread) * 0.7),
+          transparent var(--cell));
+    }
+
+    /* El frente. Los tonos van de oro pálido en el filo a ámbar en los bordes
+       de la banda, para que la retícula no se encienda de un color plano. */
+    .front {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 210%;
+      aspect-ratio: 1;
+      translate: -50% -50%;
+      border-radius: 999px;
+      background: radial-gradient(closest-side circle,
+          transparent 0 var(--in-0, 22%),
+          rgb(176 122 34 / 0.1) var(--in-1, 30%),
+          rgb(214 166 74 / 0.42) var(--in-2, 38%),
+          rgb(255 244 210 / 0.95) var(--core, 44%),
+          rgb(226 182 96 / 0.5) var(--out-1, 50%),
+          rgb(170 118 32 / 0.12) var(--out-2, 60%),
+          transparent var(--out-3, 72%));
+      animation: front-out var(--dur, 8.5s) linear var(--delay, 0s) infinite;
+    }
+
+    /* Frente angosto: casi sólo el filo encendido. */
+    .front.narrow {
+      --in-0: 33%;
+      --in-1: 37%;
+      --in-2: 41%;
+      --core: 44%;
+      --out-1: 47%;
+      --out-2: 51%;
+      --out-3: 56%;
+    }
+
+    /* Frente ancho: la cuadrícula tarda mucho en apagarse detrás. */
+    .front.wide {
+      --in-0: 8%;
+      --in-1: 18%;
+      --in-2: 32%;
+      --core: 44%;
+      --out-1: 53%;
+      --out-2: 68%;
+      --out-3: 86%;
+    }
+
+    @keyframes front-out {
+      0% { scale: 0.05; opacity: 0; }
+      3% { opacity: 0.92; }
+      6% { scale: 0.42; }
+      12% { scale: 0.78; }
+      20% { scale: 1.18; }
+      28% { scale: 1.5; }
+      30% { opacity: 0.85; }
+      36% { scale: 1.74; }
+      40% { opacity: 0.45; }
+      46% { scale: 2; opacity: 0; }
+      100% { scale: 2; opacity: 0; }
+    }
+
+    .mote {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 4.4cqw;
+      aspect-ratio: 1;
+      border-radius: 999px;
+      background: radial-gradient(circle,
+          rgb(255 248 220 / 0.98) 0 28%,
+          rgb(236 194 104 / 0.62) 54%,
+          rgb(190 130 40 / 0) 78%);
+      animation: mote-fall var(--dur, 8.5s) ease-in var(--delay, 0s) infinite;
+    }
+
+    @keyframes mote-fall {
+      0% { translate: var(--from-x) var(--from-y); opacity: 0; scale: 1.3; }
+      16% { opacity: 0.95; }
+      88% { opacity: 0.95; }
+      100% { translate: 0 0; opacity: 0; scale: 0.35; }
+    }
+
+    /* ══ Oro CSS sobre la carta ══════════════════════════════════════════ */
+    .gold-patina {
+      position: absolute;
+      inset: 0;
+      --patina-strength: 0.56;
+      --charge-high: 0.38;
+      --charge-mid: 0.18;
+      --glint-high: 0.28;
+      --glint-mid: 0.13;
+      overflow: hidden;
+      mix-blend-mode: screen;
+    }
+
+    .gold-patina.marked {
+      --patina-strength: 0.86;
+      --charge-high: 0.56;
+      --charge-mid: 0.28;
+      --glint-high: 0.4;
+      --glint-mid: 0.2;
+    }
+
+    .gold-patina::before,
+    .gold-patina::after {
+      content: "";
+      position: absolute;
+      inset: -8%;
+      pointer-events: none;
+    }
+
+    /* Pátina de fondo: siempre presente, pero con tan poco contraste que se
+       lee como material de la carta y no como una capa amarilla. */
+    .gold-patina::before {
+      background:
+        linear-gradient(118deg,
+          transparent 17%,
+          rgb(166 105 28 / 0.04) 36%,
+          rgb(255 231 169 / 0.09) 49%,
+          rgb(177 116 34 / 0.035) 62%,
+          transparent 84%),
+        radial-gradient(ellipse at 46% 43%, rgb(218 166 76 / 0.08), transparent 66%);
+      opacity: var(--patina-strength);
+      animation: gold-patina-drift 11s ease-in-out infinite alternate;
+    }
+
+    /* Un segundo reflejo, más estrecho y muy lento, evita que la pátina se
+       sienta como un tinte plano sin convertirla en un destello de interfaz. */
+    .gold-patina::after {
+      inset: -24%;
+      background: linear-gradient(116deg,
+          transparent 35%,
+          rgb(255 246 218 / 0.07) 46%,
+          rgb(216 164 69 / 0.025) 54%,
+          transparent 65%);
+      opacity: var(--patina-strength);
+      animation: gold-satin-drift 14s ease-in-out infinite alternate;
+    }
+
+    @keyframes gold-patina-drift {
+      from { translate: -2.5% 0; scale: 1.01; }
+      to { translate: 2.5% 0; scale: 1.035; }
+    }
+
+    @keyframes gold-satin-drift {
+      from { translate: -12% 1%; }
+      to { translate: 12% -1%; }
+    }
+
+    /* Cada carga comparte --dur y --delay con una mota. El estado de 0% es
+       idéntico al de 100%: al reiniciar el ciclo no hay salto de amarillo. */
+    .gold-charge {
+      position: absolute;
+      inset: -6%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at 50% 50%,
+          rgb(255 247 222 / 0.78) 0 5%,
+          rgb(235 190 92 / 0.36) 15%,
+          rgb(183 116 28 / 0.08) 34%,
+          transparent 58%);
+      opacity: 0;
+      transform-origin: 50% 50%;
+      animation: gold-charge-cycle var(--dur, 8.5s) linear var(--delay, 0s) infinite;
+    }
+
+    .gold-charge::after {
+      content: "";
+      position: absolute;
+      inset: -28%;
+      background: linear-gradient(116deg,
+          transparent 37%,
+          rgb(255 247 222 / 0.72) 47%,
+          rgb(224 169 66 / 0.22) 52%,
+          transparent 63%);
+      opacity: 0;
+      animation: gold-glint-cycle var(--dur, 8.5s) linear var(--delay, 0s) infinite;
+    }
+
+    @keyframes gold-charge-cycle {
+      0%, 100% { opacity: var(--charge-high); scale: 0.92; }
+      7% { opacity: 0; scale: 1.08; }
+      86% { opacity: 0; scale: 1.12; }
+      90% { opacity: 0.045; scale: 1.06; }
+      96% { opacity: var(--charge-mid); scale: 0.98; }
+    }
+
+    @keyframes gold-glint-cycle {
+      0%, 100% { opacity: var(--glint-high); translate: 24% 0; }
+      7% { opacity: 0; translate: 24% 0; }
+      86% { opacity: 0; translate: -28% 0; }
+      91% { opacity: 0.035; translate: -16% 0; }
+      96% { opacity: var(--glint-mid); translate: 8% 0; }
+    }
+
+    body[data-anticipation="false"] .gold-charge {
+      visibility: hidden;
+    }
+
+    .implementation-note {
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-left: 2px solid rgb(190 151 77 / 0.6);
+      background: rgb(28 22 12 / 0.5);
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body data-card="maela" data-size="real" data-paused="false" data-bare="false" data-stats="true"
+  data-anticipation="true">
+  <main>
+    <header>
+      <p class="eyebrow">Efectos · Estabilizándose · cuarta ronda</p>
+      <h1>Trama en la onda, oro en la carta</h1>
+      <p>
+        La retícula <strong>ya no está siempre</strong>: entre onda y onda no existe. Lo único que se
+        dibuja es una banda ancha de bordes suaves, así que la cuadrícula <strong>aparece delante del
+        frente y se apaga detrás</strong> a medida que pasa. Sobre el recorte 488×434 con su encuadre
+        real.
+      </p>
+      <p>
+        El <strong>oro está hecho sólo con capas CSS sobre toda la carta</strong>, no en la retícula:
+        baña el arte con una veta cálida y un reflejo satinado muy lento. Cuando una mota está por
+        llegar, ese material reúne luz hacia el centro antes de liberarla. La cuadrícula es una capa
+        distinta y sólo se revela dentro de la onda. El botón <strong>Brillo previo</strong> permite
+        comparar ambas lecturas. <code>src/</code> no importa nada de acá.
+      </p>
+
+      <div class="controls">
+        <span class="group-label">Eco</span>
+        <div class="group">
+          <button type="button" data-set="card" data-value="maela" aria-pressed="true">Maela</button>
+          <button type="button" data-set="card" data-value="aelyra" aria-pressed="false">Aelyra</button>
+          <button type="button" data-set="card" data-value="hydra" aria-pressed="false">Hidra</button>
+        </div>
+        <span class="group-label" style="margin-left: 14px">Ancho</span>
+        <div class="group">
+          <button type="button" data-set="size" data-value="comprimido" aria-pressed="false">156</button>
+          <button type="button" data-set="size" data-value="real" aria-pressed="true">212 · real</button>
+          <button type="button" data-set="size" data-value="detalle" aria-pressed="false">320</button>
+        </div>
+        <span class="spacer"></span>
+        <div class="group">
+          <button type="button" data-toggle="anticipation" aria-pressed="true">Brillo previo</button>
+          <button type="button" data-toggle="paused" aria-pressed="false">Pausar</button>
+          <button type="button" data-toggle="bare" aria-pressed="false">Sin efecto</button>
+          <button type="button" data-toggle="stats" aria-pressed="true">Stats</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="hero">
+      <div class="hero-layout">
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil"></div>
+            <div class="gold-patina"></div>
+            <div class="glow" data-motes="4" data-seed="11">
+              <div class="lattice"></div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <div class="hero-text">
+          <h3>La versión pedida</h3>
+          <ol>
+            <li>
+              <strong>Sin rescoldo.</strong> Se quitó el fondo permanente de la retícula. Cuando no hay
+              onda cerca, la cuadrícula no se ve en absoluto.
+            </li>
+            <li>
+              <strong>El frente es una banda, no un aro.</strong> Sus bordes van de transparente a oro
+              pálido y de vuelta a transparente, así que la cuadrícula se enciende gradualmente por
+              delante y se desvanece por detrás en vez de aparecer y desaparecer de golpe.
+            </li>
+            <li>
+              <strong>La carta sí conserva oro entre ondas.</strong> Dos degradados CSS muy tenues
+              mantienen ámbar en las sombras, oro cálido en los medios y un reflejo marfil que cruza
+              tan despacio que no parece un destello.
+            </li>
+            <li>
+              <strong>La espera ahora acumula tensión.</strong> En el último tramo de cada mota, el oro
+              gana cuerpo, concentra luz hacia el centro y deja pasar un reflejo diagonal. El aterrizaje
+              corta esa carga y la libera como onda.
+            </li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="family">Ancho del frente</h2>
+    <p class="family-lead">
+      Cuánta cuadrícula está encendida a la vez. Es la perilla que decide si se lee como un filo que
+      recorre la carta o como una marea que la cubre y la deja.
+    </p>
+
+    <div class="grid">
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil"></div>
+            <div class="gold-patina"></div>
+            <div class="glow" data-motes="4" data-seed="11" data-front="narrow">
+              <div class="lattice"></div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Angosto</h3>
+          <p class="says">Un filo que pasa</p>
+          <p class="how">
+            Sólo se encienden un par de cuadros a cada lado del frente. Lo más limpio sobre el arte,
+            pero el fundido es tan corto que casi no se percibe.
+          </p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil"></div>
+            <div class="gold-patina"></div>
+            <div class="glow" data-motes="4" data-seed="11">
+              <div class="lattice"></div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Medio</h3>
+          <p class="says">El de la versión pedida</p>
+          <p class="how">
+            La cuadrícula se insinúa antes de que llegue el filo y tarda un poco en irse. Es donde el
+            fundido se lee mejor.
+          </p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil"></div>
+            <div class="gold-patina"></div>
+            <div class="glow" data-motes="4" data-seed="11" data-front="wide">
+              <div class="lattice"></div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Ancho</h3>
+          <p class="says">Una marea</p>
+          <p class="how">
+            El rastro es tan largo que buena parte de la retícula queda encendida. Vuelve a acercarse a
+            tener la trama siempre puesta, que es lo que se quería evitar.
+          </p>
+        </figcaption>
+      </figure>
+    </div>
+
+    <h2 class="family">Baño dorado de la carta · CSS</h2>
+    <p class="family-lead">
+      La intensidad sólo cambia el tratamiento del arte. En ambos casos la retícula mantiene la misma
+      fuerza y continúa limitada estrictamente a la banda de la onda.
+    </p>
+
+    <div class="grid">
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil"></div>
+            <div class="gold-patina"></div>
+            <div class="glow" data-motes="4" data-seed="3">
+              <div class="lattice"></div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Sutil</h3>
+          <p class="says">Como se pidió</p>
+          <p class="how">
+            El oro vive en el arte como una pátina luminosa. La veta sólo aparece cuando cambia la
+            luz; no lava los colores originales de la ilustración.
+          </p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil"></div>
+            <div class="gold-patina marked"></div>
+            <div class="glow" data-motes="4" data-seed="8">
+              <div class="lattice"></div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Marcado</h3>
+          <p class="says">Para ver el mecanismo</p>
+          <p class="how">
+            El mismo material con una pátina más visible. Permite ver con claridad la veta y el
+            barrido satinado; para el tablero probablemente ya es demasiado.
+          </p>
+        </figcaption>
+      </figure>
+    </div>
+
+    <div class="implementation-note">
+      <strong>Esta versión ya no crea contextos WebGL ni usa canvas.</strong> La pátina, el reflejo
+      satinado, la acumulación previa, las motas y la retícula son capas CSS. Cada acumulación comparte
+      el reloj de su mota y termina exactamente donde nace su onda.
+    </div>
+
+    <div class="note">
+      <h2>Cómo está hecho</h2>
+      <ul>
+        <li>
+          <strong>La carta y la retícula son dos máscaras independientes.</strong> La pátina dorada
+          cubre todo el recorte; la retícula multiplica su opacidad por el frente y desaparece por
+          completo donde la onda no está pasando.
+        </li>
+        <li>
+          <strong>El fundido es el propio degradado del frente.</strong> No hace falta animar opacidad
+          por hilo: como la banda tiene bordes suaves y se expande, cada hilo entra y sale del rango
+          encendido por sí solo.
+        </li>
+        <li>
+          <strong>El ancho del frente son siete variables</strong> —<code>--in-0</code> a
+          <code>--out-3</code>— que sólo mueven los topes del degradado. La animación no cambia.
+        </li>
+        <li>
+          <strong>La carga dorada también es CSS.</strong> Un radial concentra la luz y un degradado
+          diagonal hace el reflejo. Sus estados de <code>0%</code> y <code>100%</code> son idénticos,
+          así que el color no salta cuando vuelve a comenzar el ciclo.
+        </li>
+        <li>
+          <strong>Coste.</strong> La propuesta anima sólo <code>scale</code>, <code>translate</code> y
+          <code>opacity</code>; no hay un dibujo por frame ni un contexto gráfico por carta.
+        </li>
+      </ul>
+    </div>
+  </main>
+
+  <script>
+    const VIEWPORT = { width: 488, height: 434 };
+    const ECHOES = {
+      maela: { file: "field-maela.jpg", width: 600, height: 600, frame: { zoom: 1, x: 1, y: 79 } },
+      aelyra: { file: "field-aelyra.jpg", width: 600, height: 842, frame: { zoom: 1.875, x: 12, y: 267 } },
+      hydra: { file: "field-hydra.jpg", width: 600, height: 600, frame: { zoom: 1.04, x: 8, y: 69 } },
+    };
+
+    function applyEcho(key) {
+      const echo = ECHOES[key];
+      if (!echo) return;
+      const viewportAspect = VIEWPORT.width / VIEWPORT.height;
+      const sourceAspect = echo.width / echo.height;
+      const wide = sourceAspect >= viewportAspect;
+      const style = document.body.style;
+      style.setProperty("--art-w", wide ? `${(sourceAspect / viewportAspect) * 100}%` : "100%");
+      style.setProperty("--art-h", wide ? "100%" : `${(viewportAspect / sourceAspect) * 100}%`);
+      style.setProperty("--art-zoom", String(echo.frame.zoom));
+      style.setProperty("--art-x", `${(echo.frame.x / VIEWPORT.width) * 100}cqw`);
+      style.setProperty("--art-y", `${(echo.frame.y / VIEWPORT.width) * 100}cqw`);
+      document.querySelectorAll("img.art").forEach((img) => {
+        img.src = `../assets/ui_references/${echo.file}`;
+      });
+    }
+
+    // Cada mota lleva un frente hermano con la misma duración y el mismo
+    // retardo: la mota llega al 100% de su ciclo, que es el 0% del frente.
+    function buildMotes(glow) {
+      const count = Number(glow.dataset.motes || 4);
+      const lattice = glow.querySelector(".lattice");
+      const patina = glow.parentElement.querySelector(".gold-patina");
+      const frontClass = glow.dataset.front ? ` ${glow.dataset.front}` : "";
+      let seed = Number(glow.dataset.seed || 1);
+      const random = () => {
+        seed = (seed * 9301 + 49297) % 233280;
+        return seed / 233280;
+      };
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2 + random() * 0.8;
+        const distance = 64 + random() * 26;
+        const duration = (7.5 + random() * 3.5).toFixed(2);
+        const delay = (-random() * duration).toFixed(2);
+        const timing = `--dur:${duration}s;--delay:${delay}s`;
+
+        const mote = document.createElement("div");
+        mote.className = "mote";
+        mote.setAttribute(
+          "style",
+          `--from-x:${(Math.cos(angle) * distance).toFixed(1)}cqw;` +
+            `--from-y:${(Math.sin(angle) * distance * 0.9).toFixed(1)}cqw;${timing}`,
+        );
+        glow.appendChild(mote);
+
+        const front = document.createElement("div");
+        front.className = "front" + frontClass;
+        front.setAttribute("style", timing);
+        lattice.appendChild(front);
+
+        if (patina) {
+          const charge = document.createElement("div");
+          charge.className = "gold-charge";
+          charge.setAttribute("style", timing);
+          patina.appendChild(charge);
+        }
+      }
+    }
+
+    document.querySelectorAll("button[data-set]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.set;
+        document.body.dataset[key] = button.dataset.value;
+        if (key === "card") applyEcho(button.dataset.value);
+        document.querySelectorAll(`button[data-set="${key}"]`).forEach((sibling) => {
+          sibling.setAttribute("aria-pressed", String(sibling === button));
+        });
+      });
+    });
+
+    document.querySelectorAll("button[data-toggle]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.toggle;
+        const next = document.body.dataset[key] !== "true";
+        document.body.dataset[key] = String(next);
+        button.setAttribute("aria-pressed", String(next));
+      });
+    });
+
+    document.querySelectorAll(".glow[data-motes]").forEach(buildMotes);
+    applyEcho(document.body.dataset.card);
+  </script>
+</body>
+
+</html>

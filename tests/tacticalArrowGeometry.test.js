@@ -11,11 +11,6 @@ import {
   targetArrowCurve,
 } from "../src/components/tacticalArrowGeometry";
 
-function lastPoint(path) {
-  const numbers = path.match(/-?\d+\.\d+/g).map(Number);
-  return { x: numbers[0], y: numbers[1] };
-}
-
 test("the blade keeps the authored anchors: the head tip lands exactly on the target", () => {
   const start = { x: 120, y: 620 };
   const end = { x: 640, y: 210 };
@@ -25,11 +20,21 @@ test("the blade keeps the authored anchors: the head tip lands exactly on the ta
     assert.deepEqual(curve.end, end, "the arrow still locks onto the authored target");
 
     const shape = tacticalArrowShape(curve);
-    assert.deepEqual(lastPoint(shape.head), { x: end.x, y: end.y }, "the head vertex sits on the lock position");
-    assert.ok(shape.blade.startsWith("M "), "the blade is a filled outline, not a stroked line");
-    assert.ok(shape.blade.endsWith(" Z"), "the blade outline closes on itself");
-    assert.ok(!/NaN/.test(shape.blade + shape.head));
+    assert.ok(shape.outline.includes(`L ${end.x.toFixed(2)} ${end.y.toFixed(2)}`), "the head vertex sits on the lock position");
+    assert.ok(shape.outline.startsWith("M "), "the blade is a filled outline, not a stroked line");
+    assert.ok(shape.outline.endsWith(" Z"), "the blade outline closes on itself");
+    assert.ok(!/NaN/.test(shape.outline));
   }
+});
+
+test("the blade and arrowhead form one continuous silhouette without an internal seam", () => {
+  const curve = combatArrowCurve({ x: 40, y: 180 }, { x: 360, y: 60 });
+  const shape = tacticalArrowShape(curve);
+
+  assert.equal(typeof shape.outline, "string");
+  assert.equal((shape.outline.match(/\bM\b/g) ?? []).length, 1, "the silhouette has a single contour");
+  assert.equal((shape.outline.match(/\bZ\b/g) ?? []).length, 1, "the silhouette closes only once");
+  assert.ok(!/NaN/.test(shape.outline));
 });
 
 test("the quadratic targeting arc survives the lift to a cubic curve", () => {
@@ -60,7 +65,7 @@ test("a degenerate arrow reports a direction instead of NaN", () => {
   const tangent = tangentOnCurve(curve, 1);
 
   assert.ok(Number.isFinite(tangent.x) && Number.isFinite(tangent.y));
-  assert.ok(!/NaN/.test(tacticalArrowShape(curve).head));
+  assert.ok(!/NaN/.test(tacticalArrowShape(curve).outline));
 });
 
 test("each surface colour derives its own deep, hot and glint tones", () => {

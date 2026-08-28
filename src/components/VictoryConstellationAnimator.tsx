@@ -56,7 +56,7 @@ function stillStarPoints(signature: number): string {
 /**
  * Victoria: motas de luz entran desde fuera del encuadre, encienden una a una las puntas de la
  * rosa cardinal y cierran la figura exactamente sobre el disco de grados que ya está en el
- * tablero. El Capítulo queda preservado en la Crónica.
+ * tablero. Esta Visión preserva el Futuro.
  *
  * No hay captura ni placa: el tablero se retira solo y lo que queda detrás es el espacio del
  * propio juego, con su cielo y su instrumento todavía vivos.

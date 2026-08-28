@@ -17,7 +17,7 @@ export function playLand(game: GameState, handId: string): GameState {
   if (next.player.energyActionUsedThisTurn) return fail(next, "The Chronicler already used their Energy Action this turn.", { code: "SOURCE_ACTION_ALREADY_USED" });
   moveHandToBattlefield(next, card);
   next.player.energyActionUsedThisTurn = true;
-  return succeed(log(next, `Player plays ${card.name}.`));
+  return succeed(log(next, `Chronicler plays ${card.name}.`));
 }
 
 export function recycleEnergy(game: GameState, handId: string): GameState {
@@ -35,7 +35,7 @@ export function recycleEnergy(game: GameState, handId: string): GameState {
   next.player.archive.push(card);
   next.player.energyActionUsedThisTurn = true;
   drawCards(next, "player", 1);
-  return succeed(log(next, `Player recycles ${card.name} and draws a card.`));
+  return succeed(log(next, `Chronicler returns ${card.name} to the Archive and draws a card.`));
 }
 
 export function castCard(game: GameState, handId: string, options: CastOptions = {}): GameState {
@@ -86,7 +86,7 @@ export function castCard(game: GameState, handId: string, options: CastOptions =
         deferPresentationEvents: options.deferPresentationEvents,
       }
     : undefined);
-  return succeed(log(next, `Player casts ${card.name}.`));
+  return succeed(log(next, `Chronicler plays ${card.name}.`));
 }
 
 function castTargetFailureReason(
@@ -135,7 +135,7 @@ export function activateAbility(game: GameState, permanentId: string, abilityId:
   if (ability.cost?.sacrificeSelf) destroyPermanent(next, card);
   resolveEffect(next, ability.effect, { source: card, side: "player", targets: options.targets });
   drainEventQueue(next, options.deferReactiveTriggers ? { deferController: "player" } : undefined);
-  return succeed(log(next, `Player activates ${card.name}.`));
+  return succeed(log(next, `Chronicler activates ${card.name}.`));
 }
 
 export function activatedAbilityFailureReason(game: GameState, card: CardInstance, ability: ActivatedAbility): string | undefined {
@@ -187,7 +187,7 @@ function payLifeCost(game: GameState, cost: ActionCost | undefined, sourceId: st
       totalPaidThisTurn: game.player.lifePaidThisTurn,
     },
   });
-  game.log.unshift(`Player pays ${amount} life for ${sourceName}.`);
+  game.log.unshift(`Chronicler pays ${amount} Life for ${sourceName}.`);
 }
 
 function moveHandToBattlefield(game: GameState, card: { instanceId: string; zone: string }): void {

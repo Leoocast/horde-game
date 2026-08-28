@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import type { MatchOrigin } from "../content/MatchOrigin";
+import { DestinyCopyIdentityButton } from "./DestinyCopyIdentityButton";
 import { DestinyRewriteControl } from "./DestinyRewriteControl";
 import { MusicPlayerMenu } from "./MusicPlayerMenu";
 import { SettingsMenu } from "./SettingsMenu";
@@ -10,7 +12,7 @@ type Props = {
   onRestartTutorial?: () => void;
   onRewriteFuture?: () => void;
   onContemplateFuture?: () => void;
-  futureSeed?: string;
+  matchOrigin?: MatchOrigin;
   sessionKind?: "normal" | "tutorial" | "journey";
   settingsRestricted?: boolean;
   setupTurns?: number;
@@ -19,10 +21,9 @@ type Props = {
   elevated?: boolean;
 };
 
-export function AppHeader({ left, showSettings = true, onReturnToMenu, onRestartTutorial, onRewriteFuture, onContemplateFuture, futureSeed, sessionKind = "normal", settingsRestricted, setupTurns, elevated = false }: Props) {
+export function AppHeader({ left, showSettings = true, onReturnToMenu, onRestartTutorial, onRewriteFuture, onContemplateFuture, matchOrigin, sessionKind = "normal", settingsRestricted, setupTurns, elevated = false }: Props) {
   const showDestinyControl = sessionKind === "normal"
-    && Boolean(futureSeed)
-    && futureSeed?.trim().toLowerCase() !== "developer"
+    && Boolean(matchOrigin)
     && Boolean(onRewriteFuture)
     && Boolean(onContemplateFuture);
 
@@ -31,11 +32,14 @@ export function AppHeader({ left, showSettings = true, onReturnToMenu, onRestart
       <div className="game-command-left min-w-0 justify-self-start">{left}</div>
       <div className="game-command-actions flex items-center gap-2 justify-self-end">
         {showDestinyControl && (
-          <DestinyRewriteControl
-            seed={futureSeed!}
-            onRewrite={onRewriteFuture!}
-            onContemplateAnother={onContemplateFuture!}
-          />
+          <>
+            <DestinyRewriteControl
+              origin={matchOrigin!}
+              onRewrite={onRewriteFuture!}
+              onContemplateAnother={onContemplateFuture!}
+            />
+            {matchOrigin!.seedKind === "canon" && <DestinyCopyIdentityButton canonCode={matchOrigin!.canonCode} />}
+          </>
         )}
         <MusicPlayerMenu />
         {showSettings && <SettingsMenu onReturnToMenu={onReturnToMenu} onRestartTutorial={onRestartTutorial} sessionKind={sessionKind} restricted={settingsRestricted} setupTurns={setupTurns} />}

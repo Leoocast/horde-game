@@ -13,6 +13,8 @@ Este índice separa contratos vigentes, contenido, planes todavía abiertos y re
 
 - [`reference/game_vocabulary.md`](reference/game_vocabulary.md) — vocabulario público y técnico.
 - [`reference/card_text_rules.md`](reference/card_text_rules.md) — redacción normativa de cartas.
+- [`reference/ui_system.md`](reference/ui_system.md) — contrato ejecutable de UI player-facing,
+  trazabilidad de componentes y reglas de homologación.
 - [`reference/animation_contracts.md`](reference/animation_contracts.md) — orden de beats, combate y VFX.
 - [`reference/vfx_and_threejs.md`](reference/vfx_and_threejs.md) — implementación visual y referencias
   técnicas.
@@ -38,19 +40,18 @@ Estos documentos se conservan porque contienen decisiones o validaciones sin ter
 
 - [`plans/learn_to_play_tutorial.md`](plans/learn_to_play_tutorial.md) — documento vivo del nuevo
   onboarding **Aprender a jugar**; fija el primer corte hasta su derrota predeterminada y la
-  aparición de **Contemplar otro futuro**, y aplaza el handoff a una partida real preparada.
+  aparición de **Contemplar otro Futuro**, y aplaza el handoff a una Visión real de un Futuro preparado.
 - [`plans/learn_to_play_implementation_plan.md`](plans/learn_to_play_implementation_plan.md) —
   auditoría del framework, motor, producto y persistencia frente a ese flujo; las Fases 1 a 4 están
-  implementadas hasta el comienzo de la primera Oleada y las fases posteriores siguen abiertas.
+  implementadas hasta el comienzo de la primera Estampida y las fases posteriores siguen abiertas.
 - [`plans/guided_tutorial_system_plan.md`](plans/guided_tutorial_system_plan.md) — framework escalable
   de pausa, bloqueo, resaltado y explicación; sus fases están cerradas y la primera versión jugable
-  de la Primera Semilla se encuentra en QA e iteración pedagógica.
+  de **Preparación** —id técnico `first-seed`— se encuentra en QA e iteración pedagógica.
 - [`plans/generated_look_remediation_plan.md`](plans/generated_look_remediation_plan.md) — corrección
   de las señales visuales que hacen leer la UI como generada; no iniciado.
 - [`plans/seed_explorer_implementation_plan.md`](plans/seed_explorer_implementation_plan.md) — MVP
   dev-only para buscar y clasificar seeds mediante análisis estático barato, shortlist verificado por
   el engine y playtest humano.
-- [`plans/seeds_of_destiny.md`](plans/seeds_of_destiny.md) — narrativa y persistencia futura.
 - [`plans/game_modes.md`](plans/game_modes.md) — variantes futuras y compatibilidad de Chaos.
 - [`plans/webgl_context_budget.md`](plans/webgl_context_budget.md) — migración implementada con QA
   visual final todavía pendiente.
@@ -60,12 +61,19 @@ Estos documentos se conservan porque contienen decisiones o validaciones sin ter
 - [`plans/ui_core_rules_clarity_plan.md`](plans/ui_core_rules_clarity_plan.md) — Fases 0 a 6
   implementadas y cerradas tras QA visual el 2026-08-11; sus contratos vigentes están resumidos en
   `CLAUDE.md`, `guides/testing.md` y `reference/animation_contracts.md`.
+- [`plans/seeds_of_destiny.md`](plans/seeds_of_destiny.md) y
+  [`plans/seeds_of_destiny_history_implementation_plan.md`](plans/seeds_of_destiny_history_implementation_plan.md)
+  — identidad Canon, historial durable, relato factual y repetición determinista cerrados como feature de
+  desarrollo el 2026-08-21; packaging y certificación se repetirán al congelar la demo.
+- [`plans/seeds_of_destiny_narrative_samples.md`](plans/seeds_of_destiny_narrative_samples.md) —
+  muestras ES/EN que fijaron la voz aprobada y siguen siendo el artefacto de regresión del relato.
 
 ## Electron y release
 
 - [`electron/migration_plan.md`](electron/migration_plan.md) — arquitectura y fases 0-6.
 - [`electron/migration_tracking.md`](electron/migration_tracking.md) — estado operativo y blockers.
-- [`electron/persistence.md`](electron/persistence.md) — contrato vigente de preferencias y resume.
+- [`electron/persistence.md`](electron/persistence.md) — contrato vigente de preferencias, historial,
+  resume, backups y clasificación Cloud-worthy.
 - [`electron/release.md`](electron/release.md) — packaging Windows y gates comerciales pendientes.
 
 ## Datos documentales

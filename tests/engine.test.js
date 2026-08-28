@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { getHostDeck, getPlayerDeck, hostDeck, playerDeck } from "../src/data/decks";
 import { normalizeDeck } from "../src/data/normalizeDeck";
-import { localizedTraitLabel, localizedTypeLine } from "../src/i18n/cardLocalization";
+import { localizedTraitLabel, localizedTraitTooltip, localizedTypeLine } from "../src/i18n/cardLocalization";
 import { canonicalizeRulesText } from "../src/i18n/rulesText";
 import { buildHostRules } from "../src/engine/HostRules";
 import { activateAbility, castCard, playLand, recycleEnergy } from "../src/engine/GameActions";
@@ -14,7 +14,7 @@ import { drainEventQueue, enqueue } from "../src/engine/EventQueue";
 import { collectStaticAuras, newlyCoveredAuras, snapshotStaticAuras } from "../src/engine/StaticAuras";
 import { acceptOpeningHand, createInitialGame, expandDeck, mulliganOpeningHand, recordFieldEntry } from "../src/engine/GameState";
 import { finishHostTurn, revealHostCardFromTop, runHostMain } from "../src/engine/HostController";
-import { canAttack, hasTrait } from "../src/engine/Traits";
+import { canAttack, canBlockAttacker, hasTrait } from "../src/engine/Traits";
 import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
 import { getPowerEndurance, hostInSurge } from "../src/engine/StaticEffects";
 import { targetCandidates, targetCandidatesWithSelectedTargets } from "../src/engine/Targeting";
@@ -377,10 +377,25 @@ test("Hostfall traits render with localized names", () => {
   assert.equal(localizedTraitLabel("REFLEX", "es"), "REFLEJOS");
   assert.equal(localizedTraitLabel("SKYGUARD", "en"), "SKYGUARD");
   assert.equal(localizedTraitLabel("POISON_1", "es"), "VENENO 1");
+  assert.equal(localizedTraitTooltip("LETHAL", "en"), "If this Echo deals any amount of damage to another Echo, that Echo dies.");
+  assert.equal(localizedTraitTooltip("LETHAL", "es"), "Si este Eco hace cualquier cantidad de daño a otro Eco, ese Eco muere.");
+});
+
+test("Furtive compares defenders against the attacker's current buffed Power", () => {
+  const game = createTestGame("furtive-current-power");
+  const nerezh = addCard(game, cardFromDeck("nerezh_graveless_matriarch", "host"));
+  const spore = addCard(game, cardFromDeck("spore_infested", "host"));
+  const equalPowerDefender = addCard(game, customCard("equal_power_defender", "player", { power: 2 }));
+  const greaterPowerDefender = addCard(game, customCard("greater_power_defender", "player", { power: 3 }));
+
+  assert.deepEqual(getPowerEndurance(game, nerezh), { power: 3, endurance: 3 }, "Nerezh excludes herself from her Zombie aura");
+  assert.deepEqual(getPowerEndurance(game, spore), { power: 2, endurance: 2 });
+  assert.equal(canBlockAttacker(game, equalPowerDefender, spore), true, "a 2-Power defender can defend a buffed 2-Power Spore");
+  assert.equal(canBlockAttacker(game, greaterPowerDefender, spore), false, "a defender with greater current Power remains illegal");
 });
 
 test("Hostfall card kinds, modifiers and authored rules render through the public vocabulary", () => {
-  assert.equal(localizedTypeLine({ kinds: ["ECHO"], modifiers: ["CHRONICLE"], subtypes: ["Vampire", "Noble"] }, "en"), "Echo · Chronicle — Vampire Noble");
+  assert.equal(localizedTypeLine({ kinds: ["ECHO"], modifiers: ["CHRONICLE"], subtypes: ["Vampire", "Noble"] }, "en"), "Echo — Vampire Noble");
   assert.equal(localizedTypeLine({ kinds: ["SPELL"], modifiers: ["QUICK"], subtypes: [] }, "es"), "Hechizo · Rápido");
   assert.equal(
     canonicalizeRulesText("When this creature enters, Host creatures gain Menace until end of turn.", "en"),
@@ -1877,27 +1892,33 @@ test("Elixir de la Primera Hoja keeps +3/+3 through End and loses it when the tu
   assert.deepEqual(getPowerEndurance(passed, restored), { power: 2, endurance: 2 });
 });
 
-test("El Juicio de Elarion only offers legal permanent types and destroys The Broken Headstone", () => {
+test("El Juicio de Elarion offers Supports, Flying Echoes, and effectively Daunting Echoes", () => {
   const game = createTestGame();
   addSources(game, 3);
-  const grafHarvest = addCard(game, cardFromDeck("the_broken_headstone", "host"));
+  const headstone = addCard(game, cardFromDeck("the_broken_headstone", "host"));
   const flyer = addCard(game, customCard("test_flyer", "host", { traits: ["FLYING"] }));
+  const dauntingCreature = addCard(game, customCard("test_daunting_creature", "host", { traits: ["DAUNTING"] }));
+  const auraGrantedDauntingCreature = addCard(game, customCard("test_daunting_zombie", "host", { subtypes: ["Zombie"] }));
   const groundCreature = addCard(game, customCard("test_ground_creature", "host"));
   const alliedSupport = addCard(game, customCard("allied_support", "player", { kinds: ["SUPPORT"] }));
   const alliedFlyer = addCard(game, customCard("allied_flyer", "player", { traits: ["FLYING"] }));
+  const alliedDauntingCreature = addCard(game, customCard("allied_daunting_creature", "player", { traits: ["DAUNTING"] }));
   const spell = addCard(game, cardFromDeck("the_judgment_of_elarion", "player", "hand"), "player", "hand");
   const requirement = spell.requiresTargets[0];
 
   const candidateIds = targetCandidates(game, "player", requirement).map((card) => card.instanceId);
-  assert.equal(candidateIds.includes(grafHarvest.instanceId), true);
+  assert.equal(candidateIds.includes(headstone.instanceId), true);
   assert.equal(candidateIds.includes(flyer.instanceId), true);
+  assert.equal(candidateIds.includes(dauntingCreature.instanceId), true);
+  assert.equal(candidateIds.includes(auraGrantedDauntingCreature.instanceId), true);
   assert.equal(candidateIds.includes(groundCreature.instanceId), false);
   assert.equal(candidateIds.includes(alliedSupport.instanceId), false);
   assert.equal(candidateIds.includes(alliedFlyer.instanceId), false);
+  assert.equal(candidateIds.includes(alliedDauntingCreature.instanceId), false);
 
-  const result = castCard(game, spell.instanceId, { targets: { targetPermanent: grafHarvest.instanceId } });
-  assert.equal(result.host.field.some((card) => card.instanceId === grafHarvest.instanceId), false);
-  assert.equal(result.host.memory.some((card) => card.instanceId === grafHarvest.instanceId), true);
+  const result = castCard(game, spell.instanceId, { targets: { targetPermanent: auraGrantedDauntingCreature.instanceId } });
+  assert.equal(result.host.field.some((card) => card.instanceId === auraGrantedDauntingCreature.instanceId), false);
+  assert.equal(result.host.memory.some((card) => card.instanceId === auraGrantedDauntingCreature.instanceId), true);
 });
 
 test("Choque de Ecos deals source power and preserves deathtouch for death cleanup", () => {
@@ -2275,6 +2296,39 @@ test("Host reveal stops at a non-token and Surge adds exactly two reveals", () =
   assert.equal(surgeResult.host.archive.length, 0);
 });
 
+test("a duplicate Host Support moves to the Archive bottom and grants a replacement reveal", () => {
+  const game = createTestGame("duplicate-host-support");
+  game.hostRules.revealCount = 1;
+  const existing = addCard(game, cardFromDeck("the_broken_headstone", "host"));
+  const duplicate = addCard(game, cardFromDeck("the_broken_headstone", "host", "archive"), "host", "archive");
+  const replacement = addCard(game, customCard("duplicate_support_replacement", "host", { zone: "archive", isToken: true }), "host", "archive");
+  const untouched = addCard(game, customCard("duplicate_support_untouched", "host", { zone: "archive", isToken: true }), "host", "archive");
+
+  const result = runHostMain(game);
+
+  assert.deepEqual(result.host.field.filter((card) => card.definitionId === existing.definitionId).map((card) => card.instanceId), [existing.instanceId]);
+  assert.equal(result.host.field.some((card) => card.instanceId === replacement.instanceId), true);
+  assert.deepEqual(result.host.archive.map((card) => card.instanceId), [untouched.instanceId, duplicate.instanceId]);
+  assert.equal(result.host.archive.at(-1)?.zone, "archive");
+});
+
+test("a duplicate Host Support also grants a replacement Surge reveal without stopping Surge", () => {
+  const game = createTestGame("duplicate-host-support-surge");
+  game.hostTurnNumber = 9;
+  game.hostRules.revealCount = 0;
+  game.hostRules.surgeTurn = 10;
+  game.hostRules.surgeExtraReveals = 1;
+  addCard(game, cardFromDeck("the_broken_headstone", "host"));
+  const duplicate = addCard(game, cardFromDeck("the_broken_headstone", "host", "archive"), "host", "archive");
+  const replacement = addCard(game, customCard("duplicate_support_surge_replacement", "host", { zone: "archive", isToken: true }), "host", "archive");
+  const untouched = addCard(game, customCard("duplicate_support_surge_untouched", "host", { zone: "archive", isToken: true }), "host", "archive");
+
+  const result = runHostMain(game);
+
+  assert.equal(result.host.field.some((card) => card.instanceId === replacement.instanceId), true);
+  assert.deepEqual(result.host.archive.map((card) => card.instanceId), [untouched.instanceId, duplicate.instanceId]);
+});
+
 test("Legion static buffs and the Daunting Front apply to their authored Host Echoes", () => {
   const game = createTestGame("goblin-static-effects");
   const foreman = addCard(game, cardFromDeck("shaman_of_the_umbral_ember", "host"));
@@ -2408,19 +2462,19 @@ test("destroying a Support does not emit Echo death events", () => {
   assert.deepEqual(game.eventQueue, []);
 });
 
-test("Memory threshold effects turn on exactly at seven Host cards", () => {
+test("Three-Eyed Corpse-Gorger awakens exactly at three Host Memory cards", () => {
   const game = createTestGame("memory-threshold");
-  const seventhMemoryHound = addCard(game, cardFromDeck("hound_of_seven_memories", "host"));
-  for (let index = 0; index < 6; index += 1) {
+  const corpseGorger = addCard(game, cardFromDeck("three_eyed_corpse_gorger", "host"));
+  for (let index = 0; index < 2; index += 1) {
     addCard(game, customCard(`memory_card_${index}`, "host", { zone: "memory" }), "host", "memory");
   }
 
-  assert.deepEqual(getPowerEndurance(game, seventhMemoryHound), { power: 3, endurance: 2 });
-  assert.equal(hasTrait(game, seventhMemoryHound, "DAUNTING"), false);
+  assert.deepEqual(getPowerEndurance(game, corpseGorger), { power: 3, endurance: 2 });
+  assert.equal(hasTrait(game, corpseGorger, "DAUNTING"), false);
 
-  addCard(game, customCard("memory_card_6", "host", { zone: "memory" }), "host", "memory");
-  assert.deepEqual(getPowerEndurance(game, seventhMemoryHound), { power: 4, endurance: 3 });
-  assert.equal(hasTrait(game, seventhMemoryHound, "DAUNTING"), true);
+  addCard(game, customCard("memory_card_2", "host", { zone: "memory" }), "host", "memory");
+  assert.deepEqual(getPowerEndurance(game, corpseGorger), { power: 4, endurance: 3 });
+  assert.equal(hasTrait(game, corpseGorger, "DAUNTING"), true);
 });
 
 test("Rider of the Third Charge and Rear-Guard Firebreather omit their sacrifice modes", () => {

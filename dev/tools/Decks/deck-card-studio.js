@@ -81,11 +81,13 @@
     }
 
     function formatEffectText(value) {
-        const tapIconHtml = '<span class="symbol-badge symbol-tap" title="Agotar / Activar"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 2h12v4c0 2.4-1.3 4.2-4 6 2.7 1.8 4 3.6 4 6v4H6v-4c0-2.4 1.3-4.2 4-6-2.7-1.8-4-3.6-4-6V2Zm2 2v2c0 1.7 1.1 3 4 4.9 2.9-1.9 4-3.2 4-4.9V4H8Zm4 9.1C9.1 15 8 16.3 8 18v2h8v-2c0-1.7-1.1-3-4-4.9Z"/></svg></span>';
+        const tapTitle = language === "en" ? "Exhaust / Activate" : "Agotar / Activar";
+        const energyTitle = language === "en" ? "Energy" : "Energía";
+        const tapIconHtml = `<span class="symbol-badge symbol-tap" title="${tapTitle}"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 2h12v4c0 2.4-1.3 4.2-4 6 2.7 1.8 4 3.6 4 6v4H6v-4c0-2.4 1.3-4.2 4-6-2.7-1.8-4-3.6-4-6V2Zm2 2v2c0 1.7 1.1 3 4 4.9 2.9-1.9 4-3.2 4-4.9V4H8Zm4 9.1C9.1 15 8 16.3 8 18v2h8v-2c0-1.7-1.1-3-4-4.9Z"/></svg></span>`;
         return cardText.formatEffectText(value, {
             tapIconHtml,
             energyIconHtml:
-                '<span class="symbol-badge symbol-energy" title="Energía"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg></span>',
+                `<span class="symbol-badge symbol-energy" title="${energyTitle}"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg></span>`,
         });
     }
 
@@ -412,7 +414,6 @@
                 <header class="tcg-head">
                     <h2 class="tcg-title${titleClass}">
                         ${escapeHtml(cardName)}
-                        ${isChronicle ? "<small>Crónica</small>" : ""}
                     </h2>
                     <div class="tcg-seal" aria-hidden="true">${deckSeal()}</div>
                 </header>

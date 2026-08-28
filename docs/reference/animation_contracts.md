@@ -24,7 +24,7 @@ bonus draw, playing or Invoking a card, and the replacement draw after returning
 
 On a valid drop, the dragged DOM card yields immediately to the presentation that owns the action.
 Sources are concealed before `LandPlayAnimator` captures the same release geometry; returned Sources
-yield to `EnergyRecycleAnimator`; Invoked cards yield to their battlefield arrival. The concealed
+yield to `EnergyRecycleAnimator`; Invoked Echoes yield to their battlefield arrival. The concealed
 copy must never snap back toward the hand underneath the real animation. Invalid drops keep the
 normal drag return. The generic `AnimatePresence` exit changes opacity only and never invents a
 second movement for an action that already has one.
@@ -50,7 +50,7 @@ Three rules make the sequence readable:
 
 A creature killed in combat leaves game state the instant its impact lands, so its triggers can resolve in sequence. `holdCombatCasualties` (`src/components/battlefieldLayout.ts`) keeps its layout slot as an invisible ghost while `resolvingHostCombat` is true, so survivors never re-center mid-sequence; every casualty leaves together when the combat ends. The held slot must keep its **position**, not just exist: copies in a stack lay out by DOM order (each slot after the first carries a negative margin) and overlap by `--copy-stack-index`, so a ghost appended to the end sent a casualty from the middle of the stack to its back and shifted every copy behind it. The row is re-sorted by entry order for that reason. Grouping also ignores stats during that window, so a dying lord dropping its buff off every creature it covered cannot re-key and remount whole stacks.
 
-**Only the creature row is held, and only creatures may inherit a held slot.** `battlefieldCardOrder` is the creature row's registry: `renderCardStacks` is called with the creature row alone and prunes every card outside it on each render, so Sources and other permanents (La Lápida Quebrada / `the_broken_headstone`) look like brand-new arrivals on *every* render. The slot-recycling pass — which lets an Echo summoned mid-combat take over a casualty's slot instead of landing past a hole — used to accept any card, so the first Source or Support it walked over consumed the ghost the instant something died. The held slot disappeared mid-sequence and the whole row re-centered. That was the "everything regroups when a card dies" bug: it needed a non-Echo permanent on the board to show up, which is why El Alzamiento de los Sinsepulcro and the player's side both hit it while a bare Goblin board did not. Both ends of the swap are now Echo-gated; `tests/battlefieldLayout.test.js` covers it.
+**Only the creature row is held, and only creatures may inherit a held slot.** `battlefieldCardOrder` is the creature row's registry: `renderCardStacks` is called with the creature row alone and prunes every card outside it on each render, so Sources and other permanents (El Santuario Quebrado / `the_broken_headstone`) look like brand-new arrivals on *every* render. The slot-recycling pass — which lets an Echo summoned mid-combat take over a casualty's slot instead of landing past a hole — used to accept any card, so the first Source or Support it walked over consumed the ghost the instant something died. The held slot disappeared mid-sequence and the whole row re-centered. That was the "everything regroups when a card dies" bug: it needed a non-Echo permanent on the board to show up, which is why El Alzamiento de los Sinsepulcro and the player's side both hit it while a bare Goblin board did not. Both ends of the swap are now Echo-gated; `tests/battlefieldLayout.test.js` covers it.
 
 A beat that *adds or removes* a permanent reflows the row, and that reflow is worth watching. `resolve()` reports whether the battlefield changed and the runner stamps the time; `done()` then waits only for whatever is **left** of `BOARD_SETTLE_MS` since that moment. Measuring from the end of the beat instead was a real source of dead air: the burn resolves at 500ms and runs to 1180ms, so its reflow was long finished, yet it sat through a second full settle before the next card could act. A creature arriving while casualties are held takes over the rightmost held slot instead of landing past the gap one left behind.
 
@@ -97,6 +97,25 @@ same frame as the blue buff lines. A permanent source already received its activ
 the ETB beat, so this beat does not pulse it again. An instant has no battlefield slot and instead
 uses the spell reveal on the right side of the Host panel. Creatures revealed later in the turn
 are not retroactively included.
+
+## Stabilization completion
+
+`stabilizing` is rules state, not an animation clock. When an Echo changes from Stabilizing to
+ready, the engine commits that change immediately and the store derives a finite presentation event
+from the real `true -> false` transition. The continuous material remains mounted beneath a 620ms
+seal: its existing particles keep their current clocks, the lattice contracts into the center, and
+a final interior release clears the veil. Do not replay the generic gold activation pulse; finishing
+Stabilization is not an ability trigger.
+
+- Player and Host Echoes use the same presentation. Several completions are staggered by 70ms in
+  Field order and form one barrier that settles after the final card.
+- The next automatic Host beat and deliberate gameplay input wait for this presentation, while the
+  underlying `GameState` remains fully committed.
+- Battlefield grouping stays frozen during the seal so a newly ready copy cannot jump into another
+  stack halfway through its own finish.
+- `animationend` releases each card. A bounded store watchdog clears a missing callback, and resets
+  invalidate the whole presentation state.
+- Reduced motion replaces the lattice contraction and expanding ring with a 180ms interior fade.
 
 ## Burn
 

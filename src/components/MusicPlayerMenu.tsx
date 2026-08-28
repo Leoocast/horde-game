@@ -55,7 +55,7 @@ export function MusicPlayerMenu() {
         <Music size={20} />
       </button>
       {menuPresence.mounted && menuPos && (
-        <div className={["old-panel game-popover game-music-popover game-menu-surface fixed z-[400] w-80 overflow-hidden text-[#e8dfc2]", menuPresence.closing ? "is-closing" : ""].join(" ")} style={{ top: menuPos.top, right: menuPos.right }}>
+        <div className={["hf-ui-panel game-popover game-music-popover game-menu-surface fixed z-[400] w-80 overflow-hidden text-[#e8dfc2]", menuPresence.closing ? "is-closing" : ""].join(" ")} style={{ top: menuPos.top, right: menuPos.right }}>
           <div className="space-y-4 p-4">
             <div className="game-music-now-playing flex items-center gap-3">
               <div className="game-music-now-icon"><Music size={18} /></div>

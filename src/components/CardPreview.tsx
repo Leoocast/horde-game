@@ -44,7 +44,7 @@ export function CardPreview() {
   const activeId = focusedCardId ?? activeEffectCardId ?? hoveredCardId;
   const card = activeId ? findCard(game, activeId) : undefined;
   const heldStaticAuraBonus = useGameStore((state) => activeId ? state.heldStaticAuraBonuses[activeId] : undefined);
-  const details = useCardDetails(card?.definitionId ?? "");
+  const details = useCardDetails(card?.definitionId ?? "", language);
 
   useEffect(() => {
     if (hoveredCardId && !findCard(game, hoveredCardId)) setHoveredCardId(undefined);
@@ -284,16 +284,16 @@ export function CardDetailsModal({
     <div data-preserve-card-focus="true" className="fixed inset-0 z-[300] flex items-center justify-center bg-black/88 p-6 text-[#f6e6b8] backdrop-blur-md">
       <div className="relative flex w-[min(1320px,calc(100vw-48px))] items-center justify-center">
         {onPrevious && (
-          <button className="old-button absolute left-0 top-1/2 z-[310] flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full" onClick={onPrevious} title={previousLabel ?? t("common.previousCard")}>
+          <button className="hf-ui-button hf-ui-button-round absolute left-0 top-1/2 z-[310] flex h-14 w-14 -translate-y-1/2 items-center justify-center" onClick={onPrevious} title={previousLabel ?? t("common.previousCard")}>
             <ChevronLeft size={26} />
           </button>
         )}
         {onNext && (
-          <button className="old-button absolute right-0 top-1/2 z-[310] flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full" onClick={onNext} title={nextLabel ?? t("common.nextCard")}>
+          <button className="hf-ui-button hf-ui-button-round absolute right-0 top-1/2 z-[310] flex h-14 w-14 -translate-y-1/2 items-center justify-center" onClick={onNext} title={nextLabel ?? t("common.nextCard")}>
             <ChevronRight size={26} />
           </button>
         )}
-        <section className="old-panel card-details-modal-panel max-h-[86vh] w-[min(1160px,calc(100vw-12rem))] overflow-hidden p-5 shadow-2xl shadow-black/70">
+        <section className="hf-ui-panel card-details-modal-panel max-h-[86vh] w-[min(1160px,calc(100vw-12rem))] overflow-hidden p-5 shadow-2xl shadow-black/70">
         <div className="min-h-0">
           {imageUrl ? (
             <img src={imageUrl} alt={localizedName} className="mx-auto max-h-[74vh] w-full max-w-[360px] rounded-md border-2 border-[#b88945] object-contain shadow-xl shadow-black/55" />
@@ -304,7 +304,7 @@ export function CardDetailsModal({
         <div className="flex min-h-0 flex-col">
           <div className="flex items-start justify-between gap-4 border-b border-[#8f6a36]/60 pb-3">
             <div>
-              <h2 className="old-title text-3xl font-black leading-tight">{localizedName}</h2>
+              <h2 className="hf-ui-title text-3xl font-black leading-tight">{localizedName}</h2>
               <p className="mt-2 text-sm font-bold tracking-wide text-[#d6b879]">{localizedType}</p>
             </div>
             <button className="icon-button h-9 w-9" title={t("common.closeDetails")} onClick={onClose}>
@@ -315,7 +315,7 @@ export function CardDetailsModal({
             {traits && <TraitPills traits={traits} />}
             {stats && <PreviewStatsBadge stats={stats} cardTheme={cardTheme} />}
             <label className="ml-auto flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#d6b879]">
-              <span className="old-title text-base normal-case tracking-normal" title={t("common.fontSize")}>
+              <span className="hf-ui-title text-base normal-case tracking-normal" title={t("common.fontSize")}>
                 aA
               </span>
               <button className="icon-button h-7 w-7 text-sm" disabled={fontSize <= 16} onClick={() => setFontSize(Math.max(16, fontSize - 1))} title={t("common.decreaseFont")}>
@@ -328,7 +328,7 @@ export function CardDetailsModal({
               <span className="w-8 text-right text-[#ffe0a0]">{fontSize}</span>
             </label>
           </div>
-          <div className="old-panel-soft mt-4 min-h-0 flex-1 overflow-auto p-4">
+          <div className="hf-ui-panel-soft mt-4 min-h-0 flex-1 overflow-auto p-4">
             <p className="whitespace-pre-line leading-relaxed text-[#f8e8bd]" style={{ fontSize }}>{renderCardText(text)}</p>
           </div>
         </div>
@@ -402,7 +402,7 @@ function TraitExplanations({
   return (
     <div className={["card-preview-keyword-explanations flex w-[min(260px,20vw)] flex-col gap-2", chaos ? "is-chaos" : "", cardTheme ? `is-${cardTheme}` : ""].join(" ")}>
       {entries.map((keyword) => (
-        <div key={keyword} className="old-panel-soft p-2.5">
+        <div key={keyword} className="hf-ui-panel-soft p-2.5">
           <div className="keyword-pill card-preview-keyword-badge">
             <CardTraitIcon keyword={keyword} />
             {renderTraitLabel(naturalCaseTraitLabel(localizedTraitLabel(keyword, language)))}

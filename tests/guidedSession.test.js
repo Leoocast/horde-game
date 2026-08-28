@@ -330,6 +330,10 @@ test("Learn to Play keeps the combat-stat and Harvester interventions reachable 
       ));
       director.start(bindings, `learn-to-play:director-regression:${attempt}`);
 
+      assert.equal(guidedSessionStore.snapshot().currentStep.id, "evy-fourth-source-briefing");
+      guidedSessionStore.notifyCheckpointState(true);
+      assert.equal(guidedSessionStore.continueExplanation(), true);
+      assert.equal(guidedSessionStore.snapshot().currentStep.id, "play-fourth-source");
       const sourceId = bindings.fourth_source;
       useGameStore.getState().playLand(sourceId);
       useGameStore.getState().completeLandPlayAnimation(useGameStore.getState().landPlayAnimationQueue[0].id);
@@ -341,7 +345,9 @@ test("Learn to Play keeps the combat-stat and Harvester interventions reachable 
       summoningAnimationCount: 0,
       autoPaidLandAnimation: undefined,
     });
-    await new Promise((resolve) => setTimeout(resolve, 1_220));
+    // The authored animation resolves at 1200 ms. Keep enough scheduler margin for the full suite;
+    // 20 ms was flaky under concurrent Vite transforms even though the production callback was sound.
+    await new Promise((resolve) => setTimeout(resolve, 1_400));
     assert.equal(guidedSessionStore.snapshot().currentStep.id, "choose-aelyra-target");
     assert.equal(useGameStore.getState().counterTargeting?.sourceId, bindings.aelyra);
     useGameStore.getState().lockCounterTarget(bindings.maela);
@@ -490,12 +496,16 @@ test("the production Learn to Play lifecycle recovers when End Turn commits befo
         assert.equal(contextualTutorialRuntime.snapshot().progressMode, "isolated");
         const bindings = guidedSessionStore.snapshot().bindings;
 
+        assert.equal(guidedSessionStore.snapshot().currentStep.id, "evy-fourth-source-briefing");
+        guidedSessionStore.notifyCheckpointState(true);
+        assert.equal(guidedSessionStore.continueExplanation(), true);
+        assert.equal(guidedSessionStore.snapshot().currentStep.id, "play-fourth-source");
         useGameStore.getState().playLand(bindings.fourth_source);
         useGameStore.getState().completeLandPlayAnimation(useGameStore.getState().landPlayAnimationQueue[0].id);
         await flushMicrotasks();
         useGameStore.getState().castCard(bindings.aelyra);
         useGameStore.setState({ summoningAnimationCount: 0, autoPaidLandAnimation: undefined });
-        await new Promise((resolve) => setTimeout(resolve, 1_220));
+        await new Promise((resolve) => setTimeout(resolve, 1_400));
         useGameStore.getState().lockCounterTarget(bindings.maela);
         useGameStore.getState().confirmCounterTargeting();
         useGameStore.setState({

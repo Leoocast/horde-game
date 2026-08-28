@@ -62,6 +62,8 @@ export type NewDeckList = {
   schemaVersion?: string;
   id: string;
   name: string;
+  /** English deck identity; `name` remains the authored Spanish identity for schema v1. */
+  displayNameEn?: string;
   side?: string;
   deckSize?: number;
   /** Number of authored Land copies kept when the runtime prepares this player deck. */
@@ -77,6 +79,8 @@ export type DeckImageManifest = {
   provider?: "local";
   defaults?: {
     showFullCardImage?: boolean;
+    /** Subdirectories beside `imageUrl` that contain localized printed-card PNGs. */
+    localizedImageDirectories?: Partial<Record<"en" | "es", string>>;
   };
   cards: Record<
     string,

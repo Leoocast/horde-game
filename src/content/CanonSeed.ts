@@ -8,6 +8,27 @@ export const CANON_SEED_RULESET_VERSION = 1 as const;
 export const CANON_SEED_ENTROPY_LENGTH = 5;
 export const CANON_SEED_ENTROPY_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+/**
+ * Compatibility is deliberately independent from the package/content revision. HF1 may remain
+ * reproducible across releases that only change presentation; a deterministic rules/deck/RNG
+ * change must retire HF1 and introduce a new format instead of silently changing old codes.
+ */
+export const CANON_SEED_COMPATIBILITY = Object.freeze({
+  HF1: Object.freeze({
+    format: CANON_SEED_FORMAT,
+    rulesetVersion: CANON_SEED_RULESET_VERSION,
+    deterministicRevision: "hostfall-hf1-r1",
+    supported: true,
+  }),
+});
+
+export type CanonSeedCompatibilityRegistry = Readonly<Record<string, Readonly<{
+  format: string;
+  rulesetVersion: number;
+  deterministicRevision: string;
+  supported: boolean;
+}>>>;
+
 const HF1_PACK_ID = "hostfall.core";
 
 type CanonDeckRegistration = Readonly<{
@@ -52,6 +73,7 @@ export type SeedFutureIdentity = Readonly<{
   /** Derived from difficulty; it is never serialized as an independent Canon Seed choice. */
   preparationTurns: number;
   gameMode: "standard";
+  deterministicRevision: string;
   contentRevision: string;
   rulesetVersion: typeof CANON_SEED_RULESET_VERSION;
 }>;
@@ -97,11 +119,16 @@ export function encodeCanonSeed(
 export function decodeCanonSeed(
   input: string,
   catalog: ContentCatalog = contentCatalog,
+  compatibility: CanonSeedCompatibilityRegistry = CANON_SEED_COMPATIBILITY,
 ): SeedFutureIdentity {
   const normalized = input.toUpperCase();
   const match = CANON_SEED_PATTERN.exec(normalized);
   if (!match) {
     throw new Error("Canon Seed must match HF1-PPP-HHH-XXD-XXX using only A-Z, 0-9 and difficulty 1-3.");
+  }
+  const compatibleFormat = compatibility[CANON_SEED_FORMAT];
+  if (!compatibleFormat?.supported || compatibleFormat.rulesetVersion !== CANON_SEED_RULESET_VERSION) {
+    throw new Error(`${CANON_SEED_FORMAT} is not reproducible by this build.`);
   }
 
   const playerRegistration = requireDeckRegistration(match[1], "player");
@@ -120,6 +147,7 @@ export function decodeCanonSeed(
     difficulty: difficulty.difficulty,
     preparationTurns: difficulty.preparationTurns,
     gameMode: "standard",
+    deterministicRevision: compatibleFormat.deterministicRevision,
     contentRevision: catalog.revision,
     rulesetVersion: CANON_SEED_RULESET_VERSION,
   });

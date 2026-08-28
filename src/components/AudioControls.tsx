@@ -61,11 +61,11 @@ export function AudioControls({ variant = "panel" }: Props) {
   }
 
   return (
-    <section className="old-panel-soft p-3">
+    <section className="hf-ui-panel-soft p-3">
       <div className="flex items-center justify-between gap-3">
-        <div className="old-title text-xs font-bold uppercase tracking-wide">SFX</div>
+        <div className="hf-ui-title text-xs font-bold uppercase tracking-wide">SFX</div>
         <button
-          className="old-button flex h-8 w-8 items-center justify-center transition"
+          className="hf-ui-button flex h-8 w-8 items-center justify-center transition"
           onClick={() => setEnabled(!enabled)}
           title={enabled ? t("audio.muteSfx") : t("audio.enableSfx")}
         >
@@ -86,17 +86,17 @@ export function AudioControls({ variant = "panel" }: Props) {
       </div>
       <button
         data-audio-click="off"
-        className="old-button mt-3 h-8 w-full text-xs font-black uppercase tracking-wide transition disabled:opacity-40"
+        className="hf-ui-button mt-3 h-8 w-full text-xs font-black uppercase tracking-wide transition disabled:opacity-40"
         disabled={!enabled}
         onClick={() => playSfx("click")}
       >
         {t("common.test")}
       </button>
-      <div className="mt-4 border-t border-[#8f6a36]/60 pt-3">
+      <div className="hf-ui-divider mt-4 border-t pt-3">
         <div className="flex items-center justify-between gap-3">
-          <div className="old-title text-xs font-bold uppercase tracking-wide">{t("audio.music")}</div>
+          <div className="hf-ui-title text-xs font-bold uppercase tracking-wide">{t("audio.music")}</div>
           <button
-            className="old-button flex h-8 w-8 items-center justify-center transition"
+            className="hf-ui-button flex h-8 w-8 items-center justify-center transition"
             onClick={() => setMusicEnabled(!musicEnabled)}
             title={musicEnabled ? t("audio.muteMusic") : t("audio.enableMusic")}
           >

@@ -12,6 +12,15 @@ const server = await createServer({
 try {
   await server.ssrLoadModule("/tests/engine.test.js");
   await server.ssrLoadModule("/tests/canonSeed.test.js");
+  await server.ssrLoadModule("/tests/matchOrigin.test.js");
+  await server.ssrLoadModule("/tests/seedExplorer.test.js");
+  await server.ssrLoadModule("/tests/attemptNarrative.test.js");
+  await server.ssrLoadModule("/tests/attemptMilestones.test.js");
+  await server.ssrLoadModule("/tests/historyDomain.test.js");
+  await server.ssrLoadModule("/tests/historyPersistence.test.js");
+  await server.ssrLoadModule("/tests/historyViewModel.test.js");
+  await server.ssrLoadModule("/tests/matchLifecycle.test.js");
+  await server.ssrLoadModule("/tests/productCapabilities.test.js");
   await server.ssrLoadModule("/tests/hostBeats.test.js");
   await server.ssrLoadModule("/tests/deckLint.test.js");
   await server.ssrLoadModule("/tests/deckCardText.test.js");

@@ -21,6 +21,7 @@ import { GuidedInteractionGate } from "../src/guidance/interactionGate";
 import { GuidedInterventionOrchestrator } from "../src/guidance/interventionOrchestrator";
 import { GuidedJourneyLifecycle } from "../src/guidance/journeyLifecycle";
 import { JourneyIntentGate, journeyIntentGate } from "../src/guidance/journeyIntentGate";
+import { LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION } from "../src/guidance/learnToPlayPrologue";
 import { translate } from "../src/i18n/translations";
 import {
   LearnToPlayPrologueDirector,
@@ -50,6 +51,40 @@ test("How to Play catalogs the main journey before optional Preparation", () => 
 });
 
 test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
+  assert.equal(translate("es", "guided.learnToPlay.intro.beatOne"), "¡Cronista… ayuda!");
+  assert.equal(
+    translate("es", "guided.learnToPlay.intro.beatFour"),
+    "Contemplemos este Futuro. Quizá todavía estemos a tiempo.",
+  );
+  assert.equal(translate("es", "guided.learnToPlay.intro.evy"), "Evy");
+  assert.equal(
+    translate("es", "guided.learnToPlay.intro.beatFive"),
+    "Contuve a la Hueste a orillas del Elarion mientras pude. Logré preparar tres Fuentes, pero sus filas rompieron nuestra línea y me obligaron a retroceder. Continúa la Visión desde aquí.",
+  );
+  assert.equal(
+    translate("es", "guided.learnToPlay.fourthSourceBriefingBody"),
+    "Has llegado. Preparemos una Fuente más antes de que la Hueste vuelva a avanzar. Será la cuarta; con ella llenaremos por completo el contenedor de Energía.",
+  );
+  assert.equal(
+    translate("es", "guided.glossary.source.definition"),
+    "Al jugar una Fuente, su Energía se acumula en el contenedor de la esquina inferior izquierda. Puedes reunir hasta cuatro para Invocar Ecos y activar Acciones.",
+  );
+  assert.equal(
+    translate("es", "guided.glossary.energy.definition"),
+    "Para Invocar Ecos o lanzar Hechizos.",
+  );
+  assert.equal(
+    translate("es", "guided.glossary.echoes.definition"),
+    "Combatientes que el Cronista y la Hueste Invocan al Campo. Pueden atacar y defender.",
+  );
+  assert.equal(
+    translate("es", "guided.glossary.host.definition"),
+    "Una fuerza implacable que avanza sin esperar órdenes. Invoca sus propios Ecos y los lanza contra el Cronista.",
+  );
+  assert.equal(
+    translate("es", "guided.learnToPlay.fourthSourceBody"),
+    "Arrastra la carta hacia el Campo para agregar su Energía al contenedor de la esquina inferior izquierda.",
+  );
   assert.equal(
     translate("es", "guided.learnToPlay.invokeAelyraBody"),
     "Aelyra, Heredera de Elarion, necesita 1 de Energía para ser Invocada. Ya tienes suficiente Energía.",
@@ -62,7 +97,35 @@ test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
     translate("es", "guided.contextual.product.attackExhaustsBody"),
     "Es opcional atacar. Si un Eco ataca, se Agota, por lo que no estará disponible para defender durante el siguiente turno de la Hueste.",
   );
-  assert.equal(translate("es", "guided.glossary.archive.definition"), "La pila de cartas aún no robadas.");
+  assert.equal(translate("es", "guided.glossary.hostArchive.label"), "Archivo de la Hueste");
+  assert.equal(translate("es", "guided.glossary.hostArchive.definition"), "La pila de Ecos aún no Invocados.");
+  assert.equal(translate("es", "guided.glossary.chroniclerArchive.label"), "Archivo del Cronista");
+  assert.equal(
+    translate("es", "guided.glossary.chroniclerArchive.definition"),
+    "La pila de Ecos y Fuentes aún no robados.",
+  );
+  assert.equal(translate("es", "guided.glossary.life.definition"), "La supervivencia del Cronista.");
+  assert.equal(
+    translate("es", "guided.glossary.reserve.definition"),
+    "Guarda hasta 3 de Energía que no usaste para tu siguiente turno. Esa Energía se utiliza antes que la de tus Fuentes.",
+  );
+  assert.equal(translate("es", "guided.cardComparison.powerGloss"), "El daño que inflige");
+  assert.equal(
+    translate("es", "guided.cardComparison.enduranceGloss"),
+    "Lo que resiste antes de ser destruido",
+  );
+  assert.equal(
+    translate("es", "guided.contextual.product.surgeBody"),
+    "A partir de este turno, la Hueste desata todo su poder e Invoca más Ecos con cada avance.",
+  );
+  assert.equal(
+    translate("es", "guided.contextual.product.emptyHandDrawBody"),
+    "Si comienzas tu turno sin Ecos o Fuentes en la Mano, robas 2 cartas en lugar de 1.",
+  );
+  assert.equal(
+    translate("es", "guided.contextual.product.returnSourceBody"),
+    "No puedes reunir más de 4 Fuentes. Arrastra Río de Elarion hacia el Archivo del Cronista para colocarlo al fondo y robar otra carta. Jugar o devolver una Fuente consume tu Acción de Fuente del turno.",
+  );
   assert.equal(
     translate("es", "guided.learnToPlay.combatStatsBody"),
     "La Fuerza indica cuánto daño inflige un Eco. El Aguante indica cuánto daño puede recibir antes de ser destruido. Cuando dos Ecos combaten, ambos se infligen daño al mismo tiempo.",
@@ -398,10 +461,8 @@ test("post-Surge concepts react only to the real empty-Hand draw and the require
     amount: 2,
     reason: "empty-hand",
     cardIds: ["river:1", "spell:1"],
-  }, context), {
-    highlights: [{ kind: "surface", anchor: "player.hand", showHighlight: false }],
-    placement: "center",
-  });
+  }, context), { placement: "center" });
+  assert.deepEqual(emptyHand.copy.glossaryTerms ?? [], []);
   assert.equal(emptyHand.evaluate({
     kind: "player.cardsDrawn",
     amount: 2,
@@ -451,25 +512,49 @@ test("authored Host-turn policies are scoped and reject invalid reveal plans", (
   assert.throws(() => gate.plan({}), /Invalid authored Host reveal count/u);
 });
 
-test("App exposes both launchers, disables Continue, and hands the journey to a random normal future", async () => {
-  const [app, menu, board] = await Promise.all([
+test("App exposes both launchers, disables Continue, and hands the journey to its approved first Canon future", async () => {
+  const [app, menu, board, intro] = await Promise.all([
     readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/Board.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/LearnToPlayIntroModal.tsx", import.meta.url), "utf8"),
   ]);
   assert.match(app, /HOW_TO_PLAY_CATALOG\.map/u);
   assert.match(app, /onLaunch: launchLearnToPlayJourney/u);
+  assert.match(app, /function launchLearnToPlayJourney\(\)\s*\{\s*setLearnToPlayIntroOpen\(true\);\s*\}/u);
+  assert.match(app, /chroniclerName=\{playerName\}/u);
+  assert.match(app, /onComplete=\{beginLearnToPlayJourney\}/u);
+  assert.match(app, /function beginLearnToPlayJourney\(\)[\s\S]*?learnToPlayJourneyLifecycle\.start\(\)[\s\S]*?setScreen\("journey"\)/u);
   assert.match(app, /howToPlayEntries=\{howToPlayEntries\}/u);
   assert.match(app, /continueDisabled/u);
-  assert.match(app, /if \(!boardSessionPolicy\.autosave \|\| screen !== "game"\) return;/u);
+  assert.match(app, /if \(!productResumeRuntime\.enabled \|\| !boardSessionPolicy\.autosave \|\| screen !== "game"\) return;/u);
   assert.match(app, /guidedProgressStore\.markJourneyCompleted\(LEARN_TO_PLAY_JOURNEY\.id, LEARN_TO_PLAY_JOURNEY\.revision\)/u);
-  assert.match(app, /generateRandomFutureSeed\(\)[\s\S]*?DEFAULT_PLAYER_DECK_ID[\s\S]*?DEFAULT_HOST_DECK_ID[\s\S]*?"normal"[\s\S]*?"standard"/u);
-  assert.match(app, /beginDestinyTransition\("contemplate", "learn-to-play-random"\)/u);
-  assert.match(app, /transition\.destination === "learn-to-play-random"/u);
-  assert.match(app, /screen === "journey"[\s\S]*?continueLearnToPlayIntoRandomFuture/u);
+  assert.match(app, /createLearnToPlayFirstMatchOrigin\(\)/u);
+  assert.match(app, /beginDestinyTransition\("contemplate", "learn-to-play-first-seed"\)/u);
+  assert.match(app, /transition\.destination === "learn-to-play-first-seed"/u);
+  assert.match(app, /screen === "journey"[\s\S]*?continueLearnToPlayIntoFirstCanonFuture/u);
   assert.match(menu, /howToPlayEntries\.map/u);
   assert.match(menu, /disabled=\{continueDisabled \|\| !onContinue\}/u);
   assert.match(board, /sessionPolicy\.showStandardOutcome && defeatReady/u);
   assert.match(board, /sessionPolicy\.showJourneyDefeat && defeatReady && onContemplateFuture/u);
   assert.match(board, /!sessionPolicy\.showPhaseBanner/u);
+  assert.equal((intro.match(/body: "guided\.learnToPlay\.intro\.beat(?:One|Two|Three|Four|Five)"/gu) ?? []).length, 5);
+  assert.match(intro, /chroniclerName\.trim\(\) \|\| t\("guided\.learnToPlay\.intro\.chronicler"\)/u);
+  assert.match(intro, /finalBeat[\s\S]*?onComplete\(\)/u);
+  assert.match(intro, /<GuidedTutorialDialog/u);
+  assert.match(intro, /learn-to-play-intro-progress/u);
+  assert.doesNotMatch(intro, /old-panel|old-title|game-home-dialog/u);
+});
+
+test("Learn to Play frames Energy before revealing the nested Reserve", () => {
+  const step = (id) => LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps.find((candidate) => candidate.id === id);
+
+  assert.equal(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.revision, 3);
+  assert.deepEqual(step("player-turn-returned").highlights, [
+    { kind: "surface", anchor: "player.sources" },
+  ]);
+  assert.deepEqual(step("explain-renewed-energy").highlights, [
+    { kind: "surface", anchor: "player.sources" },
+    { kind: "surface", anchor: "player.reserve" },
+  ]);
 });

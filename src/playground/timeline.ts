@@ -227,6 +227,7 @@ export function isPlaygroundBusy(): boolean {
     state.playerDiscardAnimationQueue.length > 0 ||
     state.landPlayAnimationQueue.length > 0 ||
     state.surgeTransitionActive ||
+    state.surgeRevealPending ||
     Boolean(state.hostAttackAnimation) ||
     Boolean(state.playerAttackAnimation) ||
     Boolean(state.spellFightAnimation) ||

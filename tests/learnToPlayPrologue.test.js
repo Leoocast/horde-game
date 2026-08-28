@@ -167,6 +167,11 @@ test("Learn to Play accepts confirmation for either authored Aelyra target", () 
 
 test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms combat fundamentals", () => {
   const opening = new Map(LEARN_TO_PLAY_OPENING_INTERVENTION.steps.map((step) => [step.id, step]));
+  assert.equal(LEARN_TO_PLAY_OPENING_INTERVENTION.revision, 2);
+  assert.equal(LEARN_TO_PLAY_OPENING_INTERVENTION.startStepId, "evy-fourth-source-briefing");
+  assert.equal(opening.get("evy-fourth-source-briefing").kind, "explain");
+  assert.equal(opening.get("evy-fourth-source-briefing").copy.titleKey, "guided.learnToPlay.intro.evy");
+  assert.equal(opening.get("evy-fourth-source-briefing").nextStepId, "play-fourth-source");
   assert.deepEqual(opening.get("play-fourth-source").presentation, {
     kind: "directionalCue",
     direction: "up",

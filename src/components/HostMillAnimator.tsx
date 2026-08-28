@@ -40,7 +40,8 @@ export function HostMillAnimator() {
 }
 
 function HostMillCard({ itemId, definitionId, name, preview, onComplete }: { itemId: string; definitionId: string; name: string; preview: boolean; onComplete: () => void }) {
-  const { imageUrl } = useCardDetails(definitionId);
+  const language = useLanguageStore((state) => state.language);
+  const { imageUrl } = useCardDetails(definitionId, language);
   const path = useMemo(() => readHostMillPath(preview), [itemId, preview]);
   const deltaX = path.target.x - path.origin.x;
   const deltaY = path.target.y - path.origin.y;

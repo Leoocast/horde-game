@@ -216,7 +216,7 @@ export function SpellTargetingOverlay({ game }: { game: GameState }) {
             preferNativeImageRendering={showFullSourceImage}
           />
         </div>
-        <div className="counter-target-preview old-panel-soft">
+        <div className="counter-target-preview hf-ui-panel-soft">
           <span className="text-[#d6b879]">{complete ? t("target.ready") : currentLabel}</span>
           <strong className={activeReq.controller === "SELF" ? "text-[#91f58f]" : "text-[#ffcf8a]"}>{activeTarget ? localizedCardName(activeTarget, language) : t("target.noSelection")}</strong>
         </div>

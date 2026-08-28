@@ -183,7 +183,7 @@ function createBurnFrame(): WarmupFrame {
   return { scene, camera: new THREE.Camera(), outputEncoding: THREE.LinearEncoding };
 }
 
-/** El agujero negro de las Semillas del Destino sólo aparece al reescribir, así que compilarlo
+/** El agujero negro de las Semillas del Destino sólo aparece al Contemplar de nuevo, así que compilarlo
  * durante la carga evita que ese primer fotograma pague la compilación en pantalla. */
 function createDestinyVortexFrame(): WarmupFrame {
   const material = new THREE.ShaderMaterial({

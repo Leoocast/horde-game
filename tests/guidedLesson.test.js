@@ -216,9 +216,21 @@ test("First Seed glossary enriches only authored localized terms", () => {
   );
   assert.deepEqual(
     spanish.filter((segment) => segment.kind === "term").map((segment) => segment.termId),
-    ["archive", "host", "life", "invoke", "echoes"],
+    ["hostArchive", "life", "host", "invoke", "echoes"],
   );
   assert.ok(spanish.every((segment) => segment.kind === "text" || segment.definition.length > 0));
+
+  const hostArchive = spanish.find((segment) => segment.kind === "term" && segment.termId === "hostArchive");
+  assert.equal(hostArchive.text, "Archivo de la Hueste");
+  assert.equal(hostArchive.definition, "La pila de Ecos aún no Invocados.");
+
+  const chroniclerArchive = guidedGlossarySegments(
+    translate("es", "guided.contextual.product.returnSourceBody"),
+    ["chroniclerArchive"],
+    (key) => translate("es", key),
+  ).find((segment) => segment.kind === "term");
+  assert.equal(chroniclerArchive.text, "Archivo del Cronista");
+  assert.equal(chroniclerArchive.definition, "La pila de Ecos y Fuentes aún no robados.");
 
   const plain = guidedGlossarySegments("Archivo y Hueste", [], (key) => translate("es", key));
   assert.deepEqual(plain, [{ kind: "text", text: "Archivo y Hueste" }]);
@@ -393,7 +405,7 @@ test("step validation catches broken aliases, translations and graph edges befor
   assert.ok(validateGuidedLesson(invalidDimmer, contentCatalog).some((problem) => /unknown dimmer visibility/u.test(problem)));
 
   const invalidGlossary = builtinLesson();
-  invalidGlossary.steps[0].copy.glossaryTerms = ["archive", "mystery", "archive"];
+  invalidGlossary.steps[0].copy.glossaryTerms = ["hostArchive", "mystery", "hostArchive"];
   const glossaryProblems = validateGuidedLesson(invalidGlossary, contentCatalog);
   assert.ok(glossaryProblems.some((problem) => /unknown glossary term/u.test(problem)));
   assert.ok(glossaryProblems.some((problem) => /repeats glossary term/u.test(problem)));

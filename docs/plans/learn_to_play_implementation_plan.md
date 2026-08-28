@@ -1,9 +1,9 @@
 # Auditoría y plan por fases — Aprender a jugar y ayudas contextuales
 
-Estado: **auditoría técnica completada; Fases 1, 2 y 3 implementadas y verificadas; primer corte fijado
-hasta la derrota y la aparición de su CTA; handoff y partida posterior aplazados**.
+Estado: **auditoría técnica completada; primer corte, derrota, vórtice y handoff a la Primera Canon
+Seed implementados; mulligan final y durabilidad durante la transición pendientes**.
 
-Última actualización: **2026-08-17**.
+Última actualización: **2026-08-21**.
 
 ## Objetivo y alcance
 
@@ -30,7 +30,9 @@ su activación completará el recorrido, pero el primer corte aprobado termina c
 no implementa todavía su activación, el vórtice ni la carga de la partida real preparada.
 
 Durante este corte, **Continuar** queda deshabilitado globalmente, no condicionado al progreso de un
-tutorial. Cuándo volverá a habilitarse se resolverá en una fase posterior.
+tutorial. La decisión posterior de demo es ocultarlo y apagar resume mediante una capability de
+producto; su reactivación se reserva para Early Access. Ese cambio pertenece a
+`seeds_of_destiny_history_implementation_plan.md`, no a este tutorial.
 
 Este plan no autoriza a implementar todas las fases juntas. Antes de cada fase se revisan con el
 usuario su experiencia visible, sus límites y las decisiones abiertas que le correspondan; sólo
@@ -392,7 +394,7 @@ Preparación ni cambiar la derrota normal.
 
 La infraestructura debe poder registrar, como mínimo, estos conceptos independientes:
 
-- jugar una Fuente e Invocar una carta;
+- jugar una Fuente e Invocar un Eco;
 - asignar defensores;
 - orden de ataque de la Hueste;
 - Volar y Guardia aérea ante un intento inválido;
@@ -435,7 +437,8 @@ Sin cambios de código.
 - Mantener fuera del corte la Mano/mulligan, seed, dificultad y Preparación de la partida posterior.
 - Aplazar el comportamiento de primera apertura y perfiles existentes.
 - Presentar todas las llegadas terminales con el revelado normal, una carta a la vez y sin agrupación.
-- Deshabilitar **Continuar** globalmente por ahora.
+- Deshabilitar **Continuar** globalmente para este corte; el objetivo posterior de la demo es
+  ocultarlo mediante la capability del plan de historial de Semillas.
 
 **Salida:** contrato del primer corte cerrado; las decisiones posteriores están aplazadas de forma
 explícita y no bloquean su implementación.
@@ -481,7 +484,8 @@ ningún gate de primera apertura.
 - Registrar `learn-to-play` con identidad independiente y launcher propio.
 - Volver data-driven el listado de Cómo jugar.
 - Deshabilitar **Continuar** globalmente sin convertir todavía `learn-to-play` en gate de primera
-  apertura.
+  apertura. El plan posterior de historial lo ocultará en la demo sin eliminar el camino de Early
+  Access.
 - Crear el lifecycle del recorrido y las políticas explícitas de tablero.
 - Permitir que una intervención guiada breve se conecte al `GameState` actual sin reconstruirlo ni
   marcar completa la jornada.
@@ -513,7 +517,9 @@ La receta deja la Vida en 31, la Cosechadora con dos contadores y el próximo re
 Acechador. Retorno consume los dos Soldados de equivalencia al morir; después quedan las dos ramas
 robustas de la primera Oleada, con o sin el descarte opcional previo. Al cerrar esta fase, el
 director se detenía en la señal real `host.surgeStarted`; las fases siguientes extienden ahora ese
-mismo recorrido sin simular la Oleada.
+mismo recorrido sin simular la Oleada. El primer turno de Oleada conserva una pausa de dominio entre
+`beginHostMain` y los revelados: termina la animación, se explica la Oleada y sólo entonces se
+revelan los Ecos de la Hueste.
 
 Las pruebas automáticas enumeran ambos objetivos legales de Aelyra, todas las asignaciones legales
 de Maela/Aelyra y los órdenes `omitir Flor`, `Flor → Vaelor` y `Vaelor → Flor`. Todas las ramas
@@ -558,19 +564,20 @@ antes de continuar, y entrega el combate a la resolución normal.
 descartada, cero o un descarte antes de Oleada, el rechazo de la quinta Fuente, Río → Ciudad,
 Choque, el ataque opcional contra los Soldados protegidos y una rama defensiva con más Vida.
 
-### Fase 6 — Derrota y handoff provisional — límite del primer corte
+### Fase 6 — Derrota y handoff a la Primera Canon Seed
 
-**Estado: implementada el 2026-08-17; pendiente de QA manual de copy, presentación y handoff.**
+**Estado: implementada; handoff Canon fijado el 2026-08-21.**
 
 - Reutilizar el quiebre normal con variante narrativa y un único CTA.
 - Nombrar ese CTA **Contemplar otro futuro**.
 - Llegar a la pantalla sin convertir la derrota en un aborto de la sesión guiada.
-- Activar el CTA para registrar la finalización del recorrido y cargar, como reemplazo provisional,
-  una partida normal de Elarion contra los Sinsepulcro con seed aleatoria.
-- Mantener fuera de este corte el vórtice, el gate de primera apertura y la partida real preparada.
+- Activar el CTA para registrar la finalización del recorrido, ejecutar el vórtice y cargar
+  `HF1-ELA-GRV-082-QC5`: Elarion contra los Sinsepulcro, Normal, Preparación 3.
+- Mantener fuera de este corte el mulligan authored, el gate de primera apertura y la recuperación
+  ante un cierre durante el vórtice.
 
 **Cierre:** la derrota se resuelve con las reglas reales, aparece su presentación narrativa y el
-CTA único conduce a una partida normal aleatoria sin conservar estado parcial del prólogo.
+CTA único conduce a la Primera Canon Seed aprobada sin conservar estado parcial del prólogo.
 
 El tablero de `learn-to-play` reutiliza la misma barrera de presentación, captura y quiebre que una
 derrota normal, pero monta un resultado propio sin código de Futuro ni las dos acciones normales.
@@ -578,12 +585,11 @@ El único CTA visible es **Contemplar otro futuro**. Comparte el material visual
 Reescribir, sin icono ni código de Futuro, y está habilitado sólo después de aceptar la narración.
 Una victoria accidental del escenario tampoco puede instalar una barrera de resultado huérfana.
 
-### Fase 6B — Vórtice y partida real preparada — aplazada
+### Fase 6B — Primera apertura final y durabilidad — aplazada
 
 - Definir el comportamiento persistente al activar el CTA y al cerrar durante el vórtice.
 - Definir primera apertura, perfiles existentes y activación del gate obligatorio.
-- Añadir el destino `prepared-future` con seed, decks, dificultad, Preparación y mulligan
-  certificados.
+- Certificar el mulligan y la primera apertura sobre `HF1-ELA-GRV-082-QC5` sin cambiar su identidad.
 - Cambiar a partida normal y comenzar su autosave en el checkpoint que se apruebe para release.
 
 **Entrada:** requiere una revisión de producto posterior; no forma parte de la implementación actual.
@@ -623,7 +629,8 @@ autoridad semántica.
 - Abandonar antes del CTA final reinicia el recorrido y descarta conceptos provisionales.
 - El CTA final se llama **Contemplar otro futuro**.
 - El primer corte termina al mostrarlo; su activación y persistencia se implementarán después.
-- **Continuar** permanece deshabilitado globalmente por ahora.
+- En este corte **Continuar** permanece deshabilitado; la demo final lo ocultará y Early Access
+  conservará la capacidad de reactivarlo.
 - La preferencia de no repetir está activa por defecto; se marca visto al cerrar/aceptar y, si se
   permiten repeticiones, hay un máximo de una aparición por concepto y partida.
 - Las ayudas observadas son no bloqueantes; las preventivas interceptan sólo la acción relevante;
@@ -642,7 +649,7 @@ resolver, sin inferirlas durante el trabajo actual:
 2. Comportamiento de primera apertura y alcance sobre perfiles existentes.
 3. Seed, dificultad y Preparación de la partida real.
 4. Persistencia exacta si la aplicación se cierra después de activar el CTA pero durante el vórtice.
-5. Momento en que **Continuar** vuelve a habilitarse.
+5. Contrato de Early Access para vincular resume e historial al mismo intento sin duplicarlo.
 
 Tampoco bloquean este corte el copy narrativo definitivo, el lore previo del Cronista ni la
 cinemática futura.

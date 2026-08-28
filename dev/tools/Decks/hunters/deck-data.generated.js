@@ -111,7 +111,7 @@ window.HostfallDeckData = {
         "id": "lyra_ojo_de_la_caceria",
         "art_crop": "../../../../public/cards/hunters/art/lyra_ojo_de_la_caceria.jpg",
         "nombre": "Lyra, Ojo de la Cacería",
-        "tipo": "Eco de Crónica — Cazador",
+        "tipo": "Eco — Cazador",
         "costo": 4,
         "atk": 3,
         "def": 4,

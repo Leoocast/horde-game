@@ -10,6 +10,10 @@ import {
   DESTINY_VORTEX_VERTEX_SHADER,
 } from "./destinyVortexShader";
 import { boundedVfxPixelRatio, renderSharedVfxFrame, sharedVfxUnavailable } from "./sharedVfxRenderer";
+import {
+  nextDestinyTransitionPhase,
+  type DestinyTransitionPhase,
+} from "./destinyTransitionBarrier";
 
 export type DestinyTransitionKind = "rewrite" | "contemplate";
 
@@ -17,7 +21,8 @@ type Props = {
   transitionId: number;
   kind: DestinyTransitionKind;
   seed: string;
-  onCovered: (transitionId: number) => void;
+  opensVision?: boolean;
+  onCovered: (transitionId: number, release: () => void) => void;
   onComplete: (transitionId: number) => void;
 };
 
@@ -25,7 +30,7 @@ const COVER_MS = 980;
 const REVEAL_MS = 1_040;
 const COMPLETE_MS = COVER_MS + REVEAL_MS;
 const REDUCED_COVER_MS = 120;
-const REDUCED_COMPLETE_MS = 300;
+const REDUCED_REVEAL_MS = 180;
 /** El shader y la copia WebGL→2D no ganan detalle por encima de 60 entregas por segundo. */
 const FRAME_INTERVAL_MS = 1000 / 60;
 /* Recorrido de la escena para repartirla en piezas. Un elemento que ocupa más que `SHARD_MAX_AREA`
@@ -39,6 +44,7 @@ const SHARD_LIMIT = 56;
 const DESTINY_BODY_CLASSES = [
   "destiny-rewrite-active",
   "destiny-rewrite-absorbing",
+  "destiny-rewrite-covered",
   "destiny-rewrite-revealing",
 ] as const;
 
@@ -83,16 +89,19 @@ function collectShards(root: Element, viewport: { width: number; height: number 
   return shards;
 }
 
-export function DestinyRewriteTransition({ transitionId, kind, seed, onCovered, onComplete }: Props) {
+export function DestinyRewriteTransition({ transitionId, kind, seed, opensVision = kind === "rewrite", onCovered, onComplete }: Props) {
   const t = useTranslation();
   const playSfx = useAudioStore((state) => state.playSfx);
-  const [phase, setPhase] = useState<"absorbing" | "revealing">("absorbing");
+  const [phase, setPhase] = useState<DestinyTransitionPhase>("absorbing");
+  const phaseRef = useRef<DestinyTransitionPhase>(phase);
+  phaseRef.current = phase;
   // Sin WebGL o con movimiento reducido queda una silueta quieta en vez de un hueco vacío.
   const [still, setStill] = useState(false);
   const futureCode = futureCodeFromSeed(seed);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const startSoundPlayedRef = useRef(false);
   const coverCommittedRef = useRef(false);
+  const releaseCommittedRef = useRef(false);
   const revealSoundPlayedRef = useRef(false);
   const completeCommittedRef = useRef(false);
   // El cambio de Futuro puede re-renderizar App (por ejemplo, 0 -> 3 turnos al salir del
@@ -105,10 +114,17 @@ export function DestinyRewriteTransition({ transitionId, kind, seed, onCovered, 
   completeCallbackRef.current = onComplete;
   playSfxRef.current = playSfx;
 
+  const releaseTransition = () => {
+    if (releaseCommittedRef.current) return;
+    releaseCommittedRef.current = true;
+    document.body.classList.remove("destiny-rewrite-covered");
+    document.body.classList.add("destiny-rewrite-revealing");
+    setPhase((current) => nextDestinyTransitionPhase(current, "release"));
+  };
+
   useEffect(() => {
     const reducedMotion = prefersReducedMotion();
     const coverMs = reducedMotion ? REDUCED_COVER_MS : COVER_MS;
-    const completeMs = reducedMotion ? REDUCED_COMPLETE_MS : COMPLETE_MS;
 
     document.body.classList.add("destiny-rewrite-active", "destiny-rewrite-absorbing");
     // StrictMode vuelve a ejecutar los efectos de montaje. El sonido y los commits pertenecen
@@ -122,34 +138,48 @@ export function DestinyRewriteTransition({ transitionId, kind, seed, onCovered, 
       if (coverCommittedRef.current) return;
       coverCommittedRef.current = true;
       document.body.classList.remove("destiny-rewrite-absorbing");
-      document.body.classList.add("destiny-rewrite-revealing");
-      setPhase("revealing");
-      coveredCallbackRef.current(transitionId);
+      document.body.classList.add("destiny-rewrite-covered");
+      setPhase((current) => nextDestinyTransitionPhase(current, "cover"));
       // El horizonte se cierra sobre la escena: ese golpe es el clímax y no puede ser mudo.
       playSfxRef.current("stoneCrash", { rate: 0.62 });
+      try {
+        coveredCallbackRef.current(transitionId, releaseTransition);
+      } catch {
+        // La escena nunca puede quedar atrapada por un callback de integración defectuoso.
+        releaseTransition();
+      }
     }, coverMs);
-    // El futuro nuevo llega después del golpe, no encima; con movimiento reducido, casi pegado.
+
+    return () => {
+      window.clearTimeout(coverTimer);
+      clearDestinyTransitionBodyClasses();
+    };
+  }, [transitionId]);
+
+  useEffect(() => {
+    if (phase !== "revealing") return;
+    const reducedMotion = prefersReducedMotion();
+    const revealMs = reducedMotion ? REDUCED_REVEAL_MS : REVEAL_MS;
+    // El futuro nuevo llega después del release explícito, no mientras el guardado está en hold.
     const revealTimer = window.setTimeout(() => {
       if (revealSoundPlayedRef.current) return;
       revealSoundPlayedRef.current = true;
       playSfxRef.current("drawOne", { rate: 0.78 });
-    }, coverMs + (reducedMotion ? 80 : 260));
+    }, reducedMotion ? 80 : 260);
     const completeTimer = window.setTimeout(() => {
       if (completeCommittedRef.current) return;
       completeCommittedRef.current = true;
+      setPhase((current) => nextDestinyTransitionPhase(current, "complete"));
       // `onComplete` desmonta este overlay. Quitar las clases antes evita que el siguiente paint
       // vea el tablero todavía bajo la animación mientras el cleanup pasivo espera su turno.
       clearDestinyTransitionBodyClasses();
       completeCallbackRef.current(transitionId);
-    }, completeMs);
-
+    }, revealMs);
     return () => {
-      window.clearTimeout(coverTimer);
       window.clearTimeout(revealTimer);
       window.clearTimeout(completeTimer);
-      clearDestinyTransitionBodyClasses();
     };
-  }, [transitionId]);
+  }, [phase, transitionId]);
 
   /* La escena no cae como un bloque: cada pieza se va por su cuenta, se estira en el eje que apunta
      al horizonte y llega tarde según lo lejos que estaba. Las animaciones se cancelan al pasar a
@@ -246,16 +276,18 @@ export function DestinyRewriteTransition({ transitionId, kind, seed, onCovered, 
     resize();
     window.addEventListener("resize", resize);
 
-    const start = performance.now();
-    let previous = start;
+    let previous = performance.now();
+    let activeElapsed = 0;
     let spin = 0;
     let frame = 0;
     let firstFramePresented = false;
     let failedFrames = 0;
     let lastRenderedAt = Number.NEGATIVE_INFINITY;
     const tick = (now: number) => {
-      const elapsed = now - start;
-      if (now - lastRenderedAt < FRAME_INTERVAL_MS && elapsed <= COMPLETE_MS) {
+      const deltaMs = Math.max(0, now - previous);
+      previous = now;
+      if (phaseRef.current !== "covered") activeElapsed += deltaMs;
+      if (now - lastRenderedAt < FRAME_INTERVAL_MS && activeElapsed <= COMPLETE_MS) {
         frame = requestAnimationFrame(tick);
         return;
       }
@@ -264,10 +296,9 @@ export function DestinyRewriteTransition({ transitionId, kind, seed, onCovered, 
         ? now - (sinceLastRender % FRAME_INTERVAL_MS)
         : now;
       // El giro se acumula por delta time: acelera al colapsar sin saltar cuando cambia el ritmo.
-      const deltaSeconds = Math.min((now - previous) / 1000, 0.05);
-      previous = now;
-      const collapse = Math.min(elapsed / COVER_MS, 1);
-      const burst = Math.max(0, Math.min((elapsed - COVER_MS) / REVEAL_MS, 1));
+      const deltaSeconds = phaseRef.current === "covered" ? 0 : Math.min(deltaMs / 1000, 0.05);
+      const collapse = Math.min(activeElapsed / COVER_MS, 1);
+      const burst = Math.max(0, Math.min((activeElapsed - COVER_MS) / REVEAL_MS, 1));
       spin += deltaSeconds * (1.05 + 3.6 * collapse * collapse) * (1 - 0.75 * burst);
 
       uniforms.uTime.value = now / 1000;
@@ -295,7 +326,7 @@ export function DestinyRewriteTransition({ transitionId, kind, seed, onCovered, 
         // evitan mostrar el respaldo por un fallo transitorio del primer fotograma.
         if (failedFrames >= 2 || sharedVfxUnavailable()) setStill(true);
       }
-      if (elapsed <= COMPLETE_MS) frame = requestAnimationFrame(tick);
+      if (activeElapsed <= COMPLETE_MS || phaseRef.current === "covered") frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
 
@@ -316,14 +347,22 @@ export function DestinyRewriteTransition({ transitionId, kind, seed, onCovered, 
       className={`destiny-vortex-overlay is-${phase}`}
       role="status"
       aria-live="assertive"
-      aria-label={t(kind === "rewrite" ? "destiny.transitionRewrite" : "destiny.transitionContemplate", { code: futureCode })}
+      aria-label={t(kind === "rewrite"
+        ? "destiny.transitionContemplateAgain"
+        : opensVision
+          ? "destiny.transitionContemplateFuture"
+          : "destiny.seekingAnotherFuture", { code: futureCode })}
     >
       <div className="destiny-vortex-veil" />
       <canvas ref={canvasRef} className="destiny-vortex-canvas" aria-hidden="true" />
       {still && <div className="destiny-vortex-still" aria-hidden="true" />}
       <div className="destiny-vortex-caption">
         <small>{t("destiny.future", { code: futureCode })}</small>
-        <strong>{t(kind === "rewrite" ? "destiny.rewriting" : "destiny.contemplating")}</strong>
+        <strong>{t(kind === "rewrite"
+          ? "destiny.openingAnotherVision"
+          : opensVision
+            ? "destiny.openingVision"
+            : "destiny.seekingAnotherFuture")}</strong>
       </div>
     </div>
   );

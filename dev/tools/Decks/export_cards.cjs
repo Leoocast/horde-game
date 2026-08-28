@@ -9,13 +9,6 @@ const DECKS = new Set([
     'legion_of_varka',
     'court_of_the_crimson_eclipse'
 ]);
-const PUBLIC_CARD_FOLDERS = {
-    pact_of_elarion: 'pact_of_elarion',
-    uprising_of_the_graveless: 'uprising_of_the_graveless',
-    legion_of_varka: 'legion_of_varka',
-    court_of_the_crimson_eclipse: 'court_of_the_crimson_eclipse'
-};
-
 function requireExporterDependency(name) {
     try {
         return require(name);
@@ -182,7 +175,7 @@ async function main() {
         pathToFileURL(path.join(scriptsDir, 'card-runtime-layout.mjs')).href
     );
     const language = studioData.resolveStudioLanguage(deckId, parsed.language);
-    const writesRuntimeCards = language === studioData.DEFAULT_STUDIO_LANGUAGE;
+    const writesDefaultRuntimeCards = language === studioData.DEFAULT_STUDIO_LANGUAGE;
     studioData.syncStudioData({ deckIds: [deckId] });
     generationManifest.assertIndependentArtSources(deckId);
 
@@ -200,25 +193,17 @@ async function main() {
     const deckDir = path.join(__dirname, deckId);
     const htmlPath = path.join(deckDir, 'index.html');
     const defaultOutputDir = path.join(deckDir, 'exported-png');
-    const outputDir = writesRuntimeCards
+    const outputDir = writesDefaultRuntimeCards
         ? defaultOutputDir
         : path.join(defaultOutputDir, language);
-    const publicCardsDir = writesRuntimeCards ? path.join(
-        __dirname,
-        '..',
-        '..',
-        '..',
-        'public',
-        'cards',
-        PUBLIC_CARD_FOLDERS[deckId]
-    ) : null;
+    const publicCardsDir = studioData.studioRuntimeCardDirectory(deckId, language);
 
     if (!fs.existsSync(htmlPath)) {
         throw new Error(`No se encontro el index del deck: ${htmlPath}`);
     }
 
     await fs.promises.mkdir(outputDir, { recursive: true });
-    if (publicCardsDir) await fs.promises.mkdir(publicCardsDir, { recursive: true });
+    await fs.promises.mkdir(publicCardsDir, { recursive: true });
 
     const browser = await chromium.launch({
         executablePath,
@@ -322,7 +307,7 @@ async function main() {
             });
         }
 
-        const measuredLayout = writesRuntimeCards
+        const measuredLayout = writesDefaultRuntimeCards
             ? await runtimeLayout.measureDeckRuntimeLayout(page, deckId)
             : null;
 
@@ -331,25 +316,19 @@ async function main() {
         for (let index = 0; index < pendingPngs.length; index++) {
             const { fileName, png } = pendingPngs[index];
             await writeFileWithRetry(path.join(outputDir, fileName), png);
-            if (publicCardsDir) {
-                await writeFileWithRetry(path.join(publicCardsDir, fileName), png);
-            }
+            await writeFileWithRetry(path.join(publicCardsDir, fileName), png);
             console.log(`[${index + 1}/${total}] ${fileName}`);
         }
 
-        if (writesRuntimeCards) {
+        if (writesDefaultRuntimeCards) {
             runtimeLayout.writeRuntimeLayouts({ [deckId]: measuredLayout });
-            generationManifest.recordDeckGeneration(deckId);
         }
+        generationManifest.recordDeckGeneration(deckId, language);
 
         console.log('');
         console.log(`Idioma: ${language}`);
         console.log(`Exportación: ${outputDir}`);
-        console.log(
-            publicCardsDir
-                ? `Juego actualizado: ${publicCardsDir}`
-                : 'Juego sin cambios: las exportaciones no españolas se guardan sólo en el Taller.'
-        );
+        console.log(`Juego actualizado: ${publicCardsDir}`);
     } finally {
         await browser.close();
     }

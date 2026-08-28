@@ -155,6 +155,52 @@ test("grouping stays frozen while the sequence runs, then settles afterwards", (
   assert.equal(after.length, 2, "once the sequence is over the differing stats split the stack");
 });
 
+test("player copies stack only with copies in the same visible state", () => {
+  const game = createTestGame();
+  const cardOrder = new Map();
+  const familyOrder = new Map();
+  const cards = Array.from({ length: 9 }, (_, index) => {
+    const card = addCard(game, customCard("stateful_echo", "player"));
+    if (index >= 3 && index < 6) card.stabilizing = true;
+    if (index >= 6) card.exhausted = true;
+    cardOrder.set(card.instanceId, index);
+    familyOrder.set(card.definitionId, 0);
+    return card;
+  });
+
+  const groups = groupBattlefieldCopies(game, cards, cardOrder, familyOrder, new Map(), new Map());
+
+  assert.deepEqual(
+    groups.map((group) => group.cards.map((card) => ({ exhausted: card.exhausted, stabilizing: card.stabilizing }))),
+    [
+      Array.from({ length: 3 }, () => ({ exhausted: false, stabilizing: false })),
+      Array.from({ length: 3 }, () => ({ exhausted: false, stabilizing: true })),
+      Array.from({ length: 3 }, () => ({ exhausted: true, stabilizing: false })),
+    ],
+    "a large family should occupy one stack per visible state instead of nine individual slots",
+  );
+});
+
+test("the Host does not split stacks by its hidden Exhausted state", () => {
+  const game = createTestGame();
+  const cardOrder = new Map();
+  const familyOrder = new Map();
+  const ready = addCard(game, customCard("host_echo", "host"));
+  const exhausted = addCard(game, customCard("host_echo", "host"));
+  exhausted.exhausted = true;
+  ready.fieldEntryTurn = 1;
+  exhausted.fieldEntryTurn = 1;
+  [ready, exhausted].forEach((card, index) => {
+    cardOrder.set(card.instanceId, index);
+    familyOrder.set(card.definitionId, 0);
+  });
+
+  const groups = groupBattlefieldCopies(game, [ready, exhausted], cardOrder, familyOrder, new Map(), new Map());
+
+  assert.equal(groups.length, 1);
+  assert.deepEqual(groups[0].cards.map((card) => card.instanceId), [ready.instanceId, exhausted.instanceId]);
+});
+
 test("non-token Host copies stack only when they entered during the same Host turn", () => {
   const game = createTestGame();
   const cardOrder = new Map();

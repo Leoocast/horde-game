@@ -16,6 +16,7 @@ import { useLanguageStore } from "../store/useLanguageStore";
 import { Heart, Shield, Sword, Swords, Zap } from "lucide-react";
 import { CardTraitIcon } from "./CardTraitIcon";
 import { GameTooltip } from "./GameTooltip";
+import { StabilizingEffect } from "./StabilizingEffect";
 
 type Props = {
   game: GameState;
@@ -33,6 +34,11 @@ type Props = {
   linkLabel?: string;
   hideStats?: boolean;
   suppressStabilizing?: boolean;
+  stabilizationCompletion?: {
+    delayMs: number;
+    eventId: number;
+    onComplete: () => void;
+  };
   suppressCardId?: boolean;
   onSelect?: () => void;
   onKeyboardActivate?: () => void;
@@ -59,7 +65,7 @@ type Props = {
   glowBorderWidth?: number;
 };
 
-export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressStabilizing, suppressCardId, onSelect, onKeyboardActivate, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, emphasizeCost = false, showCroppedTitle = false, clipActionSweep = false, preferNativeImageRendering = false, useBattlefieldArt = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
+export function Card({ game, card, selected, attacking, blocking, compact, accentColor, selectionDisabled, muted, actionable, suppressActionableChrome = false, effectAvailable, linkLabel, hideStats, suppressStabilizing, stabilizationCompletion, suppressCardId, onSelect, onKeyboardActivate, onLeave, onPointerDown, onContextMenu, suppressContextMenu, shouldSuppressClick, visualDamageMarked, suppressHoverOverlay, darkenOnHover = true, cropTopHalf, highRes, sharpImageOverlay, showFullImage = false, showCostBadge = false, emphasizeCost = false, showCroppedTitle = false, clipActionSweep = false, preferNativeImageRendering = false, useBattlefieldArt = false, face, dragging, glowBorderWidth = 1.5 }: Props) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
@@ -79,7 +85,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
     : card.controller === "host"
       ? "card-keyword-badge-enemy"
       : "card-keyword-badge-ally";
-  const { imageUrl, battlefieldArtUrl, battlefieldArtFrame, statsFrame } = useCardDetails(card.definitionId);
+  const { imageUrl, battlefieldArtUrl, battlefieldArtFrame, statsFrame } = useCardDetails(card.definitionId, language);
   const localizedName = localizedCardName(card, language);
   const highResImageUrl = imageUrl;
   const requestedBattlefieldArtUrl = useBattlefieldArt ? battlefieldArtUrl : undefined;
@@ -119,6 +125,8 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
     }
   }, [displayImageUrl, syncBattlefieldArtSourceStyle, usingBattlefieldArt]);
   const stabilizing = !suppressStabilizing && card.zone === "field" && card.kinds.includes("ECHO") && card.stabilizing;
+  const stabilizationCompleting = !suppressStabilizing && Boolean(stabilizationCompletion);
+  const stabilizationVisible = stabilizing || stabilizationCompleting;
   const showEffectAvailable = Boolean(effectAvailable && !actionable);
   const draggingGlow = dragging
     ? `0 0 0 ${glowBorderWidth}px rgba(255,106,0,0.9), 0 0 10px rgba(255,106,0,0.92), 0 0 22px rgba(255,106,0,0.58)`
@@ -159,6 +167,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
   return (
     <article
       data-card-id={suppressCardId ? undefined : card.instanceId}
+      data-stabilization-completion-event={stabilizationCompletion?.eventId}
       data-audio-click={selectionDisabled ? undefined : "valid"}
       draggable={false}
       role={selectionDisabled ? undefined : "button"}
@@ -219,7 +228,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         stats.damaged ? "card-stats-damaged" : "",
         actionable && !dragging ? "card-actionable" : "",
         showEffectAvailable ? "card-effect-available" : "",
-        stabilizing ? "summoning-sick-card" : "",
+        stabilizationVisible ? "summoning-sick-card" : "",
         selectionDisabled ? "cursor-default" : "cursor-pointer",
         muted ? "opacity-75 saturate-75" : "",
       ].join(" ")}
@@ -298,7 +307,14 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         )
       )}
       {!suppressHoverOverlay && darkenOnHover && <div className="pointer-events-none absolute inset-0 bg-stone-950/0 transition group-hover:bg-stone-950/20" />}
-      {stabilizing && <div className="summoning-sickness-overlay" aria-hidden="true" />}
+      {stabilizationVisible && (
+        <StabilizingEffect
+          seedKey={card.instanceId}
+          phase={stabilizationCompleting ? "completing" : "active"}
+          completionDelayMs={stabilizationCompletion?.delayMs}
+          onCompletion={stabilizationCompletion?.onComplete}
+        />
+      )}
       <div className="absolute left-1 top-1 flex flex-col items-start gap-1">
         <div className="flex flex-wrap gap-1">
           {card.exhausted && !usesHostExhaustedStyle && <span className="rounded-sm bg-[#21130b]/85 px-1 py-0.5 text-[10px] font-bold uppercase text-[#ffe6aa]">{t("card.exhausted")}</span>}

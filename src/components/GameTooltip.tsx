@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties, type FocusEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { tooltipCenterWithinViewport } from "./tooltipGeometry";
 
 type Props = {
   content: ReactNode;
@@ -19,6 +20,7 @@ export function GameTooltip({
   tooltipClassName = "",
 }: Props) {
   const hostRef = useRef<HTMLSpanElement>(null);
+  const tooltipRef = useRef<HTMLSpanElement>(null);
   const [interactiveVisible, setInteractiveVisible] = useState(false);
   const [position, setPosition] = useState<{ left: number; top: number }>();
   const open = Boolean(content) && (visible || interactiveVisible);
@@ -29,12 +31,17 @@ export function GameTooltip({
     function updatePosition() {
       const rect = hostRef.current?.getBoundingClientRect();
       if (!rect) return;
-      const safeHalfWidth = Math.min(180, Math.max(24, window.innerWidth / 2 - 12));
       const center = rect.left + rect.width / 2;
-      setPosition({
-        left: Math.min(Math.max(center, safeHalfWidth), window.innerWidth - safeHalfWidth),
+      const tooltipWidth = tooltipRef.current?.getBoundingClientRect().width ?? 0;
+      const nextPosition = {
+        left: tooltipCenterWithinViewport(center, tooltipWidth, window.innerWidth),
         top: side === "top" ? rect.top - 7 : rect.bottom + 7,
-      });
+      };
+      setPosition((current) => current
+        && Math.abs(current.left - nextPosition.left) < 0.1
+        && Math.abs(current.top - nextPosition.top) < 0.1
+          ? current
+          : nextPosition);
     }
 
     updatePosition();
@@ -44,14 +51,16 @@ export function GameTooltip({
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [open, side]);
+  }, [content, open, side, tooltipClassName]);
 
   function handleBlur(event: FocusEvent<HTMLSpanElement>) {
     if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) return;
     setInteractiveVisible(false);
   }
 
-  const tooltipStyle = position ? ({ left: position.left, top: position.top } satisfies CSSProperties) : undefined;
+  const tooltipStyle = position
+    ? ({ left: position.left, top: position.top } satisfies CSSProperties)
+    : ({ left: 0, top: 0, visibility: "hidden" } satisfies CSSProperties);
 
   return (
     <span
@@ -63,9 +72,10 @@ export function GameTooltip({
       onBlurCapture={handleBlur}
     >
       {children}
-      {open && position && typeof document !== "undefined"
+      {open && typeof document !== "undefined"
         ? createPortal(
             <span
+              ref={tooltipRef}
               className={[
                 "game-tooltip",
                 "game-tooltip-portal",

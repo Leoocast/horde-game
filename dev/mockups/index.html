@@ -1,194 +1,204 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hostfall — Maquetas</title>
-    <style>
-      body {
-        margin: 0;
-        min-height: 100vh;
-        background: radial-gradient(120% 90% at 50% 0%, #241c17, #0d0c0b 70%);
-        color: #d9cbb2;
-        font-family: Georgia, "Times New Roman", serif;
-        display: grid;
-        place-items: center;
-        padding: 3rem 1.5rem;
-      }
-      main {
-        width: min(760px, 100%);
-      }
-      h1 {
-        font-size: 1rem;
-        letter-spacing: 0.3em;
-        text-transform: uppercase;
-        color: #c9a24a;
-        margin: 0 0 0.5rem;
-      }
-      p.lead {
-        margin: 0 0 2rem;
-        color: #8c7f6a;
-        font-size: 0.9rem;
-      }
-      h2 {
-        margin: 2rem 0 0.8rem;
-        font-size: 0.72rem;
-        letter-spacing: 0.24em;
-        text-transform: uppercase;
-        color: #8c7f6a;
-        border-bottom: 1px solid rgba(201, 162, 74, 0.18);
-        padding-bottom: 0.4rem;
-      }
-      a {
-        display: block;
-        padding: 0.9rem 1.15rem;
-        margin-bottom: 0.6rem;
-        color: #f2e6cb;
-        text-decoration: none;
-        background: linear-gradient(#191512, #100d0b);
-        border: 1px solid #2c2620;
-        box-shadow: inset 0 0 0 1px rgba(201, 162, 74, 0.22);
-      }
-      a:hover {
-        box-shadow: inset 0 0 0 1px rgba(201, 162, 74, 0.65);
-      }
-      small {
-        display: block;
-        color: #8c7f6a;
-        font-size: 0.84rem;
-        margin-top: 0.2rem;
-      }
-    </style>
-  </head>
-  <body>
-    <main>
-      <h1>Hostfall · Maquetas</h1>
-      <p class="lead">
-        Material de decisión visual. Nada de esta carpeta se importa desde <code>src/</code> ni entra al
-        paquete de Steam.
-      </p>
 
-      <h2>Interfaz</h2>
-      <a href="ui/ui-typography.html"
-        >Comparativa tipográfica<small
-          >Diez conjuntos con muestras EN/ES y prueba de encaje medida contra los huecos reales</small
-        ></a
-      >
-      <a href="ui/ui-kit.html"
-        >Kit de interfaz<small>Seis pieles sobre los mismos botones, modales, paneles y HUD</small></a
-      >
-      <a href="ui/ui-actual-lacquer.html"
-        >UI actual × Laca del Cronista<small>Los componentes reales del juego en dos materiales</small></a
-      >
-      <a href="ui/seed-explorer.html"
-        >Seed Explorer<small
-          >Herramienta dev visual para buscar, comparar, inspeccionar y probar futuros candidatos</small
-        ></a
-      >
-      <a href="ui/menus-archive-language.html"
-        >Menús en el lenguaje del Archivo<small
-          >Los siete menús actuales —principal, ajustes, Crónicas, cartas, prepartida, barra de partida y
-          ajustes en partida— redibujados con el material del Explorador de futuros</small
-        ></a
-      >
-      <a href="ui/menu-variants-2.html"
-        >Menú · seis materiales de botón<small
-          >Placas grabadas, estandartes, instrumento de grados, esquineros, losas y pestañas con
-          antesala: cambia la pieza pulsable, no sólo su posición</small
-        ></a
-      >
-      <a href="ui/menu-variants.html"
-        >Seis composiciones del menú<small
-          >Columna, eje central, cinta inferior, rejilla, índice y lámina: mismo contenido y material,
-          seis reparticiones distintas de la pantalla, con a favor y en contra</small
-        ></a
-      >
-      <a href="ui/menus-improved.html"
-        >Menús: mejoras sobre el material vigente<small
-          >Menú, Ajustes y Crónicas sobre el cielo real del TemporalBackdrop, con la composición y los
-          componentes del juego; cada pantalla lista qué decisión de interfaz cambia y por qué</small
-        ></a
-      >
-      <a href="ui/hostfall-cardinal-mark.html"
-        >Marca cardinal partida<small
-          >Pantalla principal WebGL: emblema facetado, fisura diagonal y sector inferior-derecho desplazado y fragmentado</small
-        ></a
-      >
-      <a href="ui/keyword-icons.html"
-        >Iconos de palabras clave<small
-          >Los once Rasgos y el fallback con SVG propios, frente al icono de lucide en uso, en tamaño
-          real de insignia y píldora</small
-        ></a
-      >
-      <a href="ui/tutorial-play-arrow.html"
-        >Flecha de tutorial<small
-          >Seis variantes azules de punta roma en la familia de las flechas tácticas, sobre la carta real</small
-        ></a
-      >
-      <a href="ui/tutorial-play-arrow-roma.html"
-        >Flecha de tutorial — derivadas<small
-          >Ocho tratamientos de la Cuchilla roma elegida: bisel, hueca, segmentada, cabeza despegada y escolta</small
-        ></a
-      >
-      <a href="ui/tutorial-stat-labels.html"
-        >Fuerza y Aguante en el tutorial<small
-          >Cinco formas de nombrar las dos cifras del marcador sobre la comparación real de dos cartas</small
-        ></a
-      >
-      <a href="ui/tutorial-stat-labels-cartelas.html"
-        >Fuerza y Aguante — derivadas<small
-          >Seis diagonales de la cartela elegida, con el material y el rombo del cuadro de diálogo del tutorial</small
-        ></a
-      >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hostfall — Maquetas</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(120% 90% at 50% 0%, #241c17, #0d0c0b 70%);
+      color: #d9cbb2;
+      font-family: Georgia, "Times New Roman", serif;
+      display: grid;
+      place-items: center;
+      padding: 3rem 1.5rem;
+    }
 
-      <h2>HUD y disposición</h2>
-      <a href="hud/player-vitals-row.html">Fila de vitals del Cronista</a>
-      <a href="hud/player-archive-vs-life.html">Archivo frente a Vida</a>
-      <a href="hud/host-archive-combat-options.html">Opciones de combate contra el Archivo</a>
+    main {
+      width: min(760px, 100%);
+    }
 
-      <h2>Efectos</h2>
-      <a href="vfx/board-overture.html"
-        >Obertura del Tablero<small
-          >El VS vigente se abre y el signo del Futuro se dibuja sobre el Campo, entrega su aro al instrumento de grados y deja paso al HUD y a la mano inicial</small
-        ></a
-      >
-      <a href="vfx/chronicle-threshold.html"
-        >Umbral de la Crónica<small
-          >Begin Chronicle enciende la rosa cardinal del Futuro, que se planta en el Campo y deja el instrumento de grados</small
-        ></a
-      >
-      <a href="vfx/destiny-constellation.html"
-        >Constelación cardinal<small
-          >Desenlace preservado: la rosa cardinal se traza nodo a nodo y florece</small
-        ></a
-      >
-      <a href="vfx/future-shattered.html"
-        >Vidrio del Futuro<small
-          >Desenlace de derrota: el tablero se congela, se fractura y explota en profundidad</small
-        ></a
-      >
-      <a href="vfx/temporal-backgrounds.html"
-        >Fondos temporales<small
-          >Tres variantes de fondo espacio/temporal, cada una en menú y en tablero con las cartas puestas</small
-        ></a
-      >
-      <a href="vfx/future-shattered-3d.html"
-        >Vidrio del Futuro 3D<small
-          >Prismas con espesor, cantos biselados y refracción en un solo renderer WebGL</small
-        ></a
-      >
-      <a href="vfx/future-shattered-2.html"
-        >Vidrio del Futuro II<small
-          >Misma idea, otra composición: el vidrio abandona el cuadro y el vacío se mueve de verdad</small
-        ></a
-      >
-      <a href="vfx/elarion-approved-effects.html">Efectos aprobados de Elarion</a>
-      <a href="vfx/elarion-webgl-suite.html">Suite WebGL de Elarion</a>
-      <a href="vfx/elarion-growth-buff-index.html">Índice de buffs de crecimiento</a>
-      <a href="vfx/elarion-next-animations.html">Próximas animaciones</a>
-      <a href="vfx/kaelor-storm-buff-index.html">Índice de tormenta de Kaelor</a>
-      <a href="vfx/fireball-shapes.html">Formas de bola de fuego</a>
-      <a href="vfx/tactical-arrow-variants.html">Variantes de flecha táctica</a>
-    </main>
-  </body>
+    h1 {
+      font-size: 1rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #c9a24a;
+      margin: 0 0 0.5rem;
+    }
+
+    p.lead {
+      margin: 0 0 2rem;
+      color: #8c7f6a;
+      font-size: 0.9rem;
+    }
+
+    h2 {
+      margin: 2rem 0 0.8rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: #8c7f6a;
+      border-bottom: 1px solid rgba(201, 162, 74, 0.18);
+      padding-bottom: 0.4rem;
+    }
+
+    a {
+      display: block;
+      padding: 0.9rem 1.15rem;
+      margin-bottom: 0.6rem;
+      color: #f2e6cb;
+      text-decoration: none;
+      background: linear-gradient(#191512, #100d0b);
+      border: 1px solid #2c2620;
+      box-shadow: inset 0 0 0 1px rgba(201, 162, 74, 0.22);
+    }
+
+    a:hover {
+      box-shadow: inset 0 0 0 1px rgba(201, 162, 74, 0.65);
+    }
+
+    small {
+      display: block;
+      color: #8c7f6a;
+      font-size: 0.84rem;
+      margin-top: 0.2rem;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>Hostfall · Maquetas</h1>
+    <p class="lead">
+      Material de decisión visual. Nada de esta carpeta se importa desde <code>src/</code> ni entra al
+      paquete de Steam.
+    </p>
+
+    <h2>Interfaz</h2>
+    <a href="ui/claude-preparation-frontispiece.html">Preparación · Frontispicio: dónde vive la dificultad<small>El
+        frontispicio elegido, sin rosa ni ajustes avanzados y con el número del Futuro dominando la pantalla; cuatro
+        colocaciones para la dificultad —pie, cinta, riel y Hueste— sin quitarle protagonismo al número</small></a>
+    <a href="ui/claude-preparation-book.html">Preparación · cuatro maquetas en la lengua del Archivo<small>Escribir Crónica
+        con el material de Semillas del Destino: Página, Doble hoja, Registro y Frontispicio, con las cartas clave reales,
+        el sello de la rosa cardinal y el códec del juego recomponiendo el Futuro</small></a>
+    <a href="ui/claude-play-entry-fracture.html">Umbral de Jugar · Fractura<small>La versión elegida, aislada: la pantalla se
+        parte por el centro y las puertas salen de la costura, que ahora sólo separa las dos cartas; sin ornamentos de
+        esquina, sin historial de semillas, puertas más grandes y sin rombo, y Escribir Crónica todavía sin
+        programar</small></a>
+    <a href="ui/claude-play-entry-threshold-v3.html">Umbral = pantalla · cuatro versiones · Claude v3<small>Tercera vuelta:
+        el umbral tiene composición de pantalla completa pero el menú sigue vivo detrás, y la entrada cambia entre cuatro
+        versiones conmutables con 1–4 —Eclipse desde el botón Jugar, Fractura con costura viva, Astrolabio que adelanta el
+        disco de grados y Vidrio con quebradura—, con aura de puntero, pavesas por versión y el códec real</small></a>
+    <a href="ui/claude-play-entry-threshold.html">Umbral de Jugar sobre el menú · Claude v2<small>Segunda vuelta: una sola
+        bifurcación —umbral a pantalla completa abierto sobre el menú vivo— con el material real de los modales
+        (game-home-dialog, game-dialog-action, game-seed-input), futuros recientes, inscripción que decodifica en vivo y el
+        choque con sus tiempos reales</small></a>
+    <a href="ui/play-entry-threshold-screen-variants.html">Umbral × pantalla · cuatro versiones<small>El Umbral nace desde
+        Jugar y ocupa progresivamente todo el viewport mientras el menú sigue vivo detrás: expansión de placa, fisura
+        cardinal, folio físico y astrolabio del Destino, con rutas interactivas hacia Preparación o inscripción</small></a>
+    <a href="ui/claude-play-entry-futures.html">Jugar → Futuro · propuesta Claude<small>Jugar se bifurca en «un futuro nuevo» y
+        «un futuro inscrito» (en el sitio o como umbral), Escribir Crónica pierde la seed y pone el número de Futuro entre
+        las dos Crónicas con su firma y su «Otro futuro», y la inscripción decodifica el HF1 en vivo antes de lanzar el
+        choque real</small></a>
+    <a href="ui/play-entry-futures.html">Entrada a Jugar y protagonismo del Futuro<small>Tres profundidades para la
+        bifurcación de Jugar, Preparación sin campo de seed con el número de Futuro al centro, y el modal de inscripción
+        que decodifica el HF1 y enciende el choque; los Futuros se calculan con el hash real</small></a>
+    <a href="ui/chronicler-name-modal.html">Modal del nombre del Cronista<small>Siete reemplazos vivos del modal de
+        onboarding, ya sin la paleta oliva; la dirección elegida es el umbral grabado, sin panel y con chispas
+        alineadas a la punta de la última letra, con selector de la línea superior</small></a>
+    <a href="ui/chronicler-name-futures.html">El nombre entre futuros<small>Cuatro evoluciones del umbral mínimo sobre el
+        cielo temporal de la victoria: cielo limpio, rutas convergentes, páginas posibles e instrumento sin constelación</small></a>
+    <a href="ui/ui-typography.html">Comparativa tipográfica<small>Diez conjuntos con muestras EN/ES y prueba de encaje
+        medida contra los huecos reales</small></a>
+    <a href="ui/ui-kit.html">Kit de interfaz<small>Seis pieles sobre los mismos botones, modales, paneles y
+        HUD</small></a>
+    <a href="ui/ui-actual-lacquer.html">UI actual × Laca del Cronista<small>Los componentes reales del juego en dos
+        materiales</small></a>
+    <a href="ui/seed-explorer.html">Seed Explorer<small>Herramienta dev visual para buscar, comparar, inspeccionar y
+        probar futuros candidatos</small></a>
+    <a href="ui/chatgpt-seeds-of-destiny-menu.html">Semillas del Destino · propuesta ChatGPT<small>Archivo interactivo de
+        Futuros, historial de reescrituras y resúmenes narrativos de victoria y derrota</small></a>
+    <a href="ui/menus-archive-language.html">Menús en el lenguaje del Archivo<small>Los siete menús actuales —principal,
+        ajustes, Crónicas, cartas, prepartida, barra de partida y
+        ajustes en partida— redibujados con el material del Explorador de futuros</small></a>
+    <a href="ui/menu-variants-2.html">Menú · seis materiales de botón<small>Placas grabadas, estandartes, instrumento de
+        grados, esquineros, losas y pestañas con
+        antesala: cambia la pieza pulsable, no sólo su posición</small></a>
+    <a href="ui/menu-variants.html">Seis composiciones del menú<small>Columna, eje central, cinta inferior, rejilla,
+        índice y lámina: mismo contenido y material,
+        seis reparticiones distintas de la pantalla, con a favor y en contra</small></a>
+    <a href="ui/menus-improved.html">Menús: mejoras sobre el material vigente<small>Menú, Ajustes y Crónicas sobre el
+        cielo real del TemporalBackdrop, con la composición y los
+        componentes del juego; cada pantalla lista qué decisión de interfaz cambia y por qué</small></a>
+    <a href="ui/hostfall-cardinal-mark.html">Marca cardinal partida<small>Pantalla principal WebGL: emblema facetado,
+        fisura diagonal y sector inferior-derecho desplazado y fragmentado</small></a>
+    <a href="ui/keyword-icons.html">Iconos de palabras clave<small>Los once Rasgos y el fallback con SVG propios, frente
+        al icono de lucide en uso, en tamaño
+        real de insignia y píldora</small></a>
+    <a href="ui/tutorial-play-arrow.html">Flecha de tutorial<small>Seis variantes azules de punta roma en la familia de
+        las flechas tácticas, sobre la carta real</small></a>
+    <a href="ui/tutorial-play-arrow-roma.html">Flecha de tutorial — derivadas<small>Ocho tratamientos de la Cuchilla
+        roma elegida: bisel, hueca, segmentada, cabeza despegada y escolta</small></a>
+    <a href="ui/tutorial-stat-labels.html">Fuerza y Aguante en el tutorial<small>Cinco formas de nombrar las dos cifras
+        del marcador sobre la comparación real de dos cartas</small></a>
+    <a href="ui/tutorial-stat-labels-cartelas.html">Fuerza y Aguante — derivadas<small>Seis diagonales de la cartela
+        elegida, con el material y el rombo del cuadro de diálogo del tutorial</small></a>
+
+    <h2>HUD y disposición</h2>
+    <a href="hud/player-vitals-row.html">Fila de vitals del Cronista</a>
+    <a href="hud/player-archive-vs-life.html">Archivo frente a Vida</a>
+    <a href="hud/host-archive-combat-options.html">Opciones de combate contra el Archivo</a>
+
+    <h2>Efectos</h2>
+    <a href="vfx/surge-ember.html">Oleada · la brasa, bien puesta<small>La brasa elegida, recolocada en cinco
+        sitios que tocan el estandarte —filete bajo el título, las dos reglas encendidas, rescoldo del canto, lecho de
+        carbón y las letras ardiendo—, más cuatro direcciones nuevas (hierro candente, ceniza, borde que sangra y
+        latido) y un selector de palabra para juzgar «Oleada» frente a Embate, Tromba o Surge</small></a>
+    <a href="vfx/surge-crest.html">Oleada · el remate sin calavera<small>Se retira el medallón de la calavera y
+        se prueban seis maneras de rematar el estandarte —vacío, muesca del propio marco, la grieta clavada en el
+        canto, los rombos de la placa de Futuro, marcas de cuenta y una brasa viva—, todas con la entrada afinada y
+        control de velocidad</small></a>
+    <a href="vfx/surge-current-variations.html">Oleada · variaciones sobre la actual<small>Mismas cuatro piezas de hoy:
+        corte, fisura viva, apertura y ritmo</small></a>
+    <a href="vfx/surge-entrance.html">Oleada · fuerza de entrada<small>El estandarte de hoy sin calavera ni grieta:
+        sólo cambia cómo entra, con el subtítulo en tres tamaños</small></a>
+    <a href="vfx/surge-variants.html">Oleada · variantes de la ruptura roja<small>Qué le pasa al tablero cuando la
+        Hueste se desata: fractura, marea, sello y zarpazo</small></a>
+    <a href="vfx/surge-typographic.html">Oleada · rediseño tipográfico<small>Sin estandarte: sólo las dos líneas de
+        texto sobre el velo, en cuatro entradas</small></a>
+    <a href="vfx/stabilizing-variants.html">Estabilizándose · ocho tratamientos<small>Ocho alternativas
+        procedurales para el mismo estado, con el remolino vigente como referencia; sin GIF, sin WebGL y sin imagen
+        externa</small></a>
+    <a href="vfx/stabilizing-shortlist.html">Estabilizándose · trama, contorno y coalescencia<small>Segunda
+        ronda: variaciones dentro de las tres direcciones elegidas y tres cruces entre ellas</small></a>
+    <a href="vfx/stabilizing-golden-weave.html">Estabilizándose · coalescencia dorada<small>Motas doradas que
+        caen al centro y encienden la retícula al aterrizar, con la onda saliendo del encuadre; más las perillas de
+        cuadro, cadencia e intensidad</small></a>
+    <a href="vfx/board-overture.html">Obertura del Tablero<small>El VS vigente se abre y el signo del Futuro se dibuja
+        sobre el Campo, entrega su aro al instrumento de grados y deja paso al HUD y a la mano inicial</small></a>
+    <a href="vfx/chronicle-threshold.html">Umbral de la Crónica<small>Begin Chronicle enciende la rosa cardinal del
+        Futuro, que se planta en el Campo y deja el instrumento de grados</small></a>
+    <a href="vfx/destiny-constellation.html">Constelación cardinal<small>Desenlace preservado: la rosa cardinal se traza
+        nodo a nodo y florece</small></a>
+    <a href="vfx/future-shattered.html">Vidrio del Futuro<small>Desenlace de derrota: el tablero se congela, se fractura
+        y explota en profundidad</small></a>
+    <a href="vfx/temporal-backgrounds.html">Fondos temporales<small>Tres variantes de fondo espacio/temporal, cada una
+        en menú y en tablero con las cartas puestas</small></a>
+    <a href="vfx/future-shattered-3d.html">Vidrio del Futuro 3D<small>Prismas con espesor, cantos biselados y refracción
+        en un solo renderer WebGL</small></a>
+    <a href="vfx/future-shattered-2.html">Vidrio del Futuro II<small>Misma idea, otra composición: el vidrio abandona el
+        cuadro y el vacío se mueve de verdad</small></a>
+    <a href="vfx/elarion-approved-effects.html">Efectos aprobados de Elarion</a>
+    <a href="vfx/elarion-webgl-suite.html">Suite WebGL de Elarion</a>
+    <a href="vfx/elarion-growth-buff-index.html">Índice de buffs de crecimiento</a>
+    <a href="vfx/elarion-next-animations.html">Próximas animaciones</a>
+    <a href="vfx/kaelor-storm-buff-index.html">Índice de tormenta de Kaelor</a>
+    <a href="vfx/fireball-shapes.html">Formas de bola de fuego</a>
+    <a href="vfx/tactical-arrow-variants.html">Variantes de flecha táctica</a>
+  </main>
+</body>
+
 </html>

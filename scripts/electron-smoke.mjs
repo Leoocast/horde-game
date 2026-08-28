@@ -87,12 +87,17 @@ try {
     "onLifecycleChanged",
     "onWindowStateChanged",
     "openExternalLink",
+    "promoteSeedHistoryBackup",
     "readPreferences",
     "readResumeSave",
+    "readSeedHistory",
     "reportError",
+    "resetSeedHistory",
     "setFullscreen",
+    "writeClipboardText",
     "writePreferences",
     "writeResumeSave",
+    "writeSeedHistory",
   ]);
   assert.equal(rendererBoundary.bootstrap?.platform, "win32");
   assert.equal(rendererBoundary.blockedWindow, true);
@@ -128,7 +133,27 @@ try {
     const resumeBeforeDelete = await window.hostfallDesktop.readResumeSave();
     await window.hostfallDesktop.deleteResumeSave();
     const resumeAfterDelete = await window.hostfallDesktop.readResumeSave();
-    return { initialWindow, enteredWindow, leftWindow, preferences, resumeBeforeDelete, resumeAfterDelete };
+    const historyWrite = await window.hostfallDesktop.writeSeedHistory({
+      kind: "hostfall-history",
+      formatVersion: 1,
+      nextSequence: 1,
+      attempts: [],
+    });
+    const historyBeforeReset = await window.hostfallDesktop.readSeedHistory();
+    const historyReset = await window.hostfallDesktop.resetSeedHistory();
+    const historyAfterReset = await window.hostfallDesktop.readSeedHistory();
+    return {
+      initialWindow,
+      enteredWindow,
+      leftWindow,
+      preferences,
+      resumeBeforeDelete,
+      resumeAfterDelete,
+      historyWrite,
+      historyBeforeReset,
+      historyReset,
+      historyAfterReset,
+    };
   });
   assert.equal(desktopState.enteredWindow.fullscreen, true);
   assert.equal(desktopState.leftWindow.fullscreen, false);
@@ -136,6 +161,11 @@ try {
   assert.equal(desktopState.resumeBeforeDelete.primary?.smoke, true);
   assert.equal(desktopState.resumeAfterDelete.primary, undefined);
   assert.equal(desktopState.resumeAfterDelete.backup, undefined);
+  assert.equal(desktopState.historyWrite.ok, true);
+  assert.equal(desktopState.historyBeforeReset.primary?.kind, "hostfall-history");
+  assert.equal(desktopState.historyReset.preservedDiagnostic, true);
+  assert.equal(desktopState.historyAfterReset.primary, undefined);
+  assert.equal(desktopState.historyAfterReset.backup, undefined);
 
   const mediaState = await window.evaluate(async ({ audioUrl }) => {
     const loadImage = (url) => new Promise((resolve, reject) => {

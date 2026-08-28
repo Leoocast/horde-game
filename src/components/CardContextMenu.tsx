@@ -28,7 +28,7 @@ export function CardContextMenu() {
 
   const card = menu ? findCard(game, menu.cardId) : undefined;
   const detailsCard = detailsCardId ? findCard(game, detailsCardId) : undefined;
-  const details = useCardDetails(detailsCard?.definitionId ?? "");
+  const details = useCardDetails(detailsCard?.definitionId ?? "", language);
   const traits = detailsCard ? cardTraits(game, detailsCard) : undefined;
   const stats = detailsCard ? cardStats(game, detailsCard) : undefined;
   const detailsText = detailsCard
@@ -115,7 +115,7 @@ export function CardContextMenu() {
   return (
     <>
       <div
-        className="old-panel game-context-menu fixed z-[260] w-[220px] overflow-hidden p-1.5 text-[#f6e6b8] shadow-2xl shadow-black/70"
+        className="hf-ui-panel game-context-menu fixed z-[260] w-[220px] overflow-hidden p-1.5 text-[#f6e6b8] shadow-2xl shadow-black/70"
         style={{ left: position.left, top: position.top }}
         onPointerDown={(event) => event.stopPropagation()}
         onContextMenu={(event) => {

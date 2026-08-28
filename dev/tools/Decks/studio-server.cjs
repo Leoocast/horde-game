@@ -149,6 +149,7 @@ async function listDecks() {
         STUDIO_DECKS,
         STUDIO_LANGUAGES,
         buildStudioCards,
+        studioBattlefieldArtKinds,
         studioGameArt,
         studioLanguagesForDeck,
         studioMotif,
@@ -164,6 +165,7 @@ async function listDecks() {
 
     const decks = Object.keys(STUDIO_DECKS).map((deckId) => {
         const config = readConfig(deckId);
+        const battlefieldArtKinds = studioBattlefieldArtKinds(deckId);
         const gameArt = studioGameArt(deckId);
         const gameArtConfig = readGameArtConfig(deckId);
         const presentationById = new Map(config.cards.map((card) => [card.id, card]));
@@ -204,7 +206,8 @@ async function listDecks() {
                 battlefieldArtUrl: gameArt[card.id]?.artUrl ?? null,
                 battlefieldArtFrame:
                     gameArtConfig.cards?.[card.id]?.battlefieldArtFrame ?? null,
-                battlefieldArtEligible: /^Eco\b/u.test(card.tipo ?? ''),
+                battlefieldArtKind: battlefieldArtKinds[card.id] ?? null,
+                battlefieldArtEligible: Boolean(battlefieldArtKinds[card.id]),
                 atk: card.atk ?? null,
                 def: card.def ?? null,
             };

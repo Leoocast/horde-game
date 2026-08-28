@@ -5,6 +5,7 @@ import App from "./App";
 import { AppErrorBoundary } from "./components/AppErrorBoundary";
 import { reportRendererError } from "./platform/desktopBridge";
 import "./styles.css";
+import "./ui-system.css";
 
 assertContentBootstrapReady();
 

@@ -2,7 +2,10 @@
   "schemaVersion": "1.0.0",
   "provider": "local",
   "defaults": {
-    "showFullCardImage": true
+    "showFullCardImage": true,
+    "localizedImageDirectories": {
+      "en": "en"
+    }
   },
   "cards": {
     "graveless_soldier": {
@@ -67,10 +70,10 @@
       "imageKind": "card",
       "imageUrl": "/cards/uprising_of_the_graveless/barrow_wallbreaker.png"
     },
-    "hound_of_seven_memories": {
+    "three_eyed_corpse_gorger": {
       "source": "local",
       "imageKind": "card",
-      "imageUrl": "/cards/uprising_of_the_graveless/hound_of_seven_memories.png"
+      "imageUrl": "/cards/uprising_of_the_graveless/three_eyed_corpse_gorger.png"
     },
     "mastiff_of_the_overflowing_ossuary": {
       "source": "local",

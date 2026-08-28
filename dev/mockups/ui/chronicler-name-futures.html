@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hostfall — El nombre entre futuros</title>
+<style>
+@font-face {
+  font-family: "Cinzel Local";
+  src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Cinzel Decorative Local";
+  src: url("../assets/fonts/cinzel-decorative-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+:root {
+  --ink: #03070a;
+  --surface: #0a1114;
+  --line: rgb(183 164 102 / 0.22);
+  --line-strong: rgb(221 197 122 / 0.68);
+  --gold: #c7aa69;
+  --gold-bright: #ead59b;
+  --title: #d9c994;
+  --copy: #d9cfaa;
+  --muted: #899794;
+  --muted-deep: #637173;
+  --display: "Cinzel Local", Georgia, serif;
+  --display-deco: "Cinzel Decorative Local", "Cinzel Local", Georgia, serif;
+  --ui: "Trebuchet MS", Verdana, Tahoma, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--ink); color: var(--copy); font-family: var(--ui); }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+
+.doc { width: min(1360px, calc(100% - 48px)); margin: 0 auto; padding: 42px 0 96px; }
+.doc-head { padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+.eyebrow { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase; }
+.doc-head h1 {
+  margin: 12px 0 10px;
+  color: #e0d3ad;
+  font-family: var(--display);
+  font-size: clamp(27px, 3vw, 40px);
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+.doc-head p { max-width: 920px; margin: 0; color: #7b878b; font-size: 13px; line-height: 1.65; }
+.doc-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.doc-nav a, .chip {
+  padding: 8px 13px;
+  border: 1px solid rgb(150 138 95 / 0.42);
+  background: linear-gradient(180deg, rgb(30 39 40 / 0.98), rgb(9 15 17 / 0.99));
+  color: #acb5b5;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.doc-nav a:hover, .chip:hover, .chip.is-on { border-color: var(--line-strong); color: var(--gold-bright); }
+.toolbar {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 22px;
+  margin-top: 18px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(#03070a 74%, rgb(3 7 10 / 0.86));
+  backdrop-filter: blur(4px);
+}
+.toolbar-group { display: flex; align-items: center; gap: 8px; }
+.toolbar-label { color: var(--muted-deep); font-size: 10px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; }
+
+.variant { margin-top: 52px; scroll-margin-top: 74px; }
+.variant-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.variant-letter {
+  display: inline-grid;
+  width: 27px;
+  height: 27px;
+  flex: none;
+  border: 1px solid rgb(150 138 95 / 0.48);
+  color: var(--gold);
+  font-family: var(--display);
+  font-size: 11px;
+  place-items: center;
+}
+.variant-head h2 { margin: 0; color: var(--title); font-family: Georgia, serif; font-size: 22px; font-weight: 500; }
+.variant-head p { flex: 1 1 420px; margin: 0; color: #788588; font-size: 12.5px; line-height: 1.6; }
+.variant-head strong { color: #aa9e7a; font-weight: 700; }
+
+.stage {
+  position: relative;
+  overflow: hidden;
+  min-height: 470px;
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 70% 32%, rgb(13 46 51 / 0.5), transparent 38%),
+    #02060a;
+  aspect-ratio: 16 / 9;
+  isolation: isolate;
+}
+.sky { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; }
+.stage-scrim {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 40% 48% at 50% 48%, rgb(2 7 10 / 0.35), rgb(2 6 9 / 0.07) 66%, transparent 100%),
+    linear-gradient(180deg, rgb(1 5 7 / 0.08), rgb(1 5 7 / 0.18));
+  pointer-events: none;
+}
+.stage-vignette {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  background: radial-gradient(ellipse 66% 64% at 50% 49%, transparent 31%, rgb(1 4 7 / 0.24) 72%, rgb(1 4 7 / 0.68) 100%);
+  pointer-events: none;
+}
+.stage-content { position: absolute; z-index: 5; inset: 0; display: grid; padding: 26px; place-items: center; }
+
+.name-form {
+  position: relative;
+  width: min(520px, 86%);
+  text-align: center;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: arrive 520ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes arrive { to { opacity: 1; transform: none; } }
+.name-kicker {
+  margin: 0 0 17px;
+  color: #909d9b;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.33em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 12px #000;
+}
+.name-title {
+  margin: 0;
+  color: var(--title);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(27px, 3.1vw, 37px);
+  font-weight: 500;
+  letter-spacing: 0.055em;
+  line-height: 1.12;
+  text-shadow: 0 4px 20px rgb(0 0 0 / 0.88);
+}
+.breathing-rule { position: relative; overflow: hidden; width: 73%; height: 1px; margin: 21px auto 29px; background: var(--line); }
+.breathing-rule::after {
+  position: absolute;
+  top: 0;
+  left: -46%;
+  width: 46%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-bright), transparent);
+  content: "";
+  animation: sweep 3.8s ease-in-out infinite;
+}
+@keyframes sweep { 0% { left: -46%; } 57%, 100% { left: 100%; } }
+.field { position: relative; }
+.name-input {
+  width: 100%;
+  padding: 9px 8px 10px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #f1e5be;
+  font-family: var(--display-deco);
+  font-size: clamp(21px, 2.6vw, 29px);
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-shadow: 0 0 16px rgb(234 213 155 / 0.22), 0 3px 13px #000;
+}
+.name-input::placeholder { color: #728082; font-family: var(--ui); font-size: 11px; font-weight: 800; letter-spacing: 0.24em; }
+.input-line { position: relative; height: 1px; background: rgb(183 164 102 / 0.24); }
+.input-line::after {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: calc(var(--name-strength, 0) * 100%);
+  height: 1px;
+  background: var(--gold-bright);
+  box-shadow: 0 0 9px rgb(234 213 155 / 0.58);
+  content: "";
+  transform: translateX(-50%);
+  transition: width 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.field:focus-within .input-line::after { width: 100%; }
+.name-cta {
+  display: inline-flex;
+  min-width: 178px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 27px;
+  border: 1px solid rgb(178 158 95 / 0.42);
+  background: linear-gradient(110deg, rgb(48 58 56 / 0.52), rgb(11 21 22 / 0.72) 66%, rgb(39 49 47 / 0.52));
+  color: var(--copy);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 #020504;
+  box-shadow: inset 0 1px 0 rgb(238 225 178 / 0.07), 0 8px 20px rgb(0 0 0 / 0.35);
+  transition: border-color 150ms ease, color 150ms ease, background 150ms ease, transform 100ms ease;
+}
+.name-cta:hover { border-color: var(--line-strong); background: linear-gradient(110deg, #3a4240, #1c2828 66%, #2e3836); color: var(--gold-bright); }
+.name-cta:active { transform: translateY(1px); }
+.confirmation {
+  position: absolute;
+  z-index: 10;
+  right: 0;
+  bottom: 20px;
+  left: 0;
+  color: var(--gold-bright);
+  font-family: var(--display);
+  font-size: 11px;
+  letter-spacing: 0.23em;
+  text-align: center;
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity 340ms ease, transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.stage.is-confirmed .confirmation { opacity: 1; transform: none; }
+.stage.is-confirmed .name-form { filter: brightness(1.08); }
+.stage.is-invalid .name-form { animation: shake 260ms ease; }
+@keyframes shake { 25% { transform: translateX(-6px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-3px); } }
+
+/* A · el cielo limpio del desenlace, sin signo ni instrumento. */
+.stage-clean .stage-scrim {
+  background:
+    radial-gradient(ellipse 43% 51% at 50% 49%, rgb(2 7 10 / 0.58), rgb(2 7 10 / 0.20) 60%, transparent 100%),
+    linear-gradient(180deg, transparent, rgb(1 5 7 / 0.18));
+}
+.stage-clean::after {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgb(202 180 112 / 0.035), transparent 25%);
+  content: "";
+  pointer-events: none;
+}
+
+/* B · varios futuros llegan al mismo renglón, sin construir una constelación. */
+.future-paths { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; opacity: 0.7; pointer-events: none; }
+.future-paths path {
+  fill: none;
+  stroke: rgb(199 170 105 / 0.20);
+  stroke-width: 0.55;
+  vector-effect: non-scaling-stroke;
+  transition: stroke 300ms ease, opacity 300ms ease;
+}
+.future-paths circle { fill: #ead59b; opacity: 0.28; filter: drop-shadow(0 0 5px rgb(234 213 155 / 0.55)); }
+.stage-converge .name-form { width: min(540px, 86%); }
+.stage-converge .path-core { opacity: calc(0.28 + var(--name-strength, 0) * 0.7); }
+.stage-converge.is-named .future-paths path { stroke: rgb(234 213 155 / 0.30); }
+.convergence-glow {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  width: 34%;
+  height: 12%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgb(234 213 155 / calc(0.03 + var(--name-strength, 0) * 0.12)), transparent 72%);
+  filter: blur(9px);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+/* C · las páginas existen sólo como planos de luz en el cielo. */
+.folios { position: absolute; z-index: 2; inset: 0; overflow: hidden; perspective: 900px; pointer-events: none; }
+.folio {
+  position: absolute;
+  top: 5%;
+  bottom: 5%;
+  width: 25%;
+  border-right: 1px solid rgb(199 170 105 / 0.12);
+  border-left: 1px solid rgb(199 170 105 / 0.07);
+  background: linear-gradient(100deg, transparent 14%, rgb(164 191 185 / 0.022) 52%, transparent 88%);
+  opacity: 0.72;
+  transform-origin: 50% 100%;
+}
+.folio:nth-child(1) { left: -5%; transform: rotateY(58deg) rotateZ(-3deg); }
+.folio:nth-child(2) { left: 12%; transform: rotateY(42deg) rotateZ(-1deg); }
+.folio:nth-child(3) { right: 12%; transform: rotateY(-42deg) rotateZ(1deg); }
+.folio:nth-child(4) { right: -5%; transform: rotateY(-58deg) rotateZ(3deg); }
+.folio::after {
+  position: absolute;
+  top: 18%;
+  right: 17%;
+  bottom: 18%;
+  left: 17%;
+  background: repeating-linear-gradient(180deg, transparent 0 28px, rgb(199 170 105 / 0.06) 28px 29px);
+  content: "";
+}
+.stage-pages .stage-scrim { background: radial-gradient(ellipse 44% 58% at 50% 50%, rgb(2 7 10 / 0.65), rgb(2 7 10 / 0.12) 68%, transparent 100%); }
+.stage-pages .name-form::before {
+  position: absolute;
+  z-index: -1;
+  top: -72px;
+  right: -70px;
+  bottom: -58px;
+  left: -70px;
+  background: radial-gradient(ellipse, rgb(151 193 188 / calc(0.02 + var(--name-strength, 0) * 0.06)), transparent 68%);
+  content: "";
+  filter: blur(8px);
+}
+
+/* D · el aparato que queda visible en victoria, todavía sin signo cardinal. */
+.instrument-grid { position: absolute; z-index: 2; inset: 0; display: block; width: 100%; height: 100%; pointer-events: none; }
+.instrument-grid .cell { fill: none; stroke: rgb(150 198 190 / 0.055); stroke-width: 1; }
+.instrument-grid .frame { fill: none; stroke: rgb(199 170 105 / 0.2); stroke-width: 1.1; }
+.instrument-grid .edge-tick { fill: none; stroke: rgb(180 205 198 / 0.26); stroke-width: 0.9; }
+.instrument-grid .glass-lip { fill: none; stroke: rgb(226 240 246 / 0.11); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.instrument-grid .dial-ring,
+.instrument-grid .dial-arc { fill: none; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.instrument-grid .dial-ring { stroke: rgb(199 170 105 / 0.16); }
+.instrument-grid .dial-arc { stroke: rgb(199 170 105 / 0.12); }
+.instrument-grid .dial-tick { fill: none; stroke: rgb(214 192 122 / 0.24); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.instrument-grid .dial-label { fill: rgb(210 188 125 / 0.30); font: 500 9px/1 Consolas, "Courier New", monospace; letter-spacing: 0.12em; }
+.stage-instrument .stage-scrim {
+  z-index: 3;
+  background: radial-gradient(ellipse 42% 52% at 50% 50%, rgb(2 7 10 / 0.72), rgb(2 7 10 / 0.14) 70%, transparent 100%);
+}
+.stage-instrument .stage-content { z-index: 5; }
+
+.notes { display: flex; flex-wrap: wrap; margin: 10px 0 0; padding: 0; gap: 7px 26px; }
+.notes li { color: var(--muted-deep); font-size: 11.5px; line-height: 1.55; list-style: none; }
+.notes li::before { margin-right: 7px; color: rgb(139 116 67 / 0.8); content: "◆"; font-size: 8px; vertical-align: 2px; }
+
+@media (max-width: 720px) {
+  .doc { width: min(100% - 24px, 1360px); padding-top: 24px; }
+  .stage { min-height: 390px; aspect-ratio: auto; }
+  .stage-content { padding: 18px; }
+  .name-form { width: 92%; }
+  .folio { width: 35%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+}
+</style>
+</head>
+<body>
+<main class="doc">
+  <header class="doc-head">
+    <div class="eyebrow">Maquetas de interfaz · Onboarding</div>
+    <h1>El nombre entre futuros</h1>
+    <p>Cuatro evoluciones de <b>F · Umbral mínimo</b>. Todas conservan el formulario sin panel y usan el cielo vivo de <b>TemporalBackdrop</b> que queda visible en la victoria; la última conserva además el instrumento, pero ninguna adelanta la rosa cardinal.</p>
+    <nav class="doc-nav">
+      <a href="#a">A · Cielo contemplado ★</a>
+      <a href="#b">B · Convergencia</a>
+      <a href="#c">C · Páginas posibles</a>
+      <a href="#d">D · Instrumento vacío</a>
+      <a href="chronicler-name-modal.html">← Comparativa original</a>
+      <a href="../index.html">Índice</a>
+    </nav>
+  </header>
+
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <span class="toolbar-label">Idioma</span>
+      <button class="chip is-on" type="button" data-lang="es">Español</button>
+      <button class="chip" type="button" data-lang="en">English</button>
+    </div>
+    <div class="toolbar-group">
+      <span class="toolbar-label">Todas</span>
+      <button class="chip" type="button" id="replay-all">Repetir entrada</button>
+      <button class="chip" type="button" id="clear-all">Vaciar nombres</button>
+    </div>
+  </div>
+
+  <section class="variant" id="a">
+    <div class="variant-head">
+      <span class="variant-letter">A</span>
+      <h2>Cielo contemplado ★</h2>
+      <p><strong>La dirección más limpia.</strong> Es F sobre el mismo espacio temporal que revela la victoria: el cielo tiene movimiento y profundidad, pero nada forma todavía un signo. El futuro existe; aún no ha sido fijado.</p>
+      <button class="chip" type="button" data-replay>Repetir</button>
+    </div>
+    <div class="stage stage-clean" data-stage>
+      <canvas class="sky" data-sky aria-hidden="true"></canvas>
+      <div class="stage-scrim"></div>
+      <div class="stage-content">
+        <form class="name-form" data-form autocomplete="off">
+          <p class="name-kicker" data-copy="kicker"></p>
+          <h3 class="name-title" data-copy="title"></h3>
+          <div class="breathing-rule"></div>
+          <div class="field">
+            <input class="name-input" maxlength="24" data-name data-placeholder="placeholder" aria-label="Tu nombre" />
+            <div class="input-line"></div>
+          </div>
+          <button class="name-cta" type="submit" data-copy="cta"></button>
+        </form>
+      </div>
+      <div class="stage-vignette"></div>
+      <div class="confirmation" data-confirmation></div>
+    </div>
+    <ul class="notes">
+      <li>No reaprovecha la estrella de victoria: sólo el cielo que ya existe debajo.</li>
+      <li>La línea superior conecta directamente el acto de nombrarse con los futuros del Cronista.</li>
+    </ul>
+  </section>
+
+  <section class="variant" id="b">
+    <div class="variant-head">
+      <span class="variant-letter">B</span>
+      <h2>Convergencia</h2>
+      <p>Los futuros posibles aparecen como rutas muy finas que llegan al renglón central. Al escribir, el punto de encuentro gana luz: <strong>el nombre no crea el cielo; escoge una trayectoria dentro de él.</strong></p>
+      <button class="chip" type="button" data-replay>Repetir</button>
+    </div>
+    <div class="stage stage-converge" data-stage>
+      <canvas class="sky" data-sky aria-hidden="true"></canvas>
+      <div class="stage-scrim"></div>
+      <svg class="future-paths" viewBox="0 0 1000 562" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M-20 78 C190 95 300 236 500 281" />
+        <path d="M-20 198 C190 194 340 262 500 281" />
+        <path d="M-20 410 C205 401 345 305 500 281" />
+        <path d="M1020 82 C806 101 693 236 500 281" />
+        <path d="M1020 204 C812 198 665 263 500 281" />
+        <path d="M1020 416 C806 398 661 307 500 281" />
+        <path class="path-core" d="M500 281 C500 281 500 281 500 281" />
+        <circle cx="500" cy="281" r="2.2" />
+      </svg>
+      <div class="convergence-glow"></div>
+      <div class="stage-content">
+        <form class="name-form" data-form autocomplete="off">
+          <p class="name-kicker" data-copy="kicker"></p>
+          <h3 class="name-title" data-copy="title"></h3>
+          <div class="breathing-rule"></div>
+          <div class="field">
+            <input class="name-input" maxlength="24" data-name data-placeholder="placeholder" aria-label="Tu nombre" />
+            <div class="input-line"></div>
+          </div>
+          <button class="name-cta" type="submit" data-copy="cta"></button>
+        </form>
+      </div>
+      <div class="stage-vignette"></div>
+      <div class="confirmation" data-confirmation></div>
+    </div>
+    <ul class="notes">
+      <li>Hace visible la idea de muchos futuros sin usar la rosa cardinal antes de tiempo.</li>
+      <li>Más narrativo que A, aunque las rutas añaden una segunda lectura al fondo.</li>
+    </ul>
+  </section>
+
+  <section class="variant" id="c">
+    <div class="variant-head">
+      <span class="variant-letter">C</span>
+      <h2>Páginas posibles</h2>
+      <p>Planos casi transparentes flotan en los márgenes como páginas que el Cronista podría escribir. El centro queda vacío y legible: <strong>esta página todavía no existe hasta que recibe un nombre.</strong></p>
+      <button class="chip" type="button" data-replay>Repetir</button>
+    </div>
+    <div class="stage stage-pages" data-stage>
+      <canvas class="sky" data-sky aria-hidden="true"></canvas>
+      <div class="stage-scrim"></div>
+      <div class="folios" aria-hidden="true">
+        <i class="folio"></i><i class="folio"></i><i class="folio"></i><i class="folio"></i>
+      </div>
+      <div class="stage-content">
+        <form class="name-form" data-form autocomplete="off">
+          <p class="name-kicker" data-copy="kicker"></p>
+          <h3 class="name-title" data-copy="title"></h3>
+          <div class="breathing-rule"></div>
+          <div class="field">
+            <input class="name-input" maxlength="24" data-name data-placeholder="placeholder" aria-label="Tu nombre" />
+            <div class="input-line"></div>
+          </div>
+          <button class="name-cta" type="submit" data-copy="cta"></button>
+        </form>
+      </div>
+      <div class="stage-vignette"></div>
+      <div class="confirmation" data-confirmation></div>
+    </div>
+    <ul class="notes">
+      <li>Recupera la metáfora de la primera página sin encerrar el formulario en una hoja o panel.</li>
+      <li>Es la opción más literaria y la menos cercana al desenlace de victoria.</li>
+    </ul>
+  </section>
+
+  <section class="variant" id="d">
+    <div class="variant-head">
+      <span class="variant-letter">D</span>
+      <h2>Instrumento vacío</h2>
+      <p><strong>La traducción literal de la pantalla de victoria sin su estrella.</strong> Conserva el cielo, el cristal, el retículo y el disco de grados; la rosa cardinal todavía no existe. El formulario ocupa el vacío central del aparato.</p>
+      <button class="chip" type="button" data-replay>Repetir</button>
+    </div>
+    <div class="stage stage-instrument" data-stage>
+      <canvas class="sky" data-sky aria-hidden="true"></canvas>
+      <svg class="instrument-grid" viewBox="0 0 1000 562" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <pattern id="nameFutureCells" width="78" height="78" patternUnits="userSpaceOnUse" patternTransform="translate(26 20)">
+            <path class="cell" d="M78 0H0V78" />
+          </pattern>
+          <linearGradient id="nameFutureSheen" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#fff" stop-opacity="0" />
+            <stop offset="0.32" stop-color="#dbeef6" stop-opacity="0.028" />
+            <stop offset="0.45" stop-color="#fff" stop-opacity="0.05" />
+            <stop offset="0.6" stop-color="#dbeef6" stop-opacity="0.016" />
+            <stop offset="1" stop-color="#fff" stop-opacity="0" />
+          </linearGradient>
+          <radialGradient id="nameFutureEdge" cx="0.5" cy="0.5" r="0.74">
+            <stop offset="0.52" stop-color="#020a0c" stop-opacity="0" />
+            <stop offset="1" stop-color="#020a0c" stop-opacity="0.42" />
+          </radialGradient>
+          <radialGradient id="nameFutureFade" cx="0.5" cy="0.5" r="0.62">
+            <stop offset="0" stop-color="#0b0b0b" />
+            <stop offset="0.34" stop-color="#2a2a2a" />
+            <stop offset="0.72" stop-color="#c8c8c8" />
+            <stop offset="1" stop-color="#fff" />
+          </radialGradient>
+          <mask id="nameFutureCellMask"><rect width="1000" height="562" fill="url(#nameFutureFade)" /></mask>
+        </defs>
+        <rect width="1000" height="562" fill="url(#nameFutureCells)" mask="url(#nameFutureCellMask)" />
+        <rect x="26" y="20" width="948" height="522" fill="url(#nameFutureEdge)" />
+        <rect x="26" y="20" width="948" height="522" fill="url(#nameFutureSheen)" />
+        <rect class="frame" x="26" y="20" width="948" height="522" />
+        <path class="glass-lip" d="M27 541V21H973" />
+        <g transform="translate(500 281)">
+          <circle class="dial-ring" r="196" pathLength="360" stroke-dasharray="1 14" />
+          <circle class="dial-arc" r="183" pathLength="360" stroke-dasharray="34 18 5 33" />
+          <path class="dial-tick" d="M0-208V-195M147-147L138-138M208 0H195M147 147L138 138" />
+          <path class="dial-tick" d="M0 208V195M-147 147L-138 138M-208 0H-195M-147-147L-138-138" />
+          <text class="dial-label" x="0" y="-215" text-anchor="middle">000° · N</text>
+          <text class="dial-label" x="160" y="-155">045°</text>
+          <text class="dial-label" x="217" y="4">090° · E</text>
+          <text class="dial-label" x="160" y="163">135°</text>
+          <text class="dial-label" x="0" y="228" text-anchor="middle">180° · S</text>
+          <text class="dial-label" x="-160" y="163" text-anchor="end">225°</text>
+          <text class="dial-label" x="-217" y="4" text-anchor="end">270° · O</text>
+          <text class="dial-label" x="-160" y="-155" text-anchor="end">315°</text>
+        </g>
+        <g class="edge-tick">
+          <path d="M260 20V32M494 20V32M728 20V32" />
+          <path d="M260 542V530M494 542V530M728 542V530" />
+          <path d="M26 176H38M26 332H38M26 488H38" />
+          <path d="M974 176H962M974 332H962M974 488H962" />
+        </g>
+      </svg>
+      <div class="stage-scrim"></div>
+      <div class="stage-content">
+        <form class="name-form" data-form autocomplete="off">
+          <p class="name-kicker" data-copy="kicker"></p>
+          <h3 class="name-title" data-copy="title"></h3>
+          <div class="breathing-rule"></div>
+          <div class="field">
+            <input class="name-input" maxlength="24" data-name data-placeholder="placeholder" aria-label="Tu nombre" />
+            <div class="input-line"></div>
+          </div>
+          <button class="name-cta" type="submit" data-copy="cta"></button>
+        </form>
+      </div>
+      <div class="stage-vignette"></div>
+      <div class="confirmation" data-confirmation></div>
+    </div>
+    <ul class="notes">
+      <li>Es lo que vería el jugador si la victoria se retirara antes de construir su signo.</li>
+      <li>También es la opción con más riesgo de hacer que el onboarding parezca ya una pantalla de resultado.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+const COPY = {
+  es: {
+    kicker: "De entre todos los futuros",
+    title: "Reclama tu nombre",
+    placeholder: "TU NOMBRE",
+    cta: "Que así sea",
+    confirmed: "Un futuro queda inscrito",
+    fallback: "Cronista",
+  },
+  en: {
+    kicker: "Among all possible futures",
+    title: "Claim your name",
+    placeholder: "YOUR NAME",
+    cta: "So shall it be",
+    confirmed: "One future is now inscribed",
+    fallback: "Chronicler",
+  },
+};
+let lang = "es";
+
+function updateCopy() {
+  const copy = COPY[lang];
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-copy]").forEach((node) => { node.textContent = copy[node.dataset.copy] || ""; });
+  document.querySelectorAll("[data-placeholder]").forEach((node) => { node.placeholder = copy[node.dataset.placeholder] || ""; });
+  document.querySelectorAll("[data-confirmation]").forEach((node) => {
+    const stage = node.closest("[data-stage]");
+    const value = stage.querySelector("[data-name]").value.trim() || copy.fallback;
+    node.textContent = copy.confirmed + " · " + value;
+  });
+}
+
+function updateStage(stage) {
+  const input = stage.querySelector("[data-name]");
+  const length = input.value.trim().length;
+  const strength = Math.min(1, length / 12);
+  stage.style.setProperty("--name-strength", strength.toFixed(3));
+  stage.classList.toggle("is-named", length > 0);
+  const confirmation = stage.querySelector("[data-confirmation]");
+  confirmation.textContent = COPY[lang].confirmed + " · " + (input.value.trim() || COPY[lang].fallback);
+}
+
+document.querySelectorAll("[data-stage]").forEach((stage) => {
+  const form = stage.querySelector("[data-form]");
+  const input = stage.querySelector("[data-name]");
+  input.addEventListener("input", () => {
+    stage.classList.remove("is-confirmed", "is-invalid");
+    updateStage(stage);
+  });
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    stage.classList.remove("is-invalid");
+    if (!input.value.trim()) {
+      void stage.offsetWidth;
+      stage.classList.add("is-invalid");
+      input.focus();
+      return;
+    }
+    updateStage(stage);
+    stage.classList.add("is-confirmed");
+  });
+  updateStage(stage);
+});
+
+document.querySelectorAll("[data-lang]").forEach((button) => {
+  button.addEventListener("click", () => {
+    lang = button.dataset.lang;
+    document.querySelectorAll("[data-lang]").forEach((peer) => peer.classList.toggle("is-on", peer === button));
+    updateCopy();
+  });
+});
+
+document.querySelectorAll("[data-replay]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const stage = button.closest(".variant").querySelector("[data-stage]");
+    const form = stage.querySelector(".name-form");
+    stage.classList.remove("is-confirmed", "is-invalid");
+    form.style.animation = "none";
+    void form.offsetWidth;
+    form.style.animation = "";
+  });
+});
+
+document.getElementById("replay-all").addEventListener("click", () => {
+  document.querySelectorAll("[data-stage]").forEach((stage) => {
+    const form = stage.querySelector(".name-form");
+    stage.classList.remove("is-confirmed", "is-invalid");
+    form.style.animation = "none";
+    void form.offsetWidth;
+    form.style.animation = "";
+  });
+});
+
+document.getElementById("clear-all").addEventListener("click", () => {
+  document.querySelectorAll("[data-name]").forEach((input) => { input.value = ""; updateStage(input.closest("[data-stage]")); });
+  document.querySelectorAll("[data-stage]").forEach((stage) => stage.classList.remove("is-confirmed", "is-invalid"));
+});
+
+updateCopy();
+
+// Shader copiado de src/components/temporalBackdropShader.ts. Es el cielo que
+// permanece bajo el desenlace de victoria, sin constelación, retículo ni disco.
+const VERTEX = `
+attribute vec2 aPosition;
+void main() {
+  gl_Position = vec4(aPosition, 0.0, 1.0);
+}
+`;
+
+const FRAGMENT = `
+precision highp float;
+
+uniform vec2 uRes;
+uniform float uTime;
+uniform float uClimax;
+
+float hash21(vec2 p) {
+  p = fract(p * vec2(123.34, 345.45));
+  p += dot(p, p + 34.345);
+  return fract(p.x * p.y);
+}
+
+vec2 hash22(vec2 p) {
+  float n = hash21(p);
+  return vec2(n, hash21(p + n + 19.19));
+}
+
+float vnoise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  float a = hash21(i);
+  float b = hash21(i + vec2(1.0, 0.0));
+  float c = hash21(i + vec2(0.0, 1.0));
+  float d = hash21(i + vec2(1.0, 1.0));
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+float fbm(vec2 p) {
+  float value = 0.0;
+  float amplitude = 0.55;
+  mat2 turn = mat2(0.82, -0.57, 0.57, 0.82);
+  for (int i = 0; i < 4; i++) {
+    value += amplitude * vnoise(p);
+    p = turn * p * 2.05 + vec2(17.13, 9.71);
+    amplitude *= 0.49;
+  }
+  return value;
+}
+
+mat2 rot(float a) {
+  float c = cos(a);
+  float s = sin(a);
+  return mat2(c, -s, s, c);
+}
+
+float starLayer(vec2 p, float scale, float gate, float speed) {
+  vec2 grid = p * scale;
+  vec2 id = floor(grid);
+  vec2 cell = fract(grid) - 0.5;
+  float seed = hash21(id);
+  if (seed < gate) return 0.0;
+  vec2 shift = (hash22(id + 7.31) - 0.5) * 0.7;
+  float d = length(cell - shift);
+  float cellPx = max(1.0, uRes.y / scale);
+  float radius = max(0.045, 1.35 / cellPx);
+  float core = exp(-pow(d / radius, 2.0) * 1.6);
+  float halo = exp(-pow(d / (radius * 3.2), 2.0)) * step(0.994, seed) * 0.22;
+  return (core + halo) * (0.94 + 0.06 * sin(uTime * speed + seed * 6.2831));
+}
+
+float firefly(vec2 rel, vec2 id, float speed, float off) {
+  float seed = hash21(id + off);
+  if (seed < 0.93) return 0.0;
+  float k = 0.5 + seed;
+  vec2 wander = 0.30 * vec2(
+    sin(uTime * speed * k + seed * 31.0),
+    cos(uTime * speed * (k * 0.82) + seed * 17.0)
+  );
+  vec2 offset = (hash22(id + 5.13) - 0.5) * 0.40 + wander;
+  float d = length(rel - offset);
+  float core = exp(-d * d * 320.0);
+  float halo = exp(-d * d * 30.0) * 0.22;
+  float breath = 0.30 + 0.70 * pow(0.5 + 0.5 * sin(uTime * (0.28 + seed * 0.4) + seed * 44.0), 2.2);
+  return (core + halo) * breath;
+}
+
+float fireflies(vec2 p, float scale, float speed, float off) {
+  vec2 g = p * scale;
+  vec2 id = floor(g);
+  vec2 cell = fract(g) - 0.5;
+  float sum = 0.0;
+  for (int j = -1; j <= 1; j++) {
+    for (int i = -1; i <= 1; i++) {
+      vec2 nb = vec2(float(i), float(j));
+      sum += firefly(cell - nb, id + nb, speed, off);
+    }
+  }
+  return sum;
+}
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / uRes;
+  float aspect = uRes.x / uRes.y;
+  vec2 p = (uv - 0.5) * vec2(aspect, 1.0);
+  p = rot(uTime * 0.0055) * p;
+
+  vec2 flow = vec2(uTime * 0.020, -uTime * 0.014) * (1.0 + uClimax * 0.8);
+  vec2 warp = vec2(
+    fbm(p * 1.32 + vec2(0.0, uTime * 0.022) + 3.7),
+    fbm(p * 1.32 + vec2(uTime * 0.018, 0.0) + 11.9)
+  ) - 0.5;
+  vec2 q = p + warp * 0.36 + flow * 0.4;
+  q += 0.12 * (vec2(fbm(q * 2.3 - flow), fbm(q * 2.3 + flow + 6.1)) - 0.5);
+
+  float broad = fbm(q * 1.62);
+  float folds = fbm(q * 3.70 + 23.4);
+  float edgeBias = smoothstep(0.10, 0.74, length(p - vec2(-0.08, 0.02)));
+  float breathe = 0.92 + 0.08 * sin(uTime * 0.10);
+  float nebula = smoothstep(0.49, 0.87, broad + folds * 0.23) * mix(0.24, 1.0, edgeBias) * breathe;
+  float vein = smoothstep(0.60, 0.90, folds) * nebula;
+  float dust = smoothstep(0.70, 0.95, fbm(q * 5.8 + vec2(31.2, 15.7))) * edgeBias;
+
+  vec3 teal = mix(vec3(0.026, 0.20, 0.24), vec3(0.16, 0.09, 0.09), uClimax);
+  vec3 gold = mix(vec3(0.72, 0.50, 0.18), vec3(0.78, 0.31, 0.14), uClimax);
+  vec3 color = vec3(0.0024, 0.0062, 0.017);
+  color += vec3(0.006, 0.024, 0.058) * (0.22 + broad * 0.62);
+  color += teal * nebula * 0.92;
+  color += vec3(0.036, 0.34, 0.36) * vein * 0.38;
+  color += gold * dust * 0.26;
+
+  vec2 near = rot(uTime * 0.012) * p + vec2(uTime * 0.0040, -uTime * 0.0015);
+  vec2 mid = rot(uTime * 0.007) * p * 1.02 + 5.3;
+  vec2 far = rot(uTime * 0.003) * p + 13.7;
+  color += vec3(0.92, 0.86, 0.68) * starLayer(near, 74.0, 0.9979, 0.055) * 0.40;
+  color += vec3(0.78, 0.70, 0.46) * starLayer(mid, 142.0, 0.99945, 0.038) * 0.28;
+  color += vec3(1.00, 0.72, 0.34) * starLayer(far, 97.0, 0.99935, 0.026) * 0.28;
+
+  float glow = fireflies(p + warp * 0.05, 9.0, 0.10, 0.0)
+             + fireflies(p * 1.7 - warp * 0.04 + 8.2, 15.0, 0.07, 21.3) * 0.7;
+  color += mix(vec3(1.0, 0.80, 0.36), vec3(0.55, 0.95, 0.78), 0.35) * glow * 0.95;
+
+  float vig = 1.0 - smoothstep(0.40, 1.0, length(p * vec2(0.76, 1.0)));
+  color *= mix(0.62, 1.0, vig);
+
+  gl_FragColor = vec4(pow(max(color, 0.0), vec3(0.92)), 1.0);
+}
+`;
+
+function startSky(canvas) {
+  const gl = canvas.getContext("webgl", { alpha: false, antialias: false, depth: false, stencil: false, powerPreference: "low-power" });
+  if (!gl) { canvas.style.display = "none"; return; }
+
+  const compile = (type, source) => {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.error(gl.getShaderInfoLog(shader));
+      return null;
+    }
+    return shader;
+  };
+
+  const vertex = compile(gl.VERTEX_SHADER, VERTEX);
+  const fragment = compile(gl.FRAGMENT_SHADER, FRAGMENT);
+  if (!vertex || !fragment) { canvas.style.display = "none"; return; }
+
+  const program = gl.createProgram();
+  gl.attachShader(program, vertex);
+  gl.attachShader(program, fragment);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) { canvas.style.display = "none"; return; }
+  gl.useProgram(program);
+
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const position = gl.getAttribLocation(program, "aPosition");
+  gl.enableVertexAttribArray(position);
+  gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+
+  const uRes = gl.getUniformLocation(program, "uRes");
+  const uTime = gl.getUniformLocation(program, "uTime");
+  const uClimax = gl.getUniformLocation(program, "uClimax");
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const started = performance.now();
+  let visible = false;
+  let frame = 0;
+
+  const draw = (now) => {
+    const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+    const width = Math.max(2, Math.round(canvas.clientWidth * ratio));
+    const height = Math.max(2, Math.round(canvas.clientHeight * ratio));
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+    }
+    gl.viewport(0, 0, width, height);
+    gl.uniform2f(uRes, width, height);
+    gl.uniform1f(uTime, reduced ? 8 : (now - started) / 1000);
+    gl.uniform1f(uClimax, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  };
+
+  const loop = (now) => {
+    if (!visible) return;
+    draw(now);
+    frame = requestAnimationFrame(loop);
+  };
+
+  if (reduced) {
+    draw(started);
+  } else {
+    new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && !visible) {
+          visible = true;
+          frame = requestAnimationFrame(loop);
+        } else if (!entry.isIntersecting && visible) {
+          visible = false;
+          cancelAnimationFrame(frame);
+        }
+      });
+    }, { rootMargin: "160px" }).observe(canvas);
+  }
+}
+
+document.querySelectorAll("canvas[data-sky]").forEach(startSky);
+</script>
+</body>
+</html>

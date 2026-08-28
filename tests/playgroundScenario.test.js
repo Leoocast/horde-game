@@ -277,7 +277,7 @@ test("Host library queues preserve their authored top-to-bottom order", () => {
   assert.deepEqual(game.host.archive.slice(0, 2).map((card) => card.definitionId), ["the_broken_headstone", "graveless_soldier"]);
 });
 
-test("an exact queued Host turn reveals duplicates and no extra deck card", () => {
+test("an exact queued Host turn replaces a duplicate Support with the next Archive card", () => {
   const queued = buildScenarioGame(scenario({
     zones: {
       hostArchiveTop: [
@@ -287,11 +287,15 @@ test("an exact queued Host turn reveals duplicates and no extra deck card", () =
     },
   }));
   const libraryBefore = queued.host.archive.length;
+  const duplicateId = queued.host.archive[1].instanceId;
+  const replacementId = queued.host.archive[2].instanceId;
 
   const resolved = runHostMain(configureExactHostTurn(queued, 2));
 
   assert.equal(resolved.host.archive.length, libraryBefore - 2);
-  assert.equal(resolved.host.field.filter((card) => card.definitionId === "the_broken_headstone").length, 2);
+  assert.equal(resolved.host.field.filter((card) => card.definitionId === "the_broken_headstone").length, 1);
+  assert.equal(resolved.host.archive.some((card) => card.instanceId === replacementId), false);
+  assert.equal(resolved.host.archive.at(-1)?.instanceId, duplicateId);
 });
 
 test("a valid scenario reports no problems", () => {

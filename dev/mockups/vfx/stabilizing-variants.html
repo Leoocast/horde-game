@@ -1,0 +1,1062 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hostfall — Estabilizándose: ocho tratamientos</title>
+  <style>
+    @font-face {
+      font-family: "Cinzel";
+      font-style: normal;
+      font-weight: 500 900;
+      font-display: block;
+      src: url("../assets/fonts/cinzel-latin.woff2") format("woff2");
+    }
+
+    :root {
+      --stage: #0a0605;
+      --gold-bright: #e6d59e;
+      --parchment: #e8dec0;
+      --muted: #9b8f88;
+      --muted-dim: #837771;
+      --rule: rgb(146 116 88 / 0.22);
+      --serif: Georgia, "Times New Roman", serif;
+      --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+      /* El ancho real de una carta en el Campo. */
+      --card-w: 212px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0 0 90px;
+      background: radial-gradient(ellipse at 50% -8%, rgb(74 27 18 / 0.24), transparent 55%), var(--stage);
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 28px;
+    }
+
+    header {
+      padding: 54px 0 30px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .eyebrow {
+      color: #b8785a;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 12px 0 0;
+      color: var(--parchment);
+      font-family: var(--serif);
+      font-size: clamp(30px, 4.4vw, 46px);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      line-height: 1.06;
+    }
+
+    header p {
+      max-width: 74ch;
+      margin: 16px 0 0;
+    }
+
+    header strong {
+      color: var(--gold-bright);
+      font-weight: 600;
+    }
+
+    code {
+      color: #e0b08a;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin: 28px 0 10px;
+    }
+
+    .group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .group-label {
+      align-self: center;
+      margin-right: 2px;
+      color: var(--muted-dim);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    button {
+      height: 40px;
+      padding: 0 16px;
+      border: 1px solid rgb(146 116 88 / 0.36);
+      border-radius: 2px;
+      background: linear-gradient(180deg, rgb(33 25 22 / 0.96), rgb(15 10 9 / 0.98));
+      color: var(--muted);
+      font-family: var(--sans);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+    }
+
+    button:hover {
+      border-color: rgb(214 150 110 / 0.7);
+      color: var(--gold-bright);
+    }
+
+    button[aria-pressed="true"] {
+      border-color: rgb(214 118 74 / 0.8);
+      background: linear-gradient(180deg, rgb(62 27 18 / 0.96), rgb(24 11 9 / 0.98));
+      color: #f0c39d;
+    }
+
+    button:focus-visible {
+      outline: 2px solid rgb(234 168 133 / 0.9);
+      outline-offset: 2px;
+    }
+
+    .spacer {
+      flex: 1;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 30px 24px;
+      margin-top: 34px;
+    }
+
+    figure {
+      margin: 0;
+    }
+
+    /* ══ La carta tal como vive en el Campo ══════════════════════════════
+       Recorte canónico 488×434 de Card Studio, encuadre por variables y el
+       propio elemento como contenedor de consulta: es lo mismo que hace
+       .card-visual.card-battlefield-cropped en el runtime. */
+    .card {
+      position: relative;
+      width: var(--card-w);
+      height: calc(var(--card-w) * 0.8893442623);
+      margin: 0 auto;
+      container-type: inline-size;
+      overflow: hidden;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: #1c1712;
+      box-shadow: 0 10px 24px rgb(0 0 0 / 0.55);
+      isolation: isolate;
+    }
+
+    .art,
+    .ghost {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: var(--art-w, 100%);
+      height: var(--art-h, 100%);
+      max-width: none;
+      object-fit: contain;
+      object-position: center;
+      transform: translate3d(calc(-50% + var(--art-x, 0cqw)), calc(-50% + var(--art-y, 0cqw)), 0) scale(var(--art-zoom, 1));
+      transform-origin: center;
+      user-select: none;
+    }
+
+    /* Placa de estadísticas: reproduce la huella y la posición de
+       .card-stat-badge para poder juzgar qué tapa cada efecto. El contenido
+       es una simplificación, no el componente real. */
+    .stat-plate {
+      position: absolute;
+      right: 3px;
+      bottom: 3px;
+      z-index: 12;
+      display: flex;
+      height: clamp(25px, 15cqw, 31px);
+      min-width: clamp(76px, 46cqw, 94px);
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      overflow: hidden;
+      border: 1px solid rgb(183 169 118 / 0.62);
+      background: linear-gradient(180deg, rgb(27 35 34 / 0.96), rgb(7 13 13 / 0.98));
+      color: #e9e1c4;
+      font-family: var(--serif);
+      font-size: clamp(11px, 7cqw, 14px);
+      font-weight: 700;
+      box-shadow: inset 0 1px 0 rgb(255 247 208 / 0.1), 0 4px 12px rgb(0 0 0 / 0.68);
+      clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+    }
+
+    .stat-plate i {
+      width: 1px;
+      height: 58%;
+      background: rgb(183 169 118 / 0.45);
+    }
+
+    body[data-size="comprimido"] {
+      --card-w: 156px;
+    }
+
+    body[data-size="detalle"] {
+      --card-w: 320px;
+    }
+
+    body[data-paused="true"] .card *,
+    body[data-paused="true"] .card *::before,
+    body[data-paused="true"] .card *::after {
+      animation-play-state: paused !important;
+    }
+
+    body[data-bare="true"] .fx {
+      display: none;
+    }
+
+    body[data-stats="false"] .stat-plate {
+      display: none;
+    }
+
+    figcaption {
+      margin-top: 14px;
+    }
+
+    figcaption h3 {
+      margin: 0;
+      color: var(--parchment);
+      font-family: "Cinzel", var(--serif);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    figcaption .says {
+      margin: 5px 0 0;
+      color: #c08d63;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    figcaption p.how {
+      margin: 7px 0 0;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .note {
+      margin-top: 46px;
+      padding-top: 22px;
+      border-top: 1px solid var(--rule);
+      max-width: 78ch;
+      font-size: 13.5px;
+    }
+
+    .note h2 {
+      margin: 0 0 10px;
+      color: var(--gold-bright);
+      font-family: "Cinzel", var(--serif);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .note li {
+      margin-bottom: 7px;
+    }
+
+    /* ══ Piezas comunes ══════════════════════════════════════════════════
+       Todas se montan como la de producción: un velo opaco que oscurece la
+       carta y, encima, una capa que sólo aporta luz. */
+    .fx {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      pointer-events: none;
+    }
+
+    .veil {
+      position: absolute;
+      inset: 0;
+    }
+
+    .glow {
+      position: absolute;
+      inset: 0;
+      mix-blend-mode: screen;
+    }
+
+    .cool-veil {
+      background: radial-gradient(farthest-corner circle at 50% 50%,
+          rgb(2 6 24 / 0.2) 0 30%,
+          rgb(1 4 18 / 0.34) 68%,
+          rgb(0 2 10 / 0.46) 100%);
+    }
+
+    /* ══ 1 · Remolino de anillos (el vigente) ════════════════════════════ */
+    :root {
+      --ring-stack: radial-gradient(closest-side circle,
+          transparent 0 4.82%,
+          rgb(0 0 0 / 0.25) 5.26%,
+          rgb(0 0 0 / 0.85) 5.48%,
+          #000 5.6%,
+          rgb(0 0 0 / 0.45) 5.7%,
+          transparent 5.88% 8.43%,
+          rgb(0 0 0 / 0.25) 9.21%,
+          rgb(0 0 0 / 0.85) 9.58%,
+          #000 9.8%,
+          rgb(0 0 0 / 0.45) 9.98%,
+          transparent 10.29% 14.75%,
+          rgb(0 0 0 / 0.25) 16.12%,
+          rgb(0 0 0 / 0.85) 16.77%,
+          #000 17.15%,
+          rgb(0 0 0 / 0.45) 17.46%,
+          transparent 18.01% 25.81%,
+          rgb(0 0 0 / 0.25) 28.21%,
+          rgb(0 0 0 / 0.85) 29.35%,
+          #000 30.01%,
+          rgb(0 0 0 / 0.45) 30.55%,
+          transparent 31.51% 45.17%,
+          rgb(0 0 0 / 0.25) 49.37%,
+          rgb(0 0 0 / 0.85) 51.37%,
+          #000 52.52%,
+          rgb(0 0 0 / 0.45) 53.47%,
+          transparent 55.15% 79.05%,
+          rgb(0 0 0 / 0.25) 86.4%,
+          rgb(0 0 0 / 0.85) 89.89%,
+          #000 91.91%,
+          rgb(0 0 0 / 0.45) 93.57%,
+          transparent 96.51% 100%);
+    }
+
+    .swirl-glow {
+      position: absolute;
+      inset: 0;
+      opacity: 0.46;
+      mix-blend-mode: soft-light;
+      background:
+        radial-gradient(circle at 50% 50%, rgb(220 255 250 / 0.28), transparent 38%),
+        radial-gradient(circle at 50% 50%, #00011d 0 64%, #000009 100%);
+      filter: hue-rotate(145deg) saturate(1.45) contrast(1.2) brightness(1.1);
+    }
+
+    .swirl-window {
+      position: absolute;
+      inset: 0;
+      opacity: 0.85;
+      -webkit-mask: radial-gradient(farthest-corner circle at 50% 50%,
+          transparent 0 10%, rgb(0 0 0 / 0.32) 18%, #000 32% 92%, rgb(0 0 0 / 0.5) 102%, transparent 112%);
+      mask: radial-gradient(farthest-corner circle at 50% 50%,
+          transparent 0 10%, rgb(0 0 0 / 0.32) 18%, #000 32% 92%, rgb(0 0 0 / 0.5) 102%, transparent 112%);
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+    }
+
+    .swirl-rings {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 200%;
+      aspect-ratio: 1;
+      translate: -50% -50%;
+      border-radius: 999px;
+      mix-blend-mode: screen;
+      background: conic-gradient(from 0deg,
+          rgb(255 86 212 / 1) 0deg,
+          rgb(255 226 250 / 1) 26deg,
+          rgb(204 104 255 / 0.96) 62deg,
+          rgb(96 120 255 / 0.24) 112deg,
+          rgb(36 54 150 / 0.08) 152deg,
+          rgb(90 220 255 / 0.3) 190deg,
+          rgb(214 250 255 / 1) 232deg,
+          rgb(88 216 255 / 0.96) 268deg,
+          rgb(120 130 255 / 0.24) 308deg,
+          rgb(255 86 212 / 1) 360deg);
+      -webkit-mask: var(--ring-stack);
+      mask: var(--ring-stack);
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      animation: rings-expand 1450ms linear infinite, rings-turn 12s linear infinite;
+    }
+
+    .swirl-rings.echo {
+      background: conic-gradient(from 200deg,
+          rgb(110 238 255 / 0.96) 0deg,
+          rgb(236 252 255 / 1) 34deg,
+          rgb(120 168 255 / 0.5) 78deg,
+          rgb(60 52 180 / 0.1) 130deg,
+          rgb(214 96 255 / 0.42) 180deg,
+          rgb(255 118 226 / 1) 220deg,
+          rgb(255 202 246 / 0.86) 250deg,
+          rgb(150 90 240 / 0.3) 298deg,
+          rgb(110 238 255 / 0.96) 360deg);
+      animation: rings-expand 1450ms linear -725ms infinite, rings-turn-back 17s linear infinite;
+    }
+
+    @keyframes rings-expand {
+      0% { scale: 1; }
+      12.5% { scale: 1.0725; }
+      25% { scale: 1.1502; }
+      37.5% { scale: 1.2335; }
+      50% { scale: 1.3229; }
+      62.5% { scale: 1.4187; }
+      75% { scale: 1.5215; }
+      87.5% { scale: 1.6318; }
+      100% { scale: 1.75; }
+    }
+
+    @keyframes rings-turn {
+      from { rotate: 0turn; }
+      to { rotate: 1turn; }
+    }
+
+    @keyframes rings-turn-back {
+      from { rotate: 0turn; }
+      to { rotate: -1turn; }
+    }
+
+    /* ══ 2 · Doble sin asentar ═══════════════════════════════════════════
+       El desplazamiento va en cqw para que sea proporcional a la carta y no
+       al recuadro del arte, que es mucho más alto que el recorte. */
+    .ghost {
+      z-index: 4;
+      mix-blend-mode: screen;
+      opacity: 0.26;
+      filter: hue-rotate(150deg) saturate(1.7) brightness(1.15);
+      animation: ghost-drift 3.6s ease-in-out infinite alternate;
+    }
+
+    .ghost.warm {
+      opacity: 0.17;
+      filter: hue-rotate(-40deg) saturate(1.5) brightness(1.1);
+      animation: ghost-drift-back 4.9s ease-in-out infinite alternate;
+    }
+
+    @keyframes ghost-drift {
+      from { translate: -1.7cqw -1.1cqw; }
+      to { translate: 1.3cqw 0.9cqw; }
+    }
+
+    @keyframes ghost-drift-back {
+      from { translate: 1.5cqw 1cqw; }
+      to { translate: -1.1cqw -0.8cqw; }
+    }
+
+    /* ══ 3 · Anclas cardinales ═══════════════════════════════════════════ */
+    .anchors {
+      position: absolute;
+      inset: 6%;
+      animation: anchors-close 2.9s ease-in-out infinite alternate;
+    }
+
+    .anchor {
+      position: absolute;
+      width: 22%;
+      height: 24%;
+      border: 2px solid rgb(190 232 255 / 0.92);
+      box-shadow: 0 0 7px rgb(120 200 255 / 0.55);
+    }
+
+    .anchor.tl { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+    .anchor.tr { top: 0; right: 0; border-left: 0; border-bottom: 0; }
+    .anchor.bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
+    .anchor.br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+
+    .anchor-tick {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 9cqw;
+      height: 2px;
+      translate: -50% -50%;
+      background: rgb(206 240 255 / 0.7);
+      box-shadow: 0 0 6px rgb(120 200 255 / 0.6);
+      animation: anchors-tick 2.9s ease-in-out infinite alternate;
+    }
+
+    .anchor-tick.vertical {
+      width: 2px;
+      height: 9cqw;
+    }
+
+    @keyframes anchors-close {
+      from { scale: 1.1; opacity: 0.45; }
+      to { scale: 1; opacity: 1; }
+    }
+
+    @keyframes anchors-tick {
+      from { opacity: 0.25; }
+      to { opacity: 0.9; }
+    }
+
+    /* ══ 4 · Coalescencia ════════════════════════════════════════════════
+       Los orígenes van en cqw: la carta mide 100cqw de ancho y 88.9 de alto,
+       así que cualquier valor por encima de 50 nace fuera del encuadre. */
+    .mote {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 3.6cqw;
+      aspect-ratio: 1;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgb(232 250 255 / 0.98) 0 28%, rgb(126 208 255 / 0.6) 54%, rgb(80 160 255 / 0) 78%);
+      animation: mote-fall 3.4s ease-in infinite;
+    }
+
+    @keyframes mote-fall {
+      0% { translate: var(--from-x) var(--from-y); opacity: 0; scale: 1.35; }
+      18% { opacity: 0.95; }
+      82% { opacity: 0.7; }
+      100% { translate: 0 0; opacity: 0; scale: 0.3; }
+    }
+
+    /* ══ 5 · Onda de asentamiento ════════════════════════════════════════ */
+    .settle-wave {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 200%;
+      aspect-ratio: 1;
+      translate: -50% -50%;
+      border-radius: 999px;
+      background: radial-gradient(closest-side circle,
+          transparent 0 38%,
+          rgb(150 210 255 / 0.22) 44%,
+          rgb(226 248 255 / 0.92) 48.5%,
+          rgb(150 210 255 / 0.3) 51%,
+          transparent 58%);
+      animation: settle-out 3.1s cubic-bezier(0.25, 0.6, 0.3, 1) infinite;
+    }
+
+    .settle-wave.second {
+      animation-delay: -1.55s;
+    }
+
+    .settle-core {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 30cqw;
+      aspect-ratio: 1;
+      translate: -50% -50%;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgb(226 248 255 / 0.5) 0 24%, rgb(120 190 255 / 0.16) 52%, transparent 74%);
+      animation: settle-core-pulse 3.1s ease-in-out infinite;
+    }
+
+    @keyframes settle-out {
+      0% { scale: 0.08; opacity: 0; }
+      14% { opacity: 1; }
+      70% { opacity: 0.55; }
+      100% { scale: 0.76; opacity: 0; }
+    }
+
+    @keyframes settle-core-pulse {
+      0%, 100% { opacity: 0.3; }
+      12% { opacity: 0.85; }
+    }
+
+    /* ══ 6 · Escarcha creciente ══════════════════════════════════════════ */
+    .frost-plates {
+      position: absolute;
+      inset: -12%;
+      background: repeating-conic-gradient(from 8deg at 50% 52%,
+          rgb(214 240 255 / 0) 0deg 5deg,
+          rgb(206 238 255 / 0.5) 7deg,
+          rgb(232 250 255 / 0.86) 8.6deg,
+          rgb(180 226 255 / 0.28) 10deg,
+          rgb(214 240 255 / 0) 15deg 24deg);
+      -webkit-mask: radial-gradient(farthest-corner circle at 50% 50%, transparent 0 30%, #000 96%);
+      mask: radial-gradient(farthest-corner circle at 50% 50%, transparent 0 30%, #000 96%);
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      animation: frost-breathe 5.2s ease-in-out infinite alternate;
+    }
+
+    .frost-rime {
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(58deg, rgb(226 248 255 / 0) 0 6px, rgb(226 248 255 / 0.3) 6.6px, rgb(226 248 255 / 0) 7.4px 15px),
+        repeating-linear-gradient(-49deg, rgb(198 236 255 / 0) 0 9px, rgb(198 236 255 / 0.22) 9.7px, rgb(198 236 255 / 0) 10.6px 21px);
+      -webkit-mask: radial-gradient(farthest-corner circle at 50% 50%, transparent 0 40%, #000 100%);
+      mask: radial-gradient(farthest-corner circle at 50% 50%, transparent 0 40%, #000 100%);
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      animation: frost-glint 3.4s ease-in-out infinite alternate;
+    }
+
+    @keyframes frost-breathe {
+      from { scale: 1; opacity: 0.34; }
+      to { scale: 1.09; opacity: 0.82; }
+    }
+
+    @keyframes frost-glint {
+      from { opacity: 0.3; }
+      to { opacity: 0.72; }
+    }
+
+    /* ══ 7 · Contorno en espera ══════════════════════════════════════════
+       El marco es una máscara fija; lo que gira es el cónico de debajo. */
+    .rim {
+      position: absolute;
+      inset: 0;
+      padding: 3px;
+      border-radius: 6px;
+      overflow: hidden;
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+
+    .rim-light {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 190%;
+      aspect-ratio: 1;
+      translate: -50% -50%;
+      background: conic-gradient(from 0deg,
+          rgb(120 190 255 / 0.16) 0deg,
+          rgb(232 250 255 / 0.98) 42deg,
+          rgb(140 210 255 / 0.5) 92deg,
+          rgb(90 150 235 / 0.12) 168deg,
+          rgb(90 150 235 / 0.12) 250deg,
+          rgb(190 230 255 / 0.6) 312deg,
+          rgb(120 190 255 / 0.16) 360deg);
+      animation: rim-turn 4.4s linear infinite;
+    }
+
+    .rim-breath {
+      position: absolute;
+      inset: 0;
+      border-radius: 6px;
+      box-shadow:
+        inset 0 0 0 1px rgb(184 226 255 / 0.5),
+        inset 0 0 14px rgb(96 168 240 / 0.45);
+      animation: rim-breathe 2.6s ease-in-out infinite alternate;
+    }
+
+    @keyframes rim-turn {
+      from { rotate: 0turn; }
+      to { rotate: 1turn; }
+    }
+
+    @keyframes rim-breathe {
+      from { opacity: 0.32; }
+      to { opacity: 1; }
+    }
+
+    /* ══ 8 · Trama temporal ══════════════════════════════════════════════
+       La retícula está quieta —es la máscara del contenedor— y lo que viaja
+       por debajo es la onda que la enciende. */
+    .weave-mask {
+      position: absolute;
+      inset: 0;
+      -webkit-mask:
+        repeating-linear-gradient(0deg, transparent 0 8px, #000 8.6px 9.4px, transparent 10px 18px),
+        repeating-linear-gradient(90deg, transparent 0 8px, #000 8.6px 9.4px, transparent 10px 18px);
+      mask:
+        repeating-linear-gradient(0deg, transparent 0 8px, #000 8.6px 9.4px, transparent 10px 18px),
+        repeating-linear-gradient(90deg, transparent 0 8px, #000 8.6px 9.4px, transparent 10px 18px);
+    }
+
+    .weave-base {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(farthest-corner circle at 50% 50%,
+          rgb(150 200 255 / 0.22) 0 40%, rgb(110 160 220 / 0.1) 100%);
+    }
+
+    .weave-wave {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 210%;
+      aspect-ratio: 1;
+      translate: -50% -50%;
+      border-radius: 999px;
+      background: radial-gradient(closest-side circle,
+          transparent 0 30%,
+          rgb(180 224 255 / 0.5) 40%,
+          rgb(238 250 255 / 0.98) 46%,
+          rgb(150 200 255 / 0.3) 52%,
+          transparent 62%);
+      animation: weave-out 2.8s cubic-bezier(0.3, 0.55, 0.35, 1) infinite;
+    }
+
+    .weave-wave.second {
+      animation-delay: -1.4s;
+    }
+
+    @keyframes weave-out {
+      0% { scale: 0.07; opacity: 0; }
+      16% { opacity: 1; }
+      74% { opacity: 0.5; }
+      100% { scale: 0.72; opacity: 0; }
+    }
+  </style>
+</head>
+
+<body data-card="maela" data-size="real" data-paused="false" data-bare="false" data-stats="true">
+  <main>
+    <header>
+      <p class="eyebrow">Efectos · Estabilizándose</p>
+      <h1>Ocho maneras de decir «todavía no»</h1>
+      <p>
+        Ocho tratamientos alternativos para el <strong>mismo</strong> estado: el Eco acaba de llegar al
+        Campo y aún no puede actuar. Se ven sobre la carta tal como vive ahí —el
+        <strong>recorte 488×434</strong> con su encuadre real, no el PNG de la Mano—, al ancho de
+        <strong>212 px</strong> que usa el tablero. Todos son procedurales, se montan como
+        <strong>velo + luz</strong> y <strong>cierran su bucle sin costura</strong>. El primero es el que
+        está hoy en el juego, puesto como referencia.
+      </p>
+      <p>
+        La placa de estadísticas reproduce la huella y la posición de <code>.card-stat-badge</code> para
+        poder juzgar qué tapa cada efecto; su contenido es una simplificación. <code>src/</code> no
+        importa nada de esta carpeta.
+      </p>
+
+      <div class="controls">
+        <span class="group-label">Eco</span>
+        <div class="group">
+          <button type="button" data-set="card" data-value="maela" aria-pressed="true">Maela</button>
+          <button type="button" data-set="card" data-value="aelyra" aria-pressed="false">Aelyra</button>
+          <button type="button" data-set="card" data-value="hydra" aria-pressed="false">Hidra</button>
+        </div>
+        <span class="group-label" style="margin-left: 14px">Ancho</span>
+        <div class="group">
+          <button type="button" data-set="size" data-value="comprimido" aria-pressed="false">156</button>
+          <button type="button" data-set="size" data-value="real" aria-pressed="true">212 · real</button>
+          <button type="button" data-set="size" data-value="detalle" aria-pressed="false">320</button>
+        </div>
+        <span class="spacer"></span>
+        <div class="group">
+          <button type="button" data-toggle="paused" aria-pressed="false">Pausar</button>
+          <button type="button" data-toggle="bare" aria-pressed="false">Sin efecto</button>
+          <button type="button" data-toggle="stats" aria-pressed="true">Stats</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil cool-veil"></div>
+            <div class="swirl-glow">
+              <div class="swirl-window">
+                <div class="swirl-rings"></div>
+                <div class="swirl-rings echo"></div>
+              </div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Remolino de anillos</h3>
+          <p class="says">Vigente · referencia</p>
+          <p class="how">
+            El que está hoy en el juego. Anillos que nacen en el centro y se abren sin parar: el Eco
+            está atrapado en una corriente de la que todavía no sale.
+          </p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil cool-veil"></div>
+            <img class="ghost" alt="" />
+            <img class="ghost warm" alt="" />
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Doble sin asentar</h3>
+          <p class="says">No terminó de llegar</p>
+          <p class="how">
+            Dos copias del propio recorte, una fría y otra cálida, oscilan alrededor del original sin
+            llegar a coincidir. No tapa nada: lo que se ve mal es el Eco mismo, que es exactamente lo
+            que se quiere decir.
+          </p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil cool-veil"></div>
+            <div class="glow">
+              <div class="anchors">
+                <div class="anchor tl"></div>
+                <div class="anchor tr"></div>
+                <div class="anchor bl"></div>
+                <div class="anchor br"></div>
+              </div>
+              <div class="anchor-tick"></div>
+              <div class="anchor-tick vertical"></div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Anclas cardinales</h3>
+          <p class="says">Buscando el encaje</p>
+          <p class="how">
+            Cuatro escuadras se cierran sobre la carta y vuelven a abrirse, como un instrumento que aún
+            no fijó la pieza. Deja el arte entero limpio, pero la escuadra inferior derecha discute
+            sitio con la placa de estadísticas.
+          </p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil cool-veil"></div>
+            <div class="glow">
+              <div class="mote" style="--from-x: -64cqw; --from-y: -58cqw; animation-duration: 3.4s; animation-delay: -0.3s"></div>
+              <div class="mote" style="--from-x: 71cqw; --from-y: -47cqw; animation-duration: 4.1s; animation-delay: -2.2s"></div>
+              <div class="mote" style="--from-x: -78cqw; --from-y: 22cqw; animation-duration: 3.7s; animation-delay: -1.4s"></div>
+              <div class="mote" style="--from-x: 66cqw; --from-y: 54cqw; animation-duration: 4.6s; animation-delay: -3.1s"></div>
+              <div class="mote" style="--from-x: 8cqw; --from-y: -66cqw; animation-duration: 3.9s; animation-delay: -0.9s"></div>
+              <div class="mote" style="--from-x: -41cqw; --from-y: 63cqw; animation-duration: 4.3s; animation-delay: -2.7s"></div>
+              <div class="mote" style="--from-x: 82cqw; --from-y: -14cqw; animation-duration: 3.5s; animation-delay: -1.8s"></div>
+              <div class="mote" style="--from-x: -12cqw; --from-y: 69cqw; animation-duration: 4.8s; animation-delay: -3.6s"></div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Coalescencia</h3>
+          <p class="says">Todavía llegando</p>
+          <p class="how">
+            Motas que caen hacia la carta desde fuera del encuadre y se disuelven al llegar: al Eco le
+            falta materia por reunir. Es el más suave de todos y el que menos molesta en grupo.
+          </p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil cool-veil"></div>
+            <div class="glow">
+              <div class="settle-core"></div>
+              <div class="settle-wave"></div>
+              <div class="settle-wave second"></div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Onda de asentamiento</h3>
+          <p class="says">Asentándose de a poco</p>
+          <p class="how">
+            La versión calmada del remolino: una onda limpia por vez, que nace en el centro y muere
+            antes del borde. Misma metáfora que el vigente, con mucho menos ruido encima del arte.
+          </p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil cool-veil"></div>
+            <div class="glow">
+              <div class="frost-plates"></div>
+              <div class="frost-rime"></div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Escarcha creciente</h3>
+          <p class="says">Cuajando en su sitio</p>
+          <p class="how">
+            La helada entra por el marco y respira hacia el centro. «Estabilizarse» leído como cuajar:
+            el Eco se está volviendo sólido. El centro queda casi limpio.
+          </p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil cool-veil"></div>
+            <div class="glow">
+              <div class="rim">
+                <div class="rim-light"></div>
+              </div>
+              <div class="rim-breath"></div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Contorno en espera</h3>
+          <p class="says">Marcado, no tapado</p>
+          <p class="how">
+            No toca el arte: sólo el canto respira y una luz lo recorre. El más discreto y el más
+            barato, pero también el que más se parece a un borde de selección, que es su riesgo.
+          </p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="card">
+          <img class="art" alt="" />
+          <div class="fx">
+            <div class="veil cool-veil"></div>
+            <div class="glow">
+              <div class="weave-mask">
+                <div class="weave-base"></div>
+                <div class="weave-wave"></div>
+                <div class="weave-wave second"></div>
+              </div>
+            </div>
+          </div>
+          <div class="stat-plate"><span>3</span><i></i><span>4</span></div>
+        </div>
+        <figcaption>
+          <h3>Trama temporal</h3>
+          <p class="says">Todavía tejiéndose</p>
+          <p class="how">
+            El Eco se está tejiendo en la línea temporal. La retícula está quieta —es la máscara del
+            contenedor— y lo que viaja por debajo es la onda que la enciende. El más «temporal» de los
+            ocho y el que peor aguanta el ancho comprimido.
+          </p>
+        </figcaption>
+      </figure>
+    </div>
+
+    <div class="note">
+      <h2>Qué mirar al elegir</h2>
+      <ul>
+        <li>
+          <strong>Que diga «no puede actuar», no «está seleccionada».</strong> Es el riesgo real de
+          <em>Contorno en espera</em>: el canto encendido ya significa otra cosa en el tablero. Los que
+          ocupan el interior de la carta no tienen esa ambigüedad.
+        </li>
+        <li>
+          <strong>Que no se confunda con Agotado.</strong> Agotado ya usa la carta girada y su propia
+          insignia. Un efecto de estabilización que también apague o desature la carta empieza a decir
+          lo mismo que Agotado en vez de algo distinto.
+        </li>
+        <li>
+          <strong>La placa de estadísticas.</strong> Vive en la esquina inferior derecha y ocupa casi
+          la mitad del ancho del recorte. <em>Anclas cardinales</em> le pisa la esquina; los radiales
+          la rodean sin taparla.
+        </li>
+        <li>
+          <strong>El recorte es apaisado y bajo.</strong> Hay mucho menos alto que en el PNG de la
+          Mano, así que todo lo que crece desde el centro sale por los lados mucho antes de lo que
+          parece. Es lo que obliga a que <em>Onda</em> y <em>Trama</em> mueran antes del borde.
+        </li>
+        <li>
+          <strong>Convivencia.</strong> Varios Ecos pueden estar Estabilizándose a la vez, recién
+          Invocados en la misma secuencia, y en el Campo van pegados. <em>Coalescencia</em> y
+          <em>Escarcha</em> se sostienen en grupo; el <em>Remolino</em> y la <em>Trama</em> vuelven la
+          fila un hervidero.
+        </li>
+        <li>
+          <strong>Coste.</strong> Todos animan sólo <code>transform</code> y <code>opacity</code>.
+          <em>Doble sin asentar</em> es el único que lleva <code>filter</code>, y estático: se calcula
+          una vez y después sólo se desplaza la capa.
+        </li>
+      </ul>
+    </div>
+  </main>
+
+  <script>
+    // Mismo contrato que src/utils/battlefieldArtFrame.ts. Los encuadres son los
+    // valores authored de src/data/cardStudioGameArt.generated.json.
+    const VIEWPORT = { width: 488, height: 434 };
+    const ECHOES = {
+      maela: { file: "field-maela.jpg", width: 600, height: 600, frame: { zoom: 1, x: 1, y: 79 } },
+      aelyra: { file: "field-aelyra.jpg", width: 600, height: 842, frame: { zoom: 1.875, x: 12, y: 267 } },
+      hydra: { file: "field-hydra.jpg", width: 600, height: 600, frame: { zoom: 1.04, x: 8, y: 69 } },
+    };
+
+    function applyEcho(key) {
+      const echo = ECHOES[key];
+      if (!echo) return;
+      const viewportAspect = VIEWPORT.width / VIEWPORT.height;
+      const sourceAspect = echo.width / echo.height;
+      const wide = sourceAspect >= viewportAspect;
+      const style = document.body.style;
+      style.setProperty("--art-w", wide ? `${(sourceAspect / viewportAspect) * 100}%` : "100%");
+      style.setProperty("--art-h", wide ? "100%" : `${(viewportAspect / sourceAspect) * 100}%`);
+      style.setProperty("--art-zoom", String(echo.frame.zoom));
+      style.setProperty("--art-x", `${(echo.frame.x / VIEWPORT.width) * 100}cqw`);
+      style.setProperty("--art-y", `${(echo.frame.y / VIEWPORT.width) * 100}cqw`);
+      document.querySelectorAll("img.art, img.ghost").forEach((img) => {
+        img.src = `../assets/ui_references/${echo.file}`;
+      });
+    }
+
+    document.querySelectorAll("button[data-set]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.set;
+        document.body.dataset[key] = button.dataset.value;
+        if (key === "card") applyEcho(button.dataset.value);
+        document.querySelectorAll(`button[data-set="${key}"]`).forEach((sibling) => {
+          sibling.setAttribute("aria-pressed", String(sibling === button));
+        });
+      });
+    });
+
+    document.querySelectorAll("button[data-toggle]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.toggle;
+        const next = document.body.dataset[key] !== "true";
+        document.body.dataset[key] = String(next);
+        button.setAttribute("aria-pressed", String(next));
+      });
+    });
+
+    applyEcho(document.body.dataset.card);
+  </script>
+</body>
+
+</html>

@@ -9,10 +9,8 @@ import { Card } from "./Card";
 import { guidedAnchorRegistry, guidedCardAnchorKey, guidedSurfaceAnchorKey } from "../guidance";
 
 export function OpeningHandOverlay({ game }: { game: GameState }) {
-  const t = useTranslation();
   const acceptOpeningHand = useGameStore((state) => state.acceptOpeningHand);
   const mulliganOpeningHand = useGameStore((state) => state.mulliganOpeningHand);
-  const canMulligan = game.player.hand.length > 1;
   const committedMulliganRevisionRef = useRef<number | null>(null);
 
   const rewriteOpeningHand = () => {
@@ -24,6 +22,18 @@ export function OpeningHandOverlay({ game }: { game: GameState }) {
   };
 
   if (game.openingHandAccepted) return null;
+
+  return <OpeningHandModal game={game} onAccept={acceptOpeningHand} onMulligan={rewriteOpeningHand} />;
+}
+
+/** Controlled presentation shared by the live opening-hand flow and UI Reference. */
+export function OpeningHandModal({ game, onAccept, onMulligan }: {
+  game: GameState;
+  onAccept: () => void;
+  onMulligan: () => void;
+}) {
+  const t = useTranslation();
+  const canMulligan = game.player.hand.length > 1;
 
   return (
     <div className="opening-hand-overlay fixed inset-0 z-[420] flex items-center justify-center" role="presentation">
@@ -88,7 +98,7 @@ export function OpeningHandOverlay({ game }: { game: GameState }) {
             data-audio-click="valid"
             className="opening-hand-button opening-hand-button-accept"
             type="button"
-            onClick={acceptOpeningHand}
+            onClick={onAccept}
           >
             <Check size={18} />
             {t("mulligan.accept")}
@@ -97,7 +107,7 @@ export function OpeningHandOverlay({ game }: { game: GameState }) {
             data-audio-click={canMulligan ? "valid" : "off"}
             className="opening-hand-button opening-hand-button-mulligan"
             type="button"
-            onClick={rewriteOpeningHand}
+            onClick={onMulligan}
             disabled={!canMulligan}
           >
             <RefreshCcw size={17} />

@@ -14,7 +14,8 @@ type Translate = (key: TranslationKey) => string;
 
 export const GUIDED_GLOSSARY = {
   host: { labelKey: "guided.glossary.host.label", definitionKey: "guided.glossary.host.definition" },
-  archive: { labelKey: "guided.glossary.archive.label", definitionKey: "guided.glossary.archive.definition" },
+  hostArchive: { labelKey: "guided.glossary.hostArchive.label", definitionKey: "guided.glossary.hostArchive.definition" },
+  chroniclerArchive: { labelKey: "guided.glossary.chroniclerArchive.label", definitionKey: "guided.glossary.chroniclerArchive.definition" },
   life: { labelKey: "guided.glossary.life.label", definitionKey: "guided.glossary.life.definition" },
   preparation: { labelKey: "guided.glossary.preparation.label", definitionKey: "guided.glossary.preparation.definition" },
   field: { labelKey: "guided.glossary.field.label", definitionKey: "guided.glossary.field.definition" },

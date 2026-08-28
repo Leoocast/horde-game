@@ -24,7 +24,7 @@ export class AppErrorBoundary extends Component<Props, State> {
     return (
       <main className="app-fatal-error" role="alert">
         <p>Hostfall encontró un error inesperado.</p>
-        <h1>No se pudo continuar la partida</h1>
+        <h1>No se pudo continuar la Visión</h1>
         <span>Reinicia el juego. El diagnóstico quedó guardado localmente.</span>
       </main>
     );

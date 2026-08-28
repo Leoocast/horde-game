@@ -13,7 +13,7 @@ export function advancePhase(game: GameState, target?: Phase): GameState {
   next.phase = nextPhase;
   if (nextPhase === "untap") {
     readySide(next, "player");
-    next.log.unshift("Player readies their Field.");
+    next.log.unshift("Chronicler readies their Field.");
   }
   if (nextPhase === "draw") performPlayerDraw(next);
   if (nextPhase === "end") {
@@ -28,7 +28,7 @@ export function advancePhase(game: GameState, target?: Phase): GameState {
 export function endPlayerTurn(game: GameState): GameState {
   const next = structuredClone(game) as GameState;
   const queuedEnergy = queueUnusedNormalEnergy(next);
-  if (queuedEnergy > 0) next.log.unshift(`Player reserves ${queuedEnergy} unused Energy.`);
+  if (queuedEnergy > 0) next.log.unshift(`Chronicler reserves ${queuedEnergy} unused Energy.`);
   cleanupEndStep(next);
   resolveHostPoison(next);
   if (next.winner) return next;
@@ -52,7 +52,7 @@ export function endPlayerTurn(game: GameState): GameState {
   next.setupCompletePendingHost = false;
   next.phase = "host";
   next.activeSide = "host";
-  next.log.unshift("Player ends turn. Host turn is ready.");
+  next.log.unshift("Chronicler ends the turn. Host Turn is ready.");
   return next;
 }
 

@@ -21,6 +21,12 @@ Suite completa:
 C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe --test scripts/run-engine-tests.mjs
 ```
 
+Benchmark manual del Seed Explorer —no es un gate de CI—:
+
+```bash
+C:\Users\Arky\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe scripts/benchmark-seed-explorer.mjs
+```
+
 Deck lint standalone (reporte por deck: ready / vanilla / WIP):
 
 ```bash
@@ -112,6 +118,14 @@ La cobertura automática asociada vive principalmente en `tests/engine.test.js` 
 `tests/uiPresentation.test.js`; no sustituye la comprobación visual de trayectorias, solapamientos y
 ritmo.
 
+## Canon Seeds y origen de partida
+
+`tests/canonSeed.test.js` fija el codec HF1 y contiene un golden vector manual con el orden completo
+de Crónica/Hueste y `currentRandomState`. `tests/matchOrigin.test.js` cubre generación e importación,
+aplicación de configuración, rechazo de una revisión determinista incompatible, separación de seeds
+opaque y el contrato de copia pública. Si cambia intencionalmente el consumo de RNG, las reglas o el
+contenido determinista, no se actualiza el golden de HF1: se introduce un formato nuevo.
+
 CI corre en Windows x64, instala con `pnpm install --frozen-lockfile` y ejecuta typecheck, suite,
 deck lint, proyección de Card Studio, `build:web` y auditoría offline. Los
 scripts de instalación permitidos están declarados por paquete en `pnpm-workspace.yaml`, sin
@@ -155,6 +169,14 @@ archivo no corre nunca.
 | --- | --- |
 | `tests/engine.test.js` | Reglas del engine: determinismo por seed, Energía y autopago, estados Exhausted/Stabilizing, eventos de Invocación/Juego/Muerte, Acciones Hostfall, perfiles `hostRules`, combate, Surge por deck, compatibilidad legacy de Chaos y targeting |
 | `tests/canonSeed.test.js` | Codec `HF1-PPP-HHH-XXD-XXX`: códigos de deck independientes del idioma, entropía base 36, dificultad/Preparación acopladas y paridad de la costura de shuffle con `createInitialGame` en los cuatro enfrentamientos builtin |
+| `tests/seedExplorer.test.js` | Analyzer, búsqueda, runtime y persistencia: Mano/mulligan/topes exactos, recursos y curva impresa, ventanas potenciales de Hueste, cinco perfiles versionados con scoring/filtros distintos, rango base 36, top-K estable, pool verificado y selección diversa determinista, slices cancelables, progreso limitado, protección contra búsquedas obsoletas, favoritos defensivos con migración de perfil, export JSON/CSV y verificación contra el engine |
+| `tests/attemptNarrative.test.js` | Proyección pura del relato: vocabulario cerrado de hitos directos, selección determinista e independiente del idioma, templates ES/EN sin causalidad inferida ni metadatos repetidos, terminología de Ecos, fallback diegético ante hechos técnicos, hitos desconocidos y sincronía del artefacto de revisión |
+| `tests/attemptMilestones.test.js` | Grabador acotado de hitos: scope por sesión, primera Estampida, máximos de impacto, efecto multiobjetivo, umbral del Archivo, fuente exacta de victoria, deduplicación, copias inmutables y prohibición de leer `game.log` |
+| `tests/historyDomain.test.js` | Dominio puro del historial v1: identidades Canon/opaque, colisiones cosméticas, claves y agrupación por secuencia, lifecycle idempotente, política de elegibilidad, parser estructural, invariantes cruzadas y separación entre compatibilidad determinista y resolución de decks |
+| `tests/historyPersistence.test.js` | Persistencia de historial: round-trip web, promoción, writer único entre tabs, fallback sólo lectura, hidratación single-flight, mutaciones concurrentes, revisiones lógica/durable, retry, recuperación de activos, límite, corrupción, salvage y reset con cuarentena |
+| `tests/historyViewModel.test.js` | Biblioteca pura de Semillas del Destino: carga/vacío, tres estados, ordinales, hechos finales e hitos persistidos, colisiones cosméticas, copy Canon, replay exacto, incompatibilidad sin fallback y guards del wiring UI/vórtice/relato |
+| `tests/matchLifecycle.test.js` | Lifecycle puro del historial: matriz de launches/exclusiones, orden begin-close bajo fallos y timeouts, hydrate lento, doble inicio, outcomes con gate síncrono, snapshots inmutables de hitos, salidas explícitas, callbacks viejos, recovery tras crash y hold/release del vórtice |
+| `tests/productCapabilities.test.js` | Presets de producto: la demo activa historial sin leer, escribir ni borrar un resume sembrado; el preset de regresión Early Access conserva resume con historial apagado; `App` y StartMenu sólo exponen Continuar detrás de la capability |
 | `tests/hostBeats.test.js` | Regresiones de presentación del store: cola visual bajo timers retrasados, orden compartido Chronicler/Host, curaciones y pérdida de vida/robo de hechizos. |
 | `tests/deckLint.test.js` | El deck lint como test: una habilidad desconocida rompe la suite; también protege versión, side, vocabulario cerrado Hostfall, perfiles de reglas y normalización de zonas authored |
 | `tests/deckCardText.test.js` | Formato puro del texto impreso, fuente runtime única de reglas, proyecciones generadas y assets locales: Rasgos, Fuerza/Aguante, contadores, creación de fichas, párrafos y rutas de arte |
@@ -171,10 +193,10 @@ archivo no corre nunca.
 | `tests/guidedSession.test.js` | Ciclo de sesión Explicar/Actuar/Observar, barrera entre beats, tokens visuales con epochs, aborto seguro y vertical del Guidance Lab sobre el store real |
 | `tests/audioMix.test.js` | Cobertura y validacion del JSON de mezcla, import/export, conversion de dB y prohibicion de volumen escondido en `playSfx` |
 | `tests/vocabulary.test.js` | Vocabulario público retirado, presentación localizada de cartas y ausencia de archivos, seed mágico o cartas hardcodeadas del tutorial retirado |
-| `tests/uiPresentation.test.js` | Contratos puros y estáticos de presentación: VFX compartido, Burn, presets, capas y geometría visual |
+| `tests/uiPresentation.test.js` | Contratos puros y estáticos de presentación: VFX compartido, Burn, presets, capas, geometría visual, gates dev-only, dock de herramientas en el home e integración de Seed Explorer como pantalla independiente con el Board real |
 | `tests/contentCatalog.test.js` | Snapshot builtin inmutable, 61 identidades, aliases calificados, defaults estrictos, adapters de assets web/desktop, proyecciones de Card Studio y rechazo de candidatos external adversariales |
 | `tests/electronSecurity.test.js` | Policy pura de `hostfall://`, traversal/hosts/packs adversariales, MIME, Range, roots e integración de respuestas parciales con CSP |
-| `tests/electronPersistence.test.js` | Rutas cloud-worthy/local-only, escritura atómica, backup, corrupción y validación de window state |
+| `tests/electronPersistence.test.js` | Rutas cloud-worthy/local-only, escritura atómica, backup, corrupción, round-trip del historial, promoción segura bajo fallas inyectadas, diagnósticos de reset y validación de window state |
 | `tests/desktopPreferences.test.js` | Envelope v1 de idioma/audio, límites y rechazo de schemas desconocidos |
 | `tests/resumeSave.test.js` | Round-trip/restore determinista, claves de deck y revisión, rechazo sin fallback, backup y checkpoints inseguros durante animaciones/combate/selecciones |
 | `tests/electronRelease.test.js` | Allowlist generada, grafo Card Studio-to-runtime, audio declarativo/local, hashes del staging y comparación de manifests de paquete |

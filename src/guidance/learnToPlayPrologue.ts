@@ -157,9 +157,20 @@ export const LEARN_TO_PLAY_PROLOGUE_SCENARIO = Object.freeze({
 /** Strict opening intervention. Target selection remains free between the engine's legal allies. */
 export const LEARN_TO_PLAY_OPENING_INTERVENTION = Object.freeze({
   id: "learn-to-play.opening",
-  revision: 1,
-  startStepId: "play-fourth-source",
+  revision: 2,
+  startStepId: "evy-fourth-source-briefing",
   steps: [
+    {
+      id: "evy-fourth-source-briefing",
+      kind: "explain",
+      copy: {
+        titleKey: "guided.learnToPlay.intro.evy",
+        bodyKey: "guided.learnToPlay.fourthSourceBriefingBody",
+        glossaryTerms: ["source", "energy"],
+      },
+      highlights: [],
+      nextStepId: "play-fourth-source",
+    },
     {
       id: "play-fourth-source",
       kind: "act",
@@ -280,7 +291,7 @@ export const LEARN_TO_PLAY_FIRST_BATTLE_INTERVENTION = Object.freeze({
       copy: {
         titleKey: "guided.contextual.product.attackArchiveTitle",
         bodyKey: "guided.contextual.product.attackArchiveBody",
-        glossaryTerms: ["archive", "echoes"],
+        glossaryTerms: ["hostArchive", "echoes"],
       },
       highlights: [{ kind: "surface", anchor: "host.archive" }],
       nextStepId: "attacking-is-optional",
@@ -365,7 +376,7 @@ export const LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION = Object.freeze({
 /** First player turn after defending: pause before the hand-off, observe Energy, then set the goal. */
 export const LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION = Object.freeze({
   id: "learn-to-play.player-return",
-  revision: 2,
+  revision: 3,
   startStepId: "player-turn-returned",
   steps: [
     {
@@ -376,7 +387,7 @@ export const LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION = Object.freeze({
         bodyKey: "guided.learnToPlay.playerTurnBody",
         glossaryTerms: ["energy"],
       },
-      highlights: [],
+      highlights: [{ kind: "surface", anchor: "player.sources" }],
       nextStepId: "wait-for-energy-renewal",
     },
     {
@@ -454,7 +465,7 @@ export const LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION = Object.freeze({
       copy: {
         titleKey: "guided.contextual.product.returnSourceTitle",
         bodyKey: "guided.contextual.product.returnSourceBody",
-        glossaryTerms: ["source", "archive"],
+        glossaryTerms: ["source", "chroniclerArchive"],
       },
       highlights: [
         { kind: "card", alias: "post_surge_source", role: "origin" },
@@ -472,7 +483,7 @@ export const LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION = Object.freeze({
       copy: {
         titleKey: "guided.contextual.product.returnSourceTitle",
         bodyKey: "guided.contextual.product.returnSourceBody",
-        glossaryTerms: ["source", "archive"],
+        glossaryTerms: ["source", "chroniclerArchive"],
       },
       highlights: [
         { kind: "card", alias: "post_surge_source", role: "origin" },

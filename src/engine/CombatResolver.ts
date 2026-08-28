@@ -127,7 +127,7 @@ export function resolvePlayerCombat(
     if (!options.skipPoison && power > 0) poisonCounters += getPoisonAmount(next, attacker);
   }
   const archiveDiscards = Math.floor(hostDamage / next.hostRules.damagePerArchiveDiscard);
-  if (hostDamage > 0) log(next, `Player deals ${hostDamage} damage to Host.`);
+  if (hostDamage > 0) log(next, `Chronicler deals ${hostDamage} damage to the Host.`);
   if (poisonCounters > 0) {
     next.host.poisonCounters += poisonCounters;
     log(next, `Host gets ${poisonCounters} poison counter(s).`);
@@ -371,11 +371,11 @@ export function applyHostAttackEvent(game: GameState, event: HostAttackEvent): G
   if (blocker && event.blockerDamageMarked !== undefined) blocker.damageMarked = event.blockerDamageMarked;
   if (event.playerDamage > 0) {
     losePlayerLife(next, event.playerDamage, attacker.instanceId);
-    log(next, `Host deals ${event.playerDamage} damage to Player.`);
+    log(next, `Host deals ${event.playerDamage} damage to the Chronicler.`);
   }
   if (event.playerLifeGain > 0) {
     next.player.life += event.playerLifeGain;
-    log(next, `Player recovers ${event.playerLifeGain} life with Drain.`);
+    log(next, `Chronicler recovers ${event.playerLifeGain} Life with Drain.`);
   }
   // Survival is established at this impact, after damage is marked but before casualties enqueue
   // their death reactions. Zero-power hits do not count as receiving damage.
@@ -474,7 +474,7 @@ export function resolvePendingHostCombatDamageVolleys(game: GameState): GameStat
   next.combat.pendingDamageVolleys = [];
   if (!pending || pending.damage <= 0) return next;
   losePlayerLife(next, pending.damage, pending.sourceId);
-  log(next, `Host combat volley deals ${pending.damage} damage to Player.`);
+  log(next, `Host attack volley deals ${pending.damage} damage to the Chronicler.`);
   checkWinLoss(next);
   return next;
 }
@@ -489,7 +489,7 @@ function applyCombatDrain(game: GameState, source: CardInstance, damageDealt: nu
     return 0;
   }
   game.player.life += amount;
-  log(game, `Player recovers ${amount} life with ${source.name}.`);
+  log(game, `Chronicler recovers ${amount} Life with ${source.name}.`);
   return amount;
 }
 

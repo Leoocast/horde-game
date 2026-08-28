@@ -13,10 +13,8 @@ export type TacticalArrowCurve = {
 };
 
 export type TacticalArrowShape = {
-  /** Contorno relleno de la hoja, de ancho creciente hacia la punta. */
-  blade: string;
-  /** Cabeza cóncava; su vértice cae siempre sobre `curve.end`. */
-  head: string;
+  /** Contorno único de hoja y cabeza; evita costuras internas en relleno y destello. */
+  outline: string;
   /** Distancia recta origen-punta: gobierna recorte de hoja y barrido. */
   chordLength: number;
 };
@@ -108,17 +106,18 @@ export function tangentOnCurve(curve: TacticalArrowCurve, t: number): ArrowPoint
 
 export function tacticalArrowShape(curve: TacticalArrowCurve): TacticalArrowShape {
   const chordLength = Math.hypot(curve.end.x - curve.start.x, curve.end.y - curve.start.y) || 1;
-  // La hoja termina antes del cuello para que la cabeza no se le monte encima.
-  const bladeEnd = Math.max(0.05, 1 - (HEAD_LENGTH * 0.7) / chordLength);
-  return { blade: bladePath(curve, bladeEnd), head: headPath(curve), chordLength };
+  // La hoja termina en el cuello cóncavo de la cabeza. Dibujar ambas partes como
+  // paths superpuestos dejaba una costura diagonal y partía el destello al cruzarla.
+  const bladeEnd = Math.max(0.05, 1 - (HEAD_LENGTH * HEAD_SWEEP) / chordLength);
+  return { outline: arrowOutlinePath(curve, bladeEnd), chordLength };
 }
 
 function bladeHalfWidth(k: number): number {
   return BLADE_ROOT_HALF_WIDTH + BLADE_TIP_HALF_WIDTH * Math.pow(k, BLADE_TAPER);
 }
 
-/** Recorre un canto de la hoja y vuelve por el otro. */
-function bladePath(curve: TacticalArrowCurve, bladeEnd: number): string {
+/** Recorre hoja, alas y punta como un único contorno sin bordes internos. */
+function arrowOutlinePath(curve: TacticalArrowCurve, bladeEnd: number): string {
   const left: ArrowPoint[] = [];
   const right: ArrowPoint[] = [];
   for (let index = 0; index <= BLADE_SAMPLES; index += 1) {
@@ -129,22 +128,25 @@ function bladePath(curve: TacticalArrowCurve, bladeEnd: number): string {
     left.push({ x: point.x - tangent.y * halfWidth, y: point.y + tangent.x * halfWidth });
     right.push({ x: point.x + tangent.y * halfWidth, y: point.y - tangent.x * halfWidth });
   }
+  const { tip, wingA, wingB } = arrowHeadGeometry(curve);
   const segments = [`M ${format(left[0].x)} ${format(left[0].y)}`];
   for (let index = 1; index < left.length; index += 1) segments.push(`L ${format(left[index].x)} ${format(left[index].y)}`);
+  segments.push(`L ${format(wingA.x)} ${format(wingA.y)}`);
+  segments.push(`L ${format(tip.x)} ${format(tip.y)}`);
+  segments.push(`L ${format(wingB.x)} ${format(wingB.y)}`);
   for (let index = right.length - 1; index >= 0; index -= 1) segments.push(`L ${format(right[index].x)} ${format(right[index].y)}`);
   return `${segments.join(" ")} Z`;
 }
 
-function headPath(curve: TacticalArrowCurve): string {
+function arrowHeadGeometry(curve: TacticalArrowCurve): { tip: ArrowPoint; wingA: ArrowPoint; wingB: ArrowPoint } {
   const tip = curve.end;
   const tangent = tangentOnCurve(curve, 1);
   const normalX = -tangent.y;
   const normalY = tangent.x;
   const back = { x: tip.x - tangent.x * HEAD_LENGTH, y: tip.y - tangent.y * HEAD_LENGTH };
-  const notch = { x: tip.x - tangent.x * HEAD_LENGTH * HEAD_SWEEP, y: tip.y - tangent.y * HEAD_LENGTH * HEAD_SWEEP };
   const wingA = { x: back.x + normalX * HEAD_WING, y: back.y + normalY * HEAD_WING };
   const wingB = { x: back.x - normalX * HEAD_WING, y: back.y - normalY * HEAD_WING };
-  return `M ${format(tip.x)} ${format(tip.y)} L ${format(wingA.x)} ${format(wingA.y)} Q ${format(notch.x)} ${format(notch.y)} ${format(wingB.x)} ${format(wingB.y)} Z`;
+  return { tip, wingA, wingB };
 }
 
 function format(value: number): string {

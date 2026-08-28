@@ -107,12 +107,12 @@ test("every active card authors print metadata, bilingual flavor and an explicit
 
 test("active deck ids match their current canonical identities", () => {
   assert.deepEqual(
-    DECK_REGISTRY.map((entry) => [entry.raw.id, entry.raw.name]),
+    DECK_REGISTRY.map((entry) => [entry.raw.id, entry.raw.name, entry.raw.displayNameEn]),
     [
-      ["pact_of_elarion", "El Pacto de Elarion"],
-      ["court_of_the_crimson_eclipse", "La Corte del Eclipse Carmesí"],
-      ["uprising_of_the_graveless", "El Alzamiento de los Sinsepulcro"],
-      ["legion_of_varka", "La Legión de Varka"],
+      ["pact_of_elarion", "El Pacto de Elarion", "The Pact of Elarion"],
+      ["court_of_the_crimson_eclipse", "La Corte del Eclipse Carmesí", "The Court of the Crimson Eclipse"],
+      ["uprising_of_the_graveless", "El Alzamiento de los Sinsepulcro", "The Uprising of the Graveless"],
+      ["legion_of_varka", "La Legión de Varka", "The Legion of Varka"],
     ],
   );
 });
@@ -282,9 +282,9 @@ test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored 
     maela_watcher_of_the_heights: "Sin efecto adicional.",
     echo_of_the_forgotten_city: "Sin efecto adicional.",
     vaelor_emerald_guardian: "Al ser invocado: pon un contador -1/-1 sobre cada enemigo.",
-    clash_of_echoes: "Elige un aliado y un enemigo; el aliado inflige al enemigo daño igual a su Fuerza.",
+    clash_of_echoes: "Elige un aliado. Ese aliado inflige daño igual a su Fuerza a un enemigo que elijas.",
     shield_of_the_heir: "Elige un aliado y un enemigo; el aliado gana +1/+2 hasta el final del turno. Después, ese aliado lucha contra ese enemigo.",
-    the_judgment_of_elarion: "Elige un Apoyo enemigo o un Eco enemigo con Volar; destrúyelo.",
+    the_judgment_of_elarion: "Elige uno:\n• Destruye un Apoyo enemigo.\n• Destruye un Eco enemigo con Imponente.\n• Destruye un Eco enemigo con Volar.",
     elixir_of_the_first_leaf: "Elige un Eco; el Eco elegido gana +3/+3 hasta el final del turno.",
     river_of_elarion: "Agota esta carta; agrega 1 de Energía.",
   });
@@ -297,6 +297,7 @@ test("El Pacto de Elarion keeps Hostfall card kinds and traits through authored 
   const rootsTouchedSkyFilter = byId.the_judgment_of_elarion.abilities[0].targets[0].filters;
   assert.deepEqual(rootsTouchedSkyFilter.anyOf, [
     { kinds: ["SUPPORT"] },
+    { kinds: ["ECHO"], traits: ["DAUNTING"] },
     { kinds: ["ECHO"], traits: ["FLYING"] },
   ]);
 });
@@ -397,11 +398,11 @@ test("Zombies keep Hostfall card kinds and traits through authored normalization
     ossuary_rider: "Sin efecto adicional.",
     return_to_memory: "Al ser invocado o al morir: la Hueste descarta las 2 primeras cartas de su Archivo a su Memoria.",
     barrow_wallbreaker: "Sin efecto adicional.",
-    hound_of_seven_memories: "Mientras la Hueste tenga 7 o más cartas en su Memoria: este Eco gana +1/+1 e Imponente.",
+    three_eyed_corpse_gorger: "Mientras la Hueste tenga 3 o más cartas en su Memoria: este Eco gana +1/+1 e Imponente.",
     mastiff_of_the_overflowing_ossuary: "Mientras la Hueste tenga 7 o más cartas en su Memoria: este Eco gana Imponente.",
     spore_infested: "Sin efecto adicional.",
     harvester_of_the_fallen: "Cada vez que otro Zombi aliado muera: pon un contador +1/+1 sobre esta carta.",
-    nerezh_graveless_matriarch: "Los demás Zombis aliados ganan +1/+1.\nCada vez que otro Zombi aliado muera: el Cronista pierde 1 de Vida.",
+    nerezh_graveless_matriarch: "Los demás Zombis aliados en el Campo ganan +1/+1.\nCada vez que otro Zombi aliado muera: el Cronista pierde 1 de Vida.",
   });
   assert.equal(entry.raw.rulesProfile.damagePerArchiveDiscard, 3);
   assert.equal(entry.raw.rulesProfile.poisonPerArchiveDiscard, 3);
@@ -483,7 +484,7 @@ test("Goblins keep Hostfall card kinds, modifiers and traits through authored no
     unleash_the_legion: "Si la Hueste controla al menos un aliado: sus aliados ganan +2/+0 hasta el final del turno. Si no, comienza otra ronda de Revelado.",
     corrupted_war_bear: "Sin efecto adicional.",
     rider_of_the_umbral_volley: "Al ser invocado: la Hueste elige un enemigo; este Eco inflige a ese enemigo daño igual al número de aliados en el Campo.",
-    varka_infernal_matriarch: "Todos los aliados ganan +1/+1.\nAl ser invocada: este Eco inflige 2 de daño al Cronista y a cada enemigo.",
+    varka_infernal_matriarch: "Todos los aliados en el Campo ganan +1/+1.\nAl ser invocada: este Eco inflige 2 de daño al Cronista y a cada enemigo.",
     varkas_forgemaster: "Los demás Trasgos aliados ganan +1/+1.",
     marshal_of_the_wave: "Cuando uno o más Trasgos aliados ataquen: Invoca un Esbirro de Varka atacando.\nCada vez que otro aliado sea invocado: el Cronista pierde 1 de Vida.",
     vardek_scribe_of_the_legion: "Cuando este Eco ataque: pon un contador +1/+1 sobre este Eco. Después, Invoca una cantidad de Esbirros de Varka atacando igual a su Fuerza.",

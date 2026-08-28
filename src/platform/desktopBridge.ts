@@ -16,6 +16,14 @@ export type StoredJsonCandidates = Readonly<{
   backupCorrupted: boolean;
 }>;
 
+export type DesktopHistoryWriteResult =
+  | Readonly<{ ok: true }>
+  | Readonly<{ ok: false; reason: "full" | "io" }>;
+
+export type DesktopHistoryResetResult = Readonly<{
+  preservedDiagnostic: boolean;
+}>;
+
 export type RendererErrorReport = Readonly<{
   message: string;
   stack?: string;
@@ -34,6 +42,11 @@ export type HostfallDesktopBridge = Readonly<{
   readResumeSave(): Promise<StoredJsonCandidates>;
   writeResumeSave(value: unknown): Promise<void>;
   deleteResumeSave(): Promise<void>;
+  readSeedHistory(): Promise<StoredJsonCandidates>;
+  writeSeedHistory(value: unknown): Promise<DesktopHistoryWriteResult>;
+  promoteSeedHistoryBackup(): Promise<void>;
+  resetSeedHistory(): Promise<DesktopHistoryResetResult>;
+  writeClipboardText(value: string): Promise<void>;
   openExternalLink(linkId: ExternalLinkId): Promise<boolean>;
   reportError(report: RendererErrorReport): Promise<void>;
 }>;
@@ -47,6 +60,12 @@ declare global {
 export function captureDesktopViewport(): Promise<string | undefined> {
   const captureViewport = window.hostfallDesktop?.captureViewport;
   return typeof captureViewport === "function" ? captureViewport() : Promise.resolve(undefined);
+}
+
+export function writeClipboardText(value: string): Promise<void> {
+  if (window.hostfallDesktop) return window.hostfallDesktop.writeClipboardText(value);
+  if (!navigator.clipboard?.writeText) return Promise.reject(new Error("Clipboard API is unavailable."));
+  return navigator.clipboard.writeText(value);
 }
 
 const WEB_EXTERNAL_LINKS: Readonly<Record<ExternalLinkId, string>> = Object.freeze({

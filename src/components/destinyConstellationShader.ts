@@ -97,7 +97,7 @@ void main() {
   vec3 col = vec3(0.0);
   float al = 0.0;
 
-  // 1. La luz del Capítulo empieza a subir desde abajo, apenas un velo.
+  // 1. La luz del desenlace empieza a subir desde abajo, apenas un velo.
   float lift = smoothstep(0.0, 0.5, uT);
   float veil = fbm(vec3(p.x * 0.004, p.y * 0.003 - uTime * 0.14, 4.0 + uSeed * 3.0));
   add(col, al, COLD, smoothstep(0.45, 0.85, veil) * lift * (1.0 - p.y / uRes.y) * 0.16);

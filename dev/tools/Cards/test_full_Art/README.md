@@ -49,7 +49,7 @@ En los dos, los stats viven en la franja de arte y la línea de tipo separa el a
 Inventada, pero escrita con el vocabulario del juego (`docs/reference/game_vocabulary.md`):
 
 - **Ilvara, Filo del Juramento** · coste 6 · 5/5
-- Tipo: `Eco — Humano Caballero` en la común, `Eco de Crónica — Humano Caballero` en la full art
+- Tipo: `Eco — Humano Caballero` tanto en la común como en la full art
 - Texto: `Ímpetu. Letal.` / `Cuando Invocas este Eco, destierra un Eco enemigo con Aguante 4 o menos.`
 - Lore: *Juró arder antes que dejarse olvidar. El Archivo la recuerda ardiendo.*
 

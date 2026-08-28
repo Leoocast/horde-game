@@ -19,8 +19,10 @@ export const IDENTITY_VOCABULARY = {
   CHRONICLER: { en: "Chronicler", es: "Cronista" },
   CHRONICLE: { en: "Chronicle", es: "Crónica" },
   HOST: { en: "Host", es: "Hueste" },
-  CHAPTER: { en: "Chapter", es: "Capítulo" },
-  SURGE: { en: "Surge", es: "Oleada" },
+  INSCRIPTION: { en: "Inscription", es: "Inscripción" },
+  FUTURE: { en: "Future", es: "Futuro" },
+  VISION: { en: "Vision", es: "Visión" },
+  SURGE: { en: "Surge", es: "Estampida" },
 } as const satisfies Record<string, LocalizedTerm>;
 
 export const ZONE_VOCABULARY = {
@@ -48,7 +50,6 @@ export const CARD_TYPE_VOCABULARY = {
   SUPPORT: { en: "Support", es: "Apoyo" },
   TOKEN: { en: "Token", es: "Ficha" },
   QUICK: { en: "Quick", es: "Rápido" },
-  CHRONICLE: { en: "Chronicle", es: "de Crónica" },
 } as const satisfies Record<string, LocalizedTerm>;
 
 export const RESOURCE_VOCABULARY = {
@@ -127,8 +128,8 @@ export const TRAIT_VOCABULARY = {
     en: "Lethal",
     es: "Letal",
     reminder: {
-      en: "Any positive damage this Echo deals to another Echo is lethal.",
-      es: "Cualquier cantidad positiva de daño que haga a otro Eco es letal.",
+      en: "If this Echo deals any amount of damage to another Echo, that Echo dies.",
+      es: "Si este Eco hace cualquier cantidad de daño a otro Eco, ese Eco muere.",
     },
   },
   REFLEX: {
@@ -257,9 +258,6 @@ export function canonicalCardKindLine(
     : [vocabularyText(CARD_TYPE_VOCABULARY.CARD, language)];
   if (modifiers.includes("QUICK") || kinds.some((type) => type.trim().toUpperCase() === "INSTANT")) {
     visibleTypes.push(vocabularyText(CARD_TYPE_VOCABULARY.QUICK, language));
-  }
-  if (modifiers.includes("CHRONICLE")) {
-    visibleTypes.push(vocabularyText(CARD_TYPE_VOCABULARY.CHRONICLE, language));
   }
   const typePart = visibleTypes.join(" · ");
   return subtypes.length > 0 ? `${typePart} — ${subtypes.join(" ")}` : typePart;

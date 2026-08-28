@@ -18,7 +18,7 @@
     {
       "id": "aelyra_heir_of_elarion",
       "artCrop": "../../../../public/cards/pact_of_elarion/art/aelyra_heir_of_elarion.jpg",
-      "typeLineEs": "Eco de Crónica — Elfa Heredera"
+      "typeLineEs": "Eco — Elfa Heredera"
     },
     {
       "id": "liora_keeper_of_the_grove",
@@ -74,7 +74,8 @@
         "x": 349,
         "y": 22
       },
-      "headerFade": false
+      "headerFade": false,
+      "fullArt": false
     },
     {
       "id": "vaelor_emerald_guardian",
@@ -96,16 +97,17 @@
         "zoom": 1,
         "x": -8,
         "y": -132
-      }
+      },
+      "fullArt": false
     },
     {
       "id": "shield_of_the_heir",
       "artCrop": "../../../../public/cards/pact_of_elarion/art/shield_of_the_heir.jpg",
       "typeLineEs": "Hechizo",
       "artFrame": {
-        "zoom": 0.855,
-        "x": -98,
-        "y": -84
+        "zoom": 0.731,
+        "x": -27,
+        "y": -163
       },
       "headerFade": false
     },
@@ -114,11 +116,11 @@
       "artCrop": "../../../../public/cards/pact_of_elarion/art/the_judgment_of_elarion.jpg",
       "typeLineEs": "Hechizo · Rápido",
       "artFrame": {
-        "zoom": 1,
-        "x": -451,
-        "y": 18
+        "zoom": 1.04,
+        "x": 10,
+        "y": -75
       },
-      "fullArt": false,
+      "fullArt": true,
       "headerFade": false
     },
     {
@@ -127,8 +129,8 @@
       "typeLineEs": "Hechizo · Rápido",
       "artFrame": {
         "zoom": 1,
-        "x": -11,
-        "y": -130
+        "x": -8,
+        "y": -138
       },
       "fullArt": false,
       "headerFade": true

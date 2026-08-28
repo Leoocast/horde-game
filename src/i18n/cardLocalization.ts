@@ -56,6 +56,7 @@ const SPANISH_SUBTYPES: Record<string, string> = {
   Spring: "Manantial",
   Warrior: "Guerrero",
   Wolfkin: "Lupino",
+  Worm: "Gusano",
   Wizard: "Hechicero",
   Restorer: "Restauradora",
   Zombie: "Zombi",

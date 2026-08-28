@@ -2,6 +2,7 @@
   "schemaVersion": "1.0.0",
   "id": "legion_of_varka",
   "name": "La Legión de Varka",
+  "displayNameEn": "The Legion of Varka",
   "format": "host",
   "side": "HOST",
   "deckSize": 50,
@@ -751,8 +752,8 @@
       "name": "Varka, Infernal Matriarch",
       "displayNameEs": "Varka, Matriarca Infernal",
       "gameText": {
-        "en": "All allies gain +1/+1.\nWhen Invoked: this Echo deals 2 damage to the Chronicler and each enemy.",
-        "es": "Todos los aliados ganan +1/+1.\nAl ser invocada: este Eco inflige 2 de daño al Cronista y a cada enemigo."
+        "en": "All allies on the Field gain +1/+1.\nWhen Invoked: this Echo deals 2 damage to the Chronicler and each enemy.",
+        "es": "Todos los aliados en el Campo ganan +1/+1.\nAl ser invocada: este Eco inflige 2 de daño al Cronista y a cada enemigo."
       },
       "flavorText": {
         "en": "Varka came from Hell. The Legion was the first of her creations.",

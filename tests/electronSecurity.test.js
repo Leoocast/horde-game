@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -23,6 +23,34 @@ test("development CSP supports Vite React refresh without weakening production",
 
   assert.equal(developmentScriptPolicy, "script-src 'self' 'unsafe-eval' 'unsafe-inline'");
   assert.equal(productionScriptPolicy, "script-src 'self'");
+});
+
+test("clipboard writes cross the narrow trusted Electron bridge", async () => {
+  const [main, preload, rendererBridge] = await Promise.all([
+    readFile(new URL("../electron/main.ts", import.meta.url), "utf8"),
+    readFile(new URL("../electron/preload.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/platform/desktopBridge.ts", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(main, /ipcMain\.handle\("hostfall:write-clipboard-text"[\s\S]*?assertTrustedRenderer\(event\)[\s\S]*?clipboard\.writeText\(value\)/u);
+  assert.match(preload, /writeClipboardText:[\s\S]*?ipcRenderer\.invoke\("hostfall:write-clipboard-text", value\)/u);
+  assert.match(rendererBridge, /window\.hostfallDesktop\.writeClipboardText\(value\)/u);
+  assert.match(rendererBridge, /navigator\.clipboard\.writeText\(value\)/u);
+});
+
+test("seed history crosses only dedicated trusted IPC channels", async () => {
+  const [main, preload, rendererBridge] = await Promise.all([
+    readFile(new URL("../electron/main.ts", import.meta.url), "utf8"),
+    readFile(new URL("../electron/preload.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/platform/desktopBridge.ts", import.meta.url), "utf8"),
+  ]);
+  for (const operation of ["read", "write", "promote", "reset"]) {
+    assert.match(main, new RegExp(`ipcMain\\.handle\\("hostfall:${operation}-seed-history(?:-backup)?"[\\s\\S]*?assertTrustedRenderer\\(event\\)`, "u"));
+    assert.match(preload, new RegExp(`ipcRenderer\\.invoke\\("hostfall:${operation}-seed-history(?:-backup)?"`, "u"));
+  }
+  assert.match(rendererBridge, /readSeedHistory\(\): Promise<StoredJsonCandidates>/u);
+  assert.match(rendererBridge, /writeSeedHistory\(value: unknown\): Promise<DesktopHistoryWriteResult>/u);
+  assert.doesNotMatch(preload, /readFile|writeFile|filePath|path:/u);
 });
 
 test("hostfall protocol maps only registered app and content identities", () => {

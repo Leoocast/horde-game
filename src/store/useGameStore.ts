@@ -26,7 +26,7 @@ import {
   togglePlayerAttacker,
   type HostAttackEvent,
 } from "../engine/CombatResolver";
-import { beginHostMain, finishHostTurn, revealHostCardFromTop, runHostMain as runHostMainPhase } from "../engine/HostController";
+import { beginHostMain, finishHostTurn, revealHostCardFromTop, revealHostMainAfterSurgeEntry, runHostMain as runHostMainPhase } from "../engine/HostController";
 import { canAttack, hasTrait } from "../engine/Traits";
 import { getPowerEndurance, hostInSurge } from "../engine/StaticEffects";
 import { EFFECT_ANNOUNCEMENTS, destroyMarkedCreatures, destroyPermanent, discardChosenCard, effectNeedsManualTarget, findManualInvokedTargetTrigger, hasEffectPresentation, manualInvokedTargetRequirement, resolveEffect, resolveEffects, triggerConditionMet } from "../engine/EffectResolver";
@@ -116,6 +116,17 @@ import {
 } from "../guidance";
 import { authoredHostTurnGate, type AuthoredHostTurnPlan } from "../guidance/authoredHostTurn";
 import { DESTINY_DIAL_STEP, destinyDialDeathDelta } from "./destinyDial";
+import {
+  completedStabilizationCards,
+  stabilizationCompletionTotalMs,
+  type StabilizationCompletionCard,
+} from "./stabilizationPresentation";
+
+export type StabilizationCompletionAnimation = Readonly<{
+  id: number;
+  cards: readonly StabilizationCompletionCard[];
+  pendingCardIds: readonly string[];
+}>;
 
 export type GameStore = {
   game: GameState;
@@ -147,8 +158,10 @@ export type GameStore = {
   pendingTriggeredEffectSourceId?: string;
   hostAutoTriggerCount: number;
   playerAutoTriggerCount: number;
+  stabilizationCompletion?: StabilizationCompletionAnimation;
   surgeTransitionActive: boolean;
   surgeTransitionShown: boolean;
+  surgeRevealPending: boolean;
   /**
    * Ángulo acumulado del disco de grados del fondo, en grados. Es presentación pura:
    * no entra en `GameState`, no se persiste y no decide nada. Mide cómo se mueve el
@@ -258,6 +271,7 @@ export type GameStore = {
    *  running a Host turn. */
   resolveHostCardFromTop: () => void;
   completeSurgeTransition: () => void;
+  continueSurgeAfterExplanation: () => void;
   prepareHostAttackers: () => void;
   declareBlocker: (blockerId: string, attackerId: string) => void;
   cancelBlocks: () => void;
@@ -273,6 +287,7 @@ export type GameStore = {
   completePlayerDiscardAnimation: (id: string) => void;
   materializeLandPlayAnimation: (id: string) => void;
   completeLandPlayAnimation: (id: string) => void;
+  completeStabilizationCard: (eventId: number, cardId: string) => void;
   resolveHostCombat: () => void;
   finishHostTurn: () => void;
   completeHostMillAnimation: (id: string) => void;
@@ -306,6 +321,7 @@ const POISON_CONSUME_ANIMATION_SAFETY_CLEAR_MS = 1200;
 const DRAIN_ESSENCE_ANIMATION_SAFETY_CLEAR_MS = 3200;
 const FINAL_BANQUET_ANIMATION_SAFETY_CLEAR_MS = 2600;
 const ENERGY_FLOW_ANIMATION_SAFETY_CLEAR_MS = 1500;
+const STABILIZATION_COMPLETION_SAFETY_BUFFER_MS = 360;
 const SPELL_FIGHT_BUFF_LEAD_IN_MS = 1040;
 const SPELL_FIGHT_IMPACT_MS = 520;
 const SPELL_FIGHT_DEATH_FADE_MS = 260;
@@ -333,6 +349,8 @@ let finalBanquetCommit: (() => Partial<GameStore>) | undefined;
 let energyFlowAnimationSafetyTimer: number | undefined;
 let energyFlowCommit: (() => Partial<GameStore>) | undefined;
 let energyFlowAfterCommit: (() => void) | undefined;
+let stabilizationCompletionEventId = 0;
+let stabilizationCompletionSafetyTimer: number | undefined;
 const publishedGuidedTransitionStates = new WeakSet<GameState>();
 let hostCombatSequenceId = 0;
 let playerCombatSequenceId = 0;
@@ -587,8 +605,10 @@ function createCleanUiState(): Partial<GameStore> {
     pendingTriggeredEffectSourceId: undefined,
     hostAutoTriggerCount: 0,
     playerAutoTriggerCount: 0,
+    stabilizationCompletion: undefined,
     surgeTransitionActive: false,
     surgeTransitionShown: false,
+    surgeRevealPending: false,
     hostCombatVisualDamage: undefined,
     hostCombatDeadCardIds: [],
     specialDeadCardIds: [],
@@ -646,8 +666,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   pendingTriggeredEffectSourceId: undefined,
   hostAutoTriggerCount: 0,
   playerAutoTriggerCount: 0,
+  stabilizationCompletion: undefined,
   surgeTransitionActive: false,
   surgeTransitionShown: false,
+  surgeRevealPending: false,
   destinyDial: 0,
   destinyDialRevision: 0,
   hostCombatVisualDamage: undefined,
@@ -751,11 +773,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (get().energyRecycleDragActive === active) return;
     set({ energyRecycleDragActive: active });
   },
-  selectHand: (id) => set({ selectedHandId: id }),
-  selectPlayerCreature: (id) => set({ selectedPlayerCreatureId: id }),
-  selectHostCreature: (id) => set({ selectedHostCreatureId: id }),
+  selectHand: (id) => {
+    if (get().stabilizationCompletion) return;
+    set({ selectedHandId: id });
+  },
+  selectPlayerCreature: (id) => {
+    if (get().stabilizationCompletion) return;
+    set({ selectedPlayerCreatureId: id });
+  },
+  selectHostCreature: (id) => {
+    if (get().stabilizationCompletion) return;
+    set({ selectedHostCreatureId: id });
+  },
   selectActiveEffectCard: (id) =>
     set(({ activeEffectCardId }) => {
+      if (get().stabilizationCompletion) return {};
       if (activeEffectCloseTimer) {
         window.clearTimeout(activeEffectCloseTimer);
         activeEffectCloseTimer = undefined;
@@ -1078,14 +1110,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const intent = phaseAdvanceIntent(get().game, phase);
     if (!gameplayIntentAllowed(intent)) return;
     let transition: readonly [GameState, GameState] | undefined;
+    let stabilizationCompletion: StabilizationCompletionAnimation | undefined;
     set((state) => {
-      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.energyFlowAnimation || state.pendingSpellHandId || state.spellFightAnimation || state.playerAutoTriggerCount > 0) return {};
+      if (discardPauseInProgress(state) || state.stabilizationCompletion || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.energyFlowAnimation || state.pendingSpellHandId || state.spellFightAnimation || state.playerAutoTriggerCount > 0) return {};
       const { game } = state;
       const next = advancePhase(game, phase);
       transition = [game, next];
+      stabilizationCompletion = stabilizationCompletionForTransition(game, next);
       playDrawOneIfPlayerDrew(game, next);
       return {
         game: next,
+        stabilizationCompletion,
+        ...stabilizationCompletionInteractionReset(stabilizationCompletion),
         playerAttackDrag: undefined,
         // The hand limit is checked when the player explicitly ends the turn,
         // not merely when combat advances into the end phase.
@@ -1093,13 +1129,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
         handLimitSelectionId: undefined,
       };
     });
+    if (stabilizationCompletion) scheduleStabilizationCompletionSafetyClear(stabilizationCompletion);
     if (transition) publishGuidedTransitionReceipts(...transition);
   },
   endPlayerTurn: (options) => {
     if (!gameplayIntentAllowed(endPlayerTurnIntent(get().game))) return;
     let transition: readonly [GameState, GameState] | undefined;
+    let stabilizationCompletion: StabilizationCompletionAnimation | undefined;
     set((state) => {
-      if (discardPauseInProgress(state) || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.energyFlowAnimation || state.pendingSpellHandId || state.spellFightAnimation || state.poisonConsumeAnimation || state.playerAutoTriggerCount > 0) return {};
+      if (discardPauseInProgress(state) || state.stabilizationCompletion || state.energyRecycleAnimation || state.lifePaymentAnimation || state.bloodPactAnimation || state.drainEssenceAnimation || state.energyFlowAnimation || state.pendingSpellHandId || state.spellFightAnimation || state.poisonConsumeAnimation || state.playerAutoTriggerCount > 0) return {};
       const { game } = state;
       const overflow = playerHandOverflow(game);
       if (overflow > 0) {
@@ -1124,9 +1162,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
       const next = endPlayerTurn(game);
       transition = [game, next];
+      stabilizationCompletion = stabilizationCompletionForTransition(game, next);
       playDrawOneIfPlayerDrew(game, next);
-      return { game: next, handLimitDiscardActive: false, handLimitSelectionId: undefined, hostMillAnimationQueue: appendHostMillAnimations(state, game, next) };
+      return {
+        game: next,
+        stabilizationCompletion,
+        ...stabilizationCompletionInteractionReset(stabilizationCompletion),
+        handLimitDiscardActive: false,
+        handLimitSelectionId: undefined,
+        hostMillAnimationQueue: appendHostMillAnimations(state, game, next),
+      };
     });
+    if (stabilizationCompletion) scheduleStabilizationCompletionSafetyClear(stabilizationCompletion);
     if (transition) publishGuidedTransitionReceipts(...transition);
   },
   playLand: (id) => {
@@ -1353,6 +1400,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     poisonConsumeAnimationSafetyTimer = undefined;
     const previous = get().game;
     const next = endPlayerTurn(previous);
+    const stabilizationCompletion = stabilizationCompletionForTransition(previous, next);
     playDrawOneIfPlayerDrew(previous, next);
     let millAnimationQueued = false;
     set((state) => {
@@ -1360,21 +1408,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
       millAnimationQueued = hostMillAnimationQueue.length > 0;
       return {
         game: next,
+        stabilizationCompletion,
+        ...stabilizationCompletionInteractionReset(stabilizationCompletion),
         poisonConsumeAnimation: undefined,
         handLimitDiscardActive: false,
         handLimitSelectionId: undefined,
         hostMillAnimationQueue,
       };
     });
+    if (stabilizationCompletion) scheduleStabilizationCompletionSafetyClear(stabilizationCompletion);
     if (active.runHostAfter && millAnimationQueued) {
       poisonConsumeRunHostAfterMill = true;
     } else if (active.runHostAfter && typeof window !== "undefined") {
-      window.setTimeout(() => {
-        const latest = useGameStore.getState();
-        if (latest.game.activeSide === "host" && latest.game.phase === "host") {
-          runGuidedSystemAction(() => latest.runHostMain());
-        }
-      }, 0);
+      scheduleHostMainWhenStabilizationSettles();
     }
   },
   resolveDrainEssenceAnimation: (id) => {
@@ -1594,7 +1640,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     else if (failure) publishGameplayDenial(intent, failure);
   },
   toggleAttacker: (id) => {
-    const intendedSelected = !get().game.combat.playerAttackers.includes(id);
+    const currentGame = get().game;
+    const intendedSelected = !currentGame.combat.playerAttackers.includes(id);
+    const intendedAttacker = currentGame.player.field.find((card) => card.instanceId === id);
     const intent = { kind: "combat.toggleAttacker", cardId: id, selected: intendedSelected } as const;
     if (!gameplayIntentAllowed(intent)) return;
     let selectionChanged = false;
@@ -1608,7 +1656,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selected = isAttacking;
       if (next.lastActionResult?.ok === false) {
         failure = next.lastActionResult;
-        showActionToast(next.lastActionResult.reason);
+        if (intendedSelected && next.lastActionResult.code === "STABILIZING" && intendedAttacker) {
+          showActionToast(
+            uiText("toast.stabilizingAttack", { card: uiCardName(intendedAttacker) }),
+            "toast.attackUnavailable",
+          );
+        } else {
+          showActionToast(next.lastActionResult.reason);
+        }
       }
       if (!wasAttacking && isAttacking) {
         useAudioStore.getState().playSfx(AUDIO_FEATURE_FLAGS.selectAttacker ? "selectAttacker" : "playLand");
@@ -1638,7 +1693,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
       next.combat.playerAttackers = sortPlayerAttackersLeftToRight(next, [...selected]);
       selectedIds = [...next.combat.playerAttackers];
-      next.log.unshift(`Player attacks with ${next.combat.playerAttackers.length} creature(s).`);
+      next.log.unshift(`Chronicler attacks with ${next.combat.playerAttackers.length} Echo(es).`);
       if (next.combat.playerAttackers.length > game.combat.playerAttackers.length) useAudioStore.getState().playSfx("playLand");
       return { game: next };
     });
@@ -1654,7 +1709,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         if (attackers.has(card.instanceId) && !hasTrait(next, card, "ALERT")) card.exhausted = false;
       }
       next.combat.playerAttackers = [];
-      next.log.unshift("Player cancels attackers.");
+      next.log.unshift("Chronicler cancels the attack.");
       return { game: next, selectedPlayerCreatureId: undefined, playerAttackDrag: undefined };
     });
     publishGameplayReceipt({ kind: "attackers.cancelled", targetIds });
@@ -1866,7 +1921,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   runHostMain: () => {
     const state = get();
-    if (discardPauseInProgress(state) || state.surgeTransitionActive) return;
+    if (discardPauseInProgress(state) || state.stabilizationCompletion || state.surgeTransitionActive || state.surgeRevealPending) return;
     const { game } = state;
     if (!gameplayIntentAllowed(runHostIntent(game))) return;
     const authoredPlan = authoredHostTurnGate.plan(game);
@@ -1888,39 +1943,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return;
       }
     }
-    const previousHostBattlefieldIds = new Set(game.host.field.map((card) => card.instanceId));
     const main = runHostMainPhase(game, { deferInvokedTriggers: true });
-    const enteredCards = main.host.field.filter((card) => !previousHostBattlefieldIds.has(card.instanceId));
-    const triggerCards = enteredCards.filter(hasInvokedTrigger);
-    if (main.host.pendingCard) {
-      const pendingCard = main.host.pendingCard;
-      set({
-        game: main,
-        selectedHostCreatureId: undefined,
-        selectedPlayerCreatureId: undefined,
-        hostAutoTriggerCount: triggerCards.length,
-        summoningAnimationCount: state.summoningAnimationCount + enteredCards.length,
-        hostMillAnimationQueue: appendHostMillAnimations(state, game, main),
-      });
-      publishGameplayReceipt({ kind: "host.resolved" });
-      captureStaticAuraBeats();
-      scheduleHostArrivalEffects(enteredCards, () => runTributeOfTheFourSorrowsSequence(pendingCard));
-      return;
-    }
-    if (main.host.field.length > game.host.field.length) useAudioStore.getState().playSfx("draw");
-    set({
-      game: main,
-      selectedHostCreatureId: undefined,
-      selectedPlayerCreatureId: undefined,
-      hostAutoTriggerCount: triggerCards.length,
-      summoningAnimationCount: state.summoningAnimationCount + enteredCards.length,
-      hostMillAnimationQueue: appendHostMillAnimations(state, game, main),
-    });
-    publishGameplayReceipt({ kind: "host.resolved" });
-    // Before any frame renders the new creatures: hold back the buffs they just gained so the
-    // announcement beat still has something to reveal.
-    captureStaticAuraBeats();
-    scheduleHostArrivalEffects(enteredCards, () => startHostCombatSequence());
+    presentResolvedHostMain(game, main, state);
   },
   /**
    * Playground only. Same beats as `runHostMain` — enter triggers, static aura capture, mill
@@ -1960,12 +1984,27 @@ export const useGameStore = create<GameStore>((set, get) => ({
     scheduleHostArrivalEffects(entered, () => scheduleQueuedHostTriggers());
   },
   completeSurgeTransition: () => {
-    if (!get().surgeTransitionActive) return;
-    set({ surgeTransitionActive: false });
-    runGuidedSystemAction(() => get().runHostMain());
+    const state = get();
+    if (!state.surgeTransitionActive) return;
+    const begun = beginHostMain(state.game);
+    set({
+      game: begun,
+      surgeTransitionActive: false,
+      surgeRevealPending: true,
+    });
+    // This transition is the exact narrative seam: Surge now exists, but the Host has not
+    // revealed anything yet. Publish it directly so contextual help never depends on a strict
+    // guided intervention still owning the interaction gate at this instant.
+    publishGuidedTransitionReceipts(state.game, begun);
+  },
+  continueSurgeAfterExplanation: () => {
+    const state = get();
+    if (!state.surgeRevealPending) return;
+    const main = revealHostMainAfterSurgeEntry(state.game, { deferInvokedTriggers: true });
+    presentResolvedHostMain(state.game, main, state);
   },
   prepareHostAttackers: () => {
-    if (discardPauseInProgress(get())) return;
+    if (discardPauseInProgress(get()) || get().stabilizationCompletion) return;
     startHostCombatSequence();
   },
   declareBlocker: (blockerId, attackerId) => {
@@ -2054,6 +2093,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
       landPlayAnimationQueue: state.landPlayAnimationQueue.filter((item) => item.id !== id),
       summoningAnimationCount: Math.max(0, state.summoningAnimationCount - 1),
     })),
+  completeStabilizationCard: (eventId, cardId) => {
+    let finished = false;
+    set((state) => {
+      const active = state.stabilizationCompletion;
+      if (!active || active.id !== eventId || !active.pendingCardIds.includes(cardId)) return {};
+      const pendingCardIds = active.pendingCardIds.filter((pendingId) => pendingId !== cardId);
+      if (pendingCardIds.length > 0) {
+        return { stabilizationCompletion: { ...active, pendingCardIds } };
+      }
+      finished = true;
+      return { stabilizationCompletion: undefined };
+    });
+    if (finished) clearStabilizationCompletionTimer();
+  },
   completeHostMillAnimation: (id) => {
     let shouldRunHost = false;
     set((state) => {
@@ -2065,17 +2118,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return { hostMillAnimationQueue };
     });
     if (shouldRunHost && typeof window !== "undefined") {
-      window.setTimeout(() => {
-        const latest = useGameStore.getState();
-        if (latest.game.activeSide === "host" && latest.game.phase === "host") {
-          runGuidedSystemAction(() => latest.runHostMain());
-        }
-      }, 0);
+      scheduleHostMainWhenStabilizationSettles();
     }
   },
   resolveHostCombat: () => {
     const state = get();
-    if (discardPauseInProgress(state)) return;
+    if (discardPauseInProgress(state) || state.stabilizationCompletion) return;
     const { game, hostAttackAnimation, playerAttackAnimation, burnAnimation } = state;
     if (hostAttackAnimation || playerAttackAnimation || burnAnimation) return;
     if (game.activeSide !== "host" || game.combat.hostAttackers.length === 0) return;
@@ -2095,14 +2143,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
   finishHostTurn: () => {
     if (!gameplayIntentAllowed({ kind: "phase.startPlayerTurn" })) return;
     let transition: readonly [GameState, GameState] | undefined;
+    let stabilizationCompletion: StabilizationCompletionAnimation | undefined;
     set((state) => {
-      if (discardPauseInProgress(state)) return {};
+      if (discardPauseInProgress(state) || state.stabilizationCompletion) return {};
       const { game } = state;
       const next = finishHostTurn(game);
       transition = [game, next];
+      stabilizationCompletion = stabilizationCompletionForTransition(game, next);
       playDrawOneIfPlayerDrew(game, next);
-      return { game: next, hostAutoTriggerCount: 0 };
+      return {
+        game: next,
+        stabilizationCompletion,
+        ...stabilizationCompletionInteractionReset(stabilizationCompletion),
+        hostAutoTriggerCount: 0,
+      };
     });
+    if (stabilizationCompletion) scheduleStabilizationCompletionSafetyClear(stabilizationCompletion);
     if (transition) publishGuidedTransitionReceipts(...transition);
   },
   triggerEndGame: (winner) => {
@@ -2119,6 +2175,40 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(createCleanUiState());
   },
 }));
+
+function presentResolvedHostMain(previous: GameState, main: GameState, state: GameStore): void {
+  const previousHostBattlefieldIds = new Set(previous.host.field.map((card) => card.instanceId));
+  const enteredCards = main.host.field.filter((card) => !previousHostBattlefieldIds.has(card.instanceId));
+  const triggerCards = enteredCards.filter(hasInvokedTrigger);
+  const shared = {
+    game: main,
+    surgeRevealPending: false,
+    selectedHostCreatureId: undefined,
+    selectedPlayerCreatureId: undefined,
+    hostAutoTriggerCount: triggerCards.length,
+    summoningAnimationCount: state.summoningAnimationCount + enteredCards.length,
+    hostMillAnimationQueue: appendHostMillAnimations(state, previous, main),
+  } as const;
+
+  if (main.host.pendingCard) {
+    const pendingCard = main.host.pendingCard;
+    useGameStore.setState(shared);
+    publishGuidedTransitionReceipts(previous, main);
+    publishGameplayReceipt({ kind: "host.resolved" });
+    captureStaticAuraBeats();
+    scheduleHostArrivalEffects(enteredCards, () => runTributeOfTheFourSorrowsSequence(pendingCard));
+    return;
+  }
+
+  if (main.host.field.length > previous.host.field.length) useAudioStore.getState().playSfx("draw");
+  useGameStore.setState(shared);
+  publishGuidedTransitionReceipts(previous, main);
+  publishGameplayReceipt({ kind: "host.resolved" });
+  // Before any frame renders the new creatures: hold back the buffs they just gained so the
+  // announcement beat still has something to reveal.
+  captureStaticAuraBeats();
+  scheduleHostArrivalEffects(enteredCards, () => startHostCombatSequence());
+}
 
 function runAuthoredHostTurn(game: GameState, plan: AuthoredHostTurnPlan): void {
   const begun = beginHostMain(game);
@@ -2754,6 +2844,88 @@ function clearEnergyFlowPresentation(): void {
   energyFlowAfterCommit = undefined;
 }
 
+function stabilizationCompletionForTransition(
+  previous: GameState,
+  next: GameState,
+): StabilizationCompletionAnimation | undefined {
+  const cards = completedStabilizationCards(previous, next);
+  if (cards.length === 0) return undefined;
+  return Object.freeze({
+    id: ++stabilizationCompletionEventId,
+    cards,
+    pendingCardIds: Object.freeze(cards.map(({ cardId }) => cardId)),
+  });
+}
+
+function stabilizationCompletionInteractionReset(
+  animation: StabilizationCompletionAnimation | undefined,
+): Partial<GameStore> {
+  if (!animation) return {};
+  return {
+    selectedHandId: undefined,
+    selectedPlayerCreatureId: undefined,
+    selectedHostCreatureId: undefined,
+    activeEffectCardId: undefined,
+    closingEffectCardId: undefined,
+    hoveredCardId: undefined,
+    focusedCardId: undefined,
+    blockDrag: undefined,
+    playerAttackDrag: undefined,
+    cardContextMenu: undefined,
+  };
+}
+
+function clearStabilizationCompletionTimer(): void {
+  if (stabilizationCompletionSafetyTimer !== undefined && typeof window !== "undefined") {
+    window.clearTimeout(stabilizationCompletionSafetyTimer);
+  }
+  stabilizationCompletionSafetyTimer = undefined;
+}
+
+function finishStabilizationCompletion(eventId: number): void {
+  clearStabilizationCompletionTimer();
+  useGameStore.setState((state) =>
+    state.stabilizationCompletion?.id === eventId
+      ? { stabilizationCompletion: undefined }
+      : {},
+  );
+}
+
+function scheduleStabilizationCompletionSafetyClear(
+  animation: StabilizationCompletionAnimation,
+): void {
+  if (
+    typeof window === "undefined" ||
+    typeof document === "undefined" ||
+    typeof document.createElement !== "function"
+  ) {
+    queueMicrotask(() => finishStabilizationCompletion(animation.id));
+    return;
+  }
+  clearStabilizationCompletionTimer();
+  stabilizationCompletionSafetyTimer = window.setTimeout(
+    () => finishStabilizationCompletion(animation.id),
+    stabilizationCompletionTotalMs(animation.cards.length) + STABILIZATION_COMPLETION_SAFETY_BUFFER_MS,
+  );
+}
+
+function scheduleHostMainWhenStabilizationSettles(): void {
+  if (typeof window === "undefined") return;
+  const sessionId = useGameStore.getState().gameSessionId;
+  const resume = () => {
+    const latest = useGameStore.getState();
+    if (latest.gameSessionId !== sessionId) return;
+    if (latest.stabilizationCompletion) {
+      window.setTimeout(resume, 40);
+      return;
+    }
+    if (latest.game.activeSide === "host" && latest.game.phase === "host") {
+      runGuidedSystemAction(() => latest.runHostMain());
+    }
+  };
+  window.setTimeout(resume, 0);
+}
+
 function cancelScheduledPresentation(): void {
   hostCombatSequenceId += 1;
   playerCombatSequenceId += 1;
@@ -2788,6 +2960,7 @@ function cancelScheduledPresentation(): void {
   clearDrainEssencePresentation();
   clearFinalBanquetPresentation();
   clearEnergyFlowPresentation();
+  clearStabilizationCompletionTimer();
 }
 
 function scheduleBloodPactAnimationSafetyClear(id: string): void {
@@ -2878,6 +3051,7 @@ function combatResolutionInProgress(state: GameStore): boolean {
       state.drainEssenceAnimation ||
       state.finalBanquetAnimation ||
       state.energyFlowAnimation ||
+      state.stabilizationCompletion ||
       state.pendingSpellHandId ||
       state.spellFightAnimation ||
       state.resolvingHostCombat ||

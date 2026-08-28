@@ -3,41 +3,48 @@ import { AudioClickListener } from "./components/AudioClickListener";
 import { Board } from "./components/Board";
 import { DeckInspector } from "./components/DeckInspector";
 import { DestinyRewriteTransition, type DestinyTransitionKind } from "./components/DestinyRewriteTransition";
-import { ENCOUNTER_IMPACT_MS, ENCOUNTER_OPEN_MS, ENCOUNTER_TRANSITION_MS, EncounterTransition } from "./components/EncounterTransition";
+import { ENCOUNTER_IMPACT_MS, ENCOUNTER_OPEN_MS, ENCOUNTER_TRANSITION_MS, EncounterTransition, type EncounterCardOrigins } from "./components/EncounterTransition";
 import { ChronicleSigilOverture } from "./components/ChronicleSigilOverture";
 import { GameLoadingScreen } from "./components/GameLoadingScreen";
+import { LearnToPlayIntroModal } from "./components/LearnToPlayIntroModal";
 import { StartMenu, type HowToPlayMenuEntry } from "./components/StartMenu";
+import {
+  createOpaqueMatchOrigin,
+  matchOriginVisualSeed,
+  type MatchOrigin,
+} from "./content/MatchOrigin";
 import {
   GUIDED_LESSON_BOARD_SESSION,
   LEARN_TO_PLAY_BOARD_SESSION,
   NORMAL_BOARD_SESSION,
 } from "./components/boardSessionPolicies";
 import { findInspectableDeck, hostInspectableDecks, playerInspectableDecks } from "./data/deckCatalog";
-import { DEFAULT_HOST_DECK_ID, DEFAULT_PLAYER_DECK_ID } from "./data/decks";
 import type { GameMode } from "./engine/GameTypes";
 import { useAudioStore } from "./store/useAudioStore";
 import { useGameStore } from "./store/useGameStore";
+import { useToastStore } from "./store/useToastStore";
+import { useTranslation } from "./i18n/useTranslation";
 import { IS_DEV } from "./utils/devMode";
 import { hasCompletedOnboarding, hasPreloadedGameAssets, markGameAssetsPreloaded, readStoredPlayerName } from "./utils/appPersistence";
 import { preloadGameAssets, type LoadingLabel } from "./utils/assetPreloader";
 import { registerDesktopLifecycle } from "./platform/desktopLifecycle";
 import { initializeDesktopPreferences } from "./persistence/desktopPreferences";
 import {
-  deleteDesktopResume,
-  loadDesktopResume,
   resumeDeckIds,
-  startDesktopResumeCheckpointing,
   type DesktopResumeLoad,
 } from "./persistence/resumeService";
+import { productResumeRuntime } from "./persistence/resumeRuntime";
 import { restoreResumeGame } from "./persistence/resumeSave";
 import { initializeGuidedProgressPersistence } from "./persistence/guidedProgressPersistence";
 import { guidedProductLifecycle } from "./guidance/productRuntime";
 import { guidedLessonRegistry } from "./guidance/registry";
 import { HOW_TO_PLAY_CATALOG } from "./guidance/howToPlayCatalog";
 import { LEARN_TO_PLAY_JOURNEY, learnToPlayJourneyLifecycle } from "./guidance/learnToPlayJourney";
+import { createLearnToPlayFirstMatchOrigin } from "./guidance/learnToPlayHandoff";
 import { guidedProgressStore } from "./guidance/progress";
+import { productMatchLifecycle } from "./history/historyRuntime";
 
-// The conditional imports are compile-time: release builds remove both developer modules instead
+// The conditional imports are compile-time: release builds remove every developer module instead
 // of merely hiding their entry buttons.
 const PlaygroundScreen = import.meta.env.DEV
   ? lazy(() => import("./playground/PlaygroundScreen").then((module) => ({ default: module.PlaygroundScreen })))
@@ -45,16 +52,33 @@ const PlaygroundScreen = import.meta.env.DEV
 const AudioLabScreen = import.meta.env.DEV
   ? lazy(() => import("./audio-lab/AudioLabScreen").then((module) => ({ default: module.AudioLabScreen })))
   : undefined;
+const SeedExplorerScreen = import.meta.env.DEV
+  ? lazy(() => import("./seed-explorer/SeedExplorerScreen").then((module) => ({ default: module.SeedExplorerScreen })))
+  : undefined;
+const UIReferenceScreen = import.meta.env.DEV
+  ? lazy(() => import("./ui-reference/UIReferenceScreen").then((module) => ({ default: module.UIReferenceScreen })))
+  : undefined;
 
-type AppScreen = "start" | "deckInspector" | "game" | "tutorial" | "journey" | "playground" | "audioLab";
+type AppScreen =
+  | "start"
+  | "deckInspector"
+  | "game"
+  | "tutorial"
+  | "journey"
+  | "playground"
+  | "audioLab"
+  | "seedExplorer"
+  | "uiReference";
 
 type LaunchTransitionState = {
   id: number;
   chronicleDeckId: string;
   hostDeckId: string;
   gameMode: GameMode;
+  cardOrigins?: EncounterCardOrigins;
   startedAtMs: number;
   reducedMotion: boolean;
+  historySettled: Promise<unknown>;
 };
 
 type BoardOvertureState = {
@@ -71,36 +95,29 @@ type DestinyTransitionState = {
   id: number;
   kind: DestinyTransitionKind;
   seed: string;
-  setupTurns: number;
-  destination: "standard" | "learn-to-play-random";
+  origin?: MatchOrigin;
+  destination: "standard" | "history-replay" | "learn-to-play-first-seed";
 };
 
 /** La Mano empieza a subir mientras el último rastro del signo termina de apagarse. */
 const BOARD_OVERTURE_HAND_DELAY_MS = 650;
-const STANDARD_SETUP_TURNS = 3;
-
-function generateRandomFutureSeed(): string {
-  const random = new Uint32Array(2);
-  if (typeof crypto !== "undefined" && crypto.getRandomValues) crypto.getRandomValues(random);
-  else {
-    random[0] = Math.floor(Math.random() * 0xffffffff);
-    random[1] = Math.floor(Math.random() * 0xffffffff);
-  }
-  return `hostfall-${Date.now().toString(36)}-${random[0].toString(36)}${random[1].toString(36)}`;
-}
 
 const subscribeGuidedLifecycle = (listener: () => void) => guidedProductLifecycle.subscribe(listener);
 const readGuidedLifecycle = () => guidedProductLifecycle.snapshot();
 const subscribeJourneyLifecycle = (listener: () => void) => learnToPlayJourneyLifecycle.subscribe(listener);
 const readJourneyLifecycle = () => learnToPlayJourneyLifecycle.snapshot();
+const subscribeMatchLifecycle = (listener: () => void) => productMatchLifecycle.subscribe(listener);
+const readMatchLifecycle = () => productMatchLifecycle.snapshot();
 
 export default function App() {
+  const t = useTranslation();
   const reset = useGameStore((state) => state.reset);
   const loadScenario = useGameStore((state) => state.loadScenario);
   const gameSessionId = useGameStore((state) => state.gameSessionId);
   const startBattleMusic = useAudioStore((state) => state.startBattleMusic);
   const playSfx = useAudioStore((state) => state.playSfx);
   const stopMusic = useAudioStore((state) => state.stopMusic);
+  const pushToast = useToastStore((state) => state.pushToast);
   const [screen, setScreen] = useState<AppScreen>("start");
   const [playerName, setPlayerName] = useState(() => readStoredPlayerName());
   const [bootRevision, setBootRevision] = useState(0);
@@ -120,15 +137,20 @@ export default function App() {
      lanzamiento ya se secuencia en App; `Board` sólo se entera de en qué fase está. */
   const [boardOverture, setBoardOverture] = useState<BoardOvertureState | null>(null);
   const [destinyTransition, setDestinyTransition] = useState<DestinyTransitionState | null>(null);
+  const [matchOrigin, setMatchOrigin] = useState<MatchOrigin | null>(null);
   const launchIdRef = useRef(0);
   const destinyIdRef = useRef(0);
   const destinyTransitionRef = useRef<DestinyTransitionState | null>(null);
   const resolvedDestinyIdRef = useRef<number | null>(null);
+  const navigationPendingRef = useRef(false);
+  const seenHistoryWarningRevisionRef = useRef(0);
   const [desktopResume, setDesktopResume] = useState<DesktopResumeLoad>({ status: "none" });
   const [preferencesReady, setPreferencesReady] = useState(false);
   const [requiredTutorialOffered, setRequiredTutorialOffered] = useState(false);
+  const [learnToPlayIntroOpen, setLearnToPlayIntroOpen] = useState(false);
   const guidedLifecycle = useSyncExternalStore(subscribeGuidedLifecycle, readGuidedLifecycle, readGuidedLifecycle);
   const journeyLifecycle = useSyncExternalStore(subscribeJourneyLifecycle, readJourneyLifecycle, readJourneyLifecycle);
+  const matchLifecycle = useSyncExternalStore(subscribeMatchLifecycle, readMatchLifecycle, readMatchLifecycle);
   // The generic lesson gate remains available, but the current catalog contains only optional
   // Preparation. Learn to Play does not enter first-open gating until its later handoff phase.
   const requiredLesson = IS_DEV ? undefined : guidedProductLifecycle.nextRequiredLesson();
@@ -137,14 +159,38 @@ export default function App() {
     : screen === "journey"
       ? LEARN_TO_PLAY_BOARD_SESSION
       : NORMAL_BOARD_SESSION;
+  const clearResumeForProduct = useCallback(() => {
+    void productResumeRuntime.clear().catch(() => undefined);
+    if (productResumeRuntime.enabled) setDesktopResume({ status: "none" });
+  }, []);
 
   useEffect(() => {
     return registerDesktopLifecycle();
   }, []);
 
   useEffect(() => {
+    void productMatchLifecycle.initialize();
+  }, []);
+
+  useEffect(() => {
+    if (!matchLifecycle.lastWarning) return;
+    if (matchLifecycle.warningRevision <= seenHistoryWarningRevisionRef.current) return;
+    seenHistoryWarningRevisionRef.current = matchLifecycle.warningRevision;
+    const messageKey = matchLifecycle.lastWarning.kind === "begin"
+      ? "toast.historyBeginNotDurable"
+      : matchLifecycle.lastWarning.kind === "close"
+        ? "toast.historyCloseNotDurable"
+        : "toast.historyUnavailable";
+    pushToast({
+      title: t("toast.historyNotDurable"),
+      message: t(messageKey),
+      tone: "warning",
+    });
+  }, [matchLifecycle.lastWarning, matchLifecycle.warningRevision, pushToast, t]);
+
+  useEffect(() => {
     let active = true;
-    void loadDesktopResume()
+    void productResumeRuntime.load()
       .then((resume) => {
         if (active) setDesktopResume(resume);
       })
@@ -155,8 +201,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!boardSessionPolicy.autosave || screen !== "game") return;
-    return startDesktopResumeCheckpointing({ setupTurns, playerName });
+    if (!productResumeRuntime.enabled || !boardSessionPolicy.autosave || screen !== "game") return;
+    return productResumeRuntime.startCheckpointing({ setupTurns, playerName });
   }, [boardSessionPolicy, playerName, screen, setupTurns]);
 
   useEffect(() => {
@@ -246,18 +292,31 @@ export default function App() {
 
   useEffect(() => {
     if (!launchTransition) return;
-    const { id, reducedMotion, startedAtMs } = launchTransition;
+    const { id, reducedMotion, startedAtMs, historySettled } = launchTransition;
+    let active = true;
+    const timers = new Set<number>();
     const remainingUntil = (offsetMs: number) => Math.max(0, startedAtMs + offsetMs - performance.now());
-    const revealTimeout = window.setTimeout(() => {
+    const waitUntil = (offsetMs: number) => new Promise<void>((resolve) => {
+      const timer = window.setTimeout(() => {
+        timers.delete(timer);
+        resolve();
+      }, remainingUntil(offsetMs));
+      timers.add(timer);
+    });
+    void Promise.all([
+      historySettled,
+      waitUntil(reducedMotion ? 80 : ENCOUNTER_IMPACT_MS),
+    ]).then(async () => {
+      if (!active) return;
       startBattleMusic(true);
       setScreen("game");
-    }, reducedMotion ? 80 : remainingUntil(ENCOUNTER_IMPACT_MS));
-    const finishTimeout = window.setTimeout(() => {
+      await waitUntil(reducedMotion ? 180 : ENCOUNTER_TRANSITION_MS);
+      if (!active) return;
       setLaunchTransition((current) => (current?.id === id ? null : current));
-    }, reducedMotion ? 180 : remainingUntil(ENCOUNTER_TRANSITION_MS));
+    });
     return () => {
-      window.clearTimeout(revealTimeout);
-      window.clearTimeout(finishTimeout);
+      active = false;
+      for (const timer of timers) window.clearTimeout(timer);
     };
   }, [launchTransition, startBattleMusic]);
 
@@ -275,7 +334,7 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, [boardOverture?.handReady, boardOverture?.id, boardOverture?.phase]);
 
-  /* Salir del tablero a mitad de la obertura la deja pendiente, y la siguiente partida
+  /* Salir del tablero a mitad de la obertura la deja pendiente, y la siguiente Visión
      montaría con el HUD apagado. Mientras existe `launchTransition` seguimos en el menú a
      propósito: la obertura ya está armada para el primer render del tablero. */
   useEffect(() => {
@@ -301,6 +360,7 @@ export default function App() {
     const lesson = guidedLessonRegistry.require(lessonId);
     setSetupTurns(lesson.scenario.setupTurnsTotal);
     setPreserveMenuMusic(false);
+    setMatchOrigin(null);
     stopMusic();
     guidedProductLifecycle.start(lesson.id);
     setScreen("tutorial");
@@ -312,10 +372,16 @@ export default function App() {
   }
 
   function launchLearnToPlayJourney() {
+    setLearnToPlayIntroOpen(true);
+  }
+
+  function beginLearnToPlayJourney() {
     setSetupTurns(LEARN_TO_PLAY_JOURNEY.setupTurns);
     setPreserveMenuMusic(false);
-    stopMusic();
+    setMatchOrigin(null);
     if (!learnToPlayJourneyLifecycle.start()) return;
+    setLearnToPlayIntroOpen(false);
+    stopMusic();
     setScreen("journey");
     startBattleMusic(true);
   }
@@ -327,59 +393,113 @@ export default function App() {
   const beginDestinyTransition = useCallback((
     kind: DestinyTransitionKind,
     destination: DestinyTransitionState["destination"] = "standard",
+    requestedOrigin?: MatchOrigin,
   ): boolean => {
     if (destinyTransitionRef.current) return false;
     const gameStore = useGameStore.getState();
+    const origin = destination === "history-replay"
+      ? requestedOrigin
+      : destination === "standard"
+        ? matchOrigin ?? undefined
+        : createLearnToPlayFirstMatchOrigin();
+    if (kind === "rewrite" && !origin) return false;
     gameStore.stopGamePresentation();
     const transition = {
       id: ++destinyIdRef.current,
       kind,
-      seed: gameStore.game.seed,
-      setupTurns,
+      seed: origin ? matchOriginVisualSeed(origin) : gameStore.game.seed,
+      origin,
       destination,
     };
     destinyTransitionRef.current = transition;
     resolvedDestinyIdRef.current = null;
     setDestinyTransition(transition);
     return true;
-  }, [setupTurns]);
+  }, [matchOrigin]);
 
-  const resolveDestinyTransition = useCallback((transitionId: number) => {
+  const resolveDestinyTransition = useCallback((transitionId: number, release: () => void) => {
     const transition = destinyTransitionRef.current;
-    if (!transition || transition.id !== transitionId || resolvedDestinyIdRef.current === transitionId) return;
+    if (!transition || transition.id !== transitionId || resolvedDestinyIdRef.current === transitionId) {
+      release();
+      return;
+    }
     resolvedDestinyIdRef.current = transitionId;
-    if (transition.kind === "rewrite") {
-      reset(transition.seed, transition.setupTurns);
-      startBattleMusic(true);
-      return;
-    }
+    void (async () => {
+      try {
+        if (transition.kind === "rewrite") {
+          if (!transition.origin) return;
+          await productMatchLifecycle.closeActive("rewrite");
+          if (destinyTransitionRef.current?.id !== transitionId) return;
+          const origin = transition.origin;
+          if (transition.destination === "history-replay") {
+            clearResumeForProduct();
+            setPreserveMenuMusic(false);
+            stopMusic();
+          }
+          const launch = productMatchLifecycle.beginLaunch({
+            source: transition.destination === "history-replay" ? "history-replay" : "rewrite",
+            sessionKind: origin.rngSeed === "developer" ? "developer" : "normal",
+            origin,
+            commit: () => reset(
+              origin.rngSeed,
+              origin.preparationTurns,
+              origin.playerDeckId,
+              origin.hostDeckId,
+              origin.difficulty,
+              origin.gameMode,
+            ),
+          });
+          if (!launch.committed) return;
+          setMatchOrigin(origin);
+          setSetupTurns(origin.preparationTurns);
+          setSelectedDeckId(origin.playerDeckId);
+          setSelectedHostDeckId(origin.hostDeckId);
+          if (transition.destination === "history-replay") setScreen("game");
+          await launch.settled;
+          startBattleMusic(true);
+          return;
+        }
 
-    if (transition.destination === "learn-to-play-random") {
-      void deleteDesktopResume();
-      setDesktopResume({ status: "none" });
-      setPreserveMenuMusic(false);
-      setSetupTurns(STANDARD_SETUP_TURNS);
-      setSelectedDeckId(DEFAULT_PLAYER_DECK_ID);
-      setSelectedHostDeckId(DEFAULT_HOST_DECK_ID);
-      reset(
-        generateRandomFutureSeed(),
-        STANDARD_SETUP_TURNS,
-        DEFAULT_PLAYER_DECK_ID,
-        DEFAULT_HOST_DECK_ID,
-        "normal",
-        "standard",
-      );
-      setScreen("game");
-      startBattleMusic(true);
-      return;
-    }
+        await productMatchLifecycle.closeActive("contemplate");
+        if (destinyTransitionRef.current?.id !== transitionId) return;
+        if (transition.destination === "learn-to-play-first-seed") {
+          clearResumeForProduct();
+          setPreserveMenuMusic(false);
+          const origin = transition.origin ?? createLearnToPlayFirstMatchOrigin();
+          const launch = productMatchLifecycle.beginLaunch({
+            source: "learn-to-play-handoff",
+            sessionKind: "normal",
+            origin,
+            commit: () => reset(
+              origin.rngSeed,
+              origin.preparationTurns,
+              origin.playerDeckId,
+              origin.hostDeckId,
+              origin.difficulty,
+              origin.gameMode,
+            ),
+          });
+          if (!launch.committed) return;
+          setMatchOrigin(origin);
+          setSetupTurns(origin.preparationTurns);
+          setSelectedDeckId(origin.playerDeckId);
+          setSelectedHostDeckId(origin.hostDeckId);
+          setScreen("game");
+          await launch.settled;
+          startBattleMusic(true);
+          return;
+        }
 
-    void deleteDesktopResume();
-    setDesktopResume({ status: "none" });
-    setPreserveMenuMusic(false);
-    setMenuReturnScreen("setup");
-    setScreen("start");
-  }, [reset, startBattleMusic]);
+        clearResumeForProduct();
+        setPreserveMenuMusic(false);
+        setMatchOrigin(null);
+        setMenuReturnScreen("setup");
+        setScreen("start");
+      } finally {
+        release();
+      }
+    })();
+  }, [clearResumeForProduct, reset, startBattleMusic, stopMusic]);
 
   const completeDestinyTransition = useCallback((transitionId: number) => {
     if (destinyTransitionRef.current?.id !== transitionId) return;
@@ -388,8 +508,8 @@ export default function App() {
     setDestinyTransition((current) => (current?.id === transitionId ? null : current));
   }, []);
 
-  function continueLearnToPlayIntoRandomFuture() {
-    if (!beginDestinyTransition("contemplate", "learn-to-play-random")) return;
+  function continueLearnToPlayIntoFirstCanonFuture() {
+    if (!beginDestinyTransition("contemplate", "learn-to-play-first-seed")) return;
     // Clicking the CTA is the authored completion boundary. The board remains mounted beneath
     // the vortex until `onCovered` replaces it with the new, normal Future.
     learnToPlayJourneyLifecycle.stop();
@@ -399,6 +519,7 @@ export default function App() {
   function leaveGuidedLesson() {
     guidedProductLifecycle.stop();
     setPreserveMenuMusic(false);
+    setMatchOrigin(null);
     setMenuReturnScreen("home");
     setScreen("start");
   }
@@ -406,9 +527,24 @@ export default function App() {
   function leaveLearnToPlayJourney() {
     learnToPlayJourneyLifecycle.stop();
     setPreserveMenuMusic(false);
+    setMatchOrigin(null);
     setMenuReturnScreen("home");
     setScreen("start");
   }
+
+  const returnNormalMatchToMenu = useCallback(() => {
+    if (navigationPendingRef.current) return;
+    navigationPendingRef.current = true;
+    void productMatchLifecycle.closeActive("menu").then(() => {
+      clearResumeForProduct();
+      setPreserveMenuMusic(false);
+      setMatchOrigin(null);
+      setMenuReturnScreen("home");
+      setScreen("start");
+    }).finally(() => {
+      navigationPendingRef.current = false;
+    });
+  }, [clearResumeForProduct]);
 
   if (loading || !preferencesReady) {
     return <GameLoadingScreen percent={loading ? loadingProgress.percent : 100} label={loading ? loadingProgress.label : "ready"} leaving={loadingLeaving} />;
@@ -420,6 +556,7 @@ export default function App() {
       chronicleDeckId={launchTransition.chronicleDeckId}
       hostDeckId={launchTransition.hostDeckId}
       gameMode={launchTransition.gameMode}
+      cardOrigins={launchTransition.cardOrigins}
     />
   ) : null;
   const destinyTransitionOverlay = destinyTransition ? (
@@ -428,6 +565,7 @@ export default function App() {
       transitionId={destinyTransition.id}
       kind={destinyTransition.kind}
       seed={destinyTransition.seed}
+      opensVision={destinyTransition.kind === "rewrite" || destinyTransition.destination === "learn-to-play-first-seed"}
       onCovered={resolveDestinyTransition}
       onComplete={completeDestinyTransition}
     />
@@ -465,13 +603,44 @@ export default function App() {
     );
   }
 
+  if (screen === "seedExplorer" && SeedExplorerScreen) {
+    return (
+      <Suspense fallback={<div className="playground-chunk-fallback" />}>
+        <AudioClickListener />
+        <SeedExplorerScreen
+          onReturnToMenu={() => {
+            setPreserveMenuMusic(false);
+            setMenuReturnScreen("home");
+            setScreen("start");
+          }}
+        />
+      </Suspense>
+    );
+  }
+
+  if (screen === "uiReference" && UIReferenceScreen) {
+    return (
+      <Suspense fallback={<div className="playground-chunk-fallback" />}>
+        <AudioClickListener />
+        <UIReferenceScreen
+          onReturnToMenu={() => {
+            setPreserveMenuMusic(false);
+            setMenuReturnScreen("home");
+            setScreen("start");
+          }}
+        />
+      </Suspense>
+    );
+  }
+
   if (screen === "deckInspector") {
     return (
       <>
         <AudioClickListener />
         <DeckInspector
           deck={findInspectableDeck(inspectorDeckId)}
-          backLabel={menuReturnScreen === "chronicles" ? "Chronicles" : menuReturnScreen === "hosts" ? "Hosts" : menuReturnScreen === "chaos" ? "Chaos" : "Play"}
+          backLabel={menuReturnScreen === "chronicles" ? t("menu.chronicles") : menuReturnScreen === "hosts" ? t("menu.hosts") : menuReturnScreen === "chaos" ? "Chaos" : t("setup.prepare")}
+          useGenericDeckVocabulary={menuReturnScreen === "chaos"}
           onBack={() => setScreen("start")}
         />
         {transitionOverlay}
@@ -539,26 +708,48 @@ export default function App() {
             stopMusic();
             setScreen("audioLab");
           } : undefined}
+          onOpenSeedExplorer={IS_DEV ? () => {
+            stopMusic();
+            setScreen("seedExplorer");
+          } : undefined}
+          onOpenUiReference={IS_DEV ? () => {
+            stopMusic();
+            setScreen("uiReference");
+          } : undefined}
           howToPlayEntries={howToPlayEntries}
+          resumeEnabled={productResumeRuntime.enabled}
           resumeStatus={desktopResume.status}
-          continueDisabled
-          onContinue={!requiredLesson && desktopResume.save ? () => {
+          continueDisabled={Boolean(requiredLesson)}
+          onContinue={productResumeRuntime.enabled && !requiredLesson && desktopResume.save ? () => {
             const save = desktopResume.save!;
             const deckIds = resumeDeckIds(save);
+            const restoredGame = restoreResumeGame(save);
+            const restoredOrigin = createOpaqueMatchOrigin({
+              rngSeed: restoredGame.seed,
+              playerDeckKey: save.playerDeckKey,
+              hostDeckKey: save.hostDeckKey,
+              difficulty: restoredGame.difficulty,
+              preparationTurns: save.setupTurns,
+              gameMode: restoredGame.gameMode,
+              deterministicRevision: `resume-v${save.formatVersion}`,
+            });
             stopMusic();
             setPlayerName(save.playerName);
             setSetupTurns(save.setupTurns);
             setSelectedDeckId(deckIds.playerDeckId);
             setSelectedHostDeckId(deckIds.hostDeckId);
-            loadScenario(restoreResumeGame(save), deckIds);
+            setMatchOrigin(restoredOrigin);
+            loadScenario(restoredGame, deckIds);
             setDesktopResume({ status: "none" });
             setScreen("game");
             startBattleMusic(true);
           } : undefined}
-          onDiscardResume={desktopResume.status === "corrupt" ? () => {
-            void deleteDesktopResume();
-            setDesktopResume({ status: "none" });
-          } : undefined}
+          onDiscardResume={productResumeRuntime.enabled && desktopResume.status === "corrupt"
+            ? clearResumeForProduct
+            : undefined}
+          onReplayFuture={(origin) => {
+            void beginDestinyTransition("rewrite", "history-replay", origin);
+          }}
           onRestartFirstTime={() => {
             setRequiredTutorialOffered(false);
             setScreen("start");
@@ -573,31 +764,39 @@ export default function App() {
               launchGuidedLesson(requiredLesson.id);
               return;
             }
-            void deleteDesktopResume();
-            setDesktopResume({ status: "none" });
+            clearResumeForProduct();
             setPreserveMenuMusic(false);
             setPlayerName(options.playerName);
-            setSetupTurns(options.setupTurns);
+            setMatchOrigin(options.origin);
+            setSetupTurns(options.origin.preparationTurns);
+            setSelectedDeckId(options.origin.playerDeckId);
+            setSelectedHostDeckId(options.origin.hostDeckId);
             stopMusic();
             playSfx("draw");
             playSfx("playMonsterHeavy", { rate: 0.92 });
-            reset(
-              options.seed,
-              options.setupTurns,
-              selectedDeckId,
-              selectedHostDeckId,
-              options.mode,
-              options.gameMode,
-            );
+            const launch = productMatchLifecycle.beginLaunch({
+              source: "play",
+              sessionKind: options.origin.rngSeed === "developer" ? "developer" : "normal",
+              origin: options.origin,
+              commit: () => reset(
+                options.origin.rngSeed,
+                options.origin.preparationTurns,
+                options.origin.playerDeckId,
+                options.origin.hostDeckId,
+                options.origin.difficulty,
+                options.origin.gameMode,
+              ),
+            });
+            if (!launch.committed) return;
             const id = ++launchIdRef.current;
             const startedAtMs = performance.now();
             const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-            /* Se arma en el mismo evento que crea la partida, antes de que pueda existir un
+            /* Se arma en el mismo evento que crea la Visión, antes de que pueda existir un
                primer render del tablero. `id` impide que un callback viejo cierre otra
                obertura y el reloj absoluto la ancla a la apertura real de las cortinas. */
             setBoardOverture(reducedMotion ? null : {
               id,
-              seed: useGameStore.getState().game.seed,
+              seed: matchOriginVisualSeed(options.origin),
               dialPending: true,
               startsAtMs: startedAtMs + ENCOUNTER_OPEN_MS,
               phase: "sigil",
@@ -606,13 +805,21 @@ export default function App() {
             });
             setLaunchTransition({
               id,
-              chronicleDeckId: selectedDeckId,
-              hostDeckId: selectedHostDeckId,
-              gameMode: options.gameMode,
+              chronicleDeckId: options.origin.playerDeckId,
+              hostDeckId: options.origin.hostDeckId,
+              gameMode: options.origin.gameMode,
+              cardOrigins: reducedMotion ? undefined : options.encounterCardOrigins,
               startedAtMs,
               reducedMotion,
+              historySettled: launch.settled,
             });
           }}
+        />
+        <LearnToPlayIntroModal
+          open={learnToPlayIntroOpen}
+          chroniclerName={playerName}
+          onClose={() => setLearnToPlayIntroOpen(false)}
+          onComplete={beginLearnToPlayJourney}
         />
         {transitionOverlay}
         {destinyTransitionOverlay}
@@ -627,12 +834,14 @@ export default function App() {
       <Board
         key={gameSessionId}
         playerName={playerName}
+        matchOrigin={screen === "game" ? matchOrigin ?? undefined : undefined}
         setupTurns={setupTurns}
         encounterEntering={Boolean(launchTransition)}
         overtureActive={boardOverture?.phase === "sigil"}
         overtureSettling={boardOverture?.phase === "overlap"}
         overtureHandPending={Boolean(boardOverture && !boardOverture.handReady)}
         overtureDialPending={Boolean(boardOverture?.dialPending)}
+        outcomePersistenceReady={productMatchLifecycle.outcomeReady(`game:${gameSessionId}`)}
         sessionPolicy={boardSessionPolicy}
         tutorialInterrupted={screen === "tutorial" && (guidedLifecycle.status === "aborted" || guidedLifecycle.status === "failed")}
         tutorialErrorMessage={screen === "tutorial" ? guidedLifecycle.errorMessage : journeyLifecycle.errorMessage}
@@ -645,15 +854,13 @@ export default function App() {
         onContemplateFuture={screen === "game"
           ? () => beginDestinyTransition("contemplate")
           : screen === "journey"
-            ? continueLearnToPlayIntoRandomFuture
+            ? continueLearnToPlayIntoFirstCanonFuture
             : undefined}
-        onReturnToMenu={screen === "tutorial" ? leaveGuidedLesson : screen === "journey" ? leaveLearnToPlayJourney : () => {
-          void deleteDesktopResume();
-          setDesktopResume({ status: "none" });
-          setPreserveMenuMusic(false);
-          setMenuReturnScreen("home");
-          setScreen("start");
-        }}
+        onReturnToMenu={screen === "tutorial"
+          ? leaveGuidedLesson
+          : screen === "journey"
+            ? leaveLearnToPlayJourney
+            : returnNormalMatchToMenu}
       />
       {/* Conserva el mismo slot que ocupa junto a StartMenu. Si la obertura se insertara
           antes, React remontaría EncounterTransition al revelar Board y el choque empezaría

@@ -226,11 +226,12 @@ test("lesson validation rejects unknown highlight roles and Act steps without a 
 });
 
 test("the real Board mounts the overlay and its capture shield covers every input family", async () => {
-  const [board, battlefield, hand, overlay, contextual, journeyCues, comparison, card, styles] = await Promise.all([
+  const [board, battlefield, hand, overlay, dialog, contextual, journeyCues, comparison, card, styles] = await Promise.all([
     readFile(new URL("../src/components/Board.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/Battlefield.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/Hand.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/GuidedTutorialOverlay.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/GuidedTutorialDialog.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/ContextualTutorialCallout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/LearnToPlayJourneyCues.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/GuidedCardComparison.tsx", import.meta.url), "utf8"),
@@ -248,7 +249,9 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(card, /CardCostBadge card=\{card\} emphasized=\{emphasizeCost\}/u);
   assert.match(card, /data-guided-anchor-extension="true"/u);
   assert.match(card, /card-cost-emphasis-frame/u);
-  assert.match(overlay, /data-guided-overlay-control="true"/u);
+  assert.match(overlay, /<GuidedTutorialDialog/u);
+  assert.match(dialog, /data-guided-overlay-control="true"/u);
+  assert.equal((overlay.match(/if \(!isControl\(event\.target\)\) dismissActionCallout\(\);/gu) ?? []).length, 2);
   assert.match(overlay, /guidedGlossarySegments/u);
   assert.match(overlay, /data-guided-glossary-term="true"/u);
   assert.match(overlay, /tooltipClassName="guided-glossary-tooltip"/u);
@@ -273,10 +276,10 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(overlay, /presentation\?\.kind === "spotlight"\s*&& session\.presentationSettled/su);
   assert.match(overlay, /data-tone=\{showSilentSpotlight \? presentation\.tone : undefined\}/u);
   assert.match(overlay, /guided-tutorial-directional-cue/u);
-  assert.match(overlay, /!isLearnToPlay &&/u);
-  assert.match(overlay, /tutorial-dialog-heading/u);
-  assert.match(overlay, /<div className="tutorial-dialog-heading">\s*<h2 id="guided-tutorial-title" style=\{\{ fontSize: titleFontSize \}\}>\{title\}<\/h2>/su);
-  assert.doesNotMatch(overlay, /tutorial-dialog-heading-ornament/u);
+  assert.match(dialog, /!isLearnToPlay &&/u);
+  assert.match(dialog, /tutorial-dialog-heading/u);
+  assert.match(dialog, /<div className="tutorial-dialog-heading">\s*<h2 id=\{titleId\} style=\{\{ fontSize: titleFontSize \}\}>\{title\}<\/h2>/su);
+  assert.doesNotMatch(dialog, /tutorial-dialog-heading-ornament/u);
   assert.match(overlay, /guided\.contextual\.understood/u);
   assert.match(overlay, /\{showCallout && !missingAnchor && comparisonCards\.length > 0 && \(/u);
   assert.match(overlay, /allowedIntent\.kind === "phase\.continueSetup"/u);

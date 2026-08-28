@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import {
   app,
   BrowserWindow,
+  clipboard,
   ipcMain,
   Menu,
   powerMonitor,
@@ -19,6 +20,7 @@ import {
 import { RotatingFileLogger } from "./logger";
 import {
   DesktopJsonStore,
+  desktopPersistenceFailureReason,
   desktopDataPaths,
   parseWindowState,
   type DesktopDataPaths,
@@ -35,6 +37,7 @@ const CREDIT_URL = "https://github.com/Leoocast";
 const APP_ID = "com.hostfall.game";
 const DEFEAT_CAPTURE_MAX_WIDTH = 2560;
 const DEFEAT_CAPTURE_MAX_HEIGHT = 1440;
+const CLIPBOARD_TEXT_MAX_LENGTH = 16_384;
 const EXTERNAL_LINKS = Object.freeze({ credits: CREDIT_URL });
 const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
 const smokeMode = process.env.HOSTFALL_ELECTRON_SMOKE === "1";
@@ -380,6 +383,44 @@ function registerIpcHandlers(): void {
     await desktopStore.delete(requireDataPaths().resumeSave);
   });
 
+  ipcMain.handle("hostfall:read-seed-history", async (event) => {
+    assertTrustedRenderer(event);
+    return desktopStore.readCandidates(requireDataPaths().seedHistory);
+  });
+
+  ipcMain.handle("hostfall:write-seed-history", async (event, value: unknown) => {
+    assertTrustedRenderer(event);
+    assertEnvelope(value, "hostfall-history");
+    try {
+      await desktopStore.write(requireDataPaths().seedHistory, value);
+      return Object.freeze({ ok: true });
+    } catch (error) {
+      logger?.log("error", "Seed history write failed", error);
+      return Object.freeze({ ok: false, reason: desktopPersistenceFailureReason(error) });
+    }
+  });
+
+  ipcMain.handle("hostfall:promote-seed-history-backup", async (event) => {
+    assertTrustedRenderer(event);
+    await desktopStore.promoteBackup(requireDataPaths().seedHistory);
+  });
+
+  ipcMain.handle("hostfall:reset-seed-history", async (event) => {
+    assertTrustedRenderer(event);
+    return desktopStore.resetWithDiagnostics(
+      requireDataPaths().seedHistory,
+      requireDataPaths().diagnostics,
+    );
+  });
+
+  ipcMain.handle("hostfall:write-clipboard-text", (event, value: unknown) => {
+    assertTrustedRenderer(event);
+    if (typeof value !== "string" || value.length > CLIPBOARD_TEXT_MAX_LENGTH) {
+      throw new Error("Clipboard text must be a bounded string.");
+    }
+    clipboard.writeText(value);
+  });
+
   ipcMain.handle("hostfall:open-external", async (event, linkId: unknown) => {
     assertTrustedRenderer(event);
     if (typeof linkId !== "string" || !Object.hasOwn(EXTERNAL_LINKS, linkId)) throw new Error("Unknown external link identity.");
@@ -467,7 +508,7 @@ function emitLifecycle(state: "background" | "foreground" | "suspend" | "resume"
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send("hostfall:lifecycle", state);
 }
 
-function assertEnvelope(value: unknown, kind: "hostfall-preferences" | "hostfall-resume"): void {
+function assertEnvelope(value: unknown, kind: "hostfall-preferences" | "hostfall-resume" | "hostfall-history"): void {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Desktop persistence envelope is malformed.");
   const candidate = value as Record<string, unknown>;
   if (candidate.kind !== kind || candidate.formatVersion !== 1) throw new Error("Desktop persistence envelope is unsupported.");

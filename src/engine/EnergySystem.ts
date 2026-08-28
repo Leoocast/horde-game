@@ -85,7 +85,7 @@ export function payEnergyAutomatically(game: GameState, cost: number): boolean {
     card.exhausted = true;
     card.activatedThisTurn = true;
     game.player.energyPool = addAvailableEnergy(game.player.energyPool, produced);
-    game.log.unshift(`Player auto-exhausts ${card.name} for ${produced} Energy.`);
+    game.log.unshift(`Chronicler automatically Exhausts ${card.name} for ${produced} Energy.`);
   }
   game.player.energyPool = payEnergy(game.player.energyPool, normalizedCost);
   return true;

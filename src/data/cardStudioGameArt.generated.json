@@ -12,9 +12,9 @@
     "aelyra_heir_of_elarion": {
       "artUrl": "/cards/pact_of_elarion/art/aelyra_heir_of_elarion.jpg",
       "battlefieldArtFrame": {
-        "zoom": 1.875,
-        "x": 12,
-        "y": 267
+        "zoom": 1.603,
+        "x": 25,
+        "y": 209
       }
     },
     "liora_keeper_of_the_grove": {
@@ -83,21 +83,26 @@
     "graveless_soldier": {
       "artUrl": "/cards/uprising_of_the_graveless/art/graveless_soldier.jpg",
       "battlefieldArtFrame": {
-        "zoom": 1,
+        "zoom": 1.04,
         "x": -2,
-        "y": 86
+        "y": 94
       }
     },
     "graveless_titan": {
       "artUrl": "/cards/uprising_of_the_graveless/art/graveless_titan.jpg",
       "battlefieldArtFrame": {
         "zoom": 1,
-        "x": 0,
-        "y": 90
+        "x": 2,
+        "y": 87
       }
     },
     "the_broken_headstone": {
-      "artUrl": "/cards/uprising_of_the_graveless/art/the_broken_headstone.jpg"
+      "artUrl": "/cards/uprising_of_the_graveless/art/the_broken_headstone.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.803,
+        "x": 2,
+        "y": 2
+      }
     },
     "inexhaustible_ossuary": {
       "artUrl": "/cards/uprising_of_the_graveless/art/inexhaustible_ossuary.jpg",
@@ -161,49 +166,49 @@
     "barrow_wallbreaker": {
       "artUrl": "/cards/uprising_of_the_graveless/art/barrow_wallbreaker.jpg",
       "battlefieldArtFrame": {
-        "zoom": 1,
-        "x": 2,
-        "y": 92
+        "zoom": 1.217,
+        "x": -51,
+        "y": 99
       }
     },
-    "hound_of_seven_memories": {
-      "artUrl": "/cards/uprising_of_the_graveless/art/hound_of_seven_memories.jpg",
+    "three_eyed_corpse_gorger": {
+      "artUrl": "/cards/uprising_of_the_graveless/art/three_eyed_corpse_gorger.jpg",
       "battlefieldArtFrame": {
-        "zoom": 1,
-        "x": 0,
-        "y": 92
+        "zoom": 1.04,
+        "x": 4,
+        "y": 56
       }
     },
     "mastiff_of_the_overflowing_ossuary": {
       "artUrl": "/cards/uprising_of_the_graveless/art/mastiff_of_the_overflowing_ossuary.jpg",
       "battlefieldArtFrame": {
-        "zoom": 1,
-        "x": -10,
-        "y": 73
+        "zoom": 1.04,
+        "x": -2,
+        "y": 65
       }
     },
     "spore_infested": {
       "artUrl": "/cards/uprising_of_the_graveless/art/spore_infested.jpg",
       "battlefieldArtFrame": {
-        "zoom": 1,
-        "x": -8,
-        "y": 36
+        "zoom": 1.04,
+        "x": 7,
+        "y": 32
       }
     },
     "harvester_of_the_fallen": {
       "artUrl": "/cards/uprising_of_the_graveless/art/harvester_of_the_fallen.jpg",
       "battlefieldArtFrame": {
-        "zoom": 1.17,
-        "x": -2,
-        "y": 108
+        "zoom": 1,
+        "x": 4,
+        "y": 66
       }
     },
     "nerezh_graveless_matriarch": {
       "artUrl": "/cards/uprising_of_the_graveless/art/nerezh_graveless_matriarch.jpg",
       "battlefieldArtFrame": {
-        "zoom": 1.37,
-        "x": -2,
-        "y": 144
+        "zoom": 1.17,
+        "x": 2,
+        "y": 128
       }
     },
     "varkas_minion": {
@@ -239,10 +244,20 @@
       }
     },
     "the_daunting_front": {
-      "artUrl": "/cards/legion_of_varka/art/the_daunting_front.jpg"
+      "artUrl": "/cards/legion_of_varka/art/the_daunting_front.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.425,
+        "x": -15,
+        "y": 78
+      }
     },
     "all_against_one": {
-      "artUrl": "/cards/legion_of_varka/art/all_against_one.jpg"
+      "artUrl": "/cards/legion_of_varka/art/all_against_one.jpg",
+      "battlefieldArtFrame": {
+        "zoom": 1.37,
+        "x": -4,
+        "y": 19
+      }
     },
     "chief_of_the_double_guard": {
       "artUrl": "/cards/legion_of_varka/art/chief_of_the_double_guard.jpg",

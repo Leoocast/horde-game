@@ -134,7 +134,7 @@
     {
       "id": "varka_infernal_matriarch",
       "artCrop": "../../../../public/cards/legion_of_varka/art/varka_infernal_matriarch.jpg",
-      "typeLineEs": "Eco de Crónica — Diablesa Matriarca",
+      "typeLineEs": "Eco — Diablesa Matriarca",
       "artFrame": {
         "zoom": 0.925,
         "x": 5,

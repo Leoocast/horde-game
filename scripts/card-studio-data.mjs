@@ -102,6 +102,25 @@ export function resolveStudioLanguage(deckId, value = DEFAULT_STUDIO_LANGUAGE) {
   return language;
 }
 
+/** Public runtime directory for one printed-card language. The default stays at the deck root. */
+export function studioRuntimeCardDirectory(deckId, requestedLanguage = DEFAULT_STUDIO_LANGUAGE) {
+  const language = resolveStudioLanguage(deckId, requestedLanguage);
+  const { config, paths } = loadStudioConfig(deckId);
+  if (config.previewOnly || !config.runtimeDeck) {
+    throw new Error(`${deckId} no tiene cartas runtime exportables.`);
+  }
+  if (language === DEFAULT_STUDIO_LANGUAGE) return paths.publicDirectory;
+
+  const runtimePath = path.resolve(paths.directory, config.runtimeDeck);
+  const imageManifestPath = runtimePath.replace(/\.json$/u, "_images.json");
+  const imageManifest = readJson(imageManifestPath);
+  const directory = String(imageManifest.defaults?.localizedImageDirectories?.[language] ?? "").trim();
+  if (!/^[a-z0-9_-]+$/u.test(directory)) {
+    throw new Error(`${deckId}: falta un directorio runtime seguro para el idioma ${language}.`);
+  }
+  return path.join(paths.publicDirectory, directory);
+}
+
 function authoredEnergyAmount(card) {
   if (typeof card.energyCost === "number") return card.energyCost;
   if (card.energyCost && typeof card.energyCost === "object") {
@@ -208,7 +227,9 @@ function englishTypeLine(runtimeCard) {
   const subtypes = (runtimeCard.subtypes ?? []).join(" ");
   let type = "Card";
   if (kinds.includes("ECHO")) {
-    type = authoredIsChronicle(runtimeCard) ? "Chronicle Echo" : "Echo";
+    // CHRONICLE remains technical metadata for framing/full-art defaults. Chronicle is the
+    // Chronicler's deck, so the inherited modifier must never enter a visible card type line.
+    type = "Echo";
     if (authoredIsToken(runtimeCard)) type += " · Token";
   } else if (kinds.includes("SOURCE")) {
     type = "Source";
@@ -447,6 +468,31 @@ export function loadStudioConfig(deckId) {
   }
   validatePresentationCards(deckId, config.cards);
   return { config, paths };
+}
+
+export function studioBattlefieldArtKinds(deckId) {
+  const { config, paths } = loadStudioConfig(deckId);
+  if (config.previewOnly) {
+    return Object.fromEntries(config.cards.map((card) => [card.id, null]));
+  }
+  if (!config.runtimeDeck) throw new Error(`${deckId}: falta runtimeDeck.`);
+
+  const runtimePath = path.resolve(paths.directory, config.runtimeDeck);
+  const runtimeDeck = readJson(runtimePath);
+  const runtimeById = new Map((runtimeDeck.cards ?? []).map((card) => [card.id, card]));
+  return Object.fromEntries(config.cards.map((presentation) => {
+    const runtimeCard = runtimeById.get(presentation.id);
+    if (!runtimeCard) {
+      throw new Error(`${deckId}: ${presentation.id} no existe en ${relative(runtimePath)}.`);
+    }
+    const kinds = runtimeCard.kinds ?? [];
+    const battlefieldKind = kinds.includes("SUPPORT")
+      ? "support"
+      : kinds.includes("ECHO")
+        ? "echo"
+        : null;
+    return [presentation.id, battlefieldKind];
+  }));
 }
 
 export function loadGameArtConfig(deckId) {

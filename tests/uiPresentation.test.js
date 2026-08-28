@@ -5,7 +5,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import * as THREE from "three";
 
-import { activeDefenseArrowLinks, isBehindInStackOrder, isFrontOfCardStack, visibleDefenseArrowLinks } from "../src/components/battlefieldLayout";
+import { activeDefenseArrowLinks, consumedDefenseArrowLinkIds, isBehindInStackOrder, isFrontOfCardStack, visibleDefenseArrowLinks } from "../src/components/battlefieldLayout";
 import {
   burnProjectileOriginRatios,
   burnProjectileParticleTimings,
@@ -29,13 +29,24 @@ import {
 import { hostAttackPlayerHitDelay } from "../src/components/hostAttackPresentation";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { playerAttackHostHitDelay } from "../src/components/playerAttackPresentation";
+import {
+  CANON_SEED_COMPACT_LENGTH,
+  CANON_SEED_FORMATTED_LENGTH,
+  canonSeedCharacterCount,
+  formatCanonSeedDraft,
+  formattedCanonSeedCaret,
+  removeCanonSeedCharacter,
+} from "../src/components/playThresholdSeedInput";
 import { setupJustCompleted, setupPrimaryAction, setupProgress } from "../src/components/setupPresentation";
+import { tooltipCenterWithinViewport } from "../src/components/tooltipGeometry";
 import { CardStatsBadge, CardTraitTooltipBadge } from "../src/components/Card";
 import { CardTraitIcon } from "../src/components/CardTraitIcon";
+import { StabilizingEffect, stabilizingWaveStyles } from "../src/components/StabilizingEffect";
 import { PreviewStatsBadge, TraitPills } from "../src/components/CardPreview";
 import { VampireBite } from "../src/components/VampireBite";
 import { cardLabelCamelCase } from "../src/i18n/cardLocalization";
 import { translate } from "../src/i18n/translations";
+import { UI_REFERENCE_CATALOG } from "../src/ui-reference/uiReferenceCatalog";
 import {
   resolveCardBurnMaterial,
   resolveCardBurnScale,
@@ -44,7 +55,39 @@ import {
   resolvePersonalTargetedAttackAnimation,
 } from "../src/store/combatAnimation";
 import { burnPathCurvature, resolveBurnRenderer } from "../src/store/burnAnimation";
+import {
+  completedStabilizationCards,
+  stabilizationCompletionDelayMs,
+  stabilizationCompletionTotalMs,
+} from "../src/store/stabilizationPresentation";
 import { addCard, cardFromDeck, createTestGame, customCard } from "./engineTestUtils";
+
+test("inscribed Future entry groups, caps, pastes, and deletes Canon Seed characters", () => {
+  assert.equal(CANON_SEED_COMPACT_LENGTH, 15);
+  assert.equal(CANON_SEED_FORMATTED_LENGTH, 19);
+  assert.equal(formatCanonSeedDraft("123232232"), "123-232-232");
+  assert.equal(formatCanonSeedDraft("hf1elagrvxx1xxx"), "HF1-ELA-GRV-XX1-XXX");
+  assert.equal(formatCanonSeedDraft("hf1-ela-grv-xx1-xxx"), "HF1-ELA-GRV-XX1-XXX");
+  assert.equal(formatCanonSeedDraft("HF1-ELA-GRV-XX1-XXX-TOO-LONG"), "HF1-ELA-GRV-XX1-XXX");
+  assert.equal(canonSeedCharacterCount("HF1-ELA"), 6);
+  assert.equal(formattedCanonSeedCaret(4), 5);
+  assert.equal(formattedCanonSeedCaret(15), 19);
+  assert.equal(removeCanonSeedCharacter("123-232-232", 2), "122-322-32");
+});
+
+test("compact command-bar tooltips stay centered on their own control", () => {
+  assert.equal(
+    tooltipCenterWithinViewport(1772, 112, 1920),
+    1772,
+    "a short tooltip with enough room should not inherit the maximum tooltip width",
+  );
+  assert.equal(tooltipCenterWithinViewport(1890, 112, 1920), 1852);
+  assert.equal(tooltipCenterWithinViewport(36, 336, 1920), 180);
+
+  const tooltipSource = readFileSync(new URL("../src/components/GameTooltip.tsx", import.meta.url), "utf8");
+  assert.match(tooltipSource, /tooltipRef\.current\?\.getBoundingClientRect\(\)\.width/u);
+  assert.match(tooltipSource, /ref=\{tooltipRef\}/u);
+});
 
 test("Preparation progress preserves the original total across normal play and resume", () => {
   assert.deepEqual(setupProgress(4, 4), { completed: 1, current: 1, total: 4 });
@@ -61,6 +104,55 @@ test("Preparation progress preserves the original total across normal play and r
   );
   assert.equal(translate("es", "orb.extraTurn"), "Siguiente paso");
   assert.equal(translate("es", "orb.endTurn"), "Terminar turno");
+});
+
+test("Preparation HUD keeps its numerals aligned with the interface font", () => {
+  const hudSource = readFileSync(new URL("../src/components/TurnPhaseHud.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(hudSource, /className="game-setup-progress-numbers"[^>]*>\{setup\.current\}\/\{setup\.total\}<\/span>/u);
+  assert.match(
+    stylesSource,
+    /\.game-setup-progress-numbers\s*\{[^}]*font-family:\s*var\(--hf-ui-font-body\);[^}]*font-variant-numeric:\s*tabular-nums;/su,
+  );
+});
+
+test("the degree dial localizes West without changing the other cardinal initials", () => {
+  const backdropSource = readFileSync(new URL("../src/components/TemporalBackdrop.tsx", import.meta.url), "utf8");
+
+  assert.equal(translate("es", "destiny.cardinalWest"), "O");
+  assert.equal(translate("en", "destiny.cardinalWest"), "W");
+  assert.match(backdropSource, /t\("destiny\.cardinalWest"\)/u);
+});
+
+test("a Stabilizing attack attempt explains the attack restriction in modal and toast copy", () => {
+  const storeSource = readFileSync(new URL("../src/store/useGameStore.ts", import.meta.url), "utf8");
+  const conceptsSource = readFileSync(new URL("../src/guidance/contextualProductConcepts.ts", import.meta.url), "utf8");
+
+  assert.equal(translate("es", "guided.contextual.product.stabilizingTitle"), "Este Eco todavía no puede atacar");
+  assert.equal(
+    translate("es", "guided.contextual.product.stabilizingBody"),
+    "Fue Invocado este turno y sigue Estabilizándose. Podrá atacar en tu próximo turno.",
+  );
+  assert.equal(translate("es", "toast.attackUnavailable"), "Todavía no puede atacar");
+  assert.equal(
+    translate("es", "toast.stabilizingAttack", { card: "Liora" }),
+    "Liora sigue Estabilizándose. Podrá atacar en tu próximo turno.",
+  );
+  assert.match(conceptsSource, /glossaryTerms:\s*\["stabilizing"\]/u);
+  assert.match(storeSource, /"toast\.stabilizingAttack"/u);
+  assert.match(storeSource, /"toast\.attackUnavailable"/u);
+});
+
+test("the Host Archive HUD fades into its centered fixed position without a transformed ancestor", () => {
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  const hostEntrance = stylesSource.match(/\.game-screen\.is-overture-settling \.game-hud-host\s*\{[^}]*\}/su)?.[0] ?? "";
+  const hostKeyframes = stylesSource.match(/@keyframes encounter-board-ui-top-fade\s*\{[^}]*\}\s*[^}]*\}/su)?.[0] ?? "";
+
+  assert.match(hostEntrance, /animation:\s*encounter-board-ui-top-fade/u);
+  assert.doesNotMatch(hostEntrance, /encounter-board-ui-top(?:\s|;)/u);
+  assert.match(hostKeyframes, /opacity:\s*0/u);
+  assert.doesNotMatch(hostKeyframes, /transform:/u);
 });
 
 // Preparation is taught by the tutorial and labelled by the permanent HUD, so both languages must
@@ -487,6 +579,114 @@ test("debuffed stats render a red downward indicator independently of damage", (
   assert.match(css, /\.card-stat-badge\.is-debuffed::before\s*\{[^}]*content:\s*"\\25BC"\s*!important;/u);
 });
 
+test("Stabilizing uses synchronized CSS motes, charges and wave-only lattice", () => {
+  const first = stabilizingWaveStyles("echo-alpha");
+  assert.equal(first.length, 5);
+  assert.deepEqual(first, stabilizingWaveStyles("echo-alpha"));
+  assert.notDeepEqual(first, stabilizingWaveStyles("echo-beta"));
+
+  for (const style of first) {
+    const duration = Number.parseFloat(style["--stabilizing-duration"]);
+    const glintDuration = Number.parseFloat(style["--stabilizing-glint-duration"]);
+    const interval = Number.parseFloat(style["--stabilizing-interval"]);
+    const sweepDuration = Number.parseFloat(style["--stabilizing-sweep-duration"]);
+    const delay = Number.parseFloat(style["--stabilizing-delay"]);
+    assert.ok(duration >= 9.5 && duration <= 11);
+    assert.ok(Math.abs(interval - duration / 5) <= 0.02);
+    assert.ok(Math.abs(glintDuration - interval * 1.45) <= 0.02);
+    assert.ok(Math.abs(sweepDuration - interval * 2) <= 0.02);
+    assert.ok(delay <= 0 && delay >= -(duration * 2));
+  }
+
+  const duration = Number.parseFloat(first[0]["--stabilizing-duration"]);
+  assert.equal(new Set(first.map((style) => style["--stabilizing-duration"])).size, 1);
+  assert.ok(new Set(first.map((style) => `${style["--stabilizing-from-x"]}:${style["--stabilizing-from-y"]}`)).size > 1);
+  for (let index = 1; index < first.length; index += 1) {
+    const previousDelay = Number.parseFloat(first[index - 1]["--stabilizing-delay"]);
+    const delay = Number.parseFloat(first[index]["--stabilizing-delay"]);
+    assert.ok(Math.abs(previousDelay - delay - duration / 5) <= 0.02);
+  }
+
+  const markup = renderToStaticMarkup(createElement(StabilizingEffect, { seedKey: "echo-alpha" }));
+  assert.equal(markup.match(/class="stabilizing-gold-charge"/gu)?.length, 1);
+  assert.equal(markup.match(/class="stabilizing-gold-glint"/gu)?.length, 1);
+  assert.equal(markup.match(/class="stabilizing-wave-front"/gu)?.length, 2);
+  assert.equal(markup.match(/class="stabilizing-mote"/gu)?.length, 5);
+
+  const cardSource = readFileSync(new URL("../src/components/Card.tsx", import.meta.url), "utf8");
+  const effectSource = readFileSync(new URL("../src/components/StabilizingEffect.tsx", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  const latticeRule = css.match(/\.stabilizing-lattice\s*\{([\s\S]*?)\n  \}/u)?.[1] ?? "";
+
+  assert.match(cardSource, /<StabilizingEffect[\s\S]*?seedKey=\{card\.instanceId\}/u);
+  assert.doesNotMatch(effectSource, /canvas|WebGL|shader/iu);
+  assert.match(latticeRule, /repeating-linear-gradient/u);
+  assert.doesNotMatch(latticeRule, /background:/u);
+  assert.match(css, /\.stabilizing-wave-front\s*\{[^}]*background:\s*radial-gradient/su);
+  assert.match(css, /\.stabilizing-wave-front\s*\{[^}]*animation:\s*stabilizing-wave-front var\(--stabilizing-sweep-duration,/su);
+  assert.match(css, /\.stabilizing-mote\s*\{[^}]*width:\s*4\.4cqw;/su);
+  assert.match(css, /animation:\s*stabilizing-mote-fall[^;]*linear[^;]*infinite;/u);
+  assert.match(css, /@keyframes stabilizing-wave-front\s*\{\s*0%\s*\{[^}]*opacity:\s*0\.92;/u);
+  assert.match(css, /@keyframes stabilizing-wave-front[\s\S]*?62\.5%,\s*100%\s*\{[^}]*opacity:\s*0;/u);
+  assert.match(css, /@keyframes stabilizing-mote-fall\s*\{[\s\S]*?94%\s*\{[^}]*opacity:\s*0\.95;[\s\S]*?100%\s*\{[^}]*opacity:\s*0;/u);
+  assert.match(css, /\.stabilizing-gold-charge\s*\{[^}]*opacity:\s*0\.12;[^}]*\}/su);
+  assert.match(css, /animation:\s*stabilizing-gold-glint var\(--stabilizing-glint-duration, 3s\) linear infinite;/u);
+  assert.match(css, /animation:\s*stabilizing-satin-drift 9\.5s linear infinite;/u);
+  assert.doesNotMatch(css, /@keyframes stabilizing-gold-charge/u);
+  assert.match(css, /@keyframes stabilizing-gold-glint\s*\{\s*0%\s*\{[^}]*transform:\s*translate3d\(-85%, 0, 0\);[^}]*opacity:\s*0;/su);
+  assert.match(css, /@keyframes stabilizing-satin-drift\s*\{\s*0%\s*\{[^}]*transform:\s*translate3d\(-85%, 0, 0\);[^}]*opacity:\s*0;/su);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.stabilizing-wave-front:first-child/su);
+  assert.doesNotMatch(css, /summoning-sickness-rings|summoning-water-/u);
+});
+
+test("Stabilizing closes with a finite seal before its presentation state is released", () => {
+  const previous = createTestGame("stabilization-completion");
+  const playerEcho = addCard(previous, customCard("player-stabilizing", "player"));
+  const hostEcho = addCard(previous, customCard("host-stabilizing", "host"));
+  const removedEcho = addCard(previous, customCard("removed-stabilizing", "player"));
+  playerEcho.stabilizing = true;
+  hostEcho.stabilizing = true;
+  removedEcho.stabilizing = true;
+
+  const next = structuredClone(previous);
+  next.player.field.find((card) => card.instanceId === playerEcho.instanceId).stabilizing = false;
+  next.host.field.find((card) => card.instanceId === hostEcho.instanceId).stabilizing = false;
+  next.player.field = next.player.field.filter((card) => card.instanceId !== removedEcho.instanceId);
+
+  assert.deepEqual(completedStabilizationCards(previous, next), [
+    { cardId: playerEcho.instanceId, side: "player" },
+    { cardId: hostEcho.instanceId, side: "host" },
+  ]);
+  assert.equal(stabilizationCompletionDelayMs(0), 0);
+  assert.equal(stabilizationCompletionDelayMs(2), 140);
+  assert.equal(stabilizationCompletionTotalMs(0), 0);
+  assert.equal(stabilizationCompletionTotalMs(3), 760);
+
+  const markup = renderToStaticMarkup(createElement(StabilizingEffect, {
+    seedKey: "echo-alpha",
+    phase: "completing",
+    completionDelayMs: 140,
+  }));
+  const css = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  const storeSource = readFileSync(new URL("../src/store/useGameStore.ts", import.meta.url), "utf8");
+  const battlefieldSource = readFileSync(new URL("../src/components/Battlefield.tsx", import.meta.url), "utf8");
+  const orbSource = readFileSync(new URL("../src/components/PhaseOrb.tsx", import.meta.url), "utf8");
+
+  assert.match(markup, /stabilizing-effect is-completing/u);
+  assert.match(markup, /--stabilizing-completion-delay:140ms/u);
+  assert.match(markup, /stabilizing-completion-lattice/u);
+  assert.match(markup, /stabilizing-completion-core/u);
+  assert.match(markup, /stabilizing-completion-release/u);
+  assert.match(css, /animation:\s*stabilizing-completion-lifetime 620ms[^;]*both;/u);
+  assert.match(css, /@keyframes stabilizing-completion-lattice/u);
+  assert.match(css, /@keyframes stabilizing-completion-release/u);
+  assert.match(css, /prefers-reduced-motion:\s*reduce[\s\S]*?animation-duration:\s*180ms;/u);
+  assert.match(storeSource, /stabilizationCompletionForTransition\(game, next\)/u);
+  assert.match(storeSource, /state\.stabilizationCompletion \|\|[\s\S]*?state\.surgeTransitionActive/u);
+  assert.match(battlefieldSource, /const holdStableGrouping = holdCasualties \|\| Boolean/u);
+  assert.match(orbSource, /hostStartAfterStabilizationRef/u);
+});
+
 test("a repeated Burn volley lands as one aggregate impact and explicit targets keep their own", () => {
   // Descarga repetida contra el mismo objetivo: un solo impacto, en el reloj del último proyectil.
   assert.deepEqual(burnImpactRoutes(3, false, 90), [{ routeIndex: 2, delayMs: 180 }]);
@@ -543,7 +743,7 @@ test("the permanent temporal sky stays inside the fullscreen GPU budget", () => 
   assert.match(backdrop, /boundedVfxPixelRatio\(cssWidth, cssHeight, window\.devicePixelRatio \|\| 1\)/u);
   assert.match(backdrop, /const FRAME_INTERVAL_MS = 1000 \/ 60/u);
   assert.match(backdrop, /if \(now - lastRenderedAt < FRAME_INTERVAL_MS\)/u);
-  assert.match(backdrop, /if \(dialMix !== lastPositionedDial\)/u);
+  assert.match(backdrop, /const presentedDial = dialMix - destinyMix \* 180;[\s\S]*?if \(presentedDial !== lastPositionedDial\)/u);
   assert.match(vortex, /boundedVfxPixelRatio\(width, height, window\.devicePixelRatio \|\| 1\)/u);
   assert.match(vortex, /const FRAME_INTERVAL_MS = 1000 \/ 60/u);
   assert.match(vortex, /canvas\.width = 1;\s*canvas\.height = 1;/u);
@@ -662,7 +862,7 @@ test("production resume checkpoints exclude Playground and presentation state", 
   assert.doesNotMatch(service, /playground/iu);
   assert.doesNotMatch(schema, /playground/iu);
   assert.match(schema, /checkpoint:\s*Object\.freeze\(\{ game:/u);
-  assert.match(app, /if \(!boardSessionPolicy\.autosave \|\| screen !== "game"\) return;/u);
+  assert.match(app, /if \(!productResumeRuntime\.enabled \|\| !boardSessionPolicy\.autosave \|\| screen !== "game"\) return;/u);
 });
 
 test("procedural Burn never mounts the legacy full-screen white flash", () => {
@@ -822,6 +1022,32 @@ test("hidden defense links disappear from every combat presentation while assign
   assert.deepEqual(game.combat.blockers, { [attacker.instanceId]: [blocker.instanceId] });
 });
 
+test("a defense arrow is consumed when its fight starts even if both Echoes survive", () => {
+  const game = createTestGame();
+  const attacker = addCard(game, customCard("surviving-arrow-attacker", "host"));
+  const blocker = addCard(game, customCard("surviving-arrow-blocker", "player"));
+  const laterBlocker = addCard(game, customCard("later-arrow-blocker", "player"));
+  game.combat.hostAttackers = [attacker.instanceId];
+  game.combat.blockers = { [attacker.instanceId]: [blocker.instanceId, laterBlocker.instanceId] };
+
+  assert.deepEqual(consumedDefenseArrowLinkIds(game, {
+    attackerId: attacker.instanceId,
+    blockerId: blocker.instanceId,
+    attackerDies: false,
+  }), [`${attacker.instanceId}-${blocker.instanceId}`]);
+  assert.deepEqual(consumedDefenseArrowLinkIds(game, {
+    attackerId: attacker.instanceId,
+    blockerId: blocker.instanceId,
+    attackerDies: true,
+  }), [
+    `${attacker.instanceId}-${blocker.instanceId}`,
+    `${attacker.instanceId}-${laterBlocker.instanceId}`,
+  ]);
+
+  const visibilitySource = readFileSync(new URL("../src/components/useDefenseLinkVisibility.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(visibilitySource, /HOST_ATTACK_LINK_CLEAR_MS|setTimeout/u);
+});
+
 test("Memory presents the most recently moved card first without mutating game state", () => {
   const oldest = { instanceId: "oldest" };
   const middle = { instanceId: "middle" };
@@ -887,19 +1113,62 @@ test("card previews reuse the current printed stats plaque", () => {
   assert.match(styles, /\.deck-viewer-trait-list \.card-keyword-badge,[\s\S]*?height:\s*31px;/u);
 });
 
-test("deck collections do not clip a raised key card or its glow", () => {
+test("deck collections present their key-card art as a large adaptive gallery", () => {
+  const decksView = readFileSync(new URL("../src/components/DecksView.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
-  assert.match(styles, /\.decks-content-single\s*\{[^}]*overflow:\s*visible;/u);
+
+  assert.match(decksView, /decks-panel decks-panel-\$\{collection\}/u);
   assert.match(
     styles,
-    /\.decks-panel\s*\{[^}]*--deck-key-card-width:\s*clamp\(140px, min\(15vw, calc\(\(100vh - 290px\) \/ 1\.9\)\), 220px\);/u,
+    /\.decks-panel\s*\{[^}]*--deck-key-card-width:\s*clamp\(210px, min\(22vw, calc\(\(100vh - 250px\) \/ 1\.52\)\), 340px\);/u,
   );
+  assert.match(styles, /\.decks-panel \.decks-card-row\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fit, var\(--deck-key-card-width\)\);/u);
+  assert.match(styles, /\.decks-panel \.deck-key-card:hover \.deck-key-card-stage,[\s\S]*?translateY\(-18px\) scale\(1\.025\)/u);
+  assert.match(styles, /\.decks-panel \.deck-key-card-copy strong\s*\{[^}]*font-size:\s*clamp\(19px, 1\.5vw, 25px\);/u);
 });
 
-test("main menu reserves enough width and breathing room for the Hostfall title", () => {
+test("main menu uses the centered fracture frontispiece over the temporal sky", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
-  assert.match(styles, /--main-menu-panel-width:\s*clamp\(380px, 34vw, 590px\)/u);
-  assert.match(styles, /\.main-menu-title\s*\{[^}]*margin:\s*16px 0 0;/u);
+
+  assert.match(styles, /\.main-menu-layout\s*\{[^}]*width:\s*100%;[^}]*place-content:\s*center;[^}]*justify-items:\s*center;/u);
+  assert.match(styles, /\.main-menu-layout\s*\{[^}]*transform:\s*scale\(1\.2\);[^}]*transform-origin:\s*center;/u);
+  assert.match(styles, /\.main-menu-title\s*\{[^}]*margin:\s*0;[^}]*font-size:\s*clamp\(54px, min\(7\.7vw, 13\.5vh\), 102px\);/u);
+  assert.match(styles, /\.main-menu-entry\.is-primary\s*\{[^}]*font-size:\s*clamp\(22px,/u);
+  assert.match(startMenu, /className="main-menu-subtitle"><span \/><em>\{t\("menu\.act"\)\}<\/em><span \/><\/div>/u);
+  assert.match(startMenu, /className="main-menu-entry is-primary group"[^>]*onClick=\{openThreshold\}/u);
+  assert.doesNotMatch(startMenu, /main-menu-entry-mark/u);
+});
+
+test("main menu footer shows only the current beta version", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const version = readFileSync(new URL("../src/version.ts", import.meta.url), "utf8");
+
+  assert.match(version, /APP_VERSION = "Beta 0\.1\.0"/u);
+  assert.match(startMenu, /main-menu-credits[^>]*>[\s\S]*?\{APP_VERSION\}[\s\S]*?<\/div>/u);
+  assert.doesNotMatch(startMenu, /Version:|developedBy|Leoocast|openExternalLink/u);
+});
+
+test("main menu collections, help and settings replace the menu at full screen", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(startMenu, /const fullScreenMenu = menuScreen !== "home";/u);
+  assert.match(startMenu, /\) : menuScreen === "settings" \? \(/u);
+  assert.match(startMenu, /\) : menuScreen === "howToPlay" \? \(/u);
+  assert.match(startMenu, /\) : menuScreen === "chronicles" \? \(/u);
+  assert.match(startMenu, /\) : menuScreen === "hosts" \? \(/u);
+  assert.match(styles, /\.main-settings-screen\s*\{[^}]*width:\s*100%;[^}]*height:\s*100vh;/u);
+});
+
+test("main menu settings are grouped into two responsive columns", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(startMenu, /main-settings-content main-settings-content-columns old-scrollbar/u);
+  assert.equal(startMenu.match(/className="main-settings-column"/gu)?.length, 2);
+  assert.match(styles, /\.main-settings-content-columns\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/u);
+  assert.match(styles, /@media \(max-width: 980px\)[\s\S]*?\.main-settings-content-columns\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/u);
 });
 
 test("deck inspection keeps the same temporal sky as the main menu", () => {
@@ -908,6 +1177,7 @@ test("deck inspection keeps the same temporal sky as the main menu", () => {
 });
 
 test("the Hostfall wordmark and Chronicler name use the bundled decorative face", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.match(
@@ -916,6 +1186,25 @@ test("the Hostfall wordmark and Chronicler name use the bundled decorative face"
   );
   assert.match(styles, /\.hostfall-wordmark\s*\{[^}]*font-family:\s*"Cinzel Decorative"[^}]*font-weight:\s*400;/u);
   assert.match(styles, /\.main-menu-chronicler-name\s*\{[^}]*font-family:\s*"Cinzel Decorative"[^}]*font-weight:\s*400;/u);
+  assert.match(startMenu, /className="hf-ui-button main-menu-chronicler-edit"[\s\S]*?<Pencil size=\{16\}/u);
+  assert.doesNotMatch(startMenu, /main-menu-chronicler-mark|<Feather/u);
+  assert.doesNotMatch(styles, /\.main-menu-chronicler-mark/u);
+});
+
+test("the Chronicler claims a name over the clean temporal sky", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.equal(translate("es", "name.beforeFirstPage"), "De entre todos los Futuros");
+  assert.equal(translate("en", "name.beforeFirstPage"), "Among all possible Futures");
+  assert.equal(translate("es", "name.save"), "Que así sea");
+  assert.equal(translate("en", "name.save"), "So shall it be");
+  assert.match(startMenu, /showNameEditor \? "chronicler-name-open"/u);
+  assert.match(startMenu, /className="chronicler-name-divider"/u);
+  assert.doesNotMatch(startMenu, /chronicler-name-(?:ornament|flourish|feather)/u);
+  assert.match(styles, /\.main-menu-shell\.chronicler-name-open > \.main-menu-stage[\s\S]*?opacity:\s*0;/u);
+  assert.match(styles, /\.chronicler-name-modal\s*\{[^}]*border:\s*0;[^}]*background:\s*transparent;/u);
+  assert.match(styles, /\.chronicler-name-input-shell:focus-within::after\s*\{[^}]*width:\s*100%;/u);
 });
 
 test("deck setup panels and deck cards opt into shared click audio", () => {
@@ -927,7 +1216,175 @@ test("deck setup panels and deck cards opt into shared click audio", () => {
   assert.match(decksView, /onClick=\{\(\) => \{\s*playSfx\("click"\);\s*onOpen\(\);/u);
 });
 
-test("How to Play opens a right-side data-driven tutorial catalog", () => {
+test("standard Preparation uses a fixed Future frontispiece and keeps the real deck drawer", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.equal(translate("es", "common.viewChronicle"), "Ver Crónica");
+  assert.equal(translate("es", "common.viewHost"), "Ver Hueste");
+  assert.equal(translate("es", "common.changeChronicle"), "Cambiar Crónica");
+  assert.equal(translate("es", "common.changeHost"), "Cambiar Hueste");
+  assert.equal(translate("es", "setup.chooseChronicle"), "Elige una Crónica");
+  assert.equal(translate("es", "setup.chooseHost"), "Elige una Hueste");
+  assert.equal(translate("es", "setup.adventurer"), "Esperanza");
+  assert.equal(translate("es", "setup.veteran"), "Presagio");
+  assert.equal(translate("es", "setup.doomed"), "Perdición");
+  assert.equal(translate("en", "setup.adventurer"), "Hope");
+  assert.equal(translate("en", "setup.veteran"), "Omen");
+  assert.equal(translate("en", "setup.doomed"), "Doom");
+  assert.match(startMenu, /props\.chaos \? "chaos-setup" : "expedition-frontispiece"/u);
+  assert.match(startMenu, /<FutureCode key=\{futureCode\} code=\{futureCode\} \/>/u);
+  assert.match(startMenu, /className="preparation-frontispiece-future"/u);
+  assert.match(startMenu, /className="preparation-frontispiece-modes"[\s\S]*?<HostAwakening turns=\{props\.selectedMode\.setupTurns\} \/>/u);
+  assert.match(startMenu, /<SetupDeckDrawer[\s\S]*?selectedDeckId=/u);
+  assert.doesNotMatch(startMenu, /expedition-future-identity/u);
+
+  const modeMarkup = startMenu.slice(
+    startMenu.indexOf('<div className="preparation-frontispiece-modes"'),
+    startMenu.indexOf("<HostAwakening", startMenu.indexOf('<div className="preparation-frontispiece-modes"')),
+  );
+  const combatantMarkup = startMenu.slice(
+    startMenu.indexOf("function PreparationCombatant"),
+    startMenu.indexOf("function ChaosRules"),
+  );
+  const centerMarkup = startMenu.slice(
+    startMenu.indexOf('<div className="preparation-frontispiece-center">'),
+    startMenu.indexOf('<PreparationCombatant\n              eyebrow={t("setup.hostSide")}'),
+  );
+  const footerMarkup = startMenu.slice(
+    startMenu.indexOf('<footer className="expedition-footer preparation-frontispiece-footer"'),
+    startMenu.indexOf("</footer>", startMenu.indexOf('<footer className="expedition-footer preparation-frontispiece-footer"')),
+  );
+  const drawerMarkup = startMenu.slice(
+    startMenu.indexOf("export function SetupDeckDrawer"),
+    startMenu.indexOf("function DeveloperWarningModal"),
+  );
+  assert.doesNotMatch(modeMarkup, /setupTurns|phase\.setup|Preparation|Preparación/u);
+  assert.equal(combatantMarkup.match(/\{eyebrow\}/gu)?.length, 1);
+  assert.doesNotMatch(combatantMarkup, /cardCount|common\.cards/u);
+  assert.match(centerMarkup, /preparation-frontispiece-match[\s\S]*?preparation-frontispiece-center-fate[\s\S]*?preparation-frontispiece-modes[\s\S]*?<HostAwakening/u);
+  assert.match(centerMarkup, /className=\{`preparation-frontispiece-center-fate is-\$\{props\.mode\}`\}/u);
+  assert.doesNotMatch(footerMarkup, /preparation-frontispiece-modes|HostAwakening/u);
+  assert.match(drawerMarkup, /const drawerTitle = t\(side === "player" \? "setup\.chooseChronicle" : "setup\.chooseHost"\);/u);
+  assert.doesNotMatch(drawerMarkup, /<small>\{eyebrow\}<\/small>|menu\.(?:chronicles|hosts)/u);
+
+  assert.match(styles, /\.preparation-frontispiece-stage\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) clamp\(330px, 38\.5vw, 616px\) minmax\(0, 1fr\);/u);
+  assert.match(styles, /\.preparation-frontispiece-header > h1\s*\{[^}]*font-size:\s*clamp\(23\.1px, 2\.2vw, 33px\);/u);
+  assert.match(styles, /\.preparation-frontispiece-card\s*\{[^}]*width:\s*min\(clamp\(187px, 20\.9vw, 330px\), 44vh\);/u);
+  assert.match(styles, /\.preparation-frontispiece-future\s*\{[^}]*width:\s*100%;[^}]*font-variant-numeric:\s*tabular-nums;/u);
+  assert.match(styles, /\.preparation-frontispiece-future\s*\{[^}]*font-size:\s*clamp\(59\.4px, min\(7\.7vw, 16\.5vh\), 129\.8px\);/u);
+  assert.match(styles, /\.preparation-frontispiece-future\s*\{[^}]*color:\s*#f4dc91;[^}]*0 0 82px rgb\(190 144 55 \/ 0\.24\);/u);
+  assert.match(styles, /\.preparation-frontispiece-future > span\s*\{[^}]*width:\s*0\.72em;[^}]*preparation-future-digit-in/u);
+  assert.match(styles, /\.preparation-frontispiece-kicker\s*\{[^}]*color:\s*#91a29e;[^}]*font-size:\s*clamp\(16\.5px, 1\.375vw, 23\.1px\);/u);
+  assert.match(styles, /\.preparation-frontispiece-future > span\.is-separator\s*\{[^}]*color:\s*inherit;/u);
+  assert.match(styles, /\.preparation-frontispiece-match > span\s*\{[^}]*font-size:\s*clamp\(18\.7px, 1\.595vw, 25\.3px\);/u);
+  assert.match(styles, /\.preparation-frontispiece-match > small\s*\{[^}]*font-size:\s*13\.2px;/u);
+  assert.match(styles, /\.preparation-frontispiece-wing-foot\s*\{[^}]*margin-top:\s*clamp\(7\.7px, 1\.1vh, 12\.1px\);/u);
+  assert.match(styles, /\.preparation-frontispiece-wing-foot button\s*\{[^}]*min-height:\s*37\.4px;[^}]*font-size:\s*11px;/u);
+  assert.match(styles, /\.preparation-frontispiece-wing-foot button,\s*\.preparation-frontispiece-copy\s*\{[^}]*min-height:\s*34px;/u);
+  assert.match(styles, /\.expedition-frontispiece \.expedition-begin\s*\{[^}]*min-width:\s*296px;[^}]*min-height:\s*52px;/u);
+  assert.doesNotMatch(startMenu, /preparation-frontispiece-diamond|frontispiece-active/u);
+  const futureDigitKeyframes = styles.slice(
+    styles.indexOf("@keyframes preparation-future-digit-in"),
+    styles.indexOf("@keyframes preparation-future-halo"),
+  );
+  assert.doesNotMatch(futureDigitKeyframes, /brightness/u);
+  assert.match(styles, /\.expedition-deck-drawer > header h2\s*\{[^}]*grid-column:\s*2;[^}]*text-align:\s*center;/u);
+  assert.match(styles, /\.expedition-deck-drawer-cards\s*\{[^}]*grid-template-columns:\s*repeat\(2, var\(--deck-key-card-width\)\);[^}]*align-content:\s*start;/u);
+  assert.match(styles, /@keyframes expedition-drawer-card-in/u);
+  assert.match(styles, /\.preparation-frontispiece-center-fate \.expedition-awakening\s*\{[^}]*flex-wrap:\s*nowrap;[^}]*white-space:\s*nowrap;/u);
+  assert.match(styles, /\.preparation-frontispiece-modes\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/u);
+  assert.match(styles, /\.preparation-frontispiece-center-fate\.is-easy\s*\{[^}]*--difficulty-accent:\s*#a9e2b2;/u);
+  assert.match(styles, /\.preparation-frontispiece-center-fate\.is-hard\s*\{[^}]*--difficulty-accent:\s*#f0aaa2;/u);
+  assert.match(styles, /\.preparation-frontispiece-mode\.is-selected\s*\{[^}]*background:\s*var\(--difficulty-surface\);[^}]*color:\s*var\(--difficulty-accent\);/u);
+  assert.match(styles, /\.preparation-frontispiece-center-fate \.expedition-awakening strong\s*\{[^}]*color:\s*var\(--difficulty-accent\);/u);
+  assert.match(styles, /@keyframes preparation-cta-orbit-clockwise\s*\{\s*to \{ transform: translate\(-50%, -50%\) rotate\(360deg\); \}/u);
+  assert.match(styles, /@keyframes preparation-card-player-in/u);
+  assert.match(styles, /@keyframes preparation-card-host-in/u);
+});
+
+test("standard Preparation hands its visible cards to the encounter clash", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const encounter = readFileSync(new URL("../src/components/EncounterTransition.tsx", import.meta.url), "utf8");
+  const app = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(startMenu, /const playerCardRef = useRef<HTMLButtonElement>\(null\);/u);
+  assert.match(startMenu, /const hostCardRef = useRef<HTMLButtonElement>\(null\);/u);
+  assert.match(startMenu, /captureEncounterCardRect\(playerCardRef\.current\)[\s\S]*?captureEncounterCardRect\(hostCardRef\.current\)/u);
+  assert.match(startMenu, /props\.onStart\(player && host \? \{ player, host \} : undefined\);/u);
+  assert.match(startMenu, /ref=\{cardRef\}[\s\S]*?className=\{`preparation-frontispiece-card/u);
+  assert.match(startMenu, /className=\{`expedition-setup[\s\S]*?props\.launching \? "is-launching"/u);
+  assert.match(app, /cardOrigins: reducedMotion \? undefined : options\.encounterCardOrigins/u);
+  assert.match(app, /cardOrigins=\{launchTransition\.cardOrigins\}/u);
+
+  assert.match(encounter, /useLayoutEffect\(\(\) => \{[\s\S]*?readEncounterCardRect\(playerTargetRef\.current\)[\s\S]*?setCardTargets\(\{ player, host \}\);/u);
+  assert.match(encounter, /is-continuity-measuring/u);
+  assert.match(encounter, /has-card-continuity/u);
+  assert.match(encounter, /encounter-transition-continuity-card/u);
+  assert.match(styles, /\.expedition-frontispiece\.is-launching \.preparation-frontispiece-card-art\s*\{[^}]*visibility:\s*hidden;/u);
+  assert.match(styles, /\.encounter-transition\.is-continuity-measuring \.encounter-transition-combatant\s*\{[^}]*animation:\s*none !important;/u);
+  assert.match(styles, /\.encounter-transition\.has-card-continuity \.encounter-transition-art\s*\{[^}]*visibility:\s*hidden;/u);
+  assert.match(styles, /@keyframes encounter-continuity-card-player\s*\{[\s\S]*?42\.857%, 68%[\s\S]*?calc\(var\(--encounter-target-top\) \+ 104vh\)/u);
+  assert.match(styles, /@keyframes encounter-continuity-card-host\s*\{[\s\S]*?42\.857%, 68%[\s\S]*?calc\(var\(--encounter-target-top\) - 104vh\)/u);
+});
+
+test("secondary menus homologate their back control with Play's Main menu anchor", () => {
+  const threshold = readFileSync(new URL("../src/components/PlayThreshold.tsx", import.meta.url), "utf8");
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const decksView = readFileSync(new URL("../src/components/DecksView.tsx", import.meta.url), "utf8");
+  const seeds = readFileSync(new URL("../src/components/SeedsOfDestinyScreen.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(threshold, /className="play-threshold-back expedition-back"/u);
+  assert.equal(startMenu.match(/className="menu-screen-back expedition-back"/gu)?.length, 2);
+  assert.match(decksView, /className="menu-screen-back expedition-back"[\s\S]*?t\("common\.mainMenu"\)/u);
+  assert.match(seeds, /className="menu-screen-back expedition-back"[\s\S]*?t\("common\.mainMenu"\)/u);
+  assert.match(styles, /\.play-threshold-back\s*\{[^}]*top:\s*18px;[^}]*left:\s*clamp\(28px, 4vw, 64px\);[^}]*font-size:\s*13px;/u);
+  assert.match(styles, /\.menu-screen-back\s*\{[^}]*top:\s*18px;[^}]*left:\s*clamp\(28px, 4vw, 64px\);[^}]*margin:\s*0;/u);
+  assert.match(styles, /\.preparation-frontispiece-header\s*\{[^}]*min-height:\s*72px;[^}]*padding-block:\s*10px;/u);
+  assert.match(styles, /@media \(max-height: 760px\)\s*\{\s*\.play-threshold-back,\s*\.menu-screen-back \{ top: 14px; \}/u);
+});
+
+test("Seeds of Destiny groups Futures and Visions while HF1 is an Inscription", () => {
+  const seeds = readFileSync(new URL("../src/components/SeedsOfDestinyScreen.tsx", import.meta.url), "utf8");
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.equal(translate("en", "menu.seedsOfDestiny"), "Seeds of Destiny");
+  assert.equal(translate("es", "menu.seedsOfDestiny"), "Semillas del Destino");
+  assert.equal(translate("en", "threshold.seedLabel"), "Inscription");
+  assert.equal(translate("es", "threshold.seedLabel"), "Inscripción");
+  assert.equal(translate("en", "seeds.emptyBody"), "Contemplate a Future. Its Visions will be recorded here.");
+  assert.equal(translate("es", "seeds.emptyBody"), "Contempla un Futuro. Sus Visiones quedarán registradas aquí.");
+  assert.equal(translate("en", "seeds.emptyAction"), "Prepare a New Future");
+  assert.equal(translate("es", "seeds.emptyAction"), "Preparar un Futuro nuevo");
+  assert.doesNotMatch(seeds, /seeds-intro/u);
+  assert.match(seeds, /library\.phase === "loading" \|\| library\.phase === "empty" \? \(\s*<EmptyLibraryState onPlay=\{onPlay\} \/>/u);
+  assert.doesNotMatch(seeds, /seeds-library-pending/u);
+  assert.match(seeds, /className="seeds-empty-action"[^>]*onClick=\{onPlay\}>\s*<span>\{t\("seeds\.emptyAction"\)\}<\/span>/u);
+  assert.doesNotMatch(seeds, /LoadingLibraryState|seeds-loading-book|seeds-empty-constellation|seeds-empty-orbit|seeds-empty-path/u);
+  assert.match(startMenu, /onPlay=\{\(\) => \{\s*setClosingMenuScreen\(undefined\);\s*openThreshold\(\);/u);
+  assert.match(styles, /\.seeds-library-empty h2\s*\{[^}]*-webkit-line-clamp:\s*2;/u);
+  assert.match(styles, /\.seeds-library-empty > p\s*\{[^}]*white-space:\s*nowrap;/u);
+  assert.match(styles, /\.seeds-empty-action\s*\{[^}]*min-width:\s*296px;/u);
+  assert.match(styles, /@keyframes seeds-empty-cta-orbit-clockwise\s*\{\s*to \{ transform: translate\(-50%, -50%\) rotate\(360deg\); \}/u);
+  const duelDifficulty = seeds.slice(
+    seeds.indexOf('<p className="seeds-duel-difficulty">'),
+    seeds.indexOf("</p>", seeds.indexOf('<p className="seeds-duel-difficulty">')),
+  );
+  assert.match(duelDifficulty, /DIFFICULTY_KEYS\[future\.difficulty\]/u);
+  assert.doesNotMatch(duelDifficulty, /setupTurns|preparationTurns/u);
+});
+
+test("Which Future keeps both gates fully present and paints the pointer glow on top", () => {
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(styles, /\.play-threshold-gate::before\s*\{[^}]*z-index:\s*3;[^}]*mix-blend-mode:\s*screen;/u);
+  assert.doesNotMatch(styles, /\.play-threshold-gates:hover \.play-threshold-gate:not\(:hover\)/u);
+});
+
+test("How to Play opens a full-screen data-driven tutorial catalog", () => {
   const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
@@ -936,7 +1393,60 @@ test("How to Play opens a right-side data-driven tutorial catalog", () => {
   assert.match(startMenu, /main-settings-screen how-to-play-screen/u);
   assert.match(startMenu, /howToPlayEntries\.map/u);
   assert.match(startMenu, /disabled=\{!entry\.onLaunch\}/u);
-  assert.match(styles, /\.how-to-play-lesson\s*\{[^}]*grid-template-columns:/u);
+  assert.match(startMenu, /className=\{`how-to-play-chapter \$\{index === 0 \? "is-primary" : "is-companion"\}`\}/u);
+  assert.doesNotMatch(startMenu, /howToPlay\.tutorials|main-settings-section-title">\{t\("howToPlay/u);
+  assert.match(startMenu, /String\(index \+ 1\)\.padStart\(2, "0"\)/u);
+  assert.doesNotMatch(startMenu, /how-to-play-lesson-icon|const Icon = entry\.icon/u);
+  assert.doesNotMatch(startMenu, /how-to-play-chapter-action|<span aria-hidden="true">→<\/span>/u);
+  assert.match(styles, /\.how-to-play-catalog\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fit, minmax\(min\(100%, 320px\), 1fr\)\);/u);
+  assert.match(styles, /\.how-to-play-chapter\s*\{[^}]*min-height:\s*clamp\(218px, 27vh, 284px\);/u);
+  assert.match(styles, /\.how-to-play-chapter-number\s*\{[^}]*font:\s*700 clamp\(68px, 7vw, 116px\)/u);
+  assert.match(styles, /\.how-to-play-chapter\.is-companion\s*\{[^}]*--chapter-accent:\s*#829c99;/u);
+  assert.doesNotMatch(styles, /\.how-to-play-chapter::before|\.how-to-play-chapter-action/u);
+});
+
+test("Settings stays above gameplay while confirmations stay above Settings", () => {
+  const settings = readFileSync(new URL("../src/components/SettingsMenu.tsx", import.meta.url), "utf8");
+  const languageSelector = readFileSync(new URL("../src/components/LanguageSelector.tsx", import.meta.url), "utf8");
+  const board = readFileSync(new URL("../src/components/Board.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(settings, /modalPresence\.mounted && createPortal\(/u);
+  assert.match(settings, /const portalLauncher = guided && typeof document !== "undefined";/u);
+  assert.match(settings, /game-settings-popover game-guided-settings-launcher-layer fixed right-4 top-4/u);
+  assert.match(settings, /game-settings-popover game-settings-system-layer game-settings-modal-backdrop/u);
+  assert.match(settings, /restartPresence\.mounted && createPortal\(/u);
+  assert.match(settings, /game-settings-popover game-system-confirmation-layer game-home-backdrop/u);
+  assert.match(settings, /onClick=\{onReturnToMenu\}/u);
+  assert.match(settings, /guided \? "w-\[min\(640px,calc\(100vw-40px\)\)\]"/u);
+  assert.match(settings, /: "w-\[min\(1180px,calc\(100vw-40px\)\)\]"/u);
+  assert.match(settings, /guided \? "grid-cols-1" : "grid-cols-\[360px_minmax\(0,1fr\)\]"/u);
+  assert.match(settings, /\{!guided && <section className="hf-ui-panel-soft p-4">[\s\S]*?guided\.contextual\.settingsTitle/u);
+  assert.match(settings, /className="hf-ui-button guided-settings-restart/u);
+  assert.match(languageSelector, /language-selector is-\$\{variant\}/u);
+
+  assert.match(board, /homeConfirmationPresence\.mounted && createPortal\(/u);
+  assert.match(board, /game-settings-popover game-system-confirmation-layer game-home-backdrop/u);
+  assert.match(styles, /\.game-settings-system-layer\s*\{\s*z-index:\s*40000;/u);
+  assert.match(styles, /\.game-guided-settings-launcher-layer\s*\{\s*z-index:\s*39990;/u);
+  assert.match(styles, /\.game-system-confirmation-layer\s*\{\s*z-index:\s*40010;/u);
+  assert.match(styles, /\.game-log-card-preview\s*\{[\s\S]*?z-index:\s*40005;/u);
+  assert.match(styles, /\.deck-collection-modal-backdrop\.game-log-details-backdrop\s*\{\s*z-index:\s*40005;/u);
+  assert.match(styles, /\.game-settings-popover \.old-panel/u);
+  assert.match(styles, /\.game-settings-popover \.game-settings-modal/u);
+  assert.match(styles, /\.language-selector\.is-panel \{[\s\S]*?width: min\(100%, 440px\);[\s\S]*?margin-inline: auto;/u);
+  assert.match(styles, /\.language-selector-option \{[\s\S]*?text-align: center;[\s\S]*?white-space: nowrap;/u);
+});
+
+test("the Log card hover shows only a larger card image", () => {
+  const gameLog = readFileSync(new URL("../src/components/GameLog.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(gameLog, /const CARD_PREVIEW_WIDTH = 270;/u);
+  assert.doesNotMatch(gameLog, /<span>\{previewCard\.displayName\}<\/span>/u);
+  assert.match(styles, /\.game-log-card-preview\s*\{[\s\S]*?width:\s*270px;/u);
+  assert.doesNotMatch(styles, /\.game-log-card-preview\s*\{[^}]*?(?:border|background|box-shadow):/u);
+  assert.doesNotMatch(styles, /\.game-log-card-preview span\s*\{/u);
 });
 
 test("deck detail close buttons inherit their deck palette", () => {
@@ -954,6 +1464,16 @@ test("cards behind the front of a stack use the left combat-arrow anchor", () =>
   assert.equal(isBehindInStackOrder(middle, slots), true);
   assert.equal(isBehindInStackOrder(front, slots), false);
   assert.equal(isBehindInStackOrder(front, [front]), false);
+});
+
+test("combat arrows reveal upward with padded edges before their glint starts", () => {
+  const combatArrowsSource = readFileSync(new URL("../src/components/CombatArrows.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(combatArrowsSource, /<g className="combat-arrow-reveal">[\s\S]*?<TacticalArrowGlyph/u);
+  assert.match(stylesSource, /\.combat-arrow-reveal\s*\{[^}]*animation:\s*combat-arrow-reveal 320ms[^}]*both;/u);
+  assert.match(stylesSource, /\.combat-arrow-reveal \.tactical-arrow-glint\s*\{[^}]*animation-delay:\s*320ms;[^}]*animation-fill-mode:\s*backwards;/u);
+  assert.match(stylesSource, /@keyframes combat-arrow-reveal\s*\{[\s\S]*?to\s*\{\s*clip-path:\s*inset\(-32px\);/u);
 });
 
 test("card names and type lines use initial capitals on every word", () => {
@@ -1134,7 +1654,10 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   const animator = readFileSync(new URL("../src/components/DefeatShatterAnimator.tsx", import.meta.url), "utf8");
   const glassShader = readFileSync(new URL("../src/components/defeatGlassShader.ts", import.meta.url), "utf8");
   const modal = readFileSync(new URL("../src/components/DefeatModal.tsx", import.meta.url), "utf8");
+  const outcomeDialog = readFileSync(new URL("../src/components/GameOutcomeDialog.tsx", import.meta.url), "utf8");
+  const destinyAction = readFileSync(new URL("../src/components/DestinyActionButton.tsx", import.meta.url), "utf8");
   const journeyModal = readFileSync(new URL("../src/components/LearnToPlayDefeatModal.tsx", import.meta.url), "utf8");
+  const journeyDialogs = readFileSync(new URL("../src/components/LearnToPlayDefeatDialogs.tsx", import.meta.url), "utf8");
   const board = readFileSync(new URL("../src/components/Board.tsx", import.meta.url), "utf8");
   const desktopMain = readFileSync(new URL("../electron/main.ts", import.meta.url), "utf8");
   const backdrop = readFileSync(new URL("../src/components/TemporalBackdrop.tsx", import.meta.url), "utf8");
@@ -1210,9 +1733,18 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   // El desenlace se centra con una capa a pantalla completa: la succión del vórtice anima
   // `transform` sobre cada pieza y borraría un `translate` propio del bloque.
   assert.match(styles, /\.defeat-outcome \{\s*position: absolute;[\s\S]*?place-items: center;/u);
+  assert.match(styles, /\.defeat-outcome-inner \{[\s\S]*?place-self: center;[\s\S]*?margin-inline: auto;/u);
+  assert.doesNotMatch(styles, /\.defeat-title \{[^}]*translate:/su);
   assert.match(styles, /@keyframes defeat-outcome-in \{\s*from \{ opacity: 0; transform: translateY\(10px\); \}/u);
-  assert.match(styles, /\.defeat-title \.line \{[^}]*padding-left: 0\.065em;/su);
-  assert.match(modal, /className="defeat-outcome-inner"/u);
+  // Cinzel's tracked advance box is not its visible ink box. The shared Spanish and English
+  // verdicts use measured, locale-specific compensation so both the normal and tutorial title
+  // sit on the viewport center instead of sharing one approximate tracking offset.
+  assert.match(styles, /\.defeat-title \.line:first-child \{[^}]*padding-left: 0\.0268em;/su);
+  assert.match(styles, /\.defeat-title \.line:last-child \{[^}]*padding-left: 0\.0378em;/su);
+  assert.match(styles, /\.defeat-title:lang\(es\) \.line \{[^}]*padding-left: 0\.0489em;/su);
+  assert.doesNotMatch(styles, /\.defeat-title \.line \{[^}]*padding-left: 0\.065em;/su);
+  assert.match(modal, /<GameOutcomeDialog/u);
+  assert.match(outcomeDialog, /className=\{`\$\{tone\}-outcome-inner`\}/u);
   // TemporalBackdrop and ambience remain alive below the opaque shard geometry.
   assert.match(styles, /\.game-screen-ambience \{/u);
   assert.doesNotMatch(styles, /\.game-screen::before/u);
@@ -1220,21 +1752,24 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(board, /sessionPolicy\.showStandardOutcome && defeatReady/u);
   assert.match(board, /sessionPolicy\.showJourneyDefeat && defeatReady/u);
   assert.match(journeyModal, /<DefeatShatterAnimator/u);
-  assert.match(journeyModal, /destiny\.futureLostLineOne/u);
-  assert.match(journeyModal, /destiny\.futureLostLineTwo/u);
-  assert.match(journeyModal, /result\.chapterLostAmongShards/u);
+  assert.match(journeyModal, /<LearnToPlayDefeatOutcomeDialog/u);
+  assert.match(journeyDialogs, /destiny\.futureLostLineOne/u);
+  assert.match(journeyDialogs, /destiny\.futureLostLineTwo/u);
+  assert.match(journeyDialogs, /result\.visionLostAmongShards/u);
   assert.match(journeyModal, /LEARN_TO_PLAY_NARRATIVE_DELAY_MS\s*=\s*1_000/u);
-  assert.match(journeyModal, /guided\.learnToPlay\.defeatLineOne/u);
-  assert.match(journeyModal, /guided\.learnToPlay\.defeatLineTwo/u);
-  assert.match(journeyModal, /guided\.learnToPlay\.defeatBody/u);
-  assert.match(journeyModal, /guided\.continue/u);
-  assert.match(journeyModal, /guided\.learnToPlay\.defeatCta/u);
+  assert.match(journeyDialogs, /guided\.learnToPlay\.defeatLineOne/u);
+  assert.match(journeyDialogs, /guided\.learnToPlay\.defeatLineTwo/u);
+  assert.match(journeyDialogs, /guided\.learnToPlay\.defeatBody/u);
+  assert.match(journeyDialogs, /guided\.continue/u);
+  assert.match(journeyDialogs, /guided\.learnToPlay\.defeatCta/u);
   assert.match(journeyModal, /onContemplateFuture/u);
-  assert.match(journeyModal, /destiny-command-button learn-to-play-contemplate-button/u);
-  assert.doesNotMatch(journeyModal, /disabled/u);
-  assert.doesNotMatch(journeyModal, /onRewriteFuture|defeat-future-plate|destiny-command-glyph/u);
+  assert.match(journeyDialogs, /<DestinyActionButton/u);
+  assert.match(destinyAction, /"destiny-command-button", "learn-to-play-contemplate-button"/u);
+  assert.doesNotMatch(journeyDialogs, /disabled/u);
+  assert.doesNotMatch(`${journeyModal}\n${journeyDialogs}`, /onRewriteFuture|defeat-future-plate|destiny-command-glyph/u);
   assert.match(styles, /\.learn-to-play-contemplate-button::before \{[\s\S]*?width: 180%;[\s\S]*?aspect-ratio: 1;/u);
   assert.match(styles, /\.learn-to-play-contemplate-button \.destiny-command-copy strong \{[^}]*padding-left: 0\.13em;/su);
+  assert.match(styles, /\.learn-to-play-defeat-cta \{[^}]*justify-self: center;[^}]*margin-inline: auto;/su);
   // El vidrio se lee aunque no haya nada impreso: alfa de la captura con suelo de Fresnel.
   assert.match(glassShader, /float printed = middle\.a/u);
   assert.match(glassShader, /vFade \* max\(printed, glassEdge\)/u);
@@ -1259,9 +1794,10 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.doesNotMatch(glassShader, /gl_FragColor = vec4\(color \* fade, 1\.0\)/u);
   assert.doesNotMatch(animator, /new THREE\.WebGLRenderer|forceContextLoss/u);
   assert.match(animator, /prefers-reduced-motion:\s*reduce/u);
-  assert.match(modal, /<DefeatShatterAnimator seed=\{game\.seed\} snapshotImage=\{snapshotImage\} onSequenceStart=\{startSequence\}/u);
-  assert.match(modal, /t\("destiny\.futureLostLineOne"\)/u);
-  assert.match(modal, /t\("destiny\.futureLostLineTwo"\)/u);
+  assert.match(modal, /<DefeatShatterAnimator seed=\{matchOriginVisualSeed\(matchOrigin\)\} snapshotImage=\{snapshotImage\} onSequenceStart=\{startSequence\}/u);
+  assert.match(modal, /<GameOutcomeDialog[\s\S]*?tone="defeat"/u);
+  assert.match(outcomeDialog, /destiny\.futureLostLineOne/u);
+  assert.match(outcomeDialog, /destiny\.futureLostLineTwo/u);
   // Detrás del vidrio no se dibuja ningún fondo propio: el lienzo queda transparente y lo
   // que asoma es el espacio permanente del juego, con el tablero vivo ya retirado.
   assert.doesNotMatch(animator, /Abyss/u);
@@ -1307,15 +1843,20 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(defeatFutureLabel, /font: 800 14px\/1\.2 "Cinzel"/u);
   assert.match(defeatFutureCode, /font: 800 clamp\(23px, 2\.8vw, 33px\)\/1\.2 "Cinzel"/u);
   assert.match(styles, /grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/u);
-  assert.match(styles, /\.game-result-defeat \.game-result-action \{[\s\S]*?font-size: clamp\(8px, 2\.1vw, 13px\);[\s\S]*?white-space: nowrap;/u);
-  const contemplateHandlerAt = modal.indexOf("onClick={onContemplateFuture}");
-  const contemplateButton = modal.slice(
-    modal.lastIndexOf("<button", contemplateHandlerAt),
-    modal.indexOf("</button>", contemplateHandlerAt) + "</button>".length,
+  assert.match(styles, /\.defeat-outcome-inner \{[\s\S]*?place-self: center;/u);
+  assert.match(styles, /\.game-outcome-action \{[\s\S]*?width: 100%;[\s\S]*?margin: 0;[\s\S]*?white-space: nowrap;/u);
+  const contemplateHandlerAt = outcomeDialog.indexOf("onClick={onContemplateFuture}");
+  const contemplateButton = outcomeDialog.slice(
+    outcomeDialog.lastIndexOf("<button", contemplateHandlerAt),
+    outcomeDialog.indexOf("</button>", contemplateHandlerAt) + "</button>".length,
   );
   assert.ok(contemplateHandlerAt >= 0);
   assert.doesNotMatch(contemplateButton, /<(?:svg|[A-Z][A-Za-z0-9]*)\b/u);
-  assert.doesNotMatch(modal, /Sparkles/u);
+  assert.match(outcomeDialog, /<DestinyActionButton[\s\S]*?className="game-outcome-rewrite-action"[\s\S]*?onClick=\{onRewriteFuture\}/u);
+  assert.match(destinyAction, /"destiny-command-button", "learn-to-play-contemplate-button"/u);
+  assert.match(destinyAction, /destiny-command-copy[\s\S]*?<strong>\{label\}<\/strong>[\s\S]*?destiny-command-shimmer/u);
+  assert.match(journeyDialogs, /<DestinyActionButton[\s\S]*?guided\.learnToPlay\.defeatCta/u);
+  assert.doesNotMatch(outcomeDialog, /Sparkles/u);
   assert.doesNotMatch(styles, /@media \(max-width: 520px\) \{[\s\S]*?\.defeat-outcome-actions \{ grid-template-columns: 1fr; \}/u);
   const vortexVeil = styles.match(/\.destiny-vortex-veil \{[\s\S]*?\n\}/u)?.[0] ?? "";
   assert.doesNotMatch(vortexVeil, /repeating-conic-gradient/u);
@@ -1330,6 +1871,240 @@ test("developer tools keep their development imports without a release URL escap
   assert.match(appSource, /import\("\.\/playground\/PlaygroundScreen"\)/);
   assert.match(appSource, /const AudioLabScreen = import\.meta\.env\.DEV/);
   assert.match(appSource, /import\("\.\/audio-lab\/AudioLabScreen"\)/);
+  assert.match(appSource, /const SeedExplorerScreen = import\.meta\.env\.DEV/);
+  assert.match(appSource, /import\("\.\/seed-explorer\/SeedExplorerScreen"\)/);
+  assert.match(appSource, /const UIReferenceScreen = import\.meta\.env\.DEV/);
+  assert.match(appSource, /import\("\.\/ui-reference\/UIReferenceScreen"\)/);
   assert.match(gateSource, /export const IS_DEV: boolean = import\.meta\.env\.DEV/);
   assert.doesNotMatch(`${appSource}\n${gateSource}`, /\?playground/);
+});
+
+test("Audio Lab uses the standalone dev-workbench hierarchy without changing its authoring flow", () => {
+  const labSource = readFileSync(new URL("../src/audio-lab/AudioLabScreen.tsx", import.meta.url), "utf8");
+  const labStyles = readFileSync(new URL("../src/audio-lab/AudioLabScreen.css", import.meta.url), "utf8");
+
+  assert.match(labSource, /import "\.\/AudioLabScreen\.css"/u);
+  assert.match(labSource, /audio-lab-button audio-lab-back[\s\S]*?<ArrowLeft[\s\S]*?<span>Volver<\/span>/u);
+  assert.ok(labSource.indexOf("audio-lab-back") < labSource.indexOf("audio-lab-brand"));
+  assert.doesNotMatch(labSource, /Hostfall · Developer tool|<Home/u);
+  assert.match(labSource, /Audio Lab <span>\/ Mezcla y balance<\/span>/u);
+  assert.match(labSource, /\{visibleCount\} of \{totalCount\}/u);
+  assert.match(labSource, /<AudioLabEmptyState query=\{search\}/u);
+  assert.match(labSource, /sliderPositionPercent[\s\S]*?--audio-lab-position/u);
+  assert.match(labStyles, /\.audio-lab-topbar \{[\s\S]*?grid-template-columns: auto minmax\(0, 1fr\) auto;/u);
+  assert.match(labStyles, /\.audio-lab-workbench \{[\s\S]*?grid-template-columns: minmax\(250px, 286px\) minmax\(0, 1fr\);/u);
+  assert.match(labStyles, /linear-gradient\(90deg,[\s\S]*?var\(--audio-lab-position\)/u);
+});
+
+test("Seed Explorer is a standalone dev screen launched from the home tool dock", () => {
+  const appSource = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
+  const menuSource = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const playgroundSource = readFileSync(new URL("../src/playground/PlaygroundScreen.tsx", import.meta.url), "utf8");
+  const explorerSource = readFileSync(new URL("../src/seed-explorer/SeedExplorerScreen.tsx", import.meta.url), "utf8");
+  const explorerStylesSource = readFileSync(new URL("../src/seed-explorer/SeedExplorerScreen.css", import.meta.url), "utf8");
+  const globalStylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(appSource, /screen === "seedExplorer" && SeedExplorerScreen/u);
+  assert.match(appSource, /onOpenSeedExplorer=\{IS_DEV/u);
+  assert.match(menuSource, /import\.meta\.env\.DEV && menuScreen === "home" && \(onOpenPlayground \|\| onOpenAudioLab \|\| onOpenSeedExplorer \|\| onOpenUiReference\)/u);
+  assert.match(menuSource, /className="main-menu-developer-tools"/u);
+  assert.match(menuSource, />Seed Explorer</u);
+  assert.match(globalStylesSource, /\.main-menu-developer-tools \{[\s\S]*?position: absolute;[\s\S]*?right:[\s\S]*?bottom:/u);
+  assert.doesNotMatch(playgroundSource, /SeedExplorer|id: "seeds"/u);
+  assert.match(explorerSource, /<strong>Aproximación:<\/strong>/u);
+  assert.doesNotMatch(explorerSource, /Preparación se deriva de dificultad/u);
+  assert.match(explorerSource, /Probar en tablero/u);
+  assert.match(explorerSource, /Ver detalles/u);
+  assert.match(explorerSource, /title="Mano inicial"[\s\S]*?candidate\.preview\.openingHand/u);
+  assert.match(explorerSource, /title="Mano tras mulligan"[\s\S]*?candidate\.preview\.mulliganHand/u);
+  assert.match(explorerSource, /const imageUrl = useCardImage\(card\.definitionId\)/u);
+  assert.match(explorerSource, /backgroundColor: ratingColor/u);
+  assert.match(explorerSource, /useState<"best" \| "diverse">\("diverse"\)/u);
+  assert.match(explorerSource, /label: "Primer acercamiento"[\s\S]*?label: "Equilibrada"[\s\S]*?label: "Hostfallero experimentado"[\s\S]*?label: "Presión alta"[\s\S]*?label: "Escalada progresiva"/u);
+  assert.match(explorerSource, /value=\{configuration\.profileId\}[\s\S]*?SEED_SEARCH_PROFILES\[profileId\]\.defaultAvoidEarlySpikes/u);
+  assert.match(explorerSource, /<VariationSelectControl[\s\S]*?value=\{configuration\.variationId\}/u);
+  assert.match(explorerSource, /variationId: configuration\.variationId/u);
+  assert.match(explorerSource, /SEARCH_VARIATION_OPTIONS\.map[\s\S]*?<VariationDot variationId=\{option\.value\}/u);
+  assert.match(explorerSource, /favoriteNote \? "Editar nota" : "Agregar nota"/u);
+  assert.match(explorerSource, /<FavoriteNoteModal[\s\S]*?note=\{noteDraft\}/u);
+  assert.match(explorerSource, /updateStoredSeedFavoriteNote\(noteEditorCode, noteDraft\)/u);
+  assert.match(explorerStylesSource, /\.seed-explorer-note-overlay[\s\S]*?z-index: 10045;[\s\S]*?\.seed-explorer-note-modal/u);
+  assert.doesNotMatch(explorerSource, /<output className="seed-explorer-readonly-field">Primer acercamiento<\/output>/u);
+  assert.match(explorerSource, /selectDiverseSeedCandidates\(rankedCandidatePool, configuration\.top\)/u);
+  assert.match(explorerSource, />Mejores<\/button>[\s\S]*?>Variadas<\/button>/u);
+  assert.match(explorerSource, /seed-explorer-archetype/u);
+  assert.match(explorerSource, /is-\$\{variationTone\(variationId\)\}/u);
+  assert.match(explorerStylesSource, /\.seed-explorer-archetype\.is-stable[\s\S]*?\.seed-explorer-archetype\.is-mulligan[\s\S]*?\.seed-explorer-archetype\.is-balanced/u);
+  assert.match(explorerStylesSource, /\.seed-explorer-variation-menu[\s\S]*?\.seed-explorer-variation-dot\.is-mulligan/u);
+  assert.match(explorerSource, /createInitialGame\([\s\S]*?identity\.entropy,[\s\S]*?identity\.preparationTurns,[\s\S]*?identity\.difficulty,[\s\S]*?identity\.gameMode/u);
+  assert.match(explorerSource, /loadScenario\([\s\S]*?createInitialGame/u);
+  assert.match(explorerSource, /startBattleMusic\(true\);[\s\S]*?setBoardCandidate\(candidate\)/u);
+  assert.match(explorerSource, /if \(boardCandidate\)[\s\S]*?<Board/u);
+  assert.match(explorerSource, /onReturnToMenu=\{\(\) => \{[\s\S]*?stopMusic\(\);[\s\S]*?setBoardCandidate\(undefined\);[\s\S]*?\}\}/u);
+  assert.match(explorerSource, /<header className="seed-explorer-topbar">[\s\S]*?seed-explorer-back[\s\S]*?seed-explorer-brand/u);
+  assert.doesNotMatch(explorerSource, /Hostfall · Developer/u);
+  assert.doesNotMatch(explorerSource, /Análisis aproximado|Explicar Seed Explorer|HelpCircle/u);
+  assert.match(explorerSource, /value=\{finalistDraft\}[\s\S]*?onChange=\{\(event\) => updateFinalistDraft\(event\.target\.value\)\}[\s\S]*?onBlur=\{commitFinalistDraft\}/u);
+  assert.match(explorerSource, /import "\.\/SeedExplorerScreen\.css"/u);
+  assert.match(explorerStylesSource, /\.seed-explorer-workspace \{[\s\S]*?position: fixed;[\s\S]*?inset: 0;[\s\S]*?z-index: 10020;/u);
+  const explorerBoardStyles = explorerStylesSource.match(/\.seed-explorer-board \{[\s\S]*?\n\}/u)?.[0] ?? "";
+  assert.match(explorerBoardStyles, /height: 100vh;/u);
+  assert.doesNotMatch(explorerBoardStyles, /z-index:/u);
+  assert.match(explorerStylesSource, /\.seed-explorer-topbar \{[\s\S]*?min-height: 52px;/u);
+  assert.match(explorerStylesSource, /\.seed-explorer-detail-modal \{[\s\S]*?width: min\(1600px, calc\(100vw - 48px\)\);[\s\S]*?height: calc\(100vh - 36px\);/u);
+  assert.doesNotMatch(appSource, /seedExplorerRuntime|seedExplorerSearch/u);
+});
+
+test("UI Reference inventories only real player UI and traces every component to its runtime use", () => {
+  const appSource = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
+  const menuSource = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const screenSource = readFileSync(new URL("../src/ui-reference/UIReferenceScreen.tsx", import.meta.url), "utf8");
+  const modalGallerySource = readFileSync(new URL("../src/ui-reference/RuntimeModalGallery.tsx", import.meta.url), "utf8");
+  const confirmationSource = readFileSync(new URL("../src/components/GameConfirmationDialog.tsx", import.meta.url), "utf8");
+  const destinyDialogSource = readFileSync(new URL("../src/components/DestinyRewriteControl.tsx", import.meta.url), "utf8");
+  const temporalBackdropSource = readFileSync(new URL("../src/components/TemporalBackdrop.tsx", import.meta.url), "utf8");
+  const temporalBackdropShaderSource = readFileSync(new URL("../src/components/temporalBackdropShader.ts", import.meta.url), "utf8");
+  const destinyActionSource = readFileSync(new URL("../src/components/DestinyActionButton.tsx", import.meta.url), "utf8");
+  const handLimitSource = readFileSync(new URL("../src/components/HandLimitOverlay.tsx", import.meta.url), "utf8");
+  const learnIntroSource = readFileSync(new URL("../src/components/LearnToPlayIntroModal.tsx", import.meta.url), "utf8");
+  const guidedOverlaySource = readFileSync(new URL("../src/components/GuidedTutorialOverlay.tsx", import.meta.url), "utf8");
+  const guidedDialogSource = readFileSync(new URL("../src/components/GuidedTutorialDialog.tsx", import.meta.url), "utf8");
+  const referenceStyles = readFileSync(new URL("../src/ui-reference/UIReferenceScreen.css", import.meta.url), "utf8");
+  const runtimeStyles = readFileSync(new URL("../src/ui-system.css", import.meta.url), "utf8");
+  const gameStyles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  const mainSource = readFileSync(new URL("../src/main.tsx", import.meta.url), "utf8");
+
+  assert.match(appSource, /screen === "uiReference" && UIReferenceScreen/u);
+  assert.match(appSource, /onOpenUiReference=\{IS_DEV/u);
+  assert.match(menuSource, />UI Reference</u);
+  assert.match(screenSource, /import \{ Card, CardCostBadge \} from "\.\.\/components\/Card"/u);
+  assert.match(screenSource, /import \{ TurnPhaseHud \} from "\.\.\/components\/TurnPhaseHud"/u);
+  assert.match(screenSource, /import \{ DeckKeyCard \} from "\.\.\/components\/DecksView"/u);
+  assert.match(screenSource, /<strong>Dónde se usa<\/strong>/u);
+  assert.match(screenSource, /<RuntimeModalGallery game=\{game\}/u);
+  assert.match(screenSource, /entry\.component/u);
+  assert.match(screenSource, /entry\.source/u);
+  assert.match(screenSource, /entry\.usedIn/u);
+  assert.match(screenSource, /Qué significa cada estado/u);
+  assert.match(screenSource, /No\s+significa viejo, retirado ni pendiente de reemplazo/u);
+  assert.match(screenSource, /const ELEMENT_FILTERS = \[[\s\S]*?"Botones"[\s\S]*?"Modales"[\s\S]*?"Texto"[\s\S]*?"Feedback"/u);
+  assert.match(screenSource, />Tipos de elemento</u);
+  assert.doesNotMatch(screenSource, /UI_REFERENCE_GROUPS|ui-reference-scope/u);
+  assert.doesNotMatch(screenSource, /from\s+["'][^"']*(?:dev\/mockups|playground|audio-lab|seed-explorer|Animator|Vfx|vfx|three)[^"']*["']/u);
+  assert.match(modalGallerySource, /const MODAL_SPECIMENS:[\s\S]*?chronicler-name[\s\S]*?guided-tutorial[\s\S]*?learn-defeat-narrative/u);
+  assert.doesNotMatch(modalGallerySource, /chronicler-required|chronicler-edit|deck-drawer-(?:player|host)|settings-(?:normal|tutorial|journey)|confirmation-(?:return|interrupted|restart)|outcome-(?:victory|defeat)/u);
+  assert.match(modalGallerySource, /<strong>Dónde se usa<\/strong>/u);
+  assert.match(modalGallerySource, /<OpeningHandModal/u);
+  assert.match(modalGallerySource, /<HandLimitModal/u);
+  assert.match(modalGallerySource, /<GuidedTutorialDialog/u);
+  assert.match(modalGallerySource, /<GameOutcomeDialog/u);
+  assert.match(modalGallerySource, /Los resultados omiten su secuencia visual/u);
+  assert.doesNotMatch(modalGallerySource, /from\s+["'][^"']*(?:dev\/mockups|playground|audio-lab|seed-explorer|Animator|Vfx|vfx|three)[^"']*["']/u);
+  assert.match(guidedOverlaySource, /<GuidedTutorialDialog/u);
+  assert.match(guidedDialogSource, /guided-tutorial-callout-mark/u);
+  assert.doesNotMatch(confirmationSource, /game-dialog-icon|game-dialog-kicker|kicker:/u);
+  assert.match(destinyDialogSource, /destiny-dialog-controls[\s\S]*?destiny-dialog-kicker[\s\S]*?destiny-dialog-actions/u);
+  assert.match(destinyDialogSource, /destiny-dialog hf-ui-panel w-full max-w-\[620px\]/u);
+  assert.match(destinyDialogSource, /destiny-dialog-controls[\s\S]*?destiny-dialog-copy[\s\S]*?destiny-dialog-close[\s\S]*?destiny-dialog-kicker/u);
+  assert.doesNotMatch(destinyDialogSource, /destiny-dialog-(?:watermark|future-plate|narrative|rift|heading)|destiny\.dialog(?:Body|Consequence)|<h2/u);
+  assert.match(destinyDialogSource, /querySelector\(":scope > \.temporal-backdrop"\)/u);
+  assert.match(destinyDialogSource, /document\.body\.classList\.add\("is-destiny-dialog-open"\)/u);
+  assert.match(destinyDialogSource, /classList\.toggle\("is-destiny-dialog-closing", modalPresence\.closing\)/u);
+  assert.match(destinyDialogSource, /useAnimatedPresence\(open, 480\)/u);
+  assert.match(destinyDialogSource, /<DestinyActionButton[\s\S]*?className="destiny-dialog-primary"[\s\S]*?destiny-dialog-secondary/u);
+  assert.match(destinyActionSource, /"destiny-command-button", "learn-to-play-contemplate-button"/u);
+  assert.match(destinyDialogSource, /destiny-dialog-kicker" aria-label=[^>]*>\{futureCode\}<\/span>/u);
+  assert.match(gameStyles, /\.destiny-dialog-kicker \{[^}]*left: 50%;[^}]*width: min\(920px, calc\(100vw - 32px\)\);[^}]*margin: -82px 0 92px;[^}]*font-size: clamp\(92px, 14vw, 146px\);[^}]*padding: 0;[^}]*text-align: center;[^}]*transform: translateX\(-50%\);/su);
+  assert.doesNotMatch(gameStyles.match(/\.destiny-dialog-kicker \{[^}]*\}/su)?.[0] ?? "", /mask-image/u);
+  assert.match(gameStyles, /\.destiny-dialog-controls \{[^}]*position: fixed;[^}]*top: calc\(50% - 235px\);[^}]*left: min\(calc\(50% \+ 305px\), calc\(100% - 82px\)\);[^}]*opacity: 0\.68;/su);
+  assert.match(destinyDialogSource, /<GameTooltip content=\{t\("destiny\.copyIdentity"\)\} side="bottom">[\s\S]*?className="destiny-dialog-copy"/u);
+  assert.doesNotMatch(destinyDialogSource, /data-tooltip/u);
+  assert.doesNotMatch(gameStyles, /\.destiny-dialog-copy::after/u);
+  assert.doesNotMatch(gameStyles, /\.destiny-dialog-primary::before\s*\{[^}]*animation-direction:\s*reverse/u);
+  assert.match(gameStyles, /\.destiny-dialog-secondary \{[^}]*border: 0;[^}]*background: transparent;[^}]*font-size: 9px;/su);
+  assert.match(temporalBackdropSource, /const presentedDial = dialMix - destinyMix \* 180;[\s\S]*?positionDial\(presentedDial\)/u);
+  assert.match(temporalBackdropSource, /uprightTemporalDialLabelTransform\(degrees, DIAL_LABELS\[index\]\)/u);
+  assert.match(temporalBackdropShaderSource, /uniform float uDestiny;[\s\S]*?vec2 destinyFlow = vec2\(-uTime \* 0\.042, 0\.0\);[\s\S]*?mix\(surgeFlow, destinyFlow, uDestiny\)/u);
+  assert.doesNotMatch(gameStyles, /\.game-screen-ambience::after|destiny-gold-atmosphere/u);
+  assert.doesNotMatch(gameStyles, /\.destiny-dialog \.destiny-dialog-primary(?:\s|:|\{)/u);
+  assert.match(gameStyles, /body\.is-destiny-dialog-open \.game-screen > \*:not\(:where\(\.temporal-backdrop, \.game-screen-ambience, \.game-command-bar\)\)/u);
+  assert.match(gameStyles, /\.destiny-dialog \{[^}]*border: 0 !important;[^}]*background: transparent !important;[^}]*box-shadow: none !important;/su);
+  assert.doesNotMatch(gameStyles, /\.destiny-dialog-backdrop::before/u);
+  assert.doesNotMatch(gameStyles, /\.destiny-dialog-(?:rift|heading)/u);
+  assert.doesNotMatch(destinyDialogSource, /destiny-dialog-sigil/u);
+  assert.match(handLimitSource, /hand-limit-mark[\s\S]*?hand-limit-heading[\s\S]*?hand-limit-actions/u);
+  assert.doesNotMatch(handLimitSource, /hand\.endPhaseCount|hand-limit-icon/u);
+  assert.match(handLimitSource, /counter-target-button counter-target-cancel[\s\S]*?counter-target-button counter-target-confirm/u);
+  assert.match(handLimitSource, /hand-limit-layer pointer-events-none[\s\S]*?hand-limit-panel pointer-events-auto/u);
+  assert.match(learnIntroSource, /<GuidedTutorialDialog/u);
+  assert.match(learnIntroSource, /learn-to-play-intro-progress/u);
+  assert.doesNotMatch(learnIntroSource, /old-panel|old-title|game-home-dialog/u);
+
+  assert.match(mainSource, /import "\.\/ui-system\.css"/u);
+  assert.match(runtimeStyles, /\.hf-ui-panel,/u);
+  assert.match(runtimeStyles, /\.hf-ui-button/u);
+  assert.match(runtimeStyles, /\.expedition-begin,[\s\S]*?\.game-dialog-action-primary,[\s\S]*?\.guided-tutorial-continue/u);
+  assert.match(referenceStyles, /--ui-reference-font: "Segoe UI"/u);
+  assert.match(referenceStyles, /\.ui-reference-topbar \{[\s\S]*?min-height: 68px;[\s\S]*?grid-template-columns: auto minmax\(0, 1fr\);/u);
+  assert.match(referenceStyles, /\.ui-reference-specimen-stage \{[\s\S]*?font-family: var\(--hf-ui-font-body\);/u);
+  assert.doesNotMatch(referenceStyles, /(^|\n)(?:body|:root|\.game-screen|\.old-panel|\.hf-ui-panel)\s*\{/u);
+  assert.match(gameStyles, /\.hand-limit-mark\s*\{[\s\S]*?transform: rotate\(45deg\);/u);
+  assert.match(gameStyles, /\.hand-limit-layer \{[\s\S]*?padding: 16px 16px clamp\(104px, 18vh, 184px\);/u);
+  assert.match(gameStyles, /\.learn-to-play-intro-overlay\s*\{[\s\S]*?backdrop-filter: blur\(10px\)/u);
+  assert.match(gameStyles, /\.game-tooltip-top::after \{[\s\S]*?border-right: 1px solid[\s\S]*?border-bottom: 1px solid/u);
+  assert.match(gameStyles, /\.game-tooltip-bottom::after \{[\s\S]*?border-top: 1px solid[\s\S]*?border-left: 1px solid/u);
+
+  const ids = UI_REFERENCE_CATALOG.map((entry) => entry.id);
+  assert.equal(new Set(ids).size, ids.length);
+  assert.ok(UI_REFERENCE_CATALOG.length >= 25);
+  assert.equal(UI_REFERENCE_CATALOG.some((entry) => /CardContextMenu|CardDetailsModal/u.test(entry.component)), false);
+  for (const modalId of [
+    "chronicler-name-modal",
+    "setup-deck-drawer",
+    "settings-menu-modal",
+    "destiny-rewrite-dialog",
+    "game-confirmation-dialog",
+    "opening-hand",
+    "hand-limit-modal",
+    "graveyard-viewer-modal",
+    "graveyard-details-modal",
+    "deck-inspector-details-modal",
+    "learn-intro",
+    "guided-tutorial-dialog",
+    "game-outcome-dialog",
+    "learn-defeat-outcome-dialog",
+    "learn-defeat-narrative-dialog",
+  ]) {
+    assert.ok(ids.includes(modalId), `${modalId} must be inventoried individually`);
+  }
+  for (const entry of UI_REFERENCE_CATALOG) {
+    assert.ok(entry.component.length > 0, `${entry.id} must name its component`);
+    assert.match(entry.source, /^src\//u, `${entry.id} must point to runtime source`);
+    assert.ok(entry.usedIn.length > 0, `${entry.id} must say where it is used`);
+    assert.ok(["canonical", "product-variant", "context-only"].includes(entry.status));
+  }
+});
+
+test("Tribute source selection portals only its arrow above Energy and keeps its focused UI elevated", () => {
+  const overlaySource = readFileSync(new URL("../src/components/TributeOfTheFourSorrowsSelectionOverlay.tsx", import.meta.url), "utf8");
+  const battlefieldSource = readFileSync(new URL("../src/components/Battlefield.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(overlaySource, /import \{ createPortal \} from "react-dom";/u);
+  assert.match(overlaySource, /return \(\s*<>\s*<div[^>]*className="counter-target-backdrop"[^>]*\/>\s*\{createPortal\(\s*<svg[^>]*z-\[111\][^>]*>/u);
+  assert.match(overlaySource, /<svg[\s\S]*?<\/svg>,\s*document\.body,\s*\)\}/u);
+  assert.doesNotMatch(battlefieldSource, /mana-core-target-label/u);
+  assert.doesNotMatch(stylesSource, /\.mana-core-target-label/u);
+});
+
+test("manual Invoked targeting reveals and exposes battlefield targets behind its source card", () => {
+  const overlaySource = readFileSync(new URL("../src/components/CounterTargetingOverlay.tsx", import.meta.url), "utf8");
+  const stylesSource = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(overlaySource, /shouldRevealOverlappedTargets/u);
+  assert.match(overlaySource, /targetCandidates\(game, source\.controller, requirement\)/u);
+  assert.match(overlaySource, /findBattlefieldSlot\(targetId\)\?\.getBoundingClientRect\(\)/u);
+  assert.match(overlaySource, /data-source-overlap=\{sourceRevealsTargets \? "true" : undefined\}/u);
+  assert.match(stylesSource, /\.counter-target-source-panel\[data-source-overlap="true"\] \{[^}]*pointer-events: none;/su);
+  assert.match(stylesSource, /\.counter-target-source-panel\[data-source-overlap="true"\] \.counter-target-source-card \{[^}]*opacity: 0\.34;/su);
 });

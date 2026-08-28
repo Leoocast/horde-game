@@ -20,6 +20,11 @@ alias de sólo lectura `/vendor/three.min.js`, que resuelve al Three.js de `node
 relativa `../../../node_modules/...` sirve al abrir con doble clic, pero cae fuera de la raíz del
 servidor. Las maquetas WebGL prueban las dos rutas en ese orden.
 
+El mismo mecanismo expone, archivo por archivo, el arte del repositorio que usa alguna maqueta bajo
+`/art/...` —hoy las dos ilustraciones de `ui/claude-play-entry-fracture.html`—, para no duplicar los
+JPG dentro de `dev/mockups`. Esa maqueta también prueba primero la ruta servida y cae en la relativa
+si se abre con doble clic.
+
 ## Estructura
 
 ```text
@@ -34,6 +39,75 @@ vfx/                exploraciones de efectos
 
 ## Contenido
 
+- `ui/claude-preparation-frontispiece.html` — segunda vuelta sobre la maqueta 4 de
+  `ui/claude-preparation-book.html`. Fija el frontispicio —sin rosa de los vientos, sin ajustes
+  avanzados, con el número del Futuro como lo más grande de la pantalla y el centro leyéndose
+  *Futuro · número · Crónica · vs · Hueste*— y prueba **cuatro sitios para la dificultad**, conmutables
+  con `1`-`4`: al **pie** junto a Iniciar Crónica, como **cinta** de sólo texto bajo el enfrentamiento,
+  en un **riel** vertical del margen izquierdo, o colgando de la **Hueste**, que es quien despierta. Las
+  cartas conservan el tamaño aprobado y el códec sigue siendo el del juego.
+- `ui/claude-preparation-book.html` — cuatro maquetas de **Preparación** (`ExpeditionSetup`) en la lengua
+  visual del Archivo de Semillas: Cinzel Decorative en el título, hilos dorados en vez de paneles, cartas
+  sin marco con sombra por alfa y halo del bando, el sello de la rosa cardinal como firma del Futuro y el
+  botón de Destino con su ornamento radial. Conmutables con `1`-`4`: **Página** (índice de decisiones y
+  duelo), **Doble hoja** (una Crónica por página con el Futuro en el lomo), **Registro** (una columna
+  escrita con un renglón por decisión) y **Frontispicio** (lámina a sangre con el Futuro lacrado). Conserva
+  todo el contenido real de la pantalla —artes clave de los cuatro mazos, ver/cambiar mazo, las tres
+  dificultades, el despertar de la Hueste, los ajustes avanzados y el resumen— y recompone el número con el
+  códec del juego.
+- `ui/claude-play-entry-fracture.html` — la versión **Fractura** de
+  `ui/claude-play-entry-threshold-v3.html`, aislada y ajustada. El umbral ocupa la pantalla completa sin
+  cubrir el fondo: el cielo de Hostfall permanece y sólo se atenúa, se retira la UI del menú y entra la
+  suya. Se quitan los ornamentos de esquina, el pie de controles y el historial de semillas, el
+  título es **¿Qué Futuro contemplarás?**, las puertas crecen y pierden el rombo con icono, y la costura
+  deja de cruzar la pantalla: vive en el hueco entre las dos cartas y sólo las separa. La ruta inscrita
+  decodifica el `HF1` y lanza el choque; **Escribir Crónica** queda deliberadamente sin programar, como
+  marcador con el futuro ya propuesto.
+- `ui/claude-play-entry-threshold-v3.html` — tercera vuelta sobre `ui/play-entry-futures.html`. **A · Umbral y
+  B · Pantalla dejan de ser alternativas**: el umbral tiene composición de pantalla completa —marco,
+  ornamento radial, pie con teclas— pero el menú nunca se desmonta detrás, así que volver es instantáneo y
+  `Esc` devuelve el foco exacto a **Jugar**. Trae **cuatro versiones** de cómo la pantalla toma el menú,
+  conmutables en caliente con las teclas `1`–`4`: **Eclipse** (el velo crece desde la posición real del
+  botón Jugar, con corona de luz), **Fractura** (dos láminas y una costura viva de la que salen las
+  puertas), **Astrolabio** (el disco de grados del fondo se adelanta y gira hasta su marca) y **Vidrio**
+  (tres láminas frías y una quebradura que se dibuja). Añade aura de puntero por puerta, un campo de
+  pavesas en canvas con tinte y deriva por versión, y conserva el códec real —`hashSeed`,
+  `futureCodeFromSeed`, `HF1-PPP-HHH-XXD-XXX`— y los tiempos de `EncounterTransition`.
+- `ui/claude-play-entry-threshold.html` — segunda vuelta sobre `ui/play-entry-futures.html`. La bifurcación
+  deja de ofrecer tres profundidades y se resuelve en una sola: un **umbral a pantalla completa que se abre
+  sobre el menú vivo**, que sigue detrás atenuado y desplazado un paso. La piel ya no es propia: usa el
+  material real de los modales del juego —`game-home-backdrop`, `game-home-dialog`, `game-dialog-action`,
+  `game-seed-input`, `main-menu-entry` y el resplandor del número del diálogo de Reescribir— con Georgia
+  para títulos y Cinzel Decorative sólo en el wordmark. Añade futuros recientes en el umbral, navegación con
+  flechas/Enter/Esc con devolución de foco, y la inscripción que decodifica el `HF1` carácter a carácter
+  antes de lanzar el choque.
+- `ui/play-entry-threshold-screen-variants.html` — cuatro versiones interactivas del híbrido **Umbral →
+  pantalla completa**, todas nacidas desde la posición real de **Jugar** y con el menú vivo detrás:
+  expansión de placa, fisura cardinal, folio físico y astrolabio del Destino. Cada composición cambia
+  estructura y movimiento —no sólo la piel— y permite recorrer ambas salidas; la ruta aleatoria calcula el
+  número de Futuro con el hash real y la ruta inscrita valida el formato Canon `HF1`.
+- `ui/claude-play-entry-futures.html` — propuesta de Claude para la entrada a **Jugar**: la bifurcación
+  entre un futuro nuevo y uno inscrito (variante desplegada en el propio menú y variante de umbral a
+  pantalla completa), **Escribir Crónica** sin ningún campo de seed y con el número de Futuro ocupando
+  el centro entre las dos Crónicas —firma determinista incluida y botón **Otro futuro**—, y el modal de
+  inscripción que decodifica el código carácter a carácter y entra directo al choque. Reimplementa
+  `hashSeed`, `futureCodeFromSeed` y el formato `HF1-PPP-HHH-XXD-XXX`, así que los números que muestra
+  son los del juego, y el choque conserva los tiempos de `EncounterTransition` (2450 ms, impacto a
+  1050 ms, apertura a 1666 ms).
+- `ui/play-entry-futures.html` — la bifurcación de **Jugar** en tres profundidades (capa sobre el menú,
+  pantalla completa y sin menú intermedio), **Preparación** sin campo de Canon Seed con el número de Futuro
+  como protagonista —duelo central y estandarte— y el modal de inscripción en dos formas, con su latido de
+  confirmación y el choque simplificado a los tiempos reales de `EncounterTransition`. Reimplementa
+  `hashSeed`, `futureCodeFromSeed` y el formato `HF1-PPP-HHH-XXD-XXX`, así que cada Futuro que muestra es el
+  que produciría el juego; cambiar dificultad o Hueste recompone el número, igual que hará el runtime.
+- `ui/chronicler-name-modal.html` — siete reemplazos interactivos de `ChroniclerNameModal`, construidos sólo
+  con los tokens vigentes (`--hf-ui-*` y el material del menú principal) para retirar la paleta oliva del
+  modal actual. Cada variante se escribe, se enfoca, se confirma y se vuelve a abrir sobre una silueta del
+  menú; la barra superior cambia idioma, alterna primera apertura/reapertura y repite las entradas.
+  La dirección elegida es **G · Umbral grabado**: la composición sin panel de F con el grabado de letra de B.
+  Sus chispas se colocan midiendo el texto con `measureText` más `letter-spacing` y alineación, no con una
+  estimación por número de caracteres; su selector superior compara en vivo las alternativas a la línea
+  «Antes de la primera página».
 - `ui/ui-typography.html` — diez conjuntos tipográficos sobre la piel actual, con muestras EN/ES y una
   prueba de encaje que mide cada cadena contra el ancho real de su hueco en `src/styles.css`.
 - `ui/ui-kit.html` — seis pieles completas (botones, modales, paneles, controles, HUD).
@@ -41,6 +115,15 @@ vfx/                exploraciones de efectos
 - `ui/keyword-icons.html` — los once Rasgos y el icono de reserva con SVG propios, comparados contra
   el icono de `lucide-react` en uso, en tres familias de trazo y en el tamaño real de la insignia de
   24 px y de la píldora del preview.
+
+- `vfx/surge-ember.html` — segunda ronda sobre la brasa elegida: cinco posiciones que apoyan el fuego en el
+  estandarte en vez de colgarlo del hueco del medallón, cuatro direcciones no relacionadas con el fuego y un
+  selector de palabra para comparar «Oleada» con Embate, Tromba, Avalancha, Estampida, Asalto, Desborde y el
+  «Surge» inglés en el tamaño real del cartel.
+- `vfx/surge-crest.html` — la Oleada sin el medallón de la calavera: seis remates para el canto superior
+  del estandarte (vacío, muesca del propio marco, la grieta clavada, los rombos de la placa de Futuro, marcas
+  de cuenta y una brasa viva), cada uno con su entrada afinada, reloj y control de velocidad. Comparte escenario
+  con las rondas anteriores `surge-entrance`, `surge-current-variations`, `surge-variants` y `surge-typographic`.
 
 ### Fuentes
 

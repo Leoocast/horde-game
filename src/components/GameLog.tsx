@@ -13,6 +13,9 @@ type LogKind = "combat" | "spell" | "death" | "life" | "draw" | "turn" | "system
 type LogEntry = { text: string; sourceIndex: number; turn: number; side: Side };
 type PreviewPosition = { left: number; top: number };
 
+const CARD_PREVIEW_WIDTH = 270;
+const CARD_PREVIEW_ASPECT_RATIO = 680 / 488;
+
 const KIND_LABELS: Record<LogKind, TranslationKey> = {
   combat: "log.kindBattle",
   spell: "log.kindAction",
@@ -40,7 +43,7 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
   const cards = useMemo(() => collectCards(game), [game]);
   const cardNames = useMemo(() => [...new Set(cards.map((card) => card.name).filter(Boolean))], [cards]);
   const visibleLog = useMemo(() => annotateLog(game.log.slice(0, 80), game, language), [game, language]);
-  const previewDetails = useCardDetails(previewCard?.definitionId ?? "");
+  const previewDetails = useCardDetails(previewCard?.definitionId ?? "", language);
   const suggestions = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase();
     if (!needle) return [];
@@ -105,8 +108,8 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
 
   function showCardPreview(event: React.SyntheticEvent<HTMLButtonElement>, card: CardInstance) {
     const rect = event.currentTarget.getBoundingClientRect();
-    const width = 190;
-    const height = width * (680 / 488);
+    const width = CARD_PREVIEW_WIDTH;
+    const height = width * CARD_PREVIEW_ASPECT_RATIO;
     const left = rect.right + 12 + width < window.innerWidth ? rect.right + 12 : Math.max(12, rect.left - width - 12);
     const top = Math.min(window.innerHeight - height - 12, Math.max(12, rect.top - height * 0.42));
     setPreviewCard(card);
@@ -217,7 +220,6 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
       {previewCard && previewPosition && previewDetails.imageUrl && !detailsCard && (
         <div className="game-log-card-preview" style={previewPosition} aria-hidden="true">
           <img src={previewDetails.imageUrl} alt="" />
-          <span>{previewCard.displayName}</span>
         </div>
       )}
       {detailsCard && (
@@ -248,8 +250,8 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
   }
 
   return (
-    <aside className={`game-log-panel old-panel-soft flex min-h-0 flex-col ${className}`}>
-      <div className="game-log-panel-title old-title">{t("log.title")} <span>{visibleLog.length}</span></div>
+    <aside className={`game-log-panel hf-ui-panel-soft flex min-h-0 flex-col ${className}`}>
+      <div className="game-log-panel-title hf-ui-title">{t("log.title")} <span>{visibleLog.length}</span></div>
       <div className="game-log-panel-search">{search}{matchNavigator}</div>
       <div className="game-log-scroll old-scrollbar">{entries}</div>
       {overlays}
@@ -273,11 +275,11 @@ function annotateLog(entries: string[], game: GameState, language: "en" | "es"):
     if (/^Host turn ends/i.test(text)) {
       entrySide = "host";
       side = "host";
-    } else if (/Player starts the turn/i.test(text)) {
+    } else if (/(?:Player|Chronicler) starts the turn/i.test(text)) {
       entrySide = "player";
       const setupTransition = entries[sourceIndex - 1]?.includes("Setup turn complete");
       side = setupTransition ? "player" : "host";
-    } else if (/^(Player ends turn|Setup complete)/i.test(text)) {
+    } else if (/^(?:(?:Player|Chronicler) ends the turn|Setup complete)/i.test(text)) {
       entrySide = "player";
       side = "player";
     } else if (/^Host readies/i.test(text)) {
@@ -286,7 +288,7 @@ function annotateLog(entries: string[], game: GameState, language: "en" | "es"):
     }
     const entryTurn = /^Host turn ends/i.test(text) ? turn - 1 : turn;
     const annotated = { text: canonicalizeLogText(text, language), sourceIndex, turn: Math.max(1, entryTurn), side: entrySide };
-    if (/Player starts the turn/i.test(text)) turn -= 1;
+    if (/(?:Player|Chronicler) starts the turn/i.test(text)) turn -= 1;
     return annotated;
   });
 }

@@ -25,6 +25,7 @@ import {
   getPlayerDeck,
 } from "../src/data/decks";
 import { useCardDetails, usesFullArtCardImage } from "../src/utils/cardImages";
+import { localizedDeckCardImageUrl } from "../src/utils/deckCardImages";
 
 test("builtin content bootstraps as one immutable pack with the original order and 61 identities", () => {
   assert.deepEqual(contentCatalog.activeSources, [{ sourceId: "builtin", origin: "builtin" }]);
@@ -128,6 +129,11 @@ test("Card Studio runtime projections still resolve to the authored web URLs", (
     for (const [cardId, image] of Object.entries(entry.images.cards)) {
       const details = useCardDetails(cardId);
       assert.equal(details.imageUrl, image.imageUrl, `${entry.deck.id}/${cardId} full card URL changed`);
+      assert.equal(
+        useCardDetails(cardId, "en").imageUrl,
+        localizedDeckCardImageUrl(image.imageUrl, entry.images, "en"),
+        `${entry.deck.id}/${cardId} English full card URL changed`,
+      );
       const authoredArt = gameArt.cards[cardId]?.artUrl;
       assert.ok(authoredArt, `${entry.deck.id}/${cardId} has no Card Studio game-art projection`);
       assert.equal(details.battlefieldArtUrl, authoredArt, `${entry.deck.id}/${cardId} field art URL changed`);

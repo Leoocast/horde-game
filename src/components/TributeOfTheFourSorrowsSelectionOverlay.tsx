@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import type { GameState } from "../engine/GameTypes";
 import { useGameStore } from "../store/useGameStore";
 import { targetArrowCurve } from "./tacticalArrowGeometry";
@@ -83,16 +84,19 @@ export function TributeOfTheFourSorrowsSelectionOverlay({ game: _game }: { game:
     };
   }, [tributeOfTheFourSorrowsSelection, tributeOfTheFourSorrowsCard]);
 
-  if (!tributeOfTheFourSorrowsSelection || !end) return null;
+  if (!tributeOfTheFourSorrowsSelection || !end || typeof document === "undefined") return null;
 
   const arrow = targetArrowCurve(start, end);
 
   return (
     <>
       <div data-audio-click="off" className="counter-target-backdrop" />
-      <svg className="pointer-events-none fixed inset-0 z-[111] h-screen w-screen overflow-visible">
-        <TacticalArrowGlyph curve={arrow} color={ARROW_COLOR} />
-      </svg>
+      {createPortal(
+        <svg className="pointer-events-none fixed inset-0 z-[111] h-screen w-screen overflow-visible">
+          <TacticalArrowGlyph curve={arrow} color={ARROW_COLOR} />
+        </svg>,
+        document.body,
+      )}
     </>
   );
 }

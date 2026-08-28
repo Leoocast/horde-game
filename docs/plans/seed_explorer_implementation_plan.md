@@ -1,6 +1,6 @@
 # Plan de implementación — Seed Explorer interno (MVP barato)
 
-Estado: **implementación en curso; Fase 0 cerrada, Fases 1–4 pendientes**.
+Estado: **implementación en curso; Fases 0–3.5 cerradas, Fase 4 pendiente**.
 
 Última actualización: **2026-08-18**.
 
@@ -8,8 +8,8 @@ Referencia visual aprobada: [`dev/mockups/ui/seed-explorer.html`](../../dev/mock
 
 ## Resultado buscado
 
-Construir dentro del Playground una herramienta dev que enumere muchas seeds, descarte aperturas
-claramente indeseables y entregue 10–20 candidatas para playtest humano.
+Construir una pantalla dev independiente que enumere muchas seeds, descarte aperturas claramente
+indeseables y entregue 10–20 candidatas para playtest humano en el Board real.
 
 El MVP no intenta jugar Hostfall ni decidir objetivamente si una partida es divertida. Usa datos
 estructurales reales del futuro —Mano, mulligan, próximas cartas, Fuentes, curva y orden potencial
@@ -38,7 +38,7 @@ Esto hace fit con la arquitectura vigente sin refactorizar el engine completo.
 | Mulligan | `mulliganOpeningHand` devuelve toda la Mano, vuelve a barajar con el RNG restante y roba una carta menos. | Compartir/probar la proyección barata y verificarla otra vez para finalistas. |
 | Preparación | `endPlayerTurn`, `startPlayerTurnReady` y `playerDrawForecast`. | Recordar que `N` turnos de Preparación producen `N - 1` robos antes de la primera Hueste. |
 | Hueste | `HostRules.ts` y `HostController.ts` resuelven límite de revelados, corte por no-token, Mini Oleada, Oleada y efectos. | El bulk usa ventanas **potenciales**; nunca promete turnos exactos. |
-| Tooling dev | `PlaygroundScreen` ya es un chunk `import.meta.env.DEV` y monta el Board real. | Añadir un workspace ancho dentro del Playground, no otro producto ni una pantalla release. |
+| Tooling dev | `App` ya poda pantallas dev mediante imports condicionados por `import.meta.env.DEV`. | Añadir Seed Explorer como pantalla dev hermana de Playground y Audio Lab, accesible desde el dock dev del home. |
 | Ejecución larga | No existen Workers ni un scheduler CPU. La CSP Electron usa `worker-src 'none'` en desarrollo y producción. | Ejecutar lotes cooperativos en el renderer con progreso y cancelación. Un Worker queda fuera del MVP. |
 | Solver | Las reglas principales son headless, pero no existe `legalActions(state)`, agente genérico ni replay completo de decisiones. | Mantener `solvability: "unchecked"`. No construir IA ni beam search ahora. |
 
@@ -182,8 +182,12 @@ Reglas del contrato:
 - `entropy` contiene los cinco caracteres que alimentan `hashSeed`;
 - se resuelven las claves calificadas de los decks, no sus nombres visibles;
 - `preparationTurns` sale únicamente de la tabla de dificultad V1;
-- `contentRevision` usa `contentCatalog.revision` para distinguir cambios de contenido;
-- `rulesetVersion` se incrementa cuando cambia una regla determinista que altera el futuro;
+- `contentRevision` registra como diagnóstico la revisión instalada al decodificar; no forma parte
+  de la clave Canon ni separa dos usos compatibles del mismo `canonCode`;
+- `rulesetVersion` describe el contrato de compatibilidad fijado por el prefijo HF1, no una variante
+  libre de esa misma Canon Seed;
+- `canonCode` normalizado es la clave Canon. Decks, dificultad, Preparación, modo y entropía deben
+  coincidir siempre con su decode; una incompatibilidad exige otro prefijo o rechazar el código;
 - `futureCodeFromSeed` es sólo identidad cosmética y nunca sustituye la seed real;
 - una trayectoria jugada requeriría además mulligan y decisiones; no forma parte de esta identidad.
 
@@ -209,7 +213,7 @@ type SeedAnalysisResult = Readonly<{
   identity: SeedFutureIdentity;
   analysisRevision: 1;
   score: number;
-  profileId: "first-approach-v1";
+  profileId: SeedSearchProfileId;
   metrics: SeedMetricsV1;
   preview: SeedPreviewV1;
   mulligan: {
@@ -275,6 +279,24 @@ Se conservan los valores crudos junto al score. Los pesos y umbrales viven en un
 se prueban de forma aislada. La seed que dejó al creador en 2 de Vida sirve como referencia humana de
 **Hostfallero experimentado**, no como una verdad que el analyzer pueda deducir sin jugarla.
 
+## Perfiles V1 — Fase 3.5
+
+La misma extracción de métricas alimenta cinco preferencias versionadas. Cambiar perfil no altera
+la Canon Seed, el orden de cartas ni las métricas crudas: cambia filtros, pesos y objetivo de
+presión. Son aproximaciones iniciales pendientes de calibración humana en la Fase 4.
+
+| Perfil | Preferencia estructural |
+| --- | --- |
+| `first-approach-v1` | Recursos estables, curva accesible y presión gradual. |
+| `balanced-v1` | Reparto parejo entre apertura, recursos, curva, presión y escalada. |
+| `experienced-v1` | Tolera menos estabilidad y favorece presión y escalada mayores. |
+| `high-pressure-v1` | Exige presión temprana suficiente y le da el mayor peso del score. |
+| `progressive-pressure-v1` | Exige crecimiento entre ventanas y limita un inicio excesivo. |
+
+**Evitar picos tempranos** permanece como filtro adicional. Cada perfil propone un default, pero el
+usuario puede cambiarlo sin crear otra identidad de partida. Favoritos y exports guardan el perfil
+que produjo el score; favoritos anteriores sin perfil migran a `first-approach-v1`.
+
 ## Algoritmo de búsqueda
 
 ### Preparación por configuración
@@ -322,30 +344,30 @@ La búsqueda corre dentro del renderer del Playground en lotes cooperativos:
 
 - cada slice trabaja hasta un presupuesto aproximado de 8–12 ms;
 - después cede con el scheduler más pequeño posible (`setTimeout(0)` inyectable);
-- un `AbortSignal` cancela al cambiar configuración, iniciar otra búsqueda o cerrar el workspace;
+- un `AbortSignal` cancela al cambiar configuración, iniciar otra búsqueda o cerrar la pantalla;
 - progreso y shortlist se publican unas pocas veces por segundo, no por seed;
-- abandonar el workspace cancela trabajo futuro, pero conserva el último resultado completo;
+- abandonar la pantalla cancela trabajo futuro, pero conserva el último resultado completo mientras
+  la herramienta siga montada;
 - nunca se muta `useGameStore` durante búsqueda o inspección.
 
 No se usa Web Worker: hoy no existe esa infraestructura y `electron/protocolServer.ts` fija
 `worker-src 'none'`. Si el benchmark real demuestra jank después del fast path, habilitar Workers
 será una propuesta independiente con revisión de CSP y seguridad, no un cambio incidental.
 
-## Integración visual en el Playground
+## Integración visual como pantalla dev
 
-El diseño aprobado no cabe dentro del dock de 460–620 px. La integración será un **workspace ancho**
-perteneciente a `PlaygroundScreen`:
+El diseño aprobado no cabe dentro del dock de 460–620 px y conceptualmente no es una herramienta
+del Playground. La integración será una **pantalla dev independiente**:
 
-- añadir una entrada **Seeds** en la navegación dev;
-- al abrirla, `SeedExplorerWorkspace` cubre visualmente el Board y usa las tres columnas del mockup;
-- el Board permanece montado detrás pero queda `inert` mientras el workspace está abierto;
-- resultados, selección y favoritos se conservan al volver al Board;
+- añadir **Seed Explorer** junto a Playground y Audio Lab en un dock dev abajo a la derecha del home;
+- `SeedExplorerScreen` ocupa el viewport y usa las tres columnas del mockup;
+- **Probar en tablero** alterna la propia pantalla al Board real sin pasar por Playground;
+- el componente de la herramienta conserva resultados, selección y favoritos al volver desde el Board;
 - las columnas se apilan en breakpoints estrechos como ya hace el mockup;
 - la paleta y controles reutilizan el lenguaje visual vigente del Playground, no su distribución;
 - el código Canon nunca se traduce; sólo se localizan los nombres y la dificultad de su preview.
 
-La navegación actual fija cinco columnas aunque ya existen más tabs; al añadir Seeds se cambia a una
-distribución automática, no a otro número hardcodeado.
+Playground no importa ni monta Seed Explorer y mantiene su navegación dedicada a escenarios.
 
 ### Probar una candidata
 
@@ -356,10 +378,10 @@ distribución automática, no a otro número hardcodeado.
 2. lo planta con `useGameStore.loadScenario`, no con `reset`, para no persistir la seed como próxima
    partida normal;
 3. informa al Board los turnos reales de Preparación;
-4. cierra el workspace y colapsa las herramientas;
+4. muestra el Board dentro de Seed Explorer, conservando en memoria el shortlist de la herramienta;
 5. deja que mulligan, acciones, Hueste y combate ocurran por los handlers normales.
 
-Al reabrir Seeds, el shortlist sigue disponible para probar la siguiente candidata.
+Al volver desde el Board, el shortlist sigue disponible para probar la siguiente candidata.
 
 ## Archivos previstos
 
@@ -368,8 +390,11 @@ Al reabrir Seeds, el shortlist sigue disponible para probar la siguiente candida
 - `src/content/CanonSeed.ts` — codec HF1, registro de códigos, dificultad derivada y validación.
 - `src/engine/InitialDeckOrder.ts` — pools genéricos y secuencia compartida de shuffles.
 - `src/playground/seedExplorer.ts` — contratos, analyzer estático, métricas y perfiles.
-- `src/playground/seedExplorerSearch.ts` — enumeración, top-K, scheduler, progreso y cancelación.
-- `src/playground/panels/SeedExplorerWorkspace.tsx` — filtros, lista, inspector y acciones.
+- `src/playground/seedExplorerSearch.ts` — enumeración, top-K y verificación exacta incremental.
+- `src/playground/seedExplorerRuntime.ts` — slices cooperativos, progreso, cancelación y protección
+  contra resultados obsoletos.
+- `src/seed-explorer/SeedExplorerScreen.css` — piel de la pantalla dentro del chunk dev-only.
+- `src/seed-explorer/SeedExplorerScreen.tsx` — filtros, lista, inspector, acciones y handoff al Board.
 - `src/playground/seedExplorerStorage.ts` — favoritos locales versionados y validación defensiva.
 - `tests/canonSeed.test.js` — codec, normalización, dificultad derivada e independencia de idioma.
 - `tests/seedExplorer.test.js` — paridad, métricas, ranking, batching y storage.
@@ -377,10 +402,11 @@ Al reabrir Seeds, el shortlist sigue disponible para probar la siguiente candida
 ### Modificados
 
 - `src/engine/GameState.ts` — consumir la nueva costura de orden inicial sin cambiar gameplay.
-- `src/playground/PlaygroundScreen.tsx` — launcher/workspace, preservación de estado y probar en Board.
-- `src/styles.css` — implementación de la piel ya aprobada en el mockup.
+- `src/App.tsx` — import dev-only y ruta interna de la pantalla.
+- `src/components/StartMenu.tsx` — dock de herramientas dev en el home.
+- `src/styles.css` — posición y piel del dock dev.
 - `scripts/run-engine-tests.mjs` — registrar explícitamente el nuevo test.
-- `tests/uiPresentation.test.js` — gate dev-only y contrato del workspace.
+- `tests/uiPresentation.test.js` — gate dev-only y contrato de la pantalla independiente.
 - `docs/guides/testing.md` — añadir la nueva cobertura.
 - `CLAUDE.md` — sólo al cerrar la implementación, para resumir el contrato vigente.
 
@@ -407,6 +433,10 @@ fast path compartido.
 
 ### Fase 1 — Analyzer, perfil y búsqueda pura
 
+**Estado:** cerrada el 2026-08-18. `src/playground/seedExplorer.ts` contiene métricas, preview,
+perfil, filtros, proyección de mulligan y ventanas potenciales. `seedExplorerSearch.ts` aporta el
+rango base 36, acumulador por batches, heap top-K, desempate y verificación exacta sin Zustand.
+
 - definir identidad, preview y métricas V1;
 - implementar keep + un mulligan, filtros y `first-approach-v1`;
 - implementar heap top-K y desempate estable;
@@ -415,30 +445,83 @@ fast path compartido.
 
 **Salida:** una función pura devuelve finalistas reproducibles sin tocar Zustand.
 
+Benchmark local observado con Elarion vs Sinsepulcro, Normal, mulligan y top 20 —incluye pool de
+verificación de 400 finalistas—:
+
+| Seeds | Tiempo | Throughput observado | Pasaron filtros | Divergencias |
+| ---: | ---: | ---: | ---: | ---: |
+| 10.000 | 304 ms | 32.912/s | 9.186 | 0 |
+| 100.000 | 1.319 ms | 75.844/s | 91.532 | 0 |
+| 500.000 | 5.821 ms | 85.895/s | 457.727 | 0 |
+
+No son límites de CI. Los filtros V1 son deliberadamente conservadores y todavía dejan pasar la
+mayoría de futuros; la Fase 4 calibrará pesos y umbrales con playtests sin cambiar las métricas
+crudas.
+
 ### Fase 2 — Runtime cooperativo
+
+**Estado:** cerrada el 2026-08-18. `src/playground/seedExplorerRuntime.ts` ejecuta tanto el barrido
+como la verificación exacta en slices con presupuesto temporal y límites de trabajo defensivos. El
+scheduler y el reloj son inyectables para probar cancelación y progreso sin timers reales. El
+coordinador invalida búsquedas anteriores por `runId` y retiene por separado el último resultado
+completo.
 
 - envolver la búsqueda pura en slices cancelables;
 - limitar frecuencia de progreso y resultados parciales;
 - impedir que respuestas de búsquedas viejas reemplacen la activa;
 - conservar el último resultado completo al navegar.
 
-**Salida:** 500k pueden tardar, pero la interfaz responde y Cancelar se aplica como máximo al
-terminar el slice actual.
+**Salida:** el renderer puede ceder entre slices durante una búsqueda larga; Cancelar se observa
+antes de procesar el siguiente chunk y ninguna ejecución obsoleta puede reemplazar la activa.
 
-### Fase 3 — Workspace aprobado
+### Fase 3 — Pantalla dev aprobada
+
+**Estado:** cerrada en código el 2026-08-18; queda el QA visual/manual del usuario. La herramienta
+vive en `src/seed-explorer/SeedExplorerScreen.tsx` como pantalla dev hermana de Playground y Audio
+Lab. Se abre desde el dock dev abajo a la derecha del home, usa el runtime real, favoritos locales
+versionados y export JSON/CSV. Reconstruye la candidata mediante `createInitialGame`, la entrega a
+`loadScenario` y alterna al Board real sin perder el estado de búsqueda. La lista permite cambiar
+entre **Mejores** (ranking puro) y **Variadas** (default), usando un pool verificado más amplio y
+distancia estructural sin alterar score ni filtros.
 
 - trasladar el mockup a React con datos reales;
 - integrar filtros, lista, inspector, favoritos y copy/export;
 - conectar **Probar en tablero** al estado real;
-- ajustar navegación y responsive sin comprimir el diseño dentro del dock.
+- integrar la entrada dev en el home y el responsive sin comprimir el diseño dentro de otro dock.
 
-**Salida:** flujo completo búsqueda → inspección → playtest manual.
+**Salida:** flujo completo búsqueda → inspección → playtest manual, pendiente únicamente de ajuste
+visual si el usuario detecta diferencias en su resolución real.
+
+### Fase 3.5 — Perfiles estructurales adicionales
+
+**Estado:** cerrada el 2026-08-18 y ampliada el 2026-08-19. El selector de **Perfil buscado** ejecuta cinco perfiles reales:
+Primer acercamiento, Equilibrada, Hostfallero experimentado, Presión alta y Escalada progresiva.
+Todos reutilizan las métricas V1, mantienen ranking determinista y pasan por la misma verificación
+exacta. El perfil forma parte de request, resultado, favoritos y export, pero no de la Canon Seed.
+
+- generalizar score, filtros y razones de rechazo por perfil;
+- conservar `first-approach-v1` como default compatible;
+- exigir presión mínima o escalada mínima sólo en los perfiles que la solicitan;
+- aplicar defaults de picos tempranos explícitos por perfil;
+- migrar favoritos anteriores al perfil default;
+- comprobar con muestras locales que los cinco perfiles producen finalistas distinguibles.
+- clasificar cada candidata con una variación intrínseca y coloreada —Más estable, Mejor curva,
+  Inicio suave, Mayor escalada, Mulligan útil o Equilibrada— sin depender de su posición en el pool;
+- permitir filtrar esa variación durante el barrido completo; Mulligan útil fuerza la evaluación de
+  un mulligan y el filtro queda registrado en el request/export, no en la identidad Canon.
+
+**Salida:** el creador puede buscar tipos de futuro distintos antes de iniciar la calibración humana,
+sin IA jugadora ni nuevas métricas del engine.
 
 ### Fase 4 — Calibración y cierre
 
+**Candidata elegida por playtest del creador el 2026-08-19:** `HF1-ELA-GRV-082-QC5`. Se conserva
+como la Canon Seed de primer acercamiento aprobada mientras se corrigen bugs previos a continuar el
+flujo del tutorial.
+
 - ejecutar búsquedas del matchup de demo;
-- comparar finalistas con playtests humanos;
-- ajustar sólo pesos del perfil, manteniendo métricas crudas estables;
+- comparar finalistas de los perfiles relevantes con playtests humanos;
+- ajustar sólo pesos y umbrales de perfil, manteniendo métricas crudas estables;
 - documentar throughput observado y limitaciones;
 - ejecutar gates release para probar que el Explorer no se empaqueta.
 
@@ -464,7 +547,9 @@ Entre `tests/canonSeed.test.js` y `tests/seedExplorer.test.js` se debe cubrir:
 - seeds técnicas reservadas imposibles de representar como Canon Seed;
 - ranking estable y exactamente `top` resultados;
 - procesar en uno o muchos batches produce el mismo shortlist;
+- ejecución cooperativa produce el mismo resultado que la búsqueda síncrona;
 - cancelación impide ejecutar/publicar batches posteriores;
+- una búsqueda reemplazada no pisa la activa y cancelar conserva el último resultado completo;
 - filtros y pesos sobre fixtures sintéticos comprensibles;
 - export JSON/CSV reproducible y storage inválido que falla cerrado;
 - ningún resultado declara `winning-line-found` o `impossible`.
@@ -521,3 +606,8 @@ Sólo después de usar el MVP y medir sus carencias se evaluaría:
 - una Future Explorer para jugadores sin spoilers.
 
 Ninguno de esos puntos es requisito para encontrar buenas candidatas de demo.
+
+Decisión posterior, 2026-08-21: generar/importar una Canon Seed en Preparación y hacer que las
+superficies player-facing copien `canonCode` quedó incorporado como precondición del historial en
+`seeds_of_destiny_history_implementation_plan.md`. Esa integración no reabre el alcance ya cerrado
+del Explorer ni incluye todavía el catálogo curado Oficial/Comunidad.

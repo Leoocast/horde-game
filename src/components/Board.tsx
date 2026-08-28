@@ -1,5 +1,7 @@
-import { AlertTriangle, Home, RotateCcw } from "lucide-react";
+import { Home, RotateCcw } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
+import type { MatchOrigin } from "../content/MatchOrigin";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useGameStore, type GameStore } from "../store/useGameStore";
 import { useAudioStore } from "../store/useAudioStore";
@@ -46,14 +48,17 @@ import { RootsTouchedSkyAnimator } from "./RootsTouchedSkyAnimator";
 import { EnergyFlowAnimator } from "./EnergyFlowAnimator";
 import { GuidedTutorialOverlay } from "./GuidedTutorialOverlay";
 import { ContextualTutorialCallout } from "./ContextualTutorialCallout";
+import { GameConfirmationDialog } from "./GameConfirmationDialog";
 import { LearnToPlayJourneyCues } from "./LearnToPlayJourneyCues";
 import { NORMAL_BOARD_SESSION, type BoardSessionPolicy } from "./boardSessionPolicies";
 import { useHiddenDefenseLinkIds } from "./useDefenseLinkVisibility";
 import { IS_DEV } from "../utils/devMode";
 import { guidedPresentationActivity } from "../guidance";
+import { contextualTutorialRuntime } from "../guidance/contextualProductRuntime";
 
 type Props = {
   playerName: string;
+  matchOrigin?: MatchOrigin;
   setupTurns: number;
   encounterEntering?: boolean;
   /** El signo del Futuro se está trazando sobre el Campo: el tablero llega desnudo. */
@@ -64,6 +69,8 @@ type Props = {
   overtureHandPending?: boolean;
   /** El disco de grados todavía no fue entregado por el signo. */
   overtureDialPending?: boolean;
+  /** El resultado factual ya quedó durable o agotó su timeout degradado. */
+  outcomePersistenceReady?: boolean;
   sessionPolicy?: BoardSessionPolicy;
   tutorialInterrupted?: boolean;
   tutorialErrorMessage?: string;
@@ -75,12 +82,14 @@ type Props = {
 
 const OUTCOME_PRESENTATION_SETTLE_TIMEOUT_MS = 6000;
 // No beat normal se acerca a este presupuesto. Es solamente una salida de emergencia para que un
-// token o callback defectuoso no deje la partida terminada bloqueada para siempre.
+// token o callback defectuoso no deje la Visión terminada bloqueada para siempre.
 const OUTCOME_DRAIN_WATCHDOG_MS = 15000;
 
 const subscribeToPresentationActivity = (listener: () => void) =>
   guidedPresentationActivity.subscribe(listener);
 const readPresentationActivity = () => guidedPresentationActivity.snapshot();
+const subscribeToContextualTutorial = (listener: () => void) => contextualTutorialRuntime.subscribe(listener);
+const readContextualTutorial = () => contextualTutorialRuntime.snapshot();
 
 /** Trabajo visual finito que todavía debe completar su último frame. Se ignoran los idles
  * infinitos del tablero (vuelo, agua, energía y ambiente), porque nunca forman parte de un beat. */
@@ -122,7 +131,7 @@ async function waitForFiniteDocumentAnimations(
 }
 
 /** Todo trabajo de presentación observable desde Zustand que tiene un final automático. Los
- * estados que requieren input no entran aquí: con la partida terminada ya no pueden resolverse y
+ * estados que requieren input no entran aquí: con la Visión terminada ya no pueden resolverse y
  * la limpieza final los cierra justo antes de la captura.
  *
  * La barrera es común a los dos desenlaces: la derrota necesita drenarla para capturar el frame
@@ -149,6 +158,7 @@ function outcomePresentationActive(state: GameStore): boolean {
     || state.hostAutoTriggerCount > 0
     || state.playerAutoTriggerCount > 0
     || state.surgeTransitionActive
+    || state.surgeRevealPending
     || state.hostCombatDeadCardIds.length > 0
     || state.specialDeadCardIds.length > 0
     || state.hostMillAnimationQueue.length > 0
@@ -203,12 +213,14 @@ function settleDefeatCapture(
 
 export function Board({
   playerName,
+  matchOrigin,
   setupTurns,
   encounterEntering = false,
   overtureActive = false,
   overtureSettling = false,
   overtureHandPending = false,
   overtureDialPending = false,
+  outcomePersistenceReady = true,
   sessionPolicy = NORMAL_BOARD_SESSION,
   tutorialInterrupted = false,
   tutorialErrorMessage,
@@ -228,8 +240,10 @@ export function Board({
   // overlay's own backdrop dims the rest of the board and each zone only allows target-locking.
   const tributeOfTheFourSorrowsSelectionActive = useGameStore((state) => Boolean(state.tributeOfTheFourSorrowsSelection));
   const surgeTransitionActive = useGameStore((state) => state.surgeTransitionActive);
+  const surgeRevealPending = useGameStore((state) => state.surgeRevealPending);
   const surgeTransitionShown = useGameStore((state) => state.surgeTransitionShown);
   const completeSurgeTransition = useGameStore((state) => state.completeSurgeTransition);
+  const continueSurgeAfterExplanation = useGameStore((state) => state.continueSurgeAfterExplanation);
   const stopGamePresentation = useGameStore((state) => state.stopGamePresentation);
   const selectActiveEffectCard = useGameStore((state) => state.selectActiveEffectCard);
   const setMusicVariant = useAudioStore((state) => state.setMusicVariant);
@@ -258,11 +272,17 @@ export function Board({
     readPresentationActivity,
     readPresentationActivity,
   );
+  const contextualTutorial = useSyncExternalStore(
+    subscribeToContextualTutorial,
+    readContextualTutorial,
+    readContextualTutorial,
+  );
   const destinyDialSettled = settledDestinyDialRevision === destinyDialRevision;
   const forcedOutcomeDrain = Boolean(game.winner)
     && forcedOutcomeDrainSessionId === gameSessionId;
   // La barrera se abre igual para los dos desenlaces: sólo lo que ocurre después difiere.
   const outcomeOutroReady = Boolean(game.winner)
+    && outcomePersistenceReady
     && destinyDialSettled
     && (
       forcedOutcomeDrain
@@ -287,6 +307,25 @@ export function Board({
     (!game.winner && storePresentationActive)
     || outcomePresentationPending
   );
+
+  useEffect(() => {
+    if (!surgeRevealPending) return;
+    if (contextualTutorial.active || contextualTutorial.queue.length > 0) return;
+    // Signal publication and contextual promotion are synchronous, but one frame of grace keeps
+    // this hand-off safe if a future scheduler defers either side. If the Surge explanation is
+    // eligible it owns the pause; after acknowledgement this same effect releases the reveals.
+    const frame = window.requestAnimationFrame(() => {
+      const latestTutorial = contextualTutorialRuntime.snapshot();
+      if (latestTutorial.active || latestTutorial.queue.length > 0) return;
+      if (useGameStore.getState().surgeRevealPending) continueSurgeAfterExplanation();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [
+    contextualTutorial.active,
+    contextualTutorial.queue,
+    continueSurgeAfterExplanation,
+    surgeRevealPending,
+  ]);
 
   useEffect(() => {
     if (!outcomeEnabled) {
@@ -415,7 +454,7 @@ export function Board({
         onRestartTutorial={onRestartTutorial}
         onRewriteFuture={sessionPolicy.showFutureControls ? onRewriteFuture : undefined}
         onContemplateFuture={sessionPolicy.showFutureControls ? onContemplateFuture : undefined}
-        futureSeed={game.seed}
+        matchOrigin={matchOrigin}
         onReturnToMenu={() => setShowHomeConfirmation(true)}
       />
       <DuelHud game={game} />
@@ -475,9 +514,10 @@ export function Board({
       <GuidedTutorialOverlay />
       <ContextualTutorialCallout />
 
-      {sessionPolicy.showStandardOutcome && defeatReady && onRewriteFuture && onContemplateFuture && (
+      {sessionPolicy.showStandardOutcome && defeatReady && matchOrigin && onRewriteFuture && onContemplateFuture && (
         <DefeatModal
           game={game}
+          matchOrigin={matchOrigin}
           snapshotImage={defeatSnapshot ?? undefined}
           onRewriteFuture={onRewriteFuture}
           onContemplateFuture={onContemplateFuture}
@@ -490,65 +530,50 @@ export function Board({
           onContemplateFuture={onContemplateFuture}
         />
       )}
-      {sessionPolicy.showStandardOutcome && victoryReady && onRewriteFuture && onContemplateFuture && (
-        <VictoryModal game={game} onRewriteFuture={onRewriteFuture} onContemplateFuture={onContemplateFuture} />
+      {sessionPolicy.showStandardOutcome && victoryReady && matchOrigin && onRewriteFuture && onContemplateFuture && (
+        <VictoryModal game={game} matchOrigin={matchOrigin} onRewriteFuture={onRewriteFuture} onContemplateFuture={onContemplateFuture} />
       )}
 
       {sessionPolicy.showGuidedInterruption && tutorialInterrupted && (
         <div data-guided-system-control="true" className="game-home-backdrop fixed inset-0 z-[20040] flex items-center justify-center p-6 text-[#e4ddc2]" role="presentation">
-          <section className="old-panel game-dialog game-home-dialog w-full max-w-md p-6" role="dialog" aria-modal="true" aria-labelledby="tutorial-interrupted-title">
-            <div className="flex items-start gap-3">
-              <div className="game-dialog-icon flex h-10 w-10 shrink-0 items-center justify-center"><AlertTriangle size={20} /></div>
-              <div>
-                <div className="game-dialog-kicker">{t("guided.lifecycle.interruptedKicker")}</div>
-                <h2 id="tutorial-interrupted-title" className="old-title mt-1 text-xl font-medium uppercase tracking-[0.08em]">{t("guided.lifecycle.interruptedTitle")}</h2>
-                <p className="mt-2 text-sm text-[#8d9a94]">{t("guided.lifecycle.interruptedBody")}</p>
-                {IS_DEV && tutorialErrorMessage && <pre className="mt-3 max-h-24 overflow-auto whitespace-pre-wrap text-xs text-[#c8a985]">{tutorialErrorMessage}</pre>}
-              </div>
-            </div>
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <button className="game-dialog-action flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onReturnToMenu}>
-                <Home size={16} /> {t("guided.lifecycle.exit")}
-              </button>
-              <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onRestartTutorial}>
-                <RotateCcw size={16} /> {t("guided.lifecycle.restart")}
-              </button>
-            </div>
-          </section>
+          <GameConfirmationDialog
+            titleId="tutorial-interrupted-title"
+            title={t("guided.lifecycle.interruptedTitle")}
+            body={t("guided.lifecycle.interruptedBody")}
+            detail={IS_DEV && tutorialErrorMessage
+              ? <pre className="mt-3 max-h-24 overflow-auto whitespace-pre-wrap text-xs text-[#c8a985]">{tutorialErrorMessage}</pre>
+              : undefined}
+            actions={[
+              { label: t("guided.lifecycle.exit"), icon: <Home size={16} />, onClick: onReturnToMenu },
+              { label: t("guided.lifecycle.restart"), icon: <RotateCcw size={16} />, onClick: onRestartTutorial ?? (() => undefined), primary: true },
+            ]}
+          />
         </div>
       )}
 
-      {homeConfirmationPresence.mounted && (
+      {homeConfirmationPresence.mounted && createPortal(
         <div
           {...(sessionPolicy.guidedSystemControls ? { "data-guided-system-control": "true" } : {})}
-          className={[`game-home-backdrop fixed inset-0 ${sessionPolicy.guidedSystemControls ? "z-[20040]" : "z-[450]"} flex items-center justify-center p-6 text-[#e4ddc2]`, homeConfirmationPresence.closing ? "is-closing" : ""].join(" ")}
+          className={["game-settings-popover game-system-confirmation-layer game-home-backdrop fixed inset-0 flex items-center justify-center p-6 text-[#e4ddc2]", homeConfirmationPresence.closing ? "is-closing" : ""].join(" ")}
           role="presentation"
         >
-          <section className={["old-panel game-dialog game-home-dialog w-full max-w-md p-6", homeConfirmationPresence.closing ? "is-closing" : ""].join(" ")} role="dialog" aria-modal="true" aria-labelledby="return-home-title">
-            <div className="flex items-start gap-3">
-              <div className="game-dialog-icon flex h-10 w-10 shrink-0 items-center justify-center">
-                <AlertTriangle size={20} />
-              </div>
-              <div>
-                <div className="game-dialog-kicker">{t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveKicker" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveKicker" : "game.leaveBattlefield")}</div>
-                <h2 id="return-home-title" className="old-title mt-1 text-xl font-medium uppercase tracking-[0.08em]">
-                  {t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveTitle" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveTitle" : "game.returnHomeQuestion")}
-                </h2>
-                <p className="mt-2 text-sm text-[#8d9a94]">{t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveBody" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveBody" : "game.progressLost")}</p>
-              </div>
-            </div>
-
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <button className="game-dialog-action flex h-11 items-center justify-center text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={() => setShowHomeConfirmation(false)}>
-                {t("common.cancel")}
-              </button>
-              <button className="game-dialog-action game-dialog-action-primary flex h-11 items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.14em]" type="button" onClick={onReturnToMenu}>
-                <Home size={16} />
-                {t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.exit" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.exit" : "game.returnHome")}
-              </button>
-            </div>
-          </section>
-        </div>
+          <GameConfirmationDialog
+            titleId="return-home-title"
+            title={t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveTitle" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveTitle" : "game.returnHomeQuestion")}
+            body={t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.leaveBody" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.leaveBody" : "game.progressLost")}
+            closing={homeConfirmationPresence.closing}
+            actions={[
+              { label: t("common.cancel"), onClick: () => setShowHomeConfirmation(false) },
+              {
+                label: t(sessionPolicy.leaveCopy === "lesson" ? "guided.lifecycle.exit" : sessionPolicy.leaveCopy === "journey" ? "guided.journey.exit" : "game.returnHome"),
+                icon: <Home size={16} />,
+                onClick: onReturnToMenu,
+                primary: true,
+              },
+            ]}
+          />
+        </div>,
+        document.body,
       )}
     </main>
   );

@@ -5,8 +5,9 @@ historial de la conversión a Hostfall no forma parte de esta guía.
 
 ## Producto
 
-Hostfall es un juego PvE de cartas 1 contra Hueste. El Cronista reconstruye un Capítulo con una
-Crónica; la Hueste automatizada revela su Archivo y ataca según reglas deterministas.
+Hostfall es un juego PvE de cartas 1 contra Hueste. El Cronista lleva una Crónica —su deck— y
+contempla Futuros deterministas mediante Visiones; la Hueste automatizada revela su Archivo y ataca según
+reglas deterministas.
 
 Stack:
 
@@ -120,8 +121,9 @@ Contratos desktop vigentes:
 - Los paths `/cards/...` son referencias lógicas del pack builtin. El adapter web conserva esas
   URLs y el build Electron activa `hostfall://content/...`; main sólo sirve archivos indexados de
   roots registrados.
-- El renderer release no puede contener recursos remotos, `?playground`, `PlaygroundScreen` ni
-  `AudioLabScreen`. Verificarlo con `scripts/audit-offline-runtime.mjs` después de `build:web`.
+- El renderer release no puede contener recursos remotos, `?playground`, `PlaygroundScreen`,
+  `AudioLabScreen`, `SeedExplorerScreen` ni `UIReferenceScreen`. Verificarlo con
+  `scripts/audit-offline-runtime.mjs` después de `build:web`.
 - `docs/data/generated/runtime_asset_inventory.json` es una captura diagnóstica del último build
   release aprobado. No es un gate de desarrollo ni del CI básico y puede quedar desfasada entre
   releases; se regenera sólo después de un build release intencional.
@@ -133,15 +135,16 @@ Contratos desktop vigentes:
   del primer efecto visible. El vidrio se monta justo cuando la Vida llega a 0, así que compilarlo
   entonces costaría un tirón en el peor momento. Sus escenas mínimas quedan retenidas para conservar
   los programas GPU; no crear renderers nuevos en los animadores.
-- Fase 4 separa `profile/preferences-v1.json`, `profile/saves/resume-v1.json` y el local-only
-  `local/window-state-v1.json`. El contrato, backups, recuperación, Cloud-worthy data y checkpoints
-  seguros están en `docs/electron/persistence.md`.
+- Persistencia separa `profile/preferences-v1.json`, `profile/saves/resume-v1.json`,
+  `profile/seed-history-v1.json` y el local-only `local/window-state-v1.json`. El contrato, backups,
+  recuperación, diagnósticos, Cloud-worthy data y checkpoints seguros están en
+  `docs/electron/persistence.md`.
 - El resume guarda sólo `GameState` estable y claves calificadas; nunca Zustand, UI, timers,
   animaciones o Playground. `backgroundThrottling: true` es final y el lifecycle pausa/reanuda audio.
 - Pantalla completa se controla desde ambos menús o F11 y se persiste con el estado local de
   ventana. No implementar otro canal IPC para esta función.
-- Fase 5 genera `.electron-staging/resources` exclusivamente desde manifests runtime: 61 PNG,
-  61 artes de campo, 57 audios y 6 fuentes. `app.asar` no contiene audio ni source maps; Card Studio,
+- Fase 5 genera `.electron-staging/resources` exclusivamente desde manifests runtime: 122 PNG
+  localizados (61 ES + 61 EN), 61 artes de campo, 57 audios y 6 fuentes. `app.asar` no contiene audio ni source maps; Card Studio,
   Hunters y autoría no entran. El contrato y los blockers comerciales viven en
   `docs/electron/release.md`.
 
@@ -154,14 +157,32 @@ La gramática de cartas es propia de Hostfall y no depende de convenciones o reg
 
 Contratos principales:
 
-- Cronista / Chronicler; Crónica / Chronicle; Hueste / Host; Capítulo / Chapter.
+- Cronista / Chronicler; Crónica / Chronicle; Hueste / Host; Inscripción / Inscription; Futuro /
+  Future; Visión / Vision; Contemplar / Contemplate.
+- **Crónica** significa únicamente deck del jugador; **Hueste**, la fuerza enemiga automatizada;
+  **Batalla**, únicamente la fase de combate.
+- **Inscripción** es el código HF1 público, copiable e importable; **Futuro**, el escenario
+  determinista persistente; **Visión**, cada partida o intento de ese Futuro; **Contemplar** crea una
+  Visión.
+- `Chapter` / Capítulo y `Rewrite` / Reescribir están retirados del lenguaje player-facing. Pueden
+  sobrevivir como nombres técnicos o históricos, pero no como copy ni sinónimos de Visión o
+  Contemplar.
 - Zonas authored: `ARCHIVE`, `HAND`, `FIELD`, `MEMORY`, `OBLIVION`.
 - Zonas runtime: `archive`, `hand`, `field`, `memory`, `oblivion`.
 - Tipos: `ECHO`, `SOURCE`, `SPELL`, `SUPPORT`, `TOKEN`.
-- Modificadores: `QUICK`, `CHRONICLE`.
+- Modificadores: `QUICK` y el id técnico heredado `CHRONICLE`. Este último no se presenta como
+  `Chronicle Echo / Eco de Crónica`: aparece en cartas de ambos bandos y **Crónica** está reservada al
+  deck del jugador.
 - Recurso único: Energía, con `energyPool.available` y `energyPool.stored`.
 - Estadísticas: Fuerza y Aguante (`power`, `endurance`).
 - Estados: `exhausted`, `stabilizing`, attacking y defending según el contexto.
+- La escalada de la Hueste se llama `Surge` / **Estampida**, y su escalón previo, `Mini Surge` /
+  **Estampida menor**. «Oleada» quedó retirada del vocabulario el 2026-08-21 por falta de impacto y
+  por pertenecer al campo semántico del mar. El único «Oleada» que sobrevive es el nombre de sabor
+  de `marshal_of_the_wave` —**Mariscal de la Oleada**, traducción de *Marshal of the Wave*—, que no
+  nombra la regla y no debe alinearse con ella.
+- Letal se describe como «Si este Eco hace cualquier cantidad de daño a otro Eco, ese Eco muere»;
+  no se usa «daño positivo» ni se define el Rasgo con la propia palabra «letal».
 
 La UI española no muestra nombres ingleses de identidad. No agregar proveedores remotos de cartas,
 metadata externa ni arte no local.
@@ -181,9 +202,15 @@ Decks vigentes:
 
 Cazadores es sólo un preview de Card Studio: no tiene deck runtime ni lote final de PNG.
 
+Contrato particular de Elarion: El Juicio de Elarion puede destruir un Apoyo enemigo o un Eco
+enemigo que tenga Imponente o Volar, incluidos Rasgos efectivos concedidos por Pasivas o condiciones.
+
 Contratos particulares de la Corte: Paje de la Sed exige estar preparado en la primera pérdida
 de Vida del turno; Duelista del Eclipse no puede actuar mientras está Estabilizándose; Mirevna
 paga la mitad de la Vida actual redondeada hacia arriba.
+
+Contrato particular de los Sinsepulcro: `the_broken_headstone` conserva su id técnico estable,
+pero su nombre visible español es **El Santuario Quebrado**, acorde a su arte monumental.
 
 Contratos particulares de la Legión: Todos contra uno cuenta sólo Trasgos atacantes con Fuerza 2
 o menos; Vardek crea Esbirros atacando según su Fuerza después de recibir el contador; el daño de
@@ -211,7 +238,7 @@ almacenada es 3.
 ### Hueste
 
 No tiene Vida ni Mano. Usa Archivo, Campo, Memoria y Olvido. Su `rulesProfile`, authorizado en el
-JSON del deck, define revelados, Mini Oleada, Oleada, descarte por daño/Veneno e Ímpetu.
+JSON del deck, define revelados, Estampida menor, Estampida, descarte por daño/Veneno e Ímpetu.
 
 - Revela automáticamente y se detiene según el perfil del deck.
 - Ataca con todos los Ecos capaces; no toma decisiones tácticas.
@@ -265,9 +292,12 @@ propia carpeta.
 
 Card Studio consume `deck-data.generated.js`, generado desde el JSON runtime. La proyección contiene
 ES/EN y el Taller elige el idioma sin duplicar reglas, nombres o flavor en HTML/configuración.
-Español es el valor predeterminado. `export_cards.cjs <deck> --lang en` escribe sólo en
-`exported-png/en/`; únicamente la exportación española actualiza `public/cards/`, el layout runtime
-y la huella de `check-card-assets.mjs`. Los idiomas futuros se registran de forma central; chino
+Español es el valor predeterminado. `export_cards.cjs <deck> --lang en` escribe en
+`exported-png/en/` y `public/cards/<deck>/en/`; la exportación española conserva
+`public/cards/<deck>/`. Ambas salidas runtime quedan registradas en la huella de
+`check-card-assets.mjs`; sólo la española actualiza el layout runtime compartido. El juego elige el
+PNG impreso según el idioma activo y conserva el arte fuente común para los recortes del Campo.
+Los idiomas futuros se registran de forma central; chino
 requiere una fuente CJK local antes de habilitarse.
 Los contadores `+1/+1` declarados en `entersWithCounters` se suman a los stats base impresos, para
 que la carta muestre las estadísticas con las que entra realmente al Campo.
@@ -283,9 +313,12 @@ stats más abajo. No crear variantes copiadas por deck.
 El fade superior de las cartas comunes se controla por carta con `headerFade`; no modifica las
 variantes *full art* ni su fade inferior.
 
-Los Ecos recortados del campo usan directamente el arte fuente cargado en Card Studio. Su encuadre
-independiente (`battlefieldArtFrame`) vive en `dev/tools/Decks/<deck>/game-art.config.json` y se
-proyecta a `src/data/cardStudioGameArt.generated.json`. La referencia canónica es 488×434 px. Este
+Los Ecos recortados y los Apoyos cortos del campo usan directamente el arte fuente cargado en Card
+Studio. Su encuadre independiente (`battlefieldArtFrame`) vive en
+`dev/tools/Decks/<deck>/game-art.config.json` y se proyecta a
+`src/data/cardStudioGameArt.generated.json`. La referencia canónica es 488×434 px. El Taller deriva
+la variante desde `kinds`: los Ecos conservan cabecera y stats; los Apoyos usan el ancho compacto
+del dock (`clamp(92px, 7vw, 118px)`) y sólo arte a sangre completa, sin cabecera ni texto. Este
 sidecar no forma parte de la huella de impresión: mano, hover, detalles, colección y animaciones
 siguen usando el PNG completo.
 
@@ -397,15 +430,17 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   el espacio real y apretarla más lo deja negro por los bordes.
 - El desenlace se centra con una capa a pantalla completa y su bloque no lleva `transform` propio.
   Dos cosas lo pisarían: la regla genérica `.game-screen [role="dialog"]`, que impone
-  `game-surface-in` y termina en `translateY(0) scale(1)`, y la succión del vórtice al Reescribir,
+  `game-surface-in` y termina en `translateY(0) scale(1)`, y la succión del vórtice al **Contemplar
+  de nuevo**,
   que anima `transform` sobre cada pieza de la escena. Con un `translate` propio, el texto se
   descuelga hacia abajo y a la derecha justo antes de la transición.
-  Las líneas **Lost Future** y el CTA de `learn-to-play` compensan además el espacio terminal de su
+  Las líneas **Lost Vision** y el CTA de `learn-to-play` compensan además el espacio terminal de su
   `letter-spacing`, de modo que su centro óptico coincida con el centro geométrico.
 - El desenlace es el bloque de la maqueta, ampliado un paso: etiqueta **Derrota** con reglas
   laterales, título en dos líneas que se abren desde el centro con su corte de luz, subtítulo y
-  placa de **Futuro**. Copiar identidad vive en el canto de la placa. **Contemplar otro futuro** no
-  lleva icono y comparte una única fila, sin partir texto, con **Reescribir este futuro**; no vuelve
+  placa de **Futuro**. **Copiar Inscripción** vive en el canto de la placa. **Buscar otro Futuro** no
+  lleva icono y comparte una única fila, sin partir texto, con **Contemplar de nuevo este Futuro**;
+  no vuelve
   a envolverse en un panel de resultado genérico.
 - La victoria normal no rompe nada: su referencia canónica es `dev/mockups/vfx/destiny-constellation.html`
   y la resuelven `VictoryConstellationAnimator.tsx`, `destinyConstellationGeometry.ts` y
@@ -432,7 +467,7 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
 - No hay captura, ni placa, ni tinte: `body.is-victory-clearing` retira el HUD y las cartas con el
   espejo de su propia entrada —arriba hacia arriba, abajo hacia abajo, el Campo creciendo un
   punto— y conserva `TemporalBackdrop` completo, incluido el retículo, más `.game-screen-ambience`.
-  Cada salida termina en `visibility: hidden`: la succión del vórtice al Reescribir anima
+  Cada salida termina en `visibility: hidden`: la succión del vórtice al Contemplar de nuevo anima
   `transform` y `opacity` con la API de animaciones y devolvería el tablero ya retirado a la vista.
 - La barrera de presentación es común a los dos desenlaces (`outcomePresentationActive`,
   `outcomeOutroReady` y el watchdog de 15 s en `Board`): la derrota la drena para capturar su frame
@@ -440,11 +475,23 @@ Estados runtime deben seguir superponiéndose cuando cambian durante la partida.
   victoria entra con el desenlace, no con el último golpe.
 - El desenlace reutiliza la estructura de la derrota con la paleta dorada: etiqueta **Victoria** con
   reglas laterales, título en dos líneas que se abren desde el centro con su corte de luz, subtítulo
-  y placa de **Futuro** con los dos rombos del canto. Copiar identidad vive en el canto de la placa
+  y placa de **Futuro** con los dos rombos del canto. **Copiar Inscripción** vive en el canto de la placa
   y las dos salidas son las mismas. El estandarte y el panel genéricos de resultado quedaron
-  retirados: sólo la Oleada los conserva.
+  retirados: sólo la Estampida los conserva.
 - Reflejos se resuelve antes del daño normal; el daño simultáneo se confirma como un solo resultado
   aunque los impactos visuales se escalonen.
+
+La transición de Estampida usa **Reglas encendidas**: el estandarte no lleva ningún objeto colgado
+—el medallón de la calavera está retirado— y el fuego lo llevan las dos reglas laterales, que suben
+a 2 px, se vuelven brasa y sueltan pavesas desde dentro de su propio tramo. Las reglas son hermanas
+de la palabra dentro del `h1`, no columnas de una rejilla: crecen desde el borde del fondo del
+título hacia fuera, así que su extremo caliente queda siempre visible y el reparto se adapta solo a
+`ESTAMPIDA` o a `SURGE`. El fondo del título se mide contra la palabra —`calc(100% + gap * 2)`— y su
+centro es opaco de verdad; un ancho fijo dejaba fuera la palabra larga y cualquier transparencia
+dejaba ver la regla cruzando las letras. La entrada dura 2300 ms y conserva la **grieta diagonal**
+de 3 px a 7°, que abre la presentación y pasa por detrás del estandarte: la palabra aterriza dentro
+del corte. Su desenfoque de encendido es la única excepción viva a la prohibición de `filter:
+blur()`, porque actúa sobre un elemento de 3 px de ancho y no sobre una capa a pantalla completa.
 
 Consultar `docs/reference/animation_contracts.md` antes de tocar combate, revelados, muerte, buffs, Burn o
 activaciones estáticas.
@@ -461,6 +508,12 @@ Las animaciones son beats en cola. El orden observable es parte de la UX:
 No lanzar efectos relacionados todos a la vez. No recentrar el campo entre beats. Un pulso de
 fuente no debe repetirse cuando el mismo evento continúa inmediatamente con líneas, proyectiles o
 impactos. Los resets incrementan `hostSequenceEpoch` para invalidar callbacks viejos.
+
+Cuando un Eco termina de Estabilizarse, la regla cambia de inmediato y la presentación conserva el
+material continuo bajo un sellado finito de 620 ms. Varias cartas se escalonan 70 ms, el Campo no
+reagrupa sus copias hasta que termina el último sello y el siguiente beat automático espera. Esta
+salida no reutiliza el pulso dorado de activación. El contrato completo vive en
+`docs/reference/animation_contracts.md`.
 
 La Mano separa tres transformaciones que no deben volver a compartir el mismo nodo: el slot exterior
 anima entrada/salida y reorganización; una capa intermedia posee el drag; la carta interior posee el
@@ -489,6 +542,73 @@ antes de crear otra implementación.
   individual mediante `AUDIO_FEATURE_FLAGS`; apagar un flag no debe ocultar su clip del Taller.
 - La música cambia al tema de clímax cuando la Vida del Cronista baja del umbral configurado.
 
+El menú principal es un frontispicio centrado sobre el `TemporalBackdrop` y el fondo real del juego:
+la marca **Hostfall**, el subtítulo de Acto entre dos líneas y una navegación vertical de texto ocupan
+el eje central. **Jugar** tiene mayor jerarquía que el resto de entradas; no se recuperan filas,
+marcadores geométricos ni una placa lateral detrás del menú. La identidad editable del Cronista se
+mantiene arriba a la derecha y las herramientas dev conservan su dock discreto. Toda la UI del home,
+incluidos identidad, dock y versión, usa escala `1.2`; el pie sólo imprime **Beta 0.1.0**. Crónicas,
+Huestes, **Semillas del Destino**, Cómo jugar y Ajustes sustituyen el frontispicio y ocupan el lienzo
+completo, siempre dejando ver el ambiente real por debajo. Sus regresos comparten posición, tamaño,
+fuente, icono y texto **Menú principal** con el botón del Umbral de Jugar. En escritorio, Ajustes
+agrupa sus secciones en dos columnas editoriales —Idioma/Audio y Pantalla/Juego— y colapsa a una sola
+columna en anchos estrechos. Crónicas y Huestes son galerías de portada: la imagen de la carta clave
+domina cada opción, las opciones actuales se centran y el grid `auto-fit` admite nuevas filas sin
+encoger las portadas vigentes. El nombre queda subordinado bajo una regla del acento propio del deck.
+
+La Preparación standard usa el frontispicio de **Preparar un Futuro** sobre el `TemporalBackdrop` real:
+la cifra fija de **Futuro** domina el centro, las cartas clave flanquean el enfrentamiento y el pie
+reúne las tres dificultades, la frase completa del despertar y **Contemplar este Futuro**. La anchura del
+número no puede desplazar la composición; sus glifos viven en celdas tabulares dentro de una columna
+central fija. Toda esa composición usa escala `1.1`, incluidas las cartas y las acciones Ver/Cambiar;
+**Back**, **Copiar Inscripción** y **Contemplar este Futuro** conservan sus medidas originales. Las dificultades
+no repiten «Preparación», y «Cronista»/«Hueste» no se imprimen encima
+de las cartas. Los nombres de ambos mazos y el `VS` tienen presencia en el centro; bajo las cartas
+clave no se repite el total de cartas. Cada ala conserva **Ver mazo** y **Cambiar mazo** mediante el
+drawer real compartido, con aire suficiente entre la carta y esas acciones.
+Ese drawer es una lámina opaca de título único (**Elige una Crónica** o **Elige una Hueste**), sin
+repetir identidad y colección en dos renglones. Sus mazos empiezan arriba y fluyen siempre en dos
+columnas para admitir nuevas filas. **Futuro** tiene jerarquía visible pero usa un tono neutro para no
+competir con la cifra; todos los glifos del número, incluido el separador, comparten desde su primer
+frame el halo amarillo de Contemplar de nuevo, sin filtros de brillo que los vuelvan blancos. La dificultad es
+una franja segmentada centrada bajo el enfrentamiento y la frase del despertar vive inmediatamente
+debajo, en una sola línea; el bloque conserva aire respecto al `VS`. La opción activa y el número de
+turnos comparten un acento semántico: verde para Esperanza, amarillo para Presagio y rojo para
+Perdición. El pie queda reservado para las acciones. La entrada y la salida enfatizan primero el
+número y las dos cartas; el ornamento del CTA gira hacia la derecha. Caos conserva su pantalla de
+paneles y sus herramientas avanzadas; Chaos está deprecated y este contrato no modifica su copy ni
+sus rutas técnicas. Al pulsar **Contemplar este Futuro**, las dos cartas visibles entregan
+sus cajas de viewport a `EncounterTransition`: copias fijas continúan desde esas mismas posiciones,
+llegan a los slots reales del choque en `ENCOUNTER_IMPACT_MS`, esperan hasta la apertura de cortinas y
+salen con su lado. Los originales se ocultan en el mismo frame para no duplicarse. No se reparenta DOM;
+si falta una imagen o geometría válida, el origen no pasa por Preparación (Caos/Inscripción importada) o está
+activo movimiento reducido, se conserva automáticamente el choque independiente anterior.
+
+En el Umbral, **Menú principal** comparte el ancla vertical y horizontal de **Volver al umbral** en
+Preparación; retroceder entre ambas pantallas no debe desplazar el objetivo bajo el puntero.
+El halo que sigue al puntero se pinta encima de arte y contenido. El hover realza únicamente la puerta
+activa: la alternativa conserva siempre su opacidad completa.
+
+## Sistema de UI player-facing
+
+La referencia canónica está en `docs/reference/ui_system.md`. `src/ui-system.css` contiene los
+tokens y primitivas runtime; `src/ui-reference/UIReferenceScreen.tsx` monta componentes reales y
+`uiReferenceCatalog.ts` documenta para cada uno el archivo y **Dónde se usa**.
+
+La sección **Modales y diálogos** abre una sola muestra a tamaño real. Si un modal necesita estado
+controlado, la vista presentacional debe ser la misma que usa su wrapper runtime; los resultados
+exponen el panel de UI sin ejecutar sus animadores. Los diálogos anclados a una sesión viva de Board
+se registran como **Revisar en contexto**.
+Sólo el juego ejecutable decide esta referencia. No usar `dev/mockups`, VFX, animadores ni el estilo
+de Playground/Audio Lab/Seed Explorer para diseñar UI player-facing. No añadir `old-*` a UI nueva:
+esas clases son compatibilidad legacy dependiente de contexto. Toda pieza reutilizable nueva o
+alterada debe actualizar su specimen o quedar marcada para revisión en su pantalla real; nunca
+crear una réplica exclusiva del catálogo.
+
+UI Reference es dev-only y se abre desde el dock del home. El release no puede contener su módulo,
+ruta, etiqueta ni chunk. Su CSS sólo organiza la herramienta bajo `.ui-reference-*`; los estilos
+canónicos siempre viven en código compartido por el runtime.
+
 ## Developer mode
 
 El seed literal `developer` activa una preparación determinista para probar cartas y secuencias.
@@ -497,20 +617,44 @@ preparación genérica por tipos/efectos antes que un puente permanente por `def
 
 El Playground incluye una pestaña dev-only **Guide**. Monta un fixture exacto de Elarion sobre el
 Board real y diagnostica el ciclo de pausa, la intención autorizada, receipts, tokens visuales y
-beats retenidos. No es el guion ni el copy de la Primera Semilla y no entra al bundle de release.
+beats retenidos. No es el guion ni el copy de la lección **Preparación** —id técnico `first-seed`— y
+no entra al bundle de release.
 
-## Semillas del Destino
+## Seeds of Destiny / Semillas del Destino
 
-Las seeds normales se presentan dentro del mundo como **Semillas del Destino**: líneas temporales
-que el Cronista contempla, reescribe y finalmente preserva. Cada seed recibe una identidad
-cosmética determinista **Futuro `NNN·NNN`**; ese código compacto puede colisionar y nunca reemplaza
-la seed real. **Copiar identidad** copia la seed completa aunque la UI sólo muestre el Futuro.
+La colección de líneas temporales se presenta como **Seeds of Destiny** / **Semillas del Destino**.
+No se denomina Archivo: **Archivo** queda reservado a la zona de cartas. La colección agrupa Futuros
+y, dentro de cada uno, sus Visiones. Mientras hidrata muestra provisionalmente el mismo estado vacío
+estático para no dejar una pantalla en blanco; si encuentra Futuros, éstos lo sustituyen al terminar.
+Cuando aún no existe ninguno, muestra una frase directa en un máximo de dos líneas, una explicación
+de una sola línea y un CTA **Preparar un Futuro nuevo** hacia el Umbral de **Jugar**. Buscar o preparar
+un Futuro no crea una Visión; **Contemplar este Futuro** es la acción que inicia la partida. La
+materia del CTA gira en sentido horario y acelera al señalarlo. Los nombres técnicos existentes de
+módulos y documentos no cambian.
 
-Las **Canon Seeds** usan el contrato `HF1-PPP-HHH-XXD-XXX`. `PPP` y `HHH` son códigos estables de
-deck (`ELA`/`CEC` para Cronista y `GRV`/`VRK` para Hueste); los cinco caracteres repartidos alrededor
+La **Inscripción** / **Inscription** es el código Canon `HF1` completo, público, copiable e
+importable. No se presenta como *Seed of Destiny*, *Semilla del Destino* ni «identidad del Futuro».
+El launcher normal genera técnicamente una `CanonSeed` y la UI ofrece **Copiar Inscripción**;
+`GameState.seed` recibe únicamente sus cinco caracteres de entropía. La ruta avanzada de seed libre
+continúa siendo opaca, no constituye una Inscripción y no expone copia pública.
+
+El **Futuro** es el escenario determinista persistente definido por su origen compatible, Crónica,
+Hueste, dificultad, Preparación, modo y revisiones. Cada Futuro recibe el nombre cosmético
+determinista **Futuro `NNN·NNN`**; ese número compacto puede colisionar y nunca reemplaza la
+Inscripción ni la identidad persistida. La página abierta de un Futuro muestra únicamente su
+dificultad; no vuelve a imprimir el número de turnos de Preparación codificado por esa dificultad.
+
+Cada partida o intento de ese escenario es una **Visión**. Contemplar el mismo Futuro de nuevo crea
+otra Visión sin reemplazar ni reescribir el Futuro anterior. Victoria, derrota e interrupción
+pertenecen a la Visión; la colección puede resumir si un Futuro fue preservado por alguna Visión,
+pero nunca lo presenta como un «Futuro perdido».
+
+Las **Canon Seeds** —Inscripciones en lenguaje player-facing— usan el contrato
+`HF1-PPP-HHH-XXD-XXX`. `PPP` y `HHH` son códigos estables de deck (`ELA`/`CEC` para Crónica y
+`GRV`/`VRK` para Hueste); los cinco caracteres repartidos alrededor
 de `D` son entropía `A-Z`/`0-9`. El dígito de dificultad no entra al RNG: `1`, `2` y `3` resuelven
 Fácil/Normal/Difícil y derivan 4/3/2 turnos de Preparación respectivamente. El código no se traduce,
-no contiene checksum y una entrada válida escrita manualmente es una Canon Seed comunitaria. Sólo
+no contiene checksum y una entrada válida escrita manualmente es una Inscripción Canon comunitaria. Sólo
 un catálogo bundled externo al código puede marcarla como oficial.
 
 `src/content/CanonSeed.ts` es el codec y registro vigentes de `HF1`. Sólo su entropía alimenta
@@ -520,20 +664,94 @@ seeds técnicas `developer`, `devlost` y `devwin` permanecen fuera de Canon y co
 Un cambio incompatible de códigos, contenido o reglas deterministas exige otro prefijo, no puede
 reinterpretar silenciosamente una Canon Seed `HF1` publicada.
 
-Durante una partida normal, la barra superior coloca **Reescribir** antes de Música y Ajustes. Su
-acción principal vuelve al origen de la misma seed, con los mismos decks, dificultad y modo;
-**Contemplar otro futuro** abandona el intento y abre la preparación con los decks actuales y una
-seed nueva. Ajustes in-game no vuelve a mostrar, editar ni regenerar la seed. Victoria y derrota
-reutilizan la misma identidad y las mismas dos salidas. El reset o cambio de pantalla ocurre cuando
-el vórtice global ya cubrió el tablero; la transición vive sobre `App` para sobrevivir al remount de
-`Board` y tiene fallback de movimiento reducido.
+La Fase 2.5 de `docs/plans/seeds_of_destiny_history_implementation_plan.md` ya conectó el codec al
+producto. `src/content/MatchOrigin.ts` conserva fuera de `GameState` la identidad, configuración y
+revisiones deterministas de cada Futuro. Los Futuros standard autogenerados reciben técnicamente un
+HF1 y, al contemplarlos, el engine recibe sólo su entropía. La puerta nueva abre **Preparar un Futuro**; la puerta de
+Inscripción importa un `canonCode`, comprueba Crónica y Hueste disponibles y **Contempla ese
+Futuro** directamente con dificultad y Preparación ya aplicadas. **Copiar Inscripción** escribe
+siempre `canonCode`, y `Futuro NNN·NNN` y su firma visual también parten de ese código. El campo libre conserva semántica opaca aunque su
+texto parezca HF1: no muestra controles públicos de copia. Sólo Developer Mode expone **Copiar seed
+interna**. `CANON_SEED_COMPATIBILITY` versiona HF1 sin depender de `contentCatalog.revision`, y los
+golden vectors fijan el orden de ambos mazos y `currentRandomState`. Una HF1 válida es **Canon**;
+sólo un catálogo bundled puede otorgarle el sello **Oficial**.
+
+El Seed Explorer interno tiene ya su núcleo puro en `src/playground/seedExplorer.ts` y
+`seedExplorerSearch.ts`. Enumera la entropía base 36 sin `Math.random`, proyecta Mano, un mulligan,
+robos de Preparación y cinco ventanas potenciales de Hueste. Sus perfiles versionados son
+`first-approach-v1`, `balanced-v1`, `experienced-v1`, `high-pressure-v1` y
+`progressive-pressure-v1`; todos conservan métricas crudas comunes y sólo cambian filtros, pesos y
+objetivo de presión. El analyzer conserva un heap top-K acotado. Sus finalistas se reconstruyen con `createInitialGame` y
+`mulliganOpeningHand`; sólo después pasan de `unchecked` a `structurally-valid`. No simula acciones,
+no usa Zustand y nunca declara una seed ganable, imposible o divertida. La proyección de Hueste usa
+stats impresos y reglas de revelado/Estampida menor/Estampida, pero no ejecuta efectos que alteran el
+Archivo. El benchmark manual vive en `scripts/benchmark-seed-explorer.mjs`; sus tiempos son
+diagnóstico local, no assertions de CI.
+
+El resultado conserva un `candidatePool` verificado más ancho que el top visible. **Mejores** toma
+el ranking puro; **Variadas**, que es el default de UI, siempre conserva la primera y completa la
+lista con una selección greedy max-min sobre apertura, recursos, curva, presión, escalada y
+mulligan. Esta capa no modifica score, filtros ni identidad Canon.
+Las etiquetas de variación son una clasificación estable e independiente del pool: Más estable,
+Mejor curva, Inicio suave, Mayor escalada, Mulligan útil o Equilibrada. El dropdown **Variación
+buscada** aplica esa clasificación durante la enumeración completa, antes del heap y del ranking;
+no filtra únicamente el shortlist visible. Elegir Mulligan útil habilita la proyección de mulligan.
+El playtest del creador eligió `HF1-ELA-GRV-082-QC5` como Canon Seed de primer acercamiento el
+2026-08-19; conservarla como referencia aprobada mientras se corrigen bugs antes de retomar el
+tutorial.
+
+`src/playground/seedExplorerRuntime.ts` envuelve ese núcleo en slices cooperativos de renderer y
+parte también la verificación exacta final. Usa un scheduler, reloj y `AbortSignal` inyectables,
+limita publicaciones parciales y conserva el último resultado completo. Cada ejecución recibe un
+`runId`: una búsqueda cancelada o reemplazada no puede publicar encima de la vigente. No usa Web
+Worker; introducir uno exige una decisión separada porque la CSP desktop mantiene
+`worker-src 'none'`.
+
+La UI vive en `src/seed-explorer/SeedExplorerScreen.tsx`: es una pantalla dev independiente,
+hermana de Playground y Audio Lab, con acceso desde el dock dev abajo a la derecha del home.
+Playground no la importa ni la monta. Favoritos viven en `seedExplorerStorage.ts` como Canon Seeds
+versionadas junto con el perfil que produjo su score y se reconstruyen defensivamente; favoritos
+anteriores sin perfil migran a `first-approach-v1`. Cada favorito admite una nota local opcional,
+editable y vinculada al Canon Seed exacto. Los exports JSON/CSV no incluyen timestamps
+variables. **Probar en tablero** crea un juego nuevo con la entropía, decks, dificultad y
+Preparación de la identidad, llama `loadScenario` y alterna la propia herramienta al Board real.
+Volver desde el Board conserva shortlist, selección y último resultado. La búsqueda nunca muta
+Zustand; sólo ese handoff explícito toca el Board.
+
+Durante una Visión normal, la barra superior coloca **Contemplar de nuevo**, **Copiar Inscripción**,
+Música y Ajustes, en ese orden. La acción principal crea otra Visión desde el origen del mismo
+Futuro, con la misma Crónica, Hueste, dificultad y modo; **Buscar otro Futuro** cierra la Visión
+actual y abre Preparación con la Crónica y la Hueste actuales y un origen nuevo. Ajustes in-game no
+vuelve a mostrar, editar ni regenerar la seed técnica. Victoria y derrota reutilizan el mismo Futuro
+y las mismas dos salidas. El reset o cambio de pantalla ocurre cuando el vórtice global ya cubrió el
+tablero; la transición vive sobre `App` para sobrevivir al remount de `Board` y tiene fallback de
+movimiento reducido.
+
+El diálogo de **Contemplar de nuevo** es una decisión narrativa de Destino, no una confirmación genérica:
+retira visualmente tablero y HUD para dejar al descubierto el `TemporalBackdrop` vivo que ya posee
+la partida; no monta otro cielo, renderer ni instrumento. Al abrir, el cosmos adopta una versión
+dorada y hacia la izquierda el mismo campo de flujo procedural que acelera durante Surge, mientras el dial gira 180 grados en
+sentido antihorario; al cerrar, escena, atmósfera y dial recorren la animación inversa. El contenido flota
+sin panel opaco y muestra únicamente el código numérico del Futuro, grande, centrado contra el
+viewport, alto y con halo dorado;
+no usa máscara de fade ni
+lleva título, raja ni divisor. **Copiar Inscripción** y cerrar viven con contraste medio junto al extremo superior
+derecho de la composición y ganan presencia con hover o foco; copiar expone el `GameTooltip`
+compartido y localizado.
+**Contemplar de nuevo este Futuro** reutiliza el botón de Destino establecido por el desenlace de
+Visión perdida. El ornamento radial cubre la
+superficie completa y gira hacia la izquierda tanto en la cabecera como en el diálogo, los desenlaces
+y el tutorial. **Buscar otro Futuro** queda debajo como salida textual tenue. No recupera el antiguo
+sigilo centrado. Los nombres técnicos `DestinyRewriteControl`, `DestinyRewriteTransition`, el kind
+`rewrite` y razones persistidas semejantes se conservan por compatibilidad; no autorizan copy
+player-facing con *Rewrite / Reescribir*.
 
 El vórtice es un agujero negro dibujado por el renderer WebGL compartido: `destinyVortexShader.ts`
 resuelve en un solo plano el horizonte, el disco de acreción, el anillo de fotones, la materia que
 cae en espiral y la descarga de brasas de la liberación. Su reloj llega en dos tiempos separados,
-`uCollapse` y `uBurst`, para que cubrir, reescribir y liberar sigan siendo momentos distintos. El
+`uCollapse` y `uBurst`, para que cubrir, abrir otra Visión y liberar sigan siendo momentos distintos. El
 lienzo permanece oculto hasta copiar su primer frame válido. `uSeed` recibe una firma normalizada de
-la seed: materia, brasas y quiralidad se repiten al reescribir el mismo Futuro y cambian entre
+la seed técnica: materia, brasas y quiralidad se repiten al contemplar de nuevo el mismo Futuro y cambian entre
 Futuros. Con movimiento reducido o sin un canvas utilizable queda la silueta quieta
 `.destiny-vortex-still`. El velo de cobertura es radial: no debe añadir `repeating-conic-gradient`
 ni haces que nazcan artificialmente desde el centro.
@@ -553,10 +771,91 @@ rígido. Volver a animar
 `filter: blur()` o `saturate()` sobre la pantalla completa es una regresión de rendimiento, porque
 obliga a repintar todo el árbol en cada frame.
 
-El historial de intentos y la futura biblioteca de Semillas siguen bosquejados en
-`docs/plans/seeds_of_destiny.md`; no están implementados. El seed literal `developer` queda
-expresamente fuera de esta narrativa: oculta el control de Futuro y conserva su reinicio técnico
-dentro de las opciones de desarrollo.
+El historial de Semillas del Destino está integrado de extremo a extremo. En lenguaje de producto,
+`FutureIdentityV1` representa un Futuro y cada `AttemptRecordV1` representa una Visión; esos nombres
+técnicos y el formato persistido no se renombran. `src/history/historyTypes.ts` fija ambos y
+`HistoryEnvelopeV1`; `historyParser.ts` valida estructura e invariantes sin depender del catálogo;
+`historyFuture.ts` mantiene aparte compatibilidad determinista y resolución de decks; y
+`historyDomain.ts` concentra begin/close idempotente, metadata de salida explícita, `sequence`,
+agrupación y estado agregado. `historyEligibility.ts` admite sólo sesiones normales standard, sin
+inferir elegibilidad por seed, carta o pantalla. Canon agrupa por formato+código normalizado; opaque
+incluye seed, configuración, `contentRevision` y `OPAQUE_MATCH_RULESET_VERSION`. Un cambio de reglas
+o consumo RNG de seeds libres debe incrementar ese gate en `MatchOrigin.ts`; un cambio incompatible
+Canon exige otro formato.
+
+`HistoryService` hidrata una sola vez y serializa begin/close/recover sobre el último snapshot
+lógico, incluso si una escritura anterior quedó dirty. `logicalRevision` y `durableRevision` no se
+confunden; un fallo transitorio reintenta el snapshot más reciente y un límite físico revierte la
+mutación nueva. Web usa `hostfall-history:v1`, backup, cuarentena, Web Locks y BroadcastChannel; sin
+lock queda sólo lectura. Desktop usa `profile/seed-history-v1.json`, IPCs concretos y promoción que
+nunca rota un primario corrupto sobre `.bak`. Corrupción doble congela escrituras y conserva Visiones
+rescatables hasta un reset confirmado; desktop guarda diagnósticos y web exige segunda confirmación
+si la cuota impide la cuarentena. `createHistoryServiceForCurrentPlatform` construye la capa y
+`historyRuntime.ts` la conecta al lifecycle de producto.
+
+La Fase 5 está implementada. `MatchLifecycleCoordinator` es la autoridad pura para launches,
+recorder, cierres explícitos, recovery al arrancar y gates con timeout degradado; recibe reloj,
+persistencia, sesión y outcomes por inyección. Sólo `App` declara qué reset corresponde a Jugar,
+Contemplar de nuevo o al handoff de Aprender a jugar. Una Visión —`attempt` en el schema— nace después
+del reset comprometido, nunca
+por observar una pantalla ni desde `GameStore.reset`. `game.ended` instala síncronamente un gate
+scoped a `{attemptId, gameSessionId}`, copia turnos/Vida/Archivo y cierra antes de que `Board` revele
+el desenlace. Los end reasons técnicos `menu`, `rewrite` y `contemplate` esperan el mismo settle;
+ante fallo/timeout la acción
+continúa con toast y el servicio conserva su snapshot dirty para retry. El vórtice tiene ahora
+`absorbing -> covered -> revealing`: durante `covered` espera cierre/reset/begin y movimiento
+reducido usa la misma barrera. No hay autosave por turno; un crash conserva `active` sin hechos y el
+siguiente arranque demo lo convierte una sola vez en `startup-recovery`.
+
+La Fase 6 conecta la colección real. `historyViewModel.ts` proyecta el snapshot persistido sin
+mutarlo: ordena Visiones por el `sequence` técnico de sus attempts, deriva el agregado según sus
+resultados y detecta colisiones
+de `Futuro NNN·NNN` y sólo expone un `replayOrigin` si `resolveFutureIdentity` certifica identidad,
+decks y revisiones. `SeedsOfDestinyScreen` no importa el fixture: muestra carga, vacío, recuperación,
+degradado, lleno y corrupción; sus disclosures presentan resultado, turno, relato estructurado cuando
+existe un hito aprobado y hechos finales como fallback factual. Al entrar o cambiar de Futuro abre
+la Visión más reciente; sólo el disclosure activo rellena su rombo en dorado. Canon ofrece **Copiar
+Inscripción**, que copia `canonCode`; opaque oculta la copia pública y conserva replay
+local compatible. `App` lanza la acción por el destino técnico `history-replay` del mismo vórtice y
+crea un `attempt` nuevo —otra Visión— únicamente después de cubrir y comprometer el reset exacto. La
+acción visible es **Contemplar de nuevo**, nunca *Reescribir*. Nunca añadir un fallback
+de decks ni reinterpretar una identidad incompatible. El fixture antiguo queda sólo como laboratorio
+sin imports de producto.
+
+El origen histórico de la narrativa vive en `docs/plans/seeds_of_destiny.md` y la auditoría con el
+contrato técnico por fases en `docs/plans/seeds_of_destiny_history_implementation_plan.md`. Su
+terminología previa no sustituye el vocabulario canónico vigente. La Fase 1 tiene un prototipo
+en `src/history/attemptNarrative.ts`: selecciona de un vocabulario cerrado de ocho hechos,
+renderiza templates ES/EN sin leer `game.log` y dispone sus muestras de decisión en
+`docs/plans/seeds_of_destiny_narrative_samples.md`. Resultado, turno y Reserva permanecen como
+metadatos: no se repiten en el párrafo, y si no hay un acontecimiento el fallback permanece dentro
+del mundo. La voz habla de Ecos, nunca de cartas ni de datos generados/registrados. No está
+acoplada a `GameState`: `gameplaySignals.ts` fotografía únicamente los hechos directos durante el
+commit y `attemptMilestones.ts` conserva por sesión el ejemplar más significativo de cada clase. El
+lifecycle persiste esos hitos al cierre y la colección vuelve a renderizarlos según el idioma
+activo; registros viejos o sin hitos conservan sólo sus hechos finales. El usuario aprobó
+**Relato** como primera versión el 2026-08-21 y cerró la integración como feature de desarrollo ese
+mismo día.
+
+El cierre de desarrollo de Semillas del Destino pasó TypeScript, 643 pruebas, `build:web` y
+`audit:offline` con cero blockers. No equivale a certificación de release: cuando la demo congele
+contenido se repiten esos gates y se ejecutan además `electron:package`, `electron:verify`,
+`electron:smoke`, la matriz manual desktop y la configuración real de Steam Cloud. No generar ni
+actualizar inventarios de release sólo para revalidar esta feature durante desarrollo.
+
+La Fase 2 está implementada y la Fase 5 activó su segunda capability.
+`src/product/productCapabilities.ts` selecciona `DEMO_CAPABILITIES`: **Continuar** no se renderiza,
+resume no lee, escribe ni borra `resume-v1`, e historial sí registra Visiones normales standard.
+`src/persistence/resumeRuntime.ts` concentra esa frontera con operaciones nulas para demo. El preset
+`EARLY_ACCESS_RESUME_REGRESSION_CAPABILITIES` conserva carga, restore, checkpointing, recuperación y
+borrado detrás de tests y mantiene historial apagado. No borrar la infraestructura de resume ni
+volver a llamarla directamente desde `App`. Una Visión cortada se registra como **Visión
+interrumpida**, nunca como derrota, y sólo puede contemplarse de nuevo desde la seed técnica,
+decks, dificultad, modo, Preparación y revisión determinista originales. El historial factual no
+depende de que el prototipo previo de relato del Cronista sea aprobado. El seed literal `developer`
+queda fuera del historial comunitario, pero muestra el control de Futuro para que el mismo acceso de
+replay pueda verificarse durante QA. Conserva además su reinicio técnico dentro de las opciones
+de desarrollo.
 
 Antes de implementar el tutorial obligatorio, la claridad permanente de Preparación, robo, Acción de
 Fuente, Reserva y ataque al Archivo debe seguir el plan de diseño e implementación de
@@ -595,28 +894,29 @@ de Elarion contra los Sinsepulcro con seed preparada y ayudas contextuales. **Ap
 el tutorial obligatorio y **Preparación** será opcional; ambos podrán repetirse desde **Cómo jugar**.
 El recorrido authored todavía no está completo y no se activará como gate de primera apertura
 hasta completar su handoff. Las Fases técnicas 1 a 3 y la implementación de la Fase 4 hasta el
-comienzo real de la primera Oleada quedaron entregadas el 2026-08-17:
+comienzo real de la primera Estampida quedaron entregadas el 2026-08-17:
 existe un stream semántico pasivo por sesión que observa también
 partidas normales, y el motor tipa los rechazos necesarios para límite de Fuentes, Acción de Fuente
 usada, Estabilizándose, Agotado, Volar/Guardia aérea, Furtivo, defensor ya asignado y fase
 incorrecta. El
-prólogo queda diseñado desde el cold open hasta una derrota predeterminada: la primera Oleada usa
+prólogo queda diseñado desde el cold open hasta una derrota predeterminada: la primera Estampida usa
 ramas equivalentes de Ladrones, Titán y Soldado; el turno posterior enseña Mano vacía y Devolver
 Fuente; y el cierre authored calcula el mejor resultado defensivo antes de Invocar un Titán y los
 Soldados necesarios para que el ataque sea letal. Tres Soldados dentro del Archivo protegen al Titán
 terminal de los descartes opcionales; Choque conserva su ventana legal y la posición del Titán puede
-variar. Esa Invocación terminal no redefine la regla normal de Oleada y cada llegada se presenta una
+variar. Esa Invocación terminal no redefine la regla normal de Estampida y cada llegada se presenta una
 a una mediante el revelado normal, sin agrupación visual. El CTA único se llama **Contemplar otro
-futuro**. El corte provisional actual registra la finalización al activarlo y carga una partida
-normal aleatoria de Elarion contra los Sinsepulcro. El vórtice y la seed real preparada pertenecen
-a una fase posterior. La
+Futuro**. Al activarlo registra la finalización, ejecuta el vórtice y crea una Visión de la primera
+Inscripción Canon aprobada `HF1-ELA-GRV-082-QC5`: Elarion contra los Sinsepulcro, Normal y
+Preparación 3. La
 relación exacta entre buena Mano y mulligan sigue abierta. Si no queda un atacante
 estabilizado, la enseñanza del ataque no bloquea el flujo, permanece como no vista y reaparece en
 una partida posterior. La preferencia global de no repetir ayudas sólo suprime conceptos ya
 mostrados: un concepto no visto conserva siempre su primera aparición. Está activa por defecto, se
 marca al cerrar/aceptar la ayuda y las repeticiones se limitan a una por concepto y partida.
-**Continuar** permanece deshabilitado globalmente por ahora. No traducir escenas aisladas a código
-fuera de las fases aprobadas.
+En la build demo actual **Continuar** no se renderiza y el archivo de resume existente permanece
+intacto. El control sólo reaparece al seleccionar el preset de regresión Early Access.
+No traducir escenas aisladas a código fuera de las fases aprobadas.
 
 La auditoría y el plan técnico de esa extensión viven en
 `docs/plans/learn_to_play_implementation_plan.md`. La decisión arquitectónica vigente es conservar
@@ -624,7 +924,7 @@ el schema guiado v1 para **Preparación** y separar: observaciones semánticas s
 runtime/progreso por concepto, director efímero de **Aprender a jugar** y catálogo de producto. El
 builder exacto, anchors, barrera de presentación y overlay estricto se reutilizan. Los receipts
 guiados ahora alimentan el stream mediante un adaptador y las transiciones comprometidas proyectan
-turno, robo, Reserva, Fuentes preparadas, revelados, Oleada, orden de ataque, Vida y resultado sin
+turno, robo, Reserva, Fuentes preparadas, revelados, Estampida, orden de ataque, Vida y resultado sin
 leer el log. `ContextualTutorialRuntime` evalúa un registro de conceptos, ordena por prioridad,
 deduplica por partida y revalida el contexto antes de presentar. Su callout reutiliza anchors,
 geometría y glosario sin instalar el escudo global; las ayudas informativas y reactivas no bloquean,
@@ -634,46 +934,69 @@ añade conceptos, recorridos y la preferencia global de repetición. En partidas
 se confirma al cerrar la ayuda; el modo provisional permite commit atómico o rollback total para el
 futuro prólogo. El registro de producto contiene ya los conceptos contextuales del primer tramo:
 defensa y orden de izquierda a derecha, Volar/Guardia aérea, Vida, Reserva y Fuentes preparadas,
-Estabilizándose, ataque al Archivo, agotamiento del atacante y Oleada. Las ayudas no vistas pueden
+Estabilizándose, ataque al Archivo, agotamiento del atacante y Estampida. Las ayudas no vistas pueden
 aparecer en una partida normal compatible y se confirman globalmente; los fixtures sintéticos del
 Playground siguen aislados en development. Las acciones estructurales imprescindibles reutilizan la
 guía actual. El plan se ejecuta fase por fase con
 aprobación explícita. **Cómo jugar** ya consume un catálogo y presenta **Aprender a jugar** antes de
-**Preparación**; `first-seed` conserva su ID pero ahora es opcional. El recorrido tiene lifecycle
+**Preparación**; `first-seed` conserva su ID pero ahora es opcional. Su menú no usa pictogramas ni
+filas de Ajustes: presenta ambos recorridos desde el inicio del contenido como una cuadrícula compacta
+de entradas tipográficas numeradas, con el tutorial principal primero y la lección enfocada como
+acompañante. Las tarjetas completas son el control; no añaden rombo, divisor, flecha ni un segundo
+`Begin` en el pie, ni anteponen un rótulo redundante de selección. El recorrido tiene lifecycle
 efímero independiente, rollback de conceptos provisionales, reinicio total, autosave apagado,
 políticas explícitas de tablero e intervenciones estrictas adjuntas al `GameState` vivo. Su launcher
-está activo desde **Cómo jugar** y carga el snapshot avanzado exacto: Vida 31, Maela y tres Fuentes,
+está activo desde **Cómo jugar**. Antes de iniciar el lifecycle muestra una antesala temporal de
+cinco diálogos localizados: Evy pide ayuda, el Cronista decide contemplar ese futuro sin anticipar
+que sus protagonistas morirán y Evy entrega el combate tras preparar tres Fuentes antes de que la
+Hueste rompa su línea y la obligue a retroceder. Cerrar la
+antesala conserva **Cómo jugar**; sólo el CTA del quinto diálogo carga el recorrido. Este copy es
+una maqueta para la futura cinemática con voz, no lore definitivo. Los parlamentos del Cronista
+muestran como speaker el nombre elegido por el jugador; «El Cronista» es sólo el fallback si
+estuviera vacío. Después carga el snapshot avanzado exacto: Vida 31, Maela y tres Fuentes,
 Vaelor/Aelyra/Río en Mano, Flor como próximo robo, Retorno/Acechador/Engendro/Cosechadora en ese
-orden y la segunda copia de Acechador como siguiente revelado. La guía exige la cuarta Fuente y
+orden y la segunda copia de Acechador como siguiente revelado. Evy presenta la llegada del
+Cronista y la cuarta Fuente que completa el contenedor de Energía inferior izquierdo antes de que aparezca la instrucción actual
+**Juega Río de Elarion**. La guía exige la cuarta Fuente y
 Aelyra con objetivo libre; el director deja defensa libre, exige Vaelor, hace obligatoria una única
 inspección de la Cosechadora y permite Flor antes, después o nunca. Las pruebas enumeran todas las
 defensas legales y esas ramas, que convergen en Cosechadora 7/9, y certifican cero o un descarte
-opcional antes de la primera Oleada. El recorrido ya continúa después de `host.surgeStarted`: los
+opcional antes de la primera Estampida. El recorrido ya continúa después de `host.surgeStarted`: los
 Ladrones vacían la Mano, la regla real roba Choque + Río —Río queda a la derecha—, y jugar la quinta Fuente o intentar
 avanzar activa una intervención estricta breve para **Devolver Fuente**. Ciudad, Choque, Flor y el
 ataque posterior permanecen libres. Tres Soldados authored absorben los descartes opcionales antes
 del Titán terminal.
 
+El lenguaje visible del tutorial distingue objetos de reglas: **Fuente** aporta Energía al
+contenedor inferior izquierdo y **Energía** se canaliza para **Invocar Ecos** o lanzar Hechizos;
+nunca se enseña que se «Invocan cartas». El glosario usa términos separados para **Archivo de la
+Hueste** —la pila de Ecos aún no Invocados— y **Archivo del Cronista** —la pila de Ecos y Fuentes aún
+no robados—, de modo que el subrayado cubre la frase completa. Vida se define sólo como la
+supervivencia del Cronista y Reserva explica que conserva hasta 3 de Energía para el turno siguiente
+y la utiliza antes que las Fuentes. En la primera Estampida el orden es contractual: termina la
+animación, aparece su ayuda contextual sobre el tablero asentado y sólo al aceptarla se revelan los
+Ecos. La ayuda de Mano vacía no ilumina la Mano. En el desenlace de Aprender a jugar, tanto
+**Visión perdida** como **Contemplar otro Futuro** quedan centrados horizontalmente.
+
 El cierre terminal calcula desde el tablero vivo el mínimo de llegadas que vuelve inevitable la
 derrota, verifica la mejor defensa con el resolutor real y presenta cada carta mediante su llegada
 normal, una a una. La Vida llega a 0 por el combate real; `learn-to-play` reutiliza el quiebre de
-derrota y muestra sólo **Contemplar otro futuro** con copy narrativo propio. Tras aceptar la
-narración, el botón registra el recorrido como completado y abre provisionalmente una partida
-normal con seed aleatoria; ejecutar el vórtice y cargar la partida preparada pertenecen a la Fase
-6B aplazada. **Continuar** está deshabilitado globalmente. Para una fase
-posterior siguen pendientes
-la Mano/mulligan, seed, dificultad y
-Preparación de la partida real; el comportamiento de primera apertura y perfiles existentes; y la
+derrota y muestra sólo **Contemplar otro Futuro** con copy narrativo propio. Tras aceptar la
+narración, el botón registra el recorrido como completado, ejecuta el vórtice y abre
+`HF1-ELA-GRV-082-QC5` como una Visión normal. La Fase 6B aplazada conserva únicamente el mulligan final,
+el gate de primera apertura y la durabilidad durante la transición. En el código actual **Continuar** está deshabilitado globalmente; la política aprobada
+para la demo es ocultarlo sin retirar su implementación de Early Access. Para una fase posterior
+siguen pendientes la Mano/mulligan sobre esa misma Inscripción Canon, el comportamiento de primera apertura y perfiles existentes; y la
 persistencia exacta si la aplicación se cierra durante el vórtice.
 
-La Fase 0 quedó cerrada el 2026-08-11. La Primera Semilla obligatoria será canónica y usará **El
-Pacto de Elarion** como deck del Cronista; la Hueste y el escenario pertenecen al futuro diseño de
+La Fase 0 quedó cerrada el 2026-08-11. La lección **Preparación** —id técnico `first-seed`— usa **El
+Pacto de Elarion** como Crónica; la Hueste y el escenario pertenecen al diseño de
 contenido. El ciclo aprobado es **Explicar → Actuar → Observar → checkpoint estable**. Sólo la
 intención solicitada puede llegar al engine; una animación iniciada termina durante Observar y nunca
 se congela a mitad. Se permiten ajustes prácticos menores de layout, intensidad, copy y timing
 durante QA, pero cambiar deck canónico, política sin resume, acciones permitidas o pausa entre beats
 requiere nueva aprobación. El framework quedó cerrado con las Fases 0 a 5 y 7; las antiguas Fases 6
-y 8 fueron eliminadas por decisión explícita del usuario. La Primera Semilla tiene ya una primera
+y 8 fueron eliminadas por decisión explícita del usuario. **Preparación** tiene ya una primera
 versión jugable registrada; su ritmo y contenido siguen abiertos a QA e iteración con el usuario.
 
 La Fase 1 quedó cerrada el 2026-08-11 y fija que **cada tutorial es un escenario completamente
@@ -688,7 +1011,7 @@ capacidades, no rellena el resto del deck y no baraja una receta. Las claves cal
 inválida falla antes de crear el `GameState`, y el builder descarta todo el reparto normal para dejar
 únicamente las cartas declaradas en el orden `topToBottom` authored.
 Mulligan no es una intención authorable en schema v1: una lección puede pedir aceptar su Mano exacta,
-pero enseñar a reescribirla requerirá una versión que predefina también cada Mano de reemplazo.
+pero enseñar a cambiarla requerirá una versión que predefina también cada Mano de reemplazo.
 
 La Fase 2 quedó cerrada el 2026-08-11. `src/guidance/interactionGate.ts` es la frontera semántica
 única para las acciones deliberadas del jugador: recibe `GameplayIntent` tipados, compara aliases
@@ -725,7 +1048,7 @@ ancla. Su escudo capture bloquea pointer, clic, contexto, drag y teclado antes d
 Actuar sólo atraviesan las anclas authored y el gate semántico vuelve a validar el compromiso.
 Tooltips/previews quedan suprimidos, los intentos incorrectos producen feedback visual y textual,
 el foco queda contenido y las cartas admiten Enter/Espacio. La pestaña dev **Guide** es la vertical
-de QA; no es contenido de release ni el guion de la Primera Semilla. El QA final fijó el dimmer en
+de QA; no es contenido de release ni el guion de **Preparación**. El QA final fijó el dimmer en
 55%, alineó el cuadro al azul carbón de Settings y bloqueó también el hover del tablero durante
 Explicar y Observar.
 
@@ -748,11 +1071,17 @@ nunca paso, escenario, bindings, timers o `GameState`. Entrar, reiniciar, salir 
 lección preserva cualquier resume normal. Onboarding de
 nombre y tutorial completado son estados independientes. Settings en tutorial conserva idioma,
 audio, pantalla, reinicio total y salida, y oculta toda mutación o inspección del escenario. El
+modal de Settings es una superficie global por encima de gameplay, tutoriales y transiciones. Las
+confirmaciones que abre —incluida la salida del recorrido— aparecen por encima de Settings sin
+cerrarlo; cancelar debe devolver al mismo Settings. Ambos portales reutilizan el tema vigente
+mediante `.game-settings-popover`, sin una apariencia paralela. Durante una guía estricta, también
+el launcher de Settings vive en una capa global inmediatamente superior al escudo del tutorial:
+debe seguir accesible en Actuar, Explicar y Observar sin abrir el resto del tablero.
 registro release contiene la revisión jugable de `first-seed`, presentada como **Preparación** y
 marcada opcional. El menú **Cómo jugar** lista además **Aprender a jugar** con identidad propia. No
 hay un gate tutorial activo mientras ese recorrido principal siga incompleto.
 
-La revisión 4 de **La Primera Semilla** usa **El Pacto de Elarion** contra **El Alzamiento de los
+La revisión 4 de **Preparación** —`first-seed` en ids y schemas— usa **El Pacto de Elarion** contra **El Alzamiento de los
 Sinsepulcro** y empieza al inicio de Preparación 1/3. Su Mano inicial exacta contiene dos Fuentes,
 Liora y Vaelor. En 1/3 juega una Fuente, enseña la Acción de Fuente y su límite por turno, y compara
 Liora y Vaelor en grande para mostrar que ninguno puede Invocarse con una sola Energía. En 2/3 roba

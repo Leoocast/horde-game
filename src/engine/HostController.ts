@@ -11,10 +11,31 @@ type HostMainOptions = {
   deferInvokedTriggers?: boolean;
 };
 
+type HostRevealResult = {
+  card: CardInstance;
+  /** A duplicate Support returns to the Archive and does not consume the reveal it replaces. */
+  replacedByExtraReveal: boolean;
+};
+
 export function runHostMain(game: GameState, options: HostMainOptions = {}): GameState {
   const next = beginHostMain(game);
+  resolveHostMainReveals(next, options, hostInSurge(game));
+  return next;
+}
+
+/**
+ * Continues the first Surge turn after its presentation and explanation have finished. The Host
+ * turn is already open, so this seam reveals without readying the Field or advancing the clock a
+ * second time.
+ */
+export function revealHostMainAfterSurgeEntry(game: GameState, options: HostMainOptions = {}): GameState {
+  const next = structuredClone(game) as GameState;
+  resolveHostMainReveals(next, options, false);
+  return next;
+}
+
+function resolveHostMainReveals(next: GameState, options: HostMainOptions, wasInSurge: boolean): void {
   const rules = next.hostRules;
-  const wasInSurge = hostInSurge(game);
   revealNormal(next, options);
   if (next.hostTurnNumber === rules.miniSurgeTurn && rules.miniSurgeExtraReveals > 0) {
     next.log.unshift(`Host Mini Surge on turn ${rules.miniSurgeTurn} reveals ${rules.miniSurgeExtraReveals} extra card(s).`);
@@ -30,7 +51,6 @@ export function runHostMain(game: GameState, options: HostMainOptions = {}): Gam
   }
   resolveRequestedRevealRounds(next, options);
   if (!options.deferInvokedTriggers) drainEventQueue(next);
-  return next;
 }
 
 /**
@@ -64,9 +84,10 @@ export function runFullHostTurn(game: GameState): GameState {
 }
 
 /**
- * Reveals and plays exactly ONE card off the top of the Host Archive, through the same path the
+ * Reveals and plays exactly ONE eligible card off the top of the Host Archive, through the same path the
  * Host's turn uses — reveal, ETB, triggers, Tribute of the Four Sorrows parking and all. No ready step, reveal count,
  * no surge, no combat: this is a single card entering play, not a turn.
+ * A duplicate Support may be returned to the bottom first and grants its normal replacement reveal.
  *
  * Only the Playground needs it. A match never plays one Host card in isolation, but a lab does:
  * putting a card on the board to look at it must not drag a whole Host turn along with it.
@@ -77,7 +98,7 @@ export function revealHostCardFromTop(game: GameState, options: HostMainOptions 
     next.lastActionResult = { ok: false, reason: "The Host Archive is empty." };
     return next;
   }
-  revealAndPlayOne(next, options);
+  revealAndPlay(next, 1, options);
   resolveRequestedRevealRounds(next, options);
   if (!options.deferInvokedTriggers) drainEventQueue(next);
   next.lastActionResult = { ok: true };
@@ -90,27 +111,35 @@ export function finishHostTurn(game: GameState): GameState {
   readySide(next, "host");
   const releasedEnergy = releasePendingStoredEnergy(next);
   startPlayerTurnReady(next);
-  if (releasedEnergy > 0) next.log.unshift(`Player gains ${releasedEnergy} Stored Energy.`);
+  if (releasedEnergy > 0) next.log.unshift(`Chronicler gains ${releasedEnergy} Stored Energy.`);
   next.log.unshift("Host turn ends.");
   return next;
 }
 
 function revealNormal(game: GameState, options: HostMainOptions): void {
   let played = 0;
-  while (played < game.hostRules.revealCount && game.host.archive.length > 0) {
-    const card = revealAndPlayOne(game, options);
+  let attempts = 0;
+  const maxAttempts = game.host.archive.length;
+  while (played < game.hostRules.revealCount && game.host.archive.length > 0 && attempts < maxAttempts) {
+    const result = revealAndPlayOne(game, options);
+    attempts += 1;
+    if (!result || result.replacedByExtraReveal) continue;
     played += 1;
-    if (game.hostRules.stopOnNonToken && card && !card.isToken) {
-      game.log.unshift(`Host reveals ${card.name} and stops revealing.`);
+    if (game.hostRules.stopOnNonToken && !result.card.isToken) {
+      game.log.unshift(`Host reveals ${result.card.name} and stops revealing.`);
       break;
     }
   }
 }
 
 function revealAndPlay(game: GameState, amount: number, options: HostMainOptions): void {
-  for (let i = 0; i < amount; i += 1) {
-    if (game.host.archive.length === 0) break;
-    revealAndPlayOne(game, options);
+  let played = 0;
+  let attempts = 0;
+  const maxAttempts = game.host.archive.length;
+  while (played < amount && game.host.archive.length > 0 && attempts < maxAttempts) {
+    const result = revealAndPlayOne(game, options);
+    attempts += 1;
+    if (result && !result.replacedByExtraReveal) played += 1;
   }
 }
 
@@ -125,23 +154,36 @@ function resolveRequestedRevealRounds(game: GameState, options: HostMainOptions)
   }
 }
 
-function revealAndPlayOne(game: GameState, options: HostMainOptions): CardInstance | undefined {
+function revealAndPlayOne(game: GameState, options: HostMainOptions): HostRevealResult | undefined {
   const card = game.host.archive.shift();
   if (!card) return undefined;
   game.log.unshift(`Host reveals ${card.name}.`);
+  if (
+    card.kinds.includes("SUPPORT") &&
+    game.host.field.some(
+      (permanent) => permanent.kinds.includes("SUPPORT") && permanent.definitionId === card.definitionId,
+    )
+  ) {
+    card.zone = "archive";
+    game.host.archive.push(card);
+    game.log.unshift(
+      `${card.name} is already on the Field, so the revealed copy moves to the bottom of the Host Archive and grants one extra reveal.`,
+    );
+    return { card, replacedByExtraReveal: true };
+  }
   // Bridge: Tribute of the Four Sorrows needs a bespoke, player-interactive multi-step resolution (Host sacrifices,
   // then the player chooses life/discard/creature/land) that can't run inside this synchronous
   // reveal. Park it unresolved; the store drives the sequence and moves it to Memory itself.
   if (card.definitionId === "tribute_of_the_four_sorrows") {
     game.host.pendingCard = card;
-    return card;
+    return { card, replacedByExtraReveal: false };
   }
   if (card.kinds.includes("SPELL")) {
     resolveEffects(game, card.effects, { source: card, side: "host" });
     card.zone = "memory";
     game.host.memory.push(card);
     enqueue(game, { type: "CARD_PLAYED", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
-    return card;
+    return { card, replacedByExtraReveal: false };
   }
   card.zone = "field";
   card.exhausted = false;
@@ -153,5 +195,5 @@ function revealAndPlayOne(game: GameState, options: HostMainOptions): CardInstan
   recordFieldEntry(game, card);
   if (!options.deferInvokedTriggers) runInvokedTriggers(game, card);
   enqueue(game, { type: "CARD_PLAYED", sourceId: card.instanceId, payload: { nonToken: !card.isToken } });
-  return card;
+  return { card, replacedByExtraReveal: false };
 }

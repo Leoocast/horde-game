@@ -1,27 +1,40 @@
-import { Copy, Orbit, RefreshCcw, Sparkles, X } from "lucide-react";
+import { Copy, Orbit, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { matchOriginCanonCode, matchOriginVisualSeed, type MatchOrigin } from "../content/MatchOrigin";
 import { useAnimatedPresence } from "../hooks/useAnimatedPresence";
 import { useTranslation } from "../i18n/useTranslation";
+import { writeClipboardText } from "../platform/desktopBridge";
 import { useToastStore } from "../store/useToastStore";
 import { futureCodeFromSeed } from "../utils/futureIdentity";
+import { DestinyActionButton } from "./DestinyActionButton";
+import { GameTooltip } from "./GameTooltip";
 
 type Props = {
-  seed: string;
+  origin: MatchOrigin;
   onRewrite: () => void;
   onContemplateAnother: () => void;
+  initiallyOpen?: boolean;
+  hideLauncher?: boolean;
+  onDismiss?: () => void;
 };
 
-export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother }: Props) {
+export function DestinyRewriteControl({ origin, onRewrite, onContemplateAnother, initiallyOpen = false, hideLauncher = false, onDismiss }: Props) {
   const t = useTranslation();
   const pushToast = useToastStore((state) => state.pushToast);
-  const [open, setOpen] = useState(false);
+  const [open, setOpenState] = useState(initiallyOpen);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const dialogRef = useRef<HTMLElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const primaryActionRef = useRef<HTMLButtonElement>(null);
   const restoreFocusRef = useRef(true);
   const dialogWasMountedRef = useRef(false);
-  const modalPresence = useAnimatedPresence(open, 220);
-  const futureCode = futureCodeFromSeed(seed);
+  const modalPresence = useAnimatedPresence(open, 480);
+  const canonCode = matchOriginCanonCode(origin);
+  const futureCode = futureCodeFromSeed(matchOriginVisualSeed(origin));
+
+  function setOpen(next: boolean) {
+    setOpenState(next);
+    if (!next) onDismiss?.();
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -71,9 +84,26 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother }:
     if (restoreFocusRef.current) triggerRef.current?.focus({ preventScroll: true });
   }, [modalPresence.mounted]);
 
+  useEffect(() => {
+    if (!modalPresence.mounted) return;
+    const gameScreen = (triggerRef.current ?? dialogRef.current)?.closest<HTMLElement>(".game-screen");
+    if (!gameScreen?.querySelector(":scope > .temporal-backdrop")) return;
+    document.body.classList.add("is-destiny-dialog-open");
+    document.body.classList.toggle("is-destiny-dialog-closing", modalPresence.closing);
+    gameScreen.classList.add("is-destiny-dialog-open");
+    gameScreen.classList.toggle("is-destiny-dialog-closing", modalPresence.closing);
+    return () => {
+      document.body.classList.remove("is-destiny-dialog-open");
+      document.body.classList.remove("is-destiny-dialog-closing");
+      gameScreen.classList.remove("is-destiny-dialog-open");
+      gameScreen.classList.remove("is-destiny-dialog-closing");
+    };
+  }, [modalPresence.closing, modalPresence.mounted]);
+
   async function copyIdentity() {
+    if (!canonCode) return;
     try {
-      await navigator.clipboard.writeText(seed);
+      await writeClipboardText(canonCode);
       pushToast({
         title: t("destiny.identityCopied"),
         message: t("destiny.future", { code: futureCode }),
@@ -102,65 +132,65 @@ export function DestinyRewriteControl({ seed, onRewrite, onContemplateAnother }:
 
   return (
     <>
-      <button
+      {!hideLauncher && <button
         ref={triggerRef}
         className="destiny-command-button"
         type="button"
         onClick={openDialog}
-        aria-label={t("destiny.open", { code: futureCode })}
+        aria-label={t("destiny.contemplateAgainTitle", { code: futureCode })}
         aria-haspopup="dialog"
         aria-expanded={open}
       >
         <span className="destiny-command-glyph" aria-hidden="true"><Orbit size={23} strokeWidth={1.55} /></span>
         <span className="destiny-command-copy">
           <small>{t("destiny.future", { code: futureCode })}</small>
-          <strong>{t("destiny.rewrite")}</strong>
+          <strong>{t("destiny.contemplateAgain")}</strong>
         </span>
         <span className="destiny-command-shimmer" aria-hidden="true" />
-      </button>
+      </button>}
 
       {modalPresence.mounted && (
         <div
+          ref={dialogRef}
           className={["destiny-dialog-backdrop fixed inset-0 z-[450] flex items-center justify-center p-6", modalPresence.closing ? "is-closing" : ""].join(" ")}
-          role="presentation"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("destiny.contemplateAgainTitle", { code: futureCode })}
           onClick={(event) => {
             if (event.target === event.currentTarget) setOpen(false);
           }}
         >
-          <section
-            ref={dialogRef}
-            className={["destiny-dialog old-panel w-full max-w-[540px]", modalPresence.closing ? "is-closing" : ""].join(" ")}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="destiny-dialog-title"
-            aria-describedby="destiny-dialog-description"
-          >
+          <div className="destiny-dialog-controls">
+            {canonCode && <GameTooltip content={t("destiny.copyIdentity")} side="bottom">
+              <button
+                className="destiny-dialog-copy"
+                type="button"
+                onClick={copyIdentity}
+                aria-label={t("destiny.copyIdentity")}
+              >
+                <Copy size={16} />
+              </button>
+            </GameTooltip>}
             <button className="destiny-dialog-close" type="button" onClick={() => setOpen(false)} aria-label={t("common.close")}>
               <X size={18} />
             </button>
+          </div>
+          <div className={["destiny-dialog hf-ui-panel w-full max-w-[620px]", modalPresence.closing ? "is-closing" : ""].join(" ")}>
+            <span className="destiny-dialog-kicker" aria-label={t("destiny.future", { code: futureCode })}>{futureCode}</span>
 
-            <div className="destiny-dialog-sigil" aria-hidden="true"><Orbit size={42} strokeWidth={1.2} /></div>
-            <div className="destiny-dialog-kicker">{t("destiny.future", { code: futureCode })}</div>
-            <h2 id="destiny-dialog-title">{t("destiny.dialogTitle")}</h2>
-            <p id="destiny-dialog-description">{t("destiny.dialogBody")}</p>
-
-            <button ref={primaryActionRef} className="destiny-dialog-primary" type="button" onClick={() => choose(onRewrite)} autoFocus>
-              <RefreshCcw size={18} />
-              <span>{t("destiny.rewriteThis")}</span>
-            </button>
-
-            <div className="destiny-dialog-divider" aria-hidden="true"><span />◆<span /></div>
-
-            <button className="destiny-dialog-secondary" type="button" onClick={() => choose(onContemplateAnother)}>
-              <Sparkles size={17} />
-              <span>{t("destiny.contemplateAnother")}</span>
-            </button>
-
-            <button className="destiny-dialog-copy" type="button" onClick={copyIdentity}>
-              <Copy size={14} />
-              <span>{t("destiny.copyIdentity")}</span>
-            </button>
-          </section>
+            <div className="destiny-dialog-actions">
+              <DestinyActionButton
+                ref={primaryActionRef}
+                className="destiny-dialog-primary"
+                label={t("destiny.contemplateThisAgain")}
+                onClick={() => choose(onRewrite)}
+                autoFocus
+              />
+              <button className="destiny-dialog-secondary" type="button" onClick={() => choose(onContemplateAnother)}>
+                <span>{t("destiny.seekAnotherFuture")}</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </>

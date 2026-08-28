@@ -16,6 +16,7 @@ export type GroupMeta = { order: number; suborder: number; anchorId: string };
 export type CardGroup = { key: string; cards: CardInstance[] };
 
 export type DefenseArrowLink = { attackerId: string; blockerId: string };
+export type ActiveDefenseFight = { attackerId: string; blockerId?: string; attackerDies: boolean };
 
 /**
  * A mutable box, so callers can pass a React ref straight in. Deliberately structural: the tests
@@ -71,6 +72,19 @@ export function visibleDefenseArrowLinks(game: GameState, hiddenLinkIds: Readonl
   );
 }
 
+/** A defense assignment is presentation-only once its fight begins. If that fight kills the
+ * attacker, every later assignment sourced by it is consumed as well. */
+export function consumedDefenseArrowLinkIds(game: GameState, fight: ActiveDefenseFight | undefined): string[] {
+  if (!fight?.blockerId) return [];
+  const blockerIds = fight.attackerDies
+    ? [
+        fight.blockerId,
+        ...(game.combat.blockers[fight.attackerId] ?? []).filter((blockerId) => blockerId !== fight.blockerId),
+      ]
+    : [fight.blockerId];
+  return blockerIds.map((blockerId) => `${fight.attackerId}-${blockerId}`);
+}
+
 export function isZombieToken(card: CardInstance): boolean {
   return card.isToken && card.subtypes.some((subtype) => subtype.toLowerCase() === "zombie");
 }
@@ -112,7 +126,14 @@ export function groupBattlefieldCopies(
     const goblinToken = isGoblinToken(card);
     const swarmToken = zombieToken || goblinToken;
     const stats = cardStatState(game, card);
-    const visualStatsKey = `${stats.text}-${stats.damaged ? "damaged" : "healthy"}-${stats.buffed ? "buffed" : "base"}`;
+    // Player cards with different visible states should be as distinct as copies with different
+    // stats. This keeps a ready family from concealing a Stabilizing or Exhausted copy, while
+    // equal-state copies still collapse into one stack. Host Exhausted state stays out of the key:
+    // it is intentionally hidden presentation state and must not fragment large Host waves.
+    const visualStateKey = card.controller === "player"
+      ? `${card.exhausted ? "exhausted" : "ready"}-${card.stabilizing ? "stabilizing" : "stabilized"}`
+      : "host";
+    const visualStatsKey = `${stats.text}-${stats.damaged ? "damaged" : "healthy"}-${stats.buffed ? "buffed" : "base"}-${visualStateKey}`;
     const swarmWaveId = swarmWaveByCardId.get(card.instanceId);
     const frozenKey = stableGrouping ? lastGroupKeys?.get(card.instanceId) : undefined;
     const groupingKey =

@@ -50,7 +50,7 @@ function GuidedComparisonCard({
 }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
-  const details = useCardDetails(card.definitionId);
+  const details = useCardDetails(card.definitionId, language);
   const name = localizedCardName(card, language);
   const cost = Math.max(0, Number(card.energyCost) || 0);
   const theme = cardThemeForDefinition(card.definitionId);

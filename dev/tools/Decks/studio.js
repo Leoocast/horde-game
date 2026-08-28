@@ -40,8 +40,10 @@
     const preview = el("preview");
     const artControls = el("art-controls");
     const gameArtSection = el("game-art-section");
+    const gameArtSectionLabel = el("game-art-section-label");
     const gameArtControls = el("game-art-controls");
     const gamePreviewPanel = el("game-preview-panel");
+    const gamePreviewLabel = el("game-preview-label");
     const gamePreview = el("game-preview");
     const gamePreviewImage = el("game-preview-image");
     const gamePreviewTitle = el("game-preview-title");
@@ -315,6 +317,8 @@
             || !current.battlefieldArtEligible;
         if (!current) return;
 
+        const battlefieldArtKind = current.battlefieldArtKind || "echo";
+        const isSupport = battlefieldArtKind === "support";
         const frame = battlefieldFrameOf(cardId);
         gamePreview.style.setProperty(
             "--game-art-x",
@@ -325,7 +329,12 @@
             `${(frame.y / GAME_ART_WIDTH) * 100}cqw`
         );
         gamePreview.style.setProperty("--game-art-zoom", frame.zoom);
+        gamePreviewPanel.dataset.kind = battlefieldArtKind;
         gamePreview.dataset.deck = deckId;
+        gamePreview.dataset.kind = battlefieldArtKind;
+        gamePreviewLabel.textContent = isSupport
+            ? "Apoyo corto · 488 × 434"
+            : "En juego · escala del campo";
         if (current.battlefieldArtUrl) {
             const imageUrl = versionedArtUrl(current.battlefieldArtUrl, cardId);
             const nextUrl = new URL(imageUrl, window.location.href).href;
@@ -340,11 +349,13 @@
             clearGameArtSourceSize();
         }
         gamePreviewImage.alt = current.nombre || current.id;
-        gamePreviewTitle.textContent = current.nombre || current.id;
+        gamePreviewTitle.textContent = isSupport ? "" : current.nombre || current.id;
         const hasStats = current.atk !== null && current.atk !== undefined
             && current.def !== null && current.def !== undefined;
-        gamePreviewStats.hidden = !hasStats;
-        gamePreviewStats.textContent = hasStats ? `${current.atk} / ${current.def}` : "";
+        gamePreviewStats.hidden = isSupport || !hasStats;
+        gamePreviewStats.textContent = !isSupport && hasStats
+            ? `${current.atk} / ${current.def}`
+            : "";
     }
 
     function applyMotifToPreview() {
@@ -638,6 +649,9 @@
         const current = card();
         gameArtSection.hidden = !current?.battlefieldArtEligible;
         if (!current?.battlefieldArtEligible) return;
+        gameArtSectionLabel.textContent = current.battlefieldArtKind === "support"
+            ? "Encuadre de Apoyo corto"
+            : "Encuadre en juego";
         const frame = battlefieldFrameOf(cardId);
 
         gameArtControls.append(

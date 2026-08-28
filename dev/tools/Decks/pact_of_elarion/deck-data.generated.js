@@ -43,7 +43,7 @@ window.HostfallDeckData = {
         "artist": "Dean Spencer",
         "art_crop": "../../../../public/cards/pact_of_elarion/art/aelyra_heir_of_elarion.jpg",
         "nombre": "Aelyra, Heredera de Elarion",
-        "tipo": "Eco de Crónica — Elfa Heredera",
+        "tipo": "Eco — Elfa Heredera",
         "costo": 1,
         "atk": 1,
         "def": 2,
@@ -191,7 +191,7 @@ window.HostfallDeckData = {
         "costo": 2,
         "atk": null,
         "def": null,
-        "desc": "Elige un aliado y un enemigo; el aliado inflige al enemigo daño igual a su Fuerza.",
+        "desc": "Elige un aliado. Ese aliado inflige daño igual a su Fuerza a un enemigo que elijas.",
         "lore": "Ante el llamado del pacto, cada Eco reveló aquello por lo que aún luchaba.",
         "showFlavorText": true,
         "cantidad": 2,
@@ -217,9 +217,9 @@ window.HostfallDeckData = {
         "cantidad": 1,
         "headerFade": false,
         "art_frame": {
-          "zoom": 0.855,
-          "x": -98,
-          "y": -84
+          "zoom": 0.731,
+          "x": -27,
+          "y": -163
         }
       },
       {
@@ -232,15 +232,16 @@ window.HostfallDeckData = {
         "costo": 3,
         "atk": null,
         "def": null,
-        "desc": "Elige un Apoyo enemigo o un Eco enemigo con Volar; destrúyelo.",
+        "desc": "Elige uno:\n• Destruye un Apoyo enemigo.\n• Destruye un Eco enemigo con Imponente.\n• Destruye un Eco enemigo con Volar.",
         "lore": "Ni alas ni piedra quedaron fuera del juicio del antiguo reino.",
         "showFlavorText": true,
         "cantidad": 2,
+        "fullArt": true,
         "headerFade": false,
         "art_frame": {
-          "zoom": 1,
-          "x": -451,
-          "y": 18
+          "zoom": 1.04,
+          "x": 10,
+          "y": -75
         }
       },
       {
@@ -259,8 +260,8 @@ window.HostfallDeckData = {
         "cantidad": 2,
         "art_frame": {
           "zoom": 1,
-          "x": -11,
-          "y": -130
+          "x": -8,
+          "y": -138
         }
       },
       {
@@ -314,7 +315,7 @@ window.HostfallDeckData = {
         "artist": "Dean Spencer",
         "art_crop": "../../../../public/cards/pact_of_elarion/art/aelyra_heir_of_elarion.jpg",
         "nombre": "Aelyra, Heir of Elarion",
-        "tipo": "Chronicle Echo — Elf Heir",
+        "tipo": "Echo — Elf Heir",
         "costo": 1,
         "atk": 1,
         "def": 2,
@@ -488,9 +489,9 @@ window.HostfallDeckData = {
         "cantidad": 1,
         "headerFade": false,
         "art_frame": {
-          "zoom": 0.855,
-          "x": -98,
-          "y": -84
+          "zoom": 0.731,
+          "x": -27,
+          "y": -163
         }
       },
       {
@@ -503,15 +504,16 @@ window.HostfallDeckData = {
         "costo": 3,
         "atk": null,
         "def": null,
-        "desc": "Choose an enemy Support or an enemy Echo with Flying; destroy it.",
+        "desc": "Choose one:\n• Destroy an enemy Support.\n• Destroy an enemy Echo with Daunting.\n• Destroy an enemy Echo with Flying.",
         "lore": "Neither wing nor stone stood beyond the judgment of the ancient realm.",
         "showFlavorText": true,
         "cantidad": 2,
+        "fullArt": true,
         "headerFade": false,
         "art_frame": {
-          "zoom": 1,
-          "x": -451,
-          "y": 18
+          "zoom": 1.04,
+          "x": 10,
+          "y": -75
         }
       },
       {
@@ -530,8 +532,8 @@ window.HostfallDeckData = {
         "cantidad": 2,
         "art_frame": {
           "zoom": 1,
-          "x": -11,
-          "y": -130
+          "x": -8,
+          "y": -138
         }
       },
       {

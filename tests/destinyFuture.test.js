@@ -74,23 +74,29 @@ test("degree labels counter-rotate around their anchors and stay horizontal", ()
 });
 
 test("the narrative Future control owns normal rewrites outside Settings", async () => {
-  const [header, settings, result, transition, shader, warmup, app] = await Promise.all([
+  const [header, copyControl, settings, result, transition, shader, warmup, app, styles] = await Promise.all([
     readFile(new URL("../src/components/AppHeader.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/DestinyCopyIdentityButton.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/SettingsMenu.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/components/DefeatModal.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/GameOutcomeDialog.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/DestinyRewriteTransition.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/destinyVortexShader.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/components/vfxWarmup.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/styles.css", import.meta.url), "utf8"),
   ]);
 
   assert.ok(header.indexOf("<DestinyRewriteControl") < header.indexOf("<MusicPlayerMenu"));
-  assert.match(header, /futureSeed\?\.trim\(\)\.toLowerCase\(\) !== "developer"/u);
+  assert.ok(header.indexOf("<DestinyRewriteControl") < header.indexOf("<DestinyCopyIdentityButton"));
+  assert.ok(header.indexOf("<DestinyCopyIdentityButton") < header.indexOf("<MusicPlayerMenu"));
+  assert.match(copyControl, /writeClipboardText\(canonCode\)/u);
+  assert.match(copyControl, /<GameTooltip content=\{t\("destiny\.copyIdentity"\)\}/u);
+  assert.match(header, /matchOrigin!\.seedKind === "canon"/u);
   assert.doesNotMatch(settings, /settings\.battleSeed|game-seed-input|setSeed/u);
   assert.match(settings, /!guided && isDeveloperMode/u);
 
-  assert.match(result, /futureCodeFromSeed\(game\.seed\)/u);
-  assert.match(result, /navigator\.clipboard\.writeText\(game\.seed\)/u);
+  assert.match(result, /futureCodeFromSeed\(matchOriginVisualSeed\(matchOrigin\)\)/u);
+  assert.match(result, /writeClipboardText\(matchOrigin\.canonCode\)/u);
   assert.doesNotMatch(result, /<input|generateRandomSeed/u);
 
   assert.match(transition, /prefers-reduced-motion: reduce/u);
@@ -99,10 +105,17 @@ test("the narrative Future control owns normal rewrites outside Settings", async
   assert.match(shader, /uniform float uSeed/u);
   assert.match(warmup, /uSeed/u);
   assert.match(app, /resolvedDestinyIdRef\.current === transitionId/u);
-  assert.match(app, /seed: gameStore\.game\.seed,\s*setupTurns,\s*destination,/u);
-  assert.match(app, /reset\(transition\.seed, transition\.setupTurns\)/u);
-  assert.match(app, /\}, \[reset, startBattleMusic\]\);/u);
+  assert.match(app, /seed: origin \? matchOriginVisualSeed\(origin\) : gameStore\.game\.seed/u);
+  assert.match(app, /origin,\s*destination,/u);
+  assert.match(app, /origin\.rngSeed,[\s\S]*?origin\.preparationTurns/u);
+  assert.match(app, /\}, \[clearResumeForProduct, reset, startBattleMusic, stopMusic\]\);/u);
   assert.match(app, /setMenuReturnScreen\("setup"\)/u);
+  const commandRadial = styles.match(/\.destiny-command-button::before\s*\{[^}]*\}/su)?.[0] ?? "";
+  assert.match(commandRadial, /left:\s*50%/u);
+  assert.match(commandRadial, /width:\s*calc\(100% \+ 64px\)/u);
+  assert.match(commandRadial, /aspect-ratio:\s*1/u);
+  assert.match(styles, /@keyframes destiny-command-orbit\s*\{\s*to\s*\{[^}]*rotate\(-1turn\)/su);
+  assert.doesNotMatch(styles, /\.destiny-dialog-primary::before\s*\{[^}]*animation-direction:\s*reverse/u);
 
   const lifecycleEffectAt = transition.indexOf("  useEffect(() => {");
   const shardEffectAt = transition.indexOf("  /* La escena no cae", lifecycleEffectAt);
@@ -112,7 +125,9 @@ test("the narrative Future control owns normal rewrites outside Settings", async
   const completeCallbackAt = transition.indexOf("completeCallbackRef.current(transitionId);", completeTimerAt);
   assert.match(transition, /coveredCallbackRef\.current = onCovered/u);
   assert.match(transition, /completeCallbackRef\.current = onComplete/u);
-  assert.match(lifecycleEffect, /coveredCallbackRef\.current\(transitionId\)/u);
+  assert.match(lifecycleEffect, /coveredCallbackRef\.current\(transitionId, releaseTransition\)/u);
+  assert.match(lifecycleEffect, /destiny-rewrite-covered/u);
+  assert.match(lifecycleEffect, /phase !== "revealing"/u);
   assert.match(lifecycleEffect, /\}, \[transitionId\]\);/u);
   assert.doesNotMatch(lifecycleEffect, /\[[^\]]*(?:onCovered|onComplete|playSfx)[^\]]*\]/u);
   assert.ok(completeTimerAt >= 0);
