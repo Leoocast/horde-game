@@ -2,6 +2,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Maximize2, Search, X } from "luci
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { InspectableDeck, NewDeckAbility, NewDeckCard } from "../data/deckCatalog";
 import { localizedCardName, localizedTypeLine } from "../i18n/cardLocalization";
+import { localizedDeckName } from "../i18n/deckLocalization";
 import { canonicalizeRulesText } from "../i18n/rulesText";
 import { useTranslation } from "../i18n/useTranslation";
 import type { AppLanguage } from "../i18n/translations";
@@ -33,6 +34,7 @@ const ENABLE_DECK_CARD_PREVIEW = false;
 
 export function DeckInspector({ deck, backLabel, useGenericDeckVocabulary = false, onBack }: Props) {
   const t = useTranslation();
+  const language = useLanguageStore((state) => state.language);
   const searchAria = useGenericDeckVocabulary
     ? t("deck.searchAria")
     : t(deck.deck.side === "host" ? "deck.searchHostAria" : "deck.searchChronicleAria");
@@ -96,7 +98,7 @@ export function DeckInspector({ deck, backLabel, useGenericDeckVocabulary = fals
           {backLabel}
         </button>
         <div className="deck-detail-heading">
-          <h1>{deck.deck.name}</h1>
+          <h1>{localizedDeckName(deck.deck, language)}</h1>
         </div>
         <div className="deck-detail-tools">
           <label className="deck-detail-search">
@@ -197,7 +199,7 @@ function DeckCardTile({
   onClick: () => void;
 }) {
   const language = useLanguageStore((state) => state.language);
-  const details = useDeckCardDetails(card, deck.images);
+  const details = useDeckCardDetails(card, deck.images, language);
   const displayName = localizedCardName(card, language);
   const showFullCardImage = usesFullCardImage(deck, card);
   const playSfx = useAudioStore((state) => state.playSfx);
@@ -240,7 +242,7 @@ function DeckCardTile({
 function DeckCardInfo({ deck, card, pinned, onClearPin, onDetails }: { deck: InspectableDeck; card?: NewDeckCard; pinned: boolean; onClearPin: () => void; onDetails: () => void }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
-  const details = useDeckCardDetails(card, deck.images);
+  const details = useDeckCardDetails(card, deck.images, language);
   if (!card) {
     return (
       <aside className="deck-detail-info flex min-h-0 items-center justify-center p-4 text-center text-sm text-[#87958d]">
@@ -322,7 +324,7 @@ export function DeckInspectorDetailsModal({
 }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
-  const details = useDeckCardDetails(card, deck.images);
+  const details = useDeckCardDetails(card, deck.images, language);
   const displayName = localizedCardName(card, language);
   const text = deckCardDescription(card, language);
   const traits = deckTraits(card);

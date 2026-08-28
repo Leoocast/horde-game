@@ -14,6 +14,7 @@ import {
   type HistoryLibraryFutureViewModel,
 } from "../history/historyViewModel";
 import { localizedCardName } from "../i18n/cardLocalization";
+import { localizedDeckName } from "../i18n/deckLocalization";
 import type { TranslationKey } from "../i18n/translations";
 import { useTranslation } from "../i18n/useTranslation";
 import { writeClipboardText } from "../platform/desktopBridge";
@@ -236,6 +237,7 @@ function SeedIndexEntry({
   onMove: (offset: number) => void;
 }>) {
   const t = useTranslation();
+  const language = useLanguageStore((state) => state.language);
   const { chronicle, host } = findFutureDecks(future, decks, hostDecks);
   return (
     <li>
@@ -253,7 +255,7 @@ function SeedIndexEntry({
         <span className="seeds-entry-identity">
           <span className="seeds-entry-code">{future.code}</span>
           {future.collision && (
-            <small>{chronicle?.label ?? future.playerDeckKey} · {host?.label ?? future.hostDeckKey} · {future.identityRevision}</small>
+            <small>{chronicle ? localizedDeckName(chronicle.deck, language) : future.playerDeckKey} · {host ? localizedDeckName(host.deck, language) : future.hostDeckKey} · {future.identityRevision}</small>
           )}
         </span>
         <span className={`seeds-entry-word seeds-state-${future.status}`}>{t(statusLabelKey(future.status))}</span>
@@ -278,6 +280,7 @@ function SeedFuturePage({
   onReplay: (origin: MatchOrigin) => void;
 }>) {
   const t = useTranslation();
+  const language = useLanguageStore((state) => state.language);
   const pushToast = useToastStore((state) => state.pushToast);
   const { chronicle, host } = findFutureDecks(future, decks, hostDecks);
 
@@ -304,9 +307,9 @@ function SeedFuturePage({
             {t(statusHeadlineKey(future.status))}
           </span>
           <p className="seeds-duel-match">
-            <span>{chronicle?.label ?? future.playerDeckKey}</span>
+            <span>{chronicle ? localizedDeckName(chronicle.deck, language) : future.playerDeckKey}</span>
             <span className="seeds-versus">{t("seeds.versus")}</span>
-            <span className="seeds-host-side">{host?.label ?? future.hostDeckKey}</span>
+            <span className="seeds-host-side">{host ? localizedDeckName(host.deck, language) : future.hostDeckKey}</span>
           </p>
           <p className="seeds-duel-difficulty">
             {t(DIFFICULTY_KEYS[future.difficulty])}
@@ -359,8 +362,8 @@ function findFutureDecks(
 function SeedDuelCard({ deck, side }: Readonly<{ deck: InspectableDeck; side: "player" | "host" }>) {
   const language = useLanguageStore((state) => state.language);
   const keyCard = findDeckKeyCard(deck);
-  const details = useDeckCardDetails(keyCard, deck.images);
-  const cardName = localizedCardName(keyCard, language) || deck.label;
+  const details = useDeckCardDetails(keyCard, deck.images, language);
+  const cardName = localizedCardName(keyCard, language) || localizedDeckName(deck.deck, language);
   if (!details.imageUrl) return <span className={`seeds-duel-card seeds-duel-card-${side}`} />;
   return (
     <figure className={`seeds-duel-card seeds-duel-card-${side}`}>

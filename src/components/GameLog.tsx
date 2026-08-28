@@ -43,7 +43,7 @@ export function GameLog({ game, className = "", variant = "panel" }: { game: Gam
   const cards = useMemo(() => collectCards(game), [game]);
   const cardNames = useMemo(() => [...new Set(cards.map((card) => card.name).filter(Boolean))], [cards]);
   const visibleLog = useMemo(() => annotateLog(game.log.slice(0, 80), game, language), [game, language]);
-  const previewDetails = useCardDetails(previewCard?.definitionId ?? "");
+  const previewDetails = useCardDetails(previewCard?.definitionId ?? "", language);
   const suggestions = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase();
     if (!needle) return [];

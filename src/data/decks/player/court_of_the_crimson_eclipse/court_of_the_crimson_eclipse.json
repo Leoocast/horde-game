@@ -2,6 +2,7 @@
   "schemaVersion": "1.0.0",
   "id": "court_of_the_crimson_eclipse",
   "name": "La Corte del Eclipse Carmesí",
+  "displayNameEn": "The Court of the Crimson Eclipse",
   "format": "casual",
   "side": "CHRONICLER",
   "deckSize": 40,

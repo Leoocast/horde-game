@@ -44,7 +44,7 @@ export function CardPreview() {
   const activeId = focusedCardId ?? activeEffectCardId ?? hoveredCardId;
   const card = activeId ? findCard(game, activeId) : undefined;
   const heldStaticAuraBonus = useGameStore((state) => activeId ? state.heldStaticAuraBonuses[activeId] : undefined);
-  const details = useCardDetails(card?.definitionId ?? "");
+  const details = useCardDetails(card?.definitionId ?? "", language);
 
   useEffect(() => {
     if (hoveredCardId && !findCard(game, hoveredCardId)) setHoveredCardId(undefined);

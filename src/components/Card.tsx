@@ -85,7 +85,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
     : card.controller === "host"
       ? "card-keyword-badge-enemy"
       : "card-keyword-badge-ally";
-  const { imageUrl, battlefieldArtUrl, battlefieldArtFrame, statsFrame } = useCardDetails(card.definitionId);
+  const { imageUrl, battlefieldArtUrl, battlefieldArtFrame, statsFrame } = useCardDetails(card.definitionId, language);
   const localizedName = localizedCardName(card, language);
   const highResImageUrl = imageUrl;
   const requestedBattlefieldArtUrl = useBattlefieldArt ? battlefieldArtUrl : undefined;

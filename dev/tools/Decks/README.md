@@ -140,16 +140,17 @@ Exportar un deck:
 node dev/tools/Decks/export_cards.cjs pact_of_elarion
 ```
 
-El comando anterior equivale a `--lang es`: actualiza tanto `exported-png/` como `public/cards/` y
-registra la huella del lote que consume el juego. Para exportar otro idioma sin reemplazar las
-cartas runtime:
+El comando anterior equivale a `--lang es`: actualiza tanto `exported-png/` como
+`public/cards/<deck>/` y registra la huella española del lote que consume el juego. Para publicar
+las cartas runtime inglesas sin reemplazar las españolas:
 
 ```powershell
 node dev/tools/Decks/export_cards.cjs pact_of_elarion --lang en
 ```
 
-Las cartas inglesas se escriben en `exported-png/en/`; no modifican `public/cards/`, el layout
-runtime ni `generation-manifest.json`. El exportador no necesita servidor ni datos remotos.
+Las cartas inglesas se escriben en `exported-png/en/` y `public/cards/<deck>/en/`, y registran su
+propia huella en `generation-manifest.json`. No modifican el layout runtime compartido. El selector
+de idioma del juego cambia entre ambos lotes; el exportador no necesita servidor ni datos remotos.
 
 ## Añadir idiomas en el futuro
 

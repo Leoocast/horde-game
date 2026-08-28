@@ -101,6 +101,7 @@ export type CardDefinition = {
 export type DeckList = {
   id: string;
   name: string;
+  displayNameEn?: string;
   side: Side;
   deckSize: number;
   /** Player decks may opt into a different runtime land count than the default nine. */

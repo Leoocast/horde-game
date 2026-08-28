@@ -32,7 +32,8 @@ export function PlayerDiscardAnimator() {
 }
 
 function PlayerDiscardCard({ itemId, definitionId, name, origin, onComplete }: { itemId: string; definitionId: string; name: string; origin?: { x: number; y: number }; onComplete: () => void }) {
-  const { imageUrl } = useCardDetails(definitionId);
+  const language = useLanguageStore((state) => state.language);
+  const { imageUrl } = useCardDetails(definitionId, language);
   const path = useMemo(() => readPlayerDiscardPath(origin), [itemId, origin]);
   const deltaX = path.target.x - path.origin.x;
   const deltaY = path.target.y - path.origin.y;

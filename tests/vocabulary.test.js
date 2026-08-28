@@ -5,6 +5,7 @@ import { test } from "node:test";
 
 import { DECK_REGISTRY } from "../src/data/decks";
 import { localizedTypeLine } from "../src/i18n/cardLocalization";
+import { localizedDeckName } from "../src/i18n/deckLocalization";
 import { IDENTITY_VOCABULARY, traitVocabularyTooltip } from "../src/i18n/gameVocabulary";
 import { canonicalizeLogText, canonicalizeRulesText } from "../src/i18n/rulesText";
 import { translate, translationValues } from "../src/i18n/translations";
@@ -23,6 +24,21 @@ test("localized interface copy contains no retired public vocabulary", () => {
       assert.doesNotMatch(value, RETIRED_CONTINUITY_TERM, `${language} continuity copy: ${value}`);
     }
   }
+});
+
+test("builtin deck identities follow the selected UI language", () => {
+  assert.deepEqual(
+    DECK_REGISTRY.map((entry) => [
+      localizedDeckName(entry.deck, "es"),
+      localizedDeckName(entry.deck, "en"),
+    ]),
+    [
+      ["El Pacto de Elarion", "The Pact of Elarion"],
+      ["La Corte del Eclipse Carmesí", "The Court of the Crimson Eclipse"],
+      ["El Alzamiento de los Sinsepulcro", "The Uprising of the Graveless"],
+      ["La Legión de Varka", "The Legion of Varka"],
+    ],
+  );
 });
 
 test("continuity identity has one explicit bilingual term per concept", () => {
@@ -184,6 +200,14 @@ test("card images stay local and remote card-provider metadata cannot return", (
       assert.ok(
         fs.existsSync(path.resolve("public", image.imageUrl.slice(1))),
         `${entry.deck.id}/${cardId} points to missing image ${image.imageUrl}`,
+      );
+      const englishDirectory = entry.images.defaults?.localizedImageDirectories?.en;
+      assert.equal(englishDirectory, "en", `${entry.deck.id} must publish English card PNGs under en/`);
+      const separator = image.imageUrl.lastIndexOf("/");
+      const englishImageUrl = `${image.imageUrl.slice(0, separator + 1)}${englishDirectory}/${image.imageUrl.slice(separator + 1)}`;
+      assert.ok(
+        fs.existsSync(path.resolve("public", englishImageUrl.slice(1))),
+        `${entry.deck.id}/${cardId} points to missing English image ${englishImageUrl}`,
       );
     }
   }

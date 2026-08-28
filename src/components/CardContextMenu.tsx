@@ -28,7 +28,7 @@ export function CardContextMenu() {
 
   const card = menu ? findCard(game, menu.cardId) : undefined;
   const detailsCard = detailsCardId ? findCard(game, detailsCardId) : undefined;
-  const details = useCardDetails(detailsCard?.definitionId ?? "");
+  const details = useCardDetails(detailsCard?.definitionId ?? "", language);
   const traits = detailsCard ? cardTraits(game, detailsCard) : undefined;
   const stats = detailsCard ? cardStats(game, detailsCard) : undefined;
   const detailsText = detailsCard

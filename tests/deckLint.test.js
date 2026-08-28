@@ -107,12 +107,12 @@ test("every active card authors print metadata, bilingual flavor and an explicit
 
 test("active deck ids match their current canonical identities", () => {
   assert.deepEqual(
-    DECK_REGISTRY.map((entry) => [entry.raw.id, entry.raw.name]),
+    DECK_REGISTRY.map((entry) => [entry.raw.id, entry.raw.name, entry.raw.displayNameEn]),
     [
-      ["pact_of_elarion", "El Pacto de Elarion"],
-      ["court_of_the_crimson_eclipse", "La Corte del Eclipse Carmesí"],
-      ["uprising_of_the_graveless", "El Alzamiento de los Sinsepulcro"],
-      ["legion_of_varka", "La Legión de Varka"],
+      ["pact_of_elarion", "El Pacto de Elarion", "The Pact of Elarion"],
+      ["court_of_the_crimson_eclipse", "La Corte del Eclipse Carmesí", "The Court of the Crimson Eclipse"],
+      ["uprising_of_the_graveless", "El Alzamiento de los Sinsepulcro", "The Uprising of the Graveless"],
+      ["legion_of_varka", "La Legión de Varka", "The Legion of Varka"],
     ],
   );
 });

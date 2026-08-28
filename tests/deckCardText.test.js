@@ -226,7 +226,7 @@ test("Card Studio projects ES and EN from one extensible language registry", () 
   );
 });
 
-test("Card Studio UI and exporter select a language without replacing Spanish runtime PNGs", () => {
+test("Card Studio UI and exporter publish each language to its own runtime directory", () => {
   const studioHtml = fs.readFileSync(
     new URL("../dev/tools/Decks/studio.html", import.meta.url),
     "utf8",
@@ -248,10 +248,14 @@ test("Card Studio UI and exporter select a language without replacing Spanish ru
   assert.match(studioSource, /[?&]lang=\$\{encodeURIComponent\(language\)\}/u);
   assert.match(rendererSource, /cardsByLanguage\?\.\[language\]/u);
   assert.match(rendererSource, /new URLSearchParams\(window\.location\.search\)/u);
+  assert.match(rendererSource, /language === "en" \? "Exhaust \/ Activate" : "Agotar \/ Activar"/u);
+  assert.match(rendererSource, /language === "en" \? "Energy" : "Energía"/u);
+  assert.doesNotMatch(rendererSource, /<small>Crónica<\/small>/u);
   assert.match(exporterSource, /argument === '--lang'/u);
   assert.match(exporterSource, /pageUrl\.searchParams\.set\('lang', language\)/u);
   assert.match(exporterSource, /path\.join\(defaultOutputDir, language\)/u);
-  assert.match(exporterSource, /if \(writesRuntimeCards\)/u);
+  assert.match(exporterSource, /studioRuntimeCardDirectory\(deckId, language\)/u);
+  assert.match(exporterSource, /recordDeckGeneration\(deckId, language\)/u);
 });
 
 test("card studios consume one generated projection instead of embedded or mirrored data", () => {

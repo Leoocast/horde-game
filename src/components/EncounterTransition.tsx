@@ -2,7 +2,9 @@ import { Shield, Skull, Swords } from "lucide-react";
 import { useLayoutEffect, useRef, useState, type CSSProperties, type Ref } from "react";
 import { findDeckKeyCard, findInspectableDeck, type InspectableDeck } from "../data/deckCatalog";
 import type { GameMode } from "../engine/GameTypes";
+import { localizedDeckName } from "../i18n/deckLocalization";
 import { useTranslation } from "../i18n/useTranslation";
+import { useLanguageStore } from "../store/useLanguageStore";
 import { useDeckCardDetails } from "../utils/deckCardImages";
 
 export type EncounterCardRect = Readonly<{
@@ -39,10 +41,11 @@ export const ENCOUNTER_OPEN_MS = Math.round(ENCOUNTER_TRANSITION_MS * 0.68);
 
 export function EncounterTransition({ chronicleDeckId, hostDeckId, gameMode, cardOrigins }: Props) {
   const t = useTranslation();
+  const language = useLanguageStore((state) => state.language);
   const chronicleDeck = findInspectableDeck(chronicleDeckId);
   const hostDeck = findInspectableDeck(hostDeckId);
-  const chronicleDetails = useDeckCardDetails(findDeckKeyCard(chronicleDeck), chronicleDeck.images);
-  const hostDetails = useDeckCardDetails(findDeckKeyCard(hostDeck), hostDeck.images);
+  const chronicleDetails = useDeckCardDetails(findDeckKeyCard(chronicleDeck), chronicleDeck.images, language);
+  const hostDetails = useDeckCardDetails(findDeckKeyCard(hostDeck), hostDeck.images, language);
   const playerTargetRef = useRef<HTMLDivElement>(null);
   const hostTargetRef = useRef<HTMLDivElement>(null);
   const [cardTargets, setCardTargets] = useState<EncounterCardOrigins | null>(null);
@@ -97,7 +100,7 @@ export function EncounterTransition({ chronicleDeckId, hostDeckId, gameMode, car
           <div className="encounter-transition-combatant encounter-transition-combatant-player">
             <div className={`encounter-transition-side encounter-transition-side-player deck-theme-${chronicleDeck.presentation.theme}`}>
               <span className="encounter-transition-eyebrow"><Shield size={12} />{t(gameMode === "chaos" ? "setup.playerSide" : "setup.chronicleSide")}</span>
-              <strong className="encounter-transition-name encounter-transition-name-player">{chronicleDeck.deck.name}</strong>
+              <strong className="encounter-transition-name encounter-transition-name-player">{localizedDeckName(chronicleDeck.deck, language)}</strong>
             </div>
             <EncounterArt deck={chronicleDeck} side="player" imageUrl={chronicleDetails.imageUrl} artRef={playerTargetRef} />
           </div>
@@ -113,7 +116,7 @@ export function EncounterTransition({ chronicleDeckId, hostDeckId, gameMode, car
             <EncounterArt deck={hostDeck} side="host" imageUrl={hostDetails.imageUrl} artRef={hostTargetRef} />
             <div className={`encounter-transition-side encounter-transition-side-host deck-theme-${hostDeck.presentation.theme}`}>
               <span className="encounter-transition-eyebrow"><Skull size={12} />{t("setup.hostSide")}</span>
-              <strong className="encounter-transition-name encounter-transition-name-host">{hostDeck.deck.name}</strong>
+              <strong className="encounter-transition-name encounter-transition-name-host">{localizedDeckName(hostDeck.deck, language)}</strong>
             </div>
           </div>
         </div>

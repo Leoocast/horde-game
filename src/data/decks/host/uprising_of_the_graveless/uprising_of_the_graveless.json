@@ -2,6 +2,7 @@
   "schemaVersion": "1.0.0",
   "id": "uprising_of_the_graveless",
   "name": "El Alzamiento de los Sinsepulcro",
+  "displayNameEn": "The Uprising of the Graveless",
   "side": "HOST",
   "deckSize": 50,
   "rulesProfile": {

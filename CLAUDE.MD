@@ -143,8 +143,8 @@ Contratos desktop vigentes:
   animaciones o Playground. `backgroundThrottling: true` es final y el lifecycle pausa/reanuda audio.
 - Pantalla completa se controla desde ambos menús o F11 y se persiste con el estado local de
   ventana. No implementar otro canal IPC para esta función.
-- Fase 5 genera `.electron-staging/resources` exclusivamente desde manifests runtime: 61 PNG,
-  61 artes de campo, 57 audios y 6 fuentes. `app.asar` no contiene audio ni source maps; Card Studio,
+- Fase 5 genera `.electron-staging/resources` exclusivamente desde manifests runtime: 122 PNG
+  localizados (61 ES + 61 EN), 61 artes de campo, 57 audios y 6 fuentes. `app.asar` no contiene audio ni source maps; Card Studio,
   Hunters y autoría no entran. El contrato y los blockers comerciales viven en
   `docs/electron/release.md`.
 
@@ -292,9 +292,12 @@ propia carpeta.
 
 Card Studio consume `deck-data.generated.js`, generado desde el JSON runtime. La proyección contiene
 ES/EN y el Taller elige el idioma sin duplicar reglas, nombres o flavor en HTML/configuración.
-Español es el valor predeterminado. `export_cards.cjs <deck> --lang en` escribe sólo en
-`exported-png/en/`; únicamente la exportación española actualiza `public/cards/`, el layout runtime
-y la huella de `check-card-assets.mjs`. Los idiomas futuros se registran de forma central; chino
+Español es el valor predeterminado. `export_cards.cjs <deck> --lang en` escribe en
+`exported-png/en/` y `public/cards/<deck>/en/`; la exportación española conserva
+`public/cards/<deck>/`. Ambas salidas runtime quedan registradas en la huella de
+`check-card-assets.mjs`; sólo la española actualiza el layout runtime compartido. El juego elige el
+PNG impreso según el idioma activo y conserva el arte fuente común para los recortes del Campo.
+Los idiomas futuros se registran de forma central; chino
 requiere una fuente CJK local antes de habilitarse.
 Los contadores `+1/+1` declarados en `entersWithCounters` se suman a los stats base impresos, para
 que la carta muestre las estadísticas con las que entra realmente al Campo.

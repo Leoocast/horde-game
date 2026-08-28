@@ -19,6 +19,13 @@ export function collectRuntimeResourcePlan() {
   for (const jsonPath of deckImageManifests) {
     const manifest = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
     collectLogicalPaths(manifest, "/cards/", logicalPaths);
+    for (const image of Object.values(manifest.cards ?? {})) {
+      if (typeof image?.imageUrl !== "string") continue;
+      for (const directory of Object.values(manifest.defaults?.localizedImageDirectories ?? {})) {
+        const localizedPath = localizedSiblingPath(image.imageUrl, directory);
+        if (localizedPath) logicalPaths.add(localizedPath);
+      }
+    }
     Object.keys(manifest.cards ?? {}).forEach((cardId) => runtimeCardIds.add(cardId));
   }
   const gameArt = JSON.parse(fs.readFileSync(path.join(projectRoot, "src", "data", "cardStudioGameArt.generated.json"), "utf8"));
@@ -42,6 +49,13 @@ export function collectRuntimeResourcePlan() {
     destinations.add(entry.path);
   }
   return entries;
+}
+
+function localizedSiblingPath(logicalPath, directory) {
+  if (typeof directory !== "string" || !/^[a-z0-9_-]+$/u.test(directory)) return undefined;
+  const separator = logicalPath.lastIndexOf("/");
+  if (separator < 0) return undefined;
+  return `${logicalPath.slice(0, separator + 1)}${directory}/${logicalPath.slice(separator + 1)}`;
 }
 
 export function createStaging() {

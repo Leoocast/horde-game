@@ -37,7 +37,8 @@ function EnergyRecycleFlight({ itemId, definitionId, name, origin, onComplete }:
   origin: { x: number; y: number };
   onComplete: () => void;
 }) {
-  const { imageUrl } = useCardDetails(definitionId);
+  const language = useLanguageStore((state) => state.language);
+  const { imageUrl } = useCardDetails(definitionId, language);
   const reduceMotion = useReducedMotion();
   const target = useMemo(readRecycleTarget, [itemId]);
   const deltaX = target.x - origin.x;

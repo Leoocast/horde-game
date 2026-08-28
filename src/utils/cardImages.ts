@@ -5,6 +5,8 @@ import gameArtRaw from "../data/cardStudioGameArt.generated.json";
 import runtimeLayoutRaw from "../data/cardRuntimeLayout.generated.json";
 import type { BattlefieldArtFrame } from "./battlefieldArtFrame";
 import type { CardStatFrame } from "./cardStatFrame";
+import type { AppLanguage } from "../i18n/translations";
+import { localizedDeckCardImageUrl } from "./deckCardImages";
 
 export type CardDetails = {
   imageUrl?: string;
@@ -61,29 +63,39 @@ const cardThemeByDefinitionId = new Map<string, DeckTheme>(
     ),
   ),
 );
-const detailsById = new Map<string, CardDetails>([
+type LocalizedCardDetails = Omit<CardDetails, "imageUrl"> & {
+  imageUrls: Partial<Record<AppLanguage, string>>;
+};
+
+const detailsById = new Map<string, LocalizedCardDetails>([
   ...DECK_REGISTRY.flatMap((entry) =>
     Object.entries(entry.images.cards).flatMap(([id, image]) =>
       image.imageUrl
         ? [[id, {
-            imageUrl: resolveBuiltinAssetUrl(image.imageUrl),
+            imageUrls: {
+              es: resolveBuiltinAssetUrl(localizedDeckCardImageUrl(image.imageUrl, entry.images, "es")),
+              en: resolveBuiltinAssetUrl(localizedDeckCardImageUrl(image.imageUrl, entry.images, "en")),
+            },
             battlefieldArtUrl: gameArt.cards[id]?.artUrl
               ? resolveBuiltinAssetUrl(gameArt.cards[id].artUrl)
               : undefined,
             battlefieldArtFrame: gameArt.cards[id]?.battlefieldArtFrame,
             statsFrame: runtimeLayoutById.get(id)?.statsFrame,
-          }] as [string, CardDetails]]
+          }] as [string, LocalizedCardDetails]]
         : [],
     ),
   ),
 ]);
 
-export function useCardDetails(definitionId: string): CardDetails {
-  return detailsById.get(definitionId) ?? {};
+export function useCardDetails(definitionId: string, language: AppLanguage = "es"): CardDetails {
+  const details = detailsById.get(definitionId);
+  if (!details) return {};
+  const { imageUrls, ...shared } = details;
+  return { ...shared, imageUrl: imageUrls[language] ?? imageUrls.es };
 }
 
-export function useCardImage(definitionId: string): string | undefined {
-  return useCardDetails(definitionId).imageUrl;
+export function useCardImage(definitionId: string, language: AppLanguage = "es"): string | undefined {
+  return useCardDetails(definitionId, language).imageUrl;
 }
 
 export function shouldShowFullCardImage(definitionId: string): boolean {

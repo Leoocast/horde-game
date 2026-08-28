@@ -13,6 +13,7 @@ import {
 import { findDeckKeyCard, type InspectableDeck } from "../data/deckCatalog";
 import type { DifficultyMode } from "../engine/GameTypes";
 import { localizedCardName } from "../i18n/cardLocalization";
+import { localizedDeckName } from "../i18n/deckLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { writeClipboardText } from "../platform/desktopBridge";
 import { useAudioStore } from "../store/useAudioStore";
@@ -738,6 +739,7 @@ type ExpeditionSetupProps = {
 
 function ExpeditionSetup(props: ExpeditionSetupProps) {
   const t = useTranslation();
+  const language = useLanguageStore((state) => state.language);
   const [openDeckSide, setOpenDeckSide] = useState<"player" | "host" | null>(null);
   const playerCardRef = useRef<HTMLButtonElement>(null);
   const hostCardRef = useRef<HTMLButtonElement>(null);
@@ -850,10 +852,10 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
           <footer className="expedition-footer" inert={openDeckSide !== null}>
             <div className="expedition-footer-summary">
               <span>{t("setup.playerSide")}</span>
-              <strong>{props.playerDeck?.deck.name ?? "—"}</strong>
+              <strong>{localizedDeckName(props.playerDeck?.deck, language) || "—"}</strong>
               <i aria-hidden="true">◆</i>
               <span>{t("setup.hostSide")}</span>
-              <strong>{props.hostDeck?.deck.name ?? "—"}</strong>
+              <strong>{localizedDeckName(props.hostDeck?.deck, language) || "—"}</strong>
             </div>
             <button className="expedition-begin" type="button" onClick={launchEncounter} disabled={props.launching}>
               <span>{t("setup.unleashChaos")}</span>
@@ -887,9 +889,9 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
               <FutureCode key={futureCode} code={futureCode} />
               <span className="preparation-frontispiece-rule" aria-hidden="true" />
               <div className="preparation-frontispiece-match" aria-live="polite">
-                <span>{props.playerDeck?.deck.name ?? "—"}</span>
+                <span>{localizedDeckName(props.playerDeck?.deck, language) || "—"}</span>
                 <small>VS</small>
-                <span>{props.hostDeck?.deck.name ?? "—"}</span>
+                <span>{localizedDeckName(props.hostDeck?.deck, language) || "—"}</span>
               </div>
               <div className={`preparation-frontispiece-center-fate is-${props.mode}`}>
                 <div className="preparation-frontispiece-modes" role="group" aria-label={t("setup.difficulty")}>
@@ -1002,7 +1004,7 @@ function PreparationCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onCh
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const keyCard = deck ? findDeckKeyCard(deck) : undefined;
-  const details = useDeckCardDetails(keyCard, deck?.images ?? { cards: {} });
+  const details = useDeckCardDetails(keyCard, deck?.images ?? { cards: {} }, language);
   const keyCardName = localizedCardName(keyCard, language);
   const deckTheme = deck?.presentation.theme ?? "ramp";
   const chooseLabel = t(side === "player" ? "common.chooseChronicle" : "common.chooseHost");
@@ -1016,14 +1018,14 @@ function PreparationCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onCh
         className={`preparation-frontispiece-card is-${side} ${drawerOpen ? "is-active" : ""}`}
         type="button"
         onClick={onChangeDeck}
-        aria-label={`${changeLabel}: ${deck?.deck.name ?? chooseLabel}`}
+        aria-label={`${changeLabel}: ${localizedDeckName(deck?.deck, language) || chooseLabel}`}
         aria-expanded={drawerOpen}
         aria-controls={`expedition-${side}-deck-drawer`}
         data-audio-click="valid"
       >
         <span className="preparation-frontispiece-card-art" key={`frontispiece-art-${deck?.id ?? "empty"}`}>
           {details.imageUrl ? (
-            <img src={details.imageUrl} alt={keyCardName || deck?.label} draggable={false} />
+            <img src={details.imageUrl} alt={keyCardName || localizedDeckName(deck?.deck, language)} draggable={false} />
           ) : (
             <span>{side === "player" ? <Shield size={42} /> : <Skull size={42} />}</span>
           )}
@@ -1128,7 +1130,7 @@ function SetupCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onChangeDe
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const keyCard = deck ? findDeckKeyCard(deck) : undefined;
-  const details = useDeckCardDetails(keyCard, deck?.images ?? { cards: {} });
+  const details = useDeckCardDetails(keyCard, deck?.images ?? { cards: {} }, language);
   const keyCardName = localizedCardName(keyCard, language);
   const deckTheme = deck?.presentation.theme ?? "ramp";
   return (
@@ -1152,12 +1154,12 @@ function SetupCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onChangeDe
       </div>
       <div className="expedition-deck-feature">
         <div className="expedition-deck-art" key={`setup-art-${deck?.id ?? "empty"}`}>
-          {details.imageUrl ? <img src={details.imageUrl} alt={keyCardName || deck?.label} draggable={false} /> : <span>{side === "player" ? <Shield size={35} /> : <Skull size={35} />}</span>}
+          {details.imageUrl ? <img src={details.imageUrl} alt={keyCardName || localizedDeckName(deck?.deck, language)} draggable={false} /> : <span>{side === "player" ? <Shield size={35} /> : <Skull size={35} />}</span>}
         </div>
         <div className="expedition-deck-copy">
           <small>{deck?.deck.deckSize ?? deck?.deck.cards.length ?? 0} {t("common.cards")}</small>
           <div className="expedition-deck-current" key={`setup-copy-${deck?.id ?? "empty"}`} aria-live="polite">
-            <h2>{deck?.deck.name ?? t("common.chooseDeck")}</h2>
+            <h2>{localizedDeckName(deck?.deck, language) || t("common.chooseDeck")}</h2>
             <p>{deck ? t(deck.presentation.descriptionKey) : ""}</p>
           </div>
         </div>
@@ -1177,6 +1179,7 @@ export function SetupDeckDrawer({ side, eyebrow, decks, selectedDeckId, onSelect
   onClose: () => void;
 }) {
   const t = useTranslation();
+  const language = useLanguageStore((state) => state.language);
   const isPresent = useIsPresent();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const titleId = `expedition-${side}-deck-drawer-title`;
@@ -1211,7 +1214,7 @@ export function SetupDeckDrawer({ side, eyebrow, decks, selectedDeckId, onSelect
             key={item.id}
             deck={item}
             selected={item.id === selectedDeckId}
-            actionLabel={`${chooseLabel}: ${item.deck.name}`}
+            actionLabel={`${chooseLabel}: ${localizedDeckName(item.deck, language)}`}
             onOpen={() => {
               onSelectDeck(item.id);
               onClose();

@@ -1,6 +1,7 @@
 import { ArrowLeft, Check } from "lucide-react";
 import { findDeckKeyCard, type InspectableDeck } from "../data/deckCatalog";
 import { localizedCardName } from "../i18n/cardLocalization";
+import { localizedDeckName } from "../i18n/deckLocalization";
 import { useTranslation } from "../i18n/useTranslation";
 import { useAudioStore } from "../store/useAudioStore";
 import { useLanguageStore } from "../store/useLanguageStore";
@@ -16,6 +17,7 @@ type Props = {
 
 export function DecksView({ collection, decks, onOpenDeck, onBack, closing = false }: Props) {
   const t = useTranslation();
+  const language = useLanguageStore((state) => state.language);
   const title = collection === "chronicles" ? t("menu.chronicles") : t("menu.hosts");
   const description = collection === "chronicles" ? t("decks.chroniclesDescription") : t("decks.hostsDescription");
 
@@ -33,7 +35,7 @@ export function DecksView({ collection, decks, onOpenDeck, onBack, closing = fal
             <DeckKeyCard
               key={deck.id}
               deck={deck}
-              actionLabel={`${t(collection === "chronicles" ? "common.viewChronicle" : "common.viewHost")}: ${deck.label}`}
+              actionLabel={`${t(collection === "chronicles" ? "common.viewChronicle" : "common.viewHost")}: ${localizedDeckName(deck.deck, language)}`}
               onOpen={() => onOpenDeck(deck.id)}
             />
           ))}
@@ -47,7 +49,7 @@ export function DeckKeyCard({ deck, onOpen, selected = false, actionLabel }: { d
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const keyCard = findDeckKeyCard(deck);
-  const details = useDeckCardDetails(keyCard, deck.images);
+  const details = useDeckCardDetails(keyCard, deck.images, language);
   const cardName = localizedCardName(keyCard, language);
   const playSfx = useAudioStore((state) => state.playSfx);
 
@@ -66,7 +68,7 @@ export function DeckKeyCard({ deck, onOpen, selected = false, actionLabel }: { d
       onFocus={(event) => {
         if (!event.currentTarget.matches(":hover")) playHoverSound();
       }}
-      aria-label={actionLabel ?? t("decks.open", { deck: deck.label })}
+      aria-label={actionLabel ?? t("decks.open", { deck: localizedDeckName(deck.deck, language) })}
       aria-pressed={selected || undefined}
     >
       <span className="deck-key-card-stage">
@@ -74,11 +76,11 @@ export function DeckKeyCard({ deck, onOpen, selected = false, actionLabel }: { d
         <span className="deck-key-card-depth deck-key-card-depth-mid" aria-hidden="true" />
         <span className="deck-key-card-face">
           {details.imageUrl ? (
-            <img src={details.imageUrl} alt={cardName || deck.label} draggable={false} />
+            <img src={details.imageUrl} alt={cardName || localizedDeckName(deck.deck, language)} draggable={false} />
           ) : (
             <span className="deck-key-card-fallback">
               <small>{t("decks.keyCard")}</small>
-              <strong>{cardName || deck.label}</strong>
+              <strong>{cardName || localizedDeckName(deck.deck, language)}</strong>
             </span>
           )}
           <span className="deck-key-card-sheen" aria-hidden="true" />
@@ -86,7 +88,7 @@ export function DeckKeyCard({ deck, onOpen, selected = false, actionLabel }: { d
         {selected && <span className="deck-key-card-selection" aria-hidden="true"><Check size={14} /></span>}
       </span>
       <span className="deck-key-card-copy">
-        <strong>{deck.deck.name}</strong>
+        <strong>{localizedDeckName(deck.deck, language)}</strong>
       </span>
     </button>
   );

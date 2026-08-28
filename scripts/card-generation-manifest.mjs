@@ -2,17 +2,21 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import {
+  DEFAULT_STUDIO_LANGUAGE,
   ROOT,
   STUDIO_DECKS,
   buildStudioCards,
   loadStudioConfig,
+  resolveStudioLanguage,
+  studioLanguagesForDeck,
+  studioRuntimeCardDirectory,
   studioSourceFiles,
   syncStudioData,
 } from "./card-studio-data.mjs";
 
 export const MANIFEST_PATH = path.join(ROOT, "dev", "tools", "Decks", "generation-manifest.json");
 export const EXPORTED_DECKS = Object.freeze(["pact_of_elarion", "uprising_of_the_graveless", "legion_of_varka", "court_of_the_crimson_eclipse"]);
-const MANIFEST_SCHEMA_VERSION = "1.0.0";
+const MANIFEST_SCHEMA_VERSION = "2.0.0";
 
 function relative(filePath) {
   return path.relative(ROOT, filePath).replaceAll(path.sep, "/");
@@ -37,12 +41,12 @@ function pngSize(filePath) {
   };
 }
 
-function deckOutputDirectory(deckId) {
+function deckOutputDirectory(deckId, language = DEFAULT_STUDIO_LANGUAGE) {
   const definition = STUDIO_DECKS[deckId];
   if (!definition || definition.previewOnly) {
     throw new Error(`${deckId} no es un estudio exportable.`);
   }
-  return path.join(ROOT, definition.publicDirectory);
+  return studioRuntimeCardDirectory(deckId, language);
 }
 
 function sourceRecords(deckId) {
@@ -59,9 +63,9 @@ function combinedInputHash(sources) {
   return sha256(fingerprint);
 }
 
-function expectedCardOutputs(deckId) {
-  const outputDirectory = deckOutputDirectory(deckId);
-  return buildStudioCards(deckId).map((card) => ({
+function expectedCardOutputs(deckId, language = DEFAULT_STUDIO_LANGUAGE) {
+  const outputDirectory = deckOutputDirectory(deckId, language);
+  return buildStudioCards(deckId, language).map((card) => ({
     id: card.id,
     filePath: path.join(outputDirectory, `${card.id}.png`),
   }));
@@ -69,7 +73,7 @@ function expectedCardOutputs(deckId) {
 
 export function recursiveArtSources(deckId) {
   const { paths } = loadStudioConfig(deckId);
-  const outputDirectory = path.resolve(deckOutputDirectory(deckId));
+  const outputDirectory = path.resolve(deckOutputDirectory(deckId, DEFAULT_STUDIO_LANGUAGE));
   return buildStudioCards(deckId)
     .map((card) => ({
       id: card.id,
@@ -94,16 +98,31 @@ function readManifest() {
     return { schemaVersion: MANIFEST_SCHEMA_VERSION, decks: {} };
   }
   const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf8"));
+  if (manifest.schemaVersion === "1.0.0" && manifest.decks) {
+    return {
+      schemaVersion: MANIFEST_SCHEMA_VERSION,
+      decks: Object.fromEntries(Object.entries(manifest.decks).map(([deckId, deck]) => [deckId, {
+        languages: {
+          [DEFAULT_STUDIO_LANGUAGE]: {
+            inputHash: deck.inputHash,
+            sources: deck.sources,
+            cards: deck.cards,
+          },
+        },
+      }])),
+    };
+  }
   if (manifest.schemaVersion !== MANIFEST_SCHEMA_VERSION || !manifest.decks) {
     throw new Error("dev/tools/Decks/generation-manifest.json tiene un schema no soportado.");
   }
   return manifest;
 }
 
-export function recordDeckGeneration(deckId) {
+export function recordDeckGeneration(deckId, requestedLanguage = DEFAULT_STUDIO_LANGUAGE) {
+  const language = resolveStudioLanguage(deckId, requestedLanguage);
   assertIndependentArtSources(deckId);
   const sources = sourceRecords(deckId);
-  const cards = expectedCardOutputs(deckId).map(({ id, filePath }) => {
+  const cards = expectedCardOutputs(deckId, language).map(({ id, filePath }) => {
     if (!fs.existsSync(filePath)) {
       throw new Error(`${deckId}: falta el PNG exportado ${relative(filePath)}.`);
     }
@@ -120,10 +139,21 @@ export function recordDeckGeneration(deckId) {
     };
   });
   const manifest = readManifest();
+  const previousLanguages = manifest.decks[deckId]?.languages ?? {};
+  const nextLanguages = {
+    ...previousLanguages,
+    [language]: {
+      inputHash: combinedInputHash(sources),
+      sources,
+      cards,
+    },
+  };
   manifest.decks[deckId] = {
-    inputHash: combinedInputHash(sources),
-    sources,
-    cards,
+    languages: Object.fromEntries(
+      studioLanguagesForDeck(deckId)
+        .filter((languageCode) => nextLanguages[languageCode])
+        .map((languageCode) => [languageCode, nextLanguages[languageCode]]),
+    ),
   };
   const orderedDecks = {};
   for (const id of EXPORTED_DECKS) {
@@ -133,7 +163,7 @@ export function recordDeckGeneration(deckId) {
     MANIFEST_PATH,
     `${JSON.stringify({ schemaVersion: MANIFEST_SCHEMA_VERSION, decks: orderedDecks }, null, 2)}\n`,
   );
-  return manifest.decks[deckId];
+  return manifest.decks[deckId].languages[language];
 }
 
 function topLevelPngs(directory) {
@@ -162,19 +192,10 @@ export function verifyGenerationManifest() {
 
   for (const deckId of EXPORTED_DECKS) {
     const deckIssues = [];
-    const outputDirectory = deckOutputDirectory(deckId);
-    const actualPngs = topLevelPngs(outputDirectory);
-    const expected = expectedCardOutputs(deckId);
-    const expectedPaths = new Set(expected.map(({ filePath }) => path.resolve(filePath)));
-    const untrackedOutputs = actualPngs.filter((filePath) => !expectedPaths.has(path.resolve(filePath)));
-    for (const filePath of untrackedOutputs) {
-      deckIssues.push({
-        deckId,
-        code: "unexpected-png",
-        file: relative(filePath),
-        message: "El PNG no corresponde a ninguna carta vigente del estudio.",
-      });
-    }
+    const allActualPngs = [];
+    const languageResults = {};
+    const sources = sourceRecords(deckId);
+    const currentInputHash = combinedInputHash(sources);
 
     const recursive = recursiveArtSources(deckId);
     for (const entry of recursive) {
@@ -186,29 +207,42 @@ export function verifyGenerationManifest() {
       });
     }
 
-    const recorded = manifest.decks?.[deckId];
-    if (!recorded) {
-      for (const filePath of actualPngs) {
+    const recordedDeck = manifest.decks?.[deckId];
+    for (const language of studioLanguagesForDeck(deckId)) {
+      const outputDirectory = deckOutputDirectory(deckId, language);
+      const actualPngs = topLevelPngs(outputDirectory);
+      const expected = expectedCardOutputs(deckId, language);
+      allActualPngs.push(...actualPngs);
+      const expectedPaths = new Set(expected.map(({ filePath }) => path.resolve(filePath)));
+      for (const filePath of actualPngs.filter((candidate) => !expectedPaths.has(path.resolve(candidate)))) {
         deckIssues.push({
           deckId,
-          code: "missing-deck-manifest",
+          code: "unexpected-png",
           file: relative(filePath),
-          message: "No existe una huella de generación para este PNG.",
+          message: `El PNG no corresponde a ninguna carta vigente del estudio en ${language}.`,
         });
       }
-    } else {
-      const sources = sourceRecords(deckId);
-      const currentInputHash = combinedInputHash(sources);
-      if (recorded.inputHash !== currentInputHash) {
+
+      const recorded = recordedDeck?.languages?.[language];
+      if (!recorded) {
+        for (const { filePath } of expected) {
+          deckIssues.push({
+            deckId,
+            code: "missing-language-manifest",
+            file: relative(filePath),
+            message: `No existe una huella de generación para el PNG ${language}.`,
+          });
+        }
+      } else if (recorded.inputHash !== currentInputHash) {
         deckIssues.push({
           deckId,
           code: "stale-input-hash",
           file: relative(MANIFEST_PATH),
-          message: "Las entradas del estudio cambiaron después de exportar sus PNG.",
+          message: `Las entradas del estudio cambiaron después de exportar sus PNG ${language}.`,
         });
       }
 
-      const recordedById = new Map((recorded.cards ?? []).map((card) => [card.id, card]));
+      const recordedById = new Map((recorded?.cards ?? []).map((card) => [card.id, card]));
       for (const { id, filePath } of expected) {
         const cardRecord = recordedById.get(id);
         if (!fs.existsSync(filePath)) {
@@ -229,16 +263,18 @@ export function verifyGenerationManifest() {
           deckIssues.push({ deckId, code: "png-hash-mismatch", file: relative(filePath), message: "El PNG no coincide con su huella registrada." });
         }
       }
+      languageResults[language] = { pngCount: actualPngs.length };
     }
 
     issues.push(...deckIssues);
-    const unverifiedPngs = actualPngs.filter((filePath) => {
+    const unverifiedPngs = allActualPngs.filter((filePath) => {
       const relativePath = relative(filePath);
       return deckIssues.some((issue) => issue.file === relativePath || issue.file === relative(MANIFEST_PATH));
     });
     deckResults[deckId] = {
       ok: deckIssues.length === 0,
-      pngCount: actualPngs.length,
+      pngCount: allActualPngs.length,
+      languages: languageResults,
       unverifiedPngs: unverifiedPngs.map(relative),
       issues: deckIssues,
     };

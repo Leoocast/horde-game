@@ -7,6 +7,7 @@ export function normalizeDeck(rawDeck: NewDeckList): DeckList {
   return {
     id: authoredDeck.id,
     name: authoredDeck.name,
+    displayNameEn: authoredDeck.displayNameEn,
     side: normalizeSide(authoredDeck.side),
     deckSize: authoredDeck.deckSize ?? authoredDeck.cards.reduce((total, card) => total + (card.quantity ?? 1), 0),
     gameplayLandCount: authoredDeck.gameplayLandCount,

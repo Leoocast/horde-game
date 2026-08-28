@@ -12,7 +12,7 @@ imágenes, `cardStudioGameArt.generated.json`, las fuentes usadas por `src/style
 
 La proyección actual contiene:
 
-- 61 PNG finales de cartas;
+- 122 PNG finales de cartas (61 en español y 61 en inglés);
 - 61 artes fuente usados por el recorte del campo;
 - 57 archivos de audio;
 - 6 fuentes WOFF2.
@@ -69,7 +69,7 @@ certificado y sus credenciales se inyectan sólo desde el entorno seguro de rele
 
 `electron:release:audit` falla deliberadamente mientras exista cualquiera de estos casos:
 
-- los 61 PNG no se hayan reexportado desde el Card Studio vigente;
+- los 122 PNG localizados no se hayan reexportado desde el Card Studio vigente;
 - queden sonidos `_NEED_REVIEW`;
 - falte el texto/licencia autoritativa de una dependencia distribuida;
 - falten icono o identidad de firma.

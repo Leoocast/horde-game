@@ -24,10 +24,11 @@ test("Electron development serves bundled fonts without copying public authoring
 
 test("Electron release staging is an exact generated allowlist", () => {
   const plan = collectRuntimeResourcePlan();
-  assert.equal(plan.length, 185);
+  assert.equal(plan.length, 246);
   assert.equal(plan.filter((entry) => entry.path.startsWith("audio/")).length, 57);
-  assert.equal(plan.filter((entry) => entry.path.startsWith("cards/")).length, 122);
-  assert.equal(plan.filter((entry) => entry.path.startsWith("cards/") && entry.path.endsWith(".png")).length, 61);
+  assert.equal(plan.filter((entry) => entry.path.startsWith("cards/")).length, 183);
+  assert.equal(plan.filter((entry) => entry.path.startsWith("cards/") && entry.path.endsWith(".png")).length, 122);
+  assert.equal(plan.filter((entry) => entry.path.startsWith("cards/") && entry.path.includes("/en/")).length, 61);
   assert.equal(plan.filter((entry) => entry.path.startsWith("cards/") && entry.path.includes("/art/")).length, 61);
   assert.equal(plan.filter((entry) => entry.path.startsWith("fonts/")).length, 6);
   assert.equal(plan.some((entry) => /hunters|exported-png|\.DS_Store/iu.test(entry.path)), false);
@@ -39,7 +40,7 @@ test("staged Electron resources match paths, hashes and category totals", () => 
   const manifest = verifyStaging();
   assert.deepEqual(manifest, created);
   assert.deepEqual(manifest.categories.audio.files, 57);
-  assert.deepEqual(manifest.categories.cards.files, 122);
+  assert.deepEqual(manifest.categories.cards.files, 183);
   assert.deepEqual(manifest.categories.fonts.files, 6);
   assert.ok(fs.statSync(stagingRoot).isDirectory());
 });

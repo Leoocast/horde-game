@@ -42,7 +42,8 @@ function LandFlight({ itemId, definitionId, name, origin, onComplete }: {
   origin?: { x: number; y: number };
   onComplete: () => void;
 }) {
-  const { imageUrl } = useCardDetails(definitionId);
+  const language = useLanguageStore((state) => state.language);
+  const { imageUrl } = useCardDetails(definitionId, language);
   const reduceMotion = useReducedMotion();
   const path = useMemo(() => readLandPlayPath(origin), [itemId, origin]);
   const deltaX = path.target.x - path.origin.x;

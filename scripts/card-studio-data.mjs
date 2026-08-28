@@ -102,6 +102,25 @@ export function resolveStudioLanguage(deckId, value = DEFAULT_STUDIO_LANGUAGE) {
   return language;
 }
 
+/** Public runtime directory for one printed-card language. The default stays at the deck root. */
+export function studioRuntimeCardDirectory(deckId, requestedLanguage = DEFAULT_STUDIO_LANGUAGE) {
+  const language = resolveStudioLanguage(deckId, requestedLanguage);
+  const { config, paths } = loadStudioConfig(deckId);
+  if (config.previewOnly || !config.runtimeDeck) {
+    throw new Error(`${deckId} no tiene cartas runtime exportables.`);
+  }
+  if (language === DEFAULT_STUDIO_LANGUAGE) return paths.publicDirectory;
+
+  const runtimePath = path.resolve(paths.directory, config.runtimeDeck);
+  const imageManifestPath = runtimePath.replace(/\.json$/u, "_images.json");
+  const imageManifest = readJson(imageManifestPath);
+  const directory = String(imageManifest.defaults?.localizedImageDirectories?.[language] ?? "").trim();
+  if (!/^[a-z0-9_-]+$/u.test(directory)) {
+    throw new Error(`${deckId}: falta un directorio runtime seguro para el idioma ${language}.`);
+  }
+  return path.join(paths.publicDirectory, directory);
+}
+
 function authoredEnergyAmount(card) {
   if (typeof card.energyCost === "number") return card.energyCost;
   if (card.energyCost && typeof card.energyCost === "object") {
