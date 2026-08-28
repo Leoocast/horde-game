@@ -208,7 +208,9 @@ function englishTypeLine(runtimeCard) {
   const subtypes = (runtimeCard.subtypes ?? []).join(" ");
   let type = "Card";
   if (kinds.includes("ECHO")) {
-    type = authoredIsChronicle(runtimeCard) ? "Chronicle Echo" : "Echo";
+    // CHRONICLE remains technical metadata for framing/full-art defaults. Chronicle is the
+    // Chronicler's deck, so the inherited modifier must never enter a visible card type line.
+    type = "Echo";
     if (authoredIsToken(runtimeCard)) type += " · Token";
   } else if (kinds.includes("SOURCE")) {
     type = "Source";

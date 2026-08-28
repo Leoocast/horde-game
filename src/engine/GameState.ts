@@ -104,7 +104,7 @@ export function createInitialGame(
   applyDeveloperStartingBattlefield(game);
   const openingHandSize = seed.trim().toLowerCase() === DEVELOPER_SEED ? DEVELOPER_OPENING_HAND.length + DEVELOPER_RANDOM_OPENING_CARDS : 7;
   drawCards(game, "player", openingHandSize);
-  game.log.unshift(`Game started with seed "${seed}". Player draws ${openingHandSize}. Setup turns: ${effectiveSetupTurns}. Mode: ${gameMode}.`);
+  game.log.unshift(`Vision begins. Chronicler draws ${openingHandSize} card(s). Preparation turns: ${effectiveSetupTurns}.`);
   return game;
 }
 
@@ -122,7 +122,7 @@ export function acceptOpeningHand(game: GameState): GameState {
   const next = structuredClone(game) as GameState;
   if (next.openingHandAccepted) return next;
   next.openingHandAccepted = true;
-  next.log.unshift(`Player keeps an opening hand of ${next.player.hand.length} card(s).`);
+  next.log.unshift(`Chronicler keeps an opening Hand of ${next.player.hand.length} card(s).`);
   return next;
 }
 
@@ -139,7 +139,7 @@ export function mulliganOpeningHand(game: GameState): GameState {
   next.player.archive = shuffled.items;
   drawCards(next, "player", nextHandSize);
   next.mulligansTaken += 1;
-  next.log.unshift(`Player takes mulligan ${next.mulligansTaken} and draws ${nextHandSize} card(s).`);
+  next.log.unshift(`Chronicler redraws the opening Hand for the ${next.mulligansTaken}${ordinalSuffix(next.mulligansTaken)} time and draws ${nextHandSize} card(s).`);
   return next;
 }
 
@@ -174,6 +174,15 @@ function applyDeveloperHostOpeningArchive(seed: string, archive: CardInstance[])
     [ordered[index], ordered[replacementIndex]] = [ordered[replacementIndex], ordered[index]];
   }
   return ordered;
+}
+
+function ordinalSuffix(value: number): string {
+  const modulo100 = value % 100;
+  if (modulo100 >= 11 && modulo100 <= 13) return "th";
+  if (value % 10 === 1) return "st";
+  if (value % 10 === 2) return "nd";
+  if (value % 10 === 3) return "rd";
+  return "th";
 }
 
 function applyDevwinHostArchive(seed: string, archive: CardInstance[]): CardInstance[] {

@@ -126,7 +126,7 @@ void main() {
 
   // El campo de deformación se advecta: las nubes se revuelven, no se deslizan.
   vec2 surgeFlow = vec2(uTime * 0.020, -uTime * 0.014) * (1.0 + uClimax * 0.8);
-  // Reescribir altera el mismo campo que acelera al llegar Surge, no mueve el canvas.
+  // Contemplar de nuevo altera el mismo campo que acelera al llegar Surge, no mueve el canvas.
   // Su flujo es más enérgico y espejado en X para que el cosmos cruce hacia la izquierda.
   vec2 destinyFlow = vec2(-uTime * 0.042, 0.0);
   vec2 flow = mix(surgeFlow, destinyFlow, uDestiny);

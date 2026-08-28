@@ -40,13 +40,13 @@ Estos documentos se conservan porque contienen decisiones o validaciones sin ter
 
 - [`plans/learn_to_play_tutorial.md`](plans/learn_to_play_tutorial.md) — documento vivo del nuevo
   onboarding **Aprender a jugar**; fija el primer corte hasta su derrota predeterminada y la
-  aparición de **Contemplar otro futuro**, y aplaza el handoff a una partida real preparada.
+  aparición de **Contemplar otro Futuro**, y aplaza el handoff a una Visión real de un Futuro preparado.
 - [`plans/learn_to_play_implementation_plan.md`](plans/learn_to_play_implementation_plan.md) —
   auditoría del framework, motor, producto y persistencia frente a ese flujo; las Fases 1 a 4 están
   implementadas hasta el comienzo de la primera Estampida y las fases posteriores siguen abiertas.
 - [`plans/guided_tutorial_system_plan.md`](plans/guided_tutorial_system_plan.md) — framework escalable
   de pausa, bloqueo, resaltado y explicación; sus fases están cerradas y la primera versión jugable
-  de la Primera Semilla se encuentra en QA e iteración pedagógica.
+  de **Preparación** —id técnico `first-seed`— se encuentra en QA e iteración pedagógica.
 - [`plans/generated_look_remediation_plan.md`](plans/generated_look_remediation_plan.md) — corrección
   de las señales visuales que hacen leer la UI como generada; no iniciado.
 - [`plans/seed_explorer_implementation_plan.md`](plans/seed_explorer_implementation_plan.md) — MVP
@@ -63,7 +63,7 @@ Estos documentos se conservan porque contienen decisiones o validaciones sin ter
   `CLAUDE.md`, `guides/testing.md` y `reference/animation_contracts.md`.
 - [`plans/seeds_of_destiny.md`](plans/seeds_of_destiny.md) y
   [`plans/seeds_of_destiny_history_implementation_plan.md`](plans/seeds_of_destiny_history_implementation_plan.md)
-  — identidad Canon, historial durable, relato factual y reescritura exacta cerrados como feature de
+  — identidad Canon, historial durable, relato factual y repetición determinista cerrados como feature de
   desarrollo el 2026-08-21; packaging y certificación se repetirán al congelar la demo.
 - [`plans/seeds_of_destiny_narrative_samples.md`](plans/seeds_of_destiny_narrative_samples.md) —
   muestras ES/EN que fijaron la voz aprobada y siguen siendo el artefacto de regresión del relato.

@@ -1693,7 +1693,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
       next.combat.playerAttackers = sortPlayerAttackersLeftToRight(next, [...selected]);
       selectedIds = [...next.combat.playerAttackers];
-      next.log.unshift(`Player attacks with ${next.combat.playerAttackers.length} creature(s).`);
+      next.log.unshift(`Chronicler attacks with ${next.combat.playerAttackers.length} Echo(es).`);
       if (next.combat.playerAttackers.length > game.combat.playerAttackers.length) useAudioStore.getState().playSfx("playLand");
       return { game: next };
     });
@@ -1709,7 +1709,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         if (attackers.has(card.instanceId) && !hasTrait(next, card, "ALERT")) card.exhausted = false;
       }
       next.combat.playerAttackers = [];
-      next.log.unshift("Player cancels attackers.");
+      next.log.unshift("Chronicler cancels the attack.");
       return { game: next, selectedPlayerCreatureId: undefined, playerAttackDrag: undefined };
     });
     publishGameplayReceipt({ kind: "attackers.cancelled", targetIds });

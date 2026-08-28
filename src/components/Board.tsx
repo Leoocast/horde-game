@@ -82,7 +82,7 @@ type Props = {
 
 const OUTCOME_PRESENTATION_SETTLE_TIMEOUT_MS = 6000;
 // No beat normal se acerca a este presupuesto. Es solamente una salida de emergencia para que un
-// token o callback defectuoso no deje la partida terminada bloqueada para siempre.
+// token o callback defectuoso no deje la Visión terminada bloqueada para siempre.
 const OUTCOME_DRAIN_WATCHDOG_MS = 15000;
 
 const subscribeToPresentationActivity = (listener: () => void) =>
@@ -131,7 +131,7 @@ async function waitForFiniteDocumentAnimations(
 }
 
 /** Todo trabajo de presentación observable desde Zustand que tiene un final automático. Los
- * estados que requieren input no entran aquí: con la partida terminada ya no pueden resolverse y
+ * estados que requieren input no entran aquí: con la Visión terminada ya no pueden resolverse y
  * la limpieza final los cierra justo antes de la captura.
  *
  * La barrera es común a los dos desenlaces: la derrota necesita drenarla para capturar el frame

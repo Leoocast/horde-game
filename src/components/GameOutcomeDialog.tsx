@@ -51,7 +51,7 @@ export function GameOutcomeDialog({ matchOrigin, tone, onRewriteFuture, onContem
           <span className="line">{t(preserved ? "destiny.futurePreservedLineTwo" : "destiny.futureLostLineTwo")}</span>
         </strong>
         <span className={`${tone}-subtitle`} id={descriptionId}>
-          {t(preserved ? "result.chapterEnduresInChronicle" : "result.chapterLostAmongShards")}
+          {t(preserved ? "result.visionPreservesFuture" : "result.visionLostAmongShards")}
         </span>
 
         <span className={`${tone}-future-plate`}>
@@ -67,11 +67,11 @@ export function GameOutcomeDialog({ matchOrigin, tone, onRewriteFuture, onContem
             className="hf-ui-button game-outcome-action game-outcome-action-secondary"
             onClick={onContemplateFuture}
           >
-            <span>{t("destiny.contemplateAnother")}</span>
+            <span>{t("destiny.seekAnotherFuture")}</span>
           </button>
           <DestinyActionButton
             className="game-outcome-rewrite-action"
-            label={t("destiny.rewriteThis")}
+            label={t("destiny.contemplateThisAgain")}
             onClick={onRewriteFuture}
           />
         </div>

@@ -275,11 +275,11 @@ function annotateLog(entries: string[], game: GameState, language: "en" | "es"):
     if (/^Host turn ends/i.test(text)) {
       entrySide = "host";
       side = "host";
-    } else if (/Player starts the turn/i.test(text)) {
+    } else if (/(?:Player|Chronicler) starts the turn/i.test(text)) {
       entrySide = "player";
       const setupTransition = entries[sourceIndex - 1]?.includes("Setup turn complete");
       side = setupTransition ? "player" : "host";
-    } else if (/^(Player ends turn|Setup complete)/i.test(text)) {
+    } else if (/^(?:(?:Player|Chronicler) ends the turn|Setup complete)/i.test(text)) {
       entrySide = "player";
       side = "player";
     } else if (/^Host readies/i.test(text)) {
@@ -288,7 +288,7 @@ function annotateLog(entries: string[], game: GameState, language: "en" | "es"):
     }
     const entryTurn = /^Host turn ends/i.test(text) ? turn - 1 : turn;
     const annotated = { text: canonicalizeLogText(text, language), sourceIndex, turn: Math.max(1, entryTurn), side: entrySide };
-    if (/Player starts the turn/i.test(text)) turn -= 1;
+    if (/(?:Player|Chronicler) starts the turn/i.test(text)) turn -= 1;
     return annotated;
   });
 }

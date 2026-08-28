@@ -5,11 +5,12 @@ import { test } from "node:test";
 
 import { DECK_REGISTRY } from "../src/data/decks";
 import { localizedTypeLine } from "../src/i18n/cardLocalization";
-import { traitVocabularyTooltip } from "../src/i18n/gameVocabulary";
-import { canonicalizeRulesText } from "../src/i18n/rulesText";
+import { IDENTITY_VOCABULARY, traitVocabularyTooltip } from "../src/i18n/gameVocabulary";
+import { canonicalizeLogText, canonicalizeRulesText } from "../src/i18n/rulesText";
 import { translate, translationValues } from "../src/i18n/translations";
 
 const LEGACY_VISIBLE_TERM = /(?:\b(?:horde|mana|lands?|creatures?|artifacts?|enchantments?|sorcer(?:y|ies)|instants?|librar(?:y|ies)|battlefields?|graveyards?|exile[ds]?|untap(?:ped|s|ping)?|tap(?:ped|s|ping)?|menace|reach|vigilance|deathtouch|first strike|skulk|trample|haste|lifesteal|toxic|mill(?:ed|s|ing)?|creates?)\b|\b(?:horda|maná|tierras?|criaturas?|artefactos?|encantamientos?|conjuros?|instantáneos?|bibliotecas?|cementerios?|exilio|amenaza|alcance|vigilancia|escurridizo|arrollar|prisa|tóxico|resistencia|crea|crear)\b|campo de batalla|toque mortal|dañar primero|robo de vida|mareo de invocación)/iu;
+const RETIRED_CONTINUITY_TERM = /\b(?:chapter|chapters|rewrite|rewrites|rewritten|rewriting|capítulo|capítulos|reescribir|reescribe|reescrito|reescrita|reescritura|reescrituras)\b/iu;
 
 function assertUsesHostfallVocabulary(text, context) {
   assert.doesNotMatch(text, LEGACY_VISIBLE_TERM, `${context}: ${text}`);
@@ -19,8 +20,62 @@ test("localized interface copy contains no retired public vocabulary", () => {
   for (const language of ["en", "es"]) {
     for (const value of translationValues(language)) {
       assertUsesHostfallVocabulary(value, `${language} translation`);
+      assert.doesNotMatch(value, RETIRED_CONTINUITY_TERM, `${language} continuity copy: ${value}`);
     }
   }
+});
+
+test("continuity identity has one explicit bilingual term per concept", () => {
+  assert.deepEqual(IDENTITY_VOCABULARY, {
+    CHRONICLER: { en: "Chronicler", es: "Cronista" },
+    CHRONICLE: { en: "Chronicle", es: "Crónica" },
+    HOST: { en: "Host", es: "Hueste" },
+    INSCRIPTION: { en: "Inscription", es: "Inscripción" },
+    FUTURE: { en: "Future", es: "Futuro" },
+    VISION: { en: "Vision", es: "Visión" },
+    SURGE: { en: "Surge", es: "Estampida" },
+  });
+  assert.equal("CHAPTER" in IDENTITY_VOCABULARY, false);
+});
+
+test("the public flow distinguishes Inscription, Future, Vision, Chronicle and Host", () => {
+  assert.equal(translate("en", "threshold.seedLabel"), "Inscription");
+  assert.equal(translate("es", "threshold.seedLabel"), "Inscripción");
+  assert.equal(translate("en", "setup.prepare"), "Prepare a Future");
+  assert.equal(translate("es", "setup.prepare"), "Preparar un Futuro");
+  assert.equal(translate("en", "setup.beginChronicle"), "Contemplate This Future");
+  assert.equal(translate("es", "setup.beginChronicle"), "Contemplar este Futuro");
+  assert.equal(translate("en", "destiny.contemplateThisAgain"), "Contemplate This Future Again");
+  assert.equal(translate("es", "destiny.contemplateThisAgain"), "Volver a contemplar este Futuro");
+  assert.equal(translate("en", "destiny.seekAnotherFuture"), "Seek Another Future");
+  assert.equal(translate("es", "destiny.seekAnotherFuture"), "Buscar otro Futuro");
+  assert.equal(translate("en", "seeds.threadLabel"), "Visions of this Future");
+  assert.equal(translate("es", "seeds.threadLabel"), "Visiones de este Futuro");
+  assert.equal(translate("en", "result.visionPreservesFuture"), "This Vision preserved the Future");
+  assert.equal(translate("es", "result.visionPreservesFuture"), "Esta Visión preservó el Futuro");
+  assert.equal(translate("en", "setup.chronicleSide"), "Chronicle");
+  assert.equal(translate("es", "setup.chronicleSide"), "Crónica");
+  assert.equal(translate("en", "setup.playerSide"), "Chronicler");
+  assert.equal(translate("es", "setup.playerSide"), "Cronista");
+  assert.equal(translate("en", "setup.hostSide"), "Host");
+  assert.equal(translate("es", "setup.hostSide"), "Hueste");
+});
+
+test("the Vision Record localizes its continuity terms", () => {
+  const opening = "Vision begins. Chronicler draws 7 card(s). Preparation turns: 3.";
+  const redraw = "Chronicler redraws the opening Hand for the 2nd time and draws 5 card(s).";
+  const hostVolley = "Host attack volley deals 3 damage to the Chronicler.";
+  assert.equal(canonicalizeLogText(opening, "en"), opening);
+  assert.equal(canonicalizeLogText(opening, "es"), "La Visión comienza. El Cronista roba 7 carta(s). Turnos de Preparación: 3.");
+  assert.equal(canonicalizeLogText(redraw, "es"), "El Cronista vuelve a robar la Mano inicial por 2.ª vez y roba 5 carta(s).");
+  assert.equal(canonicalizeLogText(hostVolley, "es"), "La descarga del ataque de la Hueste hace 3 de daño al Cronista.");
+});
+
+test("deprecated Chaos keeps its existing copy outside the continuity homologation", () => {
+  assert.equal(translate("en", "setup.prepareChaosAria"), "Prepare Chaos battle");
+  assert.equal(translate("es", "setup.prepareChaosAria"), "Preparar batalla de Caos");
+  assert.equal(translate("en", "encounter.chaos"), "The chronicle fractures");
+  assert.equal(translate("es", "encounter.chaos"), "La crónica se fractura");
 });
 
 test("the in-game Host counter uses the compact side label", () => {

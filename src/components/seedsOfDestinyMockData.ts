@@ -201,8 +201,8 @@ export const SEEDS_OF_DESTINY_FIXTURE: readonly SeedFutureFixture[] = [
         verdict: "defeat",
         turn: 9,
         body: {
-          es: "La reescritura más larga. Maela sostuvo las alturas cuatro turnos y el Archivo de la Hueste bajó hasta cinco cartas antes de que la última Estampida cerrara la historia.",
-          en: "The longest rewrite. Maela held the heights for four turns and the Host Archive dropped to five cards before the last Surge closed the story.",
+          es: "La Visión más larga. Maela sostuvo las alturas cuatro turnos y el Archivo de la Hueste bajó hasta cinco cartas antes de que la última Estampida cerrara la historia.",
+          en: "The longest Vision. Maela held the heights for four turns and the Host Archive dropped to five cards before the last Surge closed the story.",
         },
         marks: [
           {
@@ -253,8 +253,8 @@ export const SEEDS_OF_DESTINY_FIXTURE: readonly SeedFutureFixture[] = [
         verdict: "defeat",
         turn: 4,
         body: {
-          es: "La caída más rápida del Archivo. La Mano no llegó a nada: tres Hechizos y una sola Fuente.",
-          en: "The fastest fall in the Archive. The Hand came to nothing: three Spells and a single Source.",
+          es: "La caída más rápida entre estas Visiones. La Mano no llegó a nada: tres Hechizos y una sola Fuente.",
+          en: "The fastest fall among these Visions. The Hand came to nothing: three Spells and a single Source.",
         },
         marks: [
           {
@@ -315,8 +315,8 @@ export const SEEDS_OF_DESTINY_FIXTURE: readonly SeedFutureFixture[] = [
         verdict: "victory",
         turn: 12,
         body: {
-          es: "La partida más larga del Archivo. El Duelista del Eclipse aguantó la Estabilización y desde el turno 6 la Corte no volvió a perder un intercambio.",
-          en: "The longest game in the Archive. The Duelist of the Eclipse held through Stabilizing and from turn 6 the Court never lost another exchange.",
+          es: "La Visión más larga de las Semillas del Destino. El Duelista del Eclipse aguantó la Estabilización y desde el turno 6 la Corte no volvió a perder un intercambio.",
+          en: "The longest Vision in Seeds of Destiny. The Duelist of the Eclipse held through Stabilizing and from turn 6 the Court never lost another exchange.",
         },
         marks: [
           {
@@ -341,8 +341,8 @@ export const SEEDS_OF_DESTINY_FIXTURE: readonly SeedFutureFixture[] = [
         verdict: "defeat",
         turn: 5,
         body: {
-          es: "Un futuro apenas contemplado. La Hueste reveló dos Ecos con Volar y la Corte no tenía con qué alcanzarlos.",
-          en: "A future barely contemplated. The Host revealed two Echoes with Flying and the Court had nothing that could reach them.",
+          es: "Un Futuro apenas contemplado. La Hueste reveló dos Ecos con Volar y la Corte no tenía con qué alcanzarlos.",
+          en: "A Future barely contemplated. The Host revealed two Echoes with Flying and the Court had nothing that could reach them.",
         },
         marks: [
           {

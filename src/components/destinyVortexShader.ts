@@ -7,7 +7,7 @@
  * segundo contexto WebGL: dibuja por `renderSharedVfxFrame` como el resto de los efectos.
  *
  * El reloj llega en dos tiempos separados, `uCollapse` y `uBurst`, para que el componente conserve
- * el contrato de la transición: cubrir la escena, reescribir y sólo entonces liberar.
+ * el contrato de la transición: cubrir la escena, abrir la nueva Visión y sólo entonces liberar.
  */
 
 /** Radio del horizonte a escala plena, en fracción del lado menor del viewport. */

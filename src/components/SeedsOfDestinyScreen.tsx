@@ -35,9 +35,6 @@ type Props = Readonly<{
 const ATTEMPT_LABEL_KEYS = [
   "seeds.attemptFirst",
   "seeds.attemptSecond",
-  "seeds.attemptThird",
-  "seeds.attemptFourth",
-  "seeds.attemptFifth",
 ] as const satisfies readonly TranslationKey[];
 
 const DIFFICULTY_KEYS = {
@@ -341,7 +338,7 @@ function SeedFuturePage({
           disabled={!future.replayOrigin}
           onClick={() => future.replayOrigin && onReplay(future.replayOrigin)}
         >
-          <strong>{t("destiny.rewriteThis")}</strong>
+          <strong>{t("destiny.contemplateThisAgain")}</strong>
         </button>
       </footer>
     </div>
@@ -481,7 +478,7 @@ function sealPhrase(
   if (future.status === "preserved") {
     const victory = future.attempts.find((attempt) => attempt.status === "victory");
     if (!victory || victory.ordinal === 1) return t("seeds.sealPreservedFirst");
-    return t("seeds.sealPreservedOn", { label: attemptLabel(victory.ordinal, t).toLocaleLowerCase() });
+    return t("seeds.sealPreservedOn", { label: attemptLabel(victory.ordinal, t) });
   }
   if (future.status === "interrupted") {
     return t(future.attempts.length === 1 ? "seeds.sealInterruptedOnce" : "seeds.sealInterruptedMany", {

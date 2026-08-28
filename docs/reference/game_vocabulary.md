@@ -1,6 +1,6 @@
 # Hostfall: vocabulario canónico
 
-Estado: **vigente, versión 1.0**.
+Estado: **vigente, versión 1.1**.
 
 Este documento define el lenguaje de reglas y la identidad que usa el producto. La fuente técnica
 de ids vive en `src/engine/hostfallVocabulary.ts` y `src/engine/hostfallZones.ts`; la presentación
@@ -22,18 +22,21 @@ La revisión de licencias necesaria para una publicación comercial es un trabaj
 Hostfall no usa Palabras de habilidad actualmente. Una etiqueta temática futura no puede aportar
 reglas por sí misma.
 
-## Identidad
+## Identidad y continuidad
 
 | Concepto | English | Español |
 | --- | --- | --- |
 | Persona jugadora | Chronicler | Cronista |
 | Deck del jugador | Chronicle | Crónica |
-| Enemigo automatizado | Host | Hueste |
-| Partida | Chapter | Capítulo |
+| Fuerza enemiga automatizada | Host | Hueste |
+| Código Canon público y compartible | Inscription | Inscripción |
+| Escenario determinista persistente | Future | Futuro |
+| Partida o intento individual | Vision | Visión |
+| Iniciar una Visión | Contemplate | Contemplar |
 | Escalada enemiga | Surge | Estampida |
 
-Una Crónica es un registro incompleto de un episodio. Sus cartas son fragmentos de memoria con los
-que el Cronista reconstruye un Capítulo:
+Una **Crónica** es siempre el deck del jugador. Sus cartas son fragmentos de memoria con los que el
+Cronista afronta una Visión:
 
 - un Eco da forma a una persona o criatura;
 - el Archivo contiene fragmentos aún no recordados;
@@ -42,8 +45,64 @@ que el Cronista reconstruye un Capítulo:
 - el Olvido contiene fragmentos separados de la reconstrucción;
 - Estabilizándose representa el tiempo que necesita un Eco recién Invocado para actuar.
 
-`Carta`, `deck` y `mazo` siguen siendo términos genéricos válidos fuera de una partida. Dentro de un
-Capítulo se usa `Archivo` para la pila de cartas.
+`Carta`, `deck` y `mazo` siguen siendo términos genéricos válidos fuera de una Visión. Dentro de una
+Visión se usa `Archivo` para la pila de cartas.
+
+Una **Inscripción** es el código `HF1-PPP-HHH-XXD-XXX` completo que el producto permite copiar,
+compartir e importar. Es la presentación player-facing de una `CanonSeed`; no es el número corto del
+Futuro ni la entropía que recibe el engine. Las seeds opacas o técnicas no son Inscripciones y no
+ofrecen copia pública.
+
+Un **Futuro** es un escenario determinista persistente: reúne la Inscripción u origen compatible,
+Crónica, Hueste, dificultad, Preparación, modo y revisiones necesarias para reproducirlo. La etiqueta
+`Futuro NNN·NNN` es sólo su nombre cosmético; puede colisionar y nunca sustituye la Inscripción o la
+identidad persistida.
+
+Una **Visión** es cada partida o intento individual de un Futuro. Varias Visiones pueden partir del
+mismo Futuro y terminar en victoria, derrota o interrupción distintas. Una victoria es una Visión
+que preserva el Futuro; una derrota es una Visión perdida; una interrupción, una Visión interrumpida.
+Los estados agregados pueden marcar el Futuro como preservado cuando contiene una victoria, pero
+nunca presentarlo como un «Futuro perdido».
+
+**Contemplar** crea una Visión. Se contempla un Futuro por primera vez o de nuevo desde su mismo
+origen; preparar o buscar otro Futuro todavía no es contemplarlo. `Chapter` / `Capítulo` y
+`Rewrite` / `Reescribir` quedan retirados del lenguaje player-facing. Sus nombres pueden sobrevivir
+en ids, schemas, componentes o documentos históricos, pero la UI no los usa como sinónimos de
+Visión o Contemplar. Una acción de mulligan debe describirse como cambiar la Mano, no como
+reescribirla.
+
+**Battle** / **Batalla** designa exclusivamente la fase de combate. No es sinónimo de Visión,
+partida, encuentro completo ni Hueste.
+
+**Seeds of Destiny** / **Semillas del Destino** es el nombre propio de la colección de Futuros y sus
+Visiones. No se llama `Archive` / `Archivo`: Archivo queda reservado a la zona de cartas. El singular
+`Seed of Destiny` / `Semilla del Destino` no nombra ningún objeto player-facing; `seed`, `CanonSeed`,
+`rngSeed` y nombres semejantes permanecen como vocabulario técnico.
+
+Este contrato rige el producto standard. Chaos está deprecated: conserva su copy, ids y contratos
+técnicos hasta que se retire, pero no sirve como precedente para nombrar superficies nuevas.
+
+### Copy de continuidad
+
+Las superficies nuevas y las homologaciones usan estas formas; no introducen sinónimos narrativos
+para los mismos objetos:
+
+| Uso | English | Español |
+| --- | --- | --- |
+| Abrir el ingreso de un HF1 | Enter an Inscription | Introducir una Inscripción |
+| Copiar el HF1 | Copy Inscription | Copiar Inscripción |
+| Configurar un escenario nuevo | Prepare a Future | Preparar un Futuro |
+| Empezar la primera Visión | Contemplate this Future | Contemplar este Futuro |
+| Empezar otra Visión del mismo Futuro | Contemplate again | Contemplar de nuevo |
+| Ir a preparar otro escenario | Seek another Future | Buscar otro Futuro |
+| Partida activa | Vision in progress | Visión en curso |
+| Resultado de derrota | Lost Vision | Visión perdida |
+| Resultado de victoria | Future Preserved | Futuro preservado |
+| Lista de partidas de un Futuro | Visions | Visiones |
+
+**Seek another Future / Buscar otro Futuro** sólo navega a Preparación. Si una ruta crea la Visión
+directamente —por ejemplo, al confirmar una Inscripción ya completa— su CTA sí usa **Contemplate /
+Contemplar**.
 
 ## Zonas
 
@@ -72,8 +131,10 @@ Modificadores:
 
 - `QUICK` / Rápido modifica un Hechizo y enumera sus ventanas reales: Principal, Batalla y
   Defender. Hostfall no promete pila ni prioridad libre.
-- `CHRONICLE` convierte la línea visible en `Chronicle Echo / Eco de Crónica`. Es una distinción
-  narrativa y visual; no limita copias ni añade una regla de unicidad.
+- `CHRONICLE` es un id técnico heredado usado por datos y herramientas; puede aparecer en cartas de
+  cualquier bando y no aporta reglas, unicidad ni pertenencia a la Crónica del jugador. No se traduce
+  ni se muestra como `Chronicle Echo / Eco de Crónica`: **Chronicle / Crónica** queda reservado al
+  deck del jugador.
 
 Los subtipos como Vampiro, Druida, Zombi o Trasgo son lore y filtros, no tipos de carta.
 

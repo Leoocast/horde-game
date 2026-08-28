@@ -23,7 +23,7 @@ export function LearnToPlayDefeatOutcomeDialog({ narrativeOpen, narrativeAcknowl
           <span className="line">{t("destiny.futureLostLineTwo")}</span>
         </strong>
         <span className="defeat-subtitle" id="learn-to-play-defeat-description">
-          {t("result.chapterLostAmongShards")}
+          {t("result.visionLostAmongShards")}
         </span>
 
         {narrativeAcknowledged && (

@@ -96,7 +96,7 @@ export function EncounterTransition({ chronicleDeckId, hostDeckId, gameMode, car
         <div className="encounter-transition-matchup">
           <div className="encounter-transition-combatant encounter-transition-combatant-player">
             <div className={`encounter-transition-side encounter-transition-side-player deck-theme-${chronicleDeck.presentation.theme}`}>
-              <span className="encounter-transition-eyebrow"><Shield size={12} />{t("setup.playerSide")}</span>
+              <span className="encounter-transition-eyebrow"><Shield size={12} />{t(gameMode === "chaos" ? "setup.playerSide" : "setup.chronicleSide")}</span>
               <strong className="encounter-transition-name encounter-transition-name-player">{chronicleDeck.deck.name}</strong>
             </div>
             <EncounterArt deck={chronicleDeck} side="player" imageUrl={chronicleDetails.imageUrl} artRef={playerTargetRef} />

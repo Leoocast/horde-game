@@ -111,7 +111,7 @@ export function finishHostTurn(game: GameState): GameState {
   readySide(next, "host");
   const releasedEnergy = releasePendingStoredEnergy(next);
   startPlayerTurnReady(next);
-  if (releasedEnergy > 0) next.log.unshift(`Player gains ${releasedEnergy} Stored Energy.`);
+  if (releasedEnergy > 0) next.log.unshift(`Chronicler gains ${releasedEnergy} Stored Energy.`);
   next.log.unshift("Host turn ends.");
   return next;
 }

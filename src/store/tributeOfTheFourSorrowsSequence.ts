@@ -94,7 +94,7 @@ function beginTributeOfTheFourSorrowsPlayerRound(resetEpoch: number): void {
     useGameStore.setState((state) => {
       const next = structuredClone(state.game) as GameState;
       losePlayerLife(next, 1, card?.instanceId);
-      next.log.unshift("Player loses 1 life.");
+      next.log.unshift("Chronicler loses 1 Life.");
       return { game: next, lifeDamageAnimationId: Date.now() };
     });
     if (useGameStore.getState().game.winner === "host") {

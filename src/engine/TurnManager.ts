@@ -74,13 +74,13 @@ export function startPlayerTurnReady(game: GameState): void {
   readySide(game, "player");
   performPlayerDraw(game);
   game.phase = "main";
-  game.log.unshift("Player starts the turn, readies their Field, and draws.");
+  game.log.unshift("Chronicler starts the turn, readies their Field, and draws.");
 }
 
 export function performPlayerDraw(game: GameState): void {
   const forecast = playerDrawForecast(game);
   drawCards(game, "player", forecast.amount);
-  game.log.unshift(`Player draws ${forecast.amount} card${forecast.amount === 1 ? "" : "s"}.`);
+  game.log.unshift(`Chronicler draws ${forecast.amount} card${forecast.amount === 1 ? "" : "s"}.`);
 }
 
 /**

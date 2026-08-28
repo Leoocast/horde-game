@@ -30,7 +30,12 @@ export function DecksView({ collection, decks, onOpenDeck, onBack, closing = fal
       <div className="decks-content decks-content-single">
         <div className="decks-card-row">
           {decks.map((deck) => (
-            <DeckKeyCard key={deck.id} deck={deck} onOpen={() => onOpenDeck(deck.id)} />
+            <DeckKeyCard
+              key={deck.id}
+              deck={deck}
+              actionLabel={`${t(collection === "chronicles" ? "common.viewChronicle" : "common.viewHost")}: ${deck.label}`}
+              onOpen={() => onOpenDeck(deck.id)}
+            />
           ))}
         </div>
       </div>

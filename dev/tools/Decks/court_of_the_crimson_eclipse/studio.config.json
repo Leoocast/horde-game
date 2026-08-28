@@ -95,7 +95,7 @@
     {
       "id": "mirevna_countess_of_the_crimson_eclipse",
       "artCrop": "../../../../public/cards/court_of_the_crimson_eclipse/art/mirevna_countess_of_the_crimson_eclipse.jpg",
-      "typeLineEs": "Eco de Crónica — Vampiro Noble",
+      "typeLineEs": "Eco — Vampiro Noble",
       "traitPlacement": "after-first-rule",
       "groupTraits": true,
       "artFrame": {

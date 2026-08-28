@@ -395,7 +395,7 @@ test("Furtive compares defenders against the attacker's current buffed Power", (
 });
 
 test("Hostfall card kinds, modifiers and authored rules render through the public vocabulary", () => {
-  assert.equal(localizedTypeLine({ kinds: ["ECHO"], modifiers: ["CHRONICLE"], subtypes: ["Vampire", "Noble"] }, "en"), "Echo · Chronicle — Vampire Noble");
+  assert.equal(localizedTypeLine({ kinds: ["ECHO"], modifiers: ["CHRONICLE"], subtypes: ["Vampire", "Noble"] }, "en"), "Echo — Vampire Noble");
   assert.equal(localizedTypeLine({ kinds: ["SPELL"], modifiers: ["QUICK"], subtypes: [] }, "es"), "Hechizo · Rápido");
   assert.equal(
     canonicalizeRulesText("When this creature enters, Host creatures gain Menace until end of turn.", "en"),

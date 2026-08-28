@@ -183,8 +183,8 @@ export function SettingsMenu({
               </div>
 
               {!guided && <section className="game-settings-log hf-ui-panel-soft flex min-h-[430px] flex-col p-5">
-                <div className="game-settings-chronicle-title">Chronicle</div>
-                <p>Every action recorded during this battle.</p>
+                <div className="game-settings-chronicle-title">{t("settings.visionRecordTitle")}</div>
+                <p>{t("settings.visionRecordDescription")}</p>
                 <GameLog game={game} variant="embedded" className="mt-4 min-h-0 flex-1" />
               </section>}
             </div>

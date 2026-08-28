@@ -15,6 +15,7 @@ import { TemporalBackdrop } from "./TemporalBackdrop";
 type Props = {
   deck: InspectableDeck;
   backLabel: string;
+  useGenericDeckVocabulary?: boolean;
   onBack: () => void;
 };
 
@@ -30,8 +31,11 @@ const DEFAULT_DECK_COLUMNS = DECK_COLUMN_OPTIONS[0];
 const DECK_COLUMNS_STORAGE_KEY = "hostfall-deck-inspector-columns:v2";
 const ENABLE_DECK_CARD_PREVIEW = false;
 
-export function DeckInspector({ deck, backLabel, onBack }: Props) {
+export function DeckInspector({ deck, backLabel, useGenericDeckVocabulary = false, onBack }: Props) {
   const t = useTranslation();
+  const searchAria = useGenericDeckVocabulary
+    ? t("deck.searchAria")
+    : t(deck.deck.side === "host" ? "deck.searchHostAria" : "deck.searchChronicleAria");
   const allCards = useMemo(() => uniqueCards([...(deck.deck.tokens ?? []), ...deck.deck.cards]), [deck]);
   const [searchQuery, setSearchQuery] = useState("");
   const cards = useMemo(() => {
@@ -102,7 +106,7 @@ export function DeckInspector({ deck, backLabel, onBack }: Props) {
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder={t("deck.searchPlaceholder")}
-              aria-label={t("deck.searchAria")}
+              aria-label={searchAria}
             />
             {searchQuery && (
               <button type="button" onClick={() => setSearchQuery("")} title={t("deck.clearSearch")} aria-label={t("deck.clearSearch")}>

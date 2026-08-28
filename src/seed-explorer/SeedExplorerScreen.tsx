@@ -447,7 +447,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
             <section className="seed-explorer-group">
               <GroupHeading title="Perfil buscado" note="V1" />
               <SelectControl
-                label="Tipo de futuro"
+                label="Tipo de Futuro"
                 value={configuration.profileId}
                 options={SEARCH_PROFILE_OPTIONS}
                 onChange={(profileId) => updateConfiguration({
@@ -579,7 +579,7 @@ export function SeedExplorerScreen({ onReturnToMenu }: SeedExplorerScreenProps) 
             {visibleCandidates.length === 0 ? (
               <div className="seed-explorer-empty">
                 {resultTab === "favorites"
-                  ? "Todavía no guardaste ningún futuro."
+                  ? "Todavía no guardaste ningún Futuro."
                   : "Configura la búsqueda y enumera futuros para ver candidatas."}
               </div>
             ) : visibleCandidates.map((candidate, index) => (
@@ -718,7 +718,7 @@ function CandidateInspector({
           <button
             className={`seed-explorer-favorite ${favorite ? "is-active" : ""}`}
             type="button"
-            aria-label={favorite ? "Quitar futuro de guardados" : "Guardar futuro"}
+            aria-label={favorite ? "Quitar Futuro de guardados" : "Guardar Futuro"}
             onClick={onToggleFavorite}
           >
             <Star size={18} fill={favorite ? "currentColor" : "none"} />
@@ -1033,7 +1033,7 @@ function SeedDetailsModal({
             <button
               className={`seed-explorer-favorite ${favorite ? "is-active" : ""}`}
               type="button"
-              aria-label={favorite ? "Quitar futuro de guardados" : "Guardar futuro"}
+              aria-label={favorite ? "Quitar Futuro de guardados" : "Guardar Futuro"}
               onClick={onToggleFavorite}
             >
               <Star size={18} fill={favorite ? "currentColor" : "none"} />

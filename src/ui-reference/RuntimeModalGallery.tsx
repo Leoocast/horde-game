@@ -57,7 +57,7 @@ const MODAL_SPECIMENS: readonly ModalSpecimen[] = [
   { id: "chronicler-name", entryId: "chronicler-name-modal", label: "Nombre del Cronista", variant: "Primer ingreso y edición" },
   { id: "deck-drawer", entryId: "setup-deck-drawer", label: "Selector lateral", variant: "Crónica y Hueste" },
   { id: "settings", entryId: "settings-menu-modal", label: "Ajustes", variant: "Normal, tutorial y recorrido" },
-  { id: "destiny", entryId: "destiny-rewrite-dialog", label: "Reescribir Futuro", variant: "Decisión de Destino" },
+  { id: "destiny", entryId: "destiny-rewrite-dialog", label: "Contemplar de nuevo", variant: "Decisión de Destino" },
   { id: "confirmation", entryId: "game-confirmation-dialog", label: "Confirmación", variant: "Salir, interrumpir o reiniciar" },
   { id: "opening-hand", entryId: "opening-hand", label: "Mano inicial", variant: "Aceptar o cambiar" },
   { id: "hand-limit", entryId: "hand-limit-modal", label: "Límite de Mano", variant: "Descarte obligatorio" },

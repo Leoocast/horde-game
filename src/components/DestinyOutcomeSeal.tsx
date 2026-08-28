@@ -118,8 +118,8 @@ function moteStyle(index: number, signature: number): MoteStyle {
 }
 
 /**
- * Sello final de una Semilla del Destino. No decide el resultado: sólo presenta el que ya fijó el
- * engine. La firma de la seed orienta runas y materia para que el mismo Futuro conserve su marca.
+ * Sello final del desenlace de una Visión. No decide el resultado: sólo presenta el que ya fijó el
+ * engine. La firma de la seed técnica orienta runas y materia para que el mismo Futuro conserve su marca.
  */
 export function DestinyOutcomeSeal({ outcome, seed }: Props) {
   const playSfx = useAudioStore((state) => state.playSfx);

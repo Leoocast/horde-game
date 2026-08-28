@@ -4340,7 +4340,7 @@
     margin-top: 0;
   }
 
-  /* Cada tutorial es un capítulo del mismo libro, no una fila de Ajustes. La numeración sustituye
+  /* Cada tutorial es una entrada del mismo libro, no una fila de Ajustes. La numeración sustituye
      los pictogramas genéricos y deja que el título sea la identidad de la opción. */
   .how-to-play-chapter {
     --chapter-accent: #c6a75f;
@@ -22913,7 +22913,7 @@ body:has(.guided-tutorial-overlay:not([data-card-preview-visible="true"])) [data
   animation: destiny-command-shimmer 900ms ease-out both;
 }
 
-/* Reescribir no trae otro cielo al tablero: retira sus piezas y deja al descubierto el
+/* Contemplar de nuevo no trae otro cielo al tablero: retira sus piezas y deja al descubierto el
    TemporalBackdrop vivo. Su entrada toma el pulso atmosférico de Surge, pero lo invierte
    hacia la izquierda y sustituye el rojo por una veladura dorada. */
 body.is-destiny-dialog-open .game-screen > *:not(:where(.temporal-backdrop, .game-screen-ambience, .game-command-bar)) {
@@ -23520,7 +23520,7 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
   text-shadow: 0 0 12px rgb(159 100 62 / 0.36);
 }
 
-/* Copiar identidad vive en el canto de la placa: la placa se lee igual y el gesto sigue a mano. */
+/* Copiar Inscripción vive en el canto de la placa: la placa se lee igual y el gesto sigue a mano. */
 .defeat-future-plate button {
   position: absolute;
   right: 8px;
@@ -23805,7 +23805,7 @@ body.is-defeat-plated .temporal-backdrop-grid { visibility: hidden; }
    donde va a encenderse la figura y no puede irse con el HUD.
    La regla de `body` alcanza los portales —la Reserva, los tooltips y el registro cuelgan de ahí,
    fuera de `.game-screen`— sin enumerar sus clases una por una. Los avisos quedan fuera: copiar
-   la identidad del Futuro tiene que poder confirmarse.
+   la Inscripción tiene que poder confirmarse.
    Las exclusiones van en `:where()` para que no sumen especificidad: así las salidas dirigidas de
    abajo empatan con este fundido genérico y ganan por orden en vez de por peso. */
 body.is-victory-clearing > *:not(:where(#root, .toast-stack)),
@@ -24031,7 +24031,7 @@ body.is-victory-clearing .game-battlefield-stage {
   text-shadow: 0 0 12px rgb(220 185 94 / 0.42);
 }
 
-/* Copiar identidad vive en el canto de la placa, igual que en la derrota. */
+/* Copiar Inscripción vive en el canto de la placa, igual que en la derrota. */
 .victory-future-plate button {
   position: absolute;
   right: 8px;
@@ -24073,7 +24073,7 @@ body.is-victory-clearing .game-battlefield-stage {
 
 .game-result-victory .game-result-action svg { flex: 0 0 auto; }
 
-/* Los cuatro terminan en `visibility: hidden`, y no es cosmético: al Reescribir, la succión del
+/* Los cuatro terminan en `visibility: hidden`, y no es cosmético: al Contemplar de nuevo, la succión del
    vórtice anima `transform` y `opacity` sobre cada pieza de la escena con la API de animaciones,
    que gana a estas reglas y devolvería el tablero ya retirado a la vista. `visibility` no está
    entre las propiedades que anima, así que lo retirado sigue retirado. Se interpola en escalón:
@@ -24892,8 +24892,8 @@ body.is-victory-clearing .game-battlefield-stage {
   font: italic 13px/1.45 "Lora", Georgia, serif;
 }
 
-/* La semilla no se imprime: el Futuro es el nombre visible y Copiar identidad
-   sigue copiando la semilla completa. */
+/* La seed técnica no se imprime: el Futuro es el nombre visible y Copiar Inscripción
+   sigue copiando el HF1 completo. */
 .seeds-duel-copy { margin-top: 14px; }
 
 .seeds-copy-chip {
@@ -24914,7 +24914,7 @@ body.is-victory-clearing .game-battlefield-stage {
 .seeds-copy-chip:hover,
 .seeds-copy-chip:focus-visible { border-color: rgb(214 192 122 / 0.7); color: var(--seeds-gold-bright); }
 
-/* ---- El hilo de reescrituras: una historia escrita y corregida ---- */
+/* ---- El hilo de Visiones de un mismo Futuro ---- */
 .seeds-thread-wrap {
   min-height: 0;
   overflow-y: auto;
@@ -25075,7 +25075,7 @@ body.is-victory-clearing .game-battlefield-stage {
   text-transform: none;
 }
 
-/* ---- Acción de reescritura ---- */
+/* ---- Acción de Contemplar de nuevo ---- */
 .seeds-page-actions {
   display: flex;
   flex-wrap: wrap;
@@ -25146,7 +25146,7 @@ body.is-victory-clearing .game-battlefield-stage {
   animation: seeds-action-orbit 8s linear infinite;
 }
 
-/* Reescribir vuelve sobre sus pasos: su ornamento gira a la izquierda. */
+/* Contemplar de nuevo vuelve sobre sus pasos: su ornamento gira a la izquierda. */
 .seeds-action.is-rewrite::before { animation-direction: reverse; }
 
 .seeds-action::after {
@@ -25231,9 +25231,9 @@ body.is-victory-clearing .game-battlefield-stage {
 }
 
 /* ---- Llegada por partes, como la Expedición ----
-   El Archivo se abre en el mismo orden en que se lee: la cabecera cae, el
+   Semillas del Destino se abre en el mismo orden en que se lee: la cabecera cae, el
    índice entra por el canto del libro, los dos bandos se declaran, la
-   identidad del Futuro se asienta entre ellos y al final llegan la historia y
+   Inscripción del Futuro se asienta entre ellos y al final llegan la historia y
    sus dos salidas. Salir desanda ese orden.
 
    Las reglas de `.main-settings-screen` viven dentro de `@layer components`,
@@ -25655,7 +25655,7 @@ body.is-victory-clearing .game-battlefield-stage {
   text-shadow: 0 1px 10px rgb(0 0 0 / 0.55);
 }
 
-/* El resplandor es el del número del diálogo de Reescribir. */
+/* El resplandor es el del número del diálogo de Contemplar de nuevo. */
 .play-threshold-future {
   margin: 0;
   color: #f2e6bd;

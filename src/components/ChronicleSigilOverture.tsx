@@ -27,7 +27,7 @@ function prefersReducedMotion(): boolean {
 }
 
 type Props = {
-  /** Semilla de la partida: el mismo Futuro dibuja siempre el mismo signo. */
+  /** Seed técnica de la Visión: el mismo Futuro dibuja siempre el mismo signo. */
   seed: string;
   /** Instante absoluto del reloj de la página en que las cortinas empiezan a abrirse. */
   startsAtMs: number;

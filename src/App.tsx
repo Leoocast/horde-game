@@ -334,7 +334,7 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, [boardOverture?.handReady, boardOverture?.id, boardOverture?.phase]);
 
-  /* Salir del tablero a mitad de la obertura la deja pendiente, y la siguiente partida
+  /* Salir del tablero a mitad de la obertura la deja pendiente, y la siguiente Visión
      montaría con el HUD apagado. Mientras existe `launchTransition` seguimos en el menú a
      propósito: la obertura ya está armada para el primer render del tablero. */
   useEffect(() => {
@@ -401,7 +401,7 @@ export default function App() {
       ? requestedOrigin
       : destination === "standard"
         ? matchOrigin ?? undefined
-        : undefined;
+        : createLearnToPlayFirstMatchOrigin();
     if (kind === "rewrite" && !origin) return false;
     gameStore.stopGamePresentation();
     const transition = {
@@ -465,7 +465,7 @@ export default function App() {
         if (transition.destination === "learn-to-play-first-seed") {
           clearResumeForProduct();
           setPreserveMenuMusic(false);
-          const origin = createLearnToPlayFirstMatchOrigin();
+          const origin = transition.origin ?? createLearnToPlayFirstMatchOrigin();
           const launch = productMatchLifecycle.beginLaunch({
             source: "learn-to-play-handoff",
             sessionKind: "normal",
@@ -565,6 +565,7 @@ export default function App() {
       transitionId={destinyTransition.id}
       kind={destinyTransition.kind}
       seed={destinyTransition.seed}
+      opensVision={destinyTransition.kind === "rewrite" || destinyTransition.destination === "learn-to-play-first-seed"}
       onCovered={resolveDestinyTransition}
       onComplete={completeDestinyTransition}
     />
@@ -638,7 +639,8 @@ export default function App() {
         <AudioClickListener />
         <DeckInspector
           deck={findInspectableDeck(inspectorDeckId)}
-          backLabel={menuReturnScreen === "chronicles" ? "Chronicles" : menuReturnScreen === "hosts" ? "Hosts" : menuReturnScreen === "chaos" ? "Chaos" : "Play"}
+          backLabel={menuReturnScreen === "chronicles" ? t("menu.chronicles") : menuReturnScreen === "hosts" ? t("menu.hosts") : menuReturnScreen === "chaos" ? "Chaos" : t("setup.prepare")}
+          useGenericDeckVocabulary={menuReturnScreen === "chaos"}
           onBack={() => setScreen("start")}
         />
         {transitionOverlay}
@@ -789,7 +791,7 @@ export default function App() {
             const id = ++launchIdRef.current;
             const startedAtMs = performance.now();
             const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-            /* Se arma en el mismo evento que crea la partida, antes de que pueda existir un
+            /* Se arma en el mismo evento que crea la Visión, antes de que pueda existir un
                primer render del tablero. `id` impide que un callback viejo cierre otra
                obertura y el reloj absoluto la ancla a la apertura real de las cortinas. */
             setBoardOverture(reducedMotion ? null : {

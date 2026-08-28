@@ -21,6 +21,7 @@ type Props = {
   transitionId: number;
   kind: DestinyTransitionKind;
   seed: string;
+  opensVision?: boolean;
   onCovered: (transitionId: number, release: () => void) => void;
   onComplete: (transitionId: number) => void;
 };
@@ -88,7 +89,7 @@ function collectShards(root: Element, viewport: { width: number; height: number 
   return shards;
 }
 
-export function DestinyRewriteTransition({ transitionId, kind, seed, onCovered, onComplete }: Props) {
+export function DestinyRewriteTransition({ transitionId, kind, seed, opensVision = kind === "rewrite", onCovered, onComplete }: Props) {
   const t = useTranslation();
   const playSfx = useAudioStore((state) => state.playSfx);
   const [phase, setPhase] = useState<DestinyTransitionPhase>("absorbing");
@@ -346,14 +347,22 @@ export function DestinyRewriteTransition({ transitionId, kind, seed, onCovered, 
       className={`destiny-vortex-overlay is-${phase}`}
       role="status"
       aria-live="assertive"
-      aria-label={t(kind === "rewrite" ? "destiny.transitionRewrite" : "destiny.transitionContemplate", { code: futureCode })}
+      aria-label={t(kind === "rewrite"
+        ? "destiny.transitionContemplateAgain"
+        : opensVision
+          ? "destiny.transitionContemplateFuture"
+          : "destiny.seekingAnotherFuture", { code: futureCode })}
     >
       <div className="destiny-vortex-veil" />
       <canvas ref={canvasRef} className="destiny-vortex-canvas" aria-hidden="true" />
       {still && <div className="destiny-vortex-still" aria-hidden="true" />}
       <div className="destiny-vortex-caption">
         <small>{t("destiny.future", { code: futureCode })}</small>
-        <strong>{t(kind === "rewrite" ? "destiny.rewriting" : "destiny.contemplating")}</strong>
+        <strong>{t(kind === "rewrite"
+          ? "destiny.openingAnotherVision"
+          : opensVision
+            ? "destiny.openingVision"
+            : "destiny.seekingAnotherFuture")}</strong>
       </div>
     </div>
   );

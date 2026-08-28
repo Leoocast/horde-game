@@ -54,12 +54,12 @@ test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
   assert.equal(translate("es", "guided.learnToPlay.intro.beatOne"), "¡Cronista… ayuda!");
   assert.equal(
     translate("es", "guided.learnToPlay.intro.beatFour"),
-    "Contemplemos este futuro. Quizá todavía estemos a tiempo.",
+    "Contemplemos este Futuro. Quizá todavía estemos a tiempo.",
   );
   assert.equal(translate("es", "guided.learnToPlay.intro.evy"), "Evy");
   assert.equal(
     translate("es", "guided.learnToPlay.intro.beatFive"),
-    "Contuve a la Hueste a orillas del Elarion mientras pude. Logré preparar tres Fuentes, pero sus filas rompieron nuestra línea y me obligaron a retroceder. Continúa la batalla desde aquí.",
+    "Contuve a la Hueste a orillas del Elarion mientras pude. Logré preparar tres Fuentes, pero sus filas rompieron nuestra línea y me obligaron a retroceder. Continúa la Visión desde aquí.",
   );
   assert.equal(
     translate("es", "guided.learnToPlay.fourthSourceBriefingBody"),

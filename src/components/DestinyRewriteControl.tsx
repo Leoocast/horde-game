@@ -137,14 +137,14 @@ export function DestinyRewriteControl({ origin, onRewrite, onContemplateAnother,
         className="destiny-command-button"
         type="button"
         onClick={openDialog}
-        aria-label={t("destiny.open", { code: futureCode })}
+        aria-label={t("destiny.contemplateAgainTitle", { code: futureCode })}
         aria-haspopup="dialog"
         aria-expanded={open}
       >
         <span className="destiny-command-glyph" aria-hidden="true"><Orbit size={23} strokeWidth={1.55} /></span>
         <span className="destiny-command-copy">
           <small>{t("destiny.future", { code: futureCode })}</small>
-          <strong>{t("destiny.rewrite")}</strong>
+          <strong>{t("destiny.contemplateAgain")}</strong>
         </span>
         <span className="destiny-command-shimmer" aria-hidden="true" />
       </button>}
@@ -155,7 +155,7 @@ export function DestinyRewriteControl({ origin, onRewrite, onContemplateAnother,
           className={["destiny-dialog-backdrop fixed inset-0 z-[450] flex items-center justify-center p-6", modalPresence.closing ? "is-closing" : ""].join(" ")}
           role="dialog"
           aria-modal="true"
-          aria-label={t("destiny.dialogTitle")}
+          aria-label={t("destiny.contemplateAgainTitle", { code: futureCode })}
           onClick={(event) => {
             if (event.target === event.currentTarget) setOpen(false);
           }}
@@ -182,12 +182,12 @@ export function DestinyRewriteControl({ origin, onRewrite, onContemplateAnother,
               <DestinyActionButton
                 ref={primaryActionRef}
                 className="destiny-dialog-primary"
-                label={t("destiny.rewriteThis")}
+                label={t("destiny.contemplateThisAgain")}
                 onClick={() => choose(onRewrite)}
                 autoFocus
               />
               <button className="destiny-dialog-secondary" type="button" onClick={() => choose(onContemplateAnother)}>
-                <span>{t("destiny.contemplateAnother")}</span>
+                <span>{t("destiny.seekAnotherFuture")}</span>
               </button>
             </div>
           </div>

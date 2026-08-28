@@ -202,7 +202,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
   }
 
   function savePlayerName() {
-    const nextName = nameDraft.trim() || "Chronicler";
+    const nextName = nameDraft.trim() || t("menu.chroniclerRole");
     setPlayerName(nextName);
     completeOnboarding(nextName);
     setNameRequired(false);
@@ -298,7 +298,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     if (developerMode) updateDeveloperMode(false);
     setLaunching(true);
     onStart({
-      playerName: playerName.trim() || "Chronicler",
+      playerName: playerName.trim() || t("menu.chroniclerRole"),
       origin: imported,
     });
   }
@@ -314,7 +314,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
       })
       : activeOrigin;
     onStart({
-      playerName: playerName.trim() || "Chronicler",
+      playerName: playerName.trim() || t("menu.chroniclerRole"),
       origin,
       encounterCardOrigins,
     });
@@ -353,8 +353,8 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         {menuScreen === "home" && (
           <div className="main-menu-chronicler" aria-label={t("menu.profileLabel")}>
             <div>
-              <strong className="main-menu-chronicler-name">{playerName || "Chronicler"}</strong>
-              <span>Chronicler</span>
+              <strong className="main-menu-chronicler-name">{playerName || t("menu.chroniclerRole")}</strong>
+              <span>{t("menu.chroniclerRole")}</span>
             </div>
             <button className="hf-ui-button main-menu-chronicler-edit" type="button" onClick={openNameEditor} title={t("menu.editName")} aria-label={t("menu.editName")}>
               <Pencil size={16} strokeWidth={1.7} />
@@ -873,7 +873,7 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
 
           <div className="preparation-frontispiece-stage" inert={openDeckSide !== null}>
             <PreparationCombatant
-              eyebrow={t("setup.playerSide")}
+              eyebrow={t("setup.chronicleSide")}
               side="player"
               deck={props.playerDeck}
               onInspect={props.onInspectPlayerDeck}
@@ -954,10 +954,11 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
             />
             <SetupDeckDrawer
               side={openDeckSide}
-              eyebrow={t(openDeckSide === "player" ? "setup.playerSide" : "setup.hostSide")}
+              eyebrow={t(openDeckSide === "player" && !props.chaos ? "setup.chronicleSide" : openDeckSide === "player" ? "setup.playerSide" : "setup.hostSide")}
               decks={openDeckSide === "player" ? props.playerDecks : props.hostDecks}
               selectedDeckId={openDeckSide === "player" ? props.selectedPlayerDeckId : props.selectedHostDeckId}
               onSelectDeck={openDeckSide === "player" ? props.onSelectPlayerDeck : props.onSelectHostDeck}
+              contextualActions={!props.chaos}
               onClose={closeDeckDrawer}
             />
           </motion.div>
@@ -1004,6 +1005,9 @@ function PreparationCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onCh
   const details = useDeckCardDetails(keyCard, deck?.images ?? { cards: {} });
   const keyCardName = localizedCardName(keyCard, language);
   const deckTheme = deck?.presentation.theme ?? "ramp";
+  const chooseLabel = t(side === "player" ? "common.chooseChronicle" : "common.chooseHost");
+  const viewLabel = t(side === "player" ? "common.viewChronicle" : "common.viewHost");
+  const changeLabel = t(side === "player" ? "common.changeChronicle" : "common.changeHost");
 
   return (
     <section className={`preparation-frontispiece-wing is-${side} deck-theme-${deckTheme}`} aria-label={eyebrow}>
@@ -1012,7 +1016,7 @@ function PreparationCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onCh
         className={`preparation-frontispiece-card is-${side} ${drawerOpen ? "is-active" : ""}`}
         type="button"
         onClick={onChangeDeck}
-        aria-label={`${t("common.changeDeck")}: ${deck?.deck.name ?? t("common.chooseDeck")}`}
+        aria-label={`${changeLabel}: ${deck?.deck.name ?? chooseLabel}`}
         aria-expanded={drawerOpen}
         aria-controls={`expedition-${side}-deck-drawer`}
         data-audio-click="valid"
@@ -1027,7 +1031,7 @@ function PreparationCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onCh
       </button>
       <div className="preparation-frontispiece-wing-foot">
         <div>
-          <button type="button" onClick={onInspect}><Eye size={14} /> {t("common.viewDeck")}</button>
+          <button type="button" onClick={onInspect}><Eye size={14} /> {viewLabel}</button>
           <button
             id={`expedition-${side}-change-deck`}
             className={drawerOpen ? "is-active" : ""}
@@ -1037,7 +1041,7 @@ function PreparationCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onCh
             aria-controls={`expedition-${side}-deck-drawer`}
           >
             {side === "player" ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
-            {t("common.changeDeck")}
+            {changeLabel}
           </button>
         </div>
       </div>
@@ -1163,12 +1167,13 @@ function SetupCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onChangeDe
   );
 }
 
-export function SetupDeckDrawer({ side, eyebrow, decks, selectedDeckId, onSelectDeck, onClose }: {
+export function SetupDeckDrawer({ side, eyebrow, decks, selectedDeckId, onSelectDeck, contextualActions = true, onClose }: {
   side: "player" | "host";
   eyebrow: string;
   decks: InspectableDeck[];
   selectedDeckId: string;
   onSelectDeck: (deckId: string) => void;
+  contextualActions?: boolean;
   onClose: () => void;
 }) {
   const t = useTranslation();
@@ -1178,6 +1183,9 @@ export function SetupDeckDrawer({ side, eyebrow, decks, selectedDeckId, onSelect
   const selectedDeck = decks.find((deck) => deck.id === selectedDeckId) ?? decks[0];
   const deckTheme = selectedDeck?.presentation.theme ?? "ramp";
   const drawerTitle = t(side === "player" ? "setup.chooseChronicle" : "setup.chooseHost");
+  const chooseLabel = contextualActions
+    ? t(side === "player" ? "common.chooseChronicle" : "common.chooseHost")
+    : t("common.chooseDeck");
 
   useEffect(() => {
     const focusTimer = window.setTimeout(() => closeButtonRef.current?.focus({ preventScroll: true }), 460);
@@ -1203,7 +1211,7 @@ export function SetupDeckDrawer({ side, eyebrow, decks, selectedDeckId, onSelect
             key={item.id}
             deck={item}
             selected={item.id === selectedDeckId}
-            actionLabel={`${t("common.chooseDeck")}: ${item.deck.name}`}
+            actionLabel={`${chooseLabel}: ${item.deck.name}`}
             onOpen={() => {
               onSelectDeck(item.id);
               onClose();

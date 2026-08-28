@@ -4,7 +4,7 @@
  * No inventa una figura nueva: es la MISMA rosa cardinal que abre el tablero
  * (`chronicleSigilGeometry`) y que ya está dibujada como instrumento de grados en
  * `TemporalBackdrop`. Por eso el plan se deriva del radio del aro del instrumento: las motas
- * convergen sobre el aparato que el Cronista lleva toda la partida mirando, y al encenderse
+ * convergen sobre el aparato que el Cronista lleva toda la Visión mirando, y al encenderse
  * la figura cae exactamente encima. Con un tamaño propio se leería como otra estrella pegada
  * sobre el tablero.
  *

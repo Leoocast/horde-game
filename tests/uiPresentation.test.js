@@ -1195,8 +1195,8 @@ test("the Chronicler claims a name over the clean temporal sky", () => {
   const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
-  assert.equal(translate("es", "name.beforeFirstPage"), "De entre todos los futuros");
-  assert.equal(translate("en", "name.beforeFirstPage"), "Among all possible futures");
+  assert.equal(translate("es", "name.beforeFirstPage"), "De entre todos los Futuros");
+  assert.equal(translate("en", "name.beforeFirstPage"), "Among all possible Futures");
   assert.equal(translate("es", "name.save"), "Que así sea");
   assert.equal(translate("en", "name.save"), "So shall it be");
   assert.match(startMenu, /showNameEditor \? "chronicler-name-open"/u);
@@ -1220,8 +1220,10 @@ test("standard Preparation uses a fixed Future frontispiece and keeps the real d
   const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
-  assert.equal(translate("es", "common.viewDeck"), "Ver mazo");
-  assert.equal(translate("es", "common.changeDeck"), "Cambiar mazo");
+  assert.equal(translate("es", "common.viewChronicle"), "Ver Crónica");
+  assert.equal(translate("es", "common.viewHost"), "Ver Hueste");
+  assert.equal(translate("es", "common.changeChronicle"), "Cambiar Crónica");
+  assert.equal(translate("es", "common.changeHost"), "Cambiar Hueste");
   assert.equal(translate("es", "setup.chooseChronicle"), "Elige una Crónica");
   assert.equal(translate("es", "setup.chooseHost"), "Elige una Hueste");
   assert.equal(translate("es", "setup.adventurer"), "Esperanza");
@@ -1344,19 +1346,19 @@ test("secondary menus homologate their back control with Play's Main menu anchor
   assert.match(styles, /@media \(max-height: 760px\)\s*\{\s*\.play-threshold-back,\s*\.menu-screen-back \{ top: 14px; \}/u);
 });
 
-test("the archive is plural while a single inscription remains a Seed of Destiny", () => {
+test("Seeds of Destiny groups Futures and Visions while HF1 is an Inscription", () => {
   const seeds = readFileSync(new URL("../src/components/SeedsOfDestinyScreen.tsx", import.meta.url), "utf8");
   const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.equal(translate("en", "menu.seedsOfDestiny"), "Seeds of Destiny");
   assert.equal(translate("es", "menu.seedsOfDestiny"), "Semillas del Destino");
-  assert.equal(translate("en", "threshold.seedLabel"), "Seed of Destiny");
-  assert.equal(translate("es", "threshold.seedLabel"), "Semilla del Destino");
-  assert.equal(translate("en", "seeds.emptyBody"), "Contemplate a Future and preserve its Chronicle here.");
-  assert.equal(translate("es", "seeds.emptyBody"), "Contempla un Futuro y conserva aquí su Crónica.");
-  assert.equal(translate("en", "seeds.emptyAction"), "Contemplate a New Future");
-  assert.equal(translate("es", "seeds.emptyAction"), "Contemplar un nuevo Futuro");
+  assert.equal(translate("en", "threshold.seedLabel"), "Inscription");
+  assert.equal(translate("es", "threshold.seedLabel"), "Inscripción");
+  assert.equal(translate("en", "seeds.emptyBody"), "Contemplate a Future. Its Visions will be recorded here.");
+  assert.equal(translate("es", "seeds.emptyBody"), "Contempla un Futuro. Sus Visiones quedarán registradas aquí.");
+  assert.equal(translate("en", "seeds.emptyAction"), "Prepare a New Future");
+  assert.equal(translate("es", "seeds.emptyAction"), "Preparar un Futuro nuevo");
   assert.doesNotMatch(seeds, /seeds-intro/u);
   assert.match(seeds, /library\.phase === "loading" \|\| library\.phase === "empty" \? \(\s*<EmptyLibraryState onPlay=\{onPlay\} \/>/u);
   assert.doesNotMatch(seeds, /seeds-library-pending/u);
@@ -1753,7 +1755,7 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(journeyModal, /<LearnToPlayDefeatOutcomeDialog/u);
   assert.match(journeyDialogs, /destiny\.futureLostLineOne/u);
   assert.match(journeyDialogs, /destiny\.futureLostLineTwo/u);
-  assert.match(journeyDialogs, /result\.chapterLostAmongShards/u);
+  assert.match(journeyDialogs, /result\.visionLostAmongShards/u);
   assert.match(journeyModal, /LEARN_TO_PLAY_NARRATIVE_DELAY_MS\s*=\s*1_000/u);
   assert.match(journeyDialogs, /guided\.learnToPlay\.defeatLineOne/u);
   assert.match(journeyDialogs, /guided\.learnToPlay\.defeatLineTwo/u);

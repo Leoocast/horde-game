@@ -222,7 +222,7 @@ test("Card Studio projects ES and EN from one extensible language registry", () 
   assert.equal(englishPact.get("veiled_dawn_flower")?.desc, "Exhaust this card; add {E}.");
   assert.equal(
     englishPact.get("aelyra_heir_of_elarion")?.tipo,
-    "Chronicle Echo — Elf Heir",
+    "Echo — Elf Heir",
   );
 });
 
@@ -1037,7 +1037,7 @@ test("Vampire studio cards stay aligned with the runtime deck", () => {
         assert.equal(studioCard.tipo, "Hechizo · Rápido", `${source.label} has a stale type for ${runtimeCard.id}`);
       }
       if (runtimeCard.id === "mirevna_countess_of_the_crimson_eclipse") {
-        assert.equal(studioCard.tipo, "Eco de Crónica — Vampiro Noble", `${source.label} has a stale type for ${runtimeCard.id}`);
+        assert.equal(studioCard.tipo, "Eco — Vampiro Noble", `${source.label} has a stale type for ${runtimeCard.id}`);
       }
       assert.equal(
         normalizeVampireEffect(studioCard.desc),
@@ -1358,7 +1358,7 @@ test("Hunter preview sources use Hostfall vocabulary and stay aligned", () => {
     rastreadora_de_huellas: "Eco — Cazador Rastreador",
     trampero_de_acero: "Eco — Cazador Trampero",
     lancero_de_la_marca: "Eco — Cazador Guerrero",
-    lyra_ojo_de_la_caceria: "Eco de Crónica — Cazador",
+    lyra_ojo_de_la_caceria: "Eco — Cazador",
     flecha_sedante: "Hechizo · Rápido",
     contra_tu_manada: "Hechizo · Rápido",
     rodear_a_la_presa: "Hechizo",

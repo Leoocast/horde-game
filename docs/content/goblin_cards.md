@@ -89,7 +89,8 @@ que decida cuándo usarla. `scripts/lint-decks.mjs` es la fuente de verdad para 
 
 ## Varka, Matriarca Infernal (`varka_infernal_matriarch`)
 
-- Es el único Eco de Crónica del deck.
+- Es el único Eco del deck que conserva el modificador técnico `CHRONICLE`; no se muestra en su
+  línea de tipo.
 - Todos los Ecos aliados, incluida Varka, reciben +1/+1 mientras permanezca en el Campo.
 - Su propia Pasiva la convierte en 4/4. Reflejos se resuelve en un paso separado de daño de combate:
   mata a un bloqueador 5/4 antes de que responda; un 5/5 sobrevive y la mata en el paso normal.

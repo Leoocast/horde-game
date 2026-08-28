@@ -91,8 +91,8 @@ export function zoneCount(game: GameState, side: Side, zone: "archive" | "hand" 
 }
 
 export function gameStatus(game: GameState): string {
-  if (game.winner) return `${game.winner === "player" ? "Player" : "Host"} wins`;
+  if (game.winner) return `${game.winner === "player" ? "Chronicler" : "Host"} wins`;
   if (game.gameMode === "chaos") return hostInSurge(game) ? "Chaos Surge active" : "Chaos mutation active";
-  if (game.setupTurnsRemaining > 0) return `Setup: ${game.setupTurnsRemaining} player turn(s) remain`;
+  if (game.setupTurnsRemaining > 0) return `Preparation: ${game.setupTurnsRemaining} Chronicler turn(s) remain`;
   return hostInSurge(game) ? "Host Surge active" : "Normal alternation";
 }

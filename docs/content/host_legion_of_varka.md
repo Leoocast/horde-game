@@ -10,8 +10,9 @@ Legión. Los 17 nombres y sus flavor bilingües viven en
 Los 17 artes fuente viven en `public/cards/legion_of_varka/art/` y sus cartas completas exportadas en
 `public/cards/legion_of_varka/`.
 
-Varka es el único Eco de Crónica del deck; los tres Ecos que también llevaban ese modificador
-dejaron de hacerlo sin cambiar estadísticas, cantidades ni reglas.
+Varka es el único Eco del deck que conserva el modificador técnico `CHRONICLE`; los tres Ecos que
+también lo llevaban dejaron de hacerlo sin cambiar estadísticas, cantidades ni reglas. Ese
+modificador no forma parte de la línea de tipo visible.
 
 ## Premisa
 
@@ -57,13 +58,13 @@ mando convierten esa presión colectiva en crecimiento, refuerzos o daño direct
 | `unleash_the_legion` | **¡Liberen a la Legión!** | Hechizo rápido; da +2/+0 al ejército existente o inicia otra ronda de Revelado si la Hueste no controla aliados. | Una compuerta explota hacia afuera: detrás puede haber refuerzos o una oleada de presión ofensiva. |
 | `corrupted_war_bear` | **Oso de Guerra Corrompido** | Eco Bestia/Oso vanilla 3/3. | Una bestia sometida a la maquinaria de guerra de la Legión. |
 | `rider_of_the_umbral_volley` | **Jinete de la Salva Umbría** | 4/2; al entrar daña un Eco enemigo según la cantidad de Ecos aliados en el Campo, incluido él mismo. | Jinete orco que mide la salva por todas las voces que responden. |
-| `varka_infernal_matriarch` | **Varka, Matriarca Infernal** | Eco de Crónica 3/3 impresa y 4/4 por su propia Pasiva; Reflejos, +1/+1 a todos los Ecos aliados y 2 de daño global al entrar. | Varka convierte sus cadenas en un círculo de fuego que alcanza a todos sus enemigos. |
+| `varka_infernal_matriarch` | **Varka, Matriarca Infernal** | Eco 3/3 impresa y 4/4 por su propia Pasiva; Reflejos, +1/+1 a todos los Ecos aliados y 2 de daño global al entrar. | Varka convierte sus cadenas en un círculo de fuego que alcanza a todos sus enemigos. |
 | `varkas_forgemaster` | **Forjador de Varka** | 3/3; da +1/+1 a otros Trasgos. | Armero que remacha placas rescatadas sobre los demás y deja su propia silueta sin el beneficio del aura. |
 | `marshal_of_the_wave` | **Mariscal de la Oleada** | 2/2; una declaración con uno o más Trasgos Invoca un Esbirro atacando; cada otra llegada causa 1 de daño al Cronista. | Mariscal que abre una salida lateral para un atacante y sincroniza cada nuevo martillo con un golpe de ariete. |
 | `vardek_scribe_of_the_legion` | **Vardek, Escriba de la Legión** | 1/2; al atacar gana un contador +1/+1 y después Invoca Esbirros atacando según su Fuerza resultante. | Vardek marca cada victoria en su armadura y hace aparecer a la cuadrilla que viene a cobrarla. |
 | `rear_guard_firebreather` | **Escupefuego de la Retaguardia** | 2/2; cada muerte de un Trasgo hace 1 de daño a un Eco enemigo aleatorio. | Recoge el último remache de cada aliado caído y lo dispara de inmediato contra una silueta enemiga. |
 
-## Eco de Crónica
+## Modificador técnico `CHRONICLE`
 
 `varka_infernal_matriarch` es **Varka, Matriarca Infernal** y el único elemento con
 `modifiers: ["CHRONICLE"]`. `marshal_of_the_wave`, `vardek_scribe_of_the_legion` y

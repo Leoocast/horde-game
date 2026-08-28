@@ -273,7 +273,7 @@ export function UIReferenceScreen({ onReturnToMenu }: Props) {
             </div>
           </ReferenceSection>
 
-          <ReferenceSection id="hud" eyebrow="Partida" title="HUD y paneles operativos">
+          <ReferenceSection id="hud" eyebrow="Visión" title="HUD y paneles operativos">
             <Specimen entryId="turn-phase-hud">
               <div className="ui-reference-hud-strip"><TurnPhaseHud game={game} setupTurns={3} /></div>
             </Specimen>
@@ -347,7 +347,7 @@ export function UIReferenceScreen({ onReturnToMenu }: Props) {
                   <StatusBadge status="context-only" />
                   <dt>Revisar en contexto</dt>
                   <dd>
-                    Es un componente real y alcanzable, pero depende del layout, portales o estado de la partida.
+                    Es un componente real y alcanzable, pero depende del layout, portales o estado de la Visión.
                     Aislarlo aquí sería engañoso, así que se valida en la pantalla indicada en “Dónde se usa”. No
                     significa viejo, retirado ni pendiente de reemplazo.
                   </dd>
