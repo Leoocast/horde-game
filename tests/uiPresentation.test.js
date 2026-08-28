@@ -1181,6 +1181,12 @@ test("standard Preparation uses a fixed Future frontispiece and keeps the real d
   assert.equal(translate("es", "common.changeDeck"), "Cambiar mazo");
   assert.equal(translate("es", "setup.chooseChronicle"), "Elige una Crónica");
   assert.equal(translate("es", "setup.chooseHost"), "Elige una Hueste");
+  assert.equal(translate("es", "setup.adventurer"), "Esperanza");
+  assert.equal(translate("es", "setup.veteran"), "Presagio");
+  assert.equal(translate("es", "setup.doomed"), "Perdición");
+  assert.equal(translate("en", "setup.adventurer"), "Hope");
+  assert.equal(translate("en", "setup.veteran"), "Omen");
+  assert.equal(translate("en", "setup.doomed"), "Doom");
   assert.match(startMenu, /props\.chaos \? "chaos-setup" : "expedition-frontispiece"/u);
   assert.match(startMenu, /<FutureCode key=\{futureCode\} code=\{futureCode\} \/>/u);
   assert.match(startMenu, /className="preparation-frontispiece-future"/u);
@@ -1243,6 +1249,16 @@ test("standard Preparation uses a fixed Future frontispiece and keeps the real d
   assert.match(styles, /@keyframes preparation-cta-orbit-clockwise\s*\{\s*to \{ transform: translate\(-50%, -50%\) rotate\(360deg\); \}/u);
   assert.match(styles, /@keyframes preparation-card-player-in/u);
   assert.match(styles, /@keyframes preparation-card-host-in/u);
+});
+
+test("the Future threshold keeps Main menu aligned with Back to the threshold", () => {
+  const threshold = readFileSync(new URL("../src/components/PlayThreshold.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(threshold, /className="play-threshold-back expedition-back"/u);
+  assert.match(styles, /\.play-threshold-back\s*\{[^}]*top:\s*18px;[^}]*left:\s*clamp\(28px, 4vw, 64px\);[^}]*font-size:\s*13px;/u);
+  assert.match(styles, /\.preparation-frontispiece-header\s*\{[^}]*min-height:\s*72px;[^}]*padding-block:\s*10px;/u);
+  assert.match(styles, /@media \(max-height: 760px\)\s*\{\s*\.play-threshold-back \{ top: 14px; \}/u);
 });
 
 test("How to Play opens a right-side data-driven tutorial catalog", () => {

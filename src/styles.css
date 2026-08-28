@@ -24659,10 +24659,10 @@ body.is-victory-clearing .game-battlefield-stage {
 .play-threshold-back {
   position: absolute;
   z-index: 3;
-  top: clamp(18px, 3vh, 32px);
-  left: clamp(20px, 3.4vw, 52px);
-  gap: 10px;
-  font-size: 14px;
+  top: 18px;
+  left: clamp(28px, 4vw, 64px);
+  gap: 9px;
+  font-size: 13px;
 }
 
 .play-threshold-body {
@@ -25178,6 +25178,10 @@ body.is-victory-clearing .game-battlefield-stage {
     font-size: clamp(16px, 5vw, 23px);
     letter-spacing: 0.04em;
   }
+}
+
+@media (max-height: 760px) {
+  .play-threshold-back { top: 14px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

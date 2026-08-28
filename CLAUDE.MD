@@ -540,10 +540,13 @@ competir con la cifra; todos los glifos del número, incluido el separador, comp
 frame el halo amarillo de Reescribir, sin filtros de brillo que los vuelvan blancos. La dificultad es
 una franja segmentada centrada bajo el enfrentamiento y la frase del despertar vive inmediatamente
 debajo, en una sola línea; el bloque conserva aire respecto al `VS`. La opción activa y el número de
-turnos comparten un acento semántico: verde para Aventurero, amarillo para Veterano y rojo para
-Condenado. El pie queda reservado para las acciones. La entrada y la salida enfatizan primero el
+turnos comparten un acento semántico: verde para Esperanza, amarillo para Presagio y rojo para
+Perdición. El pie queda reservado para las acciones. La entrada y la salida enfatizan primero el
 número y las dos cartas; el ornamento del CTA gira hacia la derecha. Caos conserva su pantalla de
 paneles y sus herramientas avanzadas.
+
+En el Umbral, **Menú principal** comparte el ancla vertical y horizontal de **Volver al umbral** en
+Preparación; retroceder entre ambas pantallas no debe desplazar el objetivo bajo el puntero.
 
 ## Sistema de UI player-facing
 
