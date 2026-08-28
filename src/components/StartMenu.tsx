@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowLeft, AudioLines, BookOpen, ChevronLeft, ChevronRight, Construction, Copy, Dices, Eye, Github, PanelsTopLeft, Pencil, Play, RefreshCw, RotateCcw, ScanSearch, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, AudioLines, BookOpen, ChevronLeft, ChevronRight, Construction, Copy, Dices, Eye, PanelsTopLeft, Pencil, Play, RefreshCw, RotateCcw, ScanSearch, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
 import { AnimatePresence, motion, useIsPresent } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { contentCatalog } from "../content/bootstrap";
@@ -14,7 +14,7 @@ import { findDeckKeyCard, type InspectableDeck } from "../data/deckCatalog";
 import type { DifficultyMode } from "../engine/GameTypes";
 import { localizedCardName } from "../i18n/cardLocalization";
 import { useTranslation } from "../i18n/useTranslation";
-import { openExternalLink, writeClipboardText } from "../platform/desktopBridge";
+import { writeClipboardText } from "../platform/desktopBridge";
 import { useAudioStore } from "../store/useAudioStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { useToastStore } from "../store/useToastStore";
@@ -440,7 +440,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
       ) : menuScreen === "settings" ? (
         <section className={`main-settings-screen ${closingMenuScreen === "settings" ? "is-closing" : ""}`} aria-label={t("menu.settings")}>
           <header className="main-settings-header">
-            <button className="menu-screen-back" type="button" onClick={closeMenuPanel}><ArrowLeft size={16} /> {t("common.back")}</button>
+            <button className="menu-screen-back expedition-back" type="button" onClick={closeMenuPanel}><ArrowLeft size={18} /> {t("common.mainMenu")}</button>
             <h2>{t("menu.settings")}</h2>
             <span>{t("settings.description")}</span>
           </header>
@@ -490,7 +490,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
       ) : menuScreen === "howToPlay" ? (
         <section className={`main-settings-screen how-to-play-screen ${closingMenuScreen === "howToPlay" ? "is-closing" : ""}`} aria-label={t("menu.howToPlay")}>
           <header className="main-settings-header">
-            <button className="menu-screen-back" type="button" onClick={closeMenuPanel}><ArrowLeft size={16} /> {t("common.back")}</button>
+            <button className="menu-screen-back expedition-back" type="button" onClick={closeMenuPanel}><ArrowLeft size={18} /> {t("common.mainMenu")}</button>
             <h2>{t("menu.howToPlay")}</h2>
             <span>{t("howToPlay.description")}</span>
           </header>
@@ -605,13 +605,8 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         />
       )}
       
-      {!fullScreenMenu && <div className="main-menu-credits fixed z-[300] text-[10px] font-bold uppercase tracking-wide text-[#66776f]">
-        <div className="mb-0.5">Version: {APP_VERSION}</div>
-        <button type="button" onClick={() => void openExternalLink("credits")} className="flex items-center gap-1.5 transition hover:text-[#e6c36f]" data-audio-click="valid">
-          <span>{t("common.developedBy")}</span>
-          <Github size={11} className="-mt-[1px]" />
-          <span>Leoocast</span>
-        </button>
+      {!fullScreenMenu && <div className="main-menu-credits fixed z-[300] text-[10px] font-bold tracking-wide text-[#66776f]">
+        {APP_VERSION}
       </div>}
 
       <ToastStack variant="menu" />

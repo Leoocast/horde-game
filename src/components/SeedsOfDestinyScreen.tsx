@@ -101,12 +101,11 @@ export function SeedsOfDestinyScreen({ decks, hostDecks, onBack, onReplay, closi
       aria-label={t("menu.seedsOfDestiny")}
     >
       <header className="expedition-header seeds-header">
-        <button className="expedition-back" type="button" onClick={onBack}>
-          <ArrowLeft size={17} /> {t("common.mainMenu")}
+        <button className="menu-screen-back expedition-back" type="button" onClick={onBack}>
+          <ArrowLeft size={18} /> {t("common.mainMenu")}
         </button>
         <div>
           <h1>{t("menu.seedsOfDestiny")}</h1>
-          <p className="seeds-intro">{t("seeds.intro")}</p>
         </div>
       </header>
 

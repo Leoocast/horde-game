@@ -154,6 +154,8 @@
     gap: clamp(30px, 5.5vh, 58px);
     padding: clamp(72px, 9vh, 112px) clamp(24px, 5vw, 80px) clamp(64px, 8vh, 96px);
     text-align: center;
+    transform: scale(1.2);
+    transform-origin: center;
   }
 
   .main-menu-stage {
@@ -4232,6 +4234,8 @@
     left: clamp(38px, 5vw, 80px);
     color: #6f7b7f;
     text-align: left;
+    transform: scale(1.2);
+    transform-origin: bottom left;
   }
 
   .main-settings-screen {
@@ -4254,27 +4258,11 @@
   }
 
   .menu-screen-back {
-    display: inline-flex;
-    min-height: 34px;
-    align-items: center;
-    gap: 8px;
-    border: 0;
-    background: transparent;
-    margin-bottom: 15px;
-    padding: 0;
-    color: #879397;
-    font-size: 10px;
-    font-weight: 850;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    transition: color 150ms ease, transform 150ms ease;
-  }
-
-  .menu-screen-back:hover,
-  .menu-screen-back:focus-visible {
-    color: #eadcb7;
-    outline: none;
-    transform: translateX(-4px);
+    position: absolute;
+    z-index: 5;
+    top: 18px;
+    left: clamp(28px, 4vw, 64px);
+    margin: 0;
   }
 
   .main-settings-header p {
@@ -15768,12 +15756,6 @@
   max-width: 100%;
 }
 
-.main-settings-screen:not(.decks-panel) .menu-screen-back {
-  min-height: 39px;
-  margin-bottom: 17px;
-  font-size: 11px;
-}
-
 .main-settings-screen:not(.decks-panel) .main-settings-header h2 {
   font-size: clamp(42px, 3.7vw, 58px);
 }
@@ -16285,6 +16267,8 @@
   width: min(320px, 30vw);
   gap: 11px;
   padding: 3px 4px 15px 0;
+  transform: scale(1.2);
+  transform-origin: top right;
 }
 
 .main-menu-chronicler-name {
@@ -19119,6 +19103,8 @@
   background: linear-gradient(145deg, rgb(15 20 19 / 0.88), rgb(7 11 12 / 0.92));
   box-shadow: 0 14px 32px rgb(0 0 0 / 0.42);
   backdrop-filter: blur(9px);
+  transform: scale(1.2);
+  transform-origin: bottom right;
 }
 
 .main-menu-developer-label {
@@ -23981,20 +23967,6 @@ body.is-victory-clearing .game-battlefield-stage {
   --seeds-muted-2: #7b888c;
 }
 
-/* Una sola fila: la entradilla es la leyenda de la barra, no un párrafo. */
-.seeds-header .seeds-intro {
-  display: block;
-  overflow: hidden;
-  margin: 9px 0 0;
-  color: #8a979a;
-  font-family: "Lora", Georgia, "Times New Roman", serif;
-  font-size: clamp(13px, 1vw, 17px);
-  font-style: italic;
-  line-height: 1.5;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .seeds-book {
   display: grid;
   min-height: 0;
@@ -24591,7 +24563,6 @@ body.is-victory-clearing .game-battlefield-stage {
 .seeds-index-entry[aria-current="true"] .seeds-seal[data-state="preserved"] .rose { stroke: #fff0c4; }
 
 @media (max-width: 1180px) {
-  .seeds-panel .seeds-intro { white-space: normal; }
   .seeds-book { grid-template-columns: minmax(0, 1fr); }
   .seeds-index { max-height: 240px; padding-right: 0; }
   .seeds-index::after { display: none; }
@@ -24800,7 +24771,14 @@ body.is-victory-clearing .game-battlefield-stage {
    propio padding —el de la Expedición— y el aire horizontal pasa al libro. */
 .main-settings-screen.seeds-panel { padding: 0; }
 
-.seeds-header { padding-inline: clamp(20px, 2.2vw, 40px); }
+.seeds-header {
+  min-height: 72px;
+  padding: 9px clamp(20px, 2.2vw, 40px);
+}
+
+.seeds-header > div {
+  grid-column: 2;
+}
 
 .seeds-panel .seeds-book {
   padding: clamp(14px, 2vh, 24px) clamp(20px, 2.2vw, 40px) clamp(16px, 2vh, 26px);
@@ -25379,7 +25357,8 @@ body.is-victory-clearing .game-battlefield-stage {
 }
 
 @media (max-height: 760px) {
-  .play-threshold-back { top: 14px; }
+  .play-threshold-back,
+  .menu-screen-back { top: 14px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

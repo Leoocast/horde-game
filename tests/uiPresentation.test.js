@@ -1127,11 +1127,21 @@ test("main menu uses the centered fracture frontispiece over the temporal sky", 
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.match(styles, /\.main-menu-layout\s*\{[^}]*width:\s*100%;[^}]*place-content:\s*center;[^}]*justify-items:\s*center;/u);
+  assert.match(styles, /\.main-menu-layout\s*\{[^}]*transform:\s*scale\(1\.2\);[^}]*transform-origin:\s*center;/u);
   assert.match(styles, /\.main-menu-title\s*\{[^}]*margin:\s*0;[^}]*font-size:\s*clamp\(54px, min\(7\.7vw, 13\.5vh\), 102px\);/u);
   assert.match(styles, /\.main-menu-entry\.is-primary\s*\{[^}]*font-size:\s*clamp\(22px,/u);
   assert.match(startMenu, /className="main-menu-subtitle"><span \/><em>\{t\("menu\.act"\)\}<\/em><span \/><\/div>/u);
   assert.match(startMenu, /className="main-menu-entry is-primary group"[^>]*onClick=\{openThreshold\}/u);
   assert.doesNotMatch(startMenu, /main-menu-entry-mark/u);
+});
+
+test("main menu footer shows only the current beta version", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const version = readFileSync(new URL("../src/version.ts", import.meta.url), "utf8");
+
+  assert.match(version, /APP_VERSION = "Beta 0\.1\.0"/u);
+  assert.match(startMenu, /main-menu-credits[^>]*>[\s\S]*?\{APP_VERSION\}[\s\S]*?<\/div>/u);
+  assert.doesNotMatch(startMenu, /Version:|developedBy|Leoocast|openExternalLink/u);
 });
 
 test("main menu collections, help and settings replace the menu at full screen", () => {
@@ -1306,14 +1316,31 @@ test("standard Preparation hands its visible cards to the encounter clash", () =
   assert.match(styles, /@keyframes encounter-continuity-card-host\s*\{[\s\S]*?42\.857%, 68%[\s\S]*?calc\(var\(--encounter-target-top\) - 104vh\)/u);
 });
 
-test("the Future threshold keeps Main menu aligned with Back to the threshold", () => {
+test("secondary menus homologate their back control with Play's Main menu anchor", () => {
   const threshold = readFileSync(new URL("../src/components/PlayThreshold.tsx", import.meta.url), "utf8");
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const decksView = readFileSync(new URL("../src/components/DecksView.tsx", import.meta.url), "utf8");
+  const seeds = readFileSync(new URL("../src/components/SeedsOfDestinyScreen.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.match(threshold, /className="play-threshold-back expedition-back"/u);
+  assert.equal(startMenu.match(/className="menu-screen-back expedition-back"/gu)?.length, 2);
+  assert.match(decksView, /className="menu-screen-back expedition-back"[\s\S]*?t\("common\.mainMenu"\)/u);
+  assert.match(seeds, /className="menu-screen-back expedition-back"[\s\S]*?t\("common\.mainMenu"\)/u);
   assert.match(styles, /\.play-threshold-back\s*\{[^}]*top:\s*18px;[^}]*left:\s*clamp\(28px, 4vw, 64px\);[^}]*font-size:\s*13px;/u);
+  assert.match(styles, /\.menu-screen-back\s*\{[^}]*top:\s*18px;[^}]*left:\s*clamp\(28px, 4vw, 64px\);[^}]*margin:\s*0;/u);
   assert.match(styles, /\.preparation-frontispiece-header\s*\{[^}]*min-height:\s*72px;[^}]*padding-block:\s*10px;/u);
-  assert.match(styles, /@media \(max-height: 760px\)\s*\{\s*\.play-threshold-back \{ top: 14px; \}/u);
+  assert.match(styles, /@media \(max-height: 760px\)\s*\{\s*\.play-threshold-back,\s*\.menu-screen-back \{ top: 14px; \}/u);
+});
+
+test("the archive is Seed of Fate while inscription asks for a Seed of Destiny", () => {
+  const seeds = readFileSync(new URL("../src/components/SeedsOfDestinyScreen.tsx", import.meta.url), "utf8");
+
+  assert.equal(translate("en", "menu.seedsOfDestiny"), "Seed of Fate");
+  assert.equal(translate("es", "menu.seedsOfDestiny"), "Semilla del Hado");
+  assert.equal(translate("en", "threshold.seedLabel"), "Seed of Destiny");
+  assert.equal(translate("es", "threshold.seedLabel"), "Semilla del Destino");
+  assert.doesNotMatch(seeds, /seeds-intro/u);
 });
 
 test("How to Play opens a full-screen data-driven tutorial catalog", () => {
