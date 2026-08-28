@@ -1196,12 +1196,23 @@ test("standard Preparation uses a fixed Future frontispiece and keeps the real d
     startMenu.indexOf("function PreparationCombatant"),
     startMenu.indexOf("function ChaosRules"),
   );
+  const centerMarkup = startMenu.slice(
+    startMenu.indexOf('<div className="preparation-frontispiece-center">'),
+    startMenu.indexOf('<PreparationCombatant\n              eyebrow={t("setup.hostSide")}'),
+  );
+  const footerMarkup = startMenu.slice(
+    startMenu.indexOf('<footer className="expedition-footer preparation-frontispiece-footer"'),
+    startMenu.indexOf("</footer>", startMenu.indexOf('<footer className="expedition-footer preparation-frontispiece-footer"')),
+  );
   const drawerMarkup = startMenu.slice(
     startMenu.indexOf("export function SetupDeckDrawer"),
     startMenu.indexOf("function DeveloperWarningModal"),
   );
   assert.doesNotMatch(modeMarkup, /setupTurns|phase\.setup|Preparation|Preparación/u);
   assert.equal(combatantMarkup.match(/\{eyebrow\}/gu)?.length, 1);
+  assert.match(centerMarkup, /preparation-frontispiece-match[\s\S]*?preparation-frontispiece-center-fate[\s\S]*?preparation-frontispiece-modes[\s\S]*?<HostAwakening/u);
+  assert.match(centerMarkup, /className=\{`preparation-frontispiece-center-fate is-\$\{props\.mode\}`\}/u);
+  assert.doesNotMatch(footerMarkup, /preparation-frontispiece-modes|HostAwakening/u);
   assert.match(drawerMarkup, /const drawerTitle = t\(side === "player" \? "setup\.chooseChronicle" : "setup\.chooseHost"\);/u);
   assert.doesNotMatch(drawerMarkup, /<small>\{eyebrow\}<\/small>|menu\.(?:chronicles|hosts)/u);
 
@@ -1220,7 +1231,12 @@ test("standard Preparation uses a fixed Future frontispiece and keeps the real d
   assert.match(styles, /\.expedition-deck-drawer > header h2\s*\{[^}]*grid-column:\s*2;[^}]*text-align:\s*center;/u);
   assert.match(styles, /\.expedition-deck-drawer-cards\s*\{[^}]*grid-template-columns:\s*repeat\(2, var\(--deck-key-card-width\)\);[^}]*align-content:\s*start;/u);
   assert.match(styles, /@keyframes expedition-drawer-card-in/u);
-  assert.match(styles, /\.preparation-frontispiece-fate \.expedition-awakening\s*\{[^}]*flex-wrap:\s*nowrap;[^}]*white-space:\s*nowrap;/u);
+  assert.match(styles, /\.preparation-frontispiece-center-fate \.expedition-awakening\s*\{[^}]*flex-wrap:\s*nowrap;[^}]*white-space:\s*nowrap;/u);
+  assert.match(styles, /\.preparation-frontispiece-modes\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/u);
+  assert.match(styles, /\.preparation-frontispiece-center-fate\.is-easy\s*\{[^}]*--difficulty-accent:\s*#a9e2b2;/u);
+  assert.match(styles, /\.preparation-frontispiece-center-fate\.is-hard\s*\{[^}]*--difficulty-accent:\s*#f0aaa2;/u);
+  assert.match(styles, /\.preparation-frontispiece-mode\.is-selected\s*\{[^}]*background:\s*var\(--difficulty-surface\);[^}]*color:\s*var\(--difficulty-accent\);/u);
+  assert.match(styles, /\.preparation-frontispiece-center-fate \.expedition-awakening strong\s*\{[^}]*color:\s*var\(--difficulty-accent\);/u);
   assert.match(styles, /@keyframes preparation-cta-orbit-clockwise\s*\{\s*to \{ transform: translate\(-50%, -50%\) rotate\(360deg\); \}/u);
   assert.match(styles, /@keyframes preparation-card-player-in/u);
   assert.match(styles, /@keyframes preparation-card-host-in/u);

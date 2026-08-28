@@ -885,6 +885,24 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
                 <small>VS</small>
                 <span>{props.hostDeck?.deck.name ?? "—"}</span>
               </div>
+              <div className={`preparation-frontispiece-center-fate is-${props.mode}`}>
+                <div className="preparation-frontispiece-modes" role="group" aria-label={t("setup.difficulty")}>
+                  {modes.map((item) => (
+                    <button
+                      key={item.id}
+                      data-difficulty={item.id}
+                      className={`preparation-frontispiece-mode ${item.id === props.mode ? "is-selected" : ""}`}
+                      type="button"
+                      aria-pressed={item.id === props.mode}
+                      onClick={() => props.onModeChange(item.id)}
+                      data-audio-click="off"
+                    >
+                      {t(item.id === "easy" ? "setup.adventurer" : item.id === "normal" ? "setup.veteran" : "setup.doomed")}
+                    </button>
+                  ))}
+                </div>
+                <HostAwakening turns={props.selectedMode.setupTurns} />
+              </div>
             </div>
 
             <PreparationCombatant
@@ -898,24 +916,6 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
           </div>
 
           <footer className="expedition-footer preparation-frontispiece-footer" inert={openDeckSide !== null}>
-            <div className="preparation-frontispiece-fate">
-              <div className="preparation-frontispiece-modes" role="group" aria-label={t("setup.difficulty")}>
-                {modes.map((item) => (
-                  <button
-                    key={item.id}
-                    data-difficulty={item.id}
-                    className={`preparation-frontispiece-mode ${item.id === props.mode ? "is-selected" : ""}`}
-                    type="button"
-                    aria-pressed={item.id === props.mode}
-                    onClick={() => props.onModeChange(item.id)}
-                    data-audio-click="off"
-                  >
-                    {t(item.id === "easy" ? "setup.adventurer" : item.id === "normal" ? "setup.veteran" : "setup.doomed")}
-                  </button>
-                ))}
-              </div>
-              <HostAwakening turns={props.selectedMode.setupTurns} />
-            </div>
             <div className="preparation-frontispiece-actions">
               {props.origin.seedKind === "canon" && (
                 <button className="preparation-frontispiece-copy" type="button" onClick={props.onCopyCanonIdentity} title={t("destiny.copyIdentity")}>

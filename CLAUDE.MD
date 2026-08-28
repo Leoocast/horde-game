@@ -535,9 +535,13 @@ Ese drawer es una lámina opaca de título único (**Elige una Crónica** o **El
 repetir identidad y colección en dos renglones. Sus mazos empiezan arriba y fluyen siempre en dos
 columnas para admitir nuevas filas. **Futuro** tiene jerarquía visible pero usa un tono neutro para no
 competir con la cifra; todos los glifos del número, incluido el separador, comparten desde su primer
-frame el halo amarillo de Reescribir, sin filtros de brillo que los vuelvan blancos. La entrada y la
-salida enfatizan primero el número y las dos cartas; el ornamento del CTA gira hacia la derecha. Caos
-conserva su pantalla de paneles y sus herramientas avanzadas.
+frame el halo amarillo de Reescribir, sin filtros de brillo que los vuelvan blancos. La dificultad es
+una franja segmentada centrada bajo el enfrentamiento y la frase del despertar vive inmediatamente
+debajo, en una sola línea; el bloque conserva aire respecto al `VS`. La opción activa y el número de
+turnos comparten un acento semántico: verde para Aventurero, amarillo para Veterano y rojo para
+Condenado. El pie queda reservado para las acciones. La entrada y la salida enfatizan primero el
+número y las dos cartas; el ornamento del CTA gira hacia la derecha. Caos conserva su pantalla de
+paneles y sus herramientas avanzadas.
 
 ## Sistema de UI player-facing
 
