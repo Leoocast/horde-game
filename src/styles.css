@@ -24815,7 +24815,7 @@ body.is-victory-clearing .game-battlefield-stage {
 .play-threshold-gate:hover .play-threshold-gate-action svg,
 .play-threshold-gate:focus-visible .play-threshold-gate-action svg { transform: translateX(4px); }
 
-/* ---- Inscripción: el material real de los diálogos del juego ---- */
+/* ---- Inscripción: una Semilla atravesando el umbral del Destino ---- */
 .play-inscribe-backdrop {
   position: fixed;
   z-index: 520;
@@ -24829,23 +24829,51 @@ body.is-victory-clearing .game-battlefield-stage {
 .play-inscribe-dialog {
   position: relative;
   display: grid;
-  width: min(560px, 100%);
-  gap: 12px;
-  padding: clamp(22px, 3vw, 32px);
+  width: min(700px, 100%);
+  justify-items: center;
+  gap: 16px;
+  padding: clamp(34px, 4.2vw, 54px) clamp(28px, 5vw, 66px) clamp(30px, 3.8vw, 46px);
+  text-align: center;
+}
+
+.play-inscribe-dialog::before {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 58% 42% at 50% 58%, rgb(211 187 112 / 0.1), transparent 70%),
+    linear-gradient(90deg, transparent 7%, rgb(206 183 111 / 0.07) 50%, transparent 93%);
+  content: "";
+  pointer-events: none;
+}
+
+.play-inscribe-dialog > * {
+  position: relative;
+  z-index: 1;
 }
 
 .play-inscribe-dialog .hf-ui-title {
   margin: 0;
-  font-size: clamp(21px, 2.2vw, 27px);
+  color: #eee1ba;
+  font-size: clamp(30px, 3.3vw, 42px);
   font-weight: 400;
+  letter-spacing: 0.035em;
+  text-shadow: 0 0 26px rgb(214 190 116 / 0.14);
+}
+
+.play-inscribe-dialog .game-dialog-kicker {
+  margin: 0;
+  color: #b4a56f;
+  font-size: 9px;
+  letter-spacing: 0.34em;
 }
 
 .play-inscribe-lead {
-  margin: 0;
-  color: #8d9a94;
+  max-width: 550px;
+  margin: 0 auto;
+  color: #aeb8b2;
   font-family: "Lora", Georgia, serif;
-  font-size: 13.5px;
-  line-height: 1.62;
+  font-size: 15px;
+  line-height: 1.66;
 }
 
 .play-inscribe-close {
@@ -24869,57 +24897,93 @@ body.is-victory-clearing .game-battlefield-stage {
   outline: none;
 }
 
+.play-inscribe-seed {
+  position: relative;
+  display: grid;
+  width: 100%;
+  gap: 12px;
+  margin-top: 6px;
+  padding: 24px 0 26px;
+  background: radial-gradient(ellipse at 50% 54%, rgb(215 192 118 / 0.08), transparent 67%);
+}
+
+.play-inscribe-seed::before,
+.play-inscribe-seed::after {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(207 185 114 / 0.52) 22%, rgb(239 218 151 / 0.78) 50%, rgb(207 185 114 / 0.52) 78%, transparent);
+  box-shadow: 0 0 14px rgb(213 189 111 / 0.12);
+  content: "";
+  pointer-events: none;
+}
+
+.play-inscribe-seed::before { top: 0; }
+.play-inscribe-seed::after { bottom: 0; }
+
+.play-inscribe-seed-label {
+  color: #c8b678;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.36em;
+  text-transform: uppercase;
+}
+
 .play-inscribe-input {
   width: 100%;
-  padding: 12px 14px;
-  font-size: 16px;
+  border-color: rgb(196 174 105 / 0.5) !important;
+  padding: 18px clamp(12px, 2vw, 22px);
+  background:
+    radial-gradient(ellipse at 50% 50%, rgb(43 44 34 / 0.64), rgb(5 10 12 / 0.9) 72%) !important;
+  color: #f3e5b8 !important;
+  box-shadow:
+    inset 0 1px 10px rgb(0 0 0 / 0.58),
+    0 0 0 1px rgb(212 190 119 / 0.04),
+    0 0 32px rgb(205 179 94 / 0.08) !important;
+  font-size: clamp(21px, 3vw, 32px);
+  letter-spacing: 0.09em;
+  line-height: 1.2;
   text-align: center;
+  text-shadow: 0 0 18px rgb(226 204 134 / 0.22);
   text-transform: uppercase;
+  transition: border-color 180ms ease, box-shadow 220ms ease, color 180ms ease;
 }
 
-.play-inscribe-decoded {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+.play-inscribe-input::placeholder {
+  color: rgb(139 145 135 / 0.48);
+  text-shadow: none;
 }
 
-.play-inscribe-cell {
-  display: grid;
-  gap: 3px;
-  border: 1px solid rgb(160 148 102 / 0.16);
-  padding: 9px 11px;
-  background: rgb(9 14 16 / 0.6);
-  transition: border-color 220ms ease, background-color 220ms ease;
+.play-inscribe-input:focus {
+  border-color: rgb(226 203 129 / 0.82) !important;
+  box-shadow:
+    inset 0 1px 10px rgb(0 0 0 / 0.58),
+    0 0 0 1px rgb(222 198 122 / 0.12),
+    0 0 38px rgb(205 179 94 / 0.16) !important;
+  outline: none;
 }
 
-.play-inscribe-cell span {
-  color: #7f8c87;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+.play-inscribe-seed.is-ready .play-inscribe-input {
+  border-color: rgb(226 203 129 / 0.82) !important;
+  color: #fff0bd !important;
+  box-shadow:
+    inset 0 1px 10px rgb(0 0 0 / 0.5),
+    0 0 0 1px rgb(226 203 129 / 0.14),
+    0 0 42px rgb(205 179 94 / 0.2) !important;
 }
 
-.play-inscribe-cell strong {
-  color: #8d9a94;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 13.5px;
-  font-weight: 400;
-  line-height: 1.3;
+.play-inscribe-seed.is-invalid .play-inscribe-input {
+  border-color: rgb(184 103 78 / 0.72) !important;
+  color: #e7b29e !important;
+  box-shadow: inset 0 1px 10px rgb(0 0 0 / 0.58), 0 0 26px rgb(151 61 40 / 0.12) !important;
 }
-
-.play-inscribe-cell.is-known {
-  border-color: rgb(202 182 116 / 0.45);
-  background: rgb(24 28 22 / 0.6);
-}
-
-.play-inscribe-cell.is-known strong { color: #f0e5c4; }
 
 .play-inscribe-result {
   display: grid;
-  min-height: 78px;
+  min-height: 72px;
   justify-items: center;
-  gap: 2px;
+  gap: 4px;
   place-content: center;
   text-align: center;
 }
@@ -24927,17 +24991,21 @@ body.is-victory-clearing .game-battlefield-stage {
 .play-inscribe-result-label {
   margin: 0;
   color: #c8b678;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.34em;
   text-transform: uppercase;
 }
 
+.play-inscribe-result .play-threshold-future {
+  font-size: 30px;
+}
+
 .play-inscribe-note {
   margin: 0;
-  color: #7f8c87;
+  color: #98a49e;
   font-family: "Lora", Georgia, serif;
-  font-size: 13px;
+  font-size: 13.5px;
   font-style: italic;
 }
 
@@ -24951,20 +25019,38 @@ body.is-victory-clearing .game-battlefield-stage {
 }
 
 .play-inscribe-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
 }
 
 .play-inscribe-action {
   display: flex;
-  height: 44px;
+  min-width: 230px;
+  height: 48px;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 900;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+}
+
+.play-inscribe-action:first-child {
+  min-width: auto;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  color: #82908a;
+}
+
+.play-inscribe-action:first-child:hover,
+.play-inscribe-action:first-child:focus-visible {
+  border-color: transparent;
+  background: transparent;
+  color: #ddd1ad;
 }
 
 @keyframes play-threshold-enter {
@@ -25023,7 +25109,25 @@ body.is-victory-clearing .game-battlefield-stage {
 
 @media (max-width: 720px) {
   .play-threshold-lead { display: none; }
-  .play-inscribe-decoded { grid-template-columns: 1fr; }
+  .play-inscribe-dialog {
+    padding-inline: 22px;
+  }
+
+  .play-inscribe-input {
+    font-size: clamp(16px, 5vw, 23px);
+    letter-spacing: 0.04em;
+  }
+}
+
+@media (max-width: 520px) {
+  .play-inscribe-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .play-inscribe-action {
+    width: 100%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

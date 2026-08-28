@@ -12,7 +12,7 @@ type DecodedDraft =
   | Readonly<{ status: "empty" }>
   | Readonly<{ status: "partial" }>
   | Readonly<{ status: "invalid" }>
-  | Readonly<{ status: "ready"; origin: MatchOrigin; playerDeck: InspectableDeck; hostDeck: InspectableDeck }>;
+  | Readonly<{ status: "ready"; origin: MatchOrigin }>;
 
 type Props = Readonly<{
   playerDecks: readonly InspectableDeck[];
@@ -40,10 +40,10 @@ export function PlayThreshold({ playerDecks, hostDecks, closing, onNewFuture, on
     if (!code) return { status: "empty" };
     try {
       const imported = importCanonMatchOrigin(code);
-      const playerDeck = playerDecks.find((deck) => deck.id === imported.playerDeckId);
-      const hostDeck = hostDecks.find((deck) => deck.id === imported.hostDeckId);
-      if (!playerDeck || !hostDeck) return { status: "invalid" };
-      return { status: "ready", origin: imported, playerDeck, hostDeck };
+      const playerDeckAvailable = playerDecks.some((deck) => deck.id === imported.playerDeckId);
+      const hostDeckAvailable = hostDecks.some((deck) => deck.id === imported.hostDeckId);
+      if (!playerDeckAvailable || !hostDeckAvailable) return { status: "invalid" };
+      return { status: "ready", origin: imported };
     } catch {
       return { status: code.length >= CANON_CODE_LENGTH ? "invalid" : "partial" };
     }
@@ -95,10 +95,6 @@ export function PlayThreshold({ playerDecks, hostDecks, closing, onNewFuture, on
     event.currentTarget.style.setProperty("--gate-pointer-x", `${((event.clientX - bounds.left) / bounds.width) * 100}%`);
     event.currentTarget.style.setProperty("--gate-pointer-y", `${((event.clientY - bounds.top) / bounds.height) * 100}%`);
   }
-
-  const difficultyLabel = decoded.status === "ready"
-    ? t(decoded.origin.difficulty === "easy" ? "setup.adventurer" : decoded.origin.difficulty === "normal" ? "setup.veteran" : "setup.doomed")
-    : "";
 
   return (
     <section className={`play-threshold ${closing ? "is-closing" : ""}`} aria-label={t("threshold.aria")}>
@@ -160,43 +156,31 @@ export function PlayThreshold({ playerDecks, hostDecks, closing, onNewFuture, on
             <h2 id="play-inscribe-title" className="hf-ui-title">{t("threshold.inscribeTitle")}</h2>
             <p className="play-inscribe-lead">{t("threshold.inscribeDescription")}</p>
 
-            <label className="sr-only" htmlFor="play-inscribe-code">{t("setup.canonSeed")}</label>
-            <input
-              id="play-inscribe-code"
-              className="play-inscribe-input game-seed-input"
-              value={draft}
-              placeholder="HF1-ELA-GRV-XX1-XXX"
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="characters"
-              spellCheck={false}
-              autoFocus
-              onChange={(event) => setDraft(event.currentTarget.value.toUpperCase())}
-            />
-
-            <div className="play-inscribe-decoded">
-              <div className={`play-inscribe-cell ${decoded.status === "ready" ? "is-known" : ""}`}>
-                <span>{t("setup.playerSide")}</span>
-                <strong>{decoded.status === "ready" ? decoded.playerDeck.deck.name : "· · ·"}</strong>
-              </div>
-              <div className={`play-inscribe-cell ${decoded.status === "ready" ? "is-known" : ""}`}>
-                <span>{t("setup.difficulty")}</span>
-                <strong>{decoded.status === "ready" ? difficultyLabel : "· · ·"}</strong>
-              </div>
-              <div className={`play-inscribe-cell ${decoded.status === "ready" ? "is-known" : ""}`}>
-                <span>{t("setup.hostSide")}</span>
-                <strong>{decoded.status === "ready" ? decoded.hostDeck.deck.name : "· · ·"}</strong>
-              </div>
+            <div className={`play-inscribe-seed is-${decoded.status}`}>
+              <label className="play-inscribe-seed-label" htmlFor="play-inscribe-code">{t("threshold.seedLabel")}</label>
+              <input
+                id="play-inscribe-code"
+                className="play-inscribe-input game-seed-input"
+                value={draft}
+                placeholder="HF1-ELA-GRV-XX1-XXX"
+                aria-describedby="play-inscribe-result"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+                autoFocus
+                onChange={(event) => setDraft(event.currentTarget.value.toUpperCase())}
+              />
             </div>
 
-            <div className="play-inscribe-result" aria-live="polite">
+            <div id="play-inscribe-result" className="play-inscribe-result" aria-live="polite">
               {decoded.status === "ready" ? (
                 <>
                   <p className="play-inscribe-result-label">{t("threshold.thisFutureIs")}</p>
                   <p className="play-threshold-future">{futureCodeFromSeed(matchOriginVisualSeed(decoded.origin))}</p>
                 </>
               ) : decoded.status === "invalid" ? (
-                <p className="play-inscribe-error" role="alert">{t("setup.canonInvalid")}</p>
+                <p className="play-inscribe-error" role="alert">{t("threshold.seedRejected")}</p>
               ) : (
                 <p className="play-inscribe-note">{t("threshold.awaitingIdentity")}</p>
               )}
