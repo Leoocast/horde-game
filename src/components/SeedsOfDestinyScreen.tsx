@@ -120,7 +120,7 @@ export function SeedsOfDestinyScreen({ decks, hostDecks, onBack, onReplay, closi
       {library.phase === "loading" ? (
         <LibraryState icon="◇" title={t("seeds.loadingTitle")} body={t("seeds.loadingBody")} />
       ) : library.phase === "empty" ? (
-        <LibraryState icon="✦" title={t("seeds.emptyTitle")} body={t("seeds.emptyBody")} />
+        <EmptyLibraryState />
       ) : future ? (
         <div className="seeds-book">
           <div className="seeds-index">
@@ -216,6 +216,37 @@ function LibraryState({ icon, title, body }: Readonly<{ icon: string; title: str
       <span aria-hidden="true">{icon}</span>
       <h2>{title}</h2>
       <p>{body}</p>
+    </div>
+  );
+}
+
+function EmptyLibraryState() {
+  const t = useTranslation();
+  const steps = [
+    t("seeds.emptyStepContemplate"),
+    t("seeds.emptyStepChronicle"),
+    t("seeds.emptyStepReturn"),
+  ];
+
+  return (
+    <div className="seeds-library-state seeds-library-empty" role="status">
+      <div className="seeds-empty-constellation" aria-hidden="true">
+        <span className="seeds-empty-thread" />
+        <span className="seeds-empty-orbit" />
+        <span className="seeds-empty-orbit is-inner" />
+        <span className="seeds-empty-star">✦</span>
+      </div>
+      <small className="seeds-empty-kicker">{t("seeds.emptyKicker")}</small>
+      <h2>{t("seeds.emptyTitle")}</h2>
+      <p>{t("seeds.emptyBody")}</p>
+      <ol className="seeds-empty-path" aria-label={t("seeds.emptyPathLabel")}>
+        {steps.map((step, index) => (
+          <li key={step}>
+            <span aria-hidden="true"><b>{String(index + 1).padStart(2, "0")}</b></span>
+            <strong>{step}</strong>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }

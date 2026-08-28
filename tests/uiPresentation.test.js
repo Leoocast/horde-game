@@ -1266,15 +1266,21 @@ test("standard Preparation uses a fixed Future frontispiece and keeps the real d
   assert.match(drawerMarkup, /const drawerTitle = t\(side === "player" \? "setup\.chooseChronicle" : "setup\.chooseHost"\);/u);
   assert.doesNotMatch(drawerMarkup, /<small>\{eyebrow\}<\/small>|menu\.(?:chronicles|hosts)/u);
 
-  assert.match(styles, /\.preparation-frontispiece-stage\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) clamp\(300px, 35vw, 560px\) minmax\(0, 1fr\);/u);
+  assert.match(styles, /\.preparation-frontispiece-stage\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) clamp\(330px, 38\.5vw, 616px\) minmax\(0, 1fr\);/u);
+  assert.match(styles, /\.preparation-frontispiece-header > h1\s*\{[^}]*font-size:\s*clamp\(23\.1px, 2\.2vw, 33px\);/u);
+  assert.match(styles, /\.preparation-frontispiece-card\s*\{[^}]*width:\s*min\(clamp\(187px, 20\.9vw, 330px\), 44vh\);/u);
   assert.match(styles, /\.preparation-frontispiece-future\s*\{[^}]*width:\s*100%;[^}]*font-variant-numeric:\s*tabular-nums;/u);
+  assert.match(styles, /\.preparation-frontispiece-future\s*\{[^}]*font-size:\s*clamp\(59\.4px, min\(7\.7vw, 16\.5vh\), 129\.8px\);/u);
   assert.match(styles, /\.preparation-frontispiece-future\s*\{[^}]*color:\s*#f4dc91;[^}]*0 0 82px rgb\(190 144 55 \/ 0\.24\);/u);
   assert.match(styles, /\.preparation-frontispiece-future > span\s*\{[^}]*width:\s*0\.72em;[^}]*preparation-future-digit-in/u);
-  assert.match(styles, /\.preparation-frontispiece-kicker\s*\{[^}]*color:\s*#91a29e;[^}]*font-size:\s*clamp\(15px, 1\.25vw, 21px\);/u);
+  assert.match(styles, /\.preparation-frontispiece-kicker\s*\{[^}]*color:\s*#91a29e;[^}]*font-size:\s*clamp\(16\.5px, 1\.375vw, 23\.1px\);/u);
   assert.match(styles, /\.preparation-frontispiece-future > span\.is-separator\s*\{[^}]*color:\s*inherit;/u);
-  assert.match(styles, /\.preparation-frontispiece-match > span\s*\{[^}]*font-size:\s*clamp\(17px, 1\.45vw, 23px\);/u);
-  assert.match(styles, /\.preparation-frontispiece-match > small\s*\{[^}]*font-size:\s*12px;/u);
-  assert.match(styles, /\.preparation-frontispiece-wing-foot\s*\{[^}]*margin-top:\s*clamp\(7px, 1vh, 11px\);/u);
+  assert.match(styles, /\.preparation-frontispiece-match > span\s*\{[^}]*font-size:\s*clamp\(18\.7px, 1\.595vw, 25\.3px\);/u);
+  assert.match(styles, /\.preparation-frontispiece-match > small\s*\{[^}]*font-size:\s*13\.2px;/u);
+  assert.match(styles, /\.preparation-frontispiece-wing-foot\s*\{[^}]*margin-top:\s*clamp\(7\.7px, 1\.1vh, 12\.1px\);/u);
+  assert.match(styles, /\.preparation-frontispiece-wing-foot button\s*\{[^}]*min-height:\s*37\.4px;[^}]*font-size:\s*11px;/u);
+  assert.match(styles, /\.preparation-frontispiece-wing-foot button,\s*\.preparation-frontispiece-copy\s*\{[^}]*min-height:\s*34px;/u);
+  assert.match(styles, /\.expedition-frontispiece \.expedition-begin\s*\{[^}]*min-width:\s*296px;[^}]*min-height:\s*52px;/u);
   assert.doesNotMatch(startMenu, /preparation-frontispiece-diamond|frontispiece-active/u);
   const futureDigitKeyframes = styles.slice(
     styles.indexOf("@keyframes preparation-future-digit-in"),
@@ -1338,14 +1344,27 @@ test("secondary menus homologate their back control with Play's Main menu anchor
   assert.match(styles, /@media \(max-height: 760px\)\s*\{\s*\.play-threshold-back,\s*\.menu-screen-back \{ top: 14px; \}/u);
 });
 
-test("the menu archive and inscription both use Seed of Destiny", () => {
+test("the archive is plural while a single inscription remains a Seed of Destiny", () => {
   const seeds = readFileSync(new URL("../src/components/SeedsOfDestinyScreen.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
-  assert.equal(translate("en", "menu.seedsOfDestiny"), "Seed of Destiny");
-  assert.equal(translate("es", "menu.seedsOfDestiny"), "Semilla del Destino");
+  assert.equal(translate("en", "menu.seedsOfDestiny"), "Seeds of Destiny");
+  assert.equal(translate("es", "menu.seedsOfDestiny"), "Semillas del Destino");
   assert.equal(translate("en", "threshold.seedLabel"), "Seed of Destiny");
   assert.equal(translate("es", "threshold.seedLabel"), "Semilla del Destino");
   assert.doesNotMatch(seeds, /seeds-intro/u);
+  assert.match(seeds, /library\.phase === "empty" \? \(\s*<EmptyLibraryState \/>/u);
+  assert.match(seeds, /className="seeds-empty-constellation"/u);
+  assert.match(seeds, /seeds\.emptyStepContemplate[\s\S]*?seeds\.emptyStepChronicle[\s\S]*?seeds\.emptyStepReturn/u);
+  assert.match(styles, /\.seeds-empty-path\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/u);
+  assert.match(styles, /@keyframes seeds-empty-orbit/u);
+});
+
+test("Which Future keeps both gates fully present and paints the pointer glow on top", () => {
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(styles, /\.play-threshold-gate::before\s*\{[^}]*z-index:\s*3;[^}]*mix-blend-mode:\s*screen;/u);
+  assert.doesNotMatch(styles, /\.play-threshold-gates:hover \.play-threshold-gate:not\(:hover\)/u);
 });
 
 test("How to Play opens a full-screen data-driven tutorial catalog", () => {

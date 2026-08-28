@@ -531,7 +531,7 @@ el eje central. **Jugar** tiene mayor jerarquía que el resto de entradas; no se
 marcadores geométricos ni una placa lateral detrás del menú. La identidad editable del Cronista se
 mantiene arriba a la derecha y las herramientas dev conservan su dock discreto. Toda la UI del home,
 incluidos identidad, dock y versión, usa escala `1.2`; el pie sólo imprime **Beta 0.1.0**. Crónicas,
-Huestes, **Semilla del Destino**, Cómo jugar y Ajustes sustituyen el frontispicio y ocupan el lienzo
+Huestes, **Semillas del Destino**, Cómo jugar y Ajustes sustituyen el frontispicio y ocupan el lienzo
 completo, siempre dejando ver el ambiente real por debajo. Sus regresos comparten posición, tamaño,
 fuente, icono y texto **Menú principal** con el botón del Umbral de Jugar. En escritorio, Ajustes
 agrupa sus secciones en dos columnas editoriales —Idioma/Audio y Pantalla/Juego— y colapsa a una sola
@@ -543,7 +543,9 @@ La Preparación standard usa el frontispicio de **Escribir Crónica** sobre el `
 la cifra fija de **Futuro** domina el centro, las cartas clave flanquean el enfrentamiento y el pie
 reúne las tres dificultades, la frase completa del despertar y **Iniciar Crónica**. La anchura del
 número no puede desplazar la composición; sus glifos viven en celdas tabulares dentro de una columna
-central fija. Las dificultades no repiten «Preparación», y «Cronista»/«Hueste» no se imprimen encima
+central fija. Toda esa composición usa escala `1.1`, incluidas las cartas y las acciones Ver/Cambiar;
+**Back**, **Copiar identidad** e **Iniciar Crónica** conservan sus medidas originales. Las dificultades
+no repiten «Preparación», y «Cronista»/«Hueste» no se imprimen encima
 de las cartas. Los nombres de ambos mazos y el `VS` tienen presencia en el centro; bajo las cartas
 clave no se repite el total de cartas. Cada ala conserva **Ver mazo** y **Cambiar mazo** mediante el
 drawer real compartido, con aire suficiente entre la carta y esas acciones.
@@ -566,6 +568,8 @@ activo movimiento reducido, se conserva automáticamente el choque independiente
 
 En el Umbral, **Menú principal** comparte el ancla vertical y horizontal de **Volver al umbral** en
 Preparación; retroceder entre ambas pantallas no debe desplazar el objetivo bajo el puntero.
+El halo que sigue al puntero se pinta encima de arte y contenido. El hover realza únicamente la puerta
+activa: la alternativa conserva siempre su opacidad completa.
 
 ## Sistema de UI player-facing
 
@@ -597,12 +601,14 @@ El Playground incluye una pestaña dev-only **Guide**. Monta un fixture exacto d
 Board real y diagnostica el ciclo de pausa, la intención autorizada, receipts, tokens visuales y
 beats retenidos. No es el guion ni el copy de la Primera Semilla y no entra al bundle de release.
 
-## Seed of Destiny / Semilla del Destino
+## Seeds of Destiny / Semillas del Destino
 
-El archivo de líneas temporales y la identidad reproducible que se escribe dentro de **Inscribe the
-future** se presentan como **Seed of Destiny** / **Semilla del Destino**. Ahí el Cronista contempla,
-reescribe y finalmente preserva sus futuros. El nombre técnico existente de módulos y documentos no
-cambia. Cada seed recibe una identidad
+El archivo de líneas temporales se presenta como **Seeds of Destiny** / **Semillas del Destino**;
+la identidad reproducible que se escribe dentro de **Inscribe the future** conserva el singular
+**Seed of Destiny** / **Semilla del Destino**. Ahí el Cronista contempla, reescribe y finalmente
+preserva sus futuros. Cuando aún no existe ninguno, el Archivo muestra una constelación incompleta y
+el recorrido Contemplar → Escribir → Reescribir, no un mensaje de sistema desnudo. El nombre técnico
+existente de módulos y documentos no cambia. Cada seed recibe una identidad
 cosmética determinista **Futuro `NNN·NNN`**; ese código compacto puede colisionar y nunca reemplaza
 la identidad reproducible. Desde la Fase 2.5, el launcher normal genera una Canon Seed `HF1` y
 **Copiar identidad** copia ese código completo; `GameState.seed` recibe únicamente sus cinco
