@@ -24593,6 +24593,8 @@ body.is-victory-clearing .game-battlefield-stage {
   z-index: 3;
   top: clamp(18px, 3vh, 32px);
   left: clamp(20px, 3.4vw, 52px);
+  gap: 10px;
+  font-size: 14px;
 }
 
 .play-threshold-body {
@@ -24601,43 +24603,35 @@ body.is-victory-clearing .game-battlefield-stage {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   justify-items: center;
-  padding: clamp(30px, 6.4vh, 86px) clamp(20px, 3vw, 54px) clamp(18px, 3.2vh, 40px);
+  padding: clamp(84px, 11.5vh, 132px) clamp(22px, 3.3vw, 60px) clamp(20px, 3.5vh, 44px);
   text-align: center;
 }
 
 .play-threshold-head {
   display: grid;
   justify-items: center;
-  gap: clamp(8px, 1.4vh, 16px);
+  gap: clamp(9px, 1.5vh, 18px);
   animation: play-threshold-rise 620ms cubic-bezier(0.22, 0.61, 0.36, 1) 100ms backwards;
-}
-
-.play-threshold-kicker {
-  margin: 0;
-  color: #c8b678;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.36em;
-  text-transform: uppercase;
 }
 
 .play-threshold-title {
   margin: 0;
   color: #ecdfb4;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(34px, min(4.9vw, 8vh), 64px);
+  font-size: clamp(37px, min(5.35vw, 8.7vh), 70px);
   font-weight: 400;
   letter-spacing: 0.02em;
   line-height: 1.05;
 }
 
 .play-threshold-lead {
-  max-width: 640px;
+  max-width: min(1120px, calc(100vw - 80px));
   margin: 0;
-  color: #8d9a94;
+  color: #a5b0aa;
   font-family: "Lora", Georgia, serif;
-  font-size: clamp(13px, 1.15vw, 15.5px);
-  line-height: 1.66;
+  font-size: clamp(12px, 1.05vw, 17px);
+  line-height: 1.5;
+  white-space: nowrap;
 }
 
 .play-threshold-gates {
@@ -24645,8 +24639,8 @@ body.is-victory-clearing .game-battlefield-stage {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-self: center;
-  gap: clamp(22px, 2.9vw, 50px);
-  width: min(1140px, 100%);
+  gap: clamp(24px, 3.2vw, 55px);
+  width: min(1254px, 100%);
 }
 
 .play-threshold-seam {
@@ -24666,18 +24660,18 @@ body.is-victory-clearing .game-battlefield-stage {
 .play-threshold-gate {
   position: relative;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   align-content: stretch;
   isolation: isolate;
-  min-height: clamp(320px, 45vh, 470px);
-  gap: 19px;
+  min-height: clamp(352px, 49.5vh, 517px);
+  gap: 21px;
   overflow: hidden;
-  border: 1px solid rgb(160 148 102 / 0.3);
-  border-top-color: rgb(202 182 116 / 0.5);
+  border: 1px solid rgb(177 163 111 / 0.4);
+  border-top-color: rgb(216 195 126 / 0.62);
   border-radius: 4px;
-  padding: clamp(28px, 3.4vw, 48px) clamp(28px, 3.4vw, 48px) 0;
-  background: linear-gradient(180deg, rgb(36 44 45 / 0.94), rgb(12 18 20 / 0.98));
-  box-shadow: 0 22px 52px rgb(0 0 0 / 0.5), inset 0 1px 0 rgb(255 245 214 / 0.06);
+  padding: clamp(31px, 3.75vw, 53px) clamp(31px, 3.75vw, 53px) 0;
+  background: linear-gradient(180deg, rgb(31 39 40 / 0.98), rgb(10 16 18 / 0.99));
+  box-shadow: 0 24px 58px rgb(0 0 0 / 0.56), inset 0 1px 0 rgb(255 245 214 / 0.08);
   text-align: left;
   transition: border-color 220ms ease, box-shadow 260ms ease, transform 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
@@ -24705,7 +24699,7 @@ body.is-victory-clearing .game-battlefield-stage {
   background-position: center var(--gate-art-y, 30%);
   background-size: cover;
   content: "";
-  mask-image: linear-gradient(180deg, transparent, #000 24%);
+  mask-image: linear-gradient(180deg, transparent, #000 30%);
   pointer-events: none;
   transition: filter 320ms ease;
 }
@@ -24716,7 +24710,7 @@ body.is-victory-clearing .game-battlefield-stage {
 
 .play-threshold-gate[data-gate="new"]::after {
   background-image:
-    linear-gradient(180deg, rgb(11 17 19 / 0.9), rgb(11 17 19 / 0.66) 40%, rgb(11 17 19 / 0.88)),
+    linear-gradient(180deg, rgb(8 14 16 / 0.96), rgb(9 15 17 / 0.78) 42%, rgb(8 13 15 / 0.94)),
     url("../assets/art/util/DeanSpencer-LichScryingOutcropCampDriveThruRPG.jpg");
 }
 
@@ -24726,7 +24720,7 @@ body.is-victory-clearing .game-battlefield-stage {
 
 .play-threshold-gate[data-gate="inscribed"]::after {
   background-image:
-    linear-gradient(180deg, rgb(11 17 19 / 0.9), rgb(11 17 19 / 0.66) 40%, rgb(11 17 19 / 0.88)),
+    linear-gradient(180deg, rgb(8 14 16 / 0.96), rgb(9 15 17 / 0.78) 42%, rgb(8 13 15 / 0.94)),
     url("../assets/art/util/DeanSpencer-spotcol-magicgateFP-nightshade-intensity-LOW-V1.jpg");
 }
 
@@ -24751,49 +24745,32 @@ body.is-victory-clearing .game-battlefield-stage {
 
 .play-threshold-gate-head {
   display: grid;
-  gap: 6px;
+  gap: 7px;
 }
 
 .play-threshold-gate-kicker {
-  color: #7f8c87;
-  font-size: 10px;
+  color: #a2ada7;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.28em;
   text-transform: uppercase;
 }
 
 .play-threshold-gate-title {
-  color: #d6c58f;
+  color: #ead9a5;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(25px, 2.7vw, 38px);
+  font-size: clamp(27.5px, 2.95vw, 42px);
   letter-spacing: 0.01em;
   line-height: 1.1;
 }
 
 .play-threshold-gate-copy {
-  color: #8d9a94;
+  max-width: 44ch;
+  color: #b4beb8;
   font-family: "Lora", Georgia, serif;
-  font-size: clamp(14.5px, 1.18vw, 17px);
-  line-height: 1.66;
-}
-
-.play-threshold-gate-figure {
-  display: flex;
-  min-height: 102px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  border-top: 1px solid rgb(160 148 102 / 0.16);
-  border-bottom: 1px solid rgb(160 148 102 / 0.16);
-  padding: 14px 2px;
-}
-
-.play-threshold-gate-label {
-  color: #7f8c87;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
+  font-size: clamp(16px, 1.3vw, 18.5px);
+  line-height: 1.64;
+  text-shadow: 0 1px 10px rgb(0 0 0 / 0.55);
 }
 
 /* El resplandor es el del número del diálogo de Reescribir. */
@@ -24806,29 +24783,17 @@ body.is-victory-clearing .game-battlefield-stage {
   text-shadow: 0 0 24px rgb(226 205 140 / 0.42), 0 0 60px rgb(226 205 140 / 0.16);
 }
 
-.play-threshold-identity {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  color: #7f8c87;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 17px;
-  letter-spacing: 0.04em;
-}
-
-.play-threshold-identity i { font-style: normal; opacity: 0.55; }
-.play-threshold-identity b { color: #f0d9a4; font-weight: 700; }
-
 .play-threshold-gate-action {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin: 0 calc(-1 * clamp(28px, 3.4vw, 48px));
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 0 calc(-1 * clamp(31px, 3.75vw, 53px));
   border-top: 1px solid rgb(160 148 102 / 0.24);
-  padding: 17px clamp(28px, 3.4vw, 48px);
+  padding: 19px clamp(31px, 3.75vw, 53px);
   background: linear-gradient(180deg, rgb(30 37 38 / 0.6), rgb(11 16 18 / 0.7));
-  color: #aeb9b3;
-  font-size: 11.5px;
+  color: #c6cec9;
+  font-size: 12.5px;
   font-weight: 800;
   letter-spacing: 0.2em;
   text-transform: uppercase;

@@ -15,8 +15,6 @@ type DecodedDraft =
   | Readonly<{ status: "ready"; origin: MatchOrigin; playerDeck: InspectableDeck; hostDeck: InspectableDeck }>;
 
 type Props = Readonly<{
-  /** The future Destiny proposes right now; it travels into Preparation unchanged. */
-  origin: MatchOrigin;
   playerDecks: readonly InspectableDeck[];
   hostDecks: readonly InspectableDeck[];
   closing: boolean;
@@ -30,13 +28,12 @@ type Props = Readonly<{
  * It owns the whole screen but never remounts the menu behind it — the background art and
  * the TemporalBackdrop stay exactly where they were, only a shade lower.
  */
-export function PlayThreshold({ origin, playerDecks, hostDecks, closing, onNewFuture, onInscribedFuture, onBack }: Props) {
+export function PlayThreshold({ playerDecks, hostDecks, closing, onNewFuture, onInscribedFuture, onBack }: Props) {
   const t = useTranslation();
   const [inscribing, setInscribing] = useState(false);
   const [inscribeClosing, setInscribeClosing] = useState(false);
   const [draft, setDraft] = useState("");
   const gatesRef = useRef<HTMLDivElement>(null);
-  const futureCode = futureCodeFromSeed(matchOriginVisualSeed(origin));
 
   const decoded = useMemo<DecodedDraft>(() => {
     const code = draft.trim();
@@ -108,12 +105,11 @@ export function PlayThreshold({ origin, playerDecks, hostDecks, closing, onNewFu
       <div className="play-threshold-veil" aria-hidden="true" />
 
       <button className="play-threshold-back expedition-back" type="button" onClick={onBack}>
-        <ArrowLeft size={16} /> {t("common.mainMenu")}
+        <ArrowLeft size={18} /> {t("common.mainMenu")}
       </button>
 
       <div className="play-threshold-body">
         <header className="play-threshold-head">
-          <p className="play-threshold-kicker">{t("threshold.kicker")}</p>
           <h1 className="play-threshold-title">{t("threshold.title")}</h1>
           <p className="play-threshold-lead">{t("threshold.lead")}</p>
         </header>
@@ -128,11 +124,7 @@ export function PlayThreshold({ origin, playerDecks, hostDecks, closing, onNewFu
               <span className="play-threshold-gate-title">{t("threshold.newTitle")}</span>
             </span>
             <span className="play-threshold-gate-copy">{t("threshold.newDescription")}</span>
-            <span className="play-threshold-gate-figure">
-              <span className="play-threshold-gate-label">{t("threshold.destinyProposes")}</span>
-              <span className="play-threshold-future">{futureCode}</span>
-            </span>
-            <span className="play-threshold-gate-action">{t("threshold.newAction")}<ChevronRight size={15} aria-hidden="true" /></span>
+            <span className="play-threshold-gate-action">{t("threshold.newAction")}<ChevronRight size={17} aria-hidden="true" /></span>
           </button>
 
           <button className="play-threshold-gate" data-gate="inscribed" type="button" onClick={openInscribe} onPointerMove={trackAura}>
@@ -141,11 +133,7 @@ export function PlayThreshold({ origin, playerDecks, hostDecks, closing, onNewFu
               <span className="play-threshold-gate-title">{t("threshold.inscribedTitle")}</span>
             </span>
             <span className="play-threshold-gate-copy">{t("threshold.inscribedDescription")}</span>
-            <span className="play-threshold-gate-figure">
-              <span className="play-threshold-gate-label">{t("threshold.identity")}</span>
-              <span className="play-threshold-identity">HF1<i>·</i>———<i>·</i>———<i>·</i>——<b>?</b><i>·</i>———</span>
-            </span>
-            <span className="play-threshold-gate-action">{t("threshold.inscribedAction")}<ChevronRight size={15} aria-hidden="true" /></span>
+            <span className="play-threshold-gate-action">{t("threshold.inscribedAction")}<ChevronRight size={17} aria-hidden="true" /></span>
           </button>
         </div>
       </div>

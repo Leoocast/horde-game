@@ -545,7 +545,6 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
         />
       ) : menuScreen === "threshold" ? (
         <PlayThreshold
-          origin={activeOrigin}
           playerDecks={playableDecks}
           hostDecks={hostDecks}
           closing={thresholdClosing}
