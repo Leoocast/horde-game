@@ -1,0 +1,1221 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hostfall — Preparación: cuatro maquetas en la lengua del Archivo</title>
+  <style>
+    /* ─────────────────────────────────────────────────────────────────────────
+       PREPARACIÓN, en la lengua visual de `ui/claude-seeds-of-destiny-menu.html`.
+
+       La pantalla real de Preparación (`ExpeditionSetup`) conserva todo su
+       contenido —Crónica, Hueste, dificultad, despertar de la Hueste, identidad
+       del Futuro, ver/cambiar mazo, ajustes avanzados e Iniciar Crónica— pero
+       adopta el material del Archivo: Cinzel Decorative para el título, Cinzel
+       para códigos y etiquetas, Lora para la prosa, hilos dorados finos, cartas
+       sin marco con sombra por alfa, y el sello de la rosa cardinal.
+
+       Cuatro disposiciones, conmutables con 1-4:
+         1 · Página     — índice de decisiones a la izquierda, duelo a la derecha.
+         2 · Doble hoja — el libro abierto: una Crónica por página y el Futuro
+                          viviendo en el lomo.
+         3 · Registro   — una sola columna escrita a mano: el Futuro encabeza y
+                          cada decisión es un renglón del registro.
+         4 · Frontispicio — lámina a sangre: las dos cartas enfrentadas y el
+                          Futuro lacrado encima.
+
+       Servir con:  node dev/mockups/serve.mjs
+       ───────────────────────────────────────────────────────────────────────── */
+    @font-face { font-family: "Cinzel Decorative Local"; src: url("../assets/fonts/cinzel-decorative-latin.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+    @font-face { font-family: "Cinzel Local"; src: url("../assets/fonts/cinzel-latin.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+    @font-face { font-family: "Lora Local"; src: url("../assets/fonts/lora-normal-latin.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+    @font-face { font-family: "Lora Italic Local"; src: url("../assets/fonts/lora-italic-latin.woff2") format("woff2"); font-style: italic; font-weight: 400 700; font-display: swap; }
+    @font-face { font-family: "Oswald Local"; src: url("../assets/fonts/oswald-latin.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+
+    /* Paleta del Archivo (`src/styles.css`, sección Semillas del Destino). */
+    :root {
+      color-scheme: dark;
+      --ink: #030608;
+      --gold: #d6a44c;
+      --gold-soft: #a3905e;
+      --gold-bright: #f0e5c4;
+      --gold-plate: #e6d59e;
+      --gold-rule: rgb(199 170 105 / 0.34);
+      --gold-rule-strong: rgb(207 183 105 / 0.62);
+      --teal: #9ec9c2;
+      --copper: #d5a67e;
+      --parchment: #e0d3ad;
+      --text: #c8cdcb;
+      --steel: #abb4b6;
+      --muted: #93a0a3;
+      --muted-2: #7b888c;
+      --hairline: rgb(145 154 157 / 0.15);
+      --hairline-warm: rgb(166 151 105 / 0.24);
+      --display: "Cinzel Decorative Local", Georgia, "Times New Roman", serif;
+      --title: "Cinzel Local", Georgia, "Times New Roman", serif;
+      --serif: "Lora Local", Georgia, "Times New Roman", serif;
+      --serif-i: "Lora Italic Local", Georgia, "Times New Roman", serif;
+      --mono: "Oswald Local", Consolas, "Courier New", monospace;
+      --ui: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+      --deck-ela: #8fb772;
+      --deck-cec: #c0566f;
+      --deck-grv: #8da96a;
+      --deck-vrk: #c67a41;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: var(--ink);
+      color: var(--text);
+      font-family: var(--ui);
+      -webkit-font-smoothing: antialiased;
+    }
+    button { border: none; background: none; color: inherit; cursor: pointer; font: inherit; }
+    :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+    /* ── Barra de la maqueta ────────────────────────────────────────────────── */
+    .mock-bar {
+      position: fixed;
+      z-index: 900;
+      top: 0;
+      right: 0;
+      left: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 40px;
+      border-bottom: 1px solid var(--hairline-warm);
+      padding: 0 13px;
+      background: rgb(3 7 8 / 0.96);
+      color: var(--muted-2);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    .mock-bar b { color: var(--gold); }
+    .mock-bar .spacer { flex: 1; }
+    .mock-bar .hint { font-family: var(--serif-i); font-size: 12px; font-style: italic; font-weight: 400; letter-spacing: 0; text-transform: none; }
+    .seg { display: flex; overflow: hidden; border: 1px solid var(--gold-rule); border-radius: 3px; }
+    .seg button {
+      border-left: 1px solid rgb(160 148 102 / 0.18);
+      padding: 6px 11px;
+      background: rgb(16 22 24 / 0.9);
+      color: var(--muted-2);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      transition: color 140ms ease, background-color 140ms ease;
+    }
+    .seg button:first-child { border-left: 0; }
+    .seg button:hover { background: rgb(30 38 40 / 0.95); color: var(--gold-bright); }
+    .seg button[aria-pressed="true"] { background: linear-gradient(180deg, rgb(60 54 34 / 0.9), rgb(26 30 30 / 0.95)); color: var(--gold-bright); }
+
+    /* ── Escenario: el fondo del juego, sin tocar ───────────────────────────── */
+    .frame {
+      position: absolute;
+      inset: 40px 0 0;
+      overflow: hidden;
+      isolation: isolate;
+      background:
+        linear-gradient(90deg, rgb(4 7 9 / 0.95), rgb(11 17 20 / 0.8) 48%, rgb(4 7 9 / 0.94)),
+        linear-gradient(0deg, rgb(3 6 8 / 0.94), rgb(0 0 0 / 0.14) 60%),
+        radial-gradient(120% 90% at 50% 8%, #10181b, #060a0c 58%, #040708);
+    }
+    .backdrop { position: absolute; inset: -6%; pointer-events: none; }
+    .backdrop-grid { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.5; }
+    .backdrop-grid rect { fill: none; stroke: rgb(148 178 172 / 0.06); stroke-width: 1; }
+    .backdrop-dial {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: min(112vh, 96vw);
+      aspect-ratio: 1;
+      translate: -50% -50%;
+      opacity: 0.42;
+    }
+    .backdrop-dial svg { width: 100%; height: 100%; animation: dial-drift 260s linear infinite; }
+    .backdrop-stars i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #cfe0da; animation: star-breathe 6s ease-in-out infinite; }
+    @keyframes dial-drift { to { rotate: -360deg; } }
+    @keyframes star-breathe { 0%, 100% { opacity: 0.12; } 50% { opacity: 0.45; } }
+    .screen-ambience {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 44%, rgb(8 13 16 / 0.28), rgb(3 6 8 / 0.62) 76%);
+      pointer-events: none;
+    }
+
+    /* ── Armazón común de la pantalla ───────────────────────────────────────── */
+    .prep {
+      position: absolute;
+      z-index: 2;
+      inset: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      padding: clamp(18px, 2.6vh, 32px) clamp(24px, 3vw, 54px) clamp(16px, 2vh, 26px);
+      animation: prep-in 320ms ease-out both;
+    }
+    @keyframes prep-in { from { opacity: 0; transform: translateY(8px); } }
+
+    .prep-head {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 18px;
+      border-bottom: 1px solid var(--hairline-warm);
+      padding-bottom: 13px;
+    }
+    .prep-back {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      align-self: center;
+      color: var(--muted-2);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      transition: color 150ms ease, transform 150ms ease;
+    }
+    .prep-back:hover { color: var(--gold-bright); transform: translateX(-3px); }
+    .prep-titles h1 {
+      margin: 0;
+      color: var(--parchment);
+      font-family: var(--display);
+      font-size: clamp(26px, 2.9vw, 42px);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 0.98;
+      text-shadow: 0 4px 22px rgb(0 0 0 / 0.85);
+    }
+    .prep-titles p {
+      margin: 9px 0 0;
+      overflow: hidden;
+      color: var(--muted);
+      font-family: var(--serif-i);
+      font-size: clamp(11.5px, 0.98vw, 15px);
+      font-style: italic;
+      line-height: 1.6;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .prep-head-right { align-self: center; justify-self: end; }
+
+    /* Identidad compacta de la cabecera: sólo donde el Futuro no preside. */
+    .head-future {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      color: var(--parchment);
+      font-family: var(--title);
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      font-variant-numeric: tabular-nums;
+    }
+    .head-future span { color: var(--muted-2); font-family: var(--ui); font-size: 10px; font-weight: 800; letter-spacing: 0.24em; text-transform: uppercase; }
+
+    /* ── Piezas compartidas ─────────────────────────────────────────────────── */
+    .kicker { color: var(--muted-2); font-size: 11px; font-weight: 800; letter-spacing: 0.26em; text-transform: uppercase; }
+
+    .duel-card { position: relative; display: block; isolation: isolate; margin: 0; }
+    .duel-card img {
+      display: block;
+      width: 100%;
+      height: auto;
+      filter:
+        drop-shadow(0 1px 1px rgb(0 0 0 / 0.6))
+        drop-shadow(0 10px 16px rgb(0 0 0 / 0.5))
+        drop-shadow(0 26px 40px rgb(0 0 0 / 0.42));
+      transition: transform 340ms cubic-bezier(0.16, 1, 0.3, 1), filter 340ms ease;
+    }
+    /* Las dos cartas se miran: giran hacia dentro sobre su propio eje. */
+    .duel-card[data-side="player"] img { transform: perspective(1000px) rotateY(9deg) rotate(-3deg); }
+    .duel-card[data-side="host"] img { transform: perspective(1000px) rotateY(-9deg) rotate(3deg); }
+    .duel-card[data-side="player"]:hover img { transform: perspective(1000px) rotateY(4deg) rotate(-1.2deg) translateY(-9px) scale(1.045); }
+    .duel-card[data-side="host"]:hover img { transform: perspective(1000px) rotateY(-4deg) rotate(1.2deg) translateY(-9px) scale(1.045); }
+    /* Un halo del color del bando separa la carta del cosmos sin dibujarle marco. */
+    .duel-card::before {
+      position: absolute;
+      z-index: -1;
+      inset: 12% 0 6%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, color-mix(in srgb, var(--deck-accent) 46%, transparent), transparent 68%);
+      content: "";
+      filter: blur(30px);
+      opacity: 0.42;
+      transition: opacity 340ms ease;
+    }
+    .duel-card:hover::before { opacity: 0.72; }
+
+    .deck-name {
+      margin: 0;
+      color: var(--parchment);
+      font-family: var(--title);
+      font-size: clamp(17px, 1.5vw, 23px);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.15;
+    }
+    .deck-copy {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-family: var(--serif);
+      font-size: clamp(13px, 1.02vw, 15px);
+      line-height: 1.6;
+    }
+    .deck-count { color: var(--muted-2); font-family: var(--title); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; }
+
+    .plate-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .plate-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid rgb(158 151 110 / 0.28);
+      padding: 7px 13px;
+      background: rgb(4 12 14 / 0.7);
+      color: #a8ad98;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+    }
+    .plate-button:hover { border-color: rgb(214 192 122 / 0.7); background: rgb(12 20 22 / 0.8); color: var(--gold-bright); }
+
+    /* El número del Futuro, con el resplandor del Archivo. */
+    .future-code {
+      margin: 0;
+      color: var(--gold-bright);
+      font-family: var(--title);
+      font-size: clamp(32px, 3.6vw, 52px);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 20px rgb(220 185 94 / 0.3);
+    }
+    .future-code.is-striking span { display: inline-block; animation: strike 420ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+    .future-code.is-striking span:nth-child(2) { animation-delay: 40ms; }
+    .future-code.is-striking span:nth-child(3) { animation-delay: 80ms; }
+    .future-code.is-striking span:nth-child(5) { animation-delay: 140ms; }
+    .future-code.is-striking span:nth-child(6) { animation-delay: 180ms; }
+    .future-code.is-striking span:nth-child(7) { animation-delay: 220ms; }
+    @keyframes strike {
+      0% { opacity: 0; transform: translateY(-8px) scale(1.4); filter: brightness(2.2); }
+      70% { opacity: 1; }
+      100% { opacity: 1; transform: none; filter: none; }
+    }
+
+    .seal { display: block; overflow: visible; }
+    .seal .rose { fill: none; stroke: rgb(232 205 138 / 0.95); stroke-width: 1.3; stroke-linejoin: miter; vector-effect: non-scaling-stroke; }
+    .seal .incision { stroke: rgb(214 164 76 / 0.85); stroke-width: 1; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+    .seal .ring { fill: none; stroke: rgb(214 192 122 / 0.5); stroke-width: 1; vector-effect: non-scaling-stroke; animation: seal-breathe 6s ease-in-out infinite; }
+    .seal .tick { stroke: rgb(199 170 105 / 0.5); stroke-width: 1; vector-effect: non-scaling-stroke; }
+    .seal .heart { fill: #fff0c4; stroke: none; }
+    @keyframes seal-breathe { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+    /* Dificultad: tres marcas del registro, no tres botones de formulario. */
+    .fate { display: grid; gap: 7px; }
+    .fate-label { color: var(--muted-2); font-size: 10.5px; font-weight: 800; letter-spacing: 0.24em; text-transform: uppercase; }
+    .fate-row { display: flex; gap: 8px; }
+    .fate-option {
+      position: relative;
+      display: grid;
+      flex: 1 1 0;
+      gap: 3px;
+      border: 1px solid rgb(145 154 157 / 0.16);
+      padding: 10px 12px;
+      background: rgb(6 12 14 / 0.55);
+      text-align: left;
+      transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
+    }
+    .fate-option strong { color: var(--steel); font-family: var(--title); font-size: 14px; font-weight: 700; letter-spacing: 0.06em; }
+    .fate-option small { color: var(--muted-2); font-family: var(--serif); font-size: 12px; }
+    .fate-option:hover { border-color: rgb(199 170 105 / 0.42); transform: translateY(-1px); }
+    .fate-option[aria-pressed="true"] {
+      border-color: var(--gold-rule-strong);
+      background: linear-gradient(180deg, rgb(38 34 20 / 0.7), rgb(8 13 15 / 0.8));
+    }
+    .fate-option[aria-pressed="true"] strong { color: var(--gold-bright); }
+    .fate-option[aria-pressed="true"]::after {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      color: var(--gold);
+      content: "◆";
+      font-size: 8px;
+    }
+
+    .awakening {
+      margin: 0;
+      color: var(--muted);
+      font-family: var(--serif-i);
+      font-size: clamp(13px, 1.05vw, 15.5px);
+      font-style: italic;
+    }
+    .awakening strong { color: var(--gold-plate); font-family: var(--title); font-style: normal; font-weight: 700; letter-spacing: 0.06em; }
+
+    /* Pie de acciones, con el botón de Destino del Archivo. */
+    .prep-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 14px;
+      border-top: 1px solid var(--hairline-warm);
+      padding-top: 14px;
+    }
+    .prep-actions .summary {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-right: auto;
+      color: var(--muted-2);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .prep-actions .summary strong { color: var(--parchment); font-family: var(--title); font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: none; }
+    .prep-actions .summary i { color: var(--gold); font-size: 8px; font-style: normal; opacity: 0.6; }
+
+    .action-destiny {
+      position: relative;
+      display: flex;
+      min-width: 296px;
+      height: 50px;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border: 1px solid var(--gold-rule-strong);
+      border-radius: 2px;
+      padding: 0 22px;
+      background:
+        linear-gradient(105deg, rgb(10 18 21 / 0.98), rgb(26 35 36 / 0.98) 52%, rgb(8 15 18 / 0.99)),
+        radial-gradient(circle at 18% 50%, rgb(89 146 147 / 0.2), transparent 42%);
+      color: var(--gold-plate);
+      box-shadow: inset 0 1px 0 rgb(251 235 177 / 0.1), inset 0 -1px 0 rgb(0 0 0 / 0.62), 0 8px 22px rgb(0 0 0 / 0.34);
+      transition: border-color 180ms ease, color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+    }
+    .action-destiny strong {
+      position: relative;
+      z-index: 2;
+      font-family: var(--serif);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    /* El ornamento radial cubre la superficie y gira hacia la izquierda. */
+    .action-destiny::before {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: calc(100% + 64px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: conic-gradient(from 20deg, transparent, rgb(108 180 178 / 0.18), transparent 34%, rgb(222 196 116 / 0.16), transparent 68%);
+      content: "";
+      opacity: 0.65;
+      transform: translate(-50%, -50%);
+      animation: destiny-orbit 8s linear infinite reverse;
+    }
+    .action-destiny::after { position: absolute; inset: 3px; border: 1px solid rgb(218 196 126 / 0.1); content: ""; }
+    .action-destiny:hover {
+      border-color: rgb(234 210 133 / 0.92);
+      color: #fff0bc;
+      transform: translateY(-1px);
+      box-shadow: inset 0 1px 0 rgb(255 239 184 / 0.14), 0 10px 26px rgb(0 0 0 / 0.42), 0 0 25px rgb(83 153 151 / 0.18);
+    }
+    .action-destiny:hover::before { opacity: 1; animation-duration: 1.4s; }
+    @keyframes destiny-orbit { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+    /* Ajustes avanzados: el cajón discreto que hoy vive al pie de Preparación. */
+    .prep-advanced { display: grid; gap: 10px; }
+    .advanced-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      justify-self: start;
+      color: var(--muted-2);
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      transition: color 150ms ease;
+    }
+    .advanced-toggle:hover { color: var(--gold-bright); }
+    .advanced-toggle i { color: var(--gold); font-size: 8px; font-style: normal; }
+    .advanced-content {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 14px;
+      border: 1px solid var(--hairline);
+      border-left: 2px solid var(--gold-rule);
+      padding: 14px 16px;
+      background: rgb(6 11 13 / 0.72);
+    }
+    .advanced-field { display: grid; gap: 6px; min-width: 0; }
+    .advanced-field label { color: var(--muted-2); font-size: 9.5px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+    .advanced-field .row { display: flex; gap: 6px; }
+    .advanced-field input {
+      min-width: 0;
+      flex: 1;
+      border: 1px solid rgb(126 139 135 / 0.42);
+      padding: 9px 11px;
+      background: rgb(5 10 12 / 0.72);
+      color: #d8d1b7;
+      font-family: var(--mono);
+      font-size: 14px;
+      letter-spacing: 0.06em;
+      box-shadow: inset 0 1px 8px rgb(0 0 0 / 0.42);
+    }
+    .advanced-field input:focus { border-color: var(--gold-rule-strong); outline: none; }
+    .advanced-developer { display: flex; align-items: center; gap: 12px; }
+    .advanced-developer span { display: grid; gap: 2px; }
+    .advanced-developer strong { color: var(--steel); font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+    .advanced-developer small { color: var(--muted-2); font-family: var(--serif); font-size: 12px; }
+    .switch { width: 42px; height: 22px; border: 1px solid rgb(145 154 157 / 0.3); background: rgb(6 12 14 / 0.8); padding: 2px; }
+    .switch > i { display: block; width: 16px; height: 16px; background: rgb(145 154 157 / 0.5); transition: transform 160ms ease, background-color 160ms ease; }
+    .switch[aria-checked="true"] { border-color: var(--gold-rule-strong); }
+    .switch[aria-checked="true"] > i { background: var(--gold); transform: translateX(20px); }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       1 · PÁGINA — índice de decisiones a la izquierda, duelo a la derecha
+       ═══════════════════════════════════════════════════════════════════════ */
+    .v-page {
+      display: grid;
+      min-height: 0;
+      grid-template-columns: minmax(320px, 26%) minmax(0, 1fr);
+      gap: 0 clamp(24px, 2.6vw, 44px);
+      padding-top: 14px;
+    }
+    .v-page .index { position: relative; display: grid; align-content: start; gap: 2px; padding-right: clamp(16px, 1.8vw, 28px); }
+    .v-page .index::after {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 1px;
+      background: linear-gradient(transparent 2%, rgb(156 137 89 / 0.3) 16%, rgb(156 137 89 / 0.14) 78%, transparent 98%);
+      content: "";
+    }
+    .index-label { margin: 0 0 6px; color: var(--muted-2); font-size: 11px; font-weight: 800; letter-spacing: 0.24em; text-transform: uppercase; }
+    .index-entry {
+      position: relative;
+      display: grid;
+      width: 100%;
+      grid-template-columns: 34px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid rgb(145 154 157 / 0.1);
+      padding: 15px 8px 15px 6px;
+      text-align: left;
+      transition: background-color 170ms ease, padding-left 170ms ease;
+    }
+    .index-entry:hover { background: rgb(199 170 105 / 0.05); padding-left: 11px; }
+    .index-entry .entry-mark { display: grid; place-items: center; color: var(--gold-soft); font-family: var(--title); font-size: 12px; font-weight: 700; }
+    .index-entry .entry-body { display: grid; gap: 4px; min-width: 0; }
+    .index-entry .entry-role { color: var(--muted-2); font-size: 10px; font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase; }
+    .index-entry .entry-value {
+      overflow: hidden;
+      color: var(--parchment);
+      font-family: var(--title);
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .index-entry .entry-note { color: var(--muted); font-family: var(--serif); font-size: 12.5px; }
+    .index-entry .entry-action { color: var(--muted-2); font-size: 10px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
+    .index-entry:hover .entry-action { color: var(--gold-bright); }
+    .v-page .index-fate { padding: 16px 6px 0; }
+    .v-page .page { display: grid; min-height: 0; grid-template-rows: minmax(0, 1fr) auto auto; }
+    .v-page .duel {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: clamp(14px, 1.8vw, 30px);
+      border-bottom: 1px solid rgb(145 154 157 / 0.12);
+      padding: 0 clamp(6px, 2.2vw, 40px) 18px;
+    }
+    .v-page .duel-card { width: min(clamp(148px, 12.6vw, 205px), 34vh); }
+    .v-page .duel-center { display: grid; justify-items: center; text-align: center; }
+    .v-page .duel-center .kicker { margin-bottom: 8px; }
+    .v-page .duel-center .seal { width: clamp(76px, 7vw, 104px); margin-bottom: 12px; }
+    .v-page .duel-match {
+      display: grid;
+      gap: 3px;
+      margin: 14px 0 0;
+      color: var(--parchment);
+      font-family: var(--serif);
+      font-size: clamp(14px, 1.1vw, 17px);
+      line-height: 1.35;
+    }
+    .v-page .duel-match .vs { color: var(--muted-2); font-family: var(--title); font-size: 11px; font-weight: 700; letter-spacing: 0.26em; text-transform: uppercase; }
+    .v-page .page-foot { display: grid; gap: 12px; padding: 16px 0 12px; }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       2 · DOBLE HOJA — el libro abierto: una Crónica por página, el Futuro
+       viviendo en el lomo
+       ═══════════════════════════════════════════════════════════════════════ */
+    .v-spread {
+      display: grid;
+      min-height: 0;
+      grid-template-columns: minmax(0, 1fr) clamp(230px, 22vw, 330px) minmax(0, 1fr);
+      align-items: stretch;
+      gap: clamp(16px, 2vw, 34px);
+      padding-top: 16px;
+    }
+    .v-spread .leaf {
+      position: relative;
+      display: grid;
+      min-height: 0;
+      overflow: hidden;
+      align-content: center;
+      justify-items: center;
+      gap: 14px;
+      padding: 0 clamp(10px, 1.6vw, 26px);
+      text-align: center;
+    }
+    .v-spread .leaf .duel-card { width: min(clamp(150px, 13.5vw, 215px), 30vh); }
+    .v-spread .leaf .deck-copy { display: -webkit-box; overflow: hidden; max-width: 40ch; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+    .v-spread .spine {
+      position: relative;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: 12px;
+      padding: 0 6px;
+      text-align: center;
+    }
+    /* El lomo: dos hilos y el aire entre ellos. */
+    .v-spread .spine::before,
+    .v-spread .spine::after {
+      position: absolute;
+      top: 4%;
+      bottom: 4%;
+      width: 1px;
+      background: linear-gradient(transparent, rgb(156 137 89 / 0.32) 18% 82%, transparent);
+      content: "";
+    }
+    .v-spread .spine::before { left: 0; }
+    .v-spread .spine::after { right: 0; }
+    .v-spread .spine .seal { width: clamp(84px, 8vw, 118px); }
+    .v-spread .spine .fate { width: 100%; }
+    .v-spread .spine .fate-row { flex-direction: column; }
+    .v-spread .spine .awakening { margin-top: 2px; }
+    .v-spread .foot { grid-column: 1 / -1; display: grid; gap: 12px; padding-top: 14px; }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       3 · REGISTRO — una sola columna escrita: el Futuro encabeza y cada
+       decisión es un renglón
+       ═══════════════════════════════════════════════════════════════════════ */
+    .v-ledger { display: grid; min-height: 0; justify-items: center; overflow-y: auto; padding-top: 20px; }
+    .v-ledger .sheet { display: grid; width: min(940px, 100%); align-content: start; gap: 18px; }
+    .v-ledger .ledger-head {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 20px;
+      border-bottom: 1px solid var(--hairline-warm);
+      padding-bottom: 16px;
+    }
+    .v-ledger .ledger-head .seal { width: clamp(74px, 7vw, 96px); }
+    .v-ledger .ledger-head .future-code { font-size: clamp(34px, 4vw, 58px); }
+    .v-ledger .ledger-head .kicker { margin-bottom: 6px; }
+    .v-ledger .row {
+      display: grid;
+      grid-template-columns: 132px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 18px;
+      border-bottom: 1px solid rgb(145 154 157 / 0.1);
+      padding: 14px 4px;
+    }
+    .v-ledger .row-label { color: var(--muted-2); font-size: 10.5px; font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase; }
+    .v-ledger .row-value { display: flex; align-items: center; gap: 16px; min-width: 0; }
+    .v-ledger .row-value .duel-card { width: 66px; flex: 0 0 auto; }
+    .v-ledger .row-value .duel-card img { transform: none; }
+    .v-ledger .row-value .duel-card:hover img { transform: translateY(-4px) scale(1.04); }
+    .v-ledger .row-text { display: grid; gap: 3px; min-width: 0; }
+    .v-ledger .row-fate { display: flex; gap: 8px; }
+    .v-ledger .row-fate .fate-option { flex: 0 0 auto; min-width: 148px; }
+    .v-ledger .ledger-foot { display: grid; gap: 12px; padding-top: 6px; }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       4 · FRONTISPICIO — lámina a sangre con el Futuro lacrado encima
+       ═══════════════════════════════════════════════════════════════════════ */
+    .v-plate { position: relative; display: grid; min-height: 0; grid-template-rows: minmax(0, 1fr) auto; padding-top: 10px; }
+    .v-plate .stage { position: relative; display: grid; min-height: 0; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: clamp(10px, 2vw, 40px); }
+    .v-plate .wing { display: grid; min-height: 0; justify-items: center; gap: 12px; text-align: center; }
+    .v-plate .wing .duel-card { width: min(clamp(180px, 19vw, 300px), 40vh); }
+    .v-plate .wing[data-side="player"] { justify-items: end; text-align: right; }
+    .v-plate .wing[data-side="host"] { justify-items: start; text-align: left; }
+    .v-plate .wing .deck-line { display: grid; gap: 4px; }
+    .v-plate .center { display: grid; justify-items: center; gap: 10px; text-align: center; }
+    .v-plate .center .seal { width: min(clamp(150px, 15vw, 220px), 26vh); }
+    /* El número se lacra sobre el sello: uno dentro del otro, no uno al lado. */
+    .v-plate .stamp { position: relative; display: grid; place-items: center; }
+    .v-plate .stamp .future-code { position: absolute; font-size: clamp(26px, 2.6vw, 38px); }
+    .v-plate .fate-row { justify-content: center; }
+    .v-plate .fate-option { flex: 0 0 auto; min-width: 132px; text-align: center; }
+    .v-plate .fate-option strong { display: block; }
+    .v-plate .foot { display: grid; gap: 12px; padding-top: 14px; }
+
+    /* ── Notas ──────────────────────────────────────────────────────────────── */
+    .notes {
+      position: fixed;
+      z-index: 950;
+      top: 40px;
+      right: 0;
+      bottom: 0;
+      overflow: auto;
+      width: min(440px, 92vw);
+      border-left: 1px solid var(--gold-rule);
+      padding: 22px 24px 40px;
+      background: rgb(6 10 11 / 0.97);
+      transform: translateX(100%);
+      transition: transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .notes.is-open { transform: none; }
+    .notes h2 { margin: 0 0 14px; color: var(--parchment); font-family: var(--title); font-size: 19px; font-weight: 700; }
+    .notes h3 { margin: 20px 0 6px; color: var(--gold); font-size: 10.5px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+    .notes ul { margin: 0; padding-left: 17px; }
+    .notes li { margin-bottom: 8px; color: var(--muted); font-family: var(--serif); font-size: 13px; line-height: 1.6; }
+    .notes strong { color: var(--text); }
+    .notes em { color: var(--gold-bright); font-style: normal; }
+
+    @media (max-width: 1180px) {
+      .v-page { grid-template-columns: 1fr; }
+      .v-page .index::after { display: none; }
+      .v-spread { grid-template-columns: 1fr; }
+      .v-plate .stage { grid-template-columns: 1fr; }
+      .v-plate .wing .duel-card { width: 150px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="mock-bar">
+    <b>Claude · Preparación · 4 maquetas</b>
+    <div class="seg" id="variants">
+      <button type="button" data-variant="page" aria-pressed="true">1 · Página</button>
+      <button type="button" data-variant="spread" aria-pressed="false">2 · Doble hoja</button>
+      <button type="button" data-variant="ledger" aria-pressed="false">3 · Registro</button>
+      <button type="button" data-variant="plate" aria-pressed="false">4 · Frontispicio</button>
+    </div>
+    <span class="hint" id="variant-hint">Índice de decisiones a la izquierda, duelo a la derecha.</span>
+    <div class="spacer"></div>
+    <div class="seg">
+      <button type="button" id="reroll">Otro futuro</button>
+      <button type="button" id="notes-toggle">Notas</button>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="backdrop" aria-hidden="true">
+      <svg class="backdrop-grid" id="backdrop-grid" preserveAspectRatio="none"></svg>
+      <div class="backdrop-stars" id="backdrop-stars"></div>
+      <div class="backdrop-dial" id="backdrop-dial"></div>
+    </div>
+    <div class="screen-ambience" aria-hidden="true"></div>
+    <section class="prep" id="prep" aria-label="Escribir Crónica"></section>
+  </div>
+
+  <aside class="notes" id="notes" aria-label="Notas de diseño">
+    <h2>Preparación en la lengua del Archivo</h2>
+
+    <h3>Qué se conserva del juego</h3>
+    <ul>
+      <li>Todo el contenido de <em>ExpeditionSetup</em>: Crónica, Hueste, sus artes clave reales, ver e
+        intercambiar mazo, las tres dificultades con su Preparación, el aviso de cuándo despierta la
+        Hueste, la identidad del Futuro, los ajustes avanzados con la Canon Seed y el Modo desarrollador,
+        y el resumen antes de <strong>Iniciar Crónica</strong>.</li>
+      <li>El códec real: <em>hashSeed</em>, <em>futureCodeFromSeed</em> y <em>HF1-PPP-HHH-XXD-XXX</em>.
+        Cambiar mazo o dificultad recompone el número, igual que en el juego.</li>
+      <li>Las cartas son las cartas clave que ya elige <em>BuiltinContentSource</em>: Aelyra, Mirevna,
+        Nerezh y Varka.</li>
+    </ul>
+
+    <h3>Qué toma del Archivo de Semillas</h3>
+    <ul>
+      <li>El material: Cinzel Decorative en el título, Cinzel en códigos y etiquetas, Lora en la prosa,
+        hilos dorados de un píxel en vez de paneles, y el fondo del juego sin cubrir.</li>
+      <li>Las cartas <strong>sin marco</strong>: sombra por alfa con <em>drop-shadow</em> y un halo del
+        color del bando detrás, nunca una placa rectangular.</li>
+      <li>El <strong>sello de la rosa cardinal</strong> —el mismo instrumento del disco de grados y de la
+        victoria— como firma del Futuro. Su interior no se rellena: sólo incisiones.</li>
+      <li>El botón de Destino con su ornamento radial girando hacia la izquierda.</li>
+    </ul>
+
+    <h3>Las cuatro disposiciones</h3>
+    <ul>
+      <li><strong>1 · Página.</strong> El libro con índice: a la izquierda las decisiones como entradas de
+        registro —Crónica, Hueste, Dificultad—, a la derecha la página abierta con el duelo y el Futuro
+        entre las dos cartas. Es la más parecida al Archivo y la que mejor escala si mañana hay más
+        decisiones que tomar.</li>
+      <li><strong>2 · Doble hoja.</strong> El libro completamente abierto: una Crónica por página y el
+        lomo en el centro, donde viven el sello, el Futuro, la dificultad y el despertar. La más
+        simétrica y la que más se lee como un duelo.</li>
+      <li><strong>3 · Registro.</strong> Una sola columna escrita: el Futuro encabeza la hoja y cada
+        decisión es un renglón con su valor y su cambio. La más sobria, la más rápida de leer y la que
+        mejor aguanta pantallas pequeñas.</li>
+      <li><strong>4 · Frontispicio.</strong> Lámina a sangre: las dos cartas grandes enfrentadas y el
+        Futuro lacrado dentro del sello, en el centro. La más ceremoniosa; el precio es que la
+        dificultad y los ajustes bajan a un segundo plano.</li>
+    </ul>
+
+    <h3>Decisiones abiertas</h3>
+    <ul>
+      <li>Con el umbral ya en el juego, ¿la Canon Seed sigue teniendo sitio aquí o los ajustes avanzados
+        se quedan sólo con el Modo desarrollador?</li>
+      <li>¿El aviso del despertar de la Hueste pertenece al centro —como aquí— o sigue colgando de la
+        carta de la Hueste?</li>
+      <li>¿Ver mazo abre el cajón de siempre o la página entera cambia a la colección?</li>
+    </ul>
+  </aside>
+
+  <script>
+    "use strict";
+
+    /* ── Códec real (RNG.ts, futureIdentity.ts, CanonSeed.ts) ───────────────── */
+    const ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    function hashSeed(seed) {
+      let hash = 2166136261;
+      for (let i = 0; i < seed.length; i += 1) {
+        hash ^= seed.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return hash >>> 0 || 1;
+    }
+
+    function futureCodeFromSeed(seed) {
+      const value = (hashSeed(seed) % 999999) + 1;
+      const digits = String(value).padStart(6, "0");
+      return digits.slice(0, 3) + "·" + digits.slice(3);
+    }
+
+    function canonCodeOf(player, host, mode, entropy) {
+      return "HF1-" + player + "-" + host + "-" + entropy.slice(0, 2) + mode + "-" + entropy.slice(2);
+    }
+
+    function newEntropy() {
+      const bytes = new Uint8Array(16);
+      let out = "";
+      while (out.length < 5) {
+        crypto.getRandomValues(bytes);
+        for (const byte of bytes) {
+          if (byte >= 252 || out.length >= 5) continue;
+          out += ALPHABET[byte % ALPHABET.length];
+        }
+      }
+      return out;
+    }
+
+    /* ── Contenido real ─────────────────────────────────────────────────────── */
+    const DECKS = {
+      ELA: {
+        side: "player", size: 39, accent: "var(--deck-ela)",
+        name: "El Pacto de Elarion",
+        copy: "Reúne a los antiguos aliados de Elarion y abre el camino para el regreso de Vaelor.",
+        card: "pact_of_elarion/aelyra_heir_of_elarion.png",
+      },
+      CEC: {
+        side: "player", size: 40, accent: "var(--deck-cec)",
+        name: "La Corte del Eclipse Carmesí",
+        copy: "En la Corte, la Vida es moneda: entrégala para tomar poder y recupérala de tus enemigos.",
+        card: "court_of_the_crimson_eclipse/mirevna_countess_of_the_crimson_eclipse.png",
+      },
+      GRV: {
+        side: "host", size: 50, accent: "var(--deck-grv)",
+        name: "El Alzamiento de los Sinsepulcro",
+        copy: "Nerezh despierta a los muertos sin tumba y convierte los recuerdos de los caídos en nuevas fuerzas.",
+        card: "uprising_of_the_graveless/nerezh_graveless_matriarch.png",
+      },
+      VRK: {
+        side: "host", size: 50, accent: "var(--deck-vrk)",
+        name: "La Legión de Varka",
+        copy: "Varka une Trasgos, Orcos y Bestias en una Legión que crece con cada guerrero que llega y cada cuerpo que cae.",
+        card: "legion_of_varka/varka_infernal_matriarch.png",
+      },
+    };
+    const MODES = {
+      "1": { label: "Aventurero", turns: 4 },
+      "2": { label: "Veterano", turns: 3 },
+      "3": { label: "Condenado", turns: 2 },
+    };
+    const PLAYER_CODES = ["ELA", "CEC"];
+    const HOST_CODES = ["GRV", "VRK"];
+    const VARIANT_HINTS = {
+      page: "Índice de decisiones a la izquierda, duelo a la derecha.",
+      spread: "El libro abierto: una Crónica por página y el Futuro en el lomo.",
+      ledger: "Una sola columna escrita: cada decisión es un renglón del registro.",
+      plate: "Lámina a sangre con el Futuro lacrado sobre el sello.",
+    };
+
+    const state = { player: "ELA", host: "GRV", mode: "2", entropy: newEntropy(), variant: "page", advanced: false, developer: false, strike: false };
+
+    const $ = (selector, scope) => (scope || document).querySelector(selector);
+    const $$ = (selector, scope) => Array.from((scope || document).querySelectorAll(selector));
+    const canonCode = () => canonCodeOf(state.player, state.host, state.mode, state.entropy);
+    const futureCode = () => futureCodeFromSeed(canonCode());
+    const playerDeck = () => DECKS[state.player];
+    const hostDeck = () => DECKS[state.host];
+
+    /* Servida por serve.mjs vale el alias `/cards/...`; con doble clic, la ruta
+       real del repositorio. Se prueban en ese orden. */
+    function cardImage(path, alt) {
+      return '<img src="../cards/' + path + '" alt="' + alt + '" draggable="false"'
+        + ' onerror="this.onerror=null;this.src=\'../../../public/cards/' + path + '\'" />';
+    }
+
+    function digits(code) {
+      return code.split("").map((character) => (character === "·" ? "<span>·</span>" : "<span>" + character + "</span>")).join("");
+    }
+
+    /* ── El sello: la rosa cardinal del instrumento, sin interior relleno ────── */
+    function sealSvg(seed) {
+      const axis = 46;
+      let random = hashSeed(seed + ":seal");
+      const next = () => {
+        random ^= random << 13; random >>>= 0;
+        random ^= random >>> 17;
+        random ^= random << 5; random >>>= 0;
+        return (random || 1) / 4294967296;
+      };
+      let rose = "";
+      for (let i = 0; i < 8; i += 1) {
+        const angle = (i / 8) * Math.PI * 2 - Math.PI / 2;
+        const radius = i % 2 === 0 ? axis : axis * 0.4;
+        rose += (i === 0 ? "M" : "L") + (60 + Math.cos(angle) * radius).toFixed(2) + " " + (60 + Math.sin(angle) * radius).toFixed(2);
+      }
+      rose += "Z";
+      /* Incisiones sin área: de axis*0.24 a axis*0.68 sobre las diagonales. */
+      let incisions = "";
+      for (let i = 0; i < 4; i += 1) {
+        const angle = (i / 4) * Math.PI * 2 - Math.PI / 4;
+        incisions += '<path class="incision" d="M' + (60 + Math.cos(angle) * axis * 0.24).toFixed(2) + " " + (60 + Math.sin(angle) * axis * 0.24).toFixed(2)
+          + "L" + (60 + Math.cos(angle) * axis * 0.68).toFixed(2) + " " + (60 + Math.sin(angle) * axis * 0.68).toFixed(2) + '" />';
+      }
+      let ticks = "";
+      const marks = 24 + Math.floor(next() * 12);
+      for (let i = 0; i < marks; i += 1) {
+        const angle = (i / marks) * Math.PI * 2;
+        const long = i % 6 === 0;
+        ticks += '<path class="tick" d="M' + (60 + Math.cos(angle) * (long ? 52 : 55)).toFixed(2) + " " + (60 + Math.sin(angle) * (long ? 52 : 55)).toFixed(2)
+          + "L" + (60 + Math.cos(angle) * 57).toFixed(2) + " " + (60 + Math.sin(angle) * 57).toFixed(2) + '" />';
+      }
+      return '<svg class="seal" viewBox="0 0 120 120" aria-hidden="true">'
+        + '<circle class="ring" cx="60" cy="60" r="57" />'
+        + '<circle class="ring" cx="60" cy="60" r="50" />'
+        + ticks
+        + '<path class="rose" d="' + rose + '" />'
+        + incisions
+        + '<circle class="heart" cx="60" cy="60" r="3.1" />'
+        + "</svg>";
+    }
+
+    /* ── Piezas compartidas por las cuatro disposiciones ─────────────────────── */
+    function headHtml(withFuture) {
+      return '<header class="prep-head">'
+        + '<button class="prep-back" type="button" data-action="back">← Volver al umbral</button>'
+        + '<div class="prep-titles"><h1>Escribir Crónica</h1>'
+        + '<p>Elige quién la escribe y qué despierta al otro lado. El Futuro ya viene contigo desde el umbral.</p></div>'
+        + '<div class="prep-head-right">'
+        + (withFuture ? '<p class="head-future"><span>Futuro</span>' + futureCode() + "</p>" : "")
+        + "</div></header>";
+    }
+
+    function duelCardHtml(side) {
+      const deck = side === "player" ? playerDeck() : hostDeck();
+      return '<figure class="duel-card" data-side="' + side + '" style="--deck-accent: ' + deck.accent + '">'
+        + cardImage(deck.card, deck.name) + "</figure>";
+    }
+
+    function futureBlockHtml(withSeal) {
+      return (withSeal ? sealSvg(canonCode()) : "")
+        + '<p class="kicker">Futuro</p>'
+        + '<p class="future-code' + (state.strike ? " is-striking" : "") + '">' + digits(futureCode()) + "</p>";
+    }
+
+    function fateHtml() {
+      return '<div class="fate"><p class="fate-label">Elige tu destino</p><div class="fate-row">'
+        + Object.keys(MODES).map((key) => '<button class="fate-option" type="button" data-action="mode" data-mode="' + key + '"'
+          + ' aria-pressed="' + (key === state.mode) + '"><strong>' + MODES[key].label + "</strong>"
+          + "<small>Preparación " + MODES[key].turns + "</small></button>").join("")
+        + "</div></div>";
+    }
+
+    function awakeningHtml() {
+      return '<p class="awakening">La Hueste despierta después de <strong>' + MODES[state.mode].turns + "</strong> turnos</p>";
+    }
+
+    function deckActionsHtml(side) {
+      return '<div class="plate-actions">'
+        + '<button class="plate-button" type="button" data-action="inspect" data-side="' + side + '">Ver mazo</button>'
+        + '<button class="plate-button" type="button" data-action="cycle" data-side="' + side + '">Cambiar</button>'
+        + "</div>";
+    }
+
+    function advancedHtml() {
+      return '<div class="prep-advanced">'
+        + '<button class="advanced-toggle" type="button" data-action="advanced" aria-expanded="' + state.advanced + '">'
+        + "<i>◆</i> Ajustes avanzados</button>"
+        + (state.advanced
+          ? '<div class="advanced-content">'
+            + '<div class="advanced-field"><label for="canon-seed">Canon Seed</label><div class="row">'
+            + '<input id="canon-seed" value="' + canonCode() + '" readonly />'
+            + '<button class="plate-button" type="button" data-action="copy">Copiar</button>'
+            + '<button class="plate-button" type="button" data-action="reroll">Nueva</button></div></div>'
+            + '<div class="advanced-field"><label for="canon-import">Importar una Canon Seed</label><div class="row">'
+            + '<input id="canon-import" placeholder="HF1-ELA-GRV-XX1-XXX" />'
+            + '<button class="plate-button" type="button">Usar</button></div></div>'
+            + '<div class="advanced-developer"><span><strong>Modo desarrollador</strong>'
+            + "<small>Herramientas de prueba y apertura determinista</small></span>"
+            + '<button class="switch" type="button" role="switch" data-action="developer" aria-checked="' + state.developer + '"><i></i></button>'
+            + "</div></div>"
+          : "")
+        + "</div>";
+    }
+
+    function actionsHtml() {
+      return '<div class="prep-actions">'
+        + '<div class="summary"><span>Cronista</span><strong>' + playerDeck().name + "</strong>"
+        + "<i>◆</i><span>Hueste</span><strong>" + hostDeck().name + "</strong>"
+        + "<i>◆</i><span>Dificultad</span><strong>" + MODES[state.mode].label + "</strong></div>"
+        + '<button class="plate-button" type="button" data-action="copy">Copiar identidad</button>'
+        + '<button class="action-destiny" type="button" data-action="start"><strong>Iniciar Crónica</strong></button>'
+        + "</div>";
+    }
+
+    /* ── 1 · Página ─────────────────────────────────────────────────────────── */
+    function renderPage() {
+      const entry = (role, value, note, action, data) => '<button class="index-entry" type="button" ' + data + ">"
+        + '<span class="entry-mark">◆</span>'
+        + '<span class="entry-body"><span class="entry-role">' + role + "</span>"
+        + '<span class="entry-value">' + value + "</span>"
+        + '<span class="entry-note">' + note + "</span></span>"
+        + '<span class="entry-action">' + action + "</span></button>";
+
+      return headHtml(false) + '<div class="v-page">'
+        + '<div class="index">'
+        + '<p class="index-label">La Crónica que vas a escribir</p>'
+        + entry("Cronista", playerDeck().name, playerDeck().size + " cartas", "Cambiar", 'data-action="cycle" data-side="player"')
+        + entry("Hueste", hostDeck().name, hostDeck().size + " cartas", "Cambiar", 'data-action="cycle" data-side="host"')
+        + entry("Dificultad", MODES[state.mode].label, "Preparación " + MODES[state.mode].turns, "Cambiar", 'data-action="next-mode"')
+        + '<div class="index-fate">' + fateHtml() + "</div>"
+        + "</div>"
+        + '<div class="page">'
+        + '<div class="duel">'
+        + '<div style="display:grid;justify-items:center;gap:10px">' + duelCardHtml("player")
+        + '<button class="plate-button" type="button" data-action="inspect" data-side="player">Ver mazo</button></div>'
+        + '<div class="duel-center">' + futureBlockHtml(true)
+        + '<div class="duel-match"><span>' + playerDeck().name + "</span>"
+        + '<span class="vs">contra</span>'
+        + '<span class="host">' + hostDeck().name + "</span></div>"
+        + "</div>"
+        + '<div style="display:grid;justify-items:center;gap:10px">' + duelCardHtml("host")
+        + '<button class="plate-button" type="button" data-action="inspect" data-side="host">Ver mazo</button></div>'
+        + "</div>"
+        + '<div class="page-foot">' + awakeningHtml() + advancedHtml() + "</div>"
+        + actionsHtml()
+        + "</div></div>";
+    }
+
+    /* ── 2 · Doble hoja ─────────────────────────────────────────────────────── */
+    function renderSpread() {
+      const leaf = (side) => {
+        const deck = side === "player" ? playerDeck() : hostDeck();
+        return '<div class="leaf" data-side="' + side + '">'
+          + '<p class="kicker">' + (side === "player" ? "Cronista" : "Hueste") + "</p>"
+          + duelCardHtml(side)
+          + '<h2 class="deck-name">' + deck.name + "</h2>"
+          + '<span class="deck-count">' + deck.size + " cartas</span>"
+          + '<p class="deck-copy">' + deck.copy + "</p>"
+          + deckActionsHtml(side)
+          + "</div>";
+      };
+      return headHtml(true) + '<div class="v-spread">'
+        + leaf("player")
+        + '<div class="spine">' + sealSvg(canonCode()) + fateHtml() + awakeningHtml() + "</div>"
+        + leaf("host")
+        + '<div class="foot">' + advancedHtml() + actionsHtml() + "</div>"
+        + "</div>";
+    }
+
+    /* ── 3 · Registro ───────────────────────────────────────────────────────── */
+    function renderLedger() {
+      const row = (label, value, action) => '<div class="row"><span class="row-label">' + label + "</span>"
+        + '<div class="row-value">' + value + "</div>"
+        + "<div>" + (action || "") + "</div></div>";
+      const deckValue = (side) => {
+        const deck = side === "player" ? playerDeck() : hostDeck();
+        return duelCardHtml(side)
+          + '<div class="row-text"><span class="deck-name" style="font-size:19px">' + deck.name + "</span>"
+          + '<span class="deck-count">' + deck.size + " cartas</span></div>";
+      };
+
+      return headHtml(false) + '<div class="v-ledger"><div class="sheet">'
+        + '<div class="ledger-head">' + sealSvg(canonCode())
+        + '<div><p class="kicker">Futuro</p><p class="future-code' + (state.strike ? " is-striking" : "")
+        + '">' + digits(futureCode()) + "</p></div></div>"
+        + row("Cronista", deckValue("player"), deckActionsHtml("player"))
+        + row("Hueste", deckValue("host"), deckActionsHtml("host"))
+        + row("Dificultad", '<div class="row-fate">'
+          + Object.keys(MODES).map((key) => '<button class="fate-option" type="button" data-action="mode" data-mode="' + key + '"'
+            + ' aria-pressed="' + (key === state.mode) + '"><strong>' + MODES[key].label + "</strong>"
+            + "<small>Preparación " + MODES[key].turns + "</small></button>").join("")
+          + "</div>", "")
+        + row("Despertar", awakeningHtml(), "")
+        + '<div class="ledger-foot">' + advancedHtml() + actionsHtml() + "</div>"
+        + "</div></div>";
+    }
+
+    /* ── 4 · Frontispicio ───────────────────────────────────────────────────── */
+    function renderPlate() {
+      const wing = (side) => {
+        const deck = side === "player" ? playerDeck() : hostDeck();
+        return '<div class="wing" data-side="' + side + '">'
+          + duelCardHtml(side)
+          + '<div class="deck-line"><p class="kicker">' + (side === "player" ? "Cronista" : "Hueste") + "</p>"
+          + '<h2 class="deck-name">' + deck.name + "</h2>"
+          + '<span class="deck-count">' + deck.size + " cartas</span></div>"
+          + deckActionsHtml(side)
+          + "</div>";
+      };
+      return headHtml(false) + '<div class="v-plate"><div class="stage">'
+        + wing("player")
+        + '<div class="center">'
+        + '<div class="stamp">' + sealSvg(canonCode())
+        + '<p class="future-code' + (state.strike ? " is-striking" : "") + '">' + digits(futureCode()) + "</p></div>"
+        + '<p class="kicker">Futuro</p>'
+        + '<div class="fate-row">'
+        + Object.keys(MODES).map((key) => '<button class="fate-option" type="button" data-action="mode" data-mode="' + key + '"'
+          + ' aria-pressed="' + (key === state.mode) + '"><strong>' + MODES[key].label + "</strong>"
+          + "<small>Preparación " + MODES[key].turns + "</small></button>").join("")
+        + "</div>"
+        + awakeningHtml()
+        + "</div>"
+        + wing("host")
+        + "</div>"
+        + '<div class="foot">' + advancedHtml() + actionsHtml() + "</div>"
+        + "</div>";
+    }
+
+    const RENDERERS = { page: renderPage, spread: renderSpread, ledger: renderLedger, plate: renderPlate };
+
+    function render(strike) {
+      state.strike = Boolean(strike);
+      const prep = $("#prep");
+      prep.innerHTML = RENDERERS[state.variant]();
+      state.strike = false;
+    }
+
+    /* ── Fondo ──────────────────────────────────────────────────────────────── */
+    function paintBackdrop() {
+      let grid = "";
+      for (let x = 0; x <= 1600; x += 116) grid += '<rect x="' + x + '" y="0" width="116" height="1000" />';
+      for (let y = 0; y <= 1000; y += 132) grid += '<rect x="0" y="' + y + '" width="1600" height="132" />';
+      const svg = $("#backdrop-grid");
+      svg.setAttribute("viewBox", "0 0 1600 1000");
+      svg.innerHTML = grid;
+
+      let ticks = "";
+      for (let i = 0; i < 72; i += 1) {
+        const angle = (i / 72) * Math.PI * 2;
+        const long = i % 6 === 0;
+        ticks += '<path d="M' + (500 + Math.cos(angle) * (long ? 460 : 478)).toFixed(1) + " " + (500 + Math.sin(angle) * (long ? 460 : 478)).toFixed(1)
+          + "L" + (500 + Math.cos(angle) * 492).toFixed(1) + " " + (500 + Math.sin(angle) * 492).toFixed(1)
+          + '" stroke="#9ec9c2" stroke-opacity="' + (long ? 0.3 : 0.14) + '" stroke-width="' + (long ? 2 : 1) + '" />';
+      }
+      $("#backdrop-dial").innerHTML = '<svg viewBox="0 0 1000 1000" fill="none">'
+        + '<circle cx="500" cy="500" r="492" stroke="#9ec9c2" stroke-opacity="0.12" />'
+        + '<circle cx="500" cy="500" r="340" stroke="#9ec9c2" stroke-opacity="0.08" />'
+        + '<circle cx="500" cy="500" r="188" stroke="#c8b678" stroke-opacity="0.06" />'
+        + ticks + "</svg>";
+
+      let random = hashSeed("hostfall:preparation:stars");
+      const next = () => {
+        random ^= random << 13; random >>>= 0;
+        random ^= random >>> 17;
+        random ^= random << 5; random >>>= 0;
+        return (random || 1) / 4294967296;
+      };
+      let stars = "";
+      for (let i = 0; i < 66; i += 1) {
+        stars += '<i style="left:' + (next() * 100).toFixed(2) + "%;top:" + (next() * 100).toFixed(2)
+          + "%;animation-delay:" + (next() * 6).toFixed(2) + 's"></i>';
+      }
+      $("#backdrop-stars").innerHTML = stars;
+    }
+
+    /* ── Eventos ────────────────────────────────────────────────────────────── */
+    function cycleDeck(side) {
+      const list = side === "player" ? PLAYER_CODES : HOST_CODES;
+      const current = side === "player" ? state.player : state.host;
+      const next = list[(list.indexOf(current) + 1) % list.length];
+      if (side === "player") state.player = next; else state.host = next;
+      render(true);
+    }
+
+    function setVariant(variant) {
+      state.variant = variant;
+      $("#variant-hint").textContent = VARIANT_HINTS[variant];
+      $$("#variants button").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.variant === variant)));
+      render(false);
+    }
+
+    $("#prep").addEventListener("click", async (event) => {
+      const target = event.target.closest("[data-action]");
+      if (!target) return;
+      const action = target.dataset.action;
+      if (action === "cycle") { cycleDeck(target.dataset.side); return; }
+      if (action === "mode") { state.mode = target.dataset.mode; render(true); return; }
+      if (action === "next-mode") {
+        const keys = Object.keys(MODES);
+        state.mode = keys[(keys.indexOf(state.mode) + 1) % keys.length];
+        render(true);
+        return;
+      }
+      if (action === "advanced") { state.advanced = !state.advanced; render(false); return; }
+      if (action === "developer") { state.developer = !state.developer; render(false); return; }
+      if (action === "reroll") { state.entropy = newEntropy(); render(true); return; }
+      if (action === "copy") {
+        try { await navigator.clipboard.writeText(canonCode()); } catch { /* sin portapapeles, nada que hacer */ }
+        return;
+      }
+      /* `back`, `inspect` y `start` pertenecen al juego: aquí no llevan a ninguna parte. */
+    });
+
+    $$("#variants button").forEach((button) => button.addEventListener("click", () => setVariant(button.dataset.variant)));
+    $("#reroll").addEventListener("click", () => { state.entropy = newEntropy(); render(true); });
+    $("#notes-toggle").addEventListener("click", () => $("#notes").classList.toggle("is-open"));
+
+    window.addEventListener("keydown", (event) => {
+      if (event.target instanceof HTMLInputElement) return;
+      const order = ["page", "spread", "ledger", "plate"];
+      if (event.key >= "1" && event.key <= "4") { setVariant(order[Number(event.key) - 1]); return; }
+      if (event.key === "Escape") $("#notes").classList.remove("is-open");
+    });
+
+    paintBackdrop();
+    render(false);
+  </script>
+</body>
+
+</html>

@@ -39,6 +39,15 @@ vfx/                exploraciones de efectos
 
 ## Contenido
 
+- `ui/claude-preparation-book.html` — cuatro maquetas de **Preparación** (`ExpeditionSetup`) en la lengua
+  visual del Archivo de Semillas: Cinzel Decorative en el título, hilos dorados en vez de paneles, cartas
+  sin marco con sombra por alfa y halo del bando, el sello de la rosa cardinal como firma del Futuro y el
+  botón de Destino con su ornamento radial. Conmutables con `1`-`4`: **Página** (índice de decisiones y
+  duelo), **Doble hoja** (una Crónica por página con el Futuro en el lomo), **Registro** (una columna
+  escrita con un renglón por decisión) y **Frontispicio** (lámina a sangre con el Futuro lacrado). Conserva
+  todo el contenido real de la pantalla —artes clave de los cuatro mazos, ver/cambiar mazo, las tres
+  dificultades, el despertar de la Hueste, los ajustes avanzados y el resumen— y recompone el número con el
+  códec del juego.
 - `ui/claude-play-entry-fracture.html` — la versión **Fractura** de
   `ui/claude-play-entry-threshold-v3.html`, aislada y ajustada. El umbral ocupa la pantalla completa sin
   cubrir el fondo: el cielo de Hostfall permanece y sólo se atenúa, se retira la UI del menú y entra la

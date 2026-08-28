@@ -38,6 +38,16 @@ const ALIASES = new Map([
     resolve(ROOT, "..", "..", "assets", "art", "util", "DeanSpencer-LichScryingOutcropCampDriveThruRPG.jpg")],
   ["art/util/DeanSpencer-spotcol-magicgateFP-nightshade-intensity-LOW-V1.jpg",
     resolve(ROOT, "..", "..", "assets", "art", "util", "DeanSpencer-spotcol-magicgateFP-nightshade-intensity-LOW-V1.jpg")],
+  // Las cartas clave reales de los cuatro mazos, tal como las elige el juego en
+  // `BuiltinContentSource`. Las maquetas de Preparación las muestran enfrentadas.
+  ["cards/pact_of_elarion/aelyra_heir_of_elarion.png",
+    resolve(ROOT, "..", "..", "public", "cards", "pact_of_elarion", "aelyra_heir_of_elarion.png")],
+  ["cards/court_of_the_crimson_eclipse/mirevna_countess_of_the_crimson_eclipse.png",
+    resolve(ROOT, "..", "..", "public", "cards", "court_of_the_crimson_eclipse", "mirevna_countess_of_the_crimson_eclipse.png")],
+  ["cards/uprising_of_the_graveless/nerezh_graveless_matriarch.png",
+    resolve(ROOT, "..", "..", "public", "cards", "uprising_of_the_graveless", "nerezh_graveless_matriarch.png")],
+  ["cards/legion_of_varka/varka_infernal_matriarch.png",
+    resolve(ROOT, "..", "..", "public", "cards", "legion_of_varka", "varka_infernal_matriarch.png")],
 ]);
 
 createServer(async (req, res) => {
