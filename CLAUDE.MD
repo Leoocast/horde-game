@@ -531,11 +531,13 @@ el eje central. **Jugar** tiene mayor jerarquía que el resto de entradas; no se
 marcadores geométricos ni una placa lateral detrás del menú. La identidad editable del Cronista se
 mantiene arriba a la derecha y las herramientas dev conservan su dock discreto. Toda la UI del home,
 incluidos identidad, dock y versión, usa escala `1.2`; el pie sólo imprime **Beta 0.1.0**. Crónicas,
-Huestes, **Semilla del Hado**, Cómo jugar y Ajustes sustituyen el frontispicio y ocupan el lienzo
+Huestes, **Semilla del Destino**, Cómo jugar y Ajustes sustituyen el frontispicio y ocupan el lienzo
 completo, siempre dejando ver el ambiente real por debajo. Sus regresos comparten posición, tamaño,
 fuente, icono y texto **Menú principal** con el botón del Umbral de Jugar. En escritorio, Ajustes
 agrupa sus secciones en dos columnas editoriales —Idioma/Audio y Pantalla/Juego— y colapsa a una sola
-columna en anchos estrechos.
+columna en anchos estrechos. Crónicas y Huestes son galerías de portada: la imagen de la carta clave
+domina cada opción, las opciones actuales se centran y el grid `auto-fit` admite nuevas filas sin
+encoger las portadas vigentes. El nombre queda subordinado bajo una regla del acento propio del deck.
 
 La Preparación standard usa el frontispicio de **Escribir Crónica** sobre el `TemporalBackdrop` real:
 la cifra fija de **Futuro** domina el centro, las cartas clave flanquean el enfrentamiento y el pie
@@ -595,12 +597,12 @@ El Playground incluye una pestaña dev-only **Guide**. Monta un fixture exacto d
 Board real y diagnostica el ciclo de pausa, la intención autorizada, receipts, tokens visuales y
 beats retenidos. No es el guion ni el copy de la Primera Semilla y no entra al bundle de release.
 
-## Seed of Fate / Semilla del Hado
+## Seed of Destiny / Semilla del Destino
 
-El archivo de líneas temporales se presenta al jugador como **Seed of Fate** / **Semilla del Hado**:
-ahí el Cronista contempla, reescribe y finalmente preserva sus futuros. La identidad reproducible que
-se escribe dentro de **Inscribe the future** se etiqueta, en cambio, **Seed of Destiny** / **Semilla
-del Destino**. El nombre técnico existente de módulos y documentos no cambia. Cada seed recibe una identidad
+El archivo de líneas temporales y la identidad reproducible que se escribe dentro de **Inscribe the
+future** se presentan como **Seed of Destiny** / **Semilla del Destino**. Ahí el Cronista contempla,
+reescribe y finalmente preserva sus futuros. El nombre técnico existente de módulos y documentos no
+cambia. Cada seed recibe una identidad
 cosmética determinista **Futuro `NNN·NNN`**; ese código compacto puede colisionar y nunca reemplaza
 la identidad reproducible. Desde la Fase 2.5, el launcher normal genera una Canon Seed `HF1` y
 **Copiar identidad** copia ese código completo; `GameState.seed` recibe únicamente sus cinco

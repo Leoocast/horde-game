@@ -2751,7 +2751,7 @@
   }
 
   .decks-panel {
-    --deck-key-card-width: clamp(140px, min(15vw, calc((100vh - 290px) / 1.9)), 220px);
+    --deck-key-card-width: clamp(210px, min(22vw, calc((100vh - 250px) / 1.52)), 340px);
     isolation: isolate;
     overflow: hidden;
   }
@@ -2989,9 +2989,7 @@
     }
 
     .decks-panel {
-      --deck-key-card-width: clamp(132px, min(14vw, calc((100vh - 260px) / 2)), 190px);
-      padding-top: 36px;
-      padding-bottom: 24px;
+      --deck-key-card-width: clamp(190px, min(21vw, calc((100vh - 205px) / 1.5)), 300px);
     }
 
     .decks-panel .main-settings-header {
@@ -16253,12 +16251,12 @@
 
 /* Larger deck portraits while preserving two readable rows. */
 .decks-panel {
-  --deck-key-card-width: clamp(122px, min(12.5vw, calc((100vh - 340px) / 2.55)), 190px);
+  --deck-key-card-width: clamp(210px, min(22vw, calc((100vh - 250px) / 1.52)), 340px);
 }
 
 @media (max-height: 820px) {
   .decks-panel {
-    --deck-key-card-width: clamp(106px, min(11vw, calc((100vh - 300px) / 2.55)), 155px);
+    --deck-key-card-width: clamp(190px, min(21vw, calc((100vh - 205px) / 1.5)), 300px);
   }
 }
 
@@ -17618,8 +17616,185 @@
 }
 
 .decks-panel .main-settings-header {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  width: 100%;
+  min-height: 112px;
+  align-content: center;
+  justify-items: center;
   border-bottom: 0;
-  padding-bottom: 4px;
+  padding: 50px clamp(28px, 4vw, 64px) 18px;
+  background: linear-gradient(180deg, rgb(4 9 11 / 0.74), rgb(4 9 11 / 0.16));
+  text-align: center;
+}
+
+.decks-panel {
+  position: relative;
+  padding: 0;
+  background: linear-gradient(115deg, rgb(5 11 13 / 0.7), rgb(8 14 16 / 0.22));
+}
+
+.decks-panel::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 34% 58% at 31% 54%, rgb(112 148 111 / 0.15), transparent 72%),
+    radial-gradient(ellipse 34% 58% at 69% 54%, rgb(180 153 86 / 0.1), transparent 72%);
+  content: "";
+  pointer-events: none;
+}
+
+.decks-panel-hosts::before {
+  background:
+    radial-gradient(ellipse 36% 60% at 31% 54%, rgb(111 75 91 / 0.18), transparent 72%),
+    radial-gradient(ellipse 36% 60% at 69% 54%, rgb(157 72 53 / 0.16), transparent 72%);
+}
+
+.decks-panel .main-settings-header h2 {
+  color: #eadfbd;
+  font-family: "Cinzel Decorative", Georgia, "Times New Roman", serif;
+  font-size: clamp(36px, 3.4vw, 54px);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-shadow: 0 3px 18px rgb(0 0 0 / 0.86), 0 0 28px rgb(196 168 96 / 0.13);
+}
+
+.decks-panel .main-settings-header > span {
+  max-width: 66ch;
+  margin-top: 8px;
+  color: #93a09e;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.decks-panel .decks-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  overflow-x: hidden;
+  overflow-y: auto;
+  place-items: center;
+  padding: clamp(22px, 3.8vh, 48px) clamp(24px, 4.5vw, 84px) clamp(30px, 4vh, 54px);
+}
+
+.decks-panel .decks-card-row {
+  display: grid;
+  width: 100%;
+  min-height: min-content;
+  grid-template-columns: repeat(auto-fit, var(--deck-key-card-width));
+  align-content: center;
+  justify-content: center;
+  gap: clamp(52px, 6vw, 104px);
+  padding: 18px 0 32px;
+}
+
+.decks-panel .deck-key-card {
+  z-index: 0;
+  width: var(--deck-key-card-width);
+  isolation: isolate;
+  padding: 0 8px 18px;
+}
+
+.decks-panel .deck-key-card::before {
+  position: absolute;
+  z-index: -1;
+  top: 8%;
+  right: -18%;
+  bottom: 12%;
+  left: -18%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, var(--deck-accent-soft), transparent 68%);
+  content: "";
+  opacity: 0.58;
+  pointer-events: none;
+  transform: scale(0.9);
+  transition: opacity 260ms ease, transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.decks-panel .deck-key-card-stage {
+  filter: drop-shadow(20px 28px 22px rgb(0 0 0 / 0.64)) drop-shadow(0 0 16px var(--deck-accent-soft));
+  transition: transform 340ms cubic-bezier(0.16, 1, 0.3, 1), filter 300ms ease;
+}
+
+.decks-panel .deck-key-card:hover::before,
+.decks-panel .deck-key-card:focus-visible::before {
+  opacity: 0.92;
+  transform: scale(1.08);
+}
+
+.decks-panel .deck-key-card:hover .deck-key-card-stage,
+.decks-panel .deck-key-card:focus-visible .deck-key-card-stage {
+  transform: translateY(-18px) scale(1.025);
+  filter: drop-shadow(0 24px 18px rgb(0 0 0 / 0.64)) drop-shadow(0 0 26px var(--deck-accent-soft));
+}
+
+.decks-panel .deck-key-card-copy {
+  margin-top: 20px;
+}
+
+.decks-panel .deck-key-card-copy::before {
+  display: block;
+  width: min(72%, 190px);
+  height: 1px;
+  margin: 0 auto 13px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--deck-accent-bright) 62%, #b99d5b), transparent);
+  box-shadow: 0 0 10px var(--deck-accent-soft);
+  content: "";
+}
+
+.decks-panel .deck-key-card-copy strong {
+  color: #e7dcc0;
+  font-family: "Lora", Georgia, "Times New Roman", serif;
+  font-size: clamp(19px, 1.5vw, 25px);
+  font-weight: 500;
+  letter-spacing: 0.035em;
+  text-shadow: 0 3px 12px rgb(0 0 0 / 0.92);
+}
+
+.decks-panel:not(.is-closing) .deck-key-card {
+  animation: deck-gallery-card-enter 440ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.decks-panel:not(.is-closing) .deck-key-card:nth-child(2) { animation-delay: 70ms; }
+.decks-panel:not(.is-closing) .deck-key-card:nth-child(3) { animation-delay: 140ms; }
+.decks-panel:not(.is-closing) .deck-key-card:nth-child(4) { animation-delay: 210ms; }
+
+@keyframes deck-gallery-card-enter {
+  from { opacity: 0; transform: translateY(24px) scale(0.965); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-height: 820px) {
+  .decks-panel .main-settings-header {
+    min-height: 92px;
+    padding-top: 42px;
+    padding-bottom: 12px;
+  }
+
+  .decks-panel .main-settings-header h2 { font-size: 36px; }
+  .decks-panel .decks-content { padding-block: 12px 22px; }
+  .decks-panel .decks-card-row { padding-block: 12px 24px; }
+}
+
+@media (max-width: 700px) {
+  .decks-panel {
+    --deck-key-card-width: min(62vw, 250px);
+  }
+
+  .decks-panel .main-settings-header {
+    min-height: 96px;
+    padding: 48px 20px 12px;
+  }
+
+  .decks-panel .main-settings-header > span { display: none; }
+  .decks-panel .decks-card-row { gap: 46px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .decks-panel:not(.is-closing) .deck-key-card { animation: none; }
 }
 
 .deck-key-card {

@@ -20,7 +20,7 @@ export function DecksView({ collection, decks, onOpenDeck, onBack, closing = fal
   const description = collection === "chronicles" ? t("decks.chroniclesDescription") : t("decks.hostsDescription");
 
   return (
-    <section className={`main-settings-screen decks-panel ${closing ? "is-closing" : ""}`} aria-label={title}>
+    <section className={`main-settings-screen decks-panel decks-panel-${collection} ${closing ? "is-closing" : ""}`} aria-label={title}>
       <header className="main-settings-header">
         <button className="menu-screen-back expedition-back" type="button" onClick={onBack}><ArrowLeft size={18} /> {t("common.mainMenu")}</button>
         <h2>{title}</h2>

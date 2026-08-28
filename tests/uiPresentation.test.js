@@ -1113,13 +1113,18 @@ test("card previews reuse the current printed stats plaque", () => {
   assert.match(styles, /\.deck-viewer-trait-list \.card-keyword-badge,[\s\S]*?height:\s*31px;/u);
 });
 
-test("deck collections do not clip a raised key card or its glow", () => {
+test("deck collections present their key-card art as a large adaptive gallery", () => {
+  const decksView = readFileSync(new URL("../src/components/DecksView.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
-  assert.match(styles, /\.decks-content-single\s*\{[^}]*overflow:\s*visible;/u);
+
+  assert.match(decksView, /decks-panel decks-panel-\$\{collection\}/u);
   assert.match(
     styles,
-    /\.decks-panel\s*\{[^}]*--deck-key-card-width:\s*clamp\(140px, min\(15vw, calc\(\(100vh - 290px\) \/ 1\.9\)\), 220px\);/u,
+    /\.decks-panel\s*\{[^}]*--deck-key-card-width:\s*clamp\(210px, min\(22vw, calc\(\(100vh - 250px\) \/ 1\.52\)\), 340px\);/u,
   );
+  assert.match(styles, /\.decks-panel \.decks-card-row\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fit, var\(--deck-key-card-width\)\);/u);
+  assert.match(styles, /\.decks-panel \.deck-key-card:hover \.deck-key-card-stage,[\s\S]*?translateY\(-18px\) scale\(1\.025\)/u);
+  assert.match(styles, /\.decks-panel \.deck-key-card-copy strong\s*\{[^}]*font-size:\s*clamp\(19px, 1\.5vw, 25px\);/u);
 });
 
 test("main menu uses the centered fracture frontispiece over the temporal sky", () => {
@@ -1333,11 +1338,11 @@ test("secondary menus homologate their back control with Play's Main menu anchor
   assert.match(styles, /@media \(max-height: 760px\)\s*\{\s*\.play-threshold-back,\s*\.menu-screen-back \{ top: 14px; \}/u);
 });
 
-test("the archive is Seed of Fate while inscription asks for a Seed of Destiny", () => {
+test("the menu archive and inscription both use Seed of Destiny", () => {
   const seeds = readFileSync(new URL("../src/components/SeedsOfDestinyScreen.tsx", import.meta.url), "utf8");
 
-  assert.equal(translate("en", "menu.seedsOfDestiny"), "Seed of Fate");
-  assert.equal(translate("es", "menu.seedsOfDestiny"), "Semilla del Hado");
+  assert.equal(translate("en", "menu.seedsOfDestiny"), "Seed of Destiny");
+  assert.equal(translate("es", "menu.seedsOfDestiny"), "Semilla del Destino");
   assert.equal(translate("en", "threshold.seedLabel"), "Seed of Destiny");
   assert.equal(translate("es", "threshold.seedLabel"), "Semilla del Destino");
   assert.doesNotMatch(seeds, /seeds-intro/u);
