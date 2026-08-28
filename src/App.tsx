@@ -3,7 +3,7 @@ import { AudioClickListener } from "./components/AudioClickListener";
 import { Board } from "./components/Board";
 import { DeckInspector } from "./components/DeckInspector";
 import { DestinyRewriteTransition, type DestinyTransitionKind } from "./components/DestinyRewriteTransition";
-import { ENCOUNTER_IMPACT_MS, ENCOUNTER_OPEN_MS, ENCOUNTER_TRANSITION_MS, EncounterTransition } from "./components/EncounterTransition";
+import { ENCOUNTER_IMPACT_MS, ENCOUNTER_OPEN_MS, ENCOUNTER_TRANSITION_MS, EncounterTransition, type EncounterCardOrigins } from "./components/EncounterTransition";
 import { ChronicleSigilOverture } from "./components/ChronicleSigilOverture";
 import { GameLoadingScreen } from "./components/GameLoadingScreen";
 import { LearnToPlayIntroModal } from "./components/LearnToPlayIntroModal";
@@ -75,6 +75,7 @@ type LaunchTransitionState = {
   chronicleDeckId: string;
   hostDeckId: string;
   gameMode: GameMode;
+  cardOrigins?: EncounterCardOrigins;
   startedAtMs: number;
   reducedMotion: boolean;
   historySettled: Promise<unknown>;
@@ -555,6 +556,7 @@ export default function App() {
       chronicleDeckId={launchTransition.chronicleDeckId}
       hostDeckId={launchTransition.hostDeckId}
       gameMode={launchTransition.gameMode}
+      cardOrigins={launchTransition.cardOrigins}
     />
   ) : null;
   const destinyTransitionOverlay = destinyTransition ? (
@@ -804,6 +806,7 @@ export default function App() {
               chronicleDeckId: options.origin.playerDeckId,
               hostDeckId: options.origin.hostDeckId,
               gameMode: options.origin.gameMode,
+              cardOrigins: reducedMotion ? undefined : options.encounterCardOrigins,
               startedAtMs,
               reducedMotion,
               historySettled: launch.settled,

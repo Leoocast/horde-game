@@ -1783,6 +1783,91 @@
     object-fit: cover;
   }
 
+  /* Standard Preparation can hand its already-visible cards to this overlay. The real matchup
+     cards stay in flow as measuring/spacing anchors; only the fixed continuity copies paint. */
+  .encounter-transition.is-continuity-measuring .encounter-transition-combatant {
+    opacity: 1;
+    transform: none;
+    animation: none !important;
+  }
+
+  .encounter-transition.is-continuity-measuring .encounter-transition-art {
+    visibility: hidden;
+    transform: none;
+  }
+
+  .encounter-transition.has-card-continuity .encounter-transition-art {
+    visibility: hidden;
+  }
+
+  .encounter-transition-continuity-card {
+    position: fixed;
+    z-index: 5;
+    top: var(--encounter-origin-top);
+    left: var(--encounter-origin-left);
+    box-sizing: border-box;
+    width: var(--encounter-origin-width);
+    height: var(--encounter-origin-height);
+    isolation: isolate;
+    pointer-events: none;
+    transform-origin: center;
+    will-change: top, left, width, height, opacity, transform;
+    animation-duration: 2450ms;
+    animation-fill-mode: both;
+    animation-timing-function: linear;
+  }
+
+  .encounter-transition-continuity-card.is-player {
+    animation-name: encounter-continuity-card-player;
+  }
+
+  .encounter-transition-continuity-card.is-host {
+    animation-name: encounter-continuity-card-host;
+  }
+
+  .encounter-transition-continuity-card::before {
+    position: absolute;
+    z-index: -1;
+    inset: -18%;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--deck-accent-soft), transparent 66%);
+    content: "";
+    filter: blur(18px);
+    animation: encounter-continuity-ornament 2450ms linear both;
+  }
+
+  .encounter-transition-continuity-card::after {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    border: 1px solid color-mix(in srgb, var(--deck-accent-bright) 38%, transparent);
+    border-radius: 9px;
+    background:
+      linear-gradient(90deg, rgb(1 5 4 / 0.08), transparent 42%, rgb(1 5 4 / 0.38)),
+      linear-gradient(180deg, transparent 58%, rgb(1 5 4 / 0.82));
+    box-shadow:
+      inset 0 0 42px rgb(0 0 0 / 0.34),
+      0 24px 54px rgb(0 0 0 / 0.62),
+      0 0 40px var(--deck-accent-soft);
+    content: "";
+    animation: encounter-continuity-ornament 2450ms linear both;
+  }
+
+  .encounter-transition-continuity-card img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 9px;
+    filter:
+      saturate(0.94)
+      brightness(0.94)
+      contrast(1.04)
+      drop-shadow(0 1px 1px rgb(0 0 0 / 0.6))
+      drop-shadow(0 10px 16px rgb(0 0 0 / 0.5))
+      drop-shadow(0 26px 40px rgb(0 0 0 / 0.42));
+    object-fit: contain;
+  }
+
   .encounter-transition-content {
     position: absolute;
     z-index: 4;
@@ -2380,6 +2465,72 @@
   @keyframes encounter-combatant-right-exit {
     from { transform: translateX(0); }
     to { transform: translateY(-104vh); }
+  }
+
+  /* 42.857 % is exactly ENCOUNTER_IMPACT_MS (1050 / 2450); 68 % is the curtain opening.
+     The cards reach their old clash slots on impact, hold through the cut, then leave with names. */
+  @keyframes encounter-continuity-card-player {
+    0% {
+      top: var(--encounter-origin-top);
+      left: var(--encounter-origin-left);
+      width: var(--encounter-origin-width);
+      height: var(--encounter-origin-height);
+      opacity: 1;
+      transform: perspective(1000px) rotateY(9deg) rotate(-3deg);
+      animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    42.857%, 68% {
+      top: var(--encounter-target-top);
+      left: var(--encounter-target-left);
+      width: var(--encounter-target-width);
+      height: var(--encounter-target-height);
+      opacity: 1;
+      transform: rotate(-3deg);
+    }
+    68% { animation-timing-function: cubic-bezier(0.72, 0, 0.22, 1); }
+    100% {
+      top: calc(var(--encounter-target-top) + 104vh);
+      left: var(--encounter-target-left);
+      width: var(--encounter-target-width);
+      height: var(--encounter-target-height);
+      opacity: 0;
+      transform: rotate(-3deg);
+    }
+  }
+
+  @keyframes encounter-continuity-card-host {
+    0% {
+      top: var(--encounter-origin-top);
+      left: var(--encounter-origin-left);
+      width: var(--encounter-origin-width);
+      height: var(--encounter-origin-height);
+      opacity: 1;
+      transform: perspective(1000px) rotateY(-9deg) rotate(3deg);
+      animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    42.857%, 68% {
+      top: var(--encounter-target-top);
+      left: var(--encounter-target-left);
+      width: var(--encounter-target-width);
+      height: var(--encounter-target-height);
+      opacity: 1;
+      transform: rotate(3deg);
+    }
+    68% { animation-timing-function: cubic-bezier(0.72, 0, 0.22, 1); }
+    100% {
+      top: calc(var(--encounter-target-top) - 104vh);
+      left: var(--encounter-target-left);
+      width: var(--encounter-target-width);
+      height: var(--encounter-target-height);
+      opacity: 0;
+      transform: rotate(3deg);
+    }
+  }
+
+  @keyframes encounter-continuity-ornament {
+    0%, 8% { opacity: 0; }
+    32%, 68% { opacity: 1; }
+    100% { opacity: 0; }
   }
 
   @keyframes encounter-impact-ring {
@@ -25296,6 +25447,12 @@ body.is-victory-clearing .game-battlefield-stage {
   transition: transform 340ms cubic-bezier(0.16, 1, 0.3, 1), filter 340ms ease;
 }
 
+/* The transition paints a fixed continuation from this exact box; keeping the source underneath
+   would reveal a duplicate while the curtains are still crossing the Preparation backdrop. */
+.expedition-frontispiece.is-launching .preparation-frontispiece-card-art {
+  visibility: hidden;
+}
+
 .preparation-frontispiece-card.is-player .preparation-frontispiece-card-art {
   transform: perspective(1000px) rotateY(9deg) rotate(-3deg);
   animation: preparation-card-player-in 620ms 90ms cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -25336,6 +25493,7 @@ body.is-victory-clearing .game-battlefield-stage {
   display: grid;
   justify-items: inherit;
   gap: 8px;
+  margin-top: clamp(7px, 1vh, 11px);
 }
 
 .preparation-frontispiece-wing-foot > div {

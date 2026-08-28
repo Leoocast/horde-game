@@ -1231,6 +1231,7 @@ test("standard Preparation uses a fixed Future frontispiece and keeps the real d
   assert.match(styles, /\.preparation-frontispiece-future > span\.is-separator\s*\{[^}]*color:\s*inherit;/u);
   assert.match(styles, /\.preparation-frontispiece-match > span\s*\{[^}]*font-size:\s*clamp\(17px, 1\.45vw, 23px\);/u);
   assert.match(styles, /\.preparation-frontispiece-match > small\s*\{[^}]*font-size:\s*12px;/u);
+  assert.match(styles, /\.preparation-frontispiece-wing-foot\s*\{[^}]*margin-top:\s*clamp\(7px, 1vh, 11px\);/u);
   assert.doesNotMatch(startMenu, /preparation-frontispiece-diamond|frontispiece-active/u);
   const futureDigitKeyframes = styles.slice(
     styles.indexOf("@keyframes preparation-future-digit-in"),
@@ -1249,6 +1250,32 @@ test("standard Preparation uses a fixed Future frontispiece and keeps the real d
   assert.match(styles, /@keyframes preparation-cta-orbit-clockwise\s*\{\s*to \{ transform: translate\(-50%, -50%\) rotate\(360deg\); \}/u);
   assert.match(styles, /@keyframes preparation-card-player-in/u);
   assert.match(styles, /@keyframes preparation-card-host-in/u);
+});
+
+test("standard Preparation hands its visible cards to the encounter clash", () => {
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
+  const encounter = readFileSync(new URL("../src/components/EncounterTransition.tsx", import.meta.url), "utf8");
+  const app = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(startMenu, /const playerCardRef = useRef<HTMLButtonElement>\(null\);/u);
+  assert.match(startMenu, /const hostCardRef = useRef<HTMLButtonElement>\(null\);/u);
+  assert.match(startMenu, /captureEncounterCardRect\(playerCardRef\.current\)[\s\S]*?captureEncounterCardRect\(hostCardRef\.current\)/u);
+  assert.match(startMenu, /props\.onStart\(player && host \? \{ player, host \} : undefined\);/u);
+  assert.match(startMenu, /ref=\{cardRef\}[\s\S]*?className=\{`preparation-frontispiece-card/u);
+  assert.match(startMenu, /className=\{`expedition-setup[\s\S]*?props\.launching \? "is-launching"/u);
+  assert.match(app, /cardOrigins: reducedMotion \? undefined : options\.encounterCardOrigins/u);
+  assert.match(app, /cardOrigins=\{launchTransition\.cardOrigins\}/u);
+
+  assert.match(encounter, /useLayoutEffect\(\(\) => \{[\s\S]*?readEncounterCardRect\(playerTargetRef\.current\)[\s\S]*?setCardTargets\(\{ player, host \}\);/u);
+  assert.match(encounter, /is-continuity-measuring/u);
+  assert.match(encounter, /has-card-continuity/u);
+  assert.match(encounter, /encounter-transition-continuity-card/u);
+  assert.match(styles, /\.expedition-frontispiece\.is-launching \.preparation-frontispiece-card-art\s*\{[^}]*visibility:\s*hidden;/u);
+  assert.match(styles, /\.encounter-transition\.is-continuity-measuring \.encounter-transition-combatant\s*\{[^}]*animation:\s*none !important;/u);
+  assert.match(styles, /\.encounter-transition\.has-card-continuity \.encounter-transition-art\s*\{[^}]*visibility:\s*hidden;/u);
+  assert.match(styles, /@keyframes encounter-continuity-card-player\s*\{[\s\S]*?42\.857%, 68%[\s\S]*?calc\(var\(--encounter-target-top\) \+ 104vh\)/u);
+  assert.match(styles, /@keyframes encounter-continuity-card-host\s*\{[\s\S]*?42\.857%, 68%[\s\S]*?calc\(var\(--encounter-target-top\) - 104vh\)/u);
 });
 
 test("the Future threshold keeps Main menu aligned with Back to the threshold", () => {

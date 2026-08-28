@@ -25,6 +25,7 @@ import { APP_VERSION } from "../version";
 import { AudioControls } from "./AudioControls";
 import { DeckKeyCard, DecksView } from "./DecksView";
 import { DisplayControls } from "./DisplayControls";
+import type { EncounterCardOrigins, EncounterCardRect } from "./EncounterTransition";
 import { LanguageSelector } from "./LanguageSelector";
 import { PlayThreshold } from "./PlayThreshold";
 import { SeedsOfDestinyScreen } from "./SeedsOfDestinyScreen";
@@ -66,7 +67,7 @@ type Props = {
   continueDisabled?: boolean;
   onDiscardResume?: () => void;
   onReplayFuture: (origin: MatchOrigin) => void;
-  onStart: (options: { playerName: string; origin: MatchOrigin }) => void;
+  onStart: (options: { playerName: string; origin: MatchOrigin; encounterCardOrigins?: EncounterCardOrigins }) => void;
 };
 
 type MenuScreen = "home" | "threshold" | "setup" | "chaos" | "chronicles" | "hosts" | "seeds" | "howToPlay" | "settings";
@@ -302,7 +303,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     });
   }
 
-  function startGame() {
+  function startGame(encounterCardOrigins?: EncounterCardOrigins) {
     if (launching) return;
     persistDeveloperMode(developerMode);
     setLaunching(true);
@@ -315,6 +316,7 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
     onStart({
       playerName: playerName.trim() || "Chronicler",
       origin,
+      encounterCardOrigins,
     });
   }
 
@@ -736,7 +738,7 @@ type ExpeditionSetupProps = {
   onCopyInternalSeed: () => void;
   onToggleDeveloperMode: () => void;
   onBack: () => void;
-  onStart: () => void;
+  onStart: (encounterCardOrigins?: EncounterCardOrigins) => void;
   launching: boolean;
   closing: boolean;
   /** A modal is stacked above the screen, so it owns Escape instead. */
@@ -746,7 +748,19 @@ type ExpeditionSetupProps = {
 function ExpeditionSetup(props: ExpeditionSetupProps) {
   const t = useTranslation();
   const [openDeckSide, setOpenDeckSide] = useState<"player" | "host" | null>(null);
+  const playerCardRef = useRef<HTMLButtonElement>(null);
+  const hostCardRef = useRef<HTMLButtonElement>(null);
   const futureCode = futureCodeFromSeed(matchOriginVisualSeed(props.origin));
+
+  const launchEncounter = () => {
+    if (props.chaos) {
+      props.onStart();
+      return;
+    }
+    const player = captureEncounterCardRect(playerCardRef.current);
+    const host = captureEncounterCardRect(hostCardRef.current);
+    props.onStart(player && host ? { player, host } : undefined);
+  };
 
   const closeDeckDrawer = () => {
     const closingSide = openDeckSide;
@@ -770,7 +784,7 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
   }, [openDeckSide, props.overlayOpen, props.onBack]);
 
   return (
-    <section className={`expedition-setup ${props.chaos ? "chaos-setup" : "expedition-frontispiece"} ${props.closing ? "is-closing" : ""}`} aria-label={props.chaos ? t("setup.prepareChaosAria") : t("setup.prepareAria")}>
+    <section className={`expedition-setup ${props.chaos ? "chaos-setup" : "expedition-frontispiece"} ${props.closing ? "is-closing" : ""} ${props.launching ? "is-launching" : ""}`} aria-label={props.chaos ? t("setup.prepareChaosAria") : t("setup.prepareAria")}>
       <SetupEmbers />
       {props.chaos ? (
         <>
@@ -850,7 +864,7 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
               <span>{t("setup.hostSide")}</span>
               <strong>{props.hostDeck?.deck.name ?? "—"}</strong>
             </div>
-            <button className="expedition-begin" type="button" onClick={props.onStart} disabled={props.launching}>
+            <button className="expedition-begin" type="button" onClick={launchEncounter} disabled={props.launching}>
               <span>{t("setup.unleashChaos")}</span>
               <Dices size={22} />
             </button>
@@ -874,6 +888,7 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
               onInspect={props.onInspectPlayerDeck}
               drawerOpen={openDeckSide === "player"}
               onChangeDeck={() => setOpenDeckSide("player")}
+              cardRef={playerCardRef}
             />
 
             <div className="preparation-frontispiece-center">
@@ -912,6 +927,7 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
               onInspect={props.onInspectHostDeck}
               drawerOpen={openDeckSide === "host"}
               onChangeDeck={() => setOpenDeckSide("host")}
+              cardRef={hostCardRef}
             />
           </div>
 
@@ -922,7 +938,7 @@ function ExpeditionSetup(props: ExpeditionSetupProps) {
                   <Copy size={14} /> {t("destiny.copyIdentity")}
                 </button>
               )}
-              <button className="expedition-begin" type="button" onClick={props.onStart} disabled={props.launching}>
+              <button className="expedition-begin" type="button" onClick={launchEncounter} disabled={props.launching}>
                 <span>{t("setup.beginChronicle")}</span>
                 <Play size={22} />
               </button>
@@ -982,13 +998,14 @@ function FutureCode({ code }: { code: string }) {
   );
 }
 
-function PreparationCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onChangeDeck }: {
+function PreparationCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onChangeDeck, cardRef }: {
   eyebrow: string;
   side: "player" | "host";
   deck?: InspectableDeck;
   onInspect: () => void;
   drawerOpen: boolean;
   onChangeDeck: () => void;
+  cardRef: React.Ref<HTMLButtonElement>;
 }) {
   const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
@@ -1000,6 +1017,7 @@ function PreparationCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onCh
   return (
     <section className={`preparation-frontispiece-wing is-${side} deck-theme-${deckTheme}`} aria-label={eyebrow}>
       <button
+        ref={cardRef}
         className={`preparation-frontispiece-card is-${side} ${drawerOpen ? "is-active" : ""}`}
         type="button"
         onClick={onChangeDeck}
@@ -1034,6 +1052,15 @@ function PreparationCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onCh
       </div>
     </section>
   );
+}
+
+function captureEncounterCardRect(card: HTMLButtonElement | null): EncounterCardRect | undefined {
+  if (!card) return undefined;
+  const rect = card.getBoundingClientRect();
+  if (![rect.left, rect.top, rect.width, rect.height].every(Number.isFinite) || rect.width <= 0 || rect.height <= 0) {
+    return undefined;
+  }
+  return { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
 }
 
 function ChaosRules() {

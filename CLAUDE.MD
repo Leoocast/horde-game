@@ -532,7 +532,7 @@ número no puede desplazar la composición; sus glifos viven en celdas tabulares
 central fija. Las dificultades no repiten «Preparación», y «Cronista»/«Hueste» no se imprimen encima
 de las cartas. Los nombres de ambos mazos y el `VS` tienen presencia en el centro; bajo las cartas
 clave no se repite el total de cartas. Cada ala conserva **Ver mazo** y **Cambiar mazo** mediante el
-drawer real compartido.
+drawer real compartido, con aire suficiente entre la carta y esas acciones.
 Ese drawer es una lámina opaca de título único (**Elige una Crónica** o **Elige una Hueste**), sin
 repetir identidad y colección en dos renglones. Sus mazos empiezan arriba y fluyen siempre en dos
 columnas para admitir nuevas filas. **Futuro** tiene jerarquía visible pero usa un tono neutro para no
@@ -543,7 +543,12 @@ debajo, en una sola línea; el bloque conserva aire respecto al `VS`. La opción
 turnos comparten un acento semántico: verde para Esperanza, amarillo para Presagio y rojo para
 Perdición. El pie queda reservado para las acciones. La entrada y la salida enfatizan primero el
 número y las dos cartas; el ornamento del CTA gira hacia la derecha. Caos conserva su pantalla de
-paneles y sus herramientas avanzadas.
+paneles y sus herramientas avanzadas. Al pulsar **Iniciar Crónica**, las dos cartas visibles entregan
+sus cajas de viewport a `EncounterTransition`: copias fijas continúan desde esas mismas posiciones,
+llegan a los slots reales del choque en `ENCOUNTER_IMPACT_MS`, esperan hasta la apertura de cortinas y
+salen con su lado. Los originales se ocultan en el mismo frame para no duplicarse. No se reparenta DOM;
+si falta una imagen o geometría válida, el origen no pasa por Preparación (Caos/semilla inscrita) o está
+activo movimiento reducido, se conserva automáticamente el choque independiente anterior.
 
 En el Umbral, **Menú principal** comparte el ancla vertical y horizontal de **Volver al umbral** en
 Preparación; retroceder entre ambas pantallas no debe desplazar el objetivo bajo el puntero.
