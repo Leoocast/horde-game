@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowLeft, AudioLines, BookOpen, ChevronLeft, ChevronRight, Construction, Copy, Dices, Eye, PanelsTopLeft, Pencil, Play, RefreshCw, RotateCcw, ScanSearch, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, AudioLines, ChevronLeft, ChevronRight, Construction, Copy, Dices, Eye, PanelsTopLeft, Pencil, Play, RefreshCw, RotateCcw, ScanSearch, Settings, Shield, Skull, Sparkles, Swords, Trash2, X } from "lucide-react";
 import { AnimatePresence, motion, useIsPresent } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { contentCatalog } from "../content/bootstrap";
@@ -497,29 +497,31 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
 
           <div className="main-settings-content old-scrollbar">
             <section className="main-settings-section how-to-play-lessons">
-              <div className="main-settings-section-title">{t("howToPlay.tutorials")}</div>
-              {howToPlayEntries.map((entry) => {
-                const Icon = entry.icon === "learn" ? Sparkles : BookOpen;
-                return (
+              <div className="how-to-play-catalog">
+                {howToPlayEntries.map((entry, index) => (
                   <button
                     key={entry.id}
-                    className="how-to-play-lesson"
+                    className={`how-to-play-chapter ${index === 0 ? "is-primary" : "is-companion"}`}
                     type="button"
                     disabled={!entry.onLaunch}
                     onClick={entry.onLaunch}
                   >
-                    <span className="how-to-play-lesson-icon" aria-hidden="true"><Icon size={25} /></span>
-                    <span className="how-to-play-lesson-copy">
+                    <span className="how-to-play-chapter-number" aria-hidden="true">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span className="how-to-play-chapter-head">
                       <small>{t(entry.kickerKey)}</small>
+                      <span className={`how-to-play-chapter-status ${entry.onLaunch ? "is-ready" : ""}`}>
+                        {t(entry.onLaunch ? "howToPlay.available" : "howToPlay.comingSoon")}
+                      </span>
+                    </span>
+                    <span className="how-to-play-chapter-copy">
                       <strong>{t(entry.titleKey)}</strong>
                       <span>{t(entry.descriptionKey)}</span>
                     </span>
-                    <span className={`how-to-play-lesson-status ${entry.onLaunch ? "is-ready" : ""}`}>
-                      {t(entry.onLaunch ? "howToPlay.start" : "howToPlay.comingSoon")}
-                    </span>
                   </button>
-                );
-              })}
+                ))}
+              </div>
             </section>
           </div>
         </section>
@@ -532,6 +534,10 @@ export function StartMenu({ decks, selectedDeckId, onSelectDeck, onOpenDeck, onV
           decks={decks}
           hostDecks={hostDecks}
           onBack={closeMenuPanel}
+          onPlay={() => {
+            setClosingMenuScreen(undefined);
+            openThreshold();
+          }}
           onReplay={onReplayFuture}
           closing={closingMenuScreen === "seeds"}
         />

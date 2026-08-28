@@ -27,6 +27,7 @@ type Props = Readonly<{
   decks: readonly InspectableDeck[];
   hostDecks: readonly InspectableDeck[];
   onBack: () => void;
+  onPlay: () => void;
   onReplay: (origin: MatchOrigin) => void;
   closing?: boolean;
 }>;
@@ -49,7 +50,7 @@ const subscribeHistory = (listener: () => void) => productHistoryRuntime.subscri
 const readHistory = () => productHistoryRuntime.snapshot();
 
 /** Real, factual library backed by the same HistoryService authority that records matches. */
-export function SeedsOfDestinyScreen({ decks, hostDecks, onBack, onReplay, closing = false }: Props) {
+export function SeedsOfDestinyScreen({ decks, hostDecks, onBack, onPlay, onReplay, closing = false }: Props) {
   const t = useTranslation();
   const pushToast = useToastStore((state) => state.pushToast);
   const snapshot = useSyncExternalStore(subscribeHistory, readHistory, readHistory);
@@ -117,10 +118,8 @@ export function SeedsOfDestinyScreen({ decks, hostDecks, onBack, onReplay, closi
         onReset={() => setResetPrompt("confirm")}
       />
 
-      {library.phase === "loading" ? (
-        <LibraryState icon="◇" title={t("seeds.loadingTitle")} body={t("seeds.loadingBody")} />
-      ) : library.phase === "empty" ? (
-        <EmptyLibraryState />
+      {library.phase === "loading" || library.phase === "empty" ? (
+        <EmptyLibraryState onPlay={onPlay} />
       ) : future ? (
         <div className="seeds-book">
           <div className="seeds-index">
@@ -210,43 +209,16 @@ function HistoryHealthBanner({
   );
 }
 
-function LibraryState({ icon, title, body }: Readonly<{ icon: string; title: string; body: string }>) {
-  return (
-    <div className="seeds-library-state" role="status">
-      <span aria-hidden="true">{icon}</span>
-      <h2>{title}</h2>
-      <p>{body}</p>
-    </div>
-  );
-}
-
-function EmptyLibraryState() {
+function EmptyLibraryState({ onPlay }: Readonly<{ onPlay: () => void }>) {
   const t = useTranslation();
-  const steps = [
-    t("seeds.emptyStepContemplate"),
-    t("seeds.emptyStepChronicle"),
-    t("seeds.emptyStepReturn"),
-  ];
 
   return (
-    <div className="seeds-library-state seeds-library-empty" role="status">
-      <div className="seeds-empty-constellation" aria-hidden="true">
-        <span className="seeds-empty-thread" />
-        <span className="seeds-empty-orbit" />
-        <span className="seeds-empty-orbit is-inner" />
-        <span className="seeds-empty-star">✦</span>
-      </div>
-      <small className="seeds-empty-kicker">{t("seeds.emptyKicker")}</small>
-      <h2>{t("seeds.emptyTitle")}</h2>
+    <div className="seeds-library-state seeds-library-empty" aria-labelledby="seeds-empty-title">
+      <h2 id="seeds-empty-title">{t("seeds.emptyTitle")}</h2>
       <p>{t("seeds.emptyBody")}</p>
-      <ol className="seeds-empty-path" aria-label={t("seeds.emptyPathLabel")}>
-        {steps.map((step, index) => (
-          <li key={step}>
-            <span aria-hidden="true"><b>{String(index + 1).padStart(2, "0")}</b></span>
-            <strong>{step}</strong>
-          </li>
-        ))}
-      </ol>
+      <button className="seeds-empty-action" type="button" onClick={onPlay}>
+        <span>{t("seeds.emptyAction")}</span>
+      </button>
     </div>
   );
 }
@@ -340,7 +312,7 @@ function SeedFuturePage({
             <span className="seeds-host-side">{host?.label ?? future.hostDeckKey}</span>
           </p>
           <p className="seeds-duel-difficulty">
-            {t(DIFFICULTY_KEYS[future.difficulty])} · {t("seeds.preparationTurns", { count: future.setupTurns })}
+            {t(DIFFICULTY_KEYS[future.difficulty])}
           </p>
           {future.collision && <p className="seeds-identity-note">{t("seeds.collisionNote", { revision: future.identityRevision })}</p>}
           <div className="seeds-duel-copy">

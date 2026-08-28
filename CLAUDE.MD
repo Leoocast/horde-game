@@ -606,13 +606,18 @@ beats retenidos. No es el guion ni el copy de la Primera Semilla y no entra al b
 El archivo de líneas temporales se presenta como **Seeds of Destiny** / **Semillas del Destino**;
 la identidad reproducible que se escribe dentro de **Inscribe the future** conserva el singular
 **Seed of Destiny** / **Semilla del Destino**. Ahí el Cronista contempla, reescribe y finalmente
-preserva sus futuros. Cuando aún no existe ninguno, el Archivo muestra una constelación incompleta y
-el recorrido Contemplar → Escribir → Reescribir, no un mensaje de sistema desnudo. El nombre técnico
+preserva sus futuros. Mientras hidrata, el Archivo muestra provisionalmente el mismo estado vacío
+estático para no dejar una pantalla en blanco; si encuentra Futuros, éstos lo sustituyen al terminar.
+Cuando aún no existe ninguno, muestra una frase directa en un máximo de dos líneas, una explicación
+de una sola línea y un CTA **Contemplar un nuevo Futuro** hacia el Umbral de **Jugar**. La materia
+del CTA gira en sentido horario y acelera al señalarlo. El nombre técnico
 existente de módulos y documentos no cambia. Cada seed recibe una identidad
 cosmética determinista **Futuro `NNN·NNN`**; ese código compacto puede colisionar y nunca reemplaza
 la identidad reproducible. Desde la Fase 2.5, el launcher normal genera una Canon Seed `HF1` y
 **Copiar identidad** copia ese código completo; `GameState.seed` recibe únicamente sus cinco
 caracteres de entropía. La ruta avanzada de seed libre continúa siendo opaca.
+La página abierta de un Futuro muestra únicamente su dificultad; no vuelve a imprimir el número de
+turnos de Preparación codificado por esa dificultad.
 
 Las **Canon Seeds** usan el contrato `HF1-PPP-HHH-XXD-XXX`. `PPP` y `HHH` son códigos estables de
 deck (`ELA`/`CEC` para Cronista y `GRV`/`VRK` para Hueste); los cinco caracteres repartidos alrededor
@@ -893,7 +898,11 @@ aparecer en una partida normal compatible y se confirman globalmente; los fixtur
 Playground siguen aislados en development. Las acciones estructurales imprescindibles reutilizan la
 guía actual. El plan se ejecuta fase por fase con
 aprobación explícita. **Cómo jugar** ya consume un catálogo y presenta **Aprender a jugar** antes de
-**Preparación**; `first-seed` conserva su ID pero ahora es opcional. El recorrido tiene lifecycle
+**Preparación**; `first-seed` conserva su ID pero ahora es opcional. Su menú no usa pictogramas ni
+filas de Ajustes: presenta ambos recorridos desde el inicio del contenido como una cuadrícula compacta
+de capítulos tipográficos numerados, con el tutorial principal primero y la lección enfocada como
+acompañante. Las tarjetas completas son el control; no añaden rombo, divisor, flecha ni un segundo
+`Begin` en el pie, ni anteponen un rótulo redundante de selección. El recorrido tiene lifecycle
 efímero independiente, rollback de conceptos provisionales, reinicio total, autosave apagado,
 políticas explícitas de tablero e intervenciones estrictas adjuntas al `GameState` vivo. Su launcher
 está activo desde **Cómo jugar**. Antes de iniciar el lifecycle muestra una antesala temporal de

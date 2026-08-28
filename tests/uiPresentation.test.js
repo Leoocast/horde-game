@@ -1346,18 +1346,33 @@ test("secondary menus homologate their back control with Play's Main menu anchor
 
 test("the archive is plural while a single inscription remains a Seed of Destiny", () => {
   const seeds = readFileSync(new URL("../src/components/SeedsOfDestinyScreen.tsx", import.meta.url), "utf8");
+  const startMenu = readFileSync(new URL("../src/components/StartMenu.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.equal(translate("en", "menu.seedsOfDestiny"), "Seeds of Destiny");
   assert.equal(translate("es", "menu.seedsOfDestiny"), "Semillas del Destino");
   assert.equal(translate("en", "threshold.seedLabel"), "Seed of Destiny");
   assert.equal(translate("es", "threshold.seedLabel"), "Semilla del Destino");
+  assert.equal(translate("en", "seeds.emptyBody"), "Contemplate a Future and preserve its Chronicle here.");
+  assert.equal(translate("es", "seeds.emptyBody"), "Contempla un Futuro y conserva aquí su Crónica.");
+  assert.equal(translate("en", "seeds.emptyAction"), "Contemplate a New Future");
+  assert.equal(translate("es", "seeds.emptyAction"), "Contemplar un nuevo Futuro");
   assert.doesNotMatch(seeds, /seeds-intro/u);
-  assert.match(seeds, /library\.phase === "empty" \? \(\s*<EmptyLibraryState \/>/u);
-  assert.match(seeds, /className="seeds-empty-constellation"/u);
-  assert.match(seeds, /seeds\.emptyStepContemplate[\s\S]*?seeds\.emptyStepChronicle[\s\S]*?seeds\.emptyStepReturn/u);
-  assert.match(styles, /\.seeds-empty-path\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/u);
-  assert.match(styles, /@keyframes seeds-empty-orbit/u);
+  assert.match(seeds, /library\.phase === "loading" \|\| library\.phase === "empty" \? \(\s*<EmptyLibraryState onPlay=\{onPlay\} \/>/u);
+  assert.doesNotMatch(seeds, /seeds-library-pending/u);
+  assert.match(seeds, /className="seeds-empty-action"[^>]*onClick=\{onPlay\}>\s*<span>\{t\("seeds\.emptyAction"\)\}<\/span>/u);
+  assert.doesNotMatch(seeds, /LoadingLibraryState|seeds-loading-book|seeds-empty-constellation|seeds-empty-orbit|seeds-empty-path/u);
+  assert.match(startMenu, /onPlay=\{\(\) => \{\s*setClosingMenuScreen\(undefined\);\s*openThreshold\(\);/u);
+  assert.match(styles, /\.seeds-library-empty h2\s*\{[^}]*-webkit-line-clamp:\s*2;/u);
+  assert.match(styles, /\.seeds-library-empty > p\s*\{[^}]*white-space:\s*nowrap;/u);
+  assert.match(styles, /\.seeds-empty-action\s*\{[^}]*min-width:\s*296px;/u);
+  assert.match(styles, /@keyframes seeds-empty-cta-orbit-clockwise\s*\{\s*to \{ transform: translate\(-50%, -50%\) rotate\(360deg\); \}/u);
+  const duelDifficulty = seeds.slice(
+    seeds.indexOf('<p className="seeds-duel-difficulty">'),
+    seeds.indexOf("</p>", seeds.indexOf('<p className="seeds-duel-difficulty">')),
+  );
+  assert.match(duelDifficulty, /DIFFICULTY_KEYS\[future\.difficulty\]/u);
+  assert.doesNotMatch(duelDifficulty, /setupTurns|preparationTurns/u);
 });
 
 test("Which Future keeps both gates fully present and paints the pointer glow on top", () => {
@@ -1376,7 +1391,16 @@ test("How to Play opens a full-screen data-driven tutorial catalog", () => {
   assert.match(startMenu, /main-settings-screen how-to-play-screen/u);
   assert.match(startMenu, /howToPlayEntries\.map/u);
   assert.match(startMenu, /disabled=\{!entry\.onLaunch\}/u);
-  assert.match(styles, /\.how-to-play-lesson\s*\{[^}]*grid-template-columns:/u);
+  assert.match(startMenu, /className=\{`how-to-play-chapter \$\{index === 0 \? "is-primary" : "is-companion"\}`\}/u);
+  assert.doesNotMatch(startMenu, /howToPlay\.tutorials|main-settings-section-title">\{t\("howToPlay/u);
+  assert.match(startMenu, /String\(index \+ 1\)\.padStart\(2, "0"\)/u);
+  assert.doesNotMatch(startMenu, /how-to-play-lesson-icon|const Icon = entry\.icon/u);
+  assert.doesNotMatch(startMenu, /how-to-play-chapter-action|<span aria-hidden="true">→<\/span>/u);
+  assert.match(styles, /\.how-to-play-catalog\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fit, minmax\(min\(100%, 320px\), 1fr\)\);/u);
+  assert.match(styles, /\.how-to-play-chapter\s*\{[^}]*min-height:\s*clamp\(218px, 27vh, 284px\);/u);
+  assert.match(styles, /\.how-to-play-chapter-number\s*\{[^}]*font:\s*700 clamp\(68px, 7vw, 116px\)/u);
+  assert.match(styles, /\.how-to-play-chapter\.is-companion\s*\{[^}]*--chapter-accent:\s*#829c99;/u);
+  assert.doesNotMatch(styles, /\.how-to-play-chapter::before|\.how-to-play-chapter-action/u);
 });
 
 test("Settings stays above gameplay while confirmations stay above Settings", () => {
