@@ -996,7 +996,6 @@ function PreparationCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onCh
   const details = useDeckCardDetails(keyCard, deck?.images ?? { cards: {} });
   const keyCardName = localizedCardName(keyCard, language);
   const deckTheme = deck?.presentation.theme ?? "ramp";
-  const cardCount = deck?.deck.deckSize ?? deck?.deck.cards.length ?? 0;
 
   return (
     <section className={`preparation-frontispiece-wing is-${side} deck-theme-${deckTheme}`} aria-label={eyebrow}>
@@ -1018,7 +1017,6 @@ function PreparationCombatant({ eyebrow, side, deck, onInspect, drawerOpen, onCh
         </span>
       </button>
       <div className="preparation-frontispiece-wing-foot">
-        <span>{cardCount} {t("common.cards")}</span>
         <div>
           <button type="button" onClick={onInspect}><Eye size={14} /> {t("common.viewDeck")}</button>
           <button

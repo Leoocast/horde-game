@@ -25334,15 +25334,6 @@ body.is-victory-clearing .game-battlefield-stage {
   gap: 8px;
 }
 
-.preparation-frontispiece-wing-foot > span {
-  color: #74817f;
-  font-family: "Cinzel", Georgia, "Times New Roman", serif;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-
 .preparation-frontispiece-wing-foot > div {
   display: flex;
   flex-wrap: wrap;
@@ -25463,8 +25454,8 @@ body.is-victory-clearing .game-battlefield-stage {
   overflow: hidden;
   color: #e0d3ad;
   font-family: "Lora", Georgia, "Times New Roman", serif;
-  font-size: clamp(14px, 1.2vw, 19px);
-  line-height: 1.32;
+  font-size: clamp(17px, 1.45vw, 23px);
+  line-height: 1.26;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -25476,7 +25467,7 @@ body.is-victory-clearing .game-battlefield-stage {
 .preparation-frontispiece-match > small {
   color: #74817f;
   font-family: "Cinzel", Georgia, "Times New Roman", serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.3em;
 }

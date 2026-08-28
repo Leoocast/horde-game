@@ -530,7 +530,9 @@ la cifra fija de **Futuro** domina el centro, las cartas clave flanquean el enfr
 reúne las tres dificultades, la frase completa del despertar y **Iniciar Crónica**. La anchura del
 número no puede desplazar la composición; sus glifos viven en celdas tabulares dentro de una columna
 central fija. Las dificultades no repiten «Preparación», y «Cronista»/«Hueste» no se imprimen encima
-de las cartas. Cada ala conserva **Ver mazo** y **Cambiar mazo** mediante el drawer real compartido.
+de las cartas. Los nombres de ambos mazos y el `VS` tienen presencia en el centro; bajo las cartas
+clave no se repite el total de cartas. Cada ala conserva **Ver mazo** y **Cambiar mazo** mediante el
+drawer real compartido.
 Ese drawer es una lámina opaca de título único (**Elige una Crónica** o **Elige una Hueste**), sin
 repetir identidad y colección en dos renglones. Sus mazos empiezan arriba y fluyen siempre en dos
 columnas para admitir nuevas filas. **Futuro** tiene jerarquía visible pero usa un tono neutro para no

@@ -1210,6 +1210,7 @@ test("standard Preparation uses a fixed Future frontispiece and keeps the real d
   );
   assert.doesNotMatch(modeMarkup, /setupTurns|phase\.setup|Preparation|Preparación/u);
   assert.equal(combatantMarkup.match(/\{eyebrow\}/gu)?.length, 1);
+  assert.doesNotMatch(combatantMarkup, /cardCount|common\.cards/u);
   assert.match(centerMarkup, /preparation-frontispiece-match[\s\S]*?preparation-frontispiece-center-fate[\s\S]*?preparation-frontispiece-modes[\s\S]*?<HostAwakening/u);
   assert.match(centerMarkup, /className=\{`preparation-frontispiece-center-fate is-\$\{props\.mode\}`\}/u);
   assert.doesNotMatch(footerMarkup, /preparation-frontispiece-modes|HostAwakening/u);
@@ -1222,6 +1223,8 @@ test("standard Preparation uses a fixed Future frontispiece and keeps the real d
   assert.match(styles, /\.preparation-frontispiece-future > span\s*\{[^}]*width:\s*0\.72em;[^}]*preparation-future-digit-in/u);
   assert.match(styles, /\.preparation-frontispiece-kicker\s*\{[^}]*color:\s*#91a29e;[^}]*font-size:\s*clamp\(15px, 1\.25vw, 21px\);/u);
   assert.match(styles, /\.preparation-frontispiece-future > span\.is-separator\s*\{[^}]*color:\s*inherit;/u);
+  assert.match(styles, /\.preparation-frontispiece-match > span\s*\{[^}]*font-size:\s*clamp\(17px, 1\.45vw, 23px\);/u);
+  assert.match(styles, /\.preparation-frontispiece-match > small\s*\{[^}]*font-size:\s*12px;/u);
   assert.doesNotMatch(startMenu, /preparation-frontispiece-diamond|frontispiece-active/u);
   const futureDigitKeyframes = styles.slice(
     styles.indexOf("@keyframes preparation-future-digit-in"),
