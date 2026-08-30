@@ -932,8 +932,10 @@ las preventivas interceptan sólo la acción relevante y nunca compiten con una 
 estricta. El progreso `hostfall-guided-progress` v2 migra v1, conserva finalizaciones de lecciones y
 añade conceptos, recorridos y la preferencia global de repetición. En partidas normales el concepto
 se confirma al cerrar la ayuda; el modo provisional permite commit atómico o rollback total para el
-futuro prólogo. El registro de producto contiene ya los conceptos contextuales del primer tramo:
-defensa y orden de izquierda a derecha, Volar/Guardia aérea, Vida, Reserva y Fuentes preparadas,
+futuro prólogo. Los recorridos aislados no escriben progreso salvo fundamentos transferibles
+declarados explícitamente, como la limpieza del daño marcado. El registro de producto contiene ya
+los conceptos contextuales del primer tramo: defensa y orden de izquierda a derecha, Volar/Guardia
+aérea, Vida, daño marcado que desaparece al cambiar de turno, Reserva y Fuentes preparadas,
 Estabilizándose, ataque al Archivo, agotamiento del atacante y Estampida. Las ayudas no vistas pueden
 aparecer en una partida normal compatible y se confirman globalmente; los fixtures sintéticos del
 Playground siguen aislados en development. Las acciones estructurales imprescindibles reutilizan la
@@ -960,7 +962,8 @@ Cronista y la cuarta Fuente que completa el contenedor de Energía inferior izqu
 **Juega Río de Elarion**. La guía exige la cuarta Fuente y
 Aelyra con objetivo libre; después de elegir su objetivo, **Cancelar** y el clic derecho global
 permiten deseleccionarlo sin cancelar la Invocación. El director deja defensa libre y marca en
-dorado **Mi Turno** sólo después de aceptar la ayuda contextual de Vida; luego exige Vaelor,
+dorado **Mi Turno** sólo después de aceptar las ayudas contextuales pendientes: Vida y, si hubo
+un choque con supervivientes, la limpieza del daño marcado; luego exige Vaelor,
 hace obligatoria una única inspección de la Cosechadora y permite Flor antes, después o nunca. Las pruebas enumeran todas las
 defensas legales y esas ramas, que convergen en Cosechadora 7/9, y certifican cero o un descarte
 opcional antes de la primera Estampida. El recorrido ya continúa después de `host.surgeStarted`: los

@@ -167,6 +167,51 @@ test("Host reveal, Surge, attacker order, life impact and outcome are projected 
   assert.equal(impactSignals.some((signal) => signal.kind === "game.ended" && signal.winner === "host"), true);
 });
 
+test("settled Host combat reports every surviving Echo with marked damage", () => {
+  const combat = createTestGame("signals-marked-combat-damage");
+  combat.openingHandAccepted = true;
+  combat.activeSide = "host";
+  combat.phase = "combat";
+  const playerEcho = addCard(combat, customCard("damaged-player-echo", "player", { endurance: 5 }));
+  const hostEcho = addCard(combat, customCard("damaged-host-echo", "host", { endurance: 6 }));
+  const untouchedEcho = addCard(combat, customCard("untouched-player-echo", "player", { endurance: 4 }));
+  const damagedSource = addCard(combat, cardFromDeck("river_of_elarion", "player", "field"));
+
+  const settled = structuredClone(combat);
+  settled.phase = "end";
+  settled.player.field.find((card) => card.instanceId === playerEcho.instanceId).damageMarked = 2;
+  settled.host.field.find((card) => card.instanceId === hostEcho.instanceId).damageMarked = 3;
+  settled.player.field.find((card) => card.instanceId === damagedSource.instanceId).damageMarked = 1;
+
+  const signal = gameplaySignalsForTransition(combat, settled)
+    .find((candidate) => candidate.kind === "combat.echoesDamaged");
+  assert.deepEqual(signal && {
+    cardIds: signal.cardIds,
+    amount: signal.amount,
+    turnNumber: signal.turnNumber,
+  }, {
+    cardIds: [playerEcho.instanceId, hostEcho.instanceId],
+    amount: 2,
+    turnNumber: settled.turnNumber,
+  });
+  assert.equal(signal.cardIds.includes(untouchedEcho.instanceId), false);
+
+  const settledWithoutDamage = structuredClone(combat);
+  settledWithoutDamage.phase = "end";
+  assert.equal(
+    gameplaySignalsForTransition(combat, settledWithoutDamage)
+      .some((candidate) => candidate.kind === "combat.echoesDamaged"),
+    false,
+  );
+
+  const stillResolving = structuredClone(settled);
+  stillResolving.phase = "combat";
+  assert.equal(
+    gameplaySignalsForTransition(combat, stillResolving).some((candidate) => candidate.kind === "combat.echoesDamaged"),
+    false,
+  );
+});
+
 test("resolved multi-target effects and decisive Archive attacks carry their causal snapshot", () => {
   const beforeEffect = createTestGame("signals-narrative-facts");
   preparePlayerCombat(beforeEffect);

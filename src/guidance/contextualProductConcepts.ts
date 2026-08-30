@@ -79,6 +79,30 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
     evaluate: () => ({ highlights: [{ kind: "surface", anchor: "player.life" }] }),
   },
   {
+    id: "marked-damage-clears",
+    revision: 1,
+    policy: "preventive",
+    priority: 75,
+    persistWhenAcknowledgedInIsolated: true,
+    copy: {
+      titleKey: "guided.contextual.product.markedDamageTitle",
+      bodyKey: "guided.contextual.product.markedDamageBody",
+      glossaryTerms: ["echoes"],
+    },
+    signalKinds: ["combat.echoesDamaged"],
+    evaluate: (signal) => signal.kind === "combat.echoesDamaged" && signal.cardIds.length > 0
+      ? markedDamageMatch(signal.cardIds)
+      : undefined,
+    prevent: (intent, context) => intent.kind === "phase.startPlayerTurn"
+      ? markedDamageMatch(damagedEchoIds(context.game))
+      : undefined,
+    revalidate: (match, context) => {
+      const current = new Set(damagedEchoIds(context.game));
+      const highlighted = highlightedCards(match);
+      return highlighted.length > 0 && highlighted.every((instanceId) => current.has(instanceId));
+    },
+  },
+  {
     id: "reserve-and-ready",
     revision: 3,
     policy: "informative",
@@ -253,6 +277,20 @@ function cardsRemainRelevant(match: ContextualConceptMatch, context: Readonly<{ 
 
 function highlightedCards(match: ContextualConceptMatch): string[] {
   return (match.highlights ?? []).flatMap((highlight) => highlight.kind === "card" ? [highlight.instanceId] : []);
+}
+
+function damagedEchoIds(game: GameState): string[] {
+  return [...game.player.field, ...game.host.field]
+    .filter((card) => card.kinds.includes("ECHO") && card.damageMarked > 0)
+    .map((card) => card.instanceId);
+}
+
+function markedDamageMatch(cardIds: readonly string[]): ContextualConceptMatch | undefined {
+  if (cardIds.length === 0) return undefined;
+  return {
+    highlights: cardIds.map((instanceId) => ({ kind: "card", instanceId, padding: 18 })),
+    placement: "center",
+  };
 }
 
 function findCard(game: GameState, instanceId: string): CardInstance | undefined {

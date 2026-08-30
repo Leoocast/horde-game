@@ -138,6 +138,11 @@ test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
     translate("es", "guided.contextual.product.assignDefendersBody"),
     "Haz clic en un Eco aliado y arrastra el cursor hasta un Eco atacante. También puedes elegir no defender.",
   );
+  assert.equal(translate("es", "guided.contextual.product.markedDamageTitle"), "El daño desaparece al cambiar de turno");
+  assert.equal(
+    translate("es", "guided.contextual.product.markedDamageBody"),
+    "Estos Ecos recibieron daño durante esta batalla. El daño permanece marcado hasta que termine el turno de la Hueste; al comenzar tu turno, se elimina y recuperan todo su Aguante.",
+  );
   assert.equal(translate("es", "guided.contextual.product.attackExhaustsTitle"), "Atacar");
   assert.equal(translate("es", "guided.learnToPlay.playerTurnTitle"), "Ahora es tu turno");
   assert.equal(translate("es", "guided.learnToPlay.playerTurnBody"), "Mira lo que pasa con la Energía.");
@@ -287,6 +292,7 @@ test("journey limits are ephemeral and product concepts cover every prologue exp
     "assign-defenders",
     "flying-defense-restriction",
     "chronicler-life",
+    "marked-damage-clears",
     "reserve-and-ready",
     "stabilizing-restriction",
     "attack-the-host-archive",
@@ -314,6 +320,44 @@ test("normal matches retain attack help while the defense prompt prefers the lef
     placement: "left",
   });
   assert.deepEqual(order.signalKinds, []);
+});
+
+test("marked combat damage highlights every affected Echo and owns the next-turn handoff", () => {
+  const concept = PRODUCT_CONTEXTUAL_CONCEPTS.find((candidate) => candidate.id === "marked-damage-clears");
+  const game = buildGuidedScenario(LEARN_TO_PLAY_PROLOGUE_SCENARIO, contentCatalog).game;
+  const playerEcho = game.player.field.find((card) => card.kinds.includes("ECHO"));
+  const hostEcho = game.host.field.find((card) => card.kinds.includes("ECHO"));
+  playerEcho.damageMarked = 1;
+  hostEcho.damageMarked = 2;
+  const signal = {
+    kind: "combat.echoesDamaged",
+    cardIds: [playerEcho.instanceId, hostEcho.instanceId],
+    amount: 2,
+    turnNumber: game.turnNumber,
+  };
+  const context = { game };
+
+  assert.equal(concept.policy, "preventive");
+  assert.equal(concept.persistWhenAcknowledgedInIsolated, true);
+  assert.deepEqual(concept.evaluate(signal, context), {
+    highlights: [
+      { kind: "card", instanceId: playerEcho.instanceId, padding: 18 },
+      { kind: "card", instanceId: hostEcho.instanceId, padding: 18 },
+    ],
+    placement: "center",
+  });
+  assert.deepEqual(concept.prevent({ kind: "phase.startPlayerTurn" }, context), {
+    highlights: [
+      { kind: "card", instanceId: playerEcho.instanceId, padding: 18 },
+      { kind: "card", instanceId: hostEcho.instanceId, padding: 18 },
+    ],
+    placement: "center",
+  });
+  assert.equal(concept.prevent({ kind: "phase.endTurn" }, context), undefined);
+
+  playerEcho.damageMarked = 0;
+  hostEcho.damageMarked = 0;
+  assert.equal(concept.revalidate(concept.evaluate(signal, context), context), false);
 });
 
 test("dragging a ground Echo onto a Flying attacker preserves the denied target for contextual guidance", async () => {

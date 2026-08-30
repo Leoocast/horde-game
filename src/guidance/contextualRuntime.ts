@@ -106,6 +106,12 @@ export class ContextualTutorialRuntime {
   authorizeIntent(intent: GameplayIntent): ContextualIntentAuthorization {
     const context = this.#readContext();
     if (context.guidedActive) return Object.freeze({ allowed: true });
+    const active = this.#active;
+    if (active?.definition.policy === "preventive" && active.definition.prevent?.(intent, context)) {
+      this.#lastInterceptedConceptId = active.definition.id;
+      this.#emit();
+      return Object.freeze({ allowed: false, conceptId: active.definition.id });
+    }
     for (const definition of this.#registry.concepts) {
       if (definition.policy !== "preventive" || !definition.prevent || !this.#eligible(definition)) continue;
       const match = definition.prevent(intent, context);
@@ -128,7 +134,12 @@ export class ContextualTutorialRuntime {
       shownAt,
     });
     if (this.#progressMode === "provisional") this.#provisional.set(entry.conceptId, entry);
-    else if (this.#progressMode === "immediate") this.#progress.markConceptSeen(entry.conceptId, entry.shownRevision, entry.shownAt);
+    else if (
+      this.#progressMode === "immediate"
+      || (this.#progressMode === "isolated" && item.definition.persistWhenAcknowledgedInIsolated)
+    ) {
+      this.#progress.markConceptSeen(entry.conceptId, entry.shownRevision, entry.shownAt);
+    }
     this.#active = undefined;
     this.#lastInterceptedConceptId = undefined;
     this.#emit();

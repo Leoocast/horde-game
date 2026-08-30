@@ -51,6 +51,12 @@ const PREVENTIVE_CONCEPT = Object.freeze({
   prevent: (intent) => intent.kind === "card.play" ? {} : undefined,
 });
 
+const ISOLATED_PERSISTENT_CONCEPT = Object.freeze({
+  ...RESERVE_CONCEPT,
+  id: "isolated-persistent",
+  persistWhenAcknowledgedInIsolated: true,
+});
+
 test("guided progress v1 migrates to v2 without losing lesson completion", () => {
   const migrated = parseGuidedProgress({
     kind: "hostfall-guided-progress",
@@ -171,6 +177,18 @@ test("isolated tutorial sessions ignore global seen checks and never write globa
   fixture.dispose();
 });
 
+test("an explicitly transferable concept records acknowledgement from an isolated tutorial", () => {
+  const fixture = createRuntime([ISOLATED_PERSISTENT_CONCEPT]);
+  fixture.signals.beginSession("tutorial:transferable");
+  fixture.runtime.beginSession("tutorial:transferable", "isolated");
+  fixture.signals.publish({ kind: "player.reserveReleased", amount: 1 });
+  fixture.drain();
+  fixture.runtime.acknowledgeActive("2026-08-30T00:00:00.000Z");
+
+  assert.equal(contextualConceptSeen(fixture.progress.snapshot(), ISOLATED_PERSISTENT_CONCEPT), true);
+  fixture.dispose();
+});
+
 test("a strict journey can suppress duplicate contextual concepts for only its current match", () => {
   const fixture = createRuntime([RESERVE_CONCEPT]);
   fixture.runtime.beginSession("match:1", "isolated");
@@ -197,6 +215,11 @@ test("preventive policy intercepts only its matching intent until the help is ac
   const blocked = fixture.runtime.authorizeIntent({ kind: "card.play", cardId: "source:1" });
   assert.deepEqual(blocked, { allowed: false, conceptId: "source-action-limit" });
   assert.equal(fixture.runtime.snapshot().active?.policy, "preventive");
+  assert.deepEqual(
+    fixture.runtime.authorizeIntent({ kind: "card.play", cardId: "source:1" }),
+    { allowed: false, conceptId: "source-action-limit" },
+    "the relevant intent remains blocked while its preventive explanation is open",
+  );
   fixture.runtime.acknowledgeActive();
   assert.equal(fixture.runtime.authorizeIntent({ kind: "card.play", cardId: "source:1" }).allowed, true);
   fixture.dispose();

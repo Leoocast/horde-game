@@ -15,6 +15,7 @@ import { findManualInvokedTargetTrigger, resolveEffect } from "../src/engine/Eff
 import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
 import { getPowerEndurance, hostInSurge } from "../src/engine/StaticEffects";
 import { buildGuidedScenario } from "../src/guidance/buildGuidedScenario";
+import { gameplaySignalsForTransition } from "../src/guidance/gameplaySignals";
 import { GuidedInteractionGate } from "../src/guidance/interactionGate";
 import {
   LEARN_TO_PLAY_END_OPENING_TURN_INTERVENTION,
@@ -163,6 +164,29 @@ test("Learn to Play accepts confirmation for either authored Aelyra target", () 
       targetIds: [built.id(alias)],
     }).allowed, true);
   }
+});
+
+test("the canonical tutorial exposes its first compatible marked-damage branch to contextual guidance", () => {
+  const built = invokeVaelor({ playFlower: false });
+  const combat = prepareHostAttackers(runHostMain(endPlayerTurn(built.game)));
+  const blockerIds = combat.player.field
+    .filter((card) => card.kinds.includes("ECHO"))
+    .map((card) => card.instanceId);
+  const branch = blockerIds.flatMap((blockerId) => combat.combat.hostAttackers.flatMap((attackerId) => {
+    const defended = declareBlocker(combat, blockerId, attackerId);
+    if (!defended.lastActionResult?.ok) return [];
+    const resolved = resolveHostCombat(defended);
+    const damagedIds = [...resolved.player.field, ...resolved.host.field]
+      .filter((card) => card.kinds.includes("ECHO") && card.damageMarked > 0)
+      .map((card) => card.instanceId);
+    return damagedIds.length > 0 ? [{ resolved, damagedIds }] : [];
+  }))[0];
+  assert.ok(branch, "the canonical tutorial must include a legal branch with surviving marked damage");
+
+  const settled = advancePhase(branch.resolved, "end");
+  const signal = gameplaySignalsForTransition(branch.resolved, settled)
+    .find((candidate) => candidate.kind === "combat.echoesDamaged");
+  assert.deepEqual(signal?.cardIds, branch.damagedIds);
 });
 
 test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms combat fundamentals", () => {

@@ -82,6 +82,12 @@ export type GameplaySignalDraft =
       attackerIds: readonly string[];
     }>
   | Readonly<{
+      kind: "combat.echoesDamaged";
+      cardIds: readonly string[];
+      amount: number;
+      turnNumber: number;
+    }>
+  | Readonly<{
       kind: "player.lifeLost";
       amount: number;
       lifeBefore: number;
@@ -308,6 +314,24 @@ export function gameplaySignalsForTransition(
     && !sameOrdered(previous.combat.hostAttackers, next.combat.hostAttackers)
   ) {
     signals.push({ kind: "host.attackersDeclared", attackerIds: [...next.combat.hostAttackers] });
+  }
+
+  const hostCombatSettled = previous.activeSide === "host"
+    && previous.phase === "combat"
+    && next.activeSide === "host"
+    && next.phase === "end";
+  if (hostCombatSettled) {
+    const cardIds = [...next.player.field, ...next.host.field]
+      .filter((card) => card.kinds.includes("ECHO") && card.damageMarked > 0)
+      .map((card) => card.instanceId);
+    if (cardIds.length > 0) {
+      signals.push({
+        kind: "combat.echoesDamaged",
+        cardIds,
+        amount: cardIds.length,
+        turnNumber: next.turnNumber,
+      });
+    }
   }
 
   if (next.player.life < previous.player.life) {

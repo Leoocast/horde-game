@@ -59,6 +59,8 @@ export type ContextualConceptDefinition = Readonly<{
   id: string;
   revision: number;
   policy: ContextualInterventionPolicy;
+  /** Tutorial journeys normally isolate progress; transferable fundamentals may opt into acknowledgement. */
+  persistWhenAcknowledgedInIsolated?: boolean;
   /** Larger values are presented first when several signals arrive in the same synchronous beat. */
   priority: number;
   copy: ContextualConceptCopy;
