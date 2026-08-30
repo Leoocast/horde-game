@@ -157,7 +157,7 @@ export const LEARN_TO_PLAY_PROLOGUE_SCENARIO = Object.freeze({
 /** Strict opening intervention. Target selection remains free between the engine's legal allies. */
 export const LEARN_TO_PLAY_OPENING_INTERVENTION = Object.freeze({
   id: "learn-to-play.opening",
-  revision: 2,
+  revision: 3,
   startStepId: "evy-fourth-source-briefing",
   steps: [
     {
@@ -246,7 +246,12 @@ export const LEARN_TO_PLAY_OPENING_INTERVENTION = Object.freeze({
         titleKey: "guided.learnToPlay.confirmAelyraTargetTitle",
         bodyKey: "guided.learnToPlay.confirmAelyraTargetBody",
       },
-      highlights: [{ kind: "surface", anchor: "selection.primaryAction" }],
+      highlights: [
+        { kind: "surface", anchor: "selection.primaryAction" },
+        { kind: "surface", anchor: "selection.cancelAction" },
+        { kind: "card", alias: "aelyra" },
+        { kind: "card", alias: "maela" },
+      ],
       allowedIntent: {
         kind: "target.confirm",
         context: "trigger",

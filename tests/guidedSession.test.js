@@ -12,6 +12,7 @@ import {
   GuidedSessionStore,
   guidedPresentationActivity,
   guidedPresentationBlockers,
+  guidedInteractionGate,
   guidedSessionStore,
 } from "../src/guidance";
 import { useAudioStore } from "../src/store/useAudioStore";
@@ -351,6 +352,16 @@ test("Learn to Play keeps the combat-stat and Harvester interventions reachable 
     assert.equal(guidedSessionStore.snapshot().currentStep.id, "choose-aelyra-target");
     assert.equal(useGameStore.getState().counterTargeting?.sourceId, bindings.aelyra);
     useGameStore.getState().lockCounterTarget(bindings.maela);
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "confirm-aelyra-target");
+    useGameStore.getState().deselectCounterTarget();
+    assert.equal(useGameStore.getState().counterTargeting?.targetId, undefined);
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "confirm-aelyra-target");
+    useGameStore.getState().lockCounterTarget(bindings.aelyra);
+    assert.equal(
+      useGameStore.getState().counterTargeting?.targetId,
+      bindings.aelyra,
+      JSON.stringify(guidedInteractionGate.snapshot().lastRejection),
+    );
     assert.equal(guidedSessionStore.snapshot().currentStep.id, "confirm-aelyra-target");
     useGameStore.getState().confirmCounterTargeting();
     useGameStore.setState({

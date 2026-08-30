@@ -140,6 +140,57 @@ test("authored target options allow one controlled choice without accepting othe
   );
 });
 
+test("target confirmation keeps an authored selection reversible without consuming the step", () => {
+  const gate = new GuidedInteractionGate();
+  const bindings = {
+    aelyra: "card-aelyra",
+    maela: "card-maela",
+    outsider: "card-outsider",
+  };
+  gate.activate(policy({
+    stepId: "confirm-aelyra",
+    bindings,
+    allowedIntent: {
+      kind: "target.confirm",
+      context: "trigger",
+      targetAliasOptions: ["aelyra", "maela"],
+      targetCount: 1,
+    },
+  }));
+
+  assert.equal(gate.authorize({ kind: "target.deselect", context: "trigger" }).allowed, true);
+  const deselected = gate.publish({ kind: "target.deselected", reason: "trigger" });
+  assert.equal(deselected.advancesStep, false);
+  assert.equal(
+    gate.authorize({ kind: "target.cancel", context: "trigger" }).rejection.reason,
+    "intent-kind-mismatch",
+  );
+
+  assert.equal(gate.authorize({
+    kind: "target.choose",
+    context: "trigger",
+    targetId: "card-maela",
+  }).allowed, true);
+  const selected = gate.publish({ kind: "target.selected", targetId: "card-maela", reason: "trigger" });
+  assert.equal(selected.advancesStep, false);
+  assert.equal(
+    gate.authorize({ kind: "target.choose", context: "trigger", targetId: "card-outsider" }).rejection.reason,
+    "selection-mismatch",
+  );
+
+  assert.equal(gate.authorize({
+    kind: "target.confirm",
+    context: "trigger",
+    targetIds: ["card-maela"],
+  }).allowed, true);
+  const confirmed = gate.publish({ kind: "target.confirmed", targetIds: ["card-maela"], reason: "trigger" });
+  assert.notEqual(confirmed.advancesStep, false);
+  assert.equal(
+    gate.authorize({ kind: "target.deselect", context: "trigger" }).rejection.reason,
+    "step-action-consumed",
+  );
+});
+
 test("accepted receipts are scoped by session/step, consume one Act action and keep a monotonic cursor", () => {
   const gate = new GuidedInteractionGate();
   gate.activate(policy({

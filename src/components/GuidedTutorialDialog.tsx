@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import type { CSSProperties, ReactNode, RefObject } from "react";
+import { Children, type CSSProperties, type ReactNode, type RefObject } from "react";
 
 export type GuidedTutorialDialogProps = Readonly<{
   title: string;
@@ -56,6 +56,7 @@ export function GuidedTutorialDialog({
   titleId = "guided-tutorial-title",
   bodyId = "guided-tutorial-body",
 }: GuidedTutorialDialogProps) {
+  const hasBody = Children.count(body) > 0;
   return (
     <section
       ref={calloutRef}
@@ -64,12 +65,12 @@ export function GuidedTutorialDialog({
       role="dialog"
       aria-modal={ariaModal}
       aria-labelledby={titleId}
-      aria-describedby={bodyId}
+      aria-describedby={hasBody ? bodyId : undefined}
       tabIndex={-1}
       data-guided-overlay-control="true"
     >
       <span className="guided-tutorial-callout-mark" aria-hidden="true" />
-      <div className="tutorial-dialog-heading">
+      <div className={["tutorial-dialog-heading", !hasBody ? "is-bodyless" : ""].filter(Boolean).join(" ")}>
         <h2 id={titleId} style={{ fontSize: titleFontSize }}>{title}</h2>
         {isLearnToPlay && onClose && (
           <button
@@ -90,7 +91,7 @@ export function GuidedTutorialDialog({
           {currentStepIndex && stepCount && <b>{currentStepIndex} / {stepCount}</b>}
         </div>
       )}
-      <div id={bodyId} className="guided-tutorial-body">{body}</div>
+      {hasBody && <div id={bodyId} className="guided-tutorial-body">{body}</div>}
       {showFeedback && <div className="guided-tutorial-feedback" role="status" aria-live="polite">{feedback}</div>}
       {footer}
       {!footer && showContinue && continueLabel && onContinue && (

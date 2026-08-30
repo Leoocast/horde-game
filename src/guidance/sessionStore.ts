@@ -216,6 +216,7 @@ export class GuidedSessionStore {
       if (this.#status !== "running") break;
       this.#receiptCursor = receipt.cursor;
       if (this.#mode === "act") {
+        if (receipt.advancesStep === false) continue;
         this.#enterObservationAfterAction(receipt);
         continue;
       }

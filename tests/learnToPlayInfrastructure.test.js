@@ -21,12 +21,16 @@ import { GuidedInteractionGate } from "../src/guidance/interactionGate";
 import { GuidedInterventionOrchestrator } from "../src/guidance/interventionOrchestrator";
 import { GuidedJourneyLifecycle } from "../src/guidance/journeyLifecycle";
 import { JourneyIntentGate, journeyIntentGate } from "../src/guidance/journeyIntentGate";
-import { LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION } from "../src/guidance/learnToPlayPrologue";
+import {
+  LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION,
+  LEARN_TO_PLAY_PROLOGUE_SCENARIO,
+} from "../src/guidance/learnToPlayPrologue";
 import { translate } from "../src/i18n/translations";
 import {
   LearnToPlayPrologueDirector,
   learnToPlayFirstDefenseReady,
   learnToPlayHarvesterInspectionReady,
+  learnToPlayPlayerTurnActionCueReady,
   learnToPlayReturnSourceRequired,
   learnToPlaySourceRecycleBlockedByOpenHelp,
 } from "../src/guidance/learnToPlayDirector";
@@ -134,9 +138,18 @@ test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
     translate("es", "guided.contextual.product.assignDefendersBody"),
     "Haz clic en un Eco aliado y arrastra el cursor hasta un Eco atacante. También puedes elegir no defender.",
   );
-  assert.equal(translate("es", "guided.learnToPlay.playerTurnTitle"), "Ahora es tu turno.");
+  assert.equal(translate("es", "guided.contextual.product.attackExhaustsTitle"), "Atacar");
+  assert.equal(translate("es", "guided.learnToPlay.playerTurnTitle"), "Ahora es tu turno");
   assert.equal(translate("es", "guided.learnToPlay.playerTurnBody"), "Mira lo que pasa con la Energía.");
-  assert.equal(translate("es", "guided.learnToPlay.useEnergyTitle"), "Usa tu Energía para Invocar nuevos Ecos.");
+  assert.equal(translate("es", "guided.learnToPlay.useEnergyTitle"), "Usa tu Energía para Invocar nuevos Ecos");
+  assert.equal(
+    translate("es", "guided.learnToPlay.inspectHarvesterBody"),
+    "Haz clic derecho sobre Cosechadora de los Caídos para revisar los detalles del Eco y descubrir por qué se activaron sus efectos.",
+  );
+  assert.equal(
+    translate("es", "guided.contextual.product.harvesterInspectionBody"),
+    "Haz clic derecho sobre Cosechadora de los Caídos para revisar los detalles del Eco y descubrir por qué se activaron sus efectos.",
+  );
 });
 
 test("contemplating another future records Learn to Play completion once", () => {
@@ -557,4 +570,22 @@ test("Learn to Play frames Energy before revealing the nested Reserve", () => {
     { kind: "surface", anchor: "player.sources" },
     { kind: "surface", anchor: "player.reserve" },
   ]);
+});
+
+test("Learn to Play highlights Mi Turno only at the settled pre-Surge handoff", () => {
+  const built = buildGuidedScenario(LEARN_TO_PLAY_PROLOGUE_SCENARIO, contentCatalog);
+  const game = structuredClone(built.game);
+  game.activeSide = "host";
+  game.hostTurnNumber = game.hostRules.surgeTurn - 1;
+  game.combat.hostAttackers = [];
+
+  assert.equal(learnToPlayPlayerTurnActionCueReady(game, "free-play", false), true);
+  assert.equal(learnToPlayPlayerTurnActionCueReady(game, "free-play", true), false);
+  assert.equal(learnToPlayPlayerTurnActionCueReady(game, "defense-intro", false), false);
+
+  game.combat.hostAttackers = [game.host.field[0].instanceId];
+  assert.equal(learnToPlayPlayerTurnActionCueReady(game, "free-play", false), false);
+  game.combat.hostAttackers = [];
+  game.hostTurnNumber = game.hostRules.surgeTurn;
+  assert.equal(learnToPlayPlayerTurnActionCueReady(game, "free-play", false), false);
 });

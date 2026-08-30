@@ -79,6 +79,19 @@ export function learnToPlayFirstDefenseReady(
     && game.combat.hostAttackers.length > 0;
 }
 
+export function learnToPlayPlayerTurnActionCueReady(
+  game: GameStore["game"],
+  stage: LearnToPlayPrologueStage,
+  contextualHelpPending: boolean,
+): boolean {
+  return !contextualHelpPending
+    && stage === "free-play"
+    && !game.winner
+    && game.activeSide === "host"
+    && game.hostTurnNumber === game.hostRules.surgeTurn - 1
+    && game.combat.hostAttackers.length === 0;
+}
+
 export function learnToPlayReturnSourceRequired(
   game: GameStore["game"],
   bindings: Readonly<Record<GuidedCardAlias, string>>,

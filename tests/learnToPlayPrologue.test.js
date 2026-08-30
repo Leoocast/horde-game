@@ -167,7 +167,7 @@ test("Learn to Play accepts confirmation for either authored Aelyra target", () 
 
 test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms combat fundamentals", () => {
   const opening = new Map(LEARN_TO_PLAY_OPENING_INTERVENTION.steps.map((step) => [step.id, step]));
-  assert.equal(LEARN_TO_PLAY_OPENING_INTERVENTION.revision, 2);
+  assert.equal(LEARN_TO_PLAY_OPENING_INTERVENTION.revision, 3);
   assert.equal(LEARN_TO_PLAY_OPENING_INTERVENTION.startStepId, "evy-fourth-source-briefing");
   assert.equal(opening.get("evy-fourth-source-briefing").kind, "explain");
   assert.equal(opening.get("evy-fourth-source-briefing").copy.titleKey, "guided.learnToPlay.intro.evy");
@@ -181,6 +181,12 @@ test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms comb
   assert.equal(opening.get("invoke-aelyra").dimmer, "hidden");
   assert.equal(opening.get("choose-aelyra-target").callout, "hidden");
   assert.equal(opening.get("confirm-aelyra-target").callout, "hidden");
+  assert.deepEqual(opening.get("confirm-aelyra-target").highlights, [
+    { kind: "surface", anchor: "selection.primaryAction" },
+    { kind: "surface", anchor: "selection.cancelAction" },
+    { kind: "card", alias: "aelyra" },
+    { kind: "card", alias: "maela" },
+  ]);
   assert.deepEqual(opening.get("enter-first-combat").presentation, { kind: "spotlight", tone: "gold" });
   assert.equal(opening.has("select-maela-attacker"), false, "the attack suggestion must not install an input shield");
   assert.equal(opening.has("pass-first-combat"), false);

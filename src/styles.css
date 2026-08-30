@@ -22164,6 +22164,12 @@ body.playground-active .phase-banner-shell {
   padding-bottom: 12px;
 }
 
+.tutorial-dialog-heading.is-bodyless {
+  border-bottom: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
 .tutorial-dialog-close,
 .contextual-tutorial-close {
   display: grid;

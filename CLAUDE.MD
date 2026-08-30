@@ -958,8 +958,10 @@ Vaelor/Aelyra/Río en Mano, Flor como próximo robo, Retorno/Acechador/Engendro/
 orden y la segunda copia de Acechador como siguiente revelado. Evy presenta la llegada del
 Cronista y la cuarta Fuente que completa el contenedor de Energía inferior izquierdo antes de que aparezca la instrucción actual
 **Juega Río de Elarion**. La guía exige la cuarta Fuente y
-Aelyra con objetivo libre; el director deja defensa libre, exige Vaelor, hace obligatoria una única
-inspección de la Cosechadora y permite Flor antes, después o nunca. Las pruebas enumeran todas las
+Aelyra con objetivo libre; después de elegir su objetivo, **Cancelar** y el clic derecho global
+permiten deseleccionarlo sin cancelar la Invocación. El director deja defensa libre y marca en
+dorado **Mi Turno** sólo después de aceptar la ayuda contextual de Vida; luego exige Vaelor,
+hace obligatoria una única inspección de la Cosechadora y permite Flor antes, después o nunca. Las pruebas enumeran todas las
 defensas legales y esas ramas, que convergen en Cosechadora 7/9, y certifican cero o un descarte
 opcional antes de la primera Estampida. El recorrido ya continúa después de `host.surgeStarted`: los
 Ladrones vacían la Mano, la regla real roba Choque + Río —Río queda a la derecha—, y jugar la quinta Fuente o intentar
