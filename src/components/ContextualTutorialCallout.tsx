@@ -58,20 +58,27 @@ export function ContextualTutorialCallout() {
   const active = runtime.active;
   const visible = Boolean(active && guided.status !== "running");
 
-  const resolved = useMemo(() => (active?.highlights ?? []).map((highlight) => {
-    const key: GuidedAnchorKey = highlight.kind === "card"
-      ? guidedCardAnchorKey(highlight.instanceId)
-      : guidedSurfaceAnchorKey(highlight.anchor);
-    return Object.freeze({
-      key,
-      role: highlight.role ?? "focus",
-      padding: highlight.padding ?? 6,
-      offsetX: highlight.offsetX ?? 0,
-      offsetY: highlight.offsetY ?? 0,
-      showHighlight: highlight.showHighlight !== false,
-      element: guidedAnchorRegistry.preferred(key),
-    });
-  }), [active, anchors.revision]);
+  const resolved = useMemo(() => {
+    const resolveHighlight = (highlight: NonNullable<typeof active>["highlights"][number], placementOnly = false) => {
+      const key: GuidedAnchorKey = highlight.kind === "card"
+        ? guidedCardAnchorKey(highlight.instanceId)
+        : guidedSurfaceAnchorKey(highlight.anchor);
+      return Object.freeze({
+        key,
+        role: highlight.role ?? "focus",
+        padding: highlight.padding ?? 6,
+        offsetX: highlight.offsetX ?? 0,
+        offsetY: highlight.offsetY ?? 0,
+        showHighlight: highlight.showHighlight !== false,
+        placementOnly,
+        element: guidedAnchorRegistry.preferred(key),
+      });
+    };
+    return [
+      ...(active?.highlights ?? []).map((highlight) => resolveHighlight(highlight)),
+      ...(active?.placementAnchor ? [resolveHighlight(active.placementAnchor, true)] : []),
+    ];
+  }, [active, anchors.revision]);
 
   useLayoutEffect(() => {
     if (!visible) {
@@ -136,6 +143,9 @@ export function ContextualTutorialCallout() {
   if (!visible || !active || typeof document === "undefined") return null;
 
   const missingAnchor = resolved.length !== rects.length;
+  const highlightRects = rects.filter((_rect, index) => !resolved[index]?.placementOnly);
+  const placementRects = rects.filter((_rect, index) => resolved[index]?.placementOnly);
+  const calloutRects = placementRects.length > 0 ? placementRects : highlightRects;
   const title = t(active.copy.titleKey);
   const preferredCalloutWidth = tutorialCalloutWidth(title, viewport.width, CONTEXTUAL_CALLOUT_PROFILE);
   const titleFontSize = tutorialCalloutTitleFontSize(
@@ -148,10 +158,10 @@ export function ContextualTutorialCallout() {
   const position = placeGuidedCallout(
     viewport,
     { ...calloutSize, width: preferredCalloutWidth },
-    missingAnchor ? [] : rects,
+    missingAnchor ? [] : calloutRects,
     active.placement,
   );
-  const connector = missingAnchor ? undefined : guidedConnectorPath(rects);
+  const connector = missingAnchor ? undefined : guidedConnectorPath(highlightRects);
   const titleId = `contextual-tutorial-title-${active.conceptId}`;
   const bodyId = `contextual-tutorial-body-${active.conceptId}`;
   const body = t(active.copy.bodyKey);
@@ -172,7 +182,7 @@ export function ContextualTutorialCallout() {
         </svg>
       )}
       {!missingAnchor && rects.map((rect, index) => {
-        if (!resolved[index]?.showHighlight) return null;
+        if (resolved[index]?.placementOnly || !resolved[index]?.showHighlight) return null;
         const isCardHighlight = rect.key.startsWith("card:");
         return (
           <span

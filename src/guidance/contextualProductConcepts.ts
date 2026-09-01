@@ -296,7 +296,8 @@ function markedDamageMatch(cardIds: readonly string[]): ContextualConceptMatch |
   if (cardIds.length === 0) return undefined;
   return {
     highlights: cardIds.map((instanceId) => ({ kind: "card", instanceId, padding: 18 })),
-    placement: "center",
+    placement: "top",
+    placementAnchor: { kind: "surface", anchor: "phase.primaryAction", showHighlight: false },
   };
 }
 

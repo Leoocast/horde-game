@@ -51,6 +51,8 @@ export type ContextualRuntimeContext = Readonly<{
 export type ContextualConceptMatch = Readonly<{
   highlights?: readonly ContextualHighlightRef[];
   placement?: GuidedCalloutPlacement;
+  /** Optional semantic anchor used only to position the callout, never to draw another ring. */
+  placementAnchor?: ContextualHighlightRef;
   /** Optional authored discriminator retained for diagnostics; concepts still dedupe by ID. */
   occurrenceKey?: string;
 }>;
@@ -89,5 +91,6 @@ export type ContextualConceptPresentation = Readonly<{
   copy: ContextualConceptCopy;
   highlights: readonly ContextualHighlightRef[];
   placement?: GuidedCalloutPlacement;
+  placementAnchor?: ContextualHighlightRef;
   triggerCursor: number;
 }>;

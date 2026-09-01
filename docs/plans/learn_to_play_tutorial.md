@@ -242,16 +242,22 @@ contador antes de atacar y demuestra por qué importa el orden de izquierda a de
 ### Último turno antes de la Oleada
 
 Justo antes de habilitar **Mi Turno**, la recuperación del Aguante es la última ayuda pendiente si
-hubo Ecos supervivientes dañados. Al confirmar el cambio de turno, la guía presenta primero
-**Conserva la Energía que no uses**, todavía antes de ejecutar la transición.
+hubo Ecos supervivientes dañados. Su cuadro aparece por encima del botón de acción para no tapar
+las cartas, mientras los Ecos afectados siguen señalados. Al confirmar el cambio de turno, la guía
+presenta **Ahora es tu turno** y pide mirar lo que sucede con la Energía.
 
-Al aceptar esa explicación, la presentación normal deja visibles y completa sus movimientos:
+Al aceptar esa explicación, la presentación normal deja visibles y completa primero estos
+movimientos:
 
 - las cuatro Fuentes vuelven a estar preparadas;
 - la Energía de las tres Fuentes que quedaron sin usar llega a la Reserva;
-- el Cronista roba **Flor del Alba**.
 
-Sólo después de asentarse esas animaciones aparece **Usa tu Energía para Invocar nuevos Ecos**. La
+Durante ese movimiento **Flor del Alba** ya puede estar comprometida por las reglas, pero permanece
+retenida fuera de la Mano. Cuando la transferencia termina aparece **Conserva la Energía que no
+uses**. Sólo al cerrar ese cuadro el Cronista roba visualmente **Flor del Alba**, con su sonido, y el
+contenedor de Reserva ya está lleno y estable.
+
+Sólo después de asentarse la entrada de Flor aparece **Usa tu Energía para Invocar nuevos Ecos**. La
 explicación previa de Reserva cubre que:
 
 - hasta tres Fuentes sin usar pueden conservar su Energía en la Reserva;

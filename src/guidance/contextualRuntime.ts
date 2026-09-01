@@ -313,6 +313,7 @@ function presentationFrom(item: ContextualQueuedConcept): ContextualConceptPrese
     copy: item.definition.copy,
     highlights: Object.freeze([...(item.match.highlights ?? [])]),
     placement: item.match.placement,
+    placementAnchor: item.match.placementAnchor,
     triggerCursor: item.triggerCursor,
   });
 }
@@ -321,6 +322,7 @@ function freezeMatch(match: ContextualConceptMatch): ContextualConceptMatch {
   return Object.freeze({
     ...match,
     highlights: match.highlights ? Object.freeze(match.highlights.map((highlight) => Object.freeze({ ...highlight }))) : undefined,
+    placementAnchor: match.placementAnchor ? Object.freeze({ ...match.placementAnchor }) : undefined,
   });
 }
 

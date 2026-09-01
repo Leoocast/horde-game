@@ -250,6 +250,8 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(card, /tabIndex=\{selectionDisabled \? undefined : 0\}/u);
   assert.match(card, /onKeyboardActivate \?\? onSelect/u);
   assert.match(hand, /currentStep\?\.id === "invoke-aelyra"/u);
+  assert.match(hand, /guidedDeferredHandCardIds\(\s*guidedSession\.currentStep\?\.deferredHandAliases,\s*guidedSession\.bindings,?\s*\)/su);
+  assert.match(hand, /!guidedDeferredHandIds\.has\(card\.instanceId\)/u);
   assert.match(hand, /emphasizeCost=\{guidedCostCardId === card\.instanceId\}/u);
   assert.match(card, /CardCostBadge card=\{card\} emphasized=\{emphasizeCost\}/u);
   assert.match(card, /data-guided-anchor-extension="true"/u);

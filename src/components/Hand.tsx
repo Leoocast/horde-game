@@ -10,6 +10,7 @@ import { useGameStore } from "../store/useGameStore";
 import { useSourceActionUiStore } from "../store/useSourceActionUiStore";
 import { useTranslation } from "../i18n/useTranslation";
 import { useToastStore } from "../store/useToastStore";
+import { useAudioStore } from "../store/useAudioStore";
 import { shouldShowFullCardImage } from "../utils/cardImages";
 import { Card } from "./Card";
 import {
@@ -25,6 +26,7 @@ import { AnimatePresence, motion, motionValue, type MotionValue, type PanInfo, t
 import {
   guidedAnchorRegistry,
   guidedCardAnchorKey,
+  guidedDeferredHandCardIds,
   guidedPresentationActivity,
   guidedSessionStore,
   guidedSurfaceAnchorKey,
@@ -135,7 +137,15 @@ export function Hand({ game }: { game: GameState }) {
       ? bloodPactAnimation.drawnCardIds
       : [],
   );
-  const visibleHand = game.player.hand.filter((card) => !hiddenBloodPactDrawIds.has(card.instanceId));
+  const guidedDeferredHandIds = guidedDeferredHandCardIds(
+    guidedSession.currentStep?.deferredHandAliases,
+    guidedSession.bindings,
+  );
+  const guidedDeferredHandSignature = [...guidedDeferredHandIds].sort().join("|");
+  const previousGuidedDeferredHandIds = useRef<ReadonlySet<string>>(guidedDeferredHandIds);
+  const visibleHand = game.player.hand.filter((card) =>
+    !hiddenBloodPactDrawIds.has(card.instanceId) && !guidedDeferredHandIds.has(card.instanceId)
+  );
   const handSize = visibleHand.length;
   const handLayoutSignature = visibleHand.map((card) => card.instanceId).join("|");
   const previousVisibleHandIds = useRef(new Set(visibleHand.map((card) => card.instanceId)));
@@ -145,6 +155,15 @@ export function Hand({ game }: { game: GameState }) {
     .filter((card) => !previousVisibleHandIds.current.has(card.instanceId))
     .map((card) => card.instanceId);
   const enteringHandOrder = new Map(enteringHandIds.map((id, index) => [id, index]));
+
+  useLayoutEffect(() => {
+    const handIds = new Set(game.player.hand.map((card) => card.instanceId));
+    const releasedDraw = [...previousGuidedDeferredHandIds.current].some((id) =>
+      !guidedDeferredHandIds.has(id) && handIds.has(id)
+    );
+    previousGuidedDeferredHandIds.current = new Set(guidedDeferredHandIds);
+    if (releasedDraw) useAudioStore.getState().playSfx("draw");
+  }, [game.player.hand, guidedDeferredHandSignature]);
 
   useEffect(() => () => {
     setEnergyRecycleDragActive(false);

@@ -296,6 +296,8 @@ type GuidedStepBase = Readonly<{
   id: string;
   copy: GuidedStepCopy;
   highlights: readonly GuidedHighlightRef[];
+  /** Presentation-only: keep already committed draws offscreen until the authored beat releases them. */
+  deferredHandAliases?: readonly GuidedCardAlias[];
   callout?: GuidedCalloutVisibility;
   dimmer?: GuidedDimmerVisibility;
   presentation?: GuidedStepPresentation;

@@ -64,6 +64,7 @@ export function assertInterventionValid(
     if (step.presentation?.kind === "cardComparison") {
       for (const alias of step.presentation.cardAliases) referencedAliases.add(alias);
     }
+    for (const alias of step.deferredHandAliases ?? []) referencedAliases.add(alias);
     for (const condition of step.preconditions ?? []) if (condition.kind === "card.inZone") referencedAliases.add(condition.cardAlias);
     collectMatcherAliases(step.kind === "act" ? step.allowedIntent : step.kind === "observe" ? step.expectedReceipt : undefined, referencedAliases);
     if (step.nextStepId && !definition.steps.some((candidate) => candidate.id === step.nextStepId)) problems.push(`missing next step ${step.nextStepId}`);

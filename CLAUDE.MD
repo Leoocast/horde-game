@@ -961,10 +961,11 @@ Aelyra con objetivo libre; después de elegir su objetivo, **Cancelar** y el cli
 permiten deseleccionarlo sin cancelar la Invocación. El director deja defensa libre y marca en
 dorado **Mi Turno** sólo después de aceptar las ayudas contextuales pendientes: primero Vida y,
 justo antes del botón, si hubo un choque con supervivientes, la recuperación del Aguante. Al
-confirmar **Mi Turno**, explica **Conserva la Energía que no uses** antes de ejecutar el cambio de
-turno; después deja visible la preparación de Fuentes, la transferencia a Reserva y el robo de
-**Flor del Alba**, y sólo con esas presentaciones asentadas abre **Usa tu Energía para Invocar
-nuevos Ecos**. Luego exige Vaelor,
+confirmar **Mi Turno**, **Ahora es tu turno** pide mirar la Energía. Al cerrar ese cuadro se ejecuta
+y queda visible la preparación de Fuentes y la transferencia a Reserva, mientras **Flor del Alba**
+permanece retenida fuera de la Mano. Sólo al asentarse la transferencia aparece **Conserva la
+Energía que no uses**; al aceptar esa explicación se libera el robo visible de Flor, con su sonido,
+y después de asentarse la entrada abre **Usa tu Energía para Invocar nuevos Ecos**. Luego exige Vaelor,
 hace obligatoria una única inspección de la Cosechadora y permite Flor antes, después o nunca. Las pruebas enumeran todas las
 defensas legales y esas ramas, que convergen en Cosechadora 7/9, y certifican cero o un descarte
 opcional antes de la primera Estampida. El recorrido ya continúa después de `host.surgeStarted`: los
@@ -977,7 +978,8 @@ La ayuda visible posterior a un combate con supervivientes no habla de «daño m
 el estado interno. Enseña la regla completa con el título **El daño no permanece** y una sola frase:
 **Al final de cada turno, los Ecos supervivientes recuperan todo su Aguante**. Su revisión
 contextual debe incrementarse cuando cambie este aprendizaje para que el copy corregido vuelva a
-mostrarse a quienes vieron una versión anterior.
+mostrarse a quienes vieron una versión anterior. El cuadro se ancla por encima de la acción
+**Mi Turno** para no cubrir las cartas; los Ecos dañados conservan su resaltado independiente.
 
 La primera explicación de Batalla de **Aprender a jugar** enseña dentro del mismo cuadro que los
 Ecos atacan el Archivo y que cada 3 de daño de ataque hacen que se descarte una carta a la Memoria. La primera

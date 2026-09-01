@@ -110,6 +110,7 @@ import {
 } from "../guidance/gameplaySignals";
 import {
   guidedPresentationActivity,
+  guidedDeferredHandCardIds,
   guidedSessionStore,
   isGuidedPresentationSettled,
   scheduleGuidedCheckpointEvaluation,
@@ -2142,6 +2143,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   finishHostTurn: () => {
     if (!gameplayIntentAllowed({ kind: "phase.startPlayerTurn" })) return;
+    const guided = guidedSessionStore.snapshot();
+    const deferredHandIds = guidedDeferredHandCardIds(
+      guided.currentStep?.deferredHandAliases,
+      guided.bindings,
+    );
     let transition: readonly [GameState, GameState] | undefined;
     let stabilizationCompletion: StabilizationCompletionAnimation | undefined;
     set((state) => {
@@ -2150,7 +2156,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const next = finishHostTurn(game);
       transition = [game, next];
       stabilizationCompletion = stabilizationCompletionForTransition(game, next);
-      playDrawOneIfPlayerDrew(game, next);
+      const previousHandIds = new Set(game.player.hand.map((card) => card.instanceId));
+      const deferredDraw = next.player.hand.some((card) =>
+        !previousHandIds.has(card.instanceId) && deferredHandIds.has(card.instanceId)
+      );
+      if (!deferredDraw) playDrawOneIfPlayerDrew(game, next);
       return {
         game: next,
         stabilizationCompletion,

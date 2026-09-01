@@ -404,6 +404,11 @@ function validateSteps(
         if (!SURFACE_ANCHORS.has(highlight.anchor)) problems.push(`Step "${step.id}" uses unknown surface anchor "${highlight.anchor}".`);
       } else problems.push(`Step "${step.id}" has an unknown highlight kind.`);
     }
+    if (step.deferredHandAliases !== undefined && !Array.isArray(step.deferredHandAliases)) {
+      problems.push(`Step "${step.id}" deferredHandAliases must be an array.`);
+    } else {
+      for (const alias of step.deferredHandAliases ?? []) validateAliasRef(step.id, alias, cards, problems);
+    }
     validateStepPresentation(step, cards, problems);
     validatePreconditions(step, cards, problems);
     if (step.kind === "act") {

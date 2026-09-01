@@ -378,10 +378,10 @@ export const LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION = Object.freeze({
   ],
 } satisfies GuidedInterventionDefinition);
 
-/** First player turn after defending: teach Reserve, visibly draw Flor, then set the next goal. */
+/** First player turn after defending: show Reserve moving, explain it, then visibly draw Flor. */
 export const LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION = Object.freeze({
   id: "learn-to-play.player-return",
-  revision: 4,
+  revision: 5,
   startStepId: "player-turn-returned",
   steps: [
     {
@@ -393,6 +393,16 @@ export const LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION = Object.freeze({
         glossaryTerms: ["energy"],
       },
       highlights: [{ kind: "surface", anchor: "player.sources" }],
+      nextStepId: "wait-for-energy-renewal",
+    },
+    {
+      id: "wait-for-energy-renewal",
+      kind: "observe",
+      callout: "hidden",
+      copy: { titleKey: "guided.learnToPlay.checkpointTitle", bodyKey: "guided.learnToPlay.checkpointBody" },
+      highlights: [],
+      deferredHandAliases: ["dawn_flower"],
+      expectedReceipt: { kind: "reserve.released" },
       nextStepId: "explain-renewed-energy",
     },
     {
@@ -407,15 +417,15 @@ export const LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION = Object.freeze({
         { kind: "surface", anchor: "player.sources" },
         { kind: "surface", anchor: "player.reserve" },
       ],
-      nextStepId: "wait-for-energy-renewal",
+      deferredHandAliases: ["dawn_flower"],
+      nextStepId: "wait-for-flor-entry",
     },
     {
-      id: "wait-for-energy-renewal",
+      id: "wait-for-flor-entry",
       kind: "observe",
       callout: "hidden",
       copy: { titleKey: "guided.learnToPlay.checkpointTitle", bodyKey: "guided.learnToPlay.checkpointBody" },
       highlights: [],
-      expectedReceipt: { kind: "reserve.released" },
       nextStepId: "use-energy-for-echoes",
     },
     {

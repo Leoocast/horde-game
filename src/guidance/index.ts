@@ -6,6 +6,8 @@ export * from "./contextualContracts";
 export * from "./contextualProductConcepts";
 export * from "./ContextualConceptRegistry";
 export * from "./contextualIntentGate";
+export * from "./deferredHandPresentation";
+export * from "./deferredHandPresentation";
 export * from "./contextualRuntime";
 export * from "./firstSeedLesson";
 export * from "./gameplaySignals";

@@ -358,14 +358,16 @@ test("marked combat damage highlights every affected Echo and owns the next-turn
       { kind: "card", instanceId: playerEcho.instanceId, padding: 18 },
       { kind: "card", instanceId: hostEcho.instanceId, padding: 18 },
     ],
-    placement: "center",
+    placement: "top",
+    placementAnchor: { kind: "surface", anchor: "phase.primaryAction", showHighlight: false },
   });
   assert.deepEqual(concept.prevent({ kind: "phase.startPlayerTurn" }, context), {
     highlights: [
       { kind: "card", instanceId: playerEcho.instanceId, padding: 18 },
       { kind: "card", instanceId: hostEcho.instanceId, padding: 18 },
     ],
-    placement: "center",
+    placement: "top",
+    placementAnchor: { kind: "surface", anchor: "phase.primaryAction", showHighlight: false },
   });
   assert.equal(concept.prevent({ kind: "phase.endTurn" }, context), undefined);
 
@@ -612,26 +614,31 @@ test("App exposes both launchers, disables Continue, and hands the journey to it
   assert.doesNotMatch(intro, /old-panel|old-title|game-home-dialog/u);
 });
 
-test("Learn to Play explains Reserve before drawing Flor and only then opens free Echo play", () => {
+test("Learn to Play shows Reserve transfer, explains it, then draws Flor before free Echo play", () => {
   const step = (id) => LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps.find((candidate) => candidate.id === id);
 
-  assert.equal(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.revision, 4);
+  assert.equal(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.revision, 5);
   assert.deepEqual(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps.map(({ id }) => id), [
     "player-turn-returned",
-    "explain-renewed-energy",
     "wait-for-energy-renewal",
+    "explain-renewed-energy",
+    "wait-for-flor-entry",
     "use-energy-for-echoes",
   ]);
   assert.deepEqual(step("player-turn-returned").highlights, [
     { kind: "surface", anchor: "player.sources" },
   ]);
-  assert.equal(step("player-turn-returned").nextStepId, "explain-renewed-energy");
+  assert.equal(step("player-turn-returned").nextStepId, "wait-for-energy-renewal");
+  assert.deepEqual(step("wait-for-energy-renewal").deferredHandAliases, ["dawn_flower"]);
+  assert.equal(step("wait-for-energy-renewal").nextStepId, "explain-renewed-energy");
   assert.deepEqual(step("explain-renewed-energy").highlights, [
     { kind: "surface", anchor: "player.sources" },
     { kind: "surface", anchor: "player.reserve" },
   ]);
-  assert.equal(step("explain-renewed-energy").nextStepId, "wait-for-energy-renewal");
-  assert.equal(step("wait-for-energy-renewal").nextStepId, "use-energy-for-echoes");
+  assert.deepEqual(step("explain-renewed-energy").deferredHandAliases, ["dawn_flower"]);
+  assert.equal(step("explain-renewed-energy").nextStepId, "wait-for-flor-entry");
+  assert.equal(step("wait-for-flor-entry").callout, "hidden");
+  assert.equal(step("wait-for-flor-entry").nextStepId, "use-energy-for-echoes");
 });
 
 test("Learn to Play highlights Mi Turno only at the settled pre-Surge handoff", () => {

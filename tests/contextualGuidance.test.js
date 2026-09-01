@@ -63,6 +63,15 @@ const BLOCKING_CONCEPT = Object.freeze({
   blocksGameplayWhileVisible: true,
 });
 
+const PLACEMENT_ANCHORED_CONCEPT = Object.freeze({
+  ...RESERVE_CONCEPT,
+  id: "placement-anchored",
+  evaluate: () => ({
+    placement: "top",
+    placementAnchor: { kind: "surface", anchor: "phase.primaryAction", showHighlight: false },
+  }),
+});
+
 test("guided progress v1 migrates to v2 without losing lesson completion", () => {
   const migrated = parseGuidedProgress({
     kind: "hostfall-guided-progress",
@@ -127,6 +136,20 @@ test("simultaneous triggers queue by priority and revalidate after presentation 
   relevant = false;
   fixture.drain();
   assert.equal(fixture.runtime.snapshot().status, "idle", "stale queued help is discarded");
+  fixture.dispose();
+});
+
+test("contextual presentation preserves an authored placement-only anchor", () => {
+  const fixture = createRuntime([PLACEMENT_ANCHORED_CONCEPT]);
+  fixture.signals.publish({ kind: "player.reserveReleased", amount: 1 });
+  fixture.drain();
+
+  assert.equal(fixture.runtime.snapshot().active?.placement, "top");
+  assert.deepEqual(fixture.runtime.snapshot().active?.placementAnchor, {
+    kind: "surface",
+    anchor: "phase.primaryAction",
+    showHighlight: false,
+  });
   fixture.dispose();
 });
 
@@ -267,6 +290,9 @@ test("contextual callout supports authored modal blocking and stays mounted sepa
   assert.match(component, /aria-live="polite"/u);
   assert.match(component, /data-blocks-gameplay=/u);
   assert.match(component, /aria-modal=\{active\.blocksGameplayWhileVisible \? "true" : "false"\}/u);
+  assert.match(component, /active\.placementAnchor/u);
+  assert.match(component, /placementOnly/u);
+  assert.match(component, /placeGuidedCallout\([\s\S]*?calloutRects/su);
   assert.match(component, /event\.key !== "Escape"/u);
   assert.match(component, /contextualTutorialRuntime\.acknowledgeActive/u);
   assert.match(component, /tutorialCalloutWidth/u);

@@ -436,10 +436,6 @@ test("Learn to Play keeps the combat-stat and Harvester interventions reachable 
     assert.equal(guidedSessionStore.snapshot().currentStep.id, "player-turn-returned");
     guidedSessionStore.notifyCheckpointState(true);
     assert.equal(guidedSessionStore.continueExplanation(), true);
-    assert.equal(guidedSessionStore.snapshot().currentStep.id, "explain-renewed-energy");
-    assert.equal(useGameStore.getState().game.activeSide, "host", "Reserve must be explained before Flor is drawn");
-    guidedSessionStore.notifyCheckpointState(true);
-    assert.equal(guidedSessionStore.continueExplanation(), true);
     assert.equal(guidedSessionStore.snapshot().currentStep.id, "wait-for-energy-renewal");
     const reserveTransfer = guidedPresentationActivity.begin("reserve.transfer", "director-regression");
     await flushMicrotasks();
@@ -451,6 +447,13 @@ test("Learn to Play keeps the combat-stat and Harvester interventions reachable 
       "the Energy explanation must wait for the transfer presentation",
     );
     reserveTransfer.end();
+    await flushMicrotasks();
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "explain-renewed-energy");
+    const florEntry = guidedPresentationActivity.begin("hand.entry", bindings.dawn_flower);
+    guidedSessionStore.notifyCheckpointState(true);
+    assert.equal(guidedSessionStore.continueExplanation(), true);
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "wait-for-flor-entry");
+    florEntry.end();
     await flushMicrotasks();
     assert.equal(guidedSessionStore.snapshot().currentStep.id, "use-energy-for-echoes");
     guidedSessionStore.notifyCheckpointState(true);
@@ -577,13 +580,14 @@ test("the production Learn to Play lifecycle recovers when End Turn commits befo
         assert.equal(guidedSessionStore.snapshot().currentStep.id, "player-turn-returned");
         guidedSessionStore.notifyCheckpointState(true);
         assert.equal(guidedSessionStore.continueExplanation(), true);
-        assert.equal(guidedSessionStore.snapshot().currentStep.id, "explain-renewed-energy");
-        assert.equal(useGameStore.getState().game.activeSide, "host");
-        guidedSessionStore.notifyCheckpointState(true);
-        assert.equal(guidedSessionStore.continueExplanation(), true);
         assert.equal(guidedSessionStore.snapshot().currentStep.id, "wait-for-energy-renewal");
         await flushMicrotasks();
         assert.equal(useGameStore.getState().game.activeSide, "player");
+        assert.equal(guidedSessionStore.snapshot().currentStep.id, "explain-renewed-energy");
+        guidedSessionStore.notifyCheckpointState(true);
+        assert.equal(guidedSessionStore.continueExplanation(), true);
+        assert.equal(guidedSessionStore.snapshot().currentStep.id, "wait-for-flor-entry");
+        await flushMicrotasks();
         assert.equal(guidedSessionStore.snapshot().currentStep.id, "use-energy-for-echoes");
         guidedSessionStore.notifyCheckpointState(true);
         assert.equal(guidedSessionStore.continueExplanation(), true);
