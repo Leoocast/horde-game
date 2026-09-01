@@ -221,6 +221,10 @@ test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms comb
   assert.deepEqual(LEARN_TO_PLAY_FIRST_BATTLE_INTERVENTION.steps[0].highlights, [
     { kind: "surface", anchor: "host.archive" },
   ]);
+  assert.equal(
+    LEARN_TO_PLAY_FIRST_BATTLE_INTERVENTION.steps[0].copy.bodyKey,
+    "guided.learnToPlay.attackArchiveBody",
+  );
   assert.deepEqual(LEARN_TO_PLAY_END_OPENING_TURN_INTERVENTION.steps[0].presentation, {
     kind: "spotlight",
     tone: "gold",

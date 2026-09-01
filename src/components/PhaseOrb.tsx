@@ -21,6 +21,7 @@ const readGuidedSession = () => guidedSessionStore.snapshot();
 const subscribeLearnToPlayDirector = (listener: () => void) => learnToPlayDirector.subscribe(listener);
 const readLearnToPlayDirector = () => learnToPlayDirector.snapshot();
 const PHASE_BLOCKING_CONTEXTUAL_CONCEPTS = new Set([
+  "host-defense-order",
   "assign-defenders",
   "chronicler-life",
   "reserve-and-ready",

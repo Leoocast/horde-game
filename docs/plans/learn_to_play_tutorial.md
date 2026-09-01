@@ -3,7 +3,7 @@
 Estado: **diseño de contenido abierto; primer corte fijado hasta la derrota predeterminada y
 handoff desde “Contemplar otro futuro” hacia la Primera Canon Seed aprobada**.
 
-Última actualización: **2026-08-21**.
+Última actualización: **2026-09-01**.
 
 ## Propósito del documento
 
@@ -238,6 +238,8 @@ Intervenciones reactivas:
 - Si intenta defender contra un Eco con Volar usando a Aelyra, se explica que sólo Volar o Guardia
   aérea puede hacerlo y se señala que Maela posee Guardia aérea.
 - Si un ataque sin defender daña al Cronista, se explica la Vida cuando el impacto ya es visible.
+- Si algún Eco sobrevive con daño, la ayuda evita describir estados internos y enseña únicamente:
+  **«Al final de cada turno, los Ecos supervivientes recuperan todo su Aguante»**.
 - No se explican anticipadamente todas las palabras clave presentes en el tablero.
 
 La asignación de defensores debe conservar decisiones reales. La Cosechadora comienza como 4/6 para
@@ -319,6 +321,8 @@ La intención es introducir el ataque sin reunir todas las explicaciones en un s
 
 - al entrar a Batalla, se enseña cómo elegir atacantes;
 - se aclara que el Cronista ataca el Archivo de la Hueste, no a sus Ecos;
+- en el primer cuadro sobre el Archivo se explica que cada 3 de daño de ataque hacen que se descarte
+  una carta del Archivo de la Hueste a su Memoria;
 - los Ecos enemigos se enfrentan cuando el Cronista defiende contra sus ataques;
 - si intenta atacar con Vaelor o con la Flor, se explica que siguen Estabilizándose;
 - cuando Maela o Aelyra ataque por primera vez, se explica que atacar Agota ese Eco y que no podrá

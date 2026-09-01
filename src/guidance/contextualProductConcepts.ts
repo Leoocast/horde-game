@@ -5,19 +5,23 @@ import type { ContextualConceptDefinition, ContextualConceptMatch } from "./cont
 export const PRODUCT_CONTEXTUAL_CONCEPTS = [
   {
     id: "host-defense-order",
-    revision: 2,
+    revision: 3,
     policy: "informative",
+    persistWhenAcknowledgedInIsolated: true,
     priority: 80,
     copy: {
       titleKey: "guided.contextual.product.defenseOrderTitle",
       bodyKey: "guided.contextual.product.defenseOrderBody",
       glossaryTerms: ["host", "echoes"],
     },
-    // Reserved for a later contextual attempt that demonstrates left-to-right resolution. Merely
-    // reaching defense does not mean the player has learned this rule.
-    signalKinds: [],
-    evaluate: () => undefined,
-    revalidate: (_match, context) => context.game.activeSide === "host" && context.game.combat.hostAttackers.length > 0,
+    signalKinds: ["host.attackersDeclared"],
+    evaluate: (signal) => signal.kind === "host.attackersDeclared" && signal.attackerIds.length > 1
+      ? {
+          highlights: [{ kind: "surface", anchor: "player.field", showHighlight: false }],
+          placement: "left",
+        }
+      : undefined,
+    revalidate: (_match, context) => context.game.activeSide === "host" && context.game.combat.hostAttackers.length > 1,
   },
   {
     id: "assign-defenders",
@@ -30,10 +34,12 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
       glossaryTerms: ["echoes"],
     },
     signalKinds: ["host.attackersDeclared"],
-    evaluate: () => ({
-      highlights: [{ kind: "surface", anchor: "player.field", showHighlight: false }],
-      placement: "left",
-    }),
+    evaluate: (signal) => signal.kind === "host.attackersDeclared" && signal.attackerIds.length === 1
+      ? {
+          highlights: [{ kind: "surface", anchor: "player.field", showHighlight: false }],
+          placement: "left",
+        }
+      : undefined,
     revalidate: (_match, context) => context.game.activeSide === "host" && context.game.combat.hostAttackers.length > 0,
   },
   {
@@ -80,7 +86,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
   },
   {
     id: "marked-damage-clears",
-    revision: 1,
+    revision: 2,
     policy: "preventive",
     priority: 75,
     persistWhenAcknowledgedInIsolated: true,

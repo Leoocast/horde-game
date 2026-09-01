@@ -295,7 +295,7 @@ export const LEARN_TO_PLAY_FIRST_BATTLE_INTERVENTION = Object.freeze({
       kind: "explain",
       copy: {
         titleKey: "guided.contextual.product.attackArchiveTitle",
-        bodyKey: "guided.contextual.product.attackArchiveBody",
+        bodyKey: "guided.learnToPlay.attackArchiveBody",
         glossaryTerms: ["hostArchive", "echoes"],
       },
       highlights: [{ kind: "surface", anchor: "host.archive" }],

@@ -972,6 +972,19 @@ avanzar activa una intervención estricta breve para **Devolver Fuente**. Ciudad
 ataque posterior permanecen libres. Tres Soldados authored absorben los descartes opcionales antes
 del Titán terminal.
 
+La ayuda visible posterior a un combate con supervivientes no habla de «daño marcado» ni describe
+el estado interno. Enseña la regla completa con el título **El daño no permanece** y una sola frase:
+**Al final de cada turno, los Ecos supervivientes recuperan todo su Aguante**. Su revisión
+contextual debe incrementarse cuando cambie este aprendizaje para que el copy corregido vuelva a
+mostrarse a quienes vieron una versión anterior.
+
+La primera explicación de Batalla de **Aprender a jugar** enseña dentro del mismo cuadro que los
+Ecos atacan el Archivo y que cada 3 de daño de ataque hacen que se descarte una carta a la Memoria. La primera
+declaración con varios atacantes de la Hueste presenta una sola ayuda que combina cómo asignar
+defensores con el orden de resolución de izquierda a derecha; una declaración de un único atacante
+conserva la ayuda simple y el concepto de orden espera hasta resultar relevante. Aceptar el orden
+dentro del recorrido aislado lo conserva como fundamento transferible para la siguiente Visión.
+
 El lenguaje visible del tutorial distingue objetos de reglas: **Fuente** aporta Energía al
 contenedor inferior izquierdo y **Energía** se canaliza para **Invocar Ecos** o lanzar Hechizos;
 nunca se enseña que se «Invocan cartas». El glosario usa términos separados para **Archivo de la

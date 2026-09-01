@@ -559,7 +559,7 @@ test("the production Learn to Play lifecycle recovers when End Turn commits befo
         guidedSessionStore.notifyCheckpointState(true);
         assert.equal(guidedSessionStore.continueExplanation(), true);
         await flushMicrotasks();
-        if (contextualTutorialRuntime.snapshot().active?.conceptId === "assign-defenders") {
+        if (["host-defense-order", "assign-defenders"].includes(contextualTutorialRuntime.snapshot().active?.conceptId)) {
           contextualTutorialRuntime.acknowledgeActive();
           await flushMicrotasks();
         }

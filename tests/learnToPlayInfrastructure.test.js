@@ -98,6 +98,14 @@ test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
     "Tus Ecos atacan únicamente el Archivo de la Hueste. Vacía el Archivo de la Hueste para derrotarla.",
   );
   assert.equal(
+    translate("es", "guided.learnToPlay.attackArchiveBody"),
+    "Tus Ecos atacan el Archivo, no a los Ecos enemigos. Por cada 3 de daño de ataque, se descarta 1 carta del Archivo de la Hueste a su Memoria. Vacía el Archivo para vencer.",
+  );
+  assert.equal(
+    translate("es", "guided.contextual.product.defenseOrderBody"),
+    "Haz clic en un Eco preparado y arrastra el cursor hasta un atacante; también puedes dejar ataques sin defender. La Hueste resuelve sus ataques de izquierda a derecha, así que un combate anterior puede cambiar lo que sucede después.",
+  );
+  assert.equal(
     translate("es", "guided.contextual.product.attackExhaustsBody"),
     "Es opcional atacar. Si un Eco ataca, se Agota, por lo que no estará disponible para defender durante el siguiente turno de la Hueste.",
   );
@@ -138,10 +146,10 @@ test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
     translate("es", "guided.contextual.product.assignDefendersBody"),
     "Haz clic en un Eco aliado y arrastra el cursor hasta un Eco atacante. También puedes elegir no defender.",
   );
-  assert.equal(translate("es", "guided.contextual.product.markedDamageTitle"), "El daño desaparece al cambiar de turno");
+  assert.equal(translate("es", "guided.contextual.product.markedDamageTitle"), "El daño no permanece");
   assert.equal(
     translate("es", "guided.contextual.product.markedDamageBody"),
-    "Estos Ecos recibieron daño durante esta batalla. El daño permanece marcado hasta que termine el turno de la Hueste; al comenzar tu turno, se elimina y recuperan todo su Aguante.",
+    "Al final de cada turno, los Ecos supervivientes recuperan todo su Aguante.",
   );
   assert.equal(translate("es", "guided.contextual.product.attackExhaustsTitle"), "Atacar");
   assert.equal(translate("es", "guided.learnToPlay.playerTurnTitle"), "Ahora es tu turno");
@@ -304,7 +312,7 @@ test("journey limits are ephemeral and product concepts cover every prologue exp
   ]);
 });
 
-test("normal matches retain attack help while the defense prompt prefers the left side", () => {
+test("normal matches teach one defender directly and combine assignment with order for multiple attackers", () => {
   const attack = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "attack-the-host-archive");
   const defense = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "assign-defenders");
   const order = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "host-defense-order");
@@ -315,15 +323,25 @@ test("normal matches retain attack help while the defense prompt prefers the lef
       highlights: [{ kind: "surface", anchor: "host.archive" }],
     },
   );
-  assert.deepEqual(defense.evaluate({ kind: "host.attackersDeclared" }, {}), {
+  const singleAttack = { kind: "host.attackersDeclared", attackerIds: ["thief"] };
+  const multipleAttacks = { kind: "host.attackersDeclared", attackerIds: ["thief", "harvester"] };
+  assert.deepEqual(defense.evaluate(singleAttack, {}), {
     highlights: [{ kind: "surface", anchor: "player.field", showHighlight: false }],
     placement: "left",
   });
-  assert.deepEqual(order.signalKinds, []);
+  assert.equal(defense.evaluate(multipleAttacks, {}), undefined);
+  assert.deepEqual(order.signalKinds, ["host.attackersDeclared"]);
+  assert.equal(order.persistWhenAcknowledgedInIsolated, true);
+  assert.equal(order.evaluate(singleAttack, {}), undefined);
+  assert.deepEqual(order.evaluate(multipleAttacks, {}), {
+    highlights: [{ kind: "surface", anchor: "player.field", showHighlight: false }],
+    placement: "left",
+  });
 });
 
 test("marked combat damage highlights every affected Echo and owns the next-turn handoff", () => {
   const concept = PRODUCT_CONTEXTUAL_CONCEPTS.find((candidate) => candidate.id === "marked-damage-clears");
+  assert.equal(concept.revision, 2);
   const game = buildGuidedScenario(LEARN_TO_PLAY_PROLOGUE_SCENARIO, contentCatalog).game;
   const playerEcho = game.player.field.find((card) => card.kinds.includes("ECHO"));
   const hostEcho = game.host.field.find((card) => card.kinds.includes("ECHO"));

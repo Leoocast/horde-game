@@ -382,7 +382,7 @@ test("the Host attack preview shows cards going to Memory and keeps the math in 
   assert.match(phaseOrbSource, /t\("orb\.attackArchive"\)/u);
   assert.match(phaseOrbSource, /t\("orb\.passCombat"\)/u);
   assert.match(phaseOrbSource, /PHASE_BLOCKING_CONTEXTUAL_CONCEPTS/u);
-  for (const conceptId of ["assign-defenders", "chronicler-life", "host-surge", "attack-exhausts-echo"]) {
+  for (const conceptId of ["host-defense-order", "assign-defenders", "chronicler-life", "host-surge", "attack-exhausts-echo"]) {
     assert.match(phaseOrbSource, new RegExp(`"${conceptId}"`, "u"));
   }
   assert.match(phaseOrbSource, /contextualTutorialBlocksPhase/u);
