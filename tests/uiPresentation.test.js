@@ -2039,7 +2039,8 @@ test("UI Reference inventories only real player UI and traces every component to
   assert.match(handLimitSource, /counter-target-button counter-target-cancel[\s\S]*?counter-target-button counter-target-confirm/u);
   assert.match(handLimitSource, /hand-limit-layer pointer-events-none[\s\S]*?hand-limit-panel pointer-events-auto/u);
   assert.match(learnIntroSource, /<GuidedTutorialDialog/u);
-  assert.match(learnIntroSource, /learn-to-play-intro-progress/u);
+  assert.match(learnIntroSource, /guided\.learnToPlay\.intro\.body/u);
+  assert.doesNotMatch(learnIntroSource, /learn-to-play-intro-progress|chroniclerName/u);
   assert.doesNotMatch(learnIntroSource, /old-panel|old-title|game-home-dialog/u);
 
   assert.match(mainSource, /import "\.\/ui-system\.css"/u);

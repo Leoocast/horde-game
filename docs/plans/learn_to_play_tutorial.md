@@ -100,8 +100,8 @@ flechas de objetivos, el brillo de los candidatos y el cambio visible de estadí
 
 ### Alcance
 
-Esta fase comienza con la transición posterior a la futura llamada «¡Cronista… ayuda!» y termina
-cuando comienza la Oleada y se presenta su explicación independiente.
+Esta fase comienza después del único párrafo de Evy que abre el recorrido y termina cuando comienza
+la Estampida y se presenta su explicación independiente.
 
 Incluye:
 
@@ -125,23 +125,16 @@ No incluye todavía:
 
 ### Cold open
 
-La antesala temporal implementada usa cinco modales localizados:
+La antesala temporal implementada usa un solo modal localizado. Evy es la única voz; el Cronista no
+responde ni aparece como speaker:
 
-> Evy: «¡Cronista… ayuda!»
->
-> «Una voz nos llama desde un futuro al borde del colapso.»
->
-> «La Hueste ya ha quebrado sus defensas. No veremos cómo comenzó.»
->
-> «Contemplemos este futuro. Quizá todavía estemos a tiempo.»
->
-> Evy: «Esta Visión ya está en marcha. Hay tres Fuentes preparadas, Maela aún resiste y la Hueste
-> se dispone a avanzar. Contempla lo que sucede a partir de aquí.»
+> Evy: «¡Cronista, ayuda! Contuve a la Hueste cuanto pude, pero esta Visión ya está en marcha. Dejé
+> tres Fuentes preparadas y Maela aún resiste; continúa desde aquí antes de que la Hueste vuelva a
+> avanzar.»
 
-El launcher permanece en **Cómo jugar** mientras se recorren estos diálogos. Cerrarlos vuelve al
-mismo panel; sólo el CTA final inicia el lifecycle y carga la partida avanzada. Son una maqueta para
-probar el ritmo de la futura cinemática con voz, no copy ni lore definitivo. Sigue abierto si el
-Cronista es nuevo dentro del lore o ya conoce su función.
+El launcher permanece en **Cómo jugar** mientras este modal está abierto. Cerrarlo vuelve al mismo
+panel; el único CTA **Continuar la Visión** inicia el lifecycle y carga la partida avanzada. No hay
+contador de diálogos, beats intermedios ni parlamentos del Cronista.
 
 Al llegar al tablero, el indicador comunica que faltan dos turnos para la Oleada. El narrador
 advierte que la Hueste está cerca de fortalecerse. El copy exacto de esa advertencia sigue abierto.

@@ -54,15 +54,10 @@ test("How to Play catalogs the main journey before optional Preparation", () => 
 });
 
 test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
-  assert.equal(translate("es", "guided.learnToPlay.intro.beatOne"), "¡Cronista… ayuda!");
-  assert.equal(
-    translate("es", "guided.learnToPlay.intro.beatFour"),
-    "Contemplemos este Futuro. Quizá todavía estemos a tiempo.",
-  );
   assert.equal(translate("es", "guided.learnToPlay.intro.evy"), "Evy");
   assert.equal(
-    translate("es", "guided.learnToPlay.intro.beatFive"),
-    "Esta Visión ya está en marcha. Hay tres Fuentes preparadas, Maela aún resiste y la Hueste se dispone a avanzar. Contempla lo que sucede a partir de aquí.",
+    translate("es", "guided.learnToPlay.intro.body"),
+    "¡Cronista, ayuda! Contuve a la Hueste cuanto pude, pero esta Visión ya está en marcha. Dejé tres Fuentes preparadas y Maela aún resiste; continúa desde aquí antes de que la Hueste vuelva a avanzar.",
   );
   assert.equal(
     translate("es", "guided.learnToPlay.fourthSourceBriefingBody"),
@@ -593,7 +588,7 @@ test("App exposes both launchers, disables Continue, and hands the journey to it
   assert.match(app, /HOW_TO_PLAY_CATALOG\.map/u);
   assert.match(app, /onLaunch: launchLearnToPlayJourney/u);
   assert.match(app, /function launchLearnToPlayJourney\(\)\s*\{\s*setLearnToPlayIntroOpen\(true\);\s*\}/u);
-  assert.match(app, /chroniclerName=\{playerName\}/u);
+  assert.doesNotMatch(app, /<LearnToPlayIntroModal[\s\S]*?chroniclerName=/u);
   assert.match(app, /onComplete=\{beginLearnToPlayJourney\}/u);
   assert.match(app, /function beginLearnToPlayJourney\(\)[\s\S]*?learnToPlayJourneyLifecycle\.start\(\)[\s\S]*?setScreen\("journey"\)/u);
   assert.match(app, /howToPlayEntries=\{howToPlayEntries\}/u);
@@ -609,11 +604,11 @@ test("App exposes both launchers, disables Continue, and hands the journey to it
   assert.match(board, /sessionPolicy\.showStandardOutcome && defeatReady/u);
   assert.match(board, /sessionPolicy\.showJourneyDefeat && defeatReady && onContemplateFuture/u);
   assert.match(board, /!sessionPolicy\.showPhaseBanner/u);
-  assert.equal((intro.match(/body: "guided\.learnToPlay\.intro\.beat(?:One|Two|Three|Four|Five)"/gu) ?? []).length, 5);
-  assert.match(intro, /chroniclerName\.trim\(\) \|\| t\("guided\.learnToPlay\.intro\.chronicler"\)/u);
-  assert.match(intro, /finalBeat[\s\S]*?onComplete\(\)/u);
+  assert.match(intro, /t\("guided\.learnToPlay\.intro\.body"\)/u);
+  assert.doesNotMatch(intro, /INTRO_BEATS|beatIndex|chroniclerName/u);
+  assert.match(intro, /onClick=\{onComplete\}/u);
   assert.match(intro, /<GuidedTutorialDialog/u);
-  assert.match(intro, /learn-to-play-intro-progress/u);
+  assert.doesNotMatch(intro, /learn-to-play-intro-progress/u);
   assert.doesNotMatch(intro, /old-panel|old-title|game-home-dialog/u);
 });
 

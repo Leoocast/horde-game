@@ -817,7 +817,6 @@ export default function App() {
         />
         <LearnToPlayIntroModal
           open={learnToPlayIntroOpen}
-          chroniclerName={playerName}
           onClose={() => setLearnToPlayIntroOpen(false)}
           onComplete={beginLearnToPlayJourney}
         />

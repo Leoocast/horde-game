@@ -948,14 +948,11 @@ acompañante. Las tarjetas completas son el control; no añaden rombo, divisor, 
 `Begin` en el pie, ni anteponen un rótulo redundante de selección. El recorrido tiene lifecycle
 efímero independiente, rollback de conceptos provisionales, reinicio total, autosave apagado,
 políticas explícitas de tablero e intervenciones estrictas adjuntas al `GameState` vivo. Su launcher
-está activo desde **Cómo jugar**. Antes de iniciar el lifecycle muestra una antesala temporal de
-cinco diálogos localizados: Evy pide ayuda, el Cronista decide contemplar ese futuro sin anticipar
-que sus protagonistas morirán y Evy sitúa la Visión ya en marcha: tres Fuentes preparadas, Maela
-aún resistiendo y la Hueste a punto de avanzar. Cerrar la
-antesala conserva **Cómo jugar**; sólo el CTA del quinto diálogo carga el recorrido. Este copy es
-una maqueta para la futura cinemática con voz, no lore definitivo. Los parlamentos del Cronista
-muestran como speaker el nombre elegido por el jugador; «El Cronista» es sólo el fallback si
-estuviera vacío. Después carga el snapshot avanzado exacto: Vida 31, Maela y tres Fuentes,
+está activo desde **Cómo jugar**. Antes de iniciar el lifecycle muestra una antesala temporal con un
+único párrafo de Evy: pide ayuda, sitúa la Visión ya en marcha, las tres Fuentes preparadas y a Maela
+aún resistiendo, sin anticipar el resultado del recorrido. El Cronista no habla ni aparece como speaker;
+no existen beats ni contador de diálogos. Cerrar la antesala conserva **Cómo jugar** y el único CTA
+**Continuar la Visión** carga el recorrido. Después carga el snapshot avanzado exacto: Vida 31, Maela y tres Fuentes,
 Vaelor/Aelyra/Río en Mano, Flor como próximo robo, Retorno/Acechador/Engendro/Cosechadora en ese
 orden y la segunda copia de Acechador como siguiente revelado. Evy presenta la llegada del
 Cronista y la cuarta Fuente que completa el contenedor de Energía inferior izquierdo antes de que aparezca la instrucción actual
