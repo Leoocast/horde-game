@@ -58,7 +58,6 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
       && signal.intent.kind === "combat.assignBlocker"
       ? {
           highlights: [
-            { kind: "card", instanceId: signal.intent.cardId },
             {
               kind: "card",
               instanceId: signal.intent.targetId,

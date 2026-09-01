@@ -392,7 +392,6 @@ test("dragging a ground Echo onto a Flying attacker preserves the denied target 
     intent: { kind: "combat.assignBlocker", cardId: "ground:1", targetId: "flying:1" },
   }, {}), {
     highlights: [
-      { kind: "card", instanceId: "ground:1" },
       { kind: "card", instanceId: "flying:1", padding: 18, offsetX: 16 },
     ],
     placement: "center",
