@@ -131,6 +131,9 @@ Modificadores:
 
 - `QUICK` / Rápido modifica un Hechizo y enumera sus ventanas reales: Principal, Batalla y
   Defender. Hostfall no promete pila ni prioridad libre.
+- En la ayuda contextual de iniciación, la formulación player-facing aprobada es «puedes lanzarlo
+  en cualquier momento». Resume que Rápido responde tanto en el turno del Cronista como durante la
+  defensa; no autoriza compromisos mientras el engine resuelve animaciones o efectos.
 - `CHRONICLE` es un id técnico heredado usado por datos y herramientas; puede aparecer en cartas de
   cualquier bando y no aporta reglas, unicidad ni pertenencia a la Crónica del jugador. No se traduce
   ni se muestra como `Chronicle Echo / Eco de Crónica`: **Chronicle / Crónica** queda reservado al

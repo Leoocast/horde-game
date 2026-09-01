@@ -4,6 +4,11 @@ Estado: **cerrado; Fases 0 a 5 y 7 completadas. Las antiguas Fases 6 y 8 fueron 
 
 Última actualización: **2026-08-11**.
 
+Nota histórica: este plan conserva menciones antiguas a **Primera Semilla** y **Tutorial básico**
+porque documentan decisiones de sus fases. El producto vigente llama **Preparación** a la lección
+`first-seed`, la ofrece como opcional y usa **Aprender a jugar** como recorrido principal. La
+sección final resume la autoridad actual; las denominaciones históricas no deben volver a UI.
+
 ## Objetivo
 
 Construir la infraestructura reutilizable con la que Hostfall podrá detener una partida en puntos
@@ -821,36 +826,11 @@ simularlo.
 
 ## Contenido actual y siguiente trabajo
 
-El framework está cerrado. La revisión 4 de la Primera Semilla está registrada como lección
-obligatoria y también se abre desde **Cómo jugar → Tutorial básico**. Usa Elarion contra los
-Sinsepulcro y, por ahora, cubre solamente los tres turnos de Preparación. Su secuencia exacta:
+El framework está cerrado. `first-seed` conserva su id técnico, pero el producto lo presenta como
+la lección opcional **Preparación**. El tutorial obligatorio es **Aprender a jugar**, cuyo contenido
+y plan técnico viven en `learn_to_play_tutorial.md` y `learn_to_play_implementation_plan.md`.
 
-1. explica el objetivo de vaciar el Archivo de la Hueste y los tres turnos consecutivos que recibe
-   el jugador para prepararse;
-2. empieza Preparación 1/3 con dos Fuentes, Liora y Vaelor en Mano; juega una Fuente y explica qué
-   genera, para qué sirve y el límite de una Fuente por turno;
-3. presenta Liora y Vaelor juntos y en grande, enfatiza la Energía que requiere cada uno y muestra que una sola Energía
-   no alcanza para Invocar a ninguno;
-4. en Preparación 2/3 roba a Maela, juega la segunda Fuente e Invoca a Liora con ambas; distingue
-   entre Fuentes Agotadas y un Eco Estabilizándose que todavía no puede usar su Acción;
-5. en Preparación 3/3 roba Escudo de la Heredera, enfoca la Energía regenerada y aclara que la
-   Energía anterior no se acumuló durante Preparación;
-6. usa la Acción de Liora ya estabilizada: Liora queda Agotada y añade una Energía a la Reserva;
-   después Invoca a Maela canalizando esa Reserva y la Energía de las dos Fuentes;
-7. explica Skyguard, la defensa de Campo y Cielo, y que terminar el último turno despertaría a la
-   Hueste. La lección se detiene antes de ejecutar esa acción.
-
-La ampliación visual de Liora y Vaelor usa `presentation.cardComparison`, una extensión genérica
-del contrato que recibe alias predefinidos y el énfasis semántico `energyCost`; no introduce lógica
-por nombre de carta en la UI ni en el runtime.
-
-La revisión 4 reduce cada cuadro visible a un solo párrafo breve. Las definiciones de Archivo,
-Hueste, Fuente, Reserva y demás vocabulario nuevo se declaran por paso y aparecen como términos
-dorados subrayados con tooltip localizado en hover o foco de teclado. El texto principal conserva
-únicamente la idea y la acción necesarias para avanzar. La Energía se reúne, canaliza, libera o
-consume; el tutorial no usa lenguaje transaccional ni convierte la excepción de Preparación en una
-regla general sobre qué Energía permanece entre turnos.
-
-Esta secuencia es un borrador para QA dentro del juego, no el ritmo ni el copy definitivo. El
-siguiente trabajo es recorrer únicamente esta sección con el usuario y ajustar mensajes, pausas y
-presentación antes de diseñar el despertar de la Hueste o cualquier enseñanza de combate.
+La Visión normal que comienza después del handoff no pertenece a una `GuidedLesson` ni amplía este
+framework lineal. Su Mano, mulligan, Preparación mental y ayudas contextuales se gobiernan desde
+[`first_canon_vision_plan.md`](first_canon_vision_plan.md). Cualquier trabajo posterior debe
+reutilizar los anchors, barreras, gates y materiales cerrados aquí sin reabrir las fases del sistema.

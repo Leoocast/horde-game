@@ -1,16 +1,16 @@
 # Aprender a jugar — diseño vivo del onboarding
 
-Estado: **diseño de contenido abierto; primer corte fijado hasta la derrota predeterminada y
-handoff desde “Contemplar otro futuro” hacia la Primera Canon Seed aprobada**.
+Estado: **diseño del prólogo abierto; derrota y handoff hacia la primera Visión Canon fijados e
+implementados. La experiencia posterior tiene un plan propio aprobado**.
 
 Última actualización: **2026-09-01**.
 
 ## Propósito del documento
 
-Este es el único documento vivo para diseñar el nuevo tutorial principal **Aprender a jugar**. Su
-objetivo es conservar las decisiones pedagógicas, narrativas y de partida con suficiente precisión
-para que, cuando el recorrido completo esté cerrado, pueda analizarse qué necesita el framework y
-recién entonces planear la implementación.
+Este es el documento vivo para diseñar el prólogo principal **Aprender a jugar** hasta que
+**Contemplar otro futuro** entrega la partida normal. Su objetivo es conservar las decisiones
+pedagógicas, narrativas y de partida de ese tramo con suficiente precisión para analizar el
+framework y planear su implementación.
 
 No es todavía una receta de `src/guidance/`, un desglose técnico ni una autorización para cambiar
 código. Las decisiones marcadas como abiertas no se deben completar por inferencia durante la
@@ -19,6 +19,11 @@ implementación.
 La auditoría de los sistemas existentes y el plan incremental correspondiente viven en
 [`learn_to_play_implementation_plan.md`](learn_to_play_implementation_plan.md). Este documento sigue
 siendo la fuente de verdad del contenido; el otro gobierna arquitectura, riesgos y fases.
+
+La Mano, el mulligan, la Preparación mental y las ayudas contextuales dentro de la Visión normal
+`HF1-ELA-GRV-082-QC5` pertenecen a
+[`first_canon_vision_plan.md`](first_canon_vision_plan.md). Este documento termina en el handoff y
+no debe volver a declarar decisiones de esa partida posterior.
 
 El recorrido guiado que existe actualmente no se elimina. La intención de producto es conservarlo
 como un tutorial específico llamado **Preparación**. El nuevo recorrido principal será **Aprender a
@@ -56,16 +61,16 @@ de implementación.
   calcula el mejor resultado defensivo que todavía puede conseguir el jugador e Invoca un Titán y
   tantos Soldados Sinsepulcro como sean necesarios para que ningún resultado legal evite la muerte.
 - Esta Invocación terminal es un evento authored del futuro perdido, no una ampliación de la regla
-  general de Oleada. La Oleada normal se habrá enseñado antes con sus revelados reales.
+  general de Estampida. La Estampida normal se habrá enseñado antes con sus revelados reales.
 - Tres Soldados reales dentro del Archivo protegen al Titán terminal de los tres descartes opcionales
   máximos. Choque de Ecos conserva su ventana legal después de ver la fuerza terminal, y la posición
   del Titán puede variar como consecuencia de los descartes anteriores.
 - El CTA único de salida se llama **Contemplar otro futuro**. Activarlo completa el tutorial y,
-  mediante el vórtice, inicia la Canon Seed aprobada `HF1-ELA-GRV-082-QC5`: **El Pacto de Elarion**
+  mediante el vórtice, inicia la Inscripción Canon aprobada `HF1-ELA-GRV-082-QC5`: **El Pacto de Elarion**
   contra **El Alzamiento de los Sinsepulcro**, dificultad Normal y tres turnos de Preparación.
-- En esa partida real y en las siguientes, las ayudas pendientes serán contextuales. Cada concepto
-  conserva si ya fue mostrado; la preferencia global decide si los conceptos vistos pueden
-  repetirse, pero los no vistos siempre conservan su primera aparición.
+- En esa partida real y en las siguientes, las ayudas pendientes serán contextuales. La experiencia
+  exacta de la primera Visión y su política de repetición están fijadas en
+  `first_canon_vision_plan.md`.
 - En el código actual **Continuar** permanece deshabilitado. El objetivo aprobado para la demo es
   ocultarlo y apagar resume mediante la capability descrita en el plan de historial de Semillas,
   conservando su implementación para Early Access.
@@ -96,7 +101,7 @@ flechas de objetivos, el brillo de los candidatos y el cambio visible de estadí
 
 ---
 
-## Fase 1 — El futuro perdido antes de la Oleada
+## Fase 1 — El futuro perdido antes de la Estampida
 
 ### Alcance
 
@@ -113,12 +118,12 @@ Incluye:
 - una primera lectura de Vida si el jugador recibe daño;
 - la entrada de Vaelor y la cadena de la Cosechadora;
 - inspección ampliada de una carta;
-- el intento de enseñar el ataque al Archivo antes de la Oleada.
+- el intento de enseñar el ataque al Archivo antes de la Estampida.
 
 No incluye todavía:
 
-- las cartas reveladas por la Oleada;
-- el camino desde la Oleada hasta la derrota;
+- las cartas reveladas por la Estampida;
+- el camino desde la Estampida hasta la derrota;
 - los valores finales de Vida y del Archivo de la Hueste;
 - la escena de derrota, el CTA **Contemplar otro futuro** o el mulligan;
 - la partida real posterior al prólogo.
@@ -136,7 +141,7 @@ El launcher permanece en **Cómo jugar** mientras este modal está abierto. Cerr
 panel; el único CTA **Continuar la Visión** inicia el lifecycle y carga la partida avanzada. No hay
 contador de diálogos, beats intermedios ni parlamentos del Cronista.
 
-Al llegar al tablero, el indicador comunica que faltan dos turnos para la Oleada. El narrador
+Al llegar al tablero, el indicador comunica que faltan dos turnos para la Estampida. El narrador
 advierte que la Hueste está cerca de fortalecerse. El copy exacto de esa advertencia sigue abierto.
 
 ### Estado exacto de entrada
@@ -170,7 +175,7 @@ El orden authored inicial, de izquierda a derecha, es:
 La primera carta preparada para el siguiente revelado es la segunda copia de **Acechador Alado de
 la Cripta**. Al ser un Eco no Ficha, detiene el revelado normal de esta Hueste. No entra ningún
 Infestado de Esporas en el recorrido fijado: quedó fuera tanto del Campo inicial como de la primera
-Oleada y del cierre terminal.
+Estampida y del cierre terminal.
 
 La Cosechadora debe resolver su ataque después de varios Zombis, aunque una nueva llegada pueda
 ocupar una posición posterior. La experiencia depende de que muertes anteriores puedan fortalecerla
@@ -239,7 +244,7 @@ que Maela y Aelyra juntas no puedan destruirla: su Fuerza combinada máxima en e
 Si muere uno de los otros Zombis antes de que llegue el combate de la Cosechadora, ella recibe el
 contador antes de atacar y demuestra por qué importa el orden de izquierda a derecha.
 
-### Último turno antes de la Oleada
+### Último turno antes de la Estampida
 
 Justo antes de habilitar **Mi Turno**, la recuperación del Aguante es la última ayuda pendiente si
 hubo Ecos supervivientes dañados. Su cuadro aparece por encima del botón de acción para no tapar
@@ -286,7 +291,7 @@ lo intenta, se explica Estabilizándose como respuesta al intento.
 
 **Elixir de la Primera Hoja** queda descartado para este robo. Aunque también cuesta 1, puede dar
 +3/+3 a un enemigo antes de Vaelor y permitir que sobreviva a la limpieza; además, al ser Rápido,
-abre una rama adicional durante la defensa de la Oleada.
+abre una rama adicional durante la defensa de la Estampida.
 
 ### Entrada de Vaelor
 
@@ -334,7 +339,7 @@ El jugador elige libremente qué Ecos estabilizados atacan.
 
 Esta enseñanza es **oportunista, no un requisito de la fase**. La defensa anterior puede matar tanto
 a Maela como a Aelyra; si ocurre, Vaelor y Flor estarán Estabilizándose y no existirá un atacante
-legal. El flujo continúa normalmente hacia la Oleada. Los conceptos «atacar el Archivo» y «atacar
+legal. El flujo continúa normalmente hacia la Estampida. Los conceptos «atacar el Archivo» y «atacar
 Agota al Eco» permanecen como `no vistos` y se presentan la próxima vez que el jugador intente un
 ataque válido, ya sea durante el prólogo o en cualquier partida real posterior.
 
@@ -351,25 +356,25 @@ nada de ese intento. Al completar el recorrido, se conservan sólo los conceptos
 realmente aparecieron; los demás siguen en `no visto` y pueden surgir contextualmente después. Si
 la preferencia global de no repetir está activa, sólo se aplica a ese conjunto ya mostrado.
 
-### Comienzo de la Oleada
+### Comienzo de la Estampida
 
-El Cronista termina el turno y comienza la animación de Oleada. Cuando esa animación termina, el
+El Cronista termina el turno y comienza la animación de Estampida. Cuando esa animación termina, el
 turno de la Hueste ya ha cruzado el umbral, pero todavía no revela ningún Eco. En esa pausa aparece
 la explicación: **«A partir de este turno, la Hueste desata todo su poder e Invoca más Ecos con cada
 avance.»** Sólo después de aceptarla comienzan el revelado normal y los revelados adicionales.
 
-La primera explicación pertenece exclusivamente a la Oleada: qué cambió y por qué la Hueste acaba
+La primera explicación pertenece exclusivamente a la Estampida: qué cambió y por qué la Hueste acaba
 de volverse más peligrosa. El orden visual es un contrato: **animación → explicación → revelados**.
 
 La Fase 1 termina en ese punto. La composición y continuación pertenecen a la Fase 2.
 
 ---
 
-## Fase 2 — De la primera Oleada al futuro perdido
+## Fase 2 — De la primera Estampida al futuro perdido
 
 ### Propósito
 
-Esta fase enseña la Oleada, vacía la Mano mediante una consecuencia real, presenta el robo adicional
+Esta fase enseña la Estampida, vacía la Mano mediante una consecuencia real, presenta el robo adicional
 por Mano vacía y obliga a descubrir la acción **Devolver Fuente**. Después retira las instrucciones,
 construye una fuerza terminal según el estado real alcanzado y termina con la derrota normal.
 
@@ -377,10 +382,10 @@ El jugador conserva libertad en sus defensas, en el uso de Choque de Ecos, en la
 de la Ciudad Olvidada y en cualquier ataque legal al Archivo. El cierre no exige que esas ramas
 lleguen al mismo tablero: calcula la fuerza necesaria después de observar cuál ocurrió.
 
-### Archivo robusto para la primera Oleada
+### Archivo robusto para la primera Estampida
 
 La muerte de Retorno a la Memoria ya habrá descartado siempre dos cartas. Después, el ataque
-opcional previo a la Oleada puede descartar cero o una carta adicional. A partir del punto al que
+opcional previo a la Estampida puede descartar cero o una carta adicional. A partir del punto al que
 llega ese desplazamiento, el segmento relevante es:
 
 1. **Ladrón de Memorias A**.
@@ -398,15 +403,15 @@ Esto produce dos ramas equivalentes:
 El Titán y el Soldado son Fichas, por lo que no detienen el revelado normal; el Ladrón sí lo detiene.
 En ambas ramas aparece al menos un Ladrón de Memorias y la presión de combate es la misma.
 
-### Primera Oleada
+### Primera Estampida
 
-Antes de esta Oleada, la Cosechadora está en 7/9. La bonificación continua de la Oleada le da
+Antes de esta Estampida, la Cosechadora está en 7/9. La bonificación continua de la Estampida le da
 +1/+0 y la presenta como 8/9 mientras esa bonificación permanezca activa.
 
 Los dos cuerpos pequeños de la rama son 3/2 y el cuerpo grande es 6/5. Junto a la Cosechadora, la
 Fuerza total de este ataque es 20 antes de cualquier cambio producido por el propio combate.
 
-La ruta prevista Invoca a Vaelor y Flor del Alba y llega a la Oleada con la Mano vacía. Si el
+La ruta prevista Invoca a Vaelor y Flor del Alba y llega a la Estampida con la Mano vacía. Si el
 jugador dejó Flor del Alba sin Invocar, el primer Ladrón de Memorias la descarta y produce el mismo
 estado. Si aparece el segundo Ladrón, su Reacción ya encuentra la Mano vacía. El descarte debe verse
 como una consecuencia de la carta, no como una instrucción arbitraria del tutorial.
@@ -496,7 +501,7 @@ El cálculo debe considerar al menos:
 
 - Vida actual del Cronista;
 - todos los atacantes que ya conserva la Hueste y sus estadísticas reales;
-- bonificación activa de Oleada;
+- bonificación activa de Estampida;
 - todos los defensores preparados y sus restricciones, incluidas Volar y Guardia aérea;
 - Estabilizándose y Agotado;
 - el orden real de ataque de izquierda a derecha;
@@ -509,9 +514,9 @@ o una función pura equivalente que explore el mejor resultado para el jugador. 
 alcanzables del escenario deberán validarse antes de release y la receta debe contener suficientes
 copias para que el cálculo nunca se quede sin Soldados.
 
-La secuencia terminal puede superar los cinco revelados ordinarios de un turno de Oleada. Debe
+La secuencia terminal puede superar los cinco revelados ordinarios de un turno de Estampida. Debe
 presentarse como el colapso authored de este futuro perdido, no como una segunda explicación de la
-regla de Oleada ni como una regla que continuará en partidas normales.
+regla de Estampida ni como una regla que continuará en partidas normales.
 
 Una vez alcanzada la condición letal, la Hueste ataca normalmente. No existe otro turno del
 Cronista: la Vida llega a 0 y comienza la presentación normal de derrota.
@@ -524,10 +529,10 @@ vacía y Devolver Fuente.
 
 La auditoría del motor confirmó que el mínimo analítico es 31:
 
-`31 + 3 de Aelyra - 13 del primer ataque - 20 de la primera Oleada = 1`
+`31 + 3 de Aelyra - 13 del primer ataque - 20 de la primera Estampida = 1`
 
 No defender es el peor caso. Cada Zombi anterior que muera defendido evita al menos 2 de daño y sólo
-agrega 1 de Fuerza a la Cosechadora; durante la Oleada, la Cosechadora ataca antes que los cuerpos
+agrega 1 de Fuerza a la Cosechadora; durante la Estampida, la Cosechadora ataca antes que los cuerpos
 recién llegados. Con 30, la rama sin defensas pierde antes del turno pedagógico. La receta final debe
 conservar un test exhaustivo que certifique esta prueba y detecte futuros cambios de cartas/reglas.
 
@@ -556,26 +561,21 @@ reutiliza la escena visual de derrota, pero ofrece un único CTA narrativo sin l
 entre Reescribir y Contemplar. Su nombre visible confirmado es **Contemplar otro futuro**.
 
 El clic es el acto que completa **Aprender a jugar**. Su activación ejecuta el vórtice y carga la
-Primera Canon Seed aprobada; la durabilidad exacta si la aplicación se cierra durante la transición
-queda pendiente hasta preparar el release.
+primera Visión Canon aprobada. La durabilidad si la aplicación se cierra durante la transición se
+implementará mediante el lifecycle recuperable fijado en `first_canon_vision_plan.md`.
 
-### Buena Mano y mulligan: fuera del primer corte
+### Primera Visión Canon: frontera de este documento
 
-La seed favorable y determinista ya está fijada como `HF1-ELA-GRV-082-QC5`. Todavía debe resolverse
-explícitamente sobre esa misma seed:
+La seed determinista está fijada como `HF1-ELA-GRV-082-QC5`. Su primera Mano, el mulligan real que
+entrega seis cartas, los cuadros de Evy, la Preparación mental y las ayudas posteriores ya no son una
+decisión abierta de este prólogo: pertenecen a
+[`first_canon_vision_plan.md`](first_canon_vision_plan.md).
 
-- la decisión anterior pedía un mulligan obligatorio para explicar que la Mano del futuro perdido
-  contribuyó a la derrota;
-- la formulación más reciente dice que el nuevo Futuro comienza con una buena Mano.
-
-La opción recomendada es que la seed muestre primero una Mano deliberadamente mala pero plausible,
-obligue a realizar un mulligan y entregue después la buena Mano preparada. Si la buena Mano aparece
-desde el comienzo, no debe conservarse un mulligan obligatorio sin una razón diferente.
-
-El prólogo no se considera completado sólo por llegar a 0 de Vida. En el producto final, la
-activación del CTA será el acto de finalización. Cerrar antes de ese clic reinicia desde el cold open;
-el comportamiento al cerrar durante el vórtice se decidirá antes del release. Cualquier mulligan o
-Preparación simplificada posterior pertenece a la partida real y queda fuera del primer corte.
+El prólogo no se considera completado sólo por llegar a 0 de Vida. Activar **Contemplar otro
+futuro** registra la finalización, ejecuta el vórtice y carga la Visión normal. Cerrar antes de ese
+clic reinicia desde el cold open. La recuperación durante el vórtice forma parte del lifecycle
+técnico del plan posterior mediante un marcador acotado; la demo conserva resume y checkpointing
+apagados.
 
 ---
 
@@ -590,7 +590,7 @@ Preparación simplificada posterior pertenece a la partida real y queda fuera de
 | Dejar Flor en Mano | Permitido. | El Ladrón la descarta; una Fuente no usada libera 1 a la Reserva y la Mano queda igualmente vacía. |
 | Intentar actuar con un Eco recién Invocado | Permitido como intento; las reglas lo rechazan. | Aparece una única explicación contextual de Estabilizándose. |
 | Atacantes estabilizados | Libre si existe alguno. | El daño puede descartar cero o una carta adicional del Archivo; si no existe ninguno, la enseñanza queda `no vista`. |
-| Defensa durante la primera Oleada | Cualquier asignación legal. | Cambian Vida, supervivientes y crecimiento de la Cosechadora; no puede impedir el turno posterior. |
+| Defensa durante la primera Estampida | Cualquier asignación legal. | Cambian Vida, supervivientes y crecimiento de la Cosechadora; no puede impedir el turno posterior. |
 | Uso de Choque de Ecos | Puede lanzarlo o conservarlo. | Puede eliminar una amenaza, pero consume 2 de Energía y excluye Invocar la Ciudad ese turno. |
 | Devolver Fuente | Es el único aprendizaje requerido del turno posterior. | Puede descubrirlo al intentar Jugar el quinto Río o al intentar terminar el turno. |
 | Uso de Flor del Alba | Opcional. | Permite Invocar la Ciudad conservando una Fuente preparada, pero no vuelve compatible Ciudad con Choque. |
@@ -600,7 +600,7 @@ Preparación simplificada posterior pertenece a la partida real y queda fuera de
 
 La muerte de Retorno a la Memoria desplaza siempre dos cartas del Archivo. Un ataque del Cronista
 puede desplazar una tercera. La pareja de Ladrones seguida por Titán y Soldado hace equivalentes
-ambas ramas de la primera Oleada. Los ataques posteriores consumen Soldados de relleno antes de que
+ambas ramas de la primera Estampida. Los ataques posteriores consumen Soldados de relleno antes de que
 el escenario construya la fuerza terminal.
 
 ## Observables que el futuro análisis técnico deberá encontrar o añadir
@@ -623,7 +623,7 @@ Esta lista describe información semántica necesaria, no nombres de APIs defini
 - apertura real de los detalles ampliados de una carta;
 - inicio de Batalla, selección y confirmación de atacantes;
 - Eco Agotado como consecuencia de atacar;
-- comienzo efectivo de la Oleada y aplicación de su bonificación;
+- comienzo efectivo de la Estampida y aplicación de su bonificación;
 - Ladrón de Memorias resuelto y carta exacta descartada;
 - comienzo de turno con Mano vacía y robo real de dos cartas;
 - intento rechazado de Jugar una quinta Fuente;
@@ -665,10 +665,10 @@ texto visible, tiempos de animación o nombres de cartas.
 - Validación exhaustiva del mínimo preliminar de 31 de Vida y del máximo de Soldados que puede pedir
   cualquier rama alcanzable.
 - Representación narrativa y técnica de la Invocación terminal para no confundirla con el límite
-  ordinario de revelados de la Oleada.
+  ordinario de revelados de la Estampida.
 - Integración de la derrota normal, el CTA único **Contemplar otro futuro** y la carga directa de
-  `HF1-ELA-GRV-082-QC5`. El mulligan authored y la recuperación ante cierres pertenecen a trabajo
-  posterior.
+  `HF1-ELA-GRV-082-QC5`. La apertura de Mano y la recuperación ante cierres continúan en
+  `first_canon_vision_plan.md`.
 - Separación de progreso entre el prólogo, el tutorial específico **Preparación** y las
   ayudas contextuales que continúan en partidas normales.
 
@@ -676,19 +676,19 @@ La auditoría de estas necesidades y sus fases está en
 [`learn_to_play_implementation_plan.md`](learn_to_play_implementation_plan.md). No se deben mover
 escenas aisladas a código fuera de la fase aprobada.
 
-## Decisiones abiertas al terminar esta actualización
+## Decisiones abiertas del prólogo al terminar esta actualización
 
-1. Copy del narrador al entrar y antes de la Oleada.
+1. Copy del narrador al entrar y antes de la Estampida.
 2. Copy definitivo de la derrota; el borrador actual usa «llegamos demasiado tarde» y «contemplar
    otro futuro».
 3. Certificación automatizada de 31 como Vida inicial y cantidad máxima de Soldados necesaria en
    todas las ramas.
-4. Si la Canon Seed aprobada muestra primero una Mano mala y el mulligan entrega la buena, o si comienza ya
-   con la buena Mano y elimina el mulligan obligatorio.
-5. Comportamiento de primera apertura y alcance sobre perfiles existentes.
-6. Persistencia exacta si la aplicación se cierra durante el vórtice.
-7. Lore previo del Cronista.
+4. Lore previo del Cronista.
+
+La Mano, el mulligan, su apertura, las preferencias contextuales y la persistencia del
+vórtice dejaron de estar abiertas en este documento: su contrato y fases viven en
+`first_canon_vision_plan.md`.
 
 La llegada terminal no está abierta: todas las cartas se presentan una por una con el revelado
 normal y sin agrupación visual. Esto no cambia que el evento terminal sea authored y pueda superar
-el número ordinario de revelados de una Oleada.
+el número ordinario de revelados de una Estampida.

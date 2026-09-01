@@ -85,6 +85,11 @@ canónico o trabajo existente todavía en migración.
 Los CTA de expedición, acción primaria de diálogo y continuar tutorial comparten
 `--hf-ui-action-primary`. Sus tamaños pueden variar por contexto, pero el material no se redefine.
 
+El marco dorado animado que la guía usa sobre **Mi Turno**, Ecos y cartas de la Mano se denomina
+canónicamente **Marco Dorado**. El nombre describe el efecto compartido, no el tipo de target donde
+se diseñó por primera vez: puede rodear cartas, botones u otras superficies sin crear una variante
+visual paralela.
+
 ## Variantes deliberadas
 
 Homologar material, borde, tipografía, foco y elevación no significa borrar semántica. Se conservan
