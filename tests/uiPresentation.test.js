@@ -1355,6 +1355,8 @@ test("Seeds of Destiny groups Futures and Visions while HF1 is an Inscription", 
   assert.equal(translate("es", "menu.seedsOfDestiny"), "Semillas del Destino");
   assert.equal(translate("en", "threshold.seedLabel"), "Inscription");
   assert.equal(translate("es", "threshold.seedLabel"), "Inscripción");
+  assert.equal(translate("en", "seeds.emptyTitle"), "No Seeds of Destiny yet");
+  assert.equal(translate("es", "seeds.emptyTitle"), "Aún no hay Semillas del Destino");
   assert.equal(translate("en", "seeds.emptyBody"), "Contemplate a Future. Its Visions will be recorded here.");
   assert.equal(translate("es", "seeds.emptyBody"), "Contempla un Futuro. Sus Visiones quedarán registradas aquí.");
   assert.equal(translate("en", "seeds.emptyAction"), "Prepare a New Future");
@@ -1365,7 +1367,7 @@ test("Seeds of Destiny groups Futures and Visions while HF1 is an Inscription", 
   assert.match(seeds, /className="seeds-empty-action"[^>]*onClick=\{onPlay\}>\s*<span>\{t\("seeds\.emptyAction"\)\}<\/span>/u);
   assert.doesNotMatch(seeds, /LoadingLibraryState|seeds-loading-book|seeds-empty-constellation|seeds-empty-orbit|seeds-empty-path/u);
   assert.match(startMenu, /onPlay=\{\(\) => \{\s*setClosingMenuScreen\(undefined\);\s*openThreshold\(\);/u);
-  assert.match(styles, /\.seeds-library-empty h2\s*\{[^}]*-webkit-line-clamp:\s*2;/u);
+  assert.doesNotMatch(styles, /\.seeds-library-empty h2\s*\{[^}]*(?:overflow:\s*hidden|-webkit-line-clamp)/u);
   assert.match(styles, /\.seeds-library-empty > p\s*\{[^}]*white-space:\s*nowrap;/u);
   assert.match(styles, /\.seeds-empty-action\s*\{[^}]*min-width:\s*296px;/u);
   assert.match(styles, /@keyframes seeds-empty-cta-orbit-clockwise\s*\{\s*to \{ transform: translate\(-50%, -50%\) rotate\(360deg\); \}/u);
@@ -1756,7 +1758,7 @@ test("the defeat shatter reuses the shared WebGL renderer and provides reduced-m
   assert.match(journeyDialogs, /destiny\.futureLostLineOne/u);
   assert.match(journeyDialogs, /destiny\.futureLostLineTwo/u);
   assert.match(journeyDialogs, /result\.visionLostAmongShards/u);
-  assert.match(journeyModal, /LEARN_TO_PLAY_NARRATIVE_DELAY_MS\s*=\s*1_000/u);
+  assert.match(journeyModal, /LEARN_TO_PLAY_NARRATIVE_DELAY_MS\s*=\s*2_000/u);
   assert.match(journeyDialogs, /guided\.learnToPlay\.defeatLineOne/u);
   assert.match(journeyDialogs, /guided\.learnToPlay\.defeatLineTwo/u);
   assert.match(journeyDialogs, /guided\.learnToPlay\.defeatBody/u);

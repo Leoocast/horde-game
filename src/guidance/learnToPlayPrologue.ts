@@ -378,10 +378,10 @@ export const LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION = Object.freeze({
   ],
 } satisfies GuidedInterventionDefinition);
 
-/** First player turn after defending: pause before the hand-off, observe Energy, then set the goal. */
+/** First player turn after defending: teach Reserve, visibly draw Flor, then set the next goal. */
 export const LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION = Object.freeze({
   id: "learn-to-play.player-return",
-  revision: 3,
+  revision: 4,
   startStepId: "player-turn-returned",
   steps: [
     {
@@ -393,15 +393,6 @@ export const LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION = Object.freeze({
         glossaryTerms: ["energy"],
       },
       highlights: [{ kind: "surface", anchor: "player.sources" }],
-      nextStepId: "wait-for-energy-renewal",
-    },
-    {
-      id: "wait-for-energy-renewal",
-      kind: "observe",
-      callout: "hidden",
-      copy: { titleKey: "guided.learnToPlay.checkpointTitle", bodyKey: "guided.learnToPlay.checkpointBody" },
-      highlights: [],
-      expectedReceipt: { kind: "reserve.released" },
       nextStepId: "explain-renewed-energy",
     },
     {
@@ -416,6 +407,15 @@ export const LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION = Object.freeze({
         { kind: "surface", anchor: "player.sources" },
         { kind: "surface", anchor: "player.reserve" },
       ],
+      nextStepId: "wait-for-energy-renewal",
+    },
+    {
+      id: "wait-for-energy-renewal",
+      kind: "observe",
+      callout: "hidden",
+      copy: { titleKey: "guided.learnToPlay.checkpointTitle", bodyKey: "guided.learnToPlay.checkpointBody" },
+      highlights: [],
+      expectedReceipt: { kind: "reserve.released" },
       nextStepId: "use-energy-for-echoes",
     },
     {

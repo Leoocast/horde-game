@@ -208,7 +208,7 @@ La UI no usa jerga interna como ETB, triggered effect, static ability o resolves
 
 | Id | English | Español | Definición |
 | --- | --- | --- | --- |
-| `FLYING` | Flying | Volar | Solo puede ser defendido por Volar o Guardia aérea. |
+| `FLYING` | Flying | Volar | No puede ser defendido excepto por un Eco con Volar o Guardia aérea. |
 | `SKYGUARD` | Skyguard | Guardia aérea | Puede defender contra Volar. |
 | `ALERT` | Alert | Alerta | Atacar no Agota este Eco. |
 | `DAUNTING` | Daunting | Imponente | Requiere dos o más defensores. |

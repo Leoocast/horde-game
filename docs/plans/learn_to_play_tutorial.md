@@ -135,9 +135,8 @@ La antesala temporal implementada usa cinco modales localizados:
 >
 > «Contemplemos este futuro. Quizá todavía estemos a tiempo.»
 >
-> Evy: «Contuve a la Hueste a orillas del Elarion mientras pude. Logré preparar tres Fuentes,
-> pero sus filas rompieron nuestra línea y me obligaron a retroceder. Continúa la batalla desde
-> aquí.»
+> Evy: «Esta Visión ya está en marcha. Hay tres Fuentes preparadas, Maela aún resiste y la Hueste
+> se dispone a avanzar. Contempla lo que sucede a partir de aquí.»
 
 El launcher permanece en **Cómo jugar** mientras se recorren estos diálogos. Cerrarlos vuelve al
 mismo panel; sólo el CTA final inicia el lifecycle y carga la partida avanzada. Son una maqueta para
@@ -249,14 +248,18 @@ contador antes de atacar y demuestra por qué importa el orden de izquierda a de
 
 ### Último turno antes de la Oleada
 
-Al comenzar el nuevo turno del Cronista, la presentación normal completa primero sus movimientos:
+Justo antes de habilitar **Mi Turno**, la recuperación del Aguante es la última ayuda pendiente si
+hubo Ecos supervivientes dañados. Al confirmar el cambio de turno, la guía presenta primero
+**Conserva la Energía que no uses**, todavía antes de ejecutar la transición.
+
+Al aceptar esa explicación, la presentación normal deja visibles y completa sus movimientos:
 
 - las cuatro Fuentes vuelven a estar preparadas;
 - la Energía de las tres Fuentes que quedaron sin usar llega a la Reserva;
 - el Cronista roba **Flor del Alba**.
 
-Después de asentarse esas animaciones, una explicación contextual relaciona lo que el jugador acaba
-de ver:
+Sólo después de asentarse esas animaciones aparece **Usa tu Energía para Invocar nuevos Ecos**. La
+explicación previa de Reserva cubre que:
 
 - hasta tres Fuentes sin usar pueden conservar su Energía en la Reserva;
 - las Fuentes se preparan otra vez para el nuevo turno;
@@ -424,7 +427,8 @@ Mano está vacía, la regla real de robo entrega dos cartas:
 La ayuda contextual explica el robo adicional después de que ambas cartas hayan llegado y la
 presentación se haya asentado: **«Si comienzas tu turno sin Ecos o Fuentes en la Mano, robas 2
 cartas en lugar de 1.»** El cuadro aparece centrado sin resaltar la Mano; las dos cartas recién
-robadas ya hacen evidente el área relevante. No se altera la regla de robo para el tutorial.
+robadas ya hacen evidente el área relevante. Mientras el cuadro está visible, bloquea todo el
+tablero: no se pueden mover, jugar ni activar cartas. No se altera la regla de robo para el tutorial.
 
 El jugador dispone inicialmente de cuatro Fuentes preparadas. Su Energía adicional depende de la
 rama anterior:

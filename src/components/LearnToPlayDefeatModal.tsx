@@ -12,7 +12,7 @@ type Props = Readonly<{
   onContemplateFuture: () => void;
 }>;
 
-const LEARN_TO_PLAY_NARRATIVE_DELAY_MS = 1_000;
+const LEARN_TO_PLAY_NARRATIVE_DELAY_MS = 2_000;
 
 /** The normal defeat remains intact; the authored narration and its CTA arrive afterward. */
 export function LearnToPlayDefeatModal({ game, snapshotImage, onContemplateFuture }: Props) {

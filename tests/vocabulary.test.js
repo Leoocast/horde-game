@@ -101,9 +101,9 @@ test("the in-game Host counter uses the compact side label", () => {
   assert.equal(translate("es", "game.hostArchive"), "Archivo de la Hueste");
 });
 
-test("Flying explains that it can defend against other Flying Echoes", () => {
-  assert.equal(traitVocabularyTooltip("FLYING", "en"), "Can defend against Echoes with Flying.");
-  assert.equal(traitVocabularyTooltip("FLYING", "es"), "Puede defender contra Ecos con Volar.");
+test("Flying explains which Echoes may defend against it", () => {
+  assert.equal(traitVocabularyTooltip("FLYING", "en"), "Cannot be defended except by an Echo with Flying or Skyguard.");
+  assert.equal(traitVocabularyTooltip("FLYING", "es"), "No puede ser defendido excepto por un Eco con Volar o Guardia aérea.");
 });
 
 test("every authored card rule and type line has a clean Hostfall presentation", () => {

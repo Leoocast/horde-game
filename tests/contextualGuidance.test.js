@@ -57,6 +57,12 @@ const ISOLATED_PERSISTENT_CONCEPT = Object.freeze({
   persistWhenAcknowledgedInIsolated: true,
 });
 
+const BLOCKING_CONCEPT = Object.freeze({
+  ...RESERVE_CONCEPT,
+  id: "blocking-explanation",
+  blocksGameplayWhileVisible: true,
+});
+
 test("guided progress v1 migrates to v2 without losing lesson completion", () => {
   const migrated = parseGuidedProgress({
     kind: "hostfall-guided-progress",
@@ -225,6 +231,26 @@ test("preventive policy intercepts only its matching intent until the help is ac
   fixture.dispose();
 });
 
+test("a blocking contextual explanation rejects every gameplay intent while it is visible", () => {
+  const fixture = createRuntime([BLOCKING_CONCEPT]);
+  fixture.signals.publish({ kind: "player.reserveReleased", amount: 1 });
+  fixture.drain();
+
+  assert.equal(fixture.runtime.snapshot().active?.blocksGameplayWhileVisible, true);
+  assert.deepEqual(
+    fixture.runtime.authorizeIntent({ kind: "card.play", cardId: "echo:1" }),
+    { allowed: false, conceptId: "blocking-explanation" },
+  );
+  assert.deepEqual(
+    fixture.runtime.authorizeIntent({ kind: "phase.endTurn" }),
+    { allowed: false, conceptId: "blocking-explanation" },
+  );
+
+  fixture.runtime.acknowledgeActive();
+  assert.equal(fixture.runtime.authorizeIntent({ kind: "card.play", cardId: "echo:1" }).allowed, true);
+  fixture.dispose();
+});
+
 test("strict guided sessions remain authoritative over preventive contextual concepts", () => {
   const fixture = createRuntime([PREVENTIVE_CONCEPT], () => ({ guidedActive: true }));
   assert.equal(fixture.runtime.authorizeIntent({ kind: "card.play", cardId: "source:1" }).allowed, true);
@@ -232,14 +258,15 @@ test("strict guided sessions remain authoritative over preventive contextual con
   fixture.dispose();
 });
 
-test("contextual callout is non-modal, keyboard dismissible and mounted separately from strict guidance", async () => {
+test("contextual callout supports authored modal blocking and stays mounted separately from strict guidance", async () => {
   const [component, board] = await Promise.all([
     readFile(new URL("../src/components/ContextualTutorialCallout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/Board.tsx", import.meta.url), "utf8"),
   ]);
   assert.match(component, /role="dialog"/u);
-  assert.match(component, /aria-modal="false"/u);
   assert.match(component, /aria-live="polite"/u);
+  assert.match(component, /data-blocks-gameplay=/u);
+  assert.match(component, /aria-modal=\{active\.blocksGameplayWhileVisible \? "true" : "false"\}/u);
   assert.match(component, /event\.key !== "Escape"/u);
   assert.match(component, /contextualTutorialRuntime\.acknowledgeActive/u);
   assert.match(component, /tutorialCalloutWidth/u);

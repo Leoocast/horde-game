@@ -32,7 +32,6 @@ import {
   learnToPlayHarvesterInspectionReady,
   learnToPlayPlayerTurnActionCueReady,
   learnToPlayReturnSourceRequired,
-  learnToPlaySourceRecycleBlockedByOpenHelp,
 } from "../src/guidance/learnToPlayDirector";
 import { PRODUCT_CONTEXTUAL_CONCEPTS } from "../src/guidance/contextualProductConcepts";
 import {
@@ -63,7 +62,7 @@ test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
   assert.equal(translate("es", "guided.learnToPlay.intro.evy"), "Evy");
   assert.equal(
     translate("es", "guided.learnToPlay.intro.beatFive"),
-    "Contuve a la Hueste a orillas del Elarion mientras pude. Logré preparar tres Fuentes, pero sus filas rompieron nuestra línea y me obligaron a retroceder. Continúa la Visión desde aquí.",
+    "Esta Visión ya está en marcha. Hay tres Fuentes preparadas, Maela aún resiste y la Hueste se dispone a avanzar. Contempla lo que sucede a partir de aquí.",
   );
   assert.equal(
     translate("es", "guided.learnToPlay.fourthSourceBriefingBody"),
@@ -103,7 +102,7 @@ test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
   );
   assert.equal(
     translate("es", "guided.contextual.product.defenseOrderBody"),
-    "Haz clic en un Eco preparado y arrastra el cursor hasta un atacante; también puedes dejar ataques sin defender. La Hueste resuelve sus ataques de izquierda a derecha, así que un combate anterior puede cambiar lo que sucede después.",
+    "La Hueste resuelve sus ataques de izquierda a derecha; un combate anterior puede cambiar lo que sucede después.\n\nHaz clic en un Eco aliado y arrastra el cursor hasta un atacante.\n\nTambién puedes elegir no defender.",
   );
   assert.equal(
     translate("es", "guided.contextual.product.attackExhaustsBody"),
@@ -341,7 +340,9 @@ test("normal matches teach one defender directly and combine assignment with ord
 
 test("marked combat damage highlights every affected Echo and owns the next-turn handoff", () => {
   const concept = PRODUCT_CONTEXTUAL_CONCEPTS.find((candidate) => candidate.id === "marked-damage-clears");
+  const life = PRODUCT_CONTEXTUAL_CONCEPTS.find((candidate) => candidate.id === "chronicler-life");
   assert.equal(concept.revision, 2);
+  assert.ok(concept.priority < life.priority, "Endurance recovery must be the final help before Mi Turno");
   const game = buildGuidedScenario(LEARN_TO_PLAY_PROLOGUE_SCENARIO, contentCatalog).game;
   const playerEcho = game.player.field.find((card) => card.kinds.includes("ECHO"));
   const hostEcho = game.host.field.find((card) => card.kinds.includes("ECHO"));
@@ -511,12 +512,6 @@ test("journey-authored milestones ignore global contextual progress and remain f
   }, bindings), false);
 });
 
-test("the empty-Hand help owns Source recycling until the player closes it", () => {
-  assert.equal(learnToPlaySourceRecycleBlockedByOpenHelp("source.recycle", "empty-hand-draw"), true);
-  assert.equal(learnToPlaySourceRecycleBlockedByOpenHelp("source.recycle", undefined), false);
-  assert.equal(learnToPlaySourceRecycleBlockedByOpenHelp("card.play", "empty-hand-draw"), false);
-});
-
 test("post-Surge concepts react only to the real empty-Hand draw and the required Source", () => {
   const emptyHand = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "empty-hand-draw");
   const returnSource = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "return-source");
@@ -537,6 +532,7 @@ test("post-Surge concepts react only to the real empty-Hand draw and the require
     reason: "empty-hand",
     cardIds: ["river:1", "spell:1"],
   }, context), { placement: "center" });
+  assert.equal(emptyHand.blocksGameplayWhileVisible, true);
   assert.deepEqual(emptyHand.copy.glossaryTerms ?? [], []);
   assert.equal(emptyHand.evaluate({
     kind: "player.cardsDrawn",
@@ -621,17 +617,26 @@ test("App exposes both launchers, disables Continue, and hands the journey to it
   assert.doesNotMatch(intro, /old-panel|old-title|game-home-dialog/u);
 });
 
-test("Learn to Play frames Energy before revealing the nested Reserve", () => {
+test("Learn to Play explains Reserve before drawing Flor and only then opens free Echo play", () => {
   const step = (id) => LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps.find((candidate) => candidate.id === id);
 
-  assert.equal(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.revision, 3);
+  assert.equal(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.revision, 4);
+  assert.deepEqual(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps.map(({ id }) => id), [
+    "player-turn-returned",
+    "explain-renewed-energy",
+    "wait-for-energy-renewal",
+    "use-energy-for-echoes",
+  ]);
   assert.deepEqual(step("player-turn-returned").highlights, [
     { kind: "surface", anchor: "player.sources" },
   ]);
+  assert.equal(step("player-turn-returned").nextStepId, "explain-renewed-energy");
   assert.deepEqual(step("explain-renewed-energy").highlights, [
     { kind: "surface", anchor: "player.sources" },
     { kind: "surface", anchor: "player.reserve" },
   ]);
+  assert.equal(step("explain-renewed-energy").nextStepId, "wait-for-energy-renewal");
+  assert.equal(step("wait-for-energy-renewal").nextStepId, "use-energy-for-echoes");
 });
 
 test("Learn to Play highlights Mi Turno only at the settled pre-Surge handoff", () => {

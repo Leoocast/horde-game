@@ -96,8 +96,8 @@ export const TRAIT_VOCABULARY = {
     en: "Flying",
     es: "Volar",
     reminder: {
-      en: "Can defend against Echoes with Flying.",
-      es: "Puede defender contra Ecos con Volar.",
+      en: "Cannot be defended except by an Echo with Flying or Skyguard.",
+      es: "No puede ser defendido excepto por un Eco con Volar o Guardia aérea.",
     },
   },
   SKYGUARD: {

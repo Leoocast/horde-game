@@ -950,8 +950,8 @@ efímero independiente, rollback de conceptos provisionales, reinicio total, aut
 políticas explícitas de tablero e intervenciones estrictas adjuntas al `GameState` vivo. Su launcher
 está activo desde **Cómo jugar**. Antes de iniciar el lifecycle muestra una antesala temporal de
 cinco diálogos localizados: Evy pide ayuda, el Cronista decide contemplar ese futuro sin anticipar
-que sus protagonistas morirán y Evy entrega el combate tras preparar tres Fuentes antes de que la
-Hueste rompa su línea y la obligue a retroceder. Cerrar la
+que sus protagonistas morirán y Evy sitúa la Visión ya en marcha: tres Fuentes preparadas, Maela
+aún resistiendo y la Hueste a punto de avanzar. Cerrar la
 antesala conserva **Cómo jugar**; sólo el CTA del quinto diálogo carga el recorrido. Este copy es
 una maqueta para la futura cinemática con voz, no lore definitivo. Los parlamentos del Cronista
 muestran como speaker el nombre elegido por el jugador; «El Cronista» es sólo el fallback si
@@ -962,8 +962,12 @@ Cronista y la cuarta Fuente que completa el contenedor de Energía inferior izqu
 **Juega Río de Elarion**. La guía exige la cuarta Fuente y
 Aelyra con objetivo libre; después de elegir su objetivo, **Cancelar** y el clic derecho global
 permiten deseleccionarlo sin cancelar la Invocación. El director deja defensa libre y marca en
-dorado **Mi Turno** sólo después de aceptar las ayudas contextuales pendientes: Vida y, si hubo
-un choque con supervivientes, la limpieza del daño marcado; luego exige Vaelor,
+dorado **Mi Turno** sólo después de aceptar las ayudas contextuales pendientes: primero Vida y,
+justo antes del botón, si hubo un choque con supervivientes, la recuperación del Aguante. Al
+confirmar **Mi Turno**, explica **Conserva la Energía que no uses** antes de ejecutar el cambio de
+turno; después deja visible la preparación de Fuentes, la transferencia a Reserva y el robo de
+**Flor del Alba**, y sólo con esas presentaciones asentadas abre **Usa tu Energía para Invocar
+nuevos Ecos**. Luego exige Vaelor,
 hace obligatoria una única inspección de la Cosechadora y permite Flor antes, después o nunca. Las pruebas enumeran todas las
 defensas legales y esas ramas, que convergen en Cosechadora 7/9, y certifican cero o un descarte
 opcional antes de la primera Estampida. El recorrido ya continúa después de `host.surgeStarted`: los
@@ -993,13 +997,15 @@ no robados—, de modo que el subrayado cubre la frase completa. Vida se define 
 supervivencia del Cronista y Reserva explica que conserva hasta 3 de Energía para el turno siguiente
 y la utiliza antes que las Fuentes. En la primera Estampida el orden es contractual: termina la
 animación, aparece su ayuda contextual sobre el tablero asentado y sólo al aceptarla se revelan los
-Ecos. La ayuda de Mano vacía no ilumina la Mano. En el desenlace de Aprender a jugar, tanto
+Ecos. La ayuda de Mano vacía no ilumina la Mano y, mientras está visible, bloquea todo el tablero:
+no se pueden mover, jugar ni activar cartas hasta aceptarla. En el desenlace de Aprender a jugar, tanto
 **Visión perdida** como **Contemplar otro Futuro** quedan centrados horizontalmente.
 
 El cierre terminal calcula desde el tablero vivo el mínimo de llegadas que vuelve inevitable la
 derrota, verifica la mejor defensa con el resolutor real y presenta cada carta mediante su llegada
 normal, una a una. La Vida llega a 0 por el combate real; `learn-to-play` reutiliza el quiebre de
-derrota y muestra sólo **Contemplar otro Futuro** con copy narrativo propio. Tras aceptar la
+derrota; el copy narrativo **Llegamos demasiado tarde** aparece dos segundos después y muestra sólo
+**Contemplar otro Futuro**. Tras aceptar la
 narración, el botón registra el recorrido como completado, ejecuta el vórtice y abre
 `HF1-ELA-GRV-082-QC5` como una Visión normal. La Fase 6B aplazada conserva únicamente el mulligan final,
 el gate de primera apertura y la durabilidad durante la transición. En el código actual **Continuar** está deshabilitado globalmente; la política aprobada
@@ -1158,8 +1164,8 @@ posterior debe intentar iluminar su alias. Las Invocaciones de Liora y Maela inc
 `player.sources` mide la unión real de las dos pistas de orbes, no el panel decorativo de la esquina.
 Los checkpoints `observe` breves pueden declarar `callout: "hidden"`: conservan la espera estable
 entre acciones, pero no renderizan texto, fade, spotlight, anclas ni conectores y tampoco cuentan en
-la numeración visible. Las anclas de carta ocultan el marco dorado del spotlight y conservan la
-indicación propia de la carta; si aparece
+la numeración visible. Todas las anclas de carta, incluidos los Ecos señalados por ayudas
+contextuales, usan el mismo marco dorado animado que la indicación de **Mi Turno**; si aparece
 una acción contextual fuera de sus límites, el descendiente marcado con
 `data-guided-anchor-extension="true"` amplía el hueco interactivo y la zona evitada por el recuadro.
 El orbe de coste forma parte explícita de esos límites visuales para que el dimmer no lo recorte.

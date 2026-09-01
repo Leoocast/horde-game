@@ -123,7 +123,7 @@ export function ContextualTutorialCallout() {
   }, [visible]);
 
   useEffect(() => {
-    if (!visible || active?.policy !== "preventive") return;
+    if (!visible || (active?.policy !== "preventive" && !active?.blocksGameplayWhileVisible)) return;
     previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const frame = window.requestAnimationFrame(() => closeRef.current?.focus({ preventScroll: true }));
     return () => {
@@ -131,7 +131,7 @@ export function ContextualTutorialCallout() {
       if (previousFocusRef.current?.isConnected) previousFocusRef.current.focus({ preventScroll: true });
       previousFocusRef.current = null;
     };
-  }, [active?.conceptId, active?.policy, visible]);
+  }, [active?.blocksGameplayWhileVisible, active?.conceptId, active?.policy, visible]);
 
   if (!visible || !active || typeof document === "undefined") return null;
 
@@ -164,27 +164,33 @@ export function ContextualTutorialCallout() {
       className="contextual-tutorial-layer"
       data-policy={active.policy}
       data-concept-id={active.conceptId}
+      data-blocks-gameplay={active.blocksGameplayWhileVisible || undefined}
     >
       {connector && (
         <svg className="contextual-tutorial-connector-layer" aria-hidden="true">
           <path className="contextual-tutorial-connector" d={connector} />
         </svg>
       )}
-      {!missingAnchor && rects.map((rect, index) => resolved[index]?.showHighlight && (
-        <span
-          key={`${rect.key}:${rect.role}`}
-          className="contextual-tutorial-ring"
-          data-anchor-key={rect.key}
-          style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
-          aria-hidden="true"
-        />
-      ))}
+      {!missingAnchor && rects.map((rect, index) => {
+        if (!resolved[index]?.showHighlight) return null;
+        const isCardHighlight = rect.key.startsWith("card:");
+        return (
+          <span
+            key={`${rect.key}:${rect.role}`}
+            className={isCardHighlight ? "guided-tutorial-ring contextual-tutorial-ring" : "contextual-tutorial-ring"}
+            data-anchor-key={rect.key}
+            data-tone={isCardHighlight ? "gold" : undefined}
+            style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
+            aria-hidden="true"
+          />
+        );
+      })}
       <section
         ref={calloutRef}
         className="contextual-tutorial-callout"
         style={{ left: position.left, top: position.top, width: preferredCalloutWidth }}
         role="dialog"
-        aria-modal="false"
+        aria-modal={active.blocksGameplayWhileVisible ? "true" : "false"}
         aria-live="polite"
         aria-labelledby={titleId}
         aria-describedby={bodyId}

@@ -59,6 +59,8 @@ export type ContextualConceptDefinition = Readonly<{
   id: string;
   revision: number;
   policy: ContextualInterventionPolicy;
+  /** Some explanations describe a just-committed state and must temporarily own the whole board. */
+  blocksGameplayWhileVisible?: boolean;
   /** Tutorial journeys normally isolate progress; transferable fundamentals may opt into acknowledgement. */
   persistWhenAcknowledgedInIsolated?: boolean;
   /** Larger values are presented first when several signals arrive in the same synchronous beat. */
@@ -83,6 +85,7 @@ export type ContextualConceptPresentation = Readonly<{
   conceptId: string;
   revision: number;
   policy: ContextualInterventionPolicy;
+  blocksGameplayWhileVisible?: boolean;
   copy: ContextualConceptCopy;
   highlights: readonly ContextualHighlightRef[];
   placement?: GuidedCalloutPlacement;

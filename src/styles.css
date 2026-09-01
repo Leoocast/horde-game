@@ -11343,7 +11343,7 @@
   }
 }
 
-/* Contextual guidance shares semantic anchors with strict lessons, but never installs a shield. */
+/* Contextual guidance is non-blocking by default; authored state explanations may install a shield. */
 .contextual-tutorial-layer {
   position: fixed;
   z-index: 19940;
@@ -11353,6 +11353,10 @@
   background: rgb(1 3 4 / 0.18);
   color: #d7d4c3;
   font-family: "Trebuchet MS", Verdana, Tahoma, ui-sans-serif, system-ui, sans-serif;
+}
+
+.contextual-tutorial-layer[data-blocks-gameplay="true"] {
+  pointer-events: auto;
 }
 
 .contextual-tutorial-connector-layer {
@@ -21979,8 +21983,6 @@ body.playground-active .phase-banner-shell {
   transform: translateX(-50%) rotate(45deg);
 }
 
-.guided-tutorial-ring[data-anchor-key^="card:"] { display: none; }
-
 .guided-tutorial-overlay[data-mode="act"] .guided-tutorial-ring {
   transform-origin: center;
   will-change: filter, transform;
@@ -24559,16 +24561,12 @@ body.is-victory-clearing .game-battlefield-stage {
 }
 
 .seeds-library-empty h2 {
-  display: -webkit-box;
   width: 100%;
   max-width: 24ch;
-  overflow: hidden;
   margin: 0;
   font-size: clamp(30px, 3.7vw, 48px);
   line-height: 1.16;
   text-wrap: balance;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
 }
 
 .seeds-library-empty > p {

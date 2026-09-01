@@ -88,7 +88,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
     id: "marked-damage-clears",
     revision: 2,
     policy: "preventive",
-    priority: 75,
+    priority: 65,
     persistWhenAcknowledgedInIsolated: true,
     copy: {
       titleKey: "guided.contextual.product.markedDamageTitle",
@@ -210,6 +210,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
     id: "empty-hand-draw",
     revision: 2,
     policy: "informative",
+    blocksGameplayWhileVisible: true,
     priority: 95,
     copy: {
       titleKey: "guided.contextual.product.emptyHandDrawTitle",

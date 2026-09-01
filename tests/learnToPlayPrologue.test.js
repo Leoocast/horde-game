@@ -241,16 +241,16 @@ test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms comb
   assert.equal(LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION.steps[2].id, "explain-combat-stats");
   assert.deepEqual(
     LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps.map((step) => step.id),
-    ["player-turn-returned", "wait-for-energy-renewal", "explain-renewed-energy", "use-energy-for-echoes"],
+    ["player-turn-returned", "explain-renewed-energy", "wait-for-energy-renewal", "use-energy-for-echoes"],
   );
-  assert.equal(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps[1].callout, "hidden");
-  assert.deepEqual(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps[1].expectedReceipt, {
-    kind: "reserve.released",
-  });
-  assert.deepEqual(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps[2].highlights, [
+  assert.deepEqual(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps[1].highlights, [
     { kind: "surface", anchor: "player.sources" },
     { kind: "surface", anchor: "player.reserve" },
   ]);
+  assert.equal(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps[2].callout, "hidden");
+  assert.deepEqual(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps[2].expectedReceipt, {
+    kind: "reserve.released",
+  });
   assert.equal(LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION.revision, 2);
   assert.equal(LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION.startStepId, "explain-return-source");
   assert.deepEqual(

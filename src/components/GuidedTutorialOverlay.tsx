@@ -438,7 +438,7 @@ export function GuidedTutorialOverlay() {
           className="guided-tutorial-ring"
           data-anchor-key={rect.key}
           data-anchor-role={rect.role}
-          data-tone={showSilentSpotlight ? presentation.tone : undefined}
+          data-tone={rect.key.startsWith("card:") ? "gold" : showSilentSpotlight ? presentation.tone : undefined}
           style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
           aria-hidden="true"
         />

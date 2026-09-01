@@ -107,6 +107,11 @@ export class ContextualTutorialRuntime {
     const context = this.#readContext();
     if (context.guidedActive) return Object.freeze({ allowed: true });
     const active = this.#active;
+    if (active?.definition.blocksGameplayWhileVisible) {
+      this.#lastInterceptedConceptId = active.definition.id;
+      this.#emit();
+      return Object.freeze({ allowed: false, conceptId: active.definition.id });
+    }
     if (active?.definition.policy === "preventive" && active.definition.prevent?.(intent, context)) {
       this.#lastInterceptedConceptId = active.definition.id;
       this.#emit();
@@ -304,6 +309,7 @@ function presentationFrom(item: ContextualQueuedConcept): ContextualConceptPrese
     conceptId: item.definition.id,
     revision: item.definition.revision,
     policy: item.definition.policy,
+    blocksGameplayWhileVisible: item.definition.blocksGameplayWhileVisible,
     copy: item.definition.copy,
     highlights: Object.freeze([...(item.match.highlights ?? [])]),
     placement: item.match.placement,

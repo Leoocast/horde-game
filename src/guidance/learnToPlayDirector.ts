@@ -2,7 +2,7 @@ import type { GameStore } from "../store/useGameStore";
 import type { GuidedCardAlias } from "./contracts";
 import { contextualTutorialRuntime } from "./contextualProductRuntime";
 import type { GuidedInterventionOrchestrator } from "./interventionOrchestrator";
-import { runGuidedSystemAction, type GameplayIntent } from "./interactionGate";
+import { runGuidedSystemAction } from "./interactionGate";
 import { isGuidedPresentationSettled } from "./presentationSettled";
 import { guidedPresentationActivity, guidedSessionStore } from "./runtime";
 import { journeyIntentGate } from "./journeyIntentGate";
@@ -103,14 +103,6 @@ export function learnToPlayReturnSourceRequired(
     && game.player.hand.some((card) => card.instanceId === sourceId);
 }
 
-/** The empty-Hand explanation is informative globally, but this one tutorial gesture must wait. */
-export function learnToPlaySourceRecycleBlockedByOpenHelp(
-  intentKind: GameplayIntent["kind"],
-  activeConceptId?: string,
-): boolean {
-  return intentKind === "source.recycle" && activeConceptId === "empty-hand-draw";
-}
-
 /** Coordinates authored milestones while every actual rule remains owned by GameStore/engine. */
 export class LearnToPlayPrologueDirector {
   readonly #host: DirectorHost;
@@ -173,16 +165,6 @@ export class LearnToPlayPrologueDirector {
       journeyId: "learn-to-play",
       authorize: (intent) => {
         const game = this.#host.readStore().game;
-        if (intent.kind === "source.recycle" && learnToPlaySourceRecycleBlockedByOpenHelp(
-          intent.kind,
-          contextualTutorialRuntime.snapshot().active?.conceptId,
-        )) {
-          return Object.freeze({
-            allowed: false,
-            guidanceId: "learn-to-play.empty-hand-help-open",
-            relatedCardIds: Object.freeze([intent.cardId]),
-          });
-        }
         if (intent.kind === "phase.startPlayerTurn" && this.#playerReturnHandoffRequired(game)) {
           this.#requestPlayerReturnPrompt();
           return Object.freeze({
