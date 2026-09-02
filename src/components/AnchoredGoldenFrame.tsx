@@ -20,7 +20,13 @@ const subscribeAnchors = (listener: () => void) => guidedAnchorRegistry.subscrib
 const readAnchors = () => guidedAnchorRegistry.snapshot();
 
 /** Canonical Marco Dorado: one material for cards, buttons and semantic surfaces. */
-export function AnchoredGoldenFrame({ target, className = "" }: { target: Target; className?: string }) {
+export function AnchoredGoldenFrame({
+  target,
+  className = "",
+}: {
+  target: Target;
+  className?: string;
+}) {
   const anchors = useSyncExternalStore(subscribeAnchors, readAnchors, readAnchors);
   const [rect, setRect] = useState<DOMRect>();
   const rectRef = useRef<DOMRect | undefined>(undefined);

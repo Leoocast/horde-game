@@ -8,7 +8,9 @@ import {
   GuidedProgressStore,
   contextualConceptSeen,
   emptyGuidedProgress,
+  guidedJourneyCompleted,
   parseGuidedProgress,
+  tutorialContextualJourney,
 } from "../src/guidance/progress";
 import { firstCanonVisionDirector } from "../src/guidance/firstCanonVision";
 import { createLearnToPlayFirstMatchOrigin } from "../src/guidance/learnToPlayHandoff";
@@ -54,12 +56,6 @@ const PREVENTIVE_CONCEPT = Object.freeze({
   signalKinds: ["intent.attempted"],
   evaluate: () => undefined,
   prevent: (intent) => intent.kind === "card.play" ? {} : undefined,
-});
-
-const ISOLATED_PERSISTENT_CONCEPT = Object.freeze({
-  ...RESERVE_CONCEPT,
-  id: "isolated-persistent",
-  persistWhenAcknowledgedInIsolated: true,
 });
 
 const BLOCKING_CONCEPT = Object.freeze({
@@ -158,11 +154,49 @@ test("the first Canon director enforces one real mulligan and resumes the retain
     { allowed: false, conceptId: "first-canon-opening" },
   );
   assert.equal(firstCanonVisionDirector.snapshot().stage, "host-awakening-warning");
-  assert.equal(firstCanonVisionDirector.acknowledge().awakenHost, true);
+  assert.equal(firstCanonVisionDirector.acknowledge().awakenHost, false);
+  assert.equal(firstCanonVisionDirector.snapshot().stage, "host-awakening-commit");
+  assert.deepEqual(
+    firstCanonVisionDirector.authorizeIntent({ kind: "card.play", cardId: "echo:1" }),
+    { allowed: false, conceptId: "first-canon-opening" },
+    "the warning acknowledgement must not reopen other decisions",
+  );
+  assert.deepEqual(
+    firstCanonVisionDirector.authorizeIntent({ kind: "phase.awakenHost" }),
+    { allowed: true },
+    "only the player's second click commits the retained transition",
+  );
   assert.equal(firstCanonVisionDirector.snapshot().stage, "completed");
 
   firstCanonVisionDirector.beginLaunch({ source: "play", origin, sessionId: "game:import" });
-  assert.equal(firstCanonVisionDirector.snapshot().stage, "inactive", "importing the same seed never installs the ordered sequence");
+  assert.equal(firstCanonVisionDirector.snapshot().stage, "replay-choice-settling");
+  firstCanonVisionDirector.notifyOpeningCardsSettled(0);
+  assert.equal(firstCanonVisionDirector.snapshot().stage, "replay-choice");
+  assert.equal(firstCanonVisionDirector.chooseReplayGuidance("independent"), true);
+  assert.equal(firstCanonVisionDirector.snapshot().stage, "inactive");
+  assert.equal(firstCanonVisionDirector.snapshot().contextualHelpMode, "unseen");
+  assert.equal(firstCanonVisionDirector.snapshot().orderedSequenceActive, false);
+  firstCanonVisionDirector.resetForTests();
+  guidedProgressStore.resetForTests();
+});
+
+test("the first Canon ignores the normal checkbox and asks how to guide later attempts", () => {
+  guidedProgressStore.resetForTests();
+  firstCanonVisionDirector.resetForTests();
+  const origin = createLearnToPlayFirstMatchOrigin();
+
+  guidedProgressStore.setHideSeenContextualHelp(false);
+  firstCanonVisionDirector.beginLaunch({ source: "play", origin, sessionId: "game:first-import" });
+  assert.equal(firstCanonVisionDirector.snapshot().stage, "opening-settling");
+  assert.equal(firstCanonVisionDirector.snapshot().contextualHelpMode, "repeat");
+
+  firstCanonVisionDirector.beginLaunch({ source: "rewrite", origin, sessionId: "game:retry" });
+  firstCanonVisionDirector.notifyOpeningCardsSettled(0);
+  assert.equal(firstCanonVisionDirector.snapshot().stage, "replay-choice");
+  assert.equal(firstCanonVisionDirector.chooseReplayGuidance("guided"), true);
+  assert.equal(firstCanonVisionDirector.snapshot().stage, "opening-intro");
+  assert.equal(firstCanonVisionDirector.snapshot().contextualHelpMode, "repeat");
+
   firstCanonVisionDirector.resetForTests();
   guidedProgressStore.resetForTests();
 });
@@ -269,31 +303,40 @@ test("provisional acknowledgement commits atomically or rolls back completely", 
   fixture.dispose();
 });
 
-test("isolated tutorial sessions ignore global seen checks and never write global progress", () => {
+test("isolated tutorial sessions ignore global seen checks and record acknowledged learning", () => {
   const fixture = createRuntime([RESERVE_CONCEPT]);
-  fixture.progress.markConceptSeen("reserve-flow", 1, "2026-08-17T00:00:00.000Z");
   fixture.signals.beginSession("tutorial:1");
   fixture.runtime.beginSession("tutorial:1", "isolated");
   fixture.signals.publish({ kind: "player.reserveReleased", amount: 1 });
   fixture.drain();
   assert.equal(fixture.runtime.snapshot().active?.conceptId, "reserve-flow");
 
-  const progressBefore = fixture.progress.snapshot();
   fixture.runtime.acknowledgeActive("2026-08-17T03:00:00.000Z");
-  assert.strictEqual(fixture.progress.snapshot(), progressBefore);
+  assert.equal(contextualConceptSeen(fixture.progress.snapshot(), RESERVE_CONCEPT), true);
+  assert.equal(guidedJourneyCompleted(
+    fixture.progress.snapshot(),
+    tutorialContextualJourney(RESERVE_CONCEPT.id, RESERVE_CONCEPT.revision),
+  ), true);
   assert.deepEqual(fixture.runtime.snapshot().provisionalConcepts, []);
   fixture.dispose();
 });
 
-test("an explicitly transferable concept records acknowledgement from an isolated tutorial", () => {
-  const fixture = createRuntime([ISOLATED_PERSISTENT_CONCEPT]);
-  fixture.signals.beginSession("tutorial:transferable");
-  fixture.runtime.beginSession("tutorial:transferable", "isolated");
+test("Canon unseen and repeat modes remain independent from the normal repeat preference", () => {
+  const fixture = createRuntime([RESERVE_CONCEPT]);
+  fixture.progress.markConceptSeen("reserve-flow", 1, "2026-08-17T00:00:00.000Z");
+  fixture.progress.setHideSeenContextualHelp(false);
+
+  fixture.signals.beginSession("canon:unseen");
+  fixture.runtime.beginSession("canon:unseen", "unseen");
   fixture.signals.publish({ kind: "player.reserveReleased", amount: 1 });
   fixture.drain();
-  fixture.runtime.acknowledgeActive("2026-08-30T00:00:00.000Z");
+  assert.equal(fixture.runtime.snapshot().status, "idle");
 
-  assert.equal(contextualConceptSeen(fixture.progress.snapshot(), ISOLATED_PERSISTENT_CONCEPT), true);
+  fixture.signals.beginSession("canon:repeat");
+  fixture.runtime.beginSession("canon:repeat", "repeat");
+  fixture.signals.publish({ kind: "player.reserveReleased", amount: 1 });
+  fixture.drain();
+  assert.equal(fixture.runtime.snapshot().active?.conceptId, "reserve-flow");
   fixture.dispose();
 });
 
@@ -353,6 +396,25 @@ test("a blocking contextual explanation rejects every gameplay intent while it i
   fixture.dispose();
 });
 
+test("a queued blocking explanation rejects gameplay before presentation can show it", () => {
+  let ready = false;
+  const fixture = createRuntime([BLOCKING_CONCEPT], () => ({ presentationReady: ready }));
+  fixture.signals.publish({ kind: "player.reserveReleased", amount: 1 });
+  fixture.drain();
+
+  assert.equal(fixture.runtime.snapshot().status, "waiting");
+  assert.deepEqual(
+    fixture.runtime.authorizeIntent({ kind: "card.play", cardId: "echo:1" }),
+    { allowed: false, conceptId: "blocking-explanation" },
+  );
+
+  ready = true;
+  fixture.runtime.refresh();
+  fixture.drain();
+  assert.equal(fixture.runtime.snapshot().active?.conceptId, "blocking-explanation");
+  fixture.dispose();
+});
+
 test("strict guided sessions remain authoritative over preventive contextual concepts", () => {
   const fixture = createRuntime([PREVENTIVE_CONCEPT], () => ({ guidedActive: true }));
   assert.equal(fixture.runtime.authorizeIntent({ kind: "card.play", cardId: "source:1" }).allowed, true);
@@ -381,6 +443,44 @@ test("contextual callout supports authored modal blocking and stays mounted sepa
   assert.match(component, /resolved\[index\]\?\.showHighlight/u);
   assert.doesNotMatch(component, /addEventListener\("pointerdown"/u);
   assert.match(board, /<GuidedTutorialOverlay\s*\/>\s*<ContextualTutorialCallout\s*\/>/u);
+});
+
+test("first-Canon Evy narration overlays gameplay without moving the Hand", async () => {
+  const [opening, firstCanon, firstCanonRuntime, contextual, cardPreview, learnDirector, styles] = await Promise.all([
+    readFile(new URL("../src/components/OpeningHandOverlay.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/FirstCanonVisionCallout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/guidance/firstCanonVisionProductRuntime.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/ContextualTutorialCallout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/CardPreview.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/guidance/learnToPlayDirector.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/styles.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(opening, /<GuidedTutorialDialog[\s\S]*title=\{t\("guided\.learnToPlay\.intro\.evy"\)\}/u);
+  assert.match(opening, /createPortal\(/u);
+  assert.match(opening, /openingInteractionLocked/u);
+  assert.match(opening, /event\.target !== event\.currentTarget/u);
+  assert.match(opening, /event\.animationName !== "opening-hand-card-enter"/u);
+  assert.match(opening, /openingCardsSettled \? "is-settled"/u);
+  assert.match(opening, /chooseFirstCanonVisionGuidance\("guided"\)/u);
+  assert.match(opening, /chooseFirstCanonVisionGuidance\("independent"\)/u);
+  assert.match(firstCanonRuntime, /mode === "repeat" \? "repeat" : "unseen"/u);
+  assert.match(firstCanonRuntime, /tutorialContextualJourney/u);
+  assert.match(firstCanonRuntime, /suppressConceptsForSession/u);
+  assert.match(firstCanon, /className="first-canon-narration first-canon-evy-dialog"/u);
+  assert.match(firstCanon, /<mask id=\{FIRST_CANON_MASK_ID\}/u);
+  assert.doesNotMatch(firstCanon, /onArrivalComplete|completeHostAwakening/u);
+  assert.match(contextual, /const speaker = active\.copy\.speakerKey/u);
+  assert.doesNotMatch(opening, /first-canon-narration-topic/u);
+  assert.doesNotMatch(firstCanon, /first-canon-narration-topic/u);
+  assert.doesNotMatch(contextual, /contextual-evy-topic/u);
+  assert.match(styles, /\.guided-tutorial-callout\.opening-hand-narration\s*\{[^}]*position:\s*absolute;/su);
+  assert.match(styles, /\.opening-hand-narration-layer\s*\{[^}]*position:\s*fixed;/su);
+  assert.doesNotMatch(styles, /\.opening-hand-layout:has\(\.opening-hand-narration\)/u);
+  assert.doesNotMatch(cardPreview, /card-preview-locked-close/u);
+  assert.match(learnDirector, /activateContextualSessionPolicy/u);
+  assert.match(learnDirector, /suppressConceptsForSession\(\["low-life-contemplate"\]\)/u);
+  assert.match(styles, /\.opening-hand-card-entry\.is-settled\s*\{[^}]*animation:\s*none;/su);
 });
 
 function createRuntime(concepts, overrideContext = () => ({})) {

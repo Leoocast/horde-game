@@ -359,8 +359,8 @@ export function GuidedTutorialOverlay() {
     title,
     preferredCalloutWidth,
     GUIDED_CALLOUT_PROFILE,
-    10,
-    25,
+    11,
+    27.5,
   );
   const positionedCalloutSize = comparisonCards.length > 0
     ? calloutSize
@@ -407,7 +407,7 @@ export function GuidedTutorialOverlay() {
       data-card-preview-visible={cardPreviewVisible ? "true" : "false"}
       data-feedback-pulse={feedbackPulse}
     >
-      {showCallout && (
+      {(showCallout || showSilentSpotlight) && (
         <>
           <svg className="guided-tutorial-mask" aria-hidden="true">
             <defs>

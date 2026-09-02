@@ -94,6 +94,7 @@ export const GUIDED_SURFACE_ANCHORS = [
   "player.life",
   "host.field",
   "host.archive",
+  "host.poison",
   "host.memory",
   "card.preview",
   "destiny.contemplateAgain",

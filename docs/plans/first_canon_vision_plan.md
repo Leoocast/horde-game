@@ -32,42 +32,40 @@ ayudas contextuales pedidas para la Visión posterior.
 apertura de la aplicación ni la migración de perfiles existentes; esas decisiones siguen abiertas
 en `learn_to_play_implementation_plan.md`.
 
-El trabajo aquí descrito sigue siendo un plan. Cada fase debe revisarse antes de modificar código.
-
 ## Decisiones de producto cerradas
 
 - La partida sigue siendo una Visión normal. Las ayudas observan y acotan acciones concretas, pero
   no reconstruyen el estado mediante una receta guiada ni alteran el orden de los Archivos.
-- La secuencia ordenada de Mano y Preparación se presenta obligatoriamente en el primer handoff
-  desde **Aprender a jugar**. La preferencia de repetición no puede suprimir ese primer encuentro.
-- Al Contemplar de nuevo este Futuro, la secuencia sólo reaparece si la preferencia existente
-  **No volver a mostrar explicaciones ya vistas** permite repetirlas. No se añade un interruptor
-  maestro distinto en este plan.
-- Un concepto contextual no visto conserva siempre su primera aparición. Uno visto sólo reaparece
-  cuando se permiten repeticiones, con un máximo de una aparición por concepto y Visión.
-- Mano vacía, Devolver Fuente, Volar y Estampida son recapitulaciones exigidas una vez por el perfil
-  de primera Visión Canon aunque el prólogo ya haya marcado el concepto global como visto. Cada una
-  espera a que ocurra su contexto real; después de mostrarse una vez, vuelve a obedecer la
-  preferencia global normal.
-- La elegibilidad de repetición se fija al crear la nueva Visión. Cambiar la preferencia durante una
-  secuencia ya iniciada no deja gates a medio liberar ni cancela el cuadro actual; el nuevo valor se
-  aplica a la siguiente Visión.
+- La secuencia ordenada de Mano y Preparación se presenta obligatoriamente la primera vez que se
+  juega la Inscripción, tanto desde **Aprender a jugar** como mediante importación directa.
+- El checkbox **No volver a mostrar explicaciones ya vistas** pertenece únicamente a partidas
+  normales. No gobierna **Aprender a jugar** ni `HF1-ELA-GRV-082-QC5`.
+- Aprender a jugar registra globalmente cada ayuda aceptada y los conceptos equivalentes enseñados
+  por su secuencia estricta. La primera Visión Canon conserva la secuencia ordenada y sus ayudas
+  propias; sólo suprime los conceptos cuya procedencia registrada es el tutorial recién recorrido.
+- En un reintento mediante **Contemplar de nuevo**, o al volver a importar la seed después de haberla
+  jugado, Evy pregunta antes de cualquier explicación. **Guíame de nuevo** repite la secuencia y sus
+  ayudas; **Estoy preparado** omite la secuencia ordenada y mantiene sólo ayudas aún no vistas.
+- Cada concepto sigue apareciendo como máximo una vez por Visión. Toda aceptación en tutorial o
+  Canon se registra para que una futura partida normal pueda suprimirla.
 - **Marco Dorado** es el nombre canónico de la animación de marco usada para señalar una carta,
   botón o superficie accionable. Se reutiliza el mismo material y movimiento ya usado en **Mi
   Turno**, Ecos y cartas de la Mano; no se crea otro efecto parecido.
 - Durante los cuadros de la Mano se bloquean el hover, el preview y las acciones de sus cartas.
   Música y Ajustes permanecen visibles, accesibles y utilizables con puntero y teclado.
+- Toda intervención hablada por Evy reutiliza el material y la jerarquía del diálogo inicial de
+  **Aprender a jugar**, con **Evy** como único título superior y sin subtítulo temático. El cuerpo de
+  estos cuadros y de las demás ayudas contextuales usa una escala tipográfica 1,1 veces mayor que la
+  original.
 - **Choque de Ecos** se explica al jugador como un Hechizo Rápido que puede lanzarse «en cualquier
   momento». Esa formulación es el lenguaje pedagógico aprobado para sus ventanas actuales; este
   plan no añade prioridad durante animaciones ni cambia la resolución del engine.
-- **Hechizo Básico** es una categoría pedagógica para un `SPELL` sin `QUICK`; no añade un modifier
-  `BASIC`, no cambia los datos de Escudo y no amplía el schema de cartas.
 - **El Santuario Quebrado** muestra en su detalle la placa **Otorga: Imponente**, con la misma
   jerarquía visual que una palabra clave. El Apoyo no adquiere `DAUNTING`: concede Imponente a los
   Zombis aliados mientras permanece en el Campo.
 - El umbral de Vida de esta ayuda es estricto: se activa al cruzar de 10 o más a menos de 10.
 - Los textos en español son la base de implementación. Las formulaciones fijadas expresamente por
-  el usuario —Hechizo Básico, Hechizo Rápido y Letal— son contractuales; el resto conserva la idea
+  el usuario —Hechizo Rápido y Letal— son contractuales; el resto conserva la idea
   aprobada y admite pulido de voz durante QA sin cambiar su aprendizaje. La versión en inglés se
   redactará con la misma intención, longitud aproximada y precisión antes de cerrar cada fase.
 
@@ -124,15 +122,15 @@ y no depende de interpretar qué carta era «relevante».
 
 | Lanzamiento | Estado previo | No repetir vistas | Resultado |
 | --- | --- | --- | --- |
-| Primer `learn-to-play-handoff` con milestone incompleto | Grupo no completado | Cualquier valor | Presenta la secuencia ordenada completa; es el primer encuentro contractual. |
-| Handoff posterior, `rewrite` o `history-replay` del mismo Futuro | Grupo completado | Activado | No repite Mano ni Preparación; los conceptos posteriores vistos también se suprimen. |
-| Handoff posterior, `rewrite` o `history-replay` del mismo Futuro | Grupo completado | Desactivado | Repite la secuencia desde el comienzo, como máximo una vez en esa Visión. |
-| Restore de la misma sesión, sólo cuando la capability de resume está habilitada | Grupo parcial | Valor fijado al lanzar | Rehidrata el siguiente paso pendiente; no vuelve a ejecutar el mulligan ni repite cuadros aceptados. |
-| Importación o partida nueva con `source: "play"` | Cualquier estado | Cualquier valor | No instala la secuencia ordenada sólo por coincidir el código de seed. Los conceptos globales siguen su política normal. |
+| Primera entrada a la seed, por handoff o `play` | No iniciada | Cualquier valor | Secuencia y ayudas canónicas completas, salvo conceptos registrados como enseñados por Aprender a jugar. |
+| `rewrite`, `history-replay` o nueva importación | Seed ya iniciada | Cualquier valor | Evy pregunta en el mulligan antes de iniciar la guía. |
+| Elección **Guíame de nuevo** | Seed ya iniciada | Cualquier valor | Repite secuencia ordenada y ayudas contextuales, una vez cada una en la Visión. |
+| Elección **Estoy preparado** | Seed ya iniciada | Cualquier valor | Mulligan normal sin secuencia; sólo aparecen conceptos aún no vistos. |
+| Partida fuera de tutorial y Canon 1 | Cualquier estado | Activado | Oculta conceptos vistos globalmente. |
+| Partida fuera de tutorial y Canon 1 | Cualquier estado | Desactivado | Permite repetir conceptos vistos, una vez por partida. |
 
-Para esta decisión de repetición, «tener activadas las ayudas contextuales» significa permitir que
-las explicaciones ya vistas vuelvan a mostrarse; en la preferencia vigente, **No volver a mostrar
-explicaciones ya vistas** debe estar desactivada.
+La elección de Evy queda fijada para ese intento y es independiente de cualquier cambio posterior
+en Ajustes. La seed canónica nunca desactiva ayudas aún no vistas por causa del checkbox normal.
 
 El grupo de Mano/Preparación tiene un milestone de finalización versionado y etapas efímeras por
 sesión. Si una Visión termina antes de completar el grupo, una nueva Visión elegible lo reinicia
@@ -146,8 +144,22 @@ intento histórico y no restaura la partida. Ningún caso se infiere sólo desde
 
 ## Experiencia ordenada de Mano inicial
 
-La explicación vive dentro del diálogo real de apertura. Se reserva una franja sobre las cartas;
-no se monta un segundo `aria-modal` encima ni se permite que el cuadro cubra la Mano.
+La explicación se monta como un overlay absoluto por encima del diálogo real de apertura. No forma
+parte del layout que distribuye las cartas, no las desplaza ni reduce su escala y conserva una sola
+superficie modal accesible a la vez.
+
+### Elección al volver a la Visión
+
+Si el perfil ya inició esta seed, las cartas terminan de entrar y Evy abre este diálogo antes de
+cualquier otro cuadro:
+
+> Cronista, ya has recorrido esta Visión. ¿Quieres que vuelva a guiarte entre sus Ecos, o te sientes
+> preparado para tomar lo aprendido y aplicarlo por tu cuenta?
+
+**Guíame de nuevo** enlaza directamente con **Un Futuro ya vivido**, sin repetir la entrada de las
+cartas. **Estoy preparado** libera el mulligan normal y conserva únicamente ayudas no vistas. En
+ambos casos las cartas quedan visualmente asentadas: el cambio de diálogo no reinicia su animación,
+no altera el layout y el hover espera a que el puntero salga de la Mano.
 
 ### 1. Un Futuro ya vivido
 
@@ -200,7 +212,8 @@ cartas, cambios de fase ni otra presentación global.
 
 ### 1. Concentrar la mente
 
-El primer cuadro se acompaña con Marco Dorado en `setup.progress`, arriba a la izquierda:
+El primer cuadro aparece junto a `setup.progress` y se acompaña con Marco Dorado en esa superficie.
+El recorte del dimmer deja el progreso real de Preparación por delante del fade negro:
 
 > **Concentrar la mente**  
 > Al iniciar una Visión, debemos concentrar la mente, Cronista. Tendremos tres turnos de Preparación
@@ -208,7 +221,8 @@ El primer cuadro se acompaña con Marco Dorado en `setup.progress`, arriba a la 
 
 ### 2. El límite de la concentración
 
-Antes de liberar el juego aparece el segundo cuadro:
+Antes de liberar el juego aparece el segundo cuadro junto a `player.reserve`; el Marco Dorado
+señala los sockets amarillos de Energía almacenada:
 
 > **El límite de la concentración**  
 > Sin embargo, mientras estemos tan concentrados en la Visión, no podremos conservar la Energía
@@ -221,15 +235,18 @@ y el jugador conserva libertad normal durante los tres turnos.
 ### 3. La Hueste despierta
 
 Cuando el jugador pulsa **Terminar turno** en Preparación 3/3, el director retiene esa intención y
-abre el aviso antes de que comiencen revelados o ataques. Mientras está visible no se vuelve a abrir
-el tablero ni se permite cambiar decisiones. No se le pide revisar el Campo ni repetir el clic: sus
-decisiones ya fueron tomadas y el cuadro es sólo un aviso.
+abre junto al botón el aviso antes de que comiencen revelados o ataques. Mientras está visible no se vuelve a abrir
+el tablero ni se permite cambiar decisiones. No se le pide revisar el Campo: sus decisiones ya fueron
+tomadas y el cuadro es sólo un aviso.
 
 > **La Hueste despierta**  
 > Cronista, espero que hayas tomado tus mejores decisiones. La Preparación ha terminado; a partir
 > de este turno, la Hueste atacará.
 
-Al aceptar, la misma intención se autoriza automáticamente y comienza el turno de la Hueste.
+Al aceptar se cierra el cuadro y sólo entonces comienza la llegada del Marco Dorado sobre el botón.
+El Marco permanece sobre **Terminar turno** y el tablero continúa bloqueado: el jugador debe pulsar
+ese botón una segunda vez para confirmar el paso. Sólo ese segundo clic autoriza la intención y
+comienza el turno de la Hueste; nunca se anima el botón mientras el aviso sigue abierto.
 
 ## Catálogo contextual de esta Visión
 
@@ -237,25 +254,25 @@ Cada concepto usa señales, resultados y estado tipado. Ninguno se activa leyend
 visible, un nombre CSS o un timeout. Las identidades concretas pertenecen al catálogo de producto;
 el runtime genérico continúa siendo independiente de decks y cartas.
 
-Las cuatro recapitulaciones procedentes del prólogo llevan un ledger `first-canon-recap` separado.
-Si una no ocurre en el primer intento, permanece pendiente para la siguiente Visión de este mismo
-Futuro hasta encontrar su situación real. Mostrarla consume sólo ese recap; no borra ni duplica el
-progreso global del concepto.
+Los conceptos que Aprender a jugar ya presentó llevan un milestone de procedencia y no se repiten
+en la primera entrada canónica; un concepto visto sólo fuera del tutorial no desactiva la guía de
+esta seed. Si el
+jugador elige **Guíame de nuevo** en una repetición, el modo de ese intento permite volver a
+mostrarlos; si elige **Estoy preparado**, sólo se conserva lo pendiente.
 
 | Concepto | Disparador semántico | Presentación y comportamiento | Copy español |
 | --- | --- | --- | --- |
-| Hechizo Básico | Primer `card.played` de **Escudo de la Heredera**, validado como `SPELL` sin `QUICK`. | Cuadro informativo después de resolver el Hechizo. | **Hechizo Básico** — «Escudo de la Heredera es un Hechizo Básico. Sólo puedes lanzarlo durante tu fase Principal.» |
-| Imponente | Primer defensor asignado a un atacante que posee Imponente en ese estado. | Resaltar atacante y defensores. Aparece tras la primera asignación, antes de confirmar una defensa insuficiente. | **Imponente** — «Un Eco Imponente sólo puede ser contenido por dos o más defensores. Los enfrentará uno por uno, en el mismo orden en que los asignes.» |
-| Mano vacía | Robo automático de dos cartas con la Mano realmente vacía. | Reutilizar el mismo cuadro del tutorial; bloquea el tablero mientras está visible. | «Al comenzar tu turno con la Mano vacía, robas 2 cartas en lugar de 1.» |
-| Quinta Fuente | Rechazo tipado al intentar jugar una quinta Fuente con el contenedor completo. | Reutilizar el mismo cuadro e interacción de **Devolver Fuente** del tutorial. | Se conserva el copy vigente de **Devolver Fuente**. |
+| Imponente | Primer defensor asignado a un atacante que posee Imponente en ese estado. | Marco Dorado únicamente en el Eco atacante de la Hueste. Aparece tras la primera asignación, antes de confirmar una defensa insuficiente. | **Imponente** — «Un Eco Imponente sólo puede ser contenido por dos o más defensores. Los enfrentará uno por uno, en el mismo orden en que los asignes.» |
+| Mano vacía | Robo automático de dos cartas con la Mano realmente vacía. | Reutilizar el mismo cuadro del tutorial; bloquea el tablero desde que queda en cola, incluso antes de que la presentación pueda mostrarlo. | «Al comenzar tu turno con la Mano vacía, robas 2 cartas en lugar de 1.» |
+| Quinta Fuente | Rechazo tipado al intentar jugar una quinta Fuente con el contenedor completo. | Reutilizar el mismo cuadro e interacción de **Devolver Fuente** del tutorial y conservar visible la línea punteada entre la Fuente y el Archivo durante el paso de acción. | Se conserva el copy vigente de **Devolver Fuente**. |
 | Hechizo Rápido | Turno de la Hueste, atacantes declarados y **Choque de Ecos** realmente disponible para jugar. | Levantar Choque mediante el estado visual de Mano y poner Marco Dorado. El levantamiento termina al jugarlo, perder la ventana, cerrar la ayuda o cambiar de sesión. | **Hechizo Rápido** — «Choque de Ecos es un Hechizo Rápido: puedes lanzarlo en cualquier momento.» |
 | Estampida | Primera `host.surgeStarted`, después de su animación y antes de continuar con los revelados. | Cuadro bloqueante sobre el tablero asentado; al aceptarlo continúan los revelados. | **La Estampida** — «¡Cronista! Ha llegado el momento. En cada Visión, al llegar el turno 10, la Hueste entra en Estampida y su ofensiva se vuelve mucho más peligrosa. Ten cuidado.» |
-| Veneno | La Hidra hace daño de Batalla a la Hueste y añade Veneno. | Esperar a que terminen impacto y contadores; resaltar Hidra y contador de Veneno. | **Veneno** — «Cada vez que la Hidra dañe a la Hueste, dejará 1 de Veneno. Al acumular 3, la Hueste descartará una carta de su Archivo.» |
-| Furtivo | Intento rechazado con `FURTIVE_BLOCK_RESTRICTION`. | Cuadro reactivo anclado al atacante y al defensor inválido. | **Furtivo** — «Los Ecos Furtivos eluden a quienes los superan en Fuerza. Sólo un Eco con Fuerza igual o menor puede cerrarles el paso.» |
-| Letal | Primer intento de asignar un defensor a un atacante Letal. | Intervención preventiva: explica antes de comprometer la asignación y permite repetirla después. | **Letal** — «Ten cuidado, Cronista: cualquier cantidad de daño de un Eco Letal destruye al defensor, sin importar su Aguante.» |
+| Veneno | La Hidra hace daño de Batalla a la Hueste y añade Veneno. | Esperar a que terminen impacto y contadores; resaltar Hidra y contador de Veneno, con el cuadro junto al marcador de la Hueste. | **Veneno** — «Cada vez que la Hidra dañe a la Hueste, dejará 1 de Veneno. Al acumular 3, la Hueste descartará una carta de su Archivo.» |
+| Furtivo | Intento rechazado con `FURTIVE_BLOCK_RESTRICTION`. | Cuadro reactivo con Marco Dorado únicamente en el Eco atacante de la Hueste. | **Furtivo** — «Los Ecos Furtivos eluden a quienes los superan en Fuerza. Sólo un Eco con Fuerza igual o menor puede cerrarles el paso.» |
+| Letal | Primer intento de asignar un defensor a un atacante Letal. | Intervención preventiva con Marco Dorado únicamente en el Eco atacante; explica antes de comprometer la asignación y permite repetirla después. | **Letal** — «Ten cuidado, Cronista: cualquier cantidad de daño de un Eco Letal destruye al defensor, sin importar su Aguante.» |
 | Volar | Intento rechazado con `BLOCK_REQUIRES_FLYING_OR_SKYGUARD`. | Reutilizar el mismo cuadro del tutorial, anclado a ambas cartas. | Se conserva el copy vigente de Volar y Guardia aérea. |
 | Apoyo de la Hueste | **El Santuario Quebrado** termina de entrar y todas sus auras, buffs y VFX están asentados. | Cuadro cerca del Apoyo y Marco Dorado sobre la carta. | **Los Apoyos de la Hueste** — «A veces, la Hueste invoca Apoyos para fortalecer a sus Ecos. Mientras El Santuario Quebrado permanezca en el Campo, sus Zombis serán Imponentes.» |
-| Vida menor de 10 | Un ataque de la Hueste termina y la Vida cruza de `>= 10` a `< 10`, sin resultado terminal. | Cuadro tras todas las animaciones. Al cerrarlo queda un Marco Dorado no bloqueante en **Contemplar de nuevo**; no obliga a usarlo. | **Todavía podemos aprender** — «La Visión se estrecha, Cronista, pero nada de lo aprendido se pierde. Puedes Contemplar de nuevo este Futuro y regresar con cada decisión más clara. A veces, la victoria empieza por recordar cómo caímos.» |
+| Vida menor de 10 | Un ataque de la Hueste termina y la Vida cruza de `>= 10` a `< 10`, sin resultado terminal. | Cuadro de Evy tras todas las animaciones, sólo en una Visión normal y nunca dentro de **Aprender a jugar**. Al cerrarlo queda un Marco Dorado no bloqueante en **Contemplar de nuevo**; no obliga a usarlo. | **Todavía podemos aprender** — «La Visión se estrecha, Cronista, pero nada de lo aprendido se pierde. Puedes Contemplar de nuevo este Futuro y regresar con cada decisión más clara. A veces, la victoria empieza por recordar cómo caímos.» |
 
 El copy presenta como regla de producto aprobada que la Estampida llega en el turno 10 de cada
 Visión. El disparador técnico no cuenta turnos por su cuenta: escucha `host.surgeStarted`, de modo
@@ -288,7 +305,7 @@ El click derecho vigente abre el `CardPreview` bloqueado. La fase visual debe:
 
 - añadir un fade negro sutil a su capa de descarte, sin modificar el fondo del overlay de Mano;
 - mantener la carta y sus explicaciones como foco dominante, sin blur pesado;
-- cerrar con click exterior, botón visible o Escape;
+- cerrar con click exterior o Escape, sin una X sobre la imagen;
 - declarar semántica de diálogo, foco inicial, contención de foco y restauración al origen;
 - ofrecer una ruta equivalente por teclado para inspeccionar una carta;
 - aplicar el mismo tratamiento al detalle ampliado que sí sea alcanzable en runtime.
@@ -314,12 +331,13 @@ Imponente como Rasgo efectivo mediante `getTraits`.
 Crear un director pequeño y versionado, separado de `GuidedLessonDefinition`, con etapas derivadas
 de receipts y checkpoints estables:
 
-`opening-intro -> await-mulligan -> mulligan-settling -> keep-hand -> preparation-intro ->`
+`replay-choice? -> opening-intro -> await-mulligan -> mulligan-settling -> keep-hand -> preparation-intro ->`
 `preparation-energy -> free-play -> host-awakening-warning -> completed`
 
 El director:
 
-- se instala por procedencia y preferencias, no por nombres dentro de componentes;
+- se instala por la identidad canónica exacta y el milestone de intento, no por la preferencia
+  global ni por nombres visibles dentro de componentes;
 - autoriza o bloquea sólo `opening.accept` y `opening.mulligan` durante la secuencia de Mano;
 - suprime sólo interacciones de carta cuando un cuadro lo requiere;
 - observa el `GameState` vivo y nunca reconstruye la partida;
@@ -352,7 +370,6 @@ cambio pedagógico sustancial pueda volver a enseñarse sin resetear conceptos n
 
 Reutilizar las señales existentes donde ya expresan el hecho real:
 
-- `card.played` para Hechizo Básico;
 - `blocker.assigned` para Imponente;
 - `action.denied` tipado para Furtivo, Volar y quinta Fuente;
 - `host.attackersDeclared` para buscar Choque realmente jugable;
@@ -374,8 +391,8 @@ consultar timing, Energía, targets y reglas reales sin duplicarlas en el concep
 
 - Registrar este plan como autoridad post-handoff y retirar decisiones obsoletas de los planes
   anteriores.
-- Fijar el milestone versionado del grupo Mano/Preparación y su matriz con
-  `hideSeenContextualHelp`.
+- Fijar el milestone versionado del grupo Mano/Preparación, la procedencia de conceptos enseñados
+  por tutorial y la separación respecto de `hideSeenContextualHelp`.
 - Certificar la Mano inicial, el primer mulligan, ambos Archivos completos,
   `currentRandomState` y la secuencia exacta de robos de `HF1-ELA-GRV-082-QC5`.
 - Fijar ids y revisiones de conceptos, copies ES y equivalentes EN.
@@ -390,8 +407,8 @@ consultar timing, Energía, targets y reglas reales sin duplicarlas en el concep
   el mismo checkpoint normal.
 - Hacer atómico o recuperable el tramo CTA -> vórtice -> partida normal mediante un marcador de
   handoff acotado, sin habilitar checkpointing en la demo.
-- Probar que importar la seed no instala el director y que **No volver a mostrar** suprime un grupo
-  ya completado al repetir la Visión.
+- Probar que importar la seed instala el director, que una repetición abre la elección de Evy y que
+  el checkbox normal no altera ninguna de las dos rutas.
 
 **Cierre:** no existen tutorial completado huérfano, intento histórico duplicado por la recuperación
 ni checkpoint de demo escrito por accidente.
@@ -399,7 +416,7 @@ ni checkpoint de demo escrito por accidente.
 ### Fase 2 — Mano y mulligan
 
 - Añadir anchor de **Volver a robar** y receipt de mulligan completado.
-- Reservar el panel narrativo sobre las cartas.
+- Superponer el panel narrativo sobre las cartas sin incluirlo en su layout.
 - Implementar los tres estados visibles, el scope de hover y el único mulligan real.
 - Cubrir doble clic, teclado, foco, Settings, Música y cierre/reanudación.
 
@@ -410,22 +427,24 @@ adicional.
 
 - Esperar el banner y registrar el Marco Dorado de `setup.progress`.
 - Presentar **Concentrar la mente** y **El límite de la concentración** antes de liberar el juego.
-- Retener la intención de terminar Preparación 3/3, mostrar **La Hueste despierta** y autorizar esa
-  misma intención automáticamente al aceptar, sin pedir otro clic ni reabrir decisiones.
+- Retener la intención de terminar Preparación 3/3, mostrar **La Hueste despierta** junto al botón y,
+  al aceptar, animar el Marco Dorado y permitir únicamente un segundo clic sobre **Terminar turno**,
+  sin reabrir las demás decisiones.
 - Mantener Reserva directa utilizable y no introducir una regla falsa en tooltips o copy.
 
 **Cierre:** los cuadros nunca pisan robos, banners, revelados o animaciones; el aviso final no
 ofrece decisiones que ya no existen.
 
-### Fase 4 — Conceptos de reglas y recaps
+### Fase 4 — Conceptos de reglas y procedencia tutorial
 
-- Añadir Hechizo Básico, Imponente, Hechizo Rápido, Veneno, Furtivo y Letal.
+- Añadir Imponente, Hechizo Rápido, Veneno, Furtivo y Letal.
 - Reutilizar Mano vacía, Devolver Fuente, Volar y Estampida con las revisiones de copy aprobadas.
 - Definir prioridades cuando dos conceptos coincidan y revalidar cartas/targets antes de mostrar.
 - Mantener el levantamiento de Choque y todos los Marcos Dorados como presentación declarativa.
 
-**Cierre:** cada concepto aparece en su primer contexto real, como máximo una vez por Visión; las
-repeticiones obedecen `hideSeenContextualHelp` y los cuatro recaps conservan su ledger obligatorio.
+**Cierre:** cada concepto aparece en su contexto real, como máximo una vez por Visión; el tutorial
+registra su procedencia, la primera Canon evita duplicarlo, **Guíame de nuevo** puede repetirlo y
+**Estoy preparado** conserva únicamente lo pendiente.
 
 ### Fase 5 — Santuario, Vida baja y detalle de carta
 
@@ -459,17 +478,17 @@ Como mínimo:
   `currentRandomState` y robos exactos de Preparación/primer turno normal.
 - `tests/matchOrigin.test.js` y lifecycle: procedencia, linaje, vórtice interrumpido y un solo intento
   histórico.
-- progreso contextual: milestone del grupo ordenado, ledger de recaps obligatorios, matriz de
-  repetición, revisiones y dedupe por Visión.
+- progreso contextual: milestone del grupo ordenado, procedencia `tutorial-contextual`, elección
+  de repetición, revisiones y dedupe por Visión.
 - gate de interacción: conservar bloqueado, un solo mulligan, doble clic, Enter/Espacio, hover de
   cartas suprimido y Música/Ajustes accesibles.
 - runtime contextual: prioridades, revalidación, cartas ausentes y espera de presentación.
-- reglas: timing de Básico/Rápido, dos defensores para Imponente y orden, Furtivo, Letal, Veneno y
+- reglas: timing de Rápido, dos defensores para Imponente y orden, Furtivo, Letal, Veneno y
   umbral estricto de Vida.
 - presentación: anchors nuevos, Marco Dorado, levantamiento y limpieza de Choque, Santuario tras
   VFX, cue de Destino y convivencia de capas.
-- detalles: **Otorga: Imponente**, Ecos con Imponente efectivo, fade, foco, Escape y estilos
-  limitados a preview/detalle.
+- detalles: **Otorga: Imponente**, Ecos con Imponente efectivo, fade, foco, Escape y preview de
+  click derecho sin botón X (se cierra con Escape o al pulsar fuera).
 - localización: inventario completo y paridad de placeholders ES/EN.
 
 Los tests no deben depender de strings del log, sleeps, orden accidental del DOM ni selectores de
@@ -490,6 +509,6 @@ estilo como autoridad de gameplay.
 ## Criterio de cierre
 
 El plan se considera implementado cuando la seed conserva su vector determinista, la experiencia
-completa respeta las preferencias contextuales y todas las entradas alternativas relevantes, cada
+completa respeta la elección canónica y la preferencia exclusiva de partidas normales, cada
 cuadro aparece después del settle correcto, Santuario comunica **Otorga: Imponente** sin alterar
 reglas y la suite completa queda verde. Hasta entonces permanece en **Planes abiertos**.

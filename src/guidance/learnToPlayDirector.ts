@@ -1,6 +1,6 @@
 import type { GameStore } from "../store/useGameStore";
 import type { GuidedCardAlias } from "./contracts";
-import { contextualTutorialRuntime } from "./contextualProductRuntime";
+import { contextualTutorialRuntime, recordLearnToPlayConceptsSeen } from "./contextualProductRuntime";
 import type { GuidedInterventionOrchestrator } from "./interventionOrchestrator";
 import { runGuidedSystemAction } from "./interactionGate";
 import { isGuidedPresentationSettled } from "./presentationSettled";
@@ -228,6 +228,14 @@ export class LearnToPlayPrologueDirector {
     this.#interventions.start(LEARN_TO_PLAY_OPENING_INTERVENTION, this.#bindings, `${gameSessionId}:opening`);
   }
 
+  /** Reasserted only after JourneyLifecycle has opened its isolated contextual session. */
+  activateContextualSessionPolicy(gameSessionId: string): void {
+    if (this.#gameSessionId !== gameSessionId || this.#stage === "inactive") return;
+    // This journey owns its authored defeat. The low-Life contemplation reminder belongs to the
+    // subsequent Vision and must not queue behind Learn to Play's strict sequence.
+    contextualTutorialRuntime.suppressConceptsForSession(["low-life-contemplate"]);
+  }
+
   stop(): void {
     journeyIntentGate.deactivate("learn-to-play");
     authoredHostTurnGate.deactivate("learn-to-play");
@@ -271,6 +279,7 @@ export class LearnToPlayPrologueDirector {
         session.lessonId === LEARN_TO_PLAY_FIRST_BATTLE_INTERVENTION.id
         && session.status === "completed"
       ) {
+        recordLearnToPlayConceptsSeen(["attack-the-host-archive", "attack-exhausts-echo"]);
         this.#setStage("opening-attack");
       } else if (
         session.status !== "running"
@@ -353,6 +362,7 @@ export class LearnToPlayPrologueDirector {
       && session.lessonId === LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.id
       && session.status === "completed"
     ) {
+      recordLearnToPlayConceptsSeen(["reserve-and-ready"]);
       this.#playerReturnIntroCompleted = true;
       this.#setStage("free-play");
     }
@@ -442,6 +452,7 @@ export class LearnToPlayPrologueDirector {
     if (this.#stage === "source-return") {
       const sourceStillInHand = store.game.player.hand.some((card) => card.instanceId === this.#bindings.post_surge_source);
       if (!sourceStillInHand || store.game.player.energyActionUsedThisTurn) {
+        recordLearnToPlayConceptsSeen(["return-source"]);
         this.#setStage("post-surge-free");
         return;
       }

@@ -4,20 +4,16 @@ import type { TranslationKey } from "../i18n/translations";
 import type { MatchLaunchSource } from "../history/matchLifecycle";
 import type { GameplayIntent } from "./interactionGate";
 import { guidedJourneyCompleted, guidedProgressStore } from "./progress";
+import type { GuidedCalloutPlacement, GuidedSurfaceAnchor } from "./contracts";
 
 export const FIRST_CANON_VISION_CODE = "HF1-ELA-GRV-082-QC5" as const;
 export const FIRST_CANON_OPENING_JOURNEY = Object.freeze({ id: "first-canon-opening", revision: 1 });
 export const FIRST_CANON_STARTED_JOURNEY = Object.freeze({ id: "first-canon-started", revision: 1 });
 
-export const FIRST_CANON_RECAPS = Object.freeze([
-  Object.freeze({ conceptId: "empty-hand-draw", journeyId: "first-canon-recap.empty-hand-draw", revision: 1 }),
-  Object.freeze({ conceptId: "return-source", journeyId: "first-canon-recap.return-source", revision: 1 }),
-  Object.freeze({ conceptId: "flying-defense-restriction", journeyId: "first-canon-recap.flying", revision: 1 }),
-  Object.freeze({ conceptId: "host-surge", journeyId: "first-canon-recap.surge", revision: 1 }),
-]);
-
 export type FirstCanonVisionStage =
   | "inactive"
+  | "replay-choice-settling"
+  | "replay-choice"
   | "opening-settling"
   | "opening-intro"
   | "await-mulligan"
@@ -29,23 +25,33 @@ export type FirstCanonVisionStage =
   | "preparation-energy"
   | "free-play"
   | "host-awakening-warning"
+  | "host-awakening-commit"
   | "completed";
+
+export type FirstCanonContextualHelpMode = "normal" | "pending" | "unseen" | "repeat";
 
 export type FirstCanonNarration = Readonly<{
   titleKey: TranslationKey;
   bodyKey: TranslationKey;
-  anchor?: "setup.progress" | "phase.primaryAction";
+  anchor?: GuidedSurfaceAnchor;
+  placement?: GuidedCalloutPlacement;
+  showFrameDuringNarration?: boolean;
 }>;
 
 export type FirstCanonVisionSnapshot = Readonly<{
   sessionId: string;
   stage: FirstCanonVisionStage;
   orderedSequenceActive: boolean;
+  contextualHelpMode: FirstCanonContextualHelpMode;
   suppressOpeningCardInteraction: boolean;
   narration?: FirstCanonNarration;
 }>;
 
 const NARRATION_BY_STAGE: Partial<Record<FirstCanonVisionStage, FirstCanonNarration>> = {
+  "replay-choice": {
+    titleKey: "guided.firstCanon.replayChoiceTitle",
+    bodyKey: "guided.firstCanon.replayChoiceBody",
+  },
   "opening-intro": {
     titleKey: "guided.firstCanon.openingIntroTitle",
     bodyKey: "guided.firstCanon.openingIntroBody",
@@ -58,16 +64,20 @@ const NARRATION_BY_STAGE: Partial<Record<FirstCanonVisionStage, FirstCanonNarrat
     titleKey: "guided.firstCanon.preparationIntroTitle",
     bodyKey: "guided.firstCanon.preparationIntroBody",
     anchor: "setup.progress",
+    placement: "right",
   },
   "preparation-energy": {
     titleKey: "guided.firstCanon.preparationEnergyTitle",
     bodyKey: "guided.firstCanon.preparationEnergyBody",
-    anchor: "setup.progress",
+    anchor: "player.reserve",
+    placement: "right",
   },
   "host-awakening-warning": {
     titleKey: "guided.firstCanon.hostAwakeningTitle",
     bodyKey: "guided.firstCanon.hostAwakeningBody",
     anchor: "phase.primaryAction",
+    placement: "left",
+    showFrameDuringNarration: false,
   },
 };
 
@@ -75,8 +85,8 @@ export class FirstCanonVisionDirector {
   #stage: FirstCanonVisionStage = "inactive";
   #sessionId = "";
   #orderedSequenceActive = false;
+  #contextualHelpMode: FirstCanonContextualHelpMode = "normal";
   #sawPreparationBanner = false;
-  #pendingHostAdvance = false;
   #listeners = new Set<() => void>();
   #snapshot = freezeSnapshot("", "inactive", false);
 
@@ -96,36 +106,44 @@ export class FirstCanonVisionDirector {
   }>): void {
     const sameFuture = matchOriginCanonCode(input.origin) === FIRST_CANON_VISION_CODE;
     const progress = guidedProgressStore.snapshot();
-    const completed = guidedJourneyCompleted(progress, FIRST_CANON_OPENING_JOURNEY);
     const previouslyStarted = guidedJourneyCompleted(progress, FIRST_CANON_STARTED_JOURNEY);
-    if (sameFuture && input.source === "learn-to-play-handoff" && !previouslyStarted) {
+    if (sameFuture && !previouslyStarted) {
       guidedProgressStore.markJourneyCompleted(FIRST_CANON_STARTED_JOURNEY.id, FIRST_CANON_STARTED_JOURNEY.revision);
     }
-    const belongsToHandoffLineage = previouslyStarted || input.source === "learn-to-play-handoff";
-    const eligibleSource = input.source === "learn-to-play-handoff"
-      || input.source === "rewrite"
-      || input.source === "history-replay";
-    const orderedSequenceActive = sameFuture
-      && eligibleSource
-      && belongsToHandoffLineage
-      && (!completed || !progress.preferences.hideSeenContextualHelp);
+    const replayChoiceRequired = sameFuture && previouslyStarted;
 
     this.#sessionId = input.sessionId;
-    this.#orderedSequenceActive = orderedSequenceActive;
-    this.#stage = orderedSequenceActive ? "opening-settling" : "inactive";
+    this.#orderedSequenceActive = sameFuture;
+    this.#contextualHelpMode = sameFuture
+      ? replayChoiceRequired ? "pending" : "repeat"
+      : "normal";
+    this.#stage = sameFuture
+      ? replayChoiceRequired ? "replay-choice-settling" : "opening-settling"
+      : "inactive";
     this.#sawPreparationBanner = false;
-    this.#pendingHostAdvance = false;
     this.#emit();
   }
 
   notifyOpeningCardsSettled(mulligansTaken: number): void {
-    if (this.#stage === "opening-settling" && mulligansTaken === 0) {
+    if (this.#stage === "replay-choice-settling" && mulligansTaken === 0) {
+      this.#stage = "replay-choice";
+      this.#emit();
+    } else if (this.#stage === "opening-settling" && mulligansTaken === 0) {
       this.#stage = "opening-intro";
       this.#emit();
     } else if (this.#stage === "mulligan-settling" && mulligansTaken === 1) {
       this.#stage = "opening-confirmation";
       this.#emit();
     }
+  }
+
+  chooseReplayGuidance(choice: "guided" | "independent"): boolean {
+    if (this.#stage !== "replay-choice") return false;
+    this.#contextualHelpMode = choice === "guided" ? "repeat" : "unseen";
+    this.#orderedSequenceActive = choice === "guided";
+    this.#stage = choice === "guided" ? "opening-intro" : "inactive";
+    this.#emit();
+    return true;
   }
 
   refresh(game: GameState, blockers: readonly string[]): void {
@@ -167,8 +185,17 @@ export class FirstCanonVisionDirector {
       this.#emit();
       return this.#blocked();
     }
+    if (this.#stage === "host-awakening-commit") {
+      if (intent.kind !== "phase.awakenHost") return this.#blocked();
+      this.#stage = "completed";
+      guidedProgressStore.markJourneyCompleted(FIRST_CANON_OPENING_JOURNEY.id, FIRST_CANON_OPENING_JOURNEY.revision);
+      this.#emit();
+      return Object.freeze({ allowed: true });
+    }
     if (
       this.#stage === "opening-settling"
+      || this.#stage === "replay-choice-settling"
+      || this.#stage === "replay-choice"
       || this.#stage === "opening-intro"
       || this.#stage === "mulligan-settling"
       || this.#stage === "opening-confirmation"
@@ -181,37 +208,26 @@ export class FirstCanonVisionDirector {
   }
 
   acknowledge(): Readonly<{ acknowledged: boolean; awakenHost: boolean }> {
-    let awakenHost = false;
     switch (this.#stage) {
       case "opening-intro": this.#stage = "await-mulligan"; break;
       case "opening-confirmation": this.#stage = "opening-accept"; break;
       case "preparation-intro": this.#stage = "preparation-energy"; break;
       case "preparation-energy": this.#stage = "free-play"; break;
       case "host-awakening-warning":
-        this.#stage = "completed";
-        this.#pendingHostAdvance = true;
-        awakenHost = true;
-        guidedProgressStore.markJourneyCompleted(FIRST_CANON_OPENING_JOURNEY.id, FIRST_CANON_OPENING_JOURNEY.revision);
+        this.#stage = "host-awakening-commit";
         break;
       default: return Object.freeze({ acknowledged: false, awakenHost: false });
     }
     this.#emit();
-    return Object.freeze({ acknowledged: true, awakenHost });
-  }
-
-  consumePendingHostAdvance(game: GameState, presentationReady: boolean): boolean {
-    if (!this.#pendingHostAdvance || !presentationReady) return false;
-    if (game.activeSide !== "host" || game.phase !== "host") return false;
-    this.#pendingHostAdvance = false;
-    return true;
+    return Object.freeze({ acknowledged: true, awakenHost: false });
   }
 
   resetForTests(): void {
     this.#stage = "inactive";
     this.#sessionId = "";
     this.#orderedSequenceActive = false;
+    this.#contextualHelpMode = "normal";
     this.#sawPreparationBanner = false;
-    this.#pendingHostAdvance = false;
     this.#emit();
   }
 
@@ -220,7 +236,12 @@ export class FirstCanonVisionDirector {
   }
 
   #emit(): void {
-    this.#snapshot = freezeSnapshot(this.#sessionId, this.#stage, this.#orderedSequenceActive);
+    this.#snapshot = freezeSnapshot(
+      this.#sessionId,
+      this.#stage,
+      this.#orderedSequenceActive,
+      this.#contextualHelpMode,
+    );
     for (const listener of this.#listeners) listener();
   }
 }
@@ -229,12 +250,16 @@ function freezeSnapshot(
   sessionId: string,
   stage: FirstCanonVisionStage,
   orderedSequenceActive: boolean,
+  contextualHelpMode: FirstCanonContextualHelpMode = "normal",
 ): FirstCanonVisionSnapshot {
   return Object.freeze({
     sessionId,
     stage,
     orderedSequenceActive,
-    suppressOpeningCardInteraction: stage === "opening-settling"
+    contextualHelpMode,
+    suppressOpeningCardInteraction: stage === "replay-choice-settling"
+      || stage === "replay-choice"
+      || stage === "opening-settling"
       || stage === "opening-intro"
       || stage === "mulligan-settling"
       || stage === "opening-confirmation",

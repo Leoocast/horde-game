@@ -508,7 +508,7 @@ export function Hand({ game }: { game: GameState }) {
                   entryOffset,
                 }}
                 variants={handCardMotion}
-                initial="initial"
+                initial={initialDealCard ? false : "initial"}
                 animate="animate"
                 exit="exit"
                 transition={{

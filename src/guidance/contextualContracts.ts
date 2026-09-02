@@ -35,6 +35,8 @@ export type ContextualHighlightRef =
 export type ContextualConceptCopy = Readonly<{
   titleKey: TranslationKey;
   bodyKey: TranslationKey;
+  /** Narrative explanations use the same speaker-led dialog as the Learn to Play opening. */
+  speakerKey?: TranslationKey;
   glossaryTerms?: readonly GuidedGlossaryTermId[];
 }>;
 
@@ -65,8 +67,6 @@ export type ContextualConceptDefinition = Readonly<{
   blocksGameplayWhileVisible?: boolean;
   /** Keeps the authored Marco Dorado after acknowledgement until the game session changes. */
   retainHighlightsAfterAcknowledge?: boolean;
-  /** Tutorial journeys normally isolate progress; transferable fundamentals may opt into acknowledgement. */
-  persistWhenAcknowledgedInIsolated?: boolean;
   /** Larger values are presented first when several signals arrive in the same synchronous beat. */
   priority: number;
   copy: ContextualConceptCopy;

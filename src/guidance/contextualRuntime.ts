@@ -1,7 +1,7 @@
 import type { GameplayIntent } from "./interactionGate";
 import type { GameplaySignalSnapshot, GameplaySignalStream } from "./gameplaySignals";
 import type { GuidedProgressStore, ContextualConceptProgress } from "./progress";
-import { contextualConceptSeen } from "./progress";
+import { contextualConceptSeen, tutorialContextualJourney } from "./progress";
 import type { ContextualConceptRegistry } from "./ContextualConceptRegistry";
 import type {
   ContextualConceptDefinition,
@@ -13,7 +13,7 @@ import type {
 } from "./contextualContracts";
 import type { ContextualIntentAuthorization } from "./contextualIntentGate";
 
-export type ContextualProgressMode = "immediate" | "provisional" | "isolated";
+export type ContextualProgressMode = "immediate" | "provisional" | "isolated" | "repeat" | "unseen";
 export type ContextualRuntimeStatus = "idle" | "waiting" | "presenting";
 
 export type ContextualRuntimeSnapshot = Readonly<{
@@ -116,6 +116,12 @@ export class ContextualTutorialRuntime {
       this.#emit();
       return Object.freeze({ allowed: false, conceptId: active.definition.id });
     }
+    const pendingBlocker = this.#queue.find((item) => item.definition.blocksGameplayWhileVisible);
+    if (pendingBlocker) {
+      this.#lastInterceptedConceptId = pendingBlocker.definition.id;
+      this.#emit();
+      return Object.freeze({ allowed: false, conceptId: pendingBlocker.definition.id });
+    }
     if (active?.definition.policy === "preventive" && active.definition.prevent?.(intent, context)) {
       this.#lastInterceptedConceptId = active.definition.id;
       this.#emit();
@@ -143,11 +149,12 @@ export class ContextualTutorialRuntime {
       shownAt,
     });
     if (this.#progressMode === "provisional") this.#provisional.set(entry.conceptId, entry);
-    else if (
-      this.#progressMode === "immediate"
-      || (this.#progressMode === "isolated" && item.definition.persistWhenAcknowledgedInIsolated)
-    ) {
+    else {
       this.#progress.markConceptSeen(entry.conceptId, entry.shownRevision, entry.shownAt);
+      if (this.#progressMode === "isolated") {
+        const tutorialJourney = tutorialContextualJourney(entry.conceptId, entry.shownRevision);
+        this.#progress.markJourneyCompleted(tutorialJourney.id, tutorialJourney.revision, entry.shownAt);
+      }
     }
     if (item.definition.retainHighlightsAfterAcknowledge) {
       this.#persistentHighlights = [...item.match.highlights ?? []].map((highlight) => Object.freeze({ ...highlight }));
@@ -194,7 +201,7 @@ export class ContextualTutorialRuntime {
     return changed;
   }
 
-  /** Abandoning the prologue forgets both accepted concepts and every pending presentation. */
+  /** Clears pending session presentation; acknowledged tutorial concepts remain persisted. */
   rollbackProvisional(): void {
     this.#provisional.clear();
     this.#queue = [];
@@ -237,8 +244,9 @@ export class ContextualTutorialRuntime {
     if (this.#active?.definition.id === definition.id) return false;
     if (this.#queue.some((item) => item.definition.id === definition.id)) return false;
     if (this.#forcedConcepts.has(definition.id)) return true;
-    if (this.#progressMode === "isolated") return true;
+    if (this.#progressMode === "isolated" || this.#progressMode === "repeat") return true;
     const progress = this.#progress.snapshot();
+    if (this.#progressMode === "unseen") return !contextualConceptSeen(progress, definition);
     return !contextualConceptSeen(progress, definition) || !progress.preferences.hideSeenContextualHelp;
   }
 

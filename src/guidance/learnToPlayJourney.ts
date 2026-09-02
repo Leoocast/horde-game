@@ -49,6 +49,9 @@ export const learnToPlayJourneyLifecycle = new GuidedJourneyLifecycle(
       );
       return gameSessionId;
     },
+    afterContextualSessionStarted(gameSessionId) {
+      learnToPlayDirector.activateContextualSessionPolicy(gameSessionId);
+    },
     stopPresentation() {
       useGameStore.getState().stopGamePresentation();
     },

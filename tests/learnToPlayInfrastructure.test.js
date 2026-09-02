@@ -195,6 +195,9 @@ test("journey attempts rebuild from the opening with isolated contextual progres
         boardRevision += 1;
         return `game-${boardRevision}`;
       },
+      afterContextualSessionStarted(gameSessionId) {
+        calls.push(`policy:${gameSessionId}`);
+      },
       stopPresentation() {
         calls.push("stop-presentation");
       },
@@ -227,6 +230,8 @@ test("journey attempts rebuild from the opening with isolated contextual progres
   assert.ok(calls.indexOf("mode:immediate") < calls.lastIndexOf("stop-presentation"));
   assert.equal(calls.includes("begin:game-1:isolated"), true);
   assert.equal(calls.includes("begin:game-2:isolated"), true);
+  assert.ok(calls.indexOf("begin:game-1:isolated") < calls.indexOf("policy:game-1"));
+  assert.ok(calls.indexOf("begin:game-2:isolated") < calls.indexOf("policy:game-2"));
 });
 
 test("a strict intervention attaches to the current board without rebuilding it", () => {
@@ -300,7 +305,6 @@ test("journey limits are ephemeral and product concepts cover every prologue exp
     "attack-the-host-archive",
     "attack-exhausts-echo",
     "host-surge",
-    "basic-spell",
     "daunting-defense",
     "quick-spell",
     "poison",
@@ -333,7 +337,6 @@ test("normal matches teach one defender directly and combine assignment with ord
   });
   assert.equal(defense.evaluate(multipleAttacks, {}), undefined);
   assert.deepEqual(order.signalKinds, ["host.attackersDeclared"]);
-  assert.equal(order.persistWhenAcknowledgedInIsolated, true);
   assert.equal(order.evaluate(singleAttack, {}), undefined);
   assert.deepEqual(order.evaluate(multipleAttacks, {}), {
     highlights: [{ kind: "surface", anchor: "player.field", showHighlight: false }],
@@ -360,7 +363,6 @@ test("marked combat damage highlights every affected Echo and owns the next-turn
   const context = { game };
 
   assert.equal(concept.policy, "preventive");
-  assert.equal(concept.persistWhenAcknowledgedInIsolated, true);
   assert.deepEqual(concept.evaluate(signal, context), {
     highlights: [
       { kind: "card", instanceId: playerEcho.instanceId, padding: 18 },
@@ -553,8 +555,8 @@ test("post-Surge concepts react only to the real empty-Hand draw and the require
   }, context);
   assert.deepEqual(fifthSource, {
     highlights: [
-      { kind: "card", instanceId: "river:1" },
-      { kind: "surface", anchor: "player.archive" },
+      { kind: "card", instanceId: "river:1", role: "origin" },
+      { kind: "surface", anchor: "player.archive", role: "destination" },
     ],
   });
   assert.equal(returnSource.evaluate({
@@ -567,6 +569,67 @@ test("post-Surge concepts react only to the real empty-Hand draw and the require
   assert.equal(returnSource.revalidate(fifthSource, {
     game: { player: { hand: [{ instanceId: "spell:1", kinds: ["SPELL"] }] } },
   }), false);
+});
+
+test("combat traits frame only the enemy Echo and board concepts stay anchored to their subject", () => {
+  const daunting = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "daunting-defense");
+  const furtive = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "furtive-defense-restriction");
+  const lethal = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "lethal-defense-warning");
+  const poison = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "poison");
+  const support = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "host-support");
+  const game = buildGuidedScenario(LEARN_TO_PLAY_PROLOGUE_SCENARIO, contentCatalog).game;
+  const attacker = game.host.field.find((card) => card.kinds.includes("ECHO"));
+  const blocker = game.player.field.find((card) => card.kinds.includes("ECHO"));
+  game.host.poisonCounters = 1;
+
+  const originalTraits = [...attacker.traits];
+  attacker.traits = [...originalTraits, "DAUNTING"];
+  assert.deepEqual(daunting.evaluate({
+    kind: "action.committed",
+    receipt: { kind: "blocker.assigned", cardId: blocker.instanceId, targetId: attacker.instanceId },
+  }, { game }), {
+    highlights: [{ kind: "card", instanceId: attacker.instanceId, padding: 18 }],
+    placement: "center",
+  });
+
+  assert.deepEqual(furtive.evaluate({
+    kind: "action.denied",
+    code: "FURTIVE_BLOCK_RESTRICTION",
+    intent: { kind: "combat.assignBlocker", cardId: blocker.instanceId, targetId: attacker.instanceId },
+  }, { game }), {
+    highlights: [{ kind: "card", instanceId: attacker.instanceId, padding: 18 }],
+    placement: "center",
+  });
+
+  attacker.traits = [...originalTraits, "LETHAL"];
+  assert.deepEqual(lethal.prevent({
+    kind: "combat.assignBlocker",
+    cardId: blocker.instanceId,
+    targetId: attacker.instanceId,
+    selected: true,
+  }, { game }), {
+    highlights: [{ kind: "card", instanceId: attacker.instanceId, padding: 18 }],
+    placement: "center",
+  });
+
+  attacker.definitionId = "hydra_of_the_black_bough";
+  assert.deepEqual(poison.evaluate({
+    kind: "action.committed",
+    receipt: { kind: "archiveAttack.confirmed", targetIds: [attacker.instanceId] },
+  }, { game }), {
+    highlights: [
+      { kind: "card", instanceId: attacker.instanceId, padding: 18 },
+      { kind: "surface", anchor: "host.poison", padding: 8 },
+    ],
+    placement: "bottom",
+    placementAnchor: { kind: "surface", anchor: "host.poison", showHighlight: false },
+  });
+
+  attacker.definitionId = "the_broken_headstone";
+  assert.deepEqual(support.evaluate({ kind: "host.cardsRevealed", cardIds: [attacker.instanceId] }, { game }), {
+    highlights: [{ kind: "card", instanceId: attacker.instanceId, padding: 18 }],
+    placement: "bottom",
+  });
 });
 
 test("authored Host-turn policies are scoped and reject invalid reveal plans", () => {

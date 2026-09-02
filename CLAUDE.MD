@@ -932,8 +932,9 @@ las preventivas interceptan sólo la acción relevante y nunca compiten con una 
 estricta. El progreso `hostfall-guided-progress` v2 migra v1, conserva finalizaciones de lecciones y
 añade conceptos, recorridos y la preferencia global de repetición. En partidas normales el concepto
 se confirma al cerrar la ayuda; el modo provisional permite commit atómico o rollback total para el
-futuro prólogo. Los recorridos aislados no escriben progreso salvo fundamentos transferibles
-declarados explícitamente, como la limpieza del daño marcado. El registro de producto contiene ya
+futuro prólogo. Los recorridos aislados ignoran el checkbox de repetición, pero registran cada
+explicación aceptada junto con su procedencia tutorial para no duplicarla en la primera Visión
+Canon ni en partidas normales posteriores. El registro de producto contiene ya
 los conceptos contextuales del primer tramo: defensa y orden de izquierda a derecha, Volar/Guardia
 aérea, Vida, daño marcado que desaparece al cambiar de turno, Reserva y Fuentes preparadas,
 Estabilizándose, ataque al Archivo, agotamiento del atacante y Estampida. Las ayudas no vistas pueden
@@ -986,7 +987,7 @@ Ecos atacan el Archivo y que cada 3 de daño de ataque hacen que se descarte una
 declaración con varios atacantes de la Hueste presenta una sola ayuda que combina cómo asignar
 defensores con el orden de resolución de izquierda a derecha; una declaración de un único atacante
 conserva la ayuda simple y el concepto de orden espera hasta resultar relevante. Aceptar el orden
-dentro del recorrido aislado lo conserva como fundamento transferible para la siguiente Visión.
+dentro del recorrido aislado lo conserva como aprendizaje para la siguiente Visión.
 
 El lenguaje visible del tutorial distingue objetos de reglas: **Fuente** aporta Energía al
 contenedor inferior izquierdo y **Energía** se canaliza para **Invocar Ecos** o lanzar Hechizos;
@@ -996,8 +997,8 @@ no robados—, de modo que el subrayado cubre la frase completa. Vida se define 
 supervivencia del Cronista y Reserva explica que conserva hasta 3 de Energía para el turno siguiente
 y la utiliza antes que las Fuentes. En la primera Estampida el orden es contractual: termina la
 animación, aparece su ayuda contextual sobre el tablero asentado y sólo al aceptarla se revelan los
-Ecos. La ayuda de Mano vacía no ilumina la Mano y, mientras está visible, bloquea todo el tablero:
-no se pueden mover, jugar ni activar cartas hasta aceptarla. En el desenlace de Aprender a jugar, tanto
+Ecos. La ayuda de Mano vacía no ilumina la Mano y bloquea todo el tablero desde que queda pendiente,
+no sólo cuando ya está visible: no se pueden mover, jugar ni activar cartas hasta aceptarla. En el desenlace de Aprender a jugar, tanto
 **Visión perdida** como **Contemplar otro Futuro** quedan centrados horizontalmente.
 
 El cierre terminal calcula desde el tablero vivo el mínimo de llegadas que vuelve inevitable la
@@ -1011,13 +1012,32 @@ y vive en `docs/plans/first_canon_vision_plan.md`; conserva la seed y el
 RNG reales, presenta una Mano inicial de siete cartas y obliga un único mulligan real que entrega la
 Mano preparada de seis cartas cuando las ayudas contextuales corresponden. Después introduce la
 Preparación como concentración mental, avisa al cerrarla y entrega el resto a conceptos
-contextuales sobre la partida normal. La primera secuencia es obligatoria al salir del handoff; al
-Contemplar de nuevo sólo se repite si **No volver a mostrar explicaciones ya vistas** permite la
-repetición. Mano vacía, Devolver Fuente, Volar y Estampida conservan además un recap obligatorio
-por perfil de primera Visión, aunque el prólogo ya los haya marcado como vistos. El Santuario
+contextuales sobre la partida normal. Sus narraciones se superponen a la Mano sin mover las cartas;
+todo cuadro hablado por Evy reutiliza el diálogo inicial de **Aprender a jugar**, con **Evy** como
+título y sin subtítulo temático, y la tipografía de ayudas usa la escala legible 1,1. El diálogo de
+Mano vive en una capa independiente y las cartas dejan su animación de entrada en un estado estable
+antes de abrirla; al cerrarse, el hover no se rearma hasta que el puntero sale de la Mano. Al
+conservarla, su representación normal se monta ya visible y no repite el fundido de entrada. En
+Preparación los cuadros se anclan al progreso, a los sockets amarillos y al botón respectivamente;
+cambiar del primer cuadro al segundo remonta el Marco Dorado para repetir su llegada completa. El último Marco Dorado empieza sólo
+después de aceptar **La Hueste despierta** y permanece hasta que el jugador pulsa **Terminar turno**
+por segunda vez; la animación nunca confirma la transición por sí sola. La primera secuencia es obligatoria al salir del handoff; al
+Contemplar de nuevo —o al volver a introducir la misma seed después de haberla jugado— Evy pregunta
+en el mulligan si debe guiarla completa otra vez o dejar al Cronista continuar por su cuenta. La
+primera Visión repite la guía canónica salvo los conceptos que Aprender a jugar acaba de enseñar;
+la opción autónoma muestra sólo conceptos globalmente no aprendidos y **Guíame de nuevo** repite
+toda la guía canónica. Esta decisión ignora el checkbox normal de repetición. Aprender a
+jugar también ignora ese checkbox, pero registra cada concepto aceptado y cada fundamento enseñado
+por una intervención estricta para que no vuelva a aparecer innecesariamente fuera del tutorial.
+**Todavía podemos aprender** se excluye después de abrir la sesión contextual de **Aprender a
+jugar**, por lo que nunca puede quedar en cola detrás del desenlace; pertenece sólo a una Visión
+normal. El Santuario
 Quebrado mostrará **Otorga: Imponente** sin
 adquirir `DAUNTING`; **Rápido** se explicará al jugador como «puedes lanzarlo en cualquier momento»
-sin cambiar las ventanas ni la resolución actuales del engine. Durante los cuadros de Mano sólo se
+sin cambiar las ventanas ni la resolución actuales del engine; no existe una ayuda de **Hechizo
+Básico**. Imponente, Furtivo y Letal enmarcan sólo el Eco atacante de la Hueste; Veneno se ancla a su
+marcador y los Apoyos a su carta. El preview de click derecho no muestra X y se cierra con Escape o
+clic fuera. Durante los cuadros de Mano sólo se
 suprimen hover, preview y acciones de carta; Música y Ajustes siguen accesibles. La transición
 CTA/vórtice/partida marca el prólogo completo sólo después de crear la Visión Canon, sin reactivar
 el resume de demo. En el código actual **Continuar** está

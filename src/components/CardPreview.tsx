@@ -41,7 +41,6 @@ export function CardPreview() {
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
   const [hoverPosition, setHoverPosition] = useState<HoverPreviewPosition>();
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const lockedDialogRef = useRef<HTMLElement>(null);
   const lockedPreviewOriginRef = useRef<HTMLElement | null>(null);
 
@@ -59,7 +58,7 @@ export function CardPreview() {
     if (!focusedCardId) return;
 
     lockedPreviewOriginRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const focusFrame = window.requestAnimationFrame(() => closeButtonRef.current?.focus({ preventScroll: true }));
+    const focusFrame = window.requestAnimationFrame(() => lockedDialogRef.current?.focus({ preventScroll: true }));
 
     function closeLockedPreview(event: PointerEvent) {
       const target = event.target;
@@ -82,7 +81,11 @@ export function CardPreview() {
       const focusable = Array.from(
         lockedDialogRef.current?.querySelectorAll<HTMLElement>("button:not([disabled]), [href], [tabindex]:not([tabindex='-1'])") ?? [],
       );
-      if (focusable.length === 0) return;
+      if (focusable.length === 0) {
+        event.preventDefault();
+        lockedDialogRef.current?.focus({ preventScroll: true });
+        return;
+      }
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
       if (event.shiftKey && document.activeElement === first) {
@@ -233,6 +236,7 @@ export function CardPreview() {
           role="dialog"
           aria-modal="true"
           aria-label={displayName}
+          tabIndex={-1}
           onContextMenu={(event) => event.preventDefault()}
         >
           <div
@@ -268,18 +272,6 @@ export function CardPreview() {
               <TraitExplanations traits="" grantsDaunting chaos={game.gameMode === "chaos"} cardTheme={cardTheme} />
             </div>
           )}
-          <button
-            ref={closeButtonRef}
-            type="button"
-            data-preserve-card-focus="true"
-            data-card-preview-locked="true"
-            className="card-preview-locked-close icon-button"
-            onClick={() => setFocusedCardId(undefined)}
-            aria-label={t("common.close")}
-            title={t("common.close")}
-          >
-            <X size={18} />
-          </button>
         </aside>
       </>
     );

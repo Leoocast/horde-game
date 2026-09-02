@@ -2,7 +2,6 @@ import type { CardInstance, GameState } from "../engine/GameTypes";
 import { hostInSurge } from "../engine/StaticEffects";
 import { canPlayerCastFromHand } from "../engine/GameActions";
 import { hasTrait } from "../engine/Traits";
-import { isQuickSpell } from "../engine/hostfallVocabulary";
 import type { ContextualConceptDefinition, ContextualConceptMatch } from "./contextualContracts";
 
 export const PRODUCT_CONTEXTUAL_CONCEPTS = [
@@ -10,7 +9,6 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
     id: "host-defense-order",
     revision: 3,
     policy: "informative",
-    persistWhenAcknowledgedInIsolated: true,
     priority: 80,
     copy: {
       titleKey: "guided.contextual.product.defenseOrderTitle",
@@ -98,7 +96,6 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
     revision: 2,
     policy: "preventive",
     priority: 65,
-    persistWhenAcknowledgedInIsolated: true,
     copy: {
       titleKey: "guided.contextual.product.markedDamageTitle",
       bodyKey: "guided.contextual.product.markedDamageBody",
@@ -207,6 +204,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
     copy: {
       titleKey: "guided.contextual.product.surgeTitle",
       bodyKey: "guided.contextual.product.surgeBody",
+      speakerKey: "guided.learnToPlay.intro.evy",
       glossaryTerms: ["host"],
     },
     signalKinds: ["host.surgeStarted"],
@@ -214,24 +212,6 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
       ? { highlights: [] }
       : undefined,
     revalidate: (_match, context) => hostInSurge(context.game),
-  },
-  {
-    id: "basic-spell",
-    revision: 1,
-    policy: "informative",
-    priority: 92,
-    copy: {
-      titleKey: "guided.contextual.product.basicSpellTitle",
-      bodyKey: "guided.contextual.product.basicSpellBody",
-    },
-    signalKinds: ["action.committed"],
-    evaluate: (signal, context) => {
-      if (signal.kind !== "action.committed" || signal.receipt.kind !== "card.played" || !signal.receipt.cardId) return undefined;
-      const card = findCard(context.game, signal.receipt.cardId);
-      return card?.definitionId === "shield_of_the_heir" && card.kinds.includes("SPELL") && !isQuickSpell(card)
-        ? { placement: "center" }
-        : undefined;
-    },
   },
   {
     id: "daunting-defense",
@@ -249,10 +229,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
       const attacker = findCard(context.game, signal.receipt.targetId);
       if (!attacker || !hasTrait(context.game, attacker, "DAUNTING")) return undefined;
       return {
-        highlights: [
-          { kind: "card", instanceId: attacker.instanceId, padding: 18 },
-          ...(context.game.combat.blockers[attacker.instanceId] ?? []).map((instanceId) => ({ kind: "card" as const, instanceId, padding: 18 })),
-        ],
+        highlights: [{ kind: "card", instanceId: attacker.instanceId, padding: 18 }],
         placement: "center",
       };
     },
@@ -296,7 +273,14 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
         .map((instanceId) => findCard(context.game, instanceId))
         .find((card) => card?.definitionId === "hydra_of_the_black_bough");
       return hydra && context.game.host.poisonCounters > 0
-        ? { highlights: [{ kind: "card", instanceId: hydra.instanceId, padding: 18 }] }
+        ? {
+            highlights: [
+              { kind: "card", instanceId: hydra.instanceId, padding: 18 },
+              { kind: "surface", anchor: "host.poison", padding: 8 },
+            ],
+            placement: "bottom",
+            placementAnchor: { kind: "surface", anchor: "host.poison", showHighlight: false },
+          }
         : undefined;
     },
     revalidate: cardsRemainRelevant,
@@ -315,10 +299,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
       && signal.code === "FURTIVE_BLOCK_RESTRICTION"
       && signal.intent.kind === "combat.assignBlocker"
       ? {
-          highlights: [
-            { kind: "card", instanceId: signal.intent.cardId, padding: 18 },
-            { kind: "card", instanceId: signal.intent.targetId, padding: 18 },
-          ],
+          highlights: [{ kind: "card", instanceId: signal.intent.targetId, padding: 18 }],
           placement: "center",
         }
       : undefined,
@@ -332,6 +313,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
     copy: {
       titleKey: "guided.contextual.product.lethalTitle",
       bodyKey: "guided.contextual.product.lethalBody",
+      speakerKey: "guided.learnToPlay.intro.evy",
     },
     signalKinds: [],
     evaluate: () => undefined,
@@ -340,10 +322,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
       const attacker = findCard(context.game, intent.targetId);
       return attacker && hasTrait(context.game, attacker, "LETHAL")
         ? {
-            highlights: [
-              { kind: "card", instanceId: intent.cardId, padding: 18 },
-              { kind: "card", instanceId: intent.targetId, padding: 18 },
-            ],
+            highlights: [{ kind: "card", instanceId: intent.targetId, padding: 18 }],
             placement: "center",
           }
         : undefined;
@@ -366,7 +345,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
         .map((instanceId) => findCard(context.game, instanceId))
         .find((card) => card?.definitionId === "the_broken_headstone");
       return sanctuary
-        ? { highlights: [{ kind: "card", instanceId: sanctuary.instanceId, padding: 18 }], placement: "center" }
+        ? { highlights: [{ kind: "card", instanceId: sanctuary.instanceId, padding: 18 }], placement: "bottom" }
         : undefined;
     },
     revalidate: cardsRemainRelevant,
@@ -381,6 +360,7 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
     copy: {
       titleKey: "guided.contextual.product.lowLifeTitle",
       bodyKey: "guided.contextual.product.lowLifeBody",
+      speakerKey: "guided.learnToPlay.intro.evy",
     },
     signalKinds: ["player.lifeLost"],
     evaluate: (signal, context) => signal.kind === "player.lifeLost"
@@ -431,8 +411,8 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
       }
       return {
         highlights: [
-          { kind: "card", instanceId: sourceId },
-          { kind: "surface", anchor: "player.archive" },
+          { kind: "card", instanceId: sourceId, role: "origin" },
+          { kind: "surface", anchor: "player.archive", role: "destination" },
         ],
       };
     },

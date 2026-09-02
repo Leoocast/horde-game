@@ -275,8 +275,8 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(battlefield, /className="guided-player-sources-anchor"/u);
   assert.match(battlefield, /data-guided-anchor-extension="true"/u);
   assert.doesNotMatch(overlay, /closest\("#guided-tutorial-overlay/u);
-  assert.match(overlay, /showCallout && \(/u);
-  assert.match(overlay, /\{showCallout && \(\s*<>\s*<svg className="guided-tutorial-mask"/su);
+  assert.match(overlay, /\(showCallout \|\| showSilentSpotlight\) && \(/u);
+  assert.match(overlay, /\{\(showCallout \|\| showSilentSpotlight\) && \(\s*<>\s*<svg className="guided-tutorial-mask"/su);
   assert.match(overlay, /const showDimmer = showCallout && session\.currentStep\?\.dimmer !== "hidden";/u);
   assert.match(overlay, /\{showDimmer && \(\s*<rect className="guided-tutorial-dimmer"/su);
   assert.match(overlay, /showSilentSpotlight/u);
@@ -346,7 +346,9 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.doesNotMatch(styles, /\.guided-tutorial-ring\[data-anchor-key\^="card:"\]\s*\{\s*display:\s*none;\s*\}/u);
   assert.match(contextual, /className="guided-tutorial-ring contextual-tutorial-ring"/u);
   assert.match(contextual, /data-tone="gold"/u);
-  assert.match(styles, /\.guided-tutorial-body p\s*\{[^}]*font-size:\s*16px;/su);
+  assert.match(styles, /\.guided-tutorial-body p\s*\{[^}]*font-size:\s*17\.6px;/su);
+  assert.match(styles, /\.guided-tutorial-body p\s*\{[^}]*font-weight:\s*400;/su);
+  assert.match(styles, /\.contextual-tutorial-body p\s*\{[^}]*font-weight:\s*400;/su);
   assert.match(
     styles,
     /\.guided-tutorial-callout h2\s*\{[^}]*overflow-wrap:\s*normal;[^}]*white-space:\s*nowrap;/su,
