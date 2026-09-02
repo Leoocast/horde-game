@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { DeckTheme } from "../data/deckCatalog";
 import type { CardInstance } from "../engine/GameTypes";
 import { cardLabelCamelCase, localizedCardName, localizedTraitLabel, localizedTraitTooltip, localizedTypeLine, naturalCaseTraitLabel } from "../i18n/cardLocalization";
@@ -32,6 +32,7 @@ type HoverPreviewPosition = {
 };
 
 export function CardPreview() {
+  const t = useTranslation();
   const language = useLanguageStore((state) => state.language);
   const game = useGameStore((state) => state.game);
   const hoveredCardId = useGameStore((state) => state.hoveredCardId);
@@ -40,6 +41,9 @@ export function CardPreview() {
   const setHoveredCardId = useGameStore((state) => state.setHoveredCardId);
   const setFocusedCardId = useGameStore((state) => state.setFocusedCardId);
   const [hoverPosition, setHoverPosition] = useState<HoverPreviewPosition>();
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const lockedDialogRef = useRef<HTMLElement>(null);
+  const lockedPreviewOriginRef = useRef<HTMLElement | null>(null);
 
   const activeId = focusedCardId ?? activeEffectCardId ?? hoveredCardId;
   const card = activeId ? findCard(game, activeId) : undefined;
@@ -54,15 +58,52 @@ export function CardPreview() {
   useLayoutEffect(() => {
     if (!focusedCardId) return;
 
+    lockedPreviewOriginRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusFrame = window.requestAnimationFrame(() => closeButtonRef.current?.focus({ preventScroll: true }));
+
     function closeLockedPreview(event: PointerEvent) {
       const target = event.target;
       if (target instanceof Element && target.closest("[data-card-preview-locked='true']")) return;
+      event.preventDefault();
+      event.stopPropagation();
       setHoveredCardId(undefined);
       setFocusedCardId(undefined);
     }
 
     document.addEventListener("pointerdown", closeLockedPreview, true);
-    return () => document.removeEventListener("pointerdown", closeLockedPreview, true);
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setHoveredCardId(undefined);
+        setFocusedCardId(undefined);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = Array.from(
+        lockedDialogRef.current?.querySelectorAll<HTMLElement>("button:not([disabled]), [href], [tabindex]:not([tabindex='-1'])") ?? [],
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      } else if (!lockedDialogRef.current?.contains(document.activeElement)) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", closeOnEscape, true);
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      document.removeEventListener("pointerdown", closeLockedPreview, true);
+      document.removeEventListener("keydown", closeOnEscape, true);
+      if (lockedPreviewOriginRef.current?.isConnected) lockedPreviewOriginRef.current.focus({ preventScroll: true });
+      lockedPreviewOriginRef.current = null;
+    };
   }, [focusedCardId, setFocusedCardId, setHoveredCardId]);
 
   useLayoutEffect(() => {
@@ -180,12 +221,18 @@ export function CardPreview() {
       <>
         <div className="card-preview-dismiss-layer pointer-events-none fixed inset-0 z-[179]" aria-hidden="true" />
         <aside
-          ref={(element) => guidedAnchorRegistry.set(
-            guidedSurfaceAnchorKey("card.preview"),
-            "card-preview:locked",
-            element,
-          )}
+          ref={(element) => {
+            lockedDialogRef.current = element;
+            guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey("card.preview"),
+              "card-preview:locked",
+              element,
+            );
+          }}
           className="fixed left-4 top-[6rem] z-[180] flex max-h-[calc(100vh-7rem)] items-start gap-3 text-[#f6e6b8]"
+          role="dialog"
+          aria-modal="true"
+          aria-label={displayName}
           onContextMenu={(event) => event.preventDefault()}
         >
           <div
@@ -208,9 +255,31 @@ export function CardPreview() {
           </div>
           {traits && (
             <div data-preserve-card-focus="true" data-card-preview-locked="true">
-              <TraitExplanations traits={traits} chaos={game.gameMode === "chaos"} cardTheme={cardTheme} />
+              <TraitExplanations
+                traits={traits}
+                grantsDaunting={card.definitionId === "the_broken_headstone"}
+                chaos={game.gameMode === "chaos"}
+                cardTheme={cardTheme}
+              />
             </div>
           )}
+          {!traits && card.definitionId === "the_broken_headstone" && (
+            <div data-preserve-card-focus="true" data-card-preview-locked="true">
+              <TraitExplanations traits="" grantsDaunting chaos={game.gameMode === "chaos"} cardTheme={cardTheme} />
+            </div>
+          )}
+          <button
+            ref={closeButtonRef}
+            type="button"
+            data-preserve-card-focus="true"
+            data-card-preview-locked="true"
+            className="card-preview-locked-close icon-button"
+            onClick={() => setFocusedCardId(undefined)}
+            aria-label={t("common.close")}
+            title={t("common.close")}
+          >
+            <X size={18} />
+          </button>
         </aside>
       </>
     );
@@ -313,6 +382,7 @@ export function CardDetailsModal({
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {traits && <TraitPills traits={traits} />}
+            {card.definitionId === "the_broken_headstone" && <GrantedDauntingPill />}
             {stats && <PreviewStatsBadge stats={stats} cardTheme={cardTheme} />}
             <label className="ml-auto flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#d6b879]">
               <span className="hf-ui-title text-base normal-case tracking-normal" title={t("common.fontSize")}>
@@ -384,10 +454,12 @@ export function TraitPills({ traits, compact = false, cardTheme }: { traits: str
 
 function TraitExplanations({
   traits,
+  grantsDaunting = false,
   chaos = false,
   cardTheme,
 }: {
   traits: string;
+  grantsDaunting?: boolean;
   chaos?: boolean;
   cardTheme?: "zombie" | "goblin" | "vampire";
 }) {
@@ -397,7 +469,7 @@ function TraitExplanations({
     .map((keyword) => keyword.trim())
     .filter(Boolean);
 
-  if (entries.length === 0) return null;
+  if (entries.length === 0 && !grantsDaunting) return null;
 
   return (
     <div className={["card-preview-keyword-explanations flex w-[min(260px,20vw)] flex-col gap-2", chaos ? "is-chaos" : "", cardTheme ? `is-${cardTheme}` : ""].join(" ")}>
@@ -410,6 +482,32 @@ function TraitExplanations({
           <p className="mt-2 text-[0.95rem] leading-relaxed text-[#f4dfb0]">{localizedTraitTooltip(keyword, language)}</p>
         </div>
       ))}
+      {grantsDaunting && <GrantedDauntingExplanation />}
+    </div>
+  );
+}
+
+function GrantedDauntingPill() {
+  const t = useTranslation();
+  return (
+    <GameTooltip content={t("cardPreview.grantsDauntingBody")}>
+      <span className="keyword-pill card-preview-granted-keyword">
+        <CardTraitIcon keyword="DAUNTING" />
+        {t("cardPreview.grantsDaunting")}
+      </span>
+    </GameTooltip>
+  );
+}
+
+function GrantedDauntingExplanation() {
+  const t = useTranslation();
+  return (
+    <div className="hf-ui-panel-soft card-preview-granted-explanation p-2.5">
+      <div className="keyword-pill card-preview-keyword-badge">
+        <CardTraitIcon keyword="DAUNTING" />
+        {t("cardPreview.grantsDaunting")}
+      </div>
+      <p className="mt-2 text-[0.95rem] leading-relaxed text-[#f4dfb0]">{t("cardPreview.grantsDauntingBody")}</p>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { Check, RefreshCcw } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { UI_FEATURE_FLAGS } from "../config/featureFlags";
 import type { GameState } from "../engine/GameTypes";
 import { useTranslation } from "../i18n/useTranslation";
@@ -7,6 +7,10 @@ import { useGameStore } from "../store/useGameStore";
 import { shouldShowFullCardImage } from "../utils/cardImages";
 import { Card } from "./Card";
 import { guidedAnchorRegistry, guidedCardAnchorKey, guidedSurfaceAnchorKey } from "../guidance";
+import { firstCanonVisionDirector } from "../guidance/firstCanonVision";
+
+const subscribeFirstCanon = (listener: () => void) => firstCanonVisionDirector.subscribe(listener);
+const readFirstCanon = () => firstCanonVisionDirector.snapshot();
 
 export function OpeningHandOverlay({ game }: { game: GameState }) {
   const acceptOpeningHand = useGameStore((state) => state.acceptOpeningHand);
@@ -33,18 +37,53 @@ export function OpeningHandModal({ game, onAccept, onMulligan }: {
   onMulligan: () => void;
 }) {
   const t = useTranslation();
-  const canMulligan = game.player.hand.length > 1;
+  const firstCanon = useSyncExternalStore(subscribeFirstCanon, readFirstCanon, readFirstCanon);
+  const narrationButtonRef = useRef<HTMLButtonElement>(null);
+  const ownsOpening = firstCanon.orderedSequenceActive && !game.openingHandAccepted;
+  const openingNarration = ownsOpening && (
+    firstCanon.stage === "opening-intro" || firstCanon.stage === "opening-confirmation"
+  ) ? firstCanon.narration : undefined;
+  const canMulligan = game.player.hand.length > 1
+    && (!ownsOpening || firstCanon.stage === "await-mulligan");
+  const canAccept = !ownsOpening || firstCanon.stage === "opening-accept";
+  const lastCardIndex = game.player.hand.length - 1;
+
+  useEffect(() => {
+    if (openingNarration) narrationButtonRef.current?.focus({ preventScroll: true });
+  }, [firstCanon.stage, openingNarration]);
+
+  useEffect(() => {
+    if (!ownsOpening || typeof window === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      firstCanonVisionDirector.notifyOpeningCardsSettled(game.mulligansTaken);
+    }
+  }, [game.mulligansTaken, ownsOpening]);
 
   return (
     <div className="opening-hand-overlay fixed inset-0 z-[420] flex items-center justify-center" role="presentation">
       <section className="opening-hand-layout" role="dialog" aria-modal="true" aria-label={t("mulligan.title")}>
+        {openingNarration && (
+          <div className="opening-hand-narration" role="document">
+            <span className="contextual-tutorial-mark" aria-hidden="true" />
+            <h2>{t(openingNarration.titleKey)}</h2>
+            <p>{t(openingNarration.bodyKey)}</p>
+            <button
+              ref={narrationButtonRef}
+              type="button"
+              className="contextual-tutorial-acknowledge"
+              onClick={() => firstCanonVisionDirector.acknowledge()}
+            >
+              {t("guided.contextual.understood")}
+            </button>
+          </div>
+        )}
         <div
           ref={(element) => guidedAnchorRegistry.set(
             guidedSurfaceAnchorKey("opening.hand"),
             "opening-hand:surface",
             element,
           )}
-          className="opening-hand-cards"
+          className={["opening-hand-cards", firstCanon.suppressOpeningCardInteraction ? "is-narration-locked" : ""].join(" ")}
         >
           {game.player.hand.map((card, index) => {
             const showFullImage = shouldShowFullCardImage(card.definitionId);
@@ -57,6 +96,9 @@ export function OpeningHandModal({ game, onAccept, onMulligan }: {
                 key={`${game.mulligansTaken}-${card.instanceId}`}
                 className="opening-hand-card-entry"
                 style={{ animationDelay: `${index * 55}ms` }}
+                onAnimationEnd={index === lastCardIndex
+                  ? () => firstCanonVisionDirector.notifyOpeningCardsSettled(game.mulligansTaken)
+                  : undefined}
               >
                 <div
                   ref={(element) => guidedAnchorRegistry.set(
@@ -99,11 +141,17 @@ export function OpeningHandModal({ game, onAccept, onMulligan }: {
             className="opening-hand-button opening-hand-button-accept"
             type="button"
             onClick={onAccept}
+            disabled={!canAccept}
           >
             <Check size={18} />
             {t("mulligan.accept")}
           </button>
           <button
+            ref={(element) => guidedAnchorRegistry.set(
+              guidedSurfaceAnchorKey("opening.mulliganAction"),
+              "opening-hand:mulligan-action",
+              element,
+            )}
             data-audio-click={canMulligan ? "valid" : "off"}
             className="opening-hand-button opening-hand-button-mulligan"
             type="button"

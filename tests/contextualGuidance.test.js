@@ -10,6 +10,11 @@ import {
   emptyGuidedProgress,
   parseGuidedProgress,
 } from "../src/guidance/progress";
+import { firstCanonVisionDirector } from "../src/guidance/firstCanonVision";
+import { createLearnToPlayFirstMatchOrigin } from "../src/guidance/learnToPlayHandoff";
+import { guidedProgressStore } from "../src/guidance/progress";
+import { getHostDeck, getPlayerDeck } from "../src/data/decks";
+import { acceptOpeningHand, createInitialGame, mulliganOpeningHand } from "../src/engine/GameState";
 
 const RESERVE_CONCEPT = Object.freeze({
   id: "reserve-flow",
@@ -109,6 +114,80 @@ test("contextual concepts persist on acknowledgement and obey global repeat pref
   fixture.signals.publish({ kind: "player.reserveReleased", amount: 1 });
   fixture.drain();
   assert.equal(fixture.runtime.snapshot().active?.conceptId, "reserve-flow");
+  fixture.dispose();
+});
+
+test("the first Canon director enforces one real mulligan and resumes the retained awakening intent", () => {
+  guidedProgressStore.resetForTests();
+  firstCanonVisionDirector.resetForTests();
+  const origin = createLearnToPlayFirstMatchOrigin();
+  let game = createInitialGame(
+    getPlayerDeck(origin.playerDeckId),
+    getHostDeck(origin.hostDeckId),
+    origin.rngSeed,
+    origin.preparationTurns,
+    origin.difficulty,
+    origin.gameMode,
+  );
+
+  firstCanonVisionDirector.beginLaunch({ source: "learn-to-play-handoff", origin, sessionId: "game:first-canon" });
+  assert.equal(firstCanonVisionDirector.snapshot().stage, "opening-settling");
+  firstCanonVisionDirector.notifyOpeningCardsSettled(0);
+  assert.equal(firstCanonVisionDirector.snapshot().stage, "opening-intro");
+  assert.equal(firstCanonVisionDirector.authorizeIntent({ kind: "opening.accept" }).allowed, false);
+  firstCanonVisionDirector.acknowledge();
+  assert.equal(firstCanonVisionDirector.authorizeIntent({ kind: "opening.mulligan" }).allowed, true);
+
+  game = mulliganOpeningHand(game);
+  firstCanonVisionDirector.refresh(game, []);
+  assert.equal(firstCanonVisionDirector.snapshot().stage, "mulligan-settling");
+  assert.equal(firstCanonVisionDirector.authorizeIntent({ kind: "opening.mulligan" }).allowed, false);
+  firstCanonVisionDirector.notifyOpeningCardsSettled(1);
+  firstCanonVisionDirector.acknowledge();
+  assert.equal(firstCanonVisionDirector.authorizeIntent({ kind: "opening.accept" }).allowed, true);
+
+  game = acceptOpeningHand(game);
+  firstCanonVisionDirector.refresh(game, []);
+  firstCanonVisionDirector.refresh(game, ["phase.banner:setup-step-1-of-3"]);
+  firstCanonVisionDirector.refresh(game, []);
+  assert.equal(firstCanonVisionDirector.snapshot().stage, "preparation-intro");
+  firstCanonVisionDirector.acknowledge();
+  firstCanonVisionDirector.acknowledge();
+  assert.deepEqual(
+    firstCanonVisionDirector.authorizeIntent({ kind: "phase.awakenHost" }),
+    { allowed: false, conceptId: "first-canon-opening" },
+  );
+  assert.equal(firstCanonVisionDirector.snapshot().stage, "host-awakening-warning");
+  assert.equal(firstCanonVisionDirector.acknowledge().awakenHost, true);
+  assert.equal(firstCanonVisionDirector.snapshot().stage, "completed");
+
+  firstCanonVisionDirector.beginLaunch({ source: "play", origin, sessionId: "game:import" });
+  assert.equal(firstCanonVisionDirector.snapshot().stage, "inactive", "importing the same seed never installs the ordered sequence");
+  firstCanonVisionDirector.resetForTests();
+  guidedProgressStore.resetForTests();
+});
+
+test("forced recaps and retained Marco Dorado have session-scoped ledgers", () => {
+  const retained = Object.freeze({
+    ...RESERVE_CONCEPT,
+    id: "retained-cue",
+    retainHighlightsAfterAcknowledge: true,
+  });
+  const fixture = createRuntime([retained]);
+  let forcedAcknowledgements = 0;
+  fixture.progress.markConceptSeen(retained.id, retained.revision, "2026-09-01T00:00:00.000Z");
+  fixture.runtime.forceConceptsForSession([{
+    conceptId: retained.id,
+    onAcknowledge: () => { forcedAcknowledgements += 1; },
+  }]);
+  fixture.signals.publish({ kind: "player.reserveReleased", amount: 1 });
+  fixture.drain();
+  assert.equal(fixture.runtime.snapshot().active?.conceptId, retained.id);
+  fixture.runtime.acknowledgeActive();
+  assert.equal(forcedAcknowledgements, 1);
+  assert.deepEqual(fixture.runtime.snapshot().persistentHighlights, [{ kind: "surface", anchor: "player.reserve" }]);
+  fixture.signals.beginSession("match:2");
+  assert.deepEqual(fixture.runtime.snapshot().persistentHighlights, []);
   fixture.dispose();
 });
 

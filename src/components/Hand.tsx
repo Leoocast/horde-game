@@ -2,8 +2,8 @@ import type { GameState } from "../engine/GameTypes";
 import type { CardInstance } from "../engine/GameTypes";
 import { UI_FEATURE_FLAGS } from "../config/featureFlags";
 import { canPayLifeCost, lifeCostAmount } from "../engine/ActionCosts";
+import { canPlayerCastFromHand } from "../engine/GameActions";
 import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand, canPlayerRecycleEnergy } from "../engine/GameRules";
-import { canPayWithAutomaticEnergy, totalEnergyCost } from "../engine/EnergySystem";
 import { hasValidTargetSequence } from "../engine/Targeting";
 import { isQuickSpell } from "../engine/hostfallVocabulary";
 import { useGameStore } from "../store/useGameStore";
@@ -32,6 +32,7 @@ import {
   guidedSurfaceAnchorKey,
   type GuidedPresentationActivityToken,
 } from "../guidance";
+import { contextualTutorialRuntime } from "../guidance/contextualProductRuntime";
 
 const DRAG_PLAY_SCREEN_RATIO = 0.7;
 const ENERGY_RECYCLE_MIN_HORIZONTAL_DRAG = 48;
@@ -39,6 +40,8 @@ const HAND_ENTRY_STAGGER = 0.07;
 const HAND_BASE_OVERLAP_RATIO = 0.12;
 const subscribeGuidedSession = (listener: () => void) => guidedSessionStore.subscribe(listener);
 const readGuidedSession = () => guidedSessionStore.snapshot();
+const subscribeContextualTutorial = (listener: () => void) => contextualTutorialRuntime.subscribe(listener);
+const readContextualTutorial = () => contextualTutorialRuntime.snapshot();
 type HandCardMotionContext = {
   entryOrder: number;
   stagger: boolean;
@@ -76,6 +79,14 @@ const handCardMotion: Variants = {
 export function Hand({ game }: { game: GameState }) {
   const t = useTranslation();
   const guidedSession = useSyncExternalStore(subscribeGuidedSession, readGuidedSession, readGuidedSession);
+  const contextualTutorial = useSyncExternalStore(
+    subscribeContextualTutorial,
+    readContextualTutorial,
+    readContextualTutorial,
+  );
+  const contextualHeldCardId = contextualTutorial.active?.conceptId === "quick-spell"
+    ? contextualTutorial.active.highlights.find((highlight) => highlight.kind === "card")?.instanceId
+    : undefined;
   const guidedCostCardId = guidedSession.status === "running"
     && guidedSession.currentStep?.id === "invoke-aelyra"
     ? guidedSession.bindings.aelyra
@@ -462,7 +473,7 @@ export function Hand({ game }: { game: GameState }) {
             const fanOffset = index - (handSize - 1) / 2;
             const fanAngle = handSize > 1 ? Math.max(-5.5, Math.min(5.5, fanOffset * 1.6)) : 0;
             const fanDip = Math.min(24, Math.abs(fanOffset) * 6.5);
-            const isHovered = hoveredHandId === card.instanceId;
+            const isHovered = hoveredHandId === card.instanceId || contextualHeldCardId === card.instanceId;
             const selectedForDiscard = discardTargetLocked || handLimitTargetLocked;
             const { raised: isHeld, zIndex: handZIndex } = getHandCardPresentationState({
               index,
@@ -649,11 +660,8 @@ export function Hand({ game }: { game: GameState }) {
 
 function isPlayableFromHand(game: GameState, card: CardInstance, pendingTriggeredEffectCount = 0): boolean {
   if (pendingTriggeredEffectCount > 0) return false;
-  if (!canPlayCardAtCurrentTiming(game, card)) return false;
   if (card.kinds.includes("SOURCE")) return !game.player.energyActionUsedThisTurn && canPlayerPutAnotherLand(game);
-  if (!canPayLifeCost(game, card.additionalCost)) return false;
-  if (!canPayWithAutomaticEnergy(game, totalEnergyCost(card.energyCost, card.variableCost?.hasX ? 1 : 0))) return false;
-  return hasValidTargetSequence(game, "player", card.requiresTargets);
+  return canPlayerCastFromHand(game, card);
 }
 
 function readHandEntryGeometry(

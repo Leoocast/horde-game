@@ -14,7 +14,8 @@ import {
 } from "../src/content/CanonSeed";
 import { contentCatalog } from "../src/content/bootstrap";
 import { getHostDeck, getPlayerDeck } from "../src/data/decks";
-import { createInitialGame } from "../src/engine/GameState";
+import { acceptOpeningHand, createInitialGame, mulliganOpeningHand } from "../src/engine/GameState";
+import { endPlayerTurn } from "../src/engine/PhaseManager";
 import {
   DEFAULT_PLAYER_DECK_SOURCE_COUNT,
   prepareInitialDeckPools,
@@ -31,6 +32,101 @@ test("HF1 uses stable language-neutral deck codes", () => {
       { code: "VRK", side: "host", qualifiedDeckKey: "hostfall.core/legion_of_varka" },
     ],
   );
+});
+
+test("HF1-ELA-GRV-082-QC5 preserves the first Canon opening and Preparation draws", () => {
+  const identity = decodeCanonSeed("HF1-ELA-GRV-082-QC5");
+  let game = createInitialGame(
+    getPlayerDeck(identity.playerDeckKey),
+    getHostDeck(identity.hostDeckKey),
+    identity.entropy,
+    identity.preparationTurns,
+    identity.difficulty,
+    identity.gameMode,
+  );
+  assert.deepEqual(game.player.hand.map((card) => card.definitionId), [
+    "river_of_elarion",
+    "vaelor_emerald_guardian",
+    "hydra_of_the_black_bough",
+    "veiled_dawn_flower",
+    "kaelor_stormcaller",
+    "river_of_elarion",
+    "kaelor_stormcaller",
+  ]);
+  assert.deepEqual(game.player.archive.map((card) => card.definitionId), [
+    "shield_of_the_heir", "elixir_of_the_first_leaf", "liora_keeper_of_the_grove", "river_of_elarion",
+    "clash_of_echoes", "the_judgment_of_elarion", "kaelor_stormcaller", "clash_of_echoes",
+    "river_of_elarion", "echo_of_the_forgotten_city", "river_of_elarion", "the_judgment_of_elarion",
+    "maela_watcher_of_the_heights", "liora_keeper_of_the_grove", "echo_of_the_forgotten_city",
+    "aelyra_heir_of_elarion", "maela_watcher_of_the_heights", "hydra_of_the_black_bough",
+    "river_of_elarion", "aelyra_heir_of_elarion", "river_of_elarion", "veiled_dawn_flower",
+    "aelyra_heir_of_elarion", "river_of_elarion", "river_of_elarion", "elixir_of_the_first_leaf",
+  ]);
+  const expectedHostArchive = [
+    "graveless_soldier", "return_to_memory", "graveless_soldier", "graveless_soldier",
+    "harvester_of_the_fallen", "graveless_soldier", "mastiff_of_the_overflowing_ossuary",
+    "graveless_titan", "graveless_titan", "winged_stalker_of_the_crypt", "graveless_soldier",
+    "graveless_soldier", "ossuary_rider", "tribute_of_the_four_sorrows", "graveless_soldier",
+    "three_eyed_corpse_gorger", "graveless_soldier", "barrow_wallbreaker", "spore_infested",
+    "graveless_soldier", "memory_thief", "graveless_soldier", "nerezh_graveless_matriarch",
+    "inexhaustible_ossuary", "graveless_soldier", "harvester_of_the_fallen",
+    "nerezh_graveless_matriarch", "graveless_soldier", "return_to_memory", "graveless_titan",
+    "graveless_titan", "graveless_soldier", "graveless_soldier", "graveless_soldier",
+    "devourer_of_the_last_memory", "the_broken_headstone", "graveless_soldier", "memory_thief",
+    "winged_stalker_of_the_crypt", "mastiff_of_the_overflowing_ossuary", "spore_infested",
+    "graveless_soldier", "graveless_soldier", "graveless_soldier", "the_broken_headstone",
+    "stitched_wing_spawn", "graveless_soldier", "devourer_of_the_last_memory",
+    "tribute_of_the_four_sorrows", "graveless_soldier",
+  ];
+  assert.deepEqual(game.host.archive.map((card) => card.definitionId), expectedHostArchive);
+  assert.equal(game.currentRandomState, 565679351);
+
+  game = mulliganOpeningHand(game);
+  assert.equal(game.mulligansTaken, 1);
+  assert.deepEqual(game.player.hand.map((card) => card.definitionId), [
+    "veiled_dawn_flower",
+    "shield_of_the_heir",
+    "river_of_elarion",
+    "liora_keeper_of_the_grove",
+    "river_of_elarion",
+    "river_of_elarion",
+  ]);
+  assert.deepEqual(game.player.archive.slice(0, 12).map((card) => card.definitionId), [
+    "hydra_of_the_black_bough",
+    "vaelor_emerald_guardian",
+    "aelyra_heir_of_elarion",
+    "kaelor_stormcaller",
+    "echo_of_the_forgotten_city",
+    "river_of_elarion",
+    "maela_watcher_of_the_heights",
+    "aelyra_heir_of_elarion",
+    "river_of_elarion",
+    "clash_of_echoes",
+    "river_of_elarion",
+    "the_judgment_of_elarion",
+  ]);
+  assert.deepEqual(game.player.archive.map((card) => card.definitionId), [
+    "hydra_of_the_black_bough", "vaelor_emerald_guardian", "aelyra_heir_of_elarion",
+    "kaelor_stormcaller", "echo_of_the_forgotten_city", "river_of_elarion",
+    "maela_watcher_of_the_heights", "aelyra_heir_of_elarion", "river_of_elarion",
+    "clash_of_echoes", "river_of_elarion", "the_judgment_of_elarion", "river_of_elarion",
+    "kaelor_stormcaller", "elixir_of_the_first_leaf", "kaelor_stormcaller",
+    "echo_of_the_forgotten_city", "river_of_elarion", "liora_keeper_of_the_grove",
+    "hydra_of_the_black_bough", "elixir_of_the_first_leaf", "clash_of_echoes",
+    "aelyra_heir_of_elarion", "river_of_elarion", "the_judgment_of_elarion",
+    "veiled_dawn_flower", "maela_watcher_of_the_heights",
+  ]);
+  assert.deepEqual(game.host.archive.map((card) => card.definitionId), expectedHostArchive);
+  assert.equal(game.currentRandomState, 3653149192);
+
+  game = acceptOpeningHand(game);
+  game = endPlayerTurn(game);
+  assert.equal(game.player.hand.at(-1)?.definitionId, "hydra_of_the_black_bough");
+  game = endPlayerTurn(game);
+  assert.equal(game.player.hand.at(-1)?.definitionId, "vaelor_emerald_guardian");
+  game = endPlayerTurn(game);
+  assert.equal(game.setupTurnsRemaining, 0);
+  assert.equal(game.player.archive[0]?.definitionId, "aelyra_heir_of_elarion");
 });
 
 test("Canon Seed round-trips the agreed HF1 example", () => {

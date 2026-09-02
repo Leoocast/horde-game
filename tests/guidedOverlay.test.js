@@ -344,8 +344,8 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(styles, /\.guided-tutorial-ring::after\s*\{[^}]*transform:\s*translateX\(-50%\) rotate\(45deg\);/su);
   assert.match(styles, /guided-tutorial-overlay:has\(\.guided-tutorial-ring\[data-anchor-key="surface:player\.sources"\]\)[\s\S]*?guided-tutorial-ring\[data-anchor-key="surface:player\.reserve"\]::after\s*\{\s*display:\s*none;/u);
   assert.doesNotMatch(styles, /\.guided-tutorial-ring\[data-anchor-key\^="card:"\]\s*\{\s*display:\s*none;\s*\}/u);
-  assert.match(contextual, /className=\{isCardHighlight \? "guided-tutorial-ring contextual-tutorial-ring" : "contextual-tutorial-ring"\}/u);
-  assert.match(contextual, /data-tone=\{isCardHighlight \? "gold" : undefined\}/u);
+  assert.match(contextual, /className="guided-tutorial-ring contextual-tutorial-ring"/u);
+  assert.match(contextual, /data-tone="gold"/u);
   assert.match(styles, /\.guided-tutorial-body p\s*\{[^}]*font-size:\s*16px;/su);
   assert.match(
     styles,

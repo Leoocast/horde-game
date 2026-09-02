@@ -5,6 +5,7 @@ import { contextualConceptSeen } from "./progress";
 import type { ContextualConceptRegistry } from "./ContextualConceptRegistry";
 import type {
   ContextualConceptDefinition,
+  ContextualHighlightRef,
   ContextualConceptMatch,
   ContextualConceptPresentation,
   ContextualQueuedConcept,
@@ -23,6 +24,7 @@ export type ContextualRuntimeSnapshot = Readonly<{
   queue: readonly string[];
   shownThisMatch: readonly string[];
   provisionalConcepts: readonly string[];
+  persistentHighlights: readonly ContextualHighlightRef[];
   active?: ContextualConceptPresentation;
   lastInterceptedConceptId?: string;
 }>;
@@ -46,6 +48,8 @@ export class ContextualTutorialRuntime {
   #active: ContextualQueuedConcept | undefined;
   #shownThisMatch = new Set<string>();
   #provisional = new Map<string, ContextualConceptProgress>();
+  #forcedConcepts = new Map<string, () => void>();
+  #persistentHighlights: ContextualHighlightRef[] = [];
   #enqueueOrder = 0;
   #promotionScheduled = false;
   #lastInterceptedConceptId: string | undefined;
@@ -145,6 +149,12 @@ export class ContextualTutorialRuntime {
     ) {
       this.#progress.markConceptSeen(entry.conceptId, entry.shownRevision, entry.shownAt);
     }
+    if (item.definition.retainHighlightsAfterAcknowledge) {
+      this.#persistentHighlights = [...item.match.highlights ?? []].map((highlight) => Object.freeze({ ...highlight }));
+    }
+    const forcedCompletion = this.#forcedConcepts.get(item.definition.id);
+    this.#forcedConcepts.delete(item.definition.id);
+    forcedCompletion?.();
     this.#active = undefined;
     this.#lastInterceptedConceptId = undefined;
     this.#emit();
@@ -166,6 +176,12 @@ export class ContextualTutorialRuntime {
       this.#lastInterceptedConceptId = undefined;
     }
     this.#emit();
+    this.#schedulePromotion();
+  }
+
+  /** Forces selected fundamentals once in this session even if their global concept is already seen. */
+  forceConceptsForSession(entries: readonly Readonly<{ conceptId: string; onAcknowledge: () => void }>[]): void {
+    for (const entry of entries) this.#forcedConcepts.set(entry.conceptId, entry.onAcknowledge);
     this.#schedulePromotion();
   }
 
@@ -195,10 +211,12 @@ export class ContextualTutorialRuntime {
   }
 
   #onSignalSnapshot(snapshot: GameplaySignalSnapshot): void {
-    if (snapshot.sessionId !== this.#gameSessionId) this.#resetSession(snapshot.sessionId, "immediate", false);
+    const sessionChanged = snapshot.sessionId !== this.#gameSessionId;
+    if (sessionChanged) this.#resetSession(snapshot.sessionId, "immediate", false);
     const signals = snapshot.signals.filter((signal) => signal.cursor > this.#signalCursor);
     if (signals.length === 0) {
       this.#signalCursor = Math.max(this.#signalCursor, snapshot.cursor);
+      if (sessionChanged) this.#emit();
       return;
     }
     const context = this.#readContext();
@@ -218,6 +236,7 @@ export class ContextualTutorialRuntime {
     if (this.#shownThisMatch.has(definition.id)) return false;
     if (this.#active?.definition.id === definition.id) return false;
     if (this.#queue.some((item) => item.definition.id === definition.id)) return false;
+    if (this.#forcedConcepts.has(definition.id)) return true;
     if (this.#progressMode === "isolated") return true;
     const progress = this.#progress.snapshot();
     return !contextualConceptSeen(progress, definition) || !progress.preferences.hideSeenContextualHelp;
@@ -281,6 +300,8 @@ export class ContextualTutorialRuntime {
     this.#active = undefined;
     this.#shownThisMatch.clear();
     this.#provisional.clear();
+    this.#forcedConcepts.clear();
+    this.#persistentHighlights = [];
     this.#enqueueOrder = 0;
     this.#promotionScheduled = false;
     this.#lastInterceptedConceptId = undefined;
@@ -297,6 +318,7 @@ export class ContextualTutorialRuntime {
       this.#queue.map(({ definition }) => definition.id),
       [...this.#shownThisMatch],
       [...this.#provisional.keys()],
+      this.#persistentHighlights,
       active,
       this.#lastInterceptedConceptId,
     );
@@ -334,6 +356,7 @@ function freezeSnapshot(
   queue: readonly string[] = [],
   shownThisMatch: readonly string[] = [],
   provisionalConcepts: readonly string[] = [],
+  persistentHighlights: readonly ContextualHighlightRef[] = [],
   active?: ContextualConceptPresentation,
   lastInterceptedConceptId?: string,
 ): ContextualRuntimeSnapshot {
@@ -345,6 +368,7 @@ function freezeSnapshot(
     queue: Object.freeze([...queue]),
     shownThisMatch: Object.freeze([...shownThisMatch]),
     provisionalConcepts: Object.freeze([...provisionalConcepts]),
+    persistentHighlights: Object.freeze(persistentHighlights.map((highlight) => Object.freeze({ ...highlight }))),
     active,
     lastInterceptedConceptId,
   });

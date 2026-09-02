@@ -1,8 +1,13 @@
 # Plan por fases — Primera Visión Canon después de Aprender a jugar
 
-Estado: **diseño de producto aprobado; implementación no iniciada**.
+Estado: **implementación completada; QA manual de ritmo y presentación pendiente**.
 
 Última actualización: **2026-09-01**.
+
+Implementación cerrada el 2026-09-01 en el director `firstCanonVision`, el runtime contextual de
+producto y las superficies normales de Mano, Preparación, Campo y detalle. Typecheck, build web y
+la suite completa quedaron verdes; el cierre definitivo conserva el QA manual del usuario previsto
+en la Fase 6.
 
 ## Autoridad y alcance
 

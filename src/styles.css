@@ -17841,6 +17841,140 @@
   .decks-panel:not(.is-closing) .deck-key-card { animation: none; }
 }
 
+/* First Canon Vision and the reusable Marco Dorado. */
+.anchored-golden-frame {
+  position: fixed;
+  z-index: 19955;
+  pointer-events: none;
+}
+
+.persistent-contextual-golden-frames {
+  position: fixed;
+  z-index: 19954;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.first-canon-narration-layer {
+  position: fixed;
+  z-index: 19950;
+  inset: 0;
+  display: grid;
+  place-items: start center;
+  padding: 106px 24px 24px;
+  background: rgb(1 3 4 / 0.34);
+  pointer-events: auto;
+}
+
+.first-canon-narration {
+  position: relative;
+  left: auto;
+  top: auto;
+  width: min(700px, calc(100vw - 48px));
+}
+
+.first-canon-narration h2 {
+  margin: 0 0 7px;
+  color: #e0d5b5;
+  font-size: clamp(18px, 2.4vw, 25px);
+  font-weight: 650;
+  line-height: 1.15;
+}
+
+.opening-hand-narration {
+  position: absolute;
+  z-index: 8;
+  top: -3px;
+  left: 50%;
+  width: min(760px, calc(100vw - 40px));
+  border: 1px solid rgb(206 180 101 / 0.68);
+  border-top-color: rgb(239 216 143 / 0.82);
+  padding: 14px 18px 13px;
+  background: linear-gradient(145deg, rgb(24 33 35 / 0.99), rgb(7 13 16 / 0.995));
+  box-shadow: 0 18px 42px rgb(0 0 0 / 0.58), 0 0 22px rgb(212 169 62 / 0.18);
+  transform: translateX(-50%);
+}
+
+.opening-hand-narration h2 {
+  margin: 0 0 5px;
+  color: #e8ddb9;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.opening-hand-narration p {
+  margin: 0;
+  color: #bdc6c0;
+  font-size: 14px;
+  line-height: 1.42;
+}
+
+.opening-hand-narration .contextual-tutorial-acknowledge { margin-top: 10px; }
+
+.opening-hand-layout:has(.opening-hand-narration) .opening-hand-cards {
+  height: min(500px, 58vh);
+  margin-top: clamp(112px, 16vh, 145px);
+}
+
+.opening-hand-cards.is-narration-locked { pointer-events: none; }
+.opening-hand-cards.is-narration-locked .opening-hand-card-entry:hover { z-index: 1; }
+.opening-hand-cards.is-narration-locked .opening-hand-card-entry:hover .opening-hand-card {
+  filter: drop-shadow(0 12px 12px rgb(0 0 0 / 0.58));
+  transform: none;
+}
+
+.card-preview-dismiss-layer {
+  background: rgb(0 0 0 / 0.46);
+  animation: card-preview-dimmer-in 150ms ease-out both;
+}
+
+@keyframes card-preview-dimmer-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.card-preview-keyword-explanations > .hf-ui-panel-soft {
+  border-color: color-mix(in srgb, var(--deck-accent, #b9a36b) 62%, #d8c383);
+  background: linear-gradient(145deg, rgb(14 21 20 / 0.98), rgb(5 10 11 / 0.995));
+  box-shadow:
+    inset 0 1px 0 rgb(255 239 184 / 0.1),
+    0 0 0 1px rgb(0 0 0 / 0.72),
+    0 0 18px var(--deck-accent-soft, rgb(213 180 92 / 0.2)),
+    0 10px 24px rgb(0 0 0 / 0.5);
+}
+
+.card-preview-keyword-explanations > .hf-ui-panel-soft p {
+  line-height: 1.52;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.72);
+}
+
+.card-preview-keyword-explanations .card-preview-keyword-badge,
+.card-details-modal-panel .keyword-pill {
+  box-shadow:
+    inset 0 1px 0 rgb(255 244 202 / 0.15),
+    inset 0 -2px 3px rgb(0 0 0 / 0.34),
+    0 0 14px var(--deck-accent-soft, rgb(213 180 92 / 0.28)),
+    0 4px 10px rgb(0 0 0 / 0.48);
+}
+
+.card-preview-locked-close {
+  position: absolute;
+  top: -10px;
+  right: -42px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  border-color: rgb(207 181 108 / 0.66);
+  background: rgb(8 13 14 / 0.94);
+  color: #eadcaf;
+  box-shadow: 0 0 16px rgb(212 169 62 / 0.2), 0 8px 18px rgb(0 0 0 / 0.52);
+}
+
+.card-preview-granted-explanation {
+  border-color: rgb(212 185 106 / 0.72) !important;
+}
+
 .deck-key-card {
   --deck-accent: #78956e;
   --deck-accent-bright: #c9dfad;

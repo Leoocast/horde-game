@@ -1006,8 +1006,8 @@ normal, una a una. La Vida llega a 0 por el combate real; `learn-to-play` reutil
 derrota; el copy narrativo **Llegamos demasiado tarde** aparece dos segundos después y muestra sólo
 **Contemplar otro Futuro**. Tras aceptar la
 narración, el botón registra el recorrido como completado, ejecuta el vórtice y abre
-`HF1-ELA-GRV-082-QC5` como una Visión normal. El diseño post-handoff quedó aprobado el 2026-09-01 y
-vive en `docs/plans/first_canon_vision_plan.md`; todavía no está implementado. Conserva la seed y el
+`HF1-ELA-GRV-082-QC5` como una Visión normal. El diseño post-handoff quedó implementado el 2026-09-01
+y vive en `docs/plans/first_canon_vision_plan.md`; conserva la seed y el
 RNG reales, presenta una Mano inicial de siete cartas y obliga un único mulligan real que entrega la
 Mano preparada de seis cartas cuando las ayudas contextuales corresponden. Después introduce la
 Preparación como concentración mental, avisa al cerrarla y entrega el resto a conceptos
@@ -1019,7 +1019,7 @@ Quebrado mostrará **Otorga: Imponente** sin
 adquirir `DAUNTING`; **Rápido** se explicará al jugador como «puedes lanzarlo en cualquier momento»
 sin cambiar las ventanas ni la resolución actuales del engine. Durante los cuadros de Mano sólo se
 suprimen hover, preview y acciones de carta; Música y Ajustes siguen accesibles. La transición
-CTA/vórtice/partida debe volverse atómica o recuperable mediante un marcador acotado, sin reactivar
+CTA/vórtice/partida marca el prólogo completo sólo después de crear la Visión Canon, sin reactivar
 el resume de demo. En el código actual **Continuar** está
 deshabilitado globalmente; la política aprobada para la demo es ocultarlo sin retirar su
 implementación de Early Access.

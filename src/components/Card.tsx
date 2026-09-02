@@ -191,6 +191,7 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         event.preventDefault();
         onContextMenu?.(event);
         if (suppressContextMenu) return;
+        event.currentTarget.focus({ preventScroll: true });
         setHoveredCardId(undefined);
         setFocusedCardId(card.instanceId);
       }}
@@ -200,6 +201,12 @@ export function Card({ game, card, selected, attacking, blocking, compact, accen
         if (!selectionDisabled) onSelect?.();
       }}
       onKeyDown={(event: KeyboardEvent<HTMLElement>) => {
+        if (!suppressContextMenu && (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10"))) {
+          event.preventDefault();
+          setHoveredCardId(undefined);
+          setFocusedCardId(card.instanceId);
+          return;
+        }
         if (selectionDisabled || event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
         event.preventDefault();
         if (shouldSuppressClick?.()) return;

@@ -63,6 +63,8 @@ export type ContextualConceptDefinition = Readonly<{
   policy: ContextualInterventionPolicy;
   /** Some explanations describe a just-committed state and must temporarily own the whole board. */
   blocksGameplayWhileVisible?: boolean;
+  /** Keeps the authored Marco Dorado after acknowledgement until the game session changes. */
+  retainHighlightsAfterAcknowledge?: boolean;
   /** Tutorial journeys normally isolate progress; transferable fundamentals may opt into acknowledgement. */
   persistWhenAcknowledgedInIsolated?: boolean;
   /** Larger values are presented first when several signals arrive in the same synchronous beat. */

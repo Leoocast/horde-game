@@ -183,13 +183,12 @@ export function ContextualTutorialCallout() {
       )}
       {!missingAnchor && rects.map((rect, index) => {
         if (resolved[index]?.placementOnly || !resolved[index]?.showHighlight) return null;
-        const isCardHighlight = rect.key.startsWith("card:");
         return (
           <span
             key={`${rect.key}:${rect.role}`}
-            className={isCardHighlight ? "guided-tutorial-ring contextual-tutorial-ring" : "contextual-tutorial-ring"}
+            className="guided-tutorial-ring contextual-tutorial-ring"
             data-anchor-key={rect.key}
-            data-tone={isCardHighlight ? "gold" : undefined}
+            data-tone="gold"
             style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
             aria-hidden="true"
           />

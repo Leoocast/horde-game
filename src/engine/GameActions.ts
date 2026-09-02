@@ -1,11 +1,11 @@
 import type { AbilityOptions, ActionCost, ActionFailure, ActionFailureCode, ActivatedAbility, CardInstance, CastOptions, GameState, Side } from "./GameTypes";
-import { lifeCostAmount, lifeCostFailureReason } from "./ActionCosts";
+import { canPayLifeCost, lifeCostAmount, lifeCostFailureReason } from "./ActionCosts";
 import { drawCards, recordFieldEntry } from "./GameState";
 import { drainEventQueue, enqueue } from "./EventQueue";
 import { destroyPermanent, hasEffectPresentation, losePlayerLife, resolveEffect, resolveEffects, runInvokedTriggers } from "./EffectResolver";
 import { MAX_PLAYER_LANDS, canPlayerPutAnotherLand, canPlayerRecycleEnergy } from "./GameRules";
-import { canPayEnergy, payEnergy, payEnergyAutomatically, storedEnergySpace, totalEnergyCost } from "./EnergySystem";
-import { targetCandidatesWithSelectedTargets } from "./Targeting";
+import { canPayEnergy, canPayWithAutomaticEnergy, payEnergy, payEnergyAutomatically, storedEnergySpace, totalEnergyCost } from "./EnergySystem";
+import { hasValidTargetSequence, targetCandidatesWithSelectedTargets } from "./Targeting";
 import { isQuickSpell } from "./hostfallVocabulary";
 
 export function playLand(game: GameState, handId: string): GameState {
@@ -111,7 +111,7 @@ function castTargetFailureReason(
   return undefined;
 }
 
-function canCastAtCurrentTiming(game: GameState, card: import("./GameTypes").CardInstance): boolean {
+export function canCastAtCurrentTiming(game: GameState, card: import("./GameTypes").CardInstance): boolean {
   if (game.winner) return false;
   if (isQuickSpell(card)) {
     if (game.activeSide === "player" && (game.phase === "main" || game.phase === "combat")) return true;
@@ -140,6 +140,15 @@ export function activateAbility(game: GameState, permanentId: string, abilityId:
 
 export function activatedAbilityFailureReason(game: GameState, card: CardInstance, ability: ActivatedAbility): string | undefined {
   return activatedAbilityFailure(game, card, ability)?.reason;
+}
+
+/** Shared rule selector for UI and contextual guidance; it never commits a cast. */
+export function canPlayerCastFromHand(game: GameState, card: CardInstance): boolean {
+  if (!game.player.hand.some((candidate) => candidate.instanceId === card.instanceId)) return false;
+  if (!canCastAtCurrentTiming(game, card)) return false;
+  if (!canPayLifeCost(game, card.additionalCost)) return false;
+  if (!canPayWithAutomaticEnergy(game, totalEnergyCost(card.energyCost, card.variableCost?.hasX ? 1 : 0))) return false;
+  return hasValidTargetSequence(game, "player", card.requiresTargets);
 }
 
 export function activatedAbilityFailure(game: GameState, card: CardInstance, ability: ActivatedAbility): ActionFailure | undefined {

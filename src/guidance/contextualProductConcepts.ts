@@ -1,5 +1,8 @@
 import type { CardInstance, GameState } from "../engine/GameTypes";
 import { hostInSurge } from "../engine/StaticEffects";
+import { canPlayerCastFromHand } from "../engine/GameActions";
+import { hasTrait } from "../engine/Traits";
+import { isQuickSpell } from "../engine/hostfallVocabulary";
 import type { ContextualConceptDefinition, ContextualConceptMatch } from "./contextualContracts";
 
 export const PRODUCT_CONTEXTUAL_CONCEPTS = [
@@ -57,7 +60,12 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
       && signal.code === "BLOCK_REQUIRES_FLYING_OR_SKYGUARD"
       && signal.intent.kind === "combat.assignBlocker"
       ? {
-          highlights: [
+        highlights: [
+            {
+              kind: "card",
+              instanceId: signal.intent.cardId,
+              padding: 18,
+            },
             {
               kind: "card",
               instanceId: signal.intent.targetId,
@@ -81,7 +89,9 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
       glossaryTerms: ["life"],
     },
     signalKinds: ["player.lifeLost"],
-    evaluate: () => ({ highlights: [{ kind: "surface", anchor: "player.life" }] }),
+    evaluate: (signal) => signal.kind === "player.lifeLost" && !(signal.lifeBefore >= 10 && signal.lifeAfter < 10)
+      ? { highlights: [{ kind: "surface", anchor: "player.life" }] }
+      : undefined,
   },
   {
     id: "marked-damage-clears",
@@ -206,6 +216,181 @@ export const PRODUCT_CONTEXTUAL_CONCEPTS = [
     revalidate: (_match, context) => hostInSurge(context.game),
   },
   {
+    id: "basic-spell",
+    revision: 1,
+    policy: "informative",
+    priority: 92,
+    copy: {
+      titleKey: "guided.contextual.product.basicSpellTitle",
+      bodyKey: "guided.contextual.product.basicSpellBody",
+    },
+    signalKinds: ["action.committed"],
+    evaluate: (signal, context) => {
+      if (signal.kind !== "action.committed" || signal.receipt.kind !== "card.played" || !signal.receipt.cardId) return undefined;
+      const card = findCard(context.game, signal.receipt.cardId);
+      return card?.definitionId === "shield_of_the_heir" && card.kinds.includes("SPELL") && !isQuickSpell(card)
+        ? { placement: "center" }
+        : undefined;
+    },
+  },
+  {
+    id: "daunting-defense",
+    revision: 1,
+    policy: "informative",
+    priority: 118,
+    copy: {
+      titleKey: "guided.contextual.product.dauntingTitle",
+      bodyKey: "guided.contextual.product.dauntingBody",
+      glossaryTerms: ["echoes"],
+    },
+    signalKinds: ["action.committed"],
+    evaluate: (signal, context) => {
+      if (signal.kind !== "action.committed" || signal.receipt.kind !== "blocker.assigned" || !signal.receipt.targetId) return undefined;
+      const attacker = findCard(context.game, signal.receipt.targetId);
+      if (!attacker || !hasTrait(context.game, attacker, "DAUNTING")) return undefined;
+      return {
+        highlights: [
+          { kind: "card", instanceId: attacker.instanceId, padding: 18 },
+          ...(context.game.combat.blockers[attacker.instanceId] ?? []).map((instanceId) => ({ kind: "card" as const, instanceId, padding: 18 })),
+        ],
+        placement: "center",
+      };
+    },
+    revalidate: (_match, context) => context.game.activeSide === "host" && context.game.combat.hostAttackers.length > 0,
+  },
+  {
+    id: "quick-spell",
+    revision: 1,
+    policy: "informative",
+    priority: 125,
+    copy: {
+      titleKey: "guided.contextual.product.quickSpellTitle",
+      bodyKey: "guided.contextual.product.quickSpellBody",
+    },
+    signalKinds: ["host.attackersDeclared"],
+    evaluate: (_signal, context) => {
+      const clash = context.game.player.hand.find((card) => card.definitionId === "clash_of_echoes");
+      return clash && canPlayerCastFromHand(context.game, clash)
+        ? { highlights: [{ kind: "card", instanceId: clash.instanceId, padding: 18 }], placement: "top" }
+        : undefined;
+    },
+    revalidate: (match, context) => {
+      const clashId = highlightedCards(match)[0];
+      const clash = context.game.player.hand.find((card) => card.instanceId === clashId);
+      return Boolean(clash && canPlayerCastFromHand(context.game, clash));
+    },
+  },
+  {
+    id: "poison",
+    revision: 1,
+    policy: "informative",
+    priority: 105,
+    copy: {
+      titleKey: "guided.contextual.product.poisonTitle",
+      bodyKey: "guided.contextual.product.poisonBody",
+    },
+    signalKinds: ["action.committed"],
+    evaluate: (signal, context) => {
+      if (signal.kind !== "action.committed" || signal.receipt.kind !== "archiveAttack.confirmed") return undefined;
+      const hydra = (signal.receipt.targetIds ?? [])
+        .map((instanceId) => findCard(context.game, instanceId))
+        .find((card) => card?.definitionId === "hydra_of_the_black_bough");
+      return hydra && context.game.host.poisonCounters > 0
+        ? { highlights: [{ kind: "card", instanceId: hydra.instanceId, padding: 18 }] }
+        : undefined;
+    },
+    revalidate: cardsRemainRelevant,
+  },
+  {
+    id: "furtive-defense-restriction",
+    revision: 1,
+    policy: "reactive",
+    priority: 121,
+    copy: {
+      titleKey: "guided.contextual.product.furtiveTitle",
+      bodyKey: "guided.contextual.product.furtiveBody",
+    },
+    signalKinds: ["action.denied"],
+    evaluate: (signal) => signal.kind === "action.denied"
+      && signal.code === "FURTIVE_BLOCK_RESTRICTION"
+      && signal.intent.kind === "combat.assignBlocker"
+      ? {
+          highlights: [
+            { kind: "card", instanceId: signal.intent.cardId, padding: 18 },
+            { kind: "card", instanceId: signal.intent.targetId, padding: 18 },
+          ],
+          placement: "center",
+        }
+      : undefined,
+    revalidate: cardsRemainRelevant,
+  },
+  {
+    id: "lethal-defense-warning",
+    revision: 1,
+    policy: "preventive",
+    priority: 135,
+    copy: {
+      titleKey: "guided.contextual.product.lethalTitle",
+      bodyKey: "guided.contextual.product.lethalBody",
+    },
+    signalKinds: [],
+    evaluate: () => undefined,
+    prevent: (intent, context) => {
+      if (intent.kind !== "combat.assignBlocker" || !intent.selected) return undefined;
+      const attacker = findCard(context.game, intent.targetId);
+      return attacker && hasTrait(context.game, attacker, "LETHAL")
+        ? {
+            highlights: [
+              { kind: "card", instanceId: intent.cardId, padding: 18 },
+              { kind: "card", instanceId: intent.targetId, padding: 18 },
+            ],
+            placement: "center",
+          }
+        : undefined;
+    },
+    revalidate: cardsRemainRelevant,
+  },
+  {
+    id: "host-support",
+    revision: 1,
+    policy: "informative",
+    priority: 112,
+    copy: {
+      titleKey: "guided.contextual.product.hostSupportTitle",
+      bodyKey: "guided.contextual.product.hostSupportBody",
+    },
+    signalKinds: ["host.cardsRevealed"],
+    evaluate: (signal, context) => {
+      if (signal.kind !== "host.cardsRevealed") return undefined;
+      const sanctuary = signal.cardIds
+        .map((instanceId) => findCard(context.game, instanceId))
+        .find((card) => card?.definitionId === "the_broken_headstone");
+      return sanctuary
+        ? { highlights: [{ kind: "card", instanceId: sanctuary.instanceId, padding: 18 }], placement: "center" }
+        : undefined;
+    },
+    revalidate: cardsRemainRelevant,
+  },
+  {
+    id: "low-life-contemplate",
+    revision: 1,
+    policy: "informative",
+    blocksGameplayWhileVisible: true,
+    retainHighlightsAfterAcknowledge: true,
+    priority: 145,
+    copy: {
+      titleKey: "guided.contextual.product.lowLifeTitle",
+      bodyKey: "guided.contextual.product.lowLifeBody",
+    },
+    signalKinds: ["player.lifeLost"],
+    evaluate: (signal, context) => signal.kind === "player.lifeLost"
+      && signal.lifeBefore >= 10
+      && signal.lifeAfter < 10
+      && !context.game.winner
+      ? { highlights: [{ kind: "surface", anchor: "destiny.contemplateAgain" }], placement: "center" }
+      : undefined,
+  },
+  {
     id: "empty-hand-draw",
     revision: 2,
     policy: "informative",
@@ -301,7 +486,7 @@ function markedDamageMatch(cardIds: readonly string[]): ContextualConceptMatch |
 }
 
 function findCard(game: GameState, instanceId: string): CardInstance | undefined {
-  return [
+  const card = [
     ...game.player.archive,
     ...game.player.hand,
     ...game.player.field,
@@ -311,5 +496,6 @@ function findCard(game: GameState, instanceId: string): CardInstance | undefined
     ...game.host.field,
     ...game.host.memory,
     ...game.host.oblivion,
-  ].find((card) => card.instanceId === instanceId);
+  ].find((candidate) => candidate.instanceId === instanceId);
+  return card ?? (game.host.pendingCard?.instanceId === instanceId ? game.host.pendingCard : undefined);
 }

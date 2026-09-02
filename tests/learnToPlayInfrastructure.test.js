@@ -122,11 +122,11 @@ test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
   );
   assert.equal(
     translate("es", "guided.contextual.product.surgeBody"),
-    "A partir de este turno, la Hueste desata todo su poder e Invoca más Ecos con cada avance.",
+    "¡Cronista! Ha llegado el momento. En cada Visión, al llegar el turno 10, la Hueste entra en Estampida y su ofensiva se vuelve mucho más peligrosa. Ten cuidado.",
   );
   assert.equal(
     translate("es", "guided.contextual.product.emptyHandDrawBody"),
-    "Si comienzas tu turno sin Ecos o Fuentes en la Mano, robas 2 cartas en lugar de 1.",
+    "Al comenzar tu turno con la Mano vacía, robas 2 cartas en lugar de 1.",
   );
   assert.equal(
     translate("es", "guided.contextual.product.returnSourceBody"),
@@ -300,6 +300,14 @@ test("journey limits are ephemeral and product concepts cover every prologue exp
     "attack-the-host-archive",
     "attack-exhausts-echo",
     "host-surge",
+    "basic-spell",
+    "daunting-defense",
+    "quick-spell",
+    "poison",
+    "furtive-defense-restriction",
+    "lethal-defense-warning",
+    "host-support",
+    "low-life-contemplate",
     "empty-hand-draw",
     "return-source",
     "learn-to-play-vaelor-required",
@@ -392,6 +400,7 @@ test("dragging a ground Echo onto a Flying attacker preserves the denied target 
     intent: { kind: "combat.assignBlocker", cardId: "ground:1", targetId: "flying:1" },
   }, {}), {
     highlights: [
+      { kind: "card", instanceId: "ground:1", padding: 18 },
       { kind: "card", instanceId: "flying:1", padding: 18, offsetX: 16 },
     ],
     placement: "center",

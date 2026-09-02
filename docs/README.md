@@ -45,7 +45,8 @@ Estos documentos se conservan porque contienen decisiones o validaciones sin ter
   auditoría del framework, motor, producto y persistencia del prólogo; sus Fases 1 a 6 están
   implementadas y conserva abiertos el QA manual de ritmo/presentación, el hardening y la
   durabilidad del handoff.
-- [`plans/first_canon_vision_plan.md`](plans/first_canon_vision_plan.md) — plan aprobado para la
+- [`plans/first_canon_vision_plan.md`](plans/first_canon_vision_plan.md) — implementación completada,
+  pendiente de QA manual, para la
   apertura de Mano de `HF1-ELA-GRV-082-QC5`, su mulligan real, Preparación mental, ayudas
   contextuales, Marco Dorado y detalle de palabras clave.
 - [`plans/guided_tutorial_system_plan.md`](plans/guided_tutorial_system_plan.md) — framework escalable

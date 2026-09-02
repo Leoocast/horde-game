@@ -78,6 +78,7 @@ export type GuidedScenarioRecipe = Readonly<{
 export const GUIDED_SURFACE_ANCHORS = [
   "opening.hand",
   "opening.primaryAction",
+  "opening.mulliganAction",
   "selection.primaryAction",
   "selection.cancelAction",
   "setup.progress",
@@ -95,6 +96,7 @@ export const GUIDED_SURFACE_ANCHORS = [
   "host.archive",
   "host.memory",
   "card.preview",
+  "destiny.contemplateAgain",
 ] as const;
 
 export type GuidedSurfaceAnchor = (typeof GUIDED_SURFACE_ANCHORS)[number];
