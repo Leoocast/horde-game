@@ -78,6 +78,7 @@ export type GuidedScenarioRecipe = Readonly<{
 export const GUIDED_SURFACE_ANCHORS = [
   "opening.hand",
   "opening.primaryAction",
+  "opening.mulliganAction",
   "selection.primaryAction",
   "selection.cancelAction",
   "setup.progress",
@@ -93,8 +94,10 @@ export const GUIDED_SURFACE_ANCHORS = [
   "player.life",
   "host.field",
   "host.archive",
+  "host.poison",
   "host.memory",
   "card.preview",
+  "destiny.contemplateAgain",
 ] as const;
 
 export type GuidedSurfaceAnchor = (typeof GUIDED_SURFACE_ANCHORS)[number];
@@ -296,6 +299,8 @@ type GuidedStepBase = Readonly<{
   id: string;
   copy: GuidedStepCopy;
   highlights: readonly GuidedHighlightRef[];
+  /** Presentation-only: keep already committed draws offscreen until the authored beat releases them. */
+  deferredHandAliases?: readonly GuidedCardAlias[];
   callout?: GuidedCalloutVisibility;
   dimmer?: GuidedDimmerVisibility;
   presentation?: GuidedStepPresentation;

@@ -242,9 +242,16 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   for (const eventName of ["pointerdown", "pointerup", "click", "dblclick", "contextmenu", "dragstart", "dragover", "drop", "keydown"]) {
     assert.match(overlay, new RegExp(`addEventListener\\("${eventName}"`, "u"));
   }
+  assert.match(overlay, /const globalTargetDeselectActive = session\.mode === "act"[\s\S]*allowedIntent\.kind === "target\.confirm"/u);
+  assert.match(overlay, /globalTargetDeselectActive && event\.button === 2/u);
+  assert.match(overlay, /const handleContextMenu = \(event: MouseEvent\) => \{[\s\S]*if \(globalTargetDeselectActive\) return;[\s\S]*handleEvent\(event\);/u);
+  assert.match(overlay, /addEventListener\("contextmenu", handleContextMenu, true\)/u);
+  assert.doesNotMatch(overlay, /addEventListener\("contextmenu", handleEvent, true\)/u);
   assert.match(card, /tabIndex=\{selectionDisabled \? undefined : 0\}/u);
   assert.match(card, /onKeyboardActivate \?\? onSelect/u);
   assert.match(hand, /currentStep\?\.id === "invoke-aelyra"/u);
+  assert.match(hand, /guidedDeferredHandCardIds\(\s*guidedSession\.currentStep\?\.deferredHandAliases,\s*guidedSession\.bindings,?\s*\)/su);
+  assert.match(hand, /!guidedDeferredHandIds\.has\(card\.instanceId\)/u);
   assert.match(hand, /emphasizeCost=\{guidedCostCardId === card\.instanceId\}/u);
   assert.match(card, /CardCostBadge card=\{card\} emphasized=\{emphasizeCost\}/u);
   assert.match(card, /data-guided-anchor-extension="true"/u);
@@ -268,17 +275,20 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(battlefield, /className="guided-player-sources-anchor"/u);
   assert.match(battlefield, /data-guided-anchor-extension="true"/u);
   assert.doesNotMatch(overlay, /closest\("#guided-tutorial-overlay/u);
-  assert.match(overlay, /showCallout && \(/u);
-  assert.match(overlay, /\{showCallout && \(\s*<>\s*<svg className="guided-tutorial-mask"/su);
+  assert.match(overlay, /\(showCallout \|\| showSilentSpotlight\) && \(/u);
+  assert.match(overlay, /\{\(showCallout \|\| showSilentSpotlight\) && \(\s*<>\s*<svg className="guided-tutorial-mask"/su);
   assert.match(overlay, /const showDimmer = showCallout && session\.currentStep\?\.dimmer !== "hidden";/u);
   assert.match(overlay, /\{showDimmer && \(\s*<rect className="guided-tutorial-dimmer"/su);
   assert.match(overlay, /showSilentSpotlight/u);
   assert.match(overlay, /presentation\?\.kind === "spotlight"\s*&& session\.presentationSettled/su);
-  assert.match(overlay, /data-tone=\{showSilentSpotlight \? presentation\.tone : undefined\}/u);
+  assert.match(overlay, /data-tone=\{rect\.key\.startsWith\("card:"\) \? "gold" : showSilentSpotlight \? presentation\.tone : undefined\}/u);
   assert.match(overlay, /guided-tutorial-directional-cue/u);
   assert.match(dialog, /!isLearnToPlay &&/u);
   assert.match(dialog, /tutorial-dialog-heading/u);
-  assert.match(dialog, /<div className="tutorial-dialog-heading">\s*<h2 id=\{titleId\} style=\{\{ fontSize: titleFontSize \}\}>\{title\}<\/h2>/su);
+  assert.match(dialog, /const hasBody = Children\.count\(body\) > 0;/u);
+  assert.match(dialog, /aria-describedby=\{hasBody \? bodyId : undefined\}/u);
+  assert.match(dialog, /!hasBody \? "is-bodyless" : ""/u);
+  assert.match(dialog, /\{hasBody && <div id=\{bodyId\} className="guided-tutorial-body">\{body\}<\/div>\}/u);
   assert.doesNotMatch(dialog, /tutorial-dialog-heading-ornament/u);
   assert.match(overlay, /guided\.contextual\.understood/u);
   assert.match(overlay, /\{showCallout && !missingAnchor && comparisonCards\.length > 0 && \(/u);
@@ -301,6 +311,12 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(contextual, /const visible = Boolean\(active && guided\.status !== "running"\)/u);
   assert.match(contextual, /createGuidedFrameLoop\(measure\)/u);
   assert.match(journeyCues, /guidedBoundsEqual\(boundsRef\.current, next\)/u);
+  assert.match(journeyCues, /contextualTutorialRuntime/u);
+  assert.match(journeyCues, /const contextualHelpPending = Boolean\(contextual\.active\) \|\| contextual\.queue\.length > 0;/u);
+  assert.match(journeyCues, /learnToPlayPlayerTurnActionCueReady\(game, director\.stage, contextualHelpPending\)/u);
+  assert.match(journeyCues, /guidedSurfaceAnchorKey\("phase\.primaryAction"\)/u);
+  assert.match(journeyCues, /learn-to-play-player-turn-cue/u);
+  assert.match(journeyCues, /data-tone="gold"/u);
   assert.match(styles, /\.guided-tutorial-overlay\[data-mode="explain"\],[\s\S]*?pointer-events: auto;/u);
   assert.match(styles, /guided-tutorial-overlay:not\(\[data-card-preview-visible="true"\]\)/u);
   assert.match(styles, /\.guided-card-comparison\s*\{[^}]*top:\s*56%;[^}]*left:\s*50%;[^}]*transform:\s*translate\(-50%, -50%\);/su);
@@ -315,6 +331,7 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.doesNotMatch(styles, /\.game-phase-button\.is-learn-to-play-attention/u);
   assert.doesNotMatch(styles, /tutorial-dialog-heading-ornament/u);
   assert.match(styles, /\.tutorial-dialog-heading,\s*\.contextual-tutorial-heading\s*\{[^}]*border-bottom:/su);
+  assert.match(styles, /\.tutorial-dialog-heading\.is-bodyless\s*\{[^}]*border-bottom:\s*0;[^}]*margin-bottom:\s*0;[^}]*padding-bottom:\s*0;/su);
   assert.doesNotMatch(styles, /\.guided-card-comparison-frame::after\s*\{/u);
   assert.match(styles, /\.guided-tutorial-overlay\.has-card-comparison \.guided-tutorial-callout\s*\{[^}]*width:\s*min\(580px, calc\(100vw - 48px\)\);/su);
   const costFocus = styles.match(/@keyframes guided-card-cost-focus\s*\{([\s\S]*?)\n\}/u)?.[1] ?? "";
@@ -326,8 +343,12 @@ test("the real Board mounts the overlay and its capture shield covers every inpu
   assert.match(styles, /\.card-cost-badge\.is-guided-emphasis > \.card-cost-emphasis-frame\s*\{/u);
   assert.match(styles, /\.guided-tutorial-ring::after\s*\{[^}]*transform:\s*translateX\(-50%\) rotate\(45deg\);/su);
   assert.match(styles, /guided-tutorial-overlay:has\(\.guided-tutorial-ring\[data-anchor-key="surface:player\.sources"\]\)[\s\S]*?guided-tutorial-ring\[data-anchor-key="surface:player\.reserve"\]::after\s*\{\s*display:\s*none;/u);
-  assert.match(styles, /\.guided-tutorial-ring\[data-anchor-key\^="card:"\]\s*\{\s*display:\s*none;\s*\}/u);
-  assert.match(styles, /\.guided-tutorial-body p\s*\{[^}]*font-size:\s*16px;/su);
+  assert.doesNotMatch(styles, /\.guided-tutorial-ring\[data-anchor-key\^="card:"\]\s*\{\s*display:\s*none;\s*\}/u);
+  assert.match(contextual, /className="guided-tutorial-ring contextual-tutorial-ring"/u);
+  assert.match(contextual, /data-tone="gold"/u);
+  assert.match(styles, /\.guided-tutorial-body p\s*\{[^}]*font-size:\s*17\.6px;/su);
+  assert.match(styles, /\.guided-tutorial-body p\s*\{[^}]*font-weight:\s*400;/su);
+  assert.match(styles, /\.contextual-tutorial-body p\s*\{[^}]*font-weight:\s*400;/su);
   assert.match(
     styles,
     /\.guided-tutorial-callout h2\s*\{[^}]*overflow-wrap:\s*normal;[^}]*white-space:\s*nowrap;/su,

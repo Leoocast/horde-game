@@ -8,6 +8,7 @@ import { useToastStore } from "../store/useToastStore";
 import { futureCodeFromSeed } from "../utils/futureIdentity";
 import { DestinyActionButton } from "./DestinyActionButton";
 import { GameTooltip } from "./GameTooltip";
+import { guidedAnchorRegistry, guidedSurfaceAnchorKey } from "../guidance";
 
 type Props = {
   origin: MatchOrigin;
@@ -133,7 +134,14 @@ export function DestinyRewriteControl({ origin, onRewrite, onContemplateAnother,
   return (
     <>
       {!hideLauncher && <button
-        ref={triggerRef}
+        ref={(element) => {
+          triggerRef.current = element;
+          guidedAnchorRegistry.set(
+            guidedSurfaceAnchorKey("destiny.contemplateAgain"),
+            "destiny:contemplate-again",
+            element,
+          );
+        }}
         className="destiny-command-button"
         type="button"
         onClick={openDialog}

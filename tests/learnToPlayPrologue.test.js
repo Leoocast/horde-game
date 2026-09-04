@@ -15,6 +15,7 @@ import { findManualInvokedTargetTrigger, resolveEffect } from "../src/engine/Eff
 import { advancePhase, endPlayerTurn } from "../src/engine/PhaseManager";
 import { getPowerEndurance, hostInSurge } from "../src/engine/StaticEffects";
 import { buildGuidedScenario } from "../src/guidance/buildGuidedScenario";
+import { gameplaySignalsForTransition } from "../src/guidance/gameplaySignals";
 import { GuidedInteractionGate } from "../src/guidance/interactionGate";
 import {
   LEARN_TO_PLAY_END_OPENING_TURN_INTERVENTION,
@@ -165,9 +166,32 @@ test("Learn to Play accepts confirmation for either authored Aelyra target", () 
   }
 });
 
+test("the canonical tutorial exposes its first compatible marked-damage branch to contextual guidance", () => {
+  const built = invokeVaelor({ playFlower: false });
+  const combat = prepareHostAttackers(runHostMain(endPlayerTurn(built.game)));
+  const blockerIds = combat.player.field
+    .filter((card) => card.kinds.includes("ECHO"))
+    .map((card) => card.instanceId);
+  const branch = blockerIds.flatMap((blockerId) => combat.combat.hostAttackers.flatMap((attackerId) => {
+    const defended = declareBlocker(combat, blockerId, attackerId);
+    if (!defended.lastActionResult?.ok) return [];
+    const resolved = resolveHostCombat(defended);
+    const damagedIds = [...resolved.player.field, ...resolved.host.field]
+      .filter((card) => card.kinds.includes("ECHO") && card.damageMarked > 0)
+      .map((card) => card.instanceId);
+    return damagedIds.length > 0 ? [{ resolved, damagedIds }] : [];
+  }))[0];
+  assert.ok(branch, "the canonical tutorial must include a legal branch with surviving marked damage");
+
+  const settled = advancePhase(branch.resolved, "end");
+  const signal = gameplaySignalsForTransition(branch.resolved, settled)
+    .find((candidate) => candidate.kind === "combat.echoesDamaged");
+  assert.deepEqual(signal?.cardIds, branch.damagedIds);
+});
+
 test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms combat fundamentals", () => {
   const opening = new Map(LEARN_TO_PLAY_OPENING_INTERVENTION.steps.map((step) => [step.id, step]));
-  assert.equal(LEARN_TO_PLAY_OPENING_INTERVENTION.revision, 2);
+  assert.equal(LEARN_TO_PLAY_OPENING_INTERVENTION.revision, 3);
   assert.equal(LEARN_TO_PLAY_OPENING_INTERVENTION.startStepId, "evy-fourth-source-briefing");
   assert.equal(opening.get("evy-fourth-source-briefing").kind, "explain");
   assert.equal(opening.get("evy-fourth-source-briefing").copy.titleKey, "guided.learnToPlay.intro.evy");
@@ -181,6 +205,12 @@ test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms comb
   assert.equal(opening.get("invoke-aelyra").dimmer, "hidden");
   assert.equal(opening.get("choose-aelyra-target").callout, "hidden");
   assert.equal(opening.get("confirm-aelyra-target").callout, "hidden");
+  assert.deepEqual(opening.get("confirm-aelyra-target").highlights, [
+    { kind: "surface", anchor: "selection.primaryAction" },
+    { kind: "surface", anchor: "selection.cancelAction" },
+    { kind: "card", alias: "aelyra" },
+    { kind: "card", alias: "maela" },
+  ]);
   assert.deepEqual(opening.get("enter-first-combat").presentation, { kind: "spotlight", tone: "gold" });
   assert.equal(opening.has("select-maela-attacker"), false, "the attack suggestion must not install an input shield");
   assert.equal(opening.has("pass-first-combat"), false);
@@ -191,6 +221,10 @@ test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms comb
   assert.deepEqual(LEARN_TO_PLAY_FIRST_BATTLE_INTERVENTION.steps[0].highlights, [
     { kind: "surface", anchor: "host.archive" },
   ]);
+  assert.equal(
+    LEARN_TO_PLAY_FIRST_BATTLE_INTERVENTION.steps[0].copy.bodyKey,
+    "guided.learnToPlay.attackArchiveBody",
+  );
   assert.deepEqual(LEARN_TO_PLAY_END_OPENING_TURN_INTERVENTION.steps[0].presentation, {
     kind: "spotlight",
     tone: "gold",
@@ -207,16 +241,21 @@ test("Learn to Play keeps Aelyra natural, cues Maela silently, and confirms comb
   assert.equal(LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION.steps[2].id, "explain-combat-stats");
   assert.deepEqual(
     LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps.map((step) => step.id),
-    ["player-turn-returned", "wait-for-energy-renewal", "explain-renewed-energy", "use-energy-for-echoes"],
+    ["player-turn-returned", "wait-for-energy-renewal", "explain-renewed-energy", "wait-for-flor-entry", "use-energy-for-echoes"],
   );
+  assert.equal(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.revision, 5);
   assert.equal(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps[1].callout, "hidden");
   assert.deepEqual(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps[1].expectedReceipt, {
     kind: "reserve.released",
   });
+  assert.deepEqual(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps[1].deferredHandAliases, ["dawn_flower"]);
   assert.deepEqual(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps[2].highlights, [
     { kind: "surface", anchor: "player.sources" },
     { kind: "surface", anchor: "player.reserve" },
   ]);
+  assert.deepEqual(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps[2].deferredHandAliases, ["dawn_flower"]);
+  assert.equal(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps[3].id, "wait-for-flor-entry");
+  assert.equal(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps[3].callout, "hidden");
   assert.equal(LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION.revision, 2);
   assert.equal(LEARN_TO_PLAY_RETURN_SOURCE_INTERVENTION.startStepId, "explain-return-source");
   assert.deepEqual(

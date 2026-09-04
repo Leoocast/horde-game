@@ -22,6 +22,7 @@ import { queueUnusedNormalEnergy, releasePendingStoredEnergy } from "../src/engi
 import { performPlayerDraw, playerDrawForecast, startPlayerTurn, startPlayerTurnReady } from "../src/engine/TurnManager";
 import { cardStatState, sortTraitsForDisplay } from "../src/utils/selectors";
 import { getHandCardPresentationState, handArchiveEntryOffset } from "../src/components/handCardPresentation";
+import { guidedDeferredHandCardIds } from "../src/guidance/deferredHandPresentation";
 import { displayedReserveEnergy, reserveTransferPresentation } from "../src/components/reserveTransferPresentation";
 import {
   fitHoverCardDisplay,
@@ -423,6 +424,14 @@ test("discard selection stays raised while the hovered hand card layers above it
     getHandCardPresentationState({ index: 4, hovered: false, selectedForDiscard: false, dragging: false }),
     { raised: false, zIndex: 5 },
   );
+});
+
+test("guided hand deferral resolves authored aliases without hiding unrelated cards", () => {
+  assert.deepEqual(
+    [...guidedDeferredHandCardIds(["flor", "missing"], { flor: "flor:1", vaelor: "vaelor:1" })],
+    ["flor:1"],
+  );
+  assert.deepEqual([...guidedDeferredHandCardIds(undefined, { flor: "flor:1" })], []);
 });
 
 test("drawn hand cards derive their entry translation from the shared Archive origin", () => {

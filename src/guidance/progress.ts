@@ -35,6 +35,11 @@ export type GuidedProgressEnvelope = Readonly<{
 }>;
 
 const LESSON_ID_PATTERN = /^[a-z0-9]+(?:[._-][a-z0-9]+)*$/u;
+const TUTORIAL_CONTEXTUAL_JOURNEY_PREFIX = "tutorial-contextual.";
+
+export function tutorialContextualJourney(conceptId: string, revision: number): Readonly<{ id: string; revision: number }> {
+  return Object.freeze({ id: `${TUTORIAL_CONTEXTUAL_JOURNEY_PREFIX}${conceptId}`, revision });
+}
 
 export function emptyGuidedProgress(): GuidedProgressEnvelope {
   return Object.freeze({

@@ -39,11 +39,16 @@ retirado. Su fuente de verdad es el JSON del deck.
 Estos documentos se conservan porque contienen decisiones o validaciones sin terminar:
 
 - [`plans/learn_to_play_tutorial.md`](plans/learn_to_play_tutorial.md) — documento vivo del nuevo
-  onboarding **Aprender a jugar**; fija el primer corte hasta su derrota predeterminada y la
-  aparición de **Contemplar otro Futuro**, y aplaza el handoff a una Visión real de un Futuro preparado.
+  onboarding **Aprender a jugar**; fija el prólogo, su derrota predeterminada y el handoff ya
+  implementado mediante **Contemplar otro futuro** hacia la primera Visión Canon.
 - [`plans/learn_to_play_implementation_plan.md`](plans/learn_to_play_implementation_plan.md) —
-  auditoría del framework, motor, producto y persistencia frente a ese flujo; las Fases 1 a 4 están
-  implementadas hasta el comienzo de la primera Estampida y las fases posteriores siguen abiertas.
+  auditoría del framework, motor, producto y persistencia del prólogo; sus Fases 1 a 6 están
+  implementadas y conserva abiertos el QA manual de ritmo/presentación, el hardening y la
+  durabilidad del handoff.
+- [`plans/first_canon_vision_plan.md`](plans/first_canon_vision_plan.md) — implementación completada,
+  pendiente de QA manual, para la
+  apertura de Mano de `HF1-ELA-GRV-082-QC5`, su mulligan real, Preparación mental, ayudas
+  contextuales, Marco Dorado y detalle de palabras clave.
 - [`plans/guided_tutorial_system_plan.md`](plans/guided_tutorial_system_plan.md) — framework escalable
   de pausa, bloqueo, resaltado y explicación; sus fases están cerradas y la primera versión jugable
   de **Preparación** —id técnico `first-seed`— se encuentra en QA e iteración pedagógica.

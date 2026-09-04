@@ -131,6 +131,9 @@ Modificadores:
 
 - `QUICK` / Rápido modifica un Hechizo y enumera sus ventanas reales: Principal, Batalla y
   Defender. Hostfall no promete pila ni prioridad libre.
+- En la ayuda contextual de iniciación, la formulación player-facing aprobada es «puedes lanzarlo
+  en cualquier momento». Resume que Rápido responde tanto en el turno del Cronista como durante la
+  defensa; no autoriza compromisos mientras el engine resuelve animaciones o efectos.
 - `CHRONICLE` es un id técnico heredado usado por datos y herramientas; puede aparecer en cartas de
   cualquier bando y no aporta reglas, unicidad ni pertenencia a la Crónica del jugador. No se traduce
   ni se muestra como `Chronicle Echo / Eco de Crónica`: **Chronicle / Crónica** queda reservado al
@@ -208,7 +211,7 @@ La UI no usa jerga interna como ETB, triggered effect, static ability o resolves
 
 | Id | English | Español | Definición |
 | --- | --- | --- | --- |
-| `FLYING` | Flying | Volar | Solo puede ser defendido por Volar o Guardia aérea. |
+| `FLYING` | Flying | Volar | No puede ser defendido excepto por un Eco con Volar o Guardia aérea. |
 | `SKYGUARD` | Skyguard | Guardia aérea | Puede defender contra Volar. |
 | `ALERT` | Alert | Alerta | Atacar no Agota este Eco. |
 | `DAUNTING` | Daunting | Imponente | Requiere dos o más defensores. |

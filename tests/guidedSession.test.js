@@ -12,6 +12,7 @@ import {
   GuidedSessionStore,
   guidedPresentationActivity,
   guidedPresentationBlockers,
+  guidedInteractionGate,
   guidedSessionStore,
 } from "../src/guidance";
 import { useAudioStore } from "../src/store/useAudioStore";
@@ -352,6 +353,16 @@ test("Learn to Play keeps the combat-stat and Harvester interventions reachable 
     assert.equal(useGameStore.getState().counterTargeting?.sourceId, bindings.aelyra);
     useGameStore.getState().lockCounterTarget(bindings.maela);
     assert.equal(guidedSessionStore.snapshot().currentStep.id, "confirm-aelyra-target");
+    useGameStore.getState().deselectCounterTarget();
+    assert.equal(useGameStore.getState().counterTargeting?.targetId, undefined);
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "confirm-aelyra-target");
+    useGameStore.getState().lockCounterTarget(bindings.aelyra);
+    assert.equal(
+      useGameStore.getState().counterTargeting?.targetId,
+      bindings.aelyra,
+      JSON.stringify(guidedInteractionGate.snapshot().lastRejection),
+    );
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "confirm-aelyra-target");
     useGameStore.getState().confirmCounterTargeting();
     useGameStore.setState({
       buffAnimationCardIds: [],
@@ -438,8 +449,12 @@ test("Learn to Play keeps the combat-stat and Harvester interventions reachable 
     reserveTransfer.end();
     await flushMicrotasks();
     assert.equal(guidedSessionStore.snapshot().currentStep.id, "explain-renewed-energy");
+    const florEntry = guidedPresentationActivity.begin("hand.entry", bindings.dawn_flower);
     guidedSessionStore.notifyCheckpointState(true);
     assert.equal(guidedSessionStore.continueExplanation(), true);
+    assert.equal(guidedSessionStore.snapshot().currentStep.id, "wait-for-flor-entry");
+    florEntry.end();
+    await flushMicrotasks();
     assert.equal(guidedSessionStore.snapshot().currentStep.id, "use-energy-for-echoes");
     guidedSessionStore.notifyCheckpointState(true);
     assert.equal(guidedSessionStore.continueExplanation(), true);
@@ -548,7 +563,7 @@ test("the production Learn to Play lifecycle recovers when End Turn commits befo
         guidedSessionStore.notifyCheckpointState(true);
         assert.equal(guidedSessionStore.continueExplanation(), true);
         await flushMicrotasks();
-        if (contextualTutorialRuntime.snapshot().active?.conceptId === "assign-defenders") {
+        if (["host-defense-order", "assign-defenders"].includes(contextualTutorialRuntime.snapshot().active?.conceptId)) {
           contextualTutorialRuntime.acknowledgeActive();
           await flushMicrotasks();
         }
@@ -568,11 +583,14 @@ test("the production Learn to Play lifecycle recovers when End Turn commits befo
         assert.equal(guidedSessionStore.snapshot().currentStep.id, "wait-for-energy-renewal");
         await flushMicrotasks();
         assert.equal(useGameStore.getState().game.activeSide, "player");
-        for (const stepId of ["explain-renewed-energy", "use-energy-for-echoes"]) {
-          assert.equal(guidedSessionStore.snapshot().currentStep.id, stepId);
-          guidedSessionStore.notifyCheckpointState(true);
-          assert.equal(guidedSessionStore.continueExplanation(), true);
-        }
+        assert.equal(guidedSessionStore.snapshot().currentStep.id, "explain-renewed-energy");
+        guidedSessionStore.notifyCheckpointState(true);
+        assert.equal(guidedSessionStore.continueExplanation(), true);
+        assert.equal(guidedSessionStore.snapshot().currentStep.id, "wait-for-flor-entry");
+        await flushMicrotasks();
+        assert.equal(guidedSessionStore.snapshot().currentStep.id, "use-energy-for-echoes");
+        guidedSessionStore.notifyCheckpointState(true);
+        assert.equal(guidedSessionStore.continueExplanation(), true);
         await flushMicrotasks();
 
         const postVaelor = structuredClone(useGameStore.getState().game);

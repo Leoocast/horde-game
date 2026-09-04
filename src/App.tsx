@@ -42,6 +42,8 @@ import { HOW_TO_PLAY_CATALOG } from "./guidance/howToPlayCatalog";
 import { LEARN_TO_PLAY_JOURNEY, learnToPlayJourneyLifecycle } from "./guidance/learnToPlayJourney";
 import { createLearnToPlayFirstMatchOrigin } from "./guidance/learnToPlayHandoff";
 import { guidedProgressStore } from "./guidance/progress";
+import { configureFirstCanonVisionLaunch } from "./guidance/firstCanonVisionProductRuntime";
+import { gameplaySignalStream } from "./guidance/gameplaySignals";
 import { productMatchLifecycle } from "./history/historyRuntime";
 
 // The conditional imports are compile-time: release builds remove every developer module instead
@@ -450,6 +452,11 @@ export default function App() {
             ),
           });
           if (!launch.committed) return;
+          configureFirstCanonVisionLaunch({
+            source: transition.destination === "history-replay" ? "history-replay" : "rewrite",
+            origin,
+            sessionId: launch.sessionId!,
+          });
           setMatchOrigin(origin);
           setSetupTurns(origin.preparationTurns);
           setSelectedDeckId(origin.playerDeckId);
@@ -480,6 +487,9 @@ export default function App() {
             ),
           });
           if (!launch.committed) return;
+          learnToPlayJourneyLifecycle.stop();
+          guidedProgressStore.markJourneyCompleted(LEARN_TO_PLAY_JOURNEY.id, LEARN_TO_PLAY_JOURNEY.revision);
+          configureFirstCanonVisionLaunch({ source: "learn-to-play-handoff", origin, sessionId: launch.sessionId! });
           setMatchOrigin(origin);
           setSetupTurns(origin.preparationTurns);
           setSelectedDeckId(origin.playerDeckId);
@@ -510,10 +520,8 @@ export default function App() {
 
   function continueLearnToPlayIntoFirstCanonFuture() {
     if (!beginDestinyTransition("contemplate", "learn-to-play-first-seed")) return;
-    // Clicking the CTA is the authored completion boundary. The board remains mounted beneath
-    // the vortex until `onCovered` replaces it with the new, normal Future.
-    learnToPlayJourneyLifecycle.stop();
-    guidedProgressStore.markJourneyCompleted(LEARN_TO_PLAY_JOURNEY.id, LEARN_TO_PLAY_JOURNEY.revision);
+    // Completion is committed only after the vortex successfully plants the real Canon Vision.
+    // Until then the journey remains recoverable beneath the transition.
   }
 
   function leaveGuidedLesson() {
@@ -740,6 +748,11 @@ export default function App() {
             setSelectedHostDeckId(deckIds.hostDeckId);
             setMatchOrigin(restoredOrigin);
             loadScenario(restoredGame, deckIds);
+            configureFirstCanonVisionLaunch({
+              source: "play",
+              origin: restoredOrigin,
+              sessionId: gameplaySignalStream.snapshot().sessionId,
+            });
             setDesktopResume({ status: "none" });
             setScreen("game");
             startBattleMusic(true);
@@ -788,6 +801,7 @@ export default function App() {
               ),
             });
             if (!launch.committed) return;
+            configureFirstCanonVisionLaunch({ source: "play", origin: options.origin, sessionId: launch.sessionId! });
             const id = ++launchIdRef.current;
             const startedAtMs = performance.now();
             const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -817,7 +831,6 @@ export default function App() {
         />
         <LearnToPlayIntroModal
           open={learnToPlayIntroOpen}
-          chroniclerName={playerName}
           onClose={() => setLearnToPlayIntroOpen(false)}
           onComplete={beginLearnToPlayJourney}
         />

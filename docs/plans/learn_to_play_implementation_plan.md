@@ -1,33 +1,35 @@
 # Auditoría y plan por fases — Aprender a jugar y ayudas contextuales
 
-Estado: **auditoría técnica completada; primer corte, derrota, vórtice y handoff a la Primera Canon
-Seed implementados; mulligan final y durabilidad durante la transición pendientes**.
+Estado: **auditoría técnica completada; prólogo, derrota, vórtice y handoff a la primera Visión
+Canon implementados. La apertura de Mano y sus ayudas tienen un plan propio; la durabilidad del
+handoff, el hardening contextual y el QA manual de ritmo/presentación siguen abiertos**.
 
-Última actualización: **2026-08-21**.
+Última actualización: **2026-09-01**.
 
 ## Objetivo y alcance
 
-Este documento traduce el flujo de
+Este documento traduce el prólogo de
 [`learn_to_play_tutorial.md`](learn_to_play_tutorial.md) a necesidades de arquitectura y a un plan
-de implementación incremental. Es el único plan técnico para este trabajo.
+de implementación incremental. La partida normal que comienza después del handoff —Mano,
+mulligan, Preparación mental y ayudas contextuales de `HF1-ELA-GRV-082-QC5`— se gobierna desde
+[`first_canon_vision_plan.md`](first_canon_vision_plan.md).
 
 Se deben conservar dos productos distintos:
 
 - la lección guiada actual pasa a presentarse como **Preparación** y conserva el framework lineal
   que ya funciona;
-- **Aprender a jugar** es un recorrido nuevo: prólogo determinista semi-guiado, derrota narrativa y,
-  en una entrega posterior, salto a una partida real preparada con ayudas contextuales que continúan
-  en partidas posteriores.
+- **Aprender a jugar** es un recorrido nuevo: prólogo determinista semi-guiado, derrota narrativa y
+  salto ya implementado a una partida real preparada con ayudas contextuales.
 
 **Aprender a jugar será el tutorial obligatorio** y **Preparación será opcional**. Ambos estarán
-disponibles dentro de Cómo jugar para repetirse manualmente. El comportamiento de primera apertura y
-la migración de perfiles se decidirán después; el primer corte sólo añade la opción manual y no
-activa el nuevo gate sobre un recorrido cuyo handoff todavía no existe.
+disponibles dentro de Cómo jugar para repetirse manualmente. La apertura de Mano, mulligan y
+repetición de la primera Visión están decididos en `first_canon_vision_plan.md`; todavía no están
+implementados. El gate de primera apertura de la aplicación y el alcance sobre perfiles existentes
+siguen siendo decisiones separadas y pendientes en este documento.
 
 Si el jugador abandona antes de esa acción, el intento no se reanuda ni recuerda conceptos
-provisionales. El CTA único se llama **Contemplar otro futuro**. El contrato de diseño conserva que
-su activación completará el recorrido, pero el primer corte aprobado termina cuando el CTA aparece:
-no implementa todavía su activación, el vórtice ni la carga de la partida real preparada.
+provisionales. El CTA único se llama **Contemplar otro futuro**. Su activación completa el recorrido,
+ejecuta el vórtice y carga la partida real preparada; ese handoff ya está implementado.
 
 Durante este corte, **Continuar** queda deshabilitado globalmente, no condicionado al progreso de un
 tutorial. La decisión posterior de demo es ocultarlo y apagar resume mediante una capability de
@@ -53,9 +55,10 @@ más segura separa cuatro responsabilidades:
 3. un director efímero del recorrido **Aprender a jugar**;
 4. un catálogo de producto capaz de mostrar ambos tutoriales en **Cómo jugar**.
 
-La partida real posterior no necesita diseñarse turno por turno para construir estas bases ni para
-entregar el prólogo. Su seed, dificultad, Preparación, mulligan y checkpoint persistente se fijarán
-cuando se diseñe el handoff; no forman parte del primer corte.
+La partida real posterior no necesitó diseñarse turno por turno para construir estas bases ni para
+entregar el prólogo. Seed, dificultad, Preparación y mulligan ya están fijados. La demo conserva el
+resume apagado; el plan post-handoff usa un marcador transaccional acotado para recuperar el
+vórtice, no un checkpoint jugable nuevo.
 
 ## Qué existe y se puede reutilizar
 
@@ -125,7 +128,7 @@ No existen todavía eventos públicos suficientemente ricos para:
 
 - atacantes de la Hueste declarados en su orden real;
 - atacante que dañó la Vida y cantidad;
-- comienzo efectivo de Oleada y bonificación aplicada;
+- comienzo efectivo de Estampida y bonificación aplicada;
 - cartas concretas reveladas por la Hueste;
 - Fuentes que volvieron a prepararse;
 - Eco que se Agotó al atacar;
@@ -184,7 +187,7 @@ Futuro. El prólogo necesita:
 
 - autosave desactivado;
 - Settings de tutorial;
-- fases y Oleada visibles normalmente;
+- fases y Estampida visibles normalmente;
 - Reescribir oculto;
 - derrota especial habilitada;
 - abandono que reinicia desde el cold open.
@@ -225,7 +228,7 @@ descartado. Al llegar el cierre se continúa revelando desde arriba: pueden qued
 esos Soldados antes del Titán según lo que hizo el jugador, y el planificador añade después las
 copias necesarias.
 
-El deck contiene 21 Soldados y 4 Titanes. La primera Oleada y el cierre consumen dos Titanes. Una
+El deck contiene 21 Soldados y 4 Titanes. La primera Estampida y el cierre consumen dos Titanes. Una
 cota conservadora reserva 1 Soldado de equivalencia, 3 de guardia y hasta 16 posteriores al Titán:
 20 de 21 copias. El evaluador debe certificar la cota real y fallar antes del runtime si no alcanza.
 
@@ -240,14 +243,16 @@ sólo `first-seed`.
 - crear el ID independiente `learn-to-play`;
 - entregar a Cómo jugar una lista localizada con estado y launcher, no añadir otra prop singular.
 
-### 11. El handoff puede sobrescribir una partida guardada
+### 11. El handoff no puede reactivar resume en la demo
 
-El tutorial actual preserva el resume normal porque nunca entra a pantalla `game`. El nuevo
-recorrido sí termina en una partida real; al cambiar de pantalla, el autosave comenzará a reemplazar
-el resume anterior.
+La política actual de demo no lee, escribe ni borra checkpoints jugables, aunque el handoff termine
+en pantalla `game`. Por tanto, la partida Canon no sobrescribe el `resume-v1` existente ni habilita
+autosave por entrar al tablero.
 
-Esto requiere una decisión explícita antes de implementar el handoff. No se debe borrar ni
-sobrescribir una partida guardada sólo por abrir **Aprender a jugar**.
+La recuperación de un cierre durante el vórtice sigue siendo una brecha real, pero se resuelve con
+una transacción o marcador específico del handoff descrito en `first_canon_vision_plan.md`, no
+reactivando la capability de resume. Early Access puede rehidratar la misma sesión sólo bajo su
+capability de regresión ya existente.
 
 ### 12. Mulligan existe como regla, pero no como contenido guiado
 
@@ -266,11 +271,11 @@ allí un mulligan contextual.
 
 **31 es el mínimo analítico correcto con las reglas y estadísticas actuales:**
 
-`31 + 3 de Aelyra - 13 del primer ataque - 20 de la primera Oleada = 1`
+`31 + 3 de Aelyra - 13 del primer ataque - 20 de la primera Estampida = 1`
 
 No defender nada es el peor caso del primer ataque. Matar un Zombi anterior puede sumar 1 de Fuerza
 a la Cosechadora, pero esa defensa evita al menos 2 de daño, así que no empeora el total. Durante la
-primera Oleada, la Cosechadora ataca antes que los cuerpos recién llegados; sus muertes posteriores
+primera Estampida, la Cosechadora ataca antes que los cuerpos recién llegados; sus muertes posteriores
 no aumentan ese ataque ya resuelto. Con 30, la rama sin defensa llega a 0 antes de enseñar Mano
 vacía.
 
@@ -332,7 +337,7 @@ Una definición de concepto debe declarar, sin nombres visibles ni condiciones d
 
 Sólo una ayuda puede estar activa. Las demás se encolan, se vuelven a validar antes de mostrarse y
 se descartan si su contexto dejó de existir. Una ayuda no se monta durante targeting incompatible,
-otra guía, Oleada en transición, animación finita o desenlace.
+otra guía, Estampida en transición, animación finita o desenlace.
 
 La regla persistente fijada es:
 
@@ -371,7 +376,7 @@ Responsabilidades:
 - exigir sólo los hitos estructurales: cuarta Fuente/Aelyra, Vaelor y Devolver Fuente;
 - permitir las ramas fijadas en el documento de contenido;
 - activar intervenciones guiadas breves sobre el tablero actual;
-- coordinar primera Oleada, ventana posterior y cierre terminal;
+- coordinar primera Estampida, ventana posterior y cierre terminal;
 - esperar la derrota normal y presentar su variante narrativa;
 - completar y comprometer progreso al pulsar el CTA final;
 - cargar después la partida real preparada.
@@ -403,7 +408,7 @@ La infraestructura debe poder registrar, como mínimo, estos conceptos independi
 - Estabilizándose ante Acción o ataque inválidos;
 - detalles ampliados de una carta;
 - atacar el Archivo y Agotarse al atacar;
-- Oleada;
+- Estampida;
 - Mano vacía y robo adicional;
 - límite de cuatro Fuentes y Devolver Fuente.
 
@@ -411,7 +416,7 @@ No todos deben aparecer en el prólogo. Los que no ocurran continúan como no vi
 la primera partida futura que produzca su contexto. El catálogo completo de mecánicas de otros
 decks puede añadirse después sin rediseñar el runtime.
 
-Anchors nuevos mínimos: contador de Oleada, acción de mulligan si se conserva y, si el QA lo pide,
+Anchors nuevos mínimos: contador de Estampida, acción de mulligan si se conserva y, si el QA lo pide,
 un anchor general de turno/fase. `card.preview` ya cubre los detalles ampliados.
 
 ## Riesgo por área
@@ -423,7 +428,7 @@ un anchor general de turno/fase. `card.preview` ya cubre los detalles ampliados.
 | Señales siempre activas | Medio | Muchos commits del store y affordances deshabilitadas deben emitir exactamente una vez. |
 | Runtime/progreso contextual | Medio | Cola, prioridad, accesibilidad, rollback y migración. |
 | Director semi-guiado | Medio-alto | Ramas libres conocidas y convergencias por invariantes. |
-| Derrota y handoff | Medio-alto | Cruza outcome, vórtice, pantalla, autosave y resume. |
+| Derrota y handoff | Medio-alto | Cruza outcome, vórtice, pantalla, historial y capabilities de persistencia. |
 | Evaluador letal | Alto | Debe explorar respuestas legales y Reacciones sin divergir de las reglas reales. |
 
 ## Plan de implementación por fases
@@ -453,7 +458,7 @@ Estado: **completada el 2026-08-17**.
 - Tipar los rechazos mínimos: límite de Fuentes, Estabilizándose, Volar/Guardia aérea, timing y
   Acción de Fuente ya usada.
 - Reportar intentos por mouse, teclado y drag aun cuando la UI conozca de antemano que son inválidos.
-- Añadir las señales autónomas de turno, robo, Reserva, revelado, Oleada, ataque e impacto.
+- Añadir las señales autónomas de turno, robo, Reserva, revelado, Estampida, ataque e impacto.
 - Probar que una partida normal emite y que **Preparación** sigue idéntica.
 
 **Cierre:** ninguna ayuda visible todavía; suite actual intacta y pruebas de emisión exactamente una
@@ -495,7 +500,7 @@ ningún gate de primera apertura.
 comportamiento y el shell de **Aprender a jugar** puede iniciar/reiniciar/salir sin guardar pasos.
 El gate release aún no se activa sobre contenido incompleto.
 
-### Fase 4 — Prólogo hasta el comienzo de la Oleada
+### Fase 4 — Prólogo hasta el comienzo de la Estampida
 
 **Estado: implementada el 2026-08-17; pendiente de QA manual de ritmo y presentación.**
 
@@ -504,32 +509,32 @@ El gate release aún no se activa sobre contenido incompleto.
 - Integrar defensa libre, orden de ataque y ayudas reactivas.
 - Resolver Reserva, robo de Flor, Vaelor/Flor en cualquier orden e inspección ampliada.
 - Enseñar ataque sólo si existe un atacante legal; si no, dejar los conceptos no vistos.
-- Añadir contador de Oleada y explicación cuando el Surge haya comenzado realmente.
+- Añadir contador de Estampida y explicación cuando el Surge haya comenzado realmente.
 
 La implementación vigente carga un escenario declarativo independiente de una lección lineal,
 conserva la sesión del recorrido por encima de intervenciones estrictas adjuntas y aplica límites
 estructurales sólo mientras `learn-to-play` está activo. La cuarta Fuente y Aelyra usan la guía
 estricta; defensa, Vida, Reserva, Volar/Guardia aérea, Estabilizándose, ataque al Archivo, agotamiento
-del atacante y Oleada usan el runtime contextual global. Vaelor es obligatorio para converger y la
+del atacante y Estampida usan el runtime contextual global. Vaelor es obligatorio para converger y la
 inspección de la Cosechadora no puede saltarse por cerrar turno durante otra ayuda.
 
 La receta deja la Vida en 31, la Cosechadora con dos contadores y el próximo revelado en el segundo
 Acechador. Retorno consume los dos Soldados de equivalencia al morir; después quedan las dos ramas
-robustas de la primera Oleada, con o sin el descarte opcional previo. Al cerrar esta fase, el
+robustas de la primera Estampida, con o sin el descarte opcional previo. Al cerrar esta fase, el
 director se detenía en la señal real `host.surgeStarted`; las fases siguientes extienden ahora ese
-mismo recorrido sin simular la Oleada. El primer turno de Oleada conserva una pausa de dominio entre
-`beginHostMain` y los revelados: termina la animación, se explica la Oleada y sólo entonces se
+mismo recorrido sin simular la Estampida. El primer turno de Estampida conserva una pausa de dominio entre
+`beginHostMain` y los revelados: termina la animación, se explica la Estampida y sólo entonces se
 revelan los Ecos de la Hueste.
 
 Las pruebas automáticas enumeran ambos objetivos legales de Aelyra, todas las asignaciones legales
 de Maela/Aelyra y los órdenes `omitir Flor`, `Flor → Vaelor` y `Vaelor → Flor`. Todas las ramas
 certifican Reserva 3, Flor robada, Cosechadora final 7/9 y el segmento robusto del Archivo; también
-se prueban cero o un descarte antes de la primera Oleada.
+se prueban cero o un descarte antes de la primera Estampida.
 
 **Cierre automático alcanzado:** tipos y suite completa aprobados. Falta el QA manual del usuario
-para cerrar ritmo, copy y presentación hasta la Oleada.
+para cerrar ritmo, copy y presentación hasta la Estampida.
 
-### Fase 5 — Post-Oleada y cierre adaptativo
+### Fase 5 — Post-Estampida y cierre adaptativo
 
 **Estado: implementada el 2026-08-17; pendiente de QA manual de ritmo y presentación.**
 
@@ -537,7 +542,7 @@ para cerrar ritmo, copy y presentación hasta la Oleada.
 - Resolver descarte de Flor, Mano vacía y robo Río + Choque mediante reglas reales.
 - Interceptar jugar el quinto Río o terminar turno para enseñar Devolver Fuente.
 - Conservar Choque/Ciudad/Flor/ataque como ramas libres.
-- Interponer un plan de turno de la Hueste sólo en el cierre, sin enseñar otra regla de Oleada.
+- Interponer un plan de turno de la Hueste sólo en el cierre, sin enseñar otra regla de Estampida.
 - Implementar el evaluador puro de supervivencia y un límite authored verificable.
 - Proteger al Titán con tres Soldados reales del Archivo y presentar la fuerza mínima mediante el
   evento terminal aprobado.
@@ -561,10 +566,10 @@ revela después exactamente ese número de cartas, una a una, esperando la llega
 antes de continuar, y entrega el combate a la resolución normal.
 
 **Cierre automático alcanzado:** tipos y suite completa aprobados. Las pruebas cubren Flor usada o
-descartada, cero o un descarte antes de Oleada, el rechazo de la quinta Fuente, Río → Ciudad,
+descartada, cero o un descarte antes de Estampida, el rechazo de la quinta Fuente, Río → Ciudad,
 Choque, el ataque opcional contra los Soldados protegidos y una rama defensiva con más Vida.
 
-### Fase 6 — Derrota y handoff a la Primera Canon Seed
+### Fase 6 — Derrota y handoff a la primera Visión Canon
 
 **Estado: implementada; handoff Canon fijado el 2026-08-21.**
 
@@ -577,7 +582,7 @@ Choque, el ataque opcional contra los Soldados protegidos y una rama defensiva c
   ante un cierre durante el vórtice.
 
 **Cierre:** la derrota se resuelve con las reglas reales, aparece su presentación narrativa y el
-CTA único conduce a la Primera Canon Seed aprobada sin conservar estado parcial del prólogo.
+CTA único conduce a la primera Visión Canon aprobada sin conservar estado parcial del prólogo.
 
 El tablero de `learn-to-play` reutiliza la misma barrera de presentación, captura y quiebre que una
 derrota normal, pero monta un resultado propio sin código de Futuro ni las dos acciones normales.
@@ -585,27 +590,34 @@ El único CTA visible es **Contemplar otro futuro**. Comparte el material visual
 Reescribir, sin icono ni código de Futuro, y está habilitado sólo después de aceptar la narración.
 Una victoria accidental del escenario tampoco puede instalar una barrera de resultado huérfana.
 
-### Fase 6B — Primera apertura final y durabilidad — aplazada
+### Fase 6B — Durabilidad del handoff — transferida
 
-- Definir el comportamiento persistente al activar el CTA y al cerrar durante el vórtice.
-- Definir primera apertura, perfiles existentes y activación del gate obligatorio.
-- Certificar el mulligan y la primera apertura sobre `HF1-ELA-GRV-082-QC5` sin cambiar su identidad.
-- Cambiar a partida normal y comenzar su autosave en el checkpoint que se apruebe para release.
+Las decisiones de apertura de Mano y mulligan dejaron de estar aplazadas. Su contrato y sus fases de
+implementación viven en [`first_canon_vision_plan.md`](first_canon_vision_plan.md). El gate de
+primera apertura de la aplicación y el alcance sobre perfiles existentes permanecen pendientes
+aquí. Este plan conserva además la frontera ya implementada del prólogo:
 
-**Entrada:** requiere una revisión de producto posterior; no forma parte de la implementación actual.
+- activar el CTA completa **Aprender a jugar**;
+- el vórtice crea una sola Visión normal de `HF1-ELA-GRV-082-QC5`;
+- la transición debe volverse atómica o recuperable ante un cierre;
+- no se duplica historial ni progreso guiado y la demo no reactiva resume.
 
-### Fase 7 — Catálogo contextual de partidas reales y hardening
+**Cierre compartido:** no existe un tutorial completado huérfano ni una partida Canon creada dos
+veces. La aceptación detallada pertenece al nuevo plan.
 
-- Activar en partidas normales todos los conceptos ya authorados.
-- Añadir los contextuales pendientes que no puedan aparecer en el prólogo, uno por concepto y con
-  fixtures semánticas pequeñas.
-- Certificar la seed preparada: Mano inicial, cada mulligan permitido y robos relevantes.
-- Probar migración web/desktop, remounts, teclado, reduced motion y convivencia con targeting,
-  Settings, resultados y autosave.
-- Ejecutar QA completo de **Preparación**, prólogo, handoff y una partida normal.
+### Fase 7 — Framework contextual y hardening compartido
 
-**Cierre:** un concepto no visto aparece en cualquier partida compatible; uno visto obedece la
-preferencia sin repetirse varias veces en la misma partida.
+El runtime global, progreso por concepto y catálogo inicial ya existen. Los conceptos específicos
+de la primera Visión y su QA se implementarán desde `first_canon_vision_plan.md`. Este plan conserva
+la obligación transversal de:
+
+- mantener observabilidad semántica sin leer logs;
+- probar migración web/desktop, remounts, teclado, reduced motion y convivencia con targeting,
+  Settings, resultados y capabilities de persistencia;
+- ejecutar QA conjunto de **Preparación**, prólogo, handoff y una partida normal.
+
+**Cierre:** un concepto no visto aparece en cualquier partida compatible; uno visto obedece las
+preferencias contextuales sin repetirse varias veces en la misma Visión.
 
 ## Estrategia de pruebas
 
@@ -628,7 +640,8 @@ autoridad semántica.
 - **Aprender a jugar** será obligatorio; **Preparación** será opcional.
 - Abandonar antes del CTA final reinicia el recorrido y descarta conceptos provisionales.
 - El CTA final se llama **Contemplar otro futuro**.
-- El primer corte termina al mostrarlo; su activación y persistencia se implementarán después.
+- El primer corte histórico terminó al mostrarlo; la Fase 6 implementó después su activación, el
+  vórtice y la carga de la partida Canon.
 - En este corte **Continuar** permanece deshabilitado; la demo final lo ocultará y Early Access
   conservará la capacidad de reactivarlo.
 - La preferencia de no repetir está activa por defecto; se marca visto al cerrar/aceptar y, si se
@@ -639,17 +652,17 @@ autoridad semántica.
 - Choque de Ecos conserva su ventana legal después del revelado terminal.
 - La posición del Titán puede variar según los descartes anteriores.
 - Todas las llegadas terminales se muestran mediante el revelado normal, una carta a la vez.
+- La apertura de Mano de `HF1-ELA-GRV-082-QC5`, su mulligan, Preparación mental, preferencias y
+  ayudas posteriores se gobiernan desde `first_canon_vision_plan.md`.
 
 ## Decisiones aplazadas expresamente
 
-No queda ninguna pregunta bloqueante para implementar el primer corte. Antes de la Fase 6B habrá que
-resolver, sin inferirlas durante el trabajo actual:
+Mano, mulligan, seed, dificultad, Preparación y recuperación durante el vórtice fueron transferidos
+al plan aprobado de la primera Visión Canon. Continúan aplazados aquí:
 
-1. Mano inicial y contrato de mulligan de la partida real preparada.
-2. Comportamiento de primera apertura y alcance sobre perfiles existentes.
-3. Seed, dificultad y Preparación de la partida real.
-4. Persistencia exacta si la aplicación se cierra después de activar el CTA pero durante el vórtice.
-5. Contrato de Early Access para vincular resume e historial al mismo intento sin duplicarlo.
+1. el gate de **Aprender a jugar** en la primera apertura de la aplicación;
+2. el tratamiento de perfiles existentes cuando ese gate se active;
+3. el contrato de Early Access para enlazar su resume habilitado con el mismo intento sin duplicarlo.
 
-Tampoco bloquean este corte el copy narrativo definitivo, el lore previo del Cronista ni la
-cinemática futura.
+Continúan fuera de este corte el copy narrativo definitivo del prólogo, el lore previo del Cronista
+y la cinemática futura.

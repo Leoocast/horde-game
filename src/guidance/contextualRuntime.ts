@@ -1,10 +1,11 @@
 import type { GameplayIntent } from "./interactionGate";
 import type { GameplaySignalSnapshot, GameplaySignalStream } from "./gameplaySignals";
 import type { GuidedProgressStore, ContextualConceptProgress } from "./progress";
-import { contextualConceptSeen } from "./progress";
+import { contextualConceptSeen, tutorialContextualJourney } from "./progress";
 import type { ContextualConceptRegistry } from "./ContextualConceptRegistry";
 import type {
   ContextualConceptDefinition,
+  ContextualHighlightRef,
   ContextualConceptMatch,
   ContextualConceptPresentation,
   ContextualQueuedConcept,
@@ -12,7 +13,7 @@ import type {
 } from "./contextualContracts";
 import type { ContextualIntentAuthorization } from "./contextualIntentGate";
 
-export type ContextualProgressMode = "immediate" | "provisional" | "isolated";
+export type ContextualProgressMode = "immediate" | "provisional" | "isolated" | "repeat" | "unseen";
 export type ContextualRuntimeStatus = "idle" | "waiting" | "presenting";
 
 export type ContextualRuntimeSnapshot = Readonly<{
@@ -23,6 +24,7 @@ export type ContextualRuntimeSnapshot = Readonly<{
   queue: readonly string[];
   shownThisMatch: readonly string[];
   provisionalConcepts: readonly string[];
+  persistentHighlights: readonly ContextualHighlightRef[];
   active?: ContextualConceptPresentation;
   lastInterceptedConceptId?: string;
 }>;
@@ -46,6 +48,8 @@ export class ContextualTutorialRuntime {
   #active: ContextualQueuedConcept | undefined;
   #shownThisMatch = new Set<string>();
   #provisional = new Map<string, ContextualConceptProgress>();
+  #forcedConcepts = new Map<string, () => void>();
+  #persistentHighlights: ContextualHighlightRef[] = [];
   #enqueueOrder = 0;
   #promotionScheduled = false;
   #lastInterceptedConceptId: string | undefined;
@@ -106,6 +110,23 @@ export class ContextualTutorialRuntime {
   authorizeIntent(intent: GameplayIntent): ContextualIntentAuthorization {
     const context = this.#readContext();
     if (context.guidedActive) return Object.freeze({ allowed: true });
+    const active = this.#active;
+    if (active?.definition.blocksGameplayWhileVisible) {
+      this.#lastInterceptedConceptId = active.definition.id;
+      this.#emit();
+      return Object.freeze({ allowed: false, conceptId: active.definition.id });
+    }
+    const pendingBlocker = this.#queue.find((item) => item.definition.blocksGameplayWhileVisible);
+    if (pendingBlocker) {
+      this.#lastInterceptedConceptId = pendingBlocker.definition.id;
+      this.#emit();
+      return Object.freeze({ allowed: false, conceptId: pendingBlocker.definition.id });
+    }
+    if (active?.definition.policy === "preventive" && active.definition.prevent?.(intent, context)) {
+      this.#lastInterceptedConceptId = active.definition.id;
+      this.#emit();
+      return Object.freeze({ allowed: false, conceptId: active.definition.id });
+    }
     for (const definition of this.#registry.concepts) {
       if (definition.policy !== "preventive" || !definition.prevent || !this.#eligible(definition)) continue;
       const match = definition.prevent(intent, context);
@@ -128,7 +149,19 @@ export class ContextualTutorialRuntime {
       shownAt,
     });
     if (this.#progressMode === "provisional") this.#provisional.set(entry.conceptId, entry);
-    else if (this.#progressMode === "immediate") this.#progress.markConceptSeen(entry.conceptId, entry.shownRevision, entry.shownAt);
+    else {
+      this.#progress.markConceptSeen(entry.conceptId, entry.shownRevision, entry.shownAt);
+      if (this.#progressMode === "isolated") {
+        const tutorialJourney = tutorialContextualJourney(entry.conceptId, entry.shownRevision);
+        this.#progress.markJourneyCompleted(tutorialJourney.id, tutorialJourney.revision, entry.shownAt);
+      }
+    }
+    if (item.definition.retainHighlightsAfterAcknowledge) {
+      this.#persistentHighlights = [...item.match.highlights ?? []].map((highlight) => Object.freeze({ ...highlight }));
+    }
+    const forcedCompletion = this.#forcedConcepts.get(item.definition.id);
+    this.#forcedConcepts.delete(item.definition.id);
+    forcedCompletion?.();
     this.#active = undefined;
     this.#lastInterceptedConceptId = undefined;
     this.#emit();
@@ -153,6 +186,12 @@ export class ContextualTutorialRuntime {
     this.#schedulePromotion();
   }
 
+  /** Forces selected fundamentals once in this session even if their global concept is already seen. */
+  forceConceptsForSession(entries: readonly Readonly<{ conceptId: string; onAcknowledge: () => void }>[]): void {
+    for (const entry of entries) this.#forcedConcepts.set(entry.conceptId, entry.onAcknowledge);
+    this.#schedulePromotion();
+  }
+
   /** Atomic concept commit used by the future journey CTA. */
   commitProvisional(): boolean {
     const entries = [...this.#provisional.values()];
@@ -162,7 +201,7 @@ export class ContextualTutorialRuntime {
     return changed;
   }
 
-  /** Abandoning the prologue forgets both accepted concepts and every pending presentation. */
+  /** Clears pending session presentation; acknowledged tutorial concepts remain persisted. */
   rollbackProvisional(): void {
     this.#provisional.clear();
     this.#queue = [];
@@ -179,10 +218,12 @@ export class ContextualTutorialRuntime {
   }
 
   #onSignalSnapshot(snapshot: GameplaySignalSnapshot): void {
-    if (snapshot.sessionId !== this.#gameSessionId) this.#resetSession(snapshot.sessionId, "immediate", false);
+    const sessionChanged = snapshot.sessionId !== this.#gameSessionId;
+    if (sessionChanged) this.#resetSession(snapshot.sessionId, "immediate", false);
     const signals = snapshot.signals.filter((signal) => signal.cursor > this.#signalCursor);
     if (signals.length === 0) {
       this.#signalCursor = Math.max(this.#signalCursor, snapshot.cursor);
+      if (sessionChanged) this.#emit();
       return;
     }
     const context = this.#readContext();
@@ -202,8 +243,10 @@ export class ContextualTutorialRuntime {
     if (this.#shownThisMatch.has(definition.id)) return false;
     if (this.#active?.definition.id === definition.id) return false;
     if (this.#queue.some((item) => item.definition.id === definition.id)) return false;
-    if (this.#progressMode === "isolated") return true;
+    if (this.#forcedConcepts.has(definition.id)) return true;
+    if (this.#progressMode === "isolated" || this.#progressMode === "repeat") return true;
     const progress = this.#progress.snapshot();
+    if (this.#progressMode === "unseen") return !contextualConceptSeen(progress, definition);
     return !contextualConceptSeen(progress, definition) || !progress.preferences.hideSeenContextualHelp;
   }
 
@@ -265,6 +308,8 @@ export class ContextualTutorialRuntime {
     this.#active = undefined;
     this.#shownThisMatch.clear();
     this.#provisional.clear();
+    this.#forcedConcepts.clear();
+    this.#persistentHighlights = [];
     this.#enqueueOrder = 0;
     this.#promotionScheduled = false;
     this.#lastInterceptedConceptId = undefined;
@@ -281,6 +326,7 @@ export class ContextualTutorialRuntime {
       this.#queue.map(({ definition }) => definition.id),
       [...this.#shownThisMatch],
       [...this.#provisional.keys()],
+      this.#persistentHighlights,
       active,
       this.#lastInterceptedConceptId,
     );
@@ -293,9 +339,11 @@ function presentationFrom(item: ContextualQueuedConcept): ContextualConceptPrese
     conceptId: item.definition.id,
     revision: item.definition.revision,
     policy: item.definition.policy,
+    blocksGameplayWhileVisible: item.definition.blocksGameplayWhileVisible,
     copy: item.definition.copy,
     highlights: Object.freeze([...(item.match.highlights ?? [])]),
     placement: item.match.placement,
+    placementAnchor: item.match.placementAnchor,
     triggerCursor: item.triggerCursor,
   });
 }
@@ -304,6 +352,7 @@ function freezeMatch(match: ContextualConceptMatch): ContextualConceptMatch {
   return Object.freeze({
     ...match,
     highlights: match.highlights ? Object.freeze(match.highlights.map((highlight) => Object.freeze({ ...highlight }))) : undefined,
+    placementAnchor: match.placementAnchor ? Object.freeze({ ...match.placementAnchor }) : undefined,
   });
 }
 
@@ -315,6 +364,7 @@ function freezeSnapshot(
   queue: readonly string[] = [],
   shownThisMatch: readonly string[] = [],
   provisionalConcepts: readonly string[] = [],
+  persistentHighlights: readonly ContextualHighlightRef[] = [],
   active?: ContextualConceptPresentation,
   lastInterceptedConceptId?: string,
 ): ContextualRuntimeSnapshot {
@@ -326,6 +376,7 @@ function freezeSnapshot(
     queue: Object.freeze([...queue]),
     shownThisMatch: Object.freeze([...shownThisMatch]),
     provisionalConcepts: Object.freeze([...provisionalConcepts]),
+    persistentHighlights: Object.freeze(persistentHighlights.map((highlight) => Object.freeze({ ...highlight }))),
     active,
     lastInterceptedConceptId,
   });

@@ -94,6 +94,8 @@ export type GuidedGameplayReceipt = GameplayReceiptData & Readonly<{
   cursor: number;
   sessionId: string;
   stepId: string;
+  /** Reversible targeting gestures keep the current authored confirmation step active. */
+  advancesStep?: false;
   cardAlias?: GuidedCardAlias;
   targetAlias?: GuidedCardAlias;
   targetAliases?: readonly GuidedCardAlias[];
@@ -191,7 +193,7 @@ export class GuidedInteractionGate {
       ? "step-action-consumed"
       : policy.mode !== "act" || !policy.allowedIntent
       ? "step-not-actionable"
-      : mismatchReason(policy.allowedIntent, intent, policy.bindings);
+      : guidedMismatchReason(policy.allowedIntent, intent, policy.bindings);
     if (!reason) return { allowed: true };
     this.#attemptCursor += 1;
     const rejection: GuidedIntentRejection = Object.freeze({
@@ -209,7 +211,8 @@ export class GuidedInteractionGate {
   publish(data: GameplayReceiptData): GuidedGameplayReceipt | undefined {
     const policy = this.#policy;
     if (!policy) return undefined;
-    if (policy.mode === "act") this.#completedStepKey = stepKey(policy);
+    const advancesStep = !isReversibleTargetingReceipt(policy.allowedIntent, data);
+    if (policy.mode === "act" && advancesStep) this.#completedStepKey = stepKey(policy);
     this.#receiptCursor += 1;
     const aliases = reverseBindings(policy.bindings);
     const receipt: GuidedGameplayReceipt = Object.freeze({
@@ -219,6 +222,7 @@ export class GuidedInteractionGate {
       cursor: this.#receiptCursor,
       sessionId: policy.sessionId,
       stepId: policy.stepId,
+      ...(!advancesStep ? { advancesStep: false as const } : {}),
       cardAlias: data.cardId ? aliases.get(data.cardId) : undefined,
       targetAlias: data.targetId ? aliases.get(data.targetId) : undefined,
       targetAliases: data.targetIds
@@ -424,6 +428,44 @@ function mismatchReason(
     }
   }
   return undefined;
+}
+
+/**
+ * Confirming a target is one UI commitment with reversible preparation. Once a legal target is
+ * selected, deselecting it—or choosing another authored option—must not become an irreversible
+ * tutorial action of its own.
+ */
+function guidedMismatchReason(
+  expected: GuidedIntentSpec,
+  actual: GameplayIntent,
+  bindings: Readonly<Record<GuidedCardAlias, string>>,
+): GuidedIntentRejectionReason | undefined {
+  if (expected.kind !== "target.confirm") return mismatchReason(expected, actual, bindings);
+  if (actual.kind === "target.deselect") {
+    return expected.context !== undefined && actual.context !== expected.context
+      ? "context-mismatch"
+      : undefined;
+  }
+  if (actual.kind === "target.choose") {
+    if (expected.context !== undefined && actual.context !== expected.context) return "context-mismatch";
+    const authoredAliases = expected.targetAlias !== undefined
+      ? [expected.targetAlias]
+      : expected.targetAliases ?? expected.targetAliasOptions;
+    if (!authoredAliases) return "selection-mismatch";
+    const authoredIds = resolveBindings(authoredAliases, bindings);
+    if (!authoredIds) return "binding-missing";
+    return authoredIds.includes(actual.targetId) ? undefined : "selection-mismatch";
+  }
+  return mismatchReason(expected, actual, bindings);
+}
+
+function isReversibleTargetingReceipt(
+  expected: GuidedIntentSpec | undefined,
+  receipt: GameplayReceiptData,
+): boolean {
+  if (expected?.kind !== "target.confirm") return false;
+  if (expected.context !== undefined && receipt.reason !== expected.context) return false;
+  return receipt.kind === "target.selected" || receipt.kind === "target.deselected";
 }
 
 function freezePolicy(policy: GuidedInteractionPolicy): GuidedInteractionPolicy {

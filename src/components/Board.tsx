@@ -48,6 +48,7 @@ import { RootsTouchedSkyAnimator } from "./RootsTouchedSkyAnimator";
 import { EnergyFlowAnimator } from "./EnergyFlowAnimator";
 import { GuidedTutorialOverlay } from "./GuidedTutorialOverlay";
 import { ContextualTutorialCallout } from "./ContextualTutorialCallout";
+import { FirstCanonVisionCallout, PersistentContextualGoldenFrames } from "./FirstCanonVisionCallout";
 import { GameConfirmationDialog } from "./GameConfirmationDialog";
 import { LearnToPlayJourneyCues } from "./LearnToPlayJourneyCues";
 import { NORMAL_BOARD_SESSION, type BoardSessionPolicy } from "./boardSessionPolicies";
@@ -513,6 +514,8 @@ export function Board({
       {!overtureHandPending && <OpeningHandOverlay game={game} />}
       <GuidedTutorialOverlay />
       <ContextualTutorialCallout />
+      <FirstCanonVisionCallout />
+      <PersistentContextualGoldenFrames />
 
       {sessionPolicy.showStandardOutcome && defeatReady && matchOrigin && onRewriteFuture && onContemplateFuture && (
         <DefeatModal

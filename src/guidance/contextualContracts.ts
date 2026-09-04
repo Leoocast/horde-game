@@ -35,6 +35,8 @@ export type ContextualHighlightRef =
 export type ContextualConceptCopy = Readonly<{
   titleKey: TranslationKey;
   bodyKey: TranslationKey;
+  /** Narrative explanations use the same speaker-led dialog as the Learn to Play opening. */
+  speakerKey?: TranslationKey;
   glossaryTerms?: readonly GuidedGlossaryTermId[];
 }>;
 
@@ -51,6 +53,8 @@ export type ContextualRuntimeContext = Readonly<{
 export type ContextualConceptMatch = Readonly<{
   highlights?: readonly ContextualHighlightRef[];
   placement?: GuidedCalloutPlacement;
+  /** Optional semantic anchor used only to position the callout, never to draw another ring. */
+  placementAnchor?: ContextualHighlightRef;
   /** Optional authored discriminator retained for diagnostics; concepts still dedupe by ID. */
   occurrenceKey?: string;
 }>;
@@ -59,6 +63,10 @@ export type ContextualConceptDefinition = Readonly<{
   id: string;
   revision: number;
   policy: ContextualInterventionPolicy;
+  /** Some explanations describe a just-committed state and must temporarily own the whole board. */
+  blocksGameplayWhileVisible?: boolean;
+  /** Keeps the authored Marco Dorado after acknowledgement until the game session changes. */
+  retainHighlightsAfterAcknowledge?: boolean;
   /** Larger values are presented first when several signals arrive in the same synchronous beat. */
   priority: number;
   copy: ContextualConceptCopy;
@@ -81,8 +89,10 @@ export type ContextualConceptPresentation = Readonly<{
   conceptId: string;
   revision: number;
   policy: ContextualInterventionPolicy;
+  blocksGameplayWhileVisible?: boolean;
   copy: ContextualConceptCopy;
   highlights: readonly ContextualHighlightRef[];
   placement?: GuidedCalloutPlacement;
+  placementAnchor?: ContextualHighlightRef;
   triggerCursor: number;
 }>;

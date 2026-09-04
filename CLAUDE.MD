@@ -877,9 +877,9 @@ y Memoria vuelve junto al Archivo. Los CTA son **Elegir atacantes**, **Atacar el
 **Pasar el combate**.
 
 La infraestructura del tutorial obligatorio se gobierna por
-`docs/plans/guided_tutorial_system_plan.md`, que sigue abierta y no autoriza implementar fases en
-bloque. Antes de cada fase se explica al usuario qué experiencia se construirá y para qué le sirve;
-sólo se implementa tras su aprobación explícita. El sistema debe ser independiente de nombres e IDs
+`docs/plans/guided_tutorial_system_plan.md`, cuyo framework está cerrado; no se reabren sus fases
+para implementar contenido nuevo. Los planes de contenido abiertos se ejecutan por fase y sólo tras
+la aprobación explícita correspondiente. El sistema debe ser independiente de nombres e IDs
 de decks en su núcleo: las lecciones declaran recetas exactas, aliases de copias y referencias
 calificadas de `ContentCatalog`. Añadir un deck no debe exigir ramas nuevas en el
 overlay, el gate de acciones ni el orquestador. La sesión activa nunca se reanuda a mitad: sólo se
@@ -889,13 +889,13 @@ paso.
 El contenido futuro del onboarding se diseña en
 `docs/plans/learn_to_play_tutorial.md`. La decisión de producto vigente es conservar la lección
 guiada actual como tutorial específico **Preparación** y crear un tutorial principal
-**Aprender a jugar**: un prólogo determinista semi-guiado, seguido más adelante por una partida real
-de Elarion contra los Sinsepulcro con seed preparada y ayudas contextuales. **Aprender a jugar** será
-el tutorial obligatorio y **Preparación** será opcional; ambos podrán repetirse desde **Cómo jugar**.
-El recorrido authored todavía no está completo y no se activará como gate de primera apertura
-hasta completar su handoff. Las Fases técnicas 1 a 3 y la implementación de la Fase 4 hasta el
-comienzo real de la primera Estampida quedaron entregadas el 2026-08-17:
-existe un stream semántico pasivo por sesión que observa también
+**Aprender a jugar**: un prólogo determinista semi-guiado que ya entrega una partida real de Elarion
+contra los Sinsepulcro mediante su handoff. **Aprender a jugar** será el tutorial obligatorio y
+**Preparación** será opcional; ambos pueden repetirse desde **Cómo jugar**. El gate de primera
+apertura de la aplicación y el tratamiento de perfiles existentes siguen pendientes, por lo que el
+recorrido todavía no se activa como gate automático. Las Fases técnicas 1 a 6, incluido el handoff,
+están implementadas; el plan post-handoff y el hardening siguen abiertos. Desde el 2026-08-17 existe
+un stream semántico pasivo por sesión que observa también
 partidas normales, y el motor tipa los rechazos necesarios para límite de Fuentes, Acción de Fuente
 usada, Estabilizándose, Agotado, Volar/Guardia aérea, Furtivo, defensor ya asignado y fase
 incorrecta. El
@@ -908,10 +908,10 @@ variar. Esa Invocación terminal no redefine la regla normal de Estampida y cada
 a una mediante el revelado normal, sin agrupación visual. El CTA único se llama **Contemplar otro
 Futuro**. Al activarlo registra la finalización, ejecuta el vórtice y crea una Visión de la primera
 Inscripción Canon aprobada `HF1-ELA-GRV-082-QC5`: Elarion contra los Sinsepulcro, Normal y
-Preparación 3. La
-relación exacta entre buena Mano y mulligan sigue abierta. Si no queda un atacante
-estabilizado, la enseñanza del ataque no bloquea el flujo, permanece como no vista y reaparece en
-una partida posterior. La preferencia global de no repetir ayudas sólo suprime conceptos ya
+Preparación 3. La relación entre Mano y mulligan quedó cerrada en el plan post-handoff: la seed
+presenta primero siete cartas y un único mulligan real entrega la Mano preparada de seis. Si no
+queda un atacante estabilizado, la enseñanza del ataque no bloquea el flujo, permanece como no
+vista y reaparece en una partida posterior. La preferencia global de no repetir ayudas sólo suprime conceptos ya
 mostrados: un concepto no visto conserva siempre su primera aparición. Está activa por defecto, se
 marca al cerrar/aceptar la ayuda y las repeticiones se limitan a una por concepto y partida.
 En la build demo actual **Continuar** no se renderiza y el archivo de resume existente permanece
@@ -932,8 +932,11 @@ las preventivas interceptan sólo la acción relevante y nunca compiten con una 
 estricta. El progreso `hostfall-guided-progress` v2 migra v1, conserva finalizaciones de lecciones y
 añade conceptos, recorridos y la preferencia global de repetición. En partidas normales el concepto
 se confirma al cerrar la ayuda; el modo provisional permite commit atómico o rollback total para el
-futuro prólogo. El registro de producto contiene ya los conceptos contextuales del primer tramo:
-defensa y orden de izquierda a derecha, Volar/Guardia aérea, Vida, Reserva y Fuentes preparadas,
+futuro prólogo. Los recorridos aislados ignoran el checkbox de repetición, pero registran cada
+explicación aceptada junto con su procedencia tutorial para no duplicarla en la primera Visión
+Canon ni en partidas normales posteriores. El registro de producto contiene ya
+los conceptos contextuales del primer tramo: defensa y orden de izquierda a derecha, Volar/Guardia
+aérea, Vida, daño marcado que desaparece al cambiar de turno, Reserva y Fuentes preparadas,
 Estabilizándose, ataque al Archivo, agotamiento del atacante y Estampida. Las ayudas no vistas pueden
 aparecer en una partida normal compatible y se confirman globalmente; los fixtures sintéticos del
 Playground siguen aislados en development. Las acciones estructurales imprescindibles reutilizan la
@@ -946,26 +949,45 @@ acompañante. Las tarjetas completas son el control; no añaden rombo, divisor, 
 `Begin` en el pie, ni anteponen un rótulo redundante de selección. El recorrido tiene lifecycle
 efímero independiente, rollback de conceptos provisionales, reinicio total, autosave apagado,
 políticas explícitas de tablero e intervenciones estrictas adjuntas al `GameState` vivo. Su launcher
-está activo desde **Cómo jugar**. Antes de iniciar el lifecycle muestra una antesala temporal de
-cinco diálogos localizados: Evy pide ayuda, el Cronista decide contemplar ese futuro sin anticipar
-que sus protagonistas morirán y Evy entrega el combate tras preparar tres Fuentes antes de que la
-Hueste rompa su línea y la obligue a retroceder. Cerrar la
-antesala conserva **Cómo jugar**; sólo el CTA del quinto diálogo carga el recorrido. Este copy es
-una maqueta para la futura cinemática con voz, no lore definitivo. Los parlamentos del Cronista
-muestran como speaker el nombre elegido por el jugador; «El Cronista» es sólo el fallback si
-estuviera vacío. Después carga el snapshot avanzado exacto: Vida 31, Maela y tres Fuentes,
+está activo desde **Cómo jugar**. Antes de iniciar el lifecycle muestra una antesala temporal con un
+único párrafo de Evy: pide ayuda, sitúa la Visión ya en marcha, las tres Fuentes preparadas y a Maela
+aún resistiendo, sin anticipar el resultado del recorrido. El Cronista no habla ni aparece como speaker;
+no existen beats ni contador de diálogos. Cerrar la antesala conserva **Cómo jugar** y el único CTA
+**Continuar la Visión** carga el recorrido. Después carga el snapshot avanzado exacto: Vida 31, Maela y tres Fuentes,
 Vaelor/Aelyra/Río en Mano, Flor como próximo robo, Retorno/Acechador/Engendro/Cosechadora en ese
 orden y la segunda copia de Acechador como siguiente revelado. Evy presenta la llegada del
 Cronista y la cuarta Fuente que completa el contenedor de Energía inferior izquierdo antes de que aparezca la instrucción actual
 **Juega Río de Elarion**. La guía exige la cuarta Fuente y
-Aelyra con objetivo libre; el director deja defensa libre, exige Vaelor, hace obligatoria una única
-inspección de la Cosechadora y permite Flor antes, después o nunca. Las pruebas enumeran todas las
+Aelyra con objetivo libre; después de elegir su objetivo, **Cancelar** y el clic derecho global
+permiten deseleccionarlo sin cancelar la Invocación. El director deja defensa libre y marca en
+dorado **Mi Turno** sólo después de aceptar las ayudas contextuales pendientes: primero Vida y,
+justo antes del botón, si hubo un choque con supervivientes, la recuperación del Aguante. Al
+confirmar **Mi Turno**, **Ahora es tu turno** pide mirar la Energía. Al cerrar ese cuadro se ejecuta
+y queda visible la preparación de Fuentes y la transferencia a Reserva, mientras **Flor del Alba**
+permanece retenida fuera de la Mano. Sólo al asentarse la transferencia aparece **Conserva la
+Energía que no uses**; al aceptar esa explicación se libera el robo visible de Flor, con su sonido,
+y después de asentarse la entrada abre **Usa tu Energía para Invocar nuevos Ecos**. Luego exige Vaelor,
+hace obligatoria una única inspección de la Cosechadora y permite Flor antes, después o nunca. Las pruebas enumeran todas las
 defensas legales y esas ramas, que convergen en Cosechadora 7/9, y certifican cero o un descarte
 opcional antes de la primera Estampida. El recorrido ya continúa después de `host.surgeStarted`: los
 Ladrones vacían la Mano, la regla real roba Choque + Río —Río queda a la derecha—, y jugar la quinta Fuente o intentar
 avanzar activa una intervención estricta breve para **Devolver Fuente**. Ciudad, Choque, Flor y el
 ataque posterior permanecen libres. Tres Soldados authored absorben los descartes opcionales antes
 del Titán terminal.
+
+La ayuda visible posterior a un combate con supervivientes no habla de «daño marcado» ni describe
+el estado interno. Enseña la regla completa con el título **El daño no permanece** y una sola frase:
+**Al final de cada turno, los Ecos supervivientes recuperan todo su Aguante**. Su revisión
+contextual debe incrementarse cuando cambie este aprendizaje para que el copy corregido vuelva a
+mostrarse a quienes vieron una versión anterior. El cuadro se ancla por encima de la acción
+**Mi Turno** para no cubrir las cartas; los Ecos dañados conservan su resaltado independiente.
+
+La primera explicación de Batalla de **Aprender a jugar** enseña dentro del mismo cuadro que los
+Ecos atacan el Archivo y que cada 3 de daño de ataque hacen que se descarte una carta a la Memoria. La primera
+declaración con varios atacantes de la Hueste presenta una sola ayuda que combina cómo asignar
+defensores con el orden de resolución de izquierda a derecha; una declaración de un único atacante
+conserva la ayuda simple y el concepto de orden espera hasta resultar relevante. Aceptar el orden
+dentro del recorrido aislado lo conserva como aprendizaje para la siguiente Visión.
 
 El lenguaje visible del tutorial distingue objetos de reglas: **Fuente** aporta Energía al
 contenedor inferior izquierdo y **Energía** se canaliza para **Invocar Ecos** o lanzar Hechizos;
@@ -975,19 +997,52 @@ no robados—, de modo que el subrayado cubre la frase completa. Vida se define 
 supervivencia del Cronista y Reserva explica que conserva hasta 3 de Energía para el turno siguiente
 y la utiliza antes que las Fuentes. En la primera Estampida el orden es contractual: termina la
 animación, aparece su ayuda contextual sobre el tablero asentado y sólo al aceptarla se revelan los
-Ecos. La ayuda de Mano vacía no ilumina la Mano. En el desenlace de Aprender a jugar, tanto
+Ecos. La ayuda de Mano vacía no ilumina la Mano y bloquea todo el tablero desde que queda pendiente,
+no sólo cuando ya está visible: no se pueden mover, jugar ni activar cartas hasta aceptarla. En el desenlace de Aprender a jugar, tanto
 **Visión perdida** como **Contemplar otro Futuro** quedan centrados horizontalmente.
 
 El cierre terminal calcula desde el tablero vivo el mínimo de llegadas que vuelve inevitable la
 derrota, verifica la mejor defensa con el resolutor real y presenta cada carta mediante su llegada
 normal, una a una. La Vida llega a 0 por el combate real; `learn-to-play` reutiliza el quiebre de
-derrota y muestra sólo **Contemplar otro Futuro** con copy narrativo propio. Tras aceptar la
+derrota; el copy narrativo **Llegamos demasiado tarde** aparece dos segundos después y muestra sólo
+**Contemplar otro Futuro**. Tras aceptar la
 narración, el botón registra el recorrido como completado, ejecuta el vórtice y abre
-`HF1-ELA-GRV-082-QC5` como una Visión normal. La Fase 6B aplazada conserva únicamente el mulligan final,
-el gate de primera apertura y la durabilidad durante la transición. En el código actual **Continuar** está deshabilitado globalmente; la política aprobada
-para la demo es ocultarlo sin retirar su implementación de Early Access. Para una fase posterior
-siguen pendientes la Mano/mulligan sobre esa misma Inscripción Canon, el comportamiento de primera apertura y perfiles existentes; y la
-persistencia exacta si la aplicación se cierra durante el vórtice.
+`HF1-ELA-GRV-082-QC5` como una Visión normal. El diseño post-handoff quedó implementado el 2026-09-01
+y vive en `docs/plans/first_canon_vision_plan.md`; conserva la seed y el
+RNG reales, presenta una Mano inicial de siete cartas y obliga un único mulligan real que entrega la
+Mano preparada de seis cartas cuando las ayudas contextuales corresponden. Después introduce la
+Preparación como concentración mental, avisa al cerrarla y entrega el resto a conceptos
+contextuales sobre la partida normal. Sus narraciones se superponen a la Mano sin mover las cartas;
+todo cuadro hablado por Evy reutiliza el diálogo inicial de **Aprender a jugar**, con **Evy** como
+título y sin subtítulo temático, y la tipografía de ayudas usa la escala legible 1,1. El diálogo de
+Mano vive en una capa independiente y las cartas dejan su animación de entrada en un estado estable
+antes de abrirla; al cerrarse, el hover no se rearma hasta que el puntero sale de la Mano. Al
+conservarla, su representación normal se monta ya visible y no repite el fundido de entrada. En
+Preparación los cuadros se anclan al progreso, a los sockets amarillos y al botón respectivamente;
+cambiar del primer cuadro al segundo remonta el Marco Dorado para repetir su llegada completa. El último Marco Dorado empieza sólo
+después de aceptar **La Hueste despierta** y permanece hasta que el jugador pulsa **Terminar turno**
+por segunda vez; la animación nunca confirma la transición por sí sola. La primera secuencia es obligatoria al salir del handoff; al
+Contemplar de nuevo —o al volver a introducir la misma seed después de haberla jugado— Evy pregunta
+en el mulligan si debe guiarla completa otra vez o dejar al Cronista continuar por su cuenta. La
+primera Visión repite la guía canónica salvo los conceptos que Aprender a jugar acaba de enseñar;
+la opción autónoma muestra sólo conceptos globalmente no aprendidos y **Guíame de nuevo** repite
+toda la guía canónica. Esta decisión ignora el checkbox normal de repetición. Aprender a
+jugar también ignora ese checkbox, pero registra cada concepto aceptado y cada fundamento enseñado
+por una intervención estricta para que no vuelva a aparecer innecesariamente fuera del tutorial.
+**Todavía podemos aprender** se excluye después de abrir la sesión contextual de **Aprender a
+jugar**, por lo que nunca puede quedar en cola detrás del desenlace; pertenece sólo a una Visión
+normal. El Santuario
+Quebrado mostrará **Otorga: Imponente** sin
+adquirir `DAUNTING`; **Rápido** se explicará al jugador como «puedes lanzarlo en cualquier momento»
+sin cambiar las ventanas ni la resolución actuales del engine; no existe una ayuda de **Hechizo
+Básico**. Imponente, Furtivo y Letal enmarcan sólo el Eco atacante de la Hueste; Veneno se ancla a su
+marcador y los Apoyos a su carta. El preview de click derecho no muestra X y se cierra con Escape o
+clic fuera. Durante los cuadros de Mano sólo se
+suprimen hover, preview y acciones de carta; Música y Ajustes siguen accesibles. La transición
+CTA/vórtice/partida marca el prólogo completo sólo después de crear la Visión Canon, sin reactivar
+el resume de demo. En el código actual **Continuar** está
+deshabilitado globalmente; la política aprobada para la demo es ocultarlo sin retirar su
+implementación de Early Access.
 
 La Fase 0 quedó cerrada el 2026-08-11. La lección **Preparación** —id técnico `first-seed`— usa **El
 Pacto de Elarion** como Crónica; la Hueste y el escenario pertenecen al diseño de
@@ -1140,10 +1195,13 @@ posterior debe intentar iluminar su alias. Las Invocaciones de Liora y Maela inc
 `player.sources` mide la unión real de las dos pistas de orbes, no el panel decorativo de la esquina.
 Los checkpoints `observe` breves pueden declarar `callout: "hidden"`: conservan la espera estable
 entre acciones, pero no renderizan texto, fade, spotlight, anclas ni conectores y tampoco cuentan en
-la numeración visible. Las anclas de carta ocultan el marco dorado del spotlight y conservan la
-indicación propia de la carta; si aparece
+la numeración visible. Todas las anclas de carta, incluidos los Ecos señalados por ayudas
+contextuales, usan el mismo marco dorado animado que la indicación de **Mi Turno**; si aparece
 una acción contextual fuera de sus límites, el descendiente marcado con
 `data-guided-anchor-extension="true"` amplía el hueco interactivo y la zona evitada por el recuadro.
+**Marco Dorado** es desde el 2026-09-01 el nombre canónico de producto para ese mismo efecto, sin
+importar si rodea una carta, un botón u otra superficie; no se crean variantes paralelas por tipo de
+target.
 El orbe de coste forma parte explícita de esos límites visuales para que el dimmer no lo recorte.
 Las dos primeras acciones del prólogo —jugar Río de Elarion e invocar a Aelyra— declaran
 `dimmer: "hidden"`: conservan el recuadro, la flecha direccional y el bloqueo de acciones, pero no

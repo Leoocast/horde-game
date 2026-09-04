@@ -109,6 +109,9 @@ export function GuidedTutorialOverlay() {
     || rects.length < resolved.length;
   const dismissCalloutOnAction = session.currentStep?.kind === "act"
     && session.currentStep.allowedIntent.kind === "phase.continueSetup";
+  const globalTargetDeselectActive = session.mode === "act"
+    && session.currentStep?.kind === "act"
+    && session.currentStep.allowedIntent.kind === "target.confirm";
   const showCallout = session.currentStep?.callout !== "hidden"
     && dismissedActionCalloutScope !== stepScope;
   const showDimmer = showCallout && session.currentStep?.dimmer !== "hidden";
@@ -267,6 +270,10 @@ export function GuidedTutorialOverlay() {
     };
 
     const handlePointerDown = (event: PointerEvent) => {
+      if (globalTargetDeselectActive && event.button === 2) {
+        allowedPointers.add(event.pointerId);
+        return;
+      }
       if (targetAllowed(event.target)) {
         allowedPointers.add(event.pointerId);
         if (!isControl(event.target)) dismissActionCallout();
@@ -284,6 +291,10 @@ export function GuidedTutorialOverlay() {
         return;
       }
       block(event);
+    };
+    const handleContextMenu = (event: MouseEvent) => {
+      if (globalTargetDeselectActive) return;
+      handleEvent(event);
     };
     const handleKeyDown = (event: KeyboardEvent) => {
       // Restricted Settings and lifecycle confirmations live above the guide layer and own their
@@ -312,7 +323,7 @@ export function GuidedTutorialOverlay() {
     document.addEventListener("pointercancel", handlePointerEnd, true);
     document.addEventListener("click", handleEvent, true);
     document.addEventListener("dblclick", handleEvent, true);
-    document.addEventListener("contextmenu", handleEvent, true);
+    document.addEventListener("contextmenu", handleContextMenu, true);
     document.addEventListener("dragstart", handleEvent, true);
     document.addEventListener("dragover", handleEvent, true);
     document.addEventListener("drop", handleEvent, true);
@@ -323,13 +334,13 @@ export function GuidedTutorialOverlay() {
       document.removeEventListener("pointercancel", handlePointerEnd, true);
       document.removeEventListener("click", handleEvent, true);
       document.removeEventListener("dblclick", handleEvent, true);
-      document.removeEventListener("contextmenu", handleEvent, true);
+      document.removeEventListener("contextmenu", handleContextMenu, true);
       document.removeEventListener("dragstart", handleEvent, true);
       document.removeEventListener("dragover", handleEvent, true);
       document.removeEventListener("drop", handleEvent, true);
       document.removeEventListener("keydown", handleKeyDown, true);
     };
-  }, [active, activeKeys, dismissCalloutOnAction, isLearnToPlay, resolved, session.currentStep?.id, session.mode, stepScope, t]);
+  }, [active, activeKeys, dismissCalloutOnAction, globalTargetDeselectActive, isLearnToPlay, resolved, session.currentStep?.id, session.mode, stepScope, t]);
 
   useEffect(() => {
     const rejection = interaction.lastRejection;
@@ -348,8 +359,8 @@ export function GuidedTutorialOverlay() {
     title,
     preferredCalloutWidth,
     GUIDED_CALLOUT_PROFILE,
-    10,
-    25,
+    11,
+    27.5,
   );
   const positionedCalloutSize = comparisonCards.length > 0
     ? calloutSize
@@ -396,7 +407,7 @@ export function GuidedTutorialOverlay() {
       data-card-preview-visible={cardPreviewVisible ? "true" : "false"}
       data-feedback-pulse={feedbackPulse}
     >
-      {showCallout && (
+      {(showCallout || showSilentSpotlight) && (
         <>
           <svg className="guided-tutorial-mask" aria-hidden="true">
             <defs>
@@ -427,7 +438,7 @@ export function GuidedTutorialOverlay() {
           className="guided-tutorial-ring"
           data-anchor-key={rect.key}
           data-anchor-role={rect.role}
-          data-tone={showSilentSpotlight ? presentation.tone : undefined}
+          data-tone={rect.key.startsWith("card:") ? "gold" : showSilentSpotlight ? presentation.tone : undefined}
           style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
           aria-hidden="true"
         />

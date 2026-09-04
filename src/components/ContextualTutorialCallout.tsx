@@ -26,6 +26,7 @@ import { contextualTutorialRuntime } from "../guidance/contextualProductRuntime"
 import { useTranslation } from "../i18n/useTranslation";
 import { GameTooltip } from "./GameTooltip";
 import { createGuidedFrameLoop } from "./guidedFrameLoop";
+import { GuidedTutorialDialog } from "./GuidedTutorialDialog";
 import { tutorialCalloutTitleFontSize, tutorialCalloutWidth } from "./tutorialCalloutSizing";
 
 const subscribeRuntime = (listener: () => void) => contextualTutorialRuntime.subscribe(listener);
@@ -58,20 +59,27 @@ export function ContextualTutorialCallout() {
   const active = runtime.active;
   const visible = Boolean(active && guided.status !== "running");
 
-  const resolved = useMemo(() => (active?.highlights ?? []).map((highlight) => {
-    const key: GuidedAnchorKey = highlight.kind === "card"
-      ? guidedCardAnchorKey(highlight.instanceId)
-      : guidedSurfaceAnchorKey(highlight.anchor);
-    return Object.freeze({
-      key,
-      role: highlight.role ?? "focus",
-      padding: highlight.padding ?? 6,
-      offsetX: highlight.offsetX ?? 0,
-      offsetY: highlight.offsetY ?? 0,
-      showHighlight: highlight.showHighlight !== false,
-      element: guidedAnchorRegistry.preferred(key),
-    });
-  }), [active, anchors.revision]);
+  const resolved = useMemo(() => {
+    const resolveHighlight = (highlight: NonNullable<typeof active>["highlights"][number], placementOnly = false) => {
+      const key: GuidedAnchorKey = highlight.kind === "card"
+        ? guidedCardAnchorKey(highlight.instanceId)
+        : guidedSurfaceAnchorKey(highlight.anchor);
+      return Object.freeze({
+        key,
+        role: highlight.role ?? "focus",
+        padding: highlight.padding ?? 6,
+        offsetX: highlight.offsetX ?? 0,
+        offsetY: highlight.offsetY ?? 0,
+        showHighlight: highlight.showHighlight !== false,
+        placementOnly,
+        element: guidedAnchorRegistry.preferred(key),
+      });
+    };
+    return [
+      ...(active?.highlights ?? []).map((highlight) => resolveHighlight(highlight)),
+      ...(active?.placementAnchor ? [resolveHighlight(active.placementAnchor, true)] : []),
+    ];
+  }, [active, anchors.revision]);
 
   useLayoutEffect(() => {
     if (!visible) {
@@ -123,7 +131,7 @@ export function ContextualTutorialCallout() {
   }, [visible]);
 
   useEffect(() => {
-    if (!visible || active?.policy !== "preventive") return;
+    if (!visible || (active?.policy !== "preventive" && !active?.blocksGameplayWhileVisible)) return;
     previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const frame = window.requestAnimationFrame(() => closeRef.current?.focus({ preventScroll: true }));
     return () => {
@@ -131,115 +139,154 @@ export function ContextualTutorialCallout() {
       if (previousFocusRef.current?.isConnected) previousFocusRef.current.focus({ preventScroll: true });
       previousFocusRef.current = null;
     };
-  }, [active?.conceptId, active?.policy, visible]);
+  }, [active?.blocksGameplayWhileVisible, active?.conceptId, active?.policy, visible]);
 
   if (!visible || !active || typeof document === "undefined") return null;
 
   const missingAnchor = resolved.length !== rects.length;
+  const highlightRects = rects.filter((_rect, index) => !resolved[index]?.placementOnly);
+  const placementRects = rects.filter((_rect, index) => resolved[index]?.placementOnly);
+  const calloutRects = placementRects.length > 0 ? placementRects : highlightRects;
   const title = t(active.copy.titleKey);
-  const preferredCalloutWidth = tutorialCalloutWidth(title, viewport.width, CONTEXTUAL_CALLOUT_PROFILE);
+  const speaker = active.copy.speakerKey ? t(active.copy.speakerKey) : undefined;
+  const preferredCalloutWidth = speaker
+    ? Math.min(620, Math.max(280, viewport.width - 48))
+    : tutorialCalloutWidth(title, viewport.width, CONTEXTUAL_CALLOUT_PROFILE);
   const titleFontSize = tutorialCalloutTitleFontSize(
-    title,
+    speaker ?? title,
     preferredCalloutWidth,
     CONTEXTUAL_CALLOUT_PROFILE,
-    10,
-    21,
+    11,
+    23,
   );
   const position = placeGuidedCallout(
     viewport,
     { ...calloutSize, width: preferredCalloutWidth },
-    missingAnchor ? [] : rects,
+    missingAnchor ? [] : calloutRects,
     active.placement,
   );
-  const connector = missingAnchor ? undefined : guidedConnectorPath(rects);
+  const connector = missingAnchor ? undefined : guidedConnectorPath(highlightRects);
   const titleId = `contextual-tutorial-title-${active.conceptId}`;
   const bodyId = `contextual-tutorial-body-${active.conceptId}`;
   const body = t(active.copy.bodyKey);
   const paragraphs = body.split(/\n{2,}/u).filter(Boolean).map(
     (paragraph) => guidedGlossarySegments(paragraph, active.copy.glossaryTerms ?? [], t),
   );
+  const paragraphNodes = paragraphs.map((paragraph, paragraphIndex) => (
+    <p key={`${active.conceptId}:body:${paragraphIndex}`}>
+      {paragraph.map((segment, segmentIndex) => segment.kind === "text"
+        ? <span key={`text:${segmentIndex}`}>{segment.text}</span>
+        : (
+          <GameTooltip
+            key={`${segment.termId}:${segmentIndex}`}
+            content={segment.definition}
+            className="guided-glossary-tooltip-host"
+            tooltipClassName="guided-glossary-tooltip contextual-glossary-tooltip"
+          >
+            <button
+              type="button"
+              className="guided-glossary-term"
+              aria-label={`${segment.text}: ${segment.definition}`}
+            >
+              {segment.text}
+            </button>
+          </GameTooltip>
+        ))}
+    </p>
+  ));
 
   return createPortal(
     <div
       className="contextual-tutorial-layer"
       data-policy={active.policy}
       data-concept-id={active.conceptId}
+      data-blocks-gameplay={active.blocksGameplayWhileVisible || undefined}
+      onKeyDown={(event) => {
+        if (event.key !== "Escape") return;
+        event.preventDefault();
+        contextualTutorialRuntime.acknowledgeActive();
+      }}
     >
       {connector && (
         <svg className="contextual-tutorial-connector-layer" aria-hidden="true">
           <path className="contextual-tutorial-connector" d={connector} />
         </svg>
       )}
-      {!missingAnchor && rects.map((rect, index) => resolved[index]?.showHighlight && (
-        <span
-          key={`${rect.key}:${rect.role}`}
-          className="contextual-tutorial-ring"
-          data-anchor-key={rect.key}
-          style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
-          aria-hidden="true"
+      {!missingAnchor && rects.map((rect, index) => {
+        if (resolved[index]?.placementOnly || !resolved[index]?.showHighlight) return null;
+        return (
+          <span
+            key={`${rect.key}:${rect.role}`}
+            className="guided-tutorial-ring contextual-tutorial-ring"
+            data-anchor-key={rect.key}
+            data-tone="gold"
+            style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
+            aria-hidden="true"
+          />
+        );
+      })}
+      {speaker ? (
+        <GuidedTutorialDialog
+          calloutRef={calloutRef}
+          className="contextual-tutorial-callout contextual-evy-dialog"
+          style={{ left: position.left, top: position.top, width: preferredCalloutWidth }}
+          title={speaker}
+          body={paragraphNodes}
+          isLearnToPlay
+          ariaModal={Boolean(active.blocksGameplayWhileVisible)}
+          closeLabel={t("common.close")}
+          onClose={() => contextualTutorialRuntime.acknowledgeActive()}
+          showFeedback={false}
+          titleId={titleId}
+          bodyId={bodyId}
+          footer={(
+            <button
+              ref={closeRef}
+              type="button"
+              className="guided-tutorial-continue"
+              onClick={() => contextualTutorialRuntime.acknowledgeActive()}
+            >
+              {t("guided.contextual.understood")}
+            </button>
+          )}
         />
-      ))}
-      <section
-        ref={calloutRef}
-        className="contextual-tutorial-callout"
-        style={{ left: position.left, top: position.top, width: preferredCalloutWidth }}
-        role="dialog"
-        aria-modal="false"
-        aria-live="polite"
-        aria-labelledby={titleId}
-        aria-describedby={bodyId}
-        onKeyDown={(event) => {
-          if (event.key !== "Escape") return;
-          event.preventDefault();
-          contextualTutorialRuntime.acknowledgeActive();
-        }}
-      >
-        <span className="contextual-tutorial-mark" aria-hidden="true" />
-        <div className="contextual-tutorial-heading">
-          <h2 id={titleId} style={{ fontSize: titleFontSize }}>{title}</h2>
-          <button
-            ref={closeRef}
-            type="button"
-            className="contextual-tutorial-close"
-            onClick={() => contextualTutorialRuntime.acknowledgeActive()}
-            title={t("common.close")}
-            aria-label={t("common.close")}
-          >
-            <X size={15} />
-          </button>
-        </div>
-        <div id={bodyId} className="contextual-tutorial-body">
-          {paragraphs.map((paragraph, paragraphIndex) => (
-            <p key={`${active.conceptId}:body:${paragraphIndex}`}>
-              {paragraph.map((segment, segmentIndex) => segment.kind === "text"
-                ? <span key={`text:${segmentIndex}`}>{segment.text}</span>
-                : (
-                  <GameTooltip
-                    key={`${segment.termId}:${segmentIndex}`}
-                    content={segment.definition}
-                    className="guided-glossary-tooltip-host"
-                    tooltipClassName="guided-glossary-tooltip contextual-glossary-tooltip"
-                  >
-                    <button
-                      type="button"
-                      className="guided-glossary-term"
-                      aria-label={`${segment.text}: ${segment.definition}`}
-                    >
-                      {segment.text}
-                    </button>
-                  </GameTooltip>
-                ))}
-            </p>
-          ))}
-        </div>
-        <button
-          type="button"
-          className="contextual-tutorial-acknowledge"
-          onClick={() => contextualTutorialRuntime.acknowledgeActive()}
+      ) : (
+        <section
+          ref={calloutRef}
+          className="contextual-tutorial-callout"
+          style={{ left: position.left, top: position.top, width: preferredCalloutWidth }}
+          role="dialog"
+          aria-modal={active.blocksGameplayWhileVisible ? "true" : "false"}
+          aria-live="polite"
+          aria-labelledby={titleId}
+          aria-describedby={bodyId}
         >
-          {t("guided.contextual.understood")}
-        </button>
-      </section>
+          <span className="contextual-tutorial-mark" aria-hidden="true" />
+          <div className="contextual-tutorial-heading">
+            <h2 id={titleId} style={{ fontSize: titleFontSize }}>{title}</h2>
+            <button
+              ref={closeRef}
+              type="button"
+              className="contextual-tutorial-close"
+              onClick={() => contextualTutorialRuntime.acknowledgeActive()}
+              title={t("common.close")}
+              aria-label={t("common.close")}
+            >
+              <X size={15} />
+            </button>
+          </div>
+          <div id={bodyId} className="contextual-tutorial-body">
+            {paragraphNodes}
+          </div>
+          <button
+            type="button"
+            className="contextual-tutorial-acknowledge"
+            onClick={() => contextualTutorialRuntime.acknowledgeActive()}
+          >
+            {t("guided.contextual.understood")}
+          </button>
+        </section>
+      )}
     </div>,
     document.body,
   );

@@ -339,7 +339,7 @@ function ActiveRuntimeModal({
   }
 
   if (id === "learn-intro") {
-    return <LearnToPlayIntroModal open chroniclerName={chroniclerName} onClose={close} onComplete={close} />;
+    return <LearnToPlayIntroModal open onClose={close} onComplete={close} />;
   }
 
   if (id === "guided-tutorial") {

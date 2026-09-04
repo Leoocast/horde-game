@@ -356,6 +356,11 @@ export function DuelHud({ game }: { game: GameState }) {
             {game.host.poisonCounters > 0 && (
               <GameTooltip content={t("game.poisonCounters", { count: game.host.poisonCounters, threshold: poisonDiscardThreshold })} side="bottom" className="host-poison-tooltip">
                 <div
+                  ref={(element) => guidedAnchorRegistry.set(
+                    guidedSurfaceAnchorKey("host.poison"),
+                    "duel-hud:host-poison",
+                    element,
+                  )}
                   key={poisonAttackAnimation?.id ?? poisonConsumeAnimation?.id ?? `poison-${game.host.poisonCounters}`}
                   className={[
                     "host-poison-status",

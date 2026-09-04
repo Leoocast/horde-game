@@ -157,7 +157,7 @@ export const LEARN_TO_PLAY_PROLOGUE_SCENARIO = Object.freeze({
 /** Strict opening intervention. Target selection remains free between the engine's legal allies. */
 export const LEARN_TO_PLAY_OPENING_INTERVENTION = Object.freeze({
   id: "learn-to-play.opening",
-  revision: 2,
+  revision: 3,
   startStepId: "evy-fourth-source-briefing",
   steps: [
     {
@@ -246,7 +246,12 @@ export const LEARN_TO_PLAY_OPENING_INTERVENTION = Object.freeze({
         titleKey: "guided.learnToPlay.confirmAelyraTargetTitle",
         bodyKey: "guided.learnToPlay.confirmAelyraTargetBody",
       },
-      highlights: [{ kind: "surface", anchor: "selection.primaryAction" }],
+      highlights: [
+        { kind: "surface", anchor: "selection.primaryAction" },
+        { kind: "surface", anchor: "selection.cancelAction" },
+        { kind: "card", alias: "aelyra" },
+        { kind: "card", alias: "maela" },
+      ],
       allowedIntent: {
         kind: "target.confirm",
         context: "trigger",
@@ -290,7 +295,7 @@ export const LEARN_TO_PLAY_FIRST_BATTLE_INTERVENTION = Object.freeze({
       kind: "explain",
       copy: {
         titleKey: "guided.contextual.product.attackArchiveTitle",
-        bodyKey: "guided.contextual.product.attackArchiveBody",
+        bodyKey: "guided.learnToPlay.attackArchiveBody",
         glossaryTerms: ["hostArchive", "echoes"],
       },
       highlights: [{ kind: "surface", anchor: "host.archive" }],
@@ -373,10 +378,10 @@ export const LEARN_TO_PLAY_FIRST_DEFENSE_INTERVENTION = Object.freeze({
   ],
 } satisfies GuidedInterventionDefinition);
 
-/** First player turn after defending: pause before the hand-off, observe Energy, then set the goal. */
+/** First player turn after defending: show Reserve moving, explain it, then visibly draw Flor. */
 export const LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION = Object.freeze({
   id: "learn-to-play.player-return",
-  revision: 3,
+  revision: 5,
   startStepId: "player-turn-returned",
   steps: [
     {
@@ -396,6 +401,7 @@ export const LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION = Object.freeze({
       callout: "hidden",
       copy: { titleKey: "guided.learnToPlay.checkpointTitle", bodyKey: "guided.learnToPlay.checkpointBody" },
       highlights: [],
+      deferredHandAliases: ["dawn_flower"],
       expectedReceipt: { kind: "reserve.released" },
       nextStepId: "explain-renewed-energy",
     },
@@ -411,6 +417,15 @@ export const LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION = Object.freeze({
         { kind: "surface", anchor: "player.sources" },
         { kind: "surface", anchor: "player.reserve" },
       ],
+      deferredHandAliases: ["dawn_flower"],
+      nextStepId: "wait-for-flor-entry",
+    },
+    {
+      id: "wait-for-flor-entry",
+      kind: "observe",
+      callout: "hidden",
+      copy: { titleKey: "guided.learnToPlay.checkpointTitle", bodyKey: "guided.learnToPlay.checkpointBody" },
+      highlights: [],
       nextStepId: "use-energy-for-echoes",
     },
     {

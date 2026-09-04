@@ -21,14 +21,17 @@ import { GuidedInteractionGate } from "../src/guidance/interactionGate";
 import { GuidedInterventionOrchestrator } from "../src/guidance/interventionOrchestrator";
 import { GuidedJourneyLifecycle } from "../src/guidance/journeyLifecycle";
 import { JourneyIntentGate, journeyIntentGate } from "../src/guidance/journeyIntentGate";
-import { LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION } from "../src/guidance/learnToPlayPrologue";
+import {
+  LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION,
+  LEARN_TO_PLAY_PROLOGUE_SCENARIO,
+} from "../src/guidance/learnToPlayPrologue";
 import { translate } from "../src/i18n/translations";
 import {
   LearnToPlayPrologueDirector,
   learnToPlayFirstDefenseReady,
   learnToPlayHarvesterInspectionReady,
+  learnToPlayPlayerTurnActionCueReady,
   learnToPlayReturnSourceRequired,
-  learnToPlaySourceRecycleBlockedByOpenHelp,
 } from "../src/guidance/learnToPlayDirector";
 import { PRODUCT_CONTEXTUAL_CONCEPTS } from "../src/guidance/contextualProductConcepts";
 import {
@@ -51,15 +54,10 @@ test("How to Play catalogs the main journey before optional Preparation", () => 
 });
 
 test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
-  assert.equal(translate("es", "guided.learnToPlay.intro.beatOne"), "¡Cronista… ayuda!");
-  assert.equal(
-    translate("es", "guided.learnToPlay.intro.beatFour"),
-    "Contemplemos este Futuro. Quizá todavía estemos a tiempo.",
-  );
   assert.equal(translate("es", "guided.learnToPlay.intro.evy"), "Evy");
   assert.equal(
-    translate("es", "guided.learnToPlay.intro.beatFive"),
-    "Contuve a la Hueste a orillas del Elarion mientras pude. Logré preparar tres Fuentes, pero sus filas rompieron nuestra línea y me obligaron a retroceder. Continúa la Visión desde aquí.",
+    translate("es", "guided.learnToPlay.intro.body"),
+    "¡Cronista, ayuda! Contuve a la Hueste cuanto pude, pero esta Visión ya está en marcha. Dejé tres Fuentes preparadas y Maela aún resiste; continúa desde aquí antes de que la Hueste vuelva a avanzar.",
   );
   assert.equal(
     translate("es", "guided.learnToPlay.fourthSourceBriefingBody"),
@@ -94,6 +92,14 @@ test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
     "Tus Ecos atacan únicamente el Archivo de la Hueste. Vacía el Archivo de la Hueste para derrotarla.",
   );
   assert.equal(
+    translate("es", "guided.learnToPlay.attackArchiveBody"),
+    "Tus Ecos atacan el Archivo, no a los Ecos enemigos. Por cada 3 de daño de ataque, se descarta 1 carta del Archivo de la Hueste a su Memoria. Vacía el Archivo para vencer.",
+  );
+  assert.equal(
+    translate("es", "guided.contextual.product.defenseOrderBody"),
+    "La Hueste resuelve sus ataques de izquierda a derecha; un combate anterior puede cambiar lo que sucede después.\n\nHaz clic en un Eco aliado y arrastra el cursor hasta un atacante.\n\nTambién puedes elegir no defender.",
+  );
+  assert.equal(
     translate("es", "guided.contextual.product.attackExhaustsBody"),
     "Es opcional atacar. Si un Eco ataca, se Agota, por lo que no estará disponible para defender durante el siguiente turno de la Hueste.",
   );
@@ -116,11 +122,11 @@ test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
   );
   assert.equal(
     translate("es", "guided.contextual.product.surgeBody"),
-    "A partir de este turno, la Hueste desata todo su poder e Invoca más Ecos con cada avance.",
+    "¡Cronista! Ha llegado el momento. En cada Visión, al llegar el turno 10, la Hueste entra en Estampida y su ofensiva se vuelve mucho más peligrosa. Ten cuidado.",
   );
   assert.equal(
     translate("es", "guided.contextual.product.emptyHandDrawBody"),
-    "Si comienzas tu turno sin Ecos o Fuentes en la Mano, robas 2 cartas en lugar de 1.",
+    "Al comenzar tu turno con la Mano vacía, robas 2 cartas en lugar de 1.",
   );
   assert.equal(
     translate("es", "guided.contextual.product.returnSourceBody"),
@@ -134,9 +140,23 @@ test("Learn to Play keeps the revised Spanish teaching copy exact", () => {
     translate("es", "guided.contextual.product.assignDefendersBody"),
     "Haz clic en un Eco aliado y arrastra el cursor hasta un Eco atacante. También puedes elegir no defender.",
   );
-  assert.equal(translate("es", "guided.learnToPlay.playerTurnTitle"), "Ahora es tu turno.");
+  assert.equal(translate("es", "guided.contextual.product.markedDamageTitle"), "El daño no permanece");
+  assert.equal(
+    translate("es", "guided.contextual.product.markedDamageBody"),
+    "Al final de cada turno, los Ecos supervivientes recuperan todo su Aguante.",
+  );
+  assert.equal(translate("es", "guided.contextual.product.attackExhaustsTitle"), "Atacar");
+  assert.equal(translate("es", "guided.learnToPlay.playerTurnTitle"), "Ahora es tu turno");
   assert.equal(translate("es", "guided.learnToPlay.playerTurnBody"), "Mira lo que pasa con la Energía.");
-  assert.equal(translate("es", "guided.learnToPlay.useEnergyTitle"), "Usa tu Energía para Invocar nuevos Ecos.");
+  assert.equal(translate("es", "guided.learnToPlay.useEnergyTitle"), "Usa tu Energía para Invocar nuevos Ecos");
+  assert.equal(
+    translate("es", "guided.learnToPlay.inspectHarvesterBody"),
+    "Haz clic derecho sobre Cosechadora de los Caídos para revisar los detalles del Eco y descubrir por qué se activaron sus efectos.",
+  );
+  assert.equal(
+    translate("es", "guided.contextual.product.harvesterInspectionBody"),
+    "Haz clic derecho sobre Cosechadora de los Caídos para revisar los detalles del Eco y descubrir por qué se activaron sus efectos.",
+  );
 });
 
 test("contemplating another future records Learn to Play completion once", () => {
@@ -175,6 +195,9 @@ test("journey attempts rebuild from the opening with isolated contextual progres
         boardRevision += 1;
         return `game-${boardRevision}`;
       },
+      afterContextualSessionStarted(gameSessionId) {
+        calls.push(`policy:${gameSessionId}`);
+      },
       stopPresentation() {
         calls.push("stop-presentation");
       },
@@ -207,6 +230,8 @@ test("journey attempts rebuild from the opening with isolated contextual progres
   assert.ok(calls.indexOf("mode:immediate") < calls.lastIndexOf("stop-presentation"));
   assert.equal(calls.includes("begin:game-1:isolated"), true);
   assert.equal(calls.includes("begin:game-2:isolated"), true);
+  assert.ok(calls.indexOf("begin:game-1:isolated") < calls.indexOf("policy:game-1"));
+  assert.ok(calls.indexOf("begin:game-2:isolated") < calls.indexOf("policy:game-2"));
 });
 
 test("a strict intervention attaches to the current board without rebuilding it", () => {
@@ -274,18 +299,26 @@ test("journey limits are ephemeral and product concepts cover every prologue exp
     "assign-defenders",
     "flying-defense-restriction",
     "chronicler-life",
+    "marked-damage-clears",
     "reserve-and-ready",
     "stabilizing-restriction",
     "attack-the-host-archive",
     "attack-exhausts-echo",
     "host-surge",
+    "daunting-defense",
+    "quick-spell",
+    "poison",
+    "furtive-defense-restriction",
+    "lethal-defense-warning",
+    "host-support",
+    "low-life-contemplate",
     "empty-hand-draw",
     "return-source",
     "learn-to-play-vaelor-required",
   ]);
 });
 
-test("normal matches retain attack help while the defense prompt prefers the left side", () => {
+test("normal matches teach one defender directly and combine assignment with order for multiple attackers", () => {
   const attack = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "attack-the-host-archive");
   const defense = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "assign-defenders");
   const order = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "host-defense-order");
@@ -296,11 +329,61 @@ test("normal matches retain attack help while the defense prompt prefers the lef
       highlights: [{ kind: "surface", anchor: "host.archive" }],
     },
   );
-  assert.deepEqual(defense.evaluate({ kind: "host.attackersDeclared" }, {}), {
+  const singleAttack = { kind: "host.attackersDeclared", attackerIds: ["thief"] };
+  const multipleAttacks = { kind: "host.attackersDeclared", attackerIds: ["thief", "harvester"] };
+  assert.deepEqual(defense.evaluate(singleAttack, {}), {
     highlights: [{ kind: "surface", anchor: "player.field", showHighlight: false }],
     placement: "left",
   });
-  assert.deepEqual(order.signalKinds, []);
+  assert.equal(defense.evaluate(multipleAttacks, {}), undefined);
+  assert.deepEqual(order.signalKinds, ["host.attackersDeclared"]);
+  assert.equal(order.evaluate(singleAttack, {}), undefined);
+  assert.deepEqual(order.evaluate(multipleAttacks, {}), {
+    highlights: [{ kind: "surface", anchor: "player.field", showHighlight: false }],
+    placement: "left",
+  });
+});
+
+test("marked combat damage highlights every affected Echo and owns the next-turn handoff", () => {
+  const concept = PRODUCT_CONTEXTUAL_CONCEPTS.find((candidate) => candidate.id === "marked-damage-clears");
+  const life = PRODUCT_CONTEXTUAL_CONCEPTS.find((candidate) => candidate.id === "chronicler-life");
+  assert.equal(concept.revision, 2);
+  assert.ok(concept.priority < life.priority, "Endurance recovery must be the final help before Mi Turno");
+  const game = buildGuidedScenario(LEARN_TO_PLAY_PROLOGUE_SCENARIO, contentCatalog).game;
+  const playerEcho = game.player.field.find((card) => card.kinds.includes("ECHO"));
+  const hostEcho = game.host.field.find((card) => card.kinds.includes("ECHO"));
+  playerEcho.damageMarked = 1;
+  hostEcho.damageMarked = 2;
+  const signal = {
+    kind: "combat.echoesDamaged",
+    cardIds: [playerEcho.instanceId, hostEcho.instanceId],
+    amount: 2,
+    turnNumber: game.turnNumber,
+  };
+  const context = { game };
+
+  assert.equal(concept.policy, "preventive");
+  assert.deepEqual(concept.evaluate(signal, context), {
+    highlights: [
+      { kind: "card", instanceId: playerEcho.instanceId, padding: 18 },
+      { kind: "card", instanceId: hostEcho.instanceId, padding: 18 },
+    ],
+    placement: "top",
+    placementAnchor: { kind: "surface", anchor: "phase.primaryAction", showHighlight: false },
+  });
+  assert.deepEqual(concept.prevent({ kind: "phase.startPlayerTurn" }, context), {
+    highlights: [
+      { kind: "card", instanceId: playerEcho.instanceId, padding: 18 },
+      { kind: "card", instanceId: hostEcho.instanceId, padding: 18 },
+    ],
+    placement: "top",
+    placementAnchor: { kind: "surface", anchor: "phase.primaryAction", showHighlight: false },
+  });
+  assert.equal(concept.prevent({ kind: "phase.endTurn" }, context), undefined);
+
+  playerEcho.damageMarked = 0;
+  hostEcho.damageMarked = 0;
+  assert.equal(concept.revalidate(concept.evaluate(signal, context), context), false);
 });
 
 test("dragging a ground Echo onto a Flying attacker preserves the denied target for contextual guidance", async () => {
@@ -319,7 +402,7 @@ test("dragging a ground Echo onto a Flying attacker preserves the denied target 
     intent: { kind: "combat.assignBlocker", cardId: "ground:1", targetId: "flying:1" },
   }, {}), {
     highlights: [
-      { kind: "card", instanceId: "ground:1" },
+      { kind: "card", instanceId: "ground:1", padding: 18 },
       { kind: "card", instanceId: "flying:1", padding: 18, offsetX: 16 },
     ],
     placement: "center",
@@ -436,12 +519,6 @@ test("journey-authored milestones ignore global contextual progress and remain f
   }, bindings), false);
 });
 
-test("the empty-Hand help owns Source recycling until the player closes it", () => {
-  assert.equal(learnToPlaySourceRecycleBlockedByOpenHelp("source.recycle", "empty-hand-draw"), true);
-  assert.equal(learnToPlaySourceRecycleBlockedByOpenHelp("source.recycle", undefined), false);
-  assert.equal(learnToPlaySourceRecycleBlockedByOpenHelp("card.play", "empty-hand-draw"), false);
-});
-
 test("post-Surge concepts react only to the real empty-Hand draw and the required Source", () => {
   const emptyHand = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "empty-hand-draw");
   const returnSource = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "return-source");
@@ -462,6 +539,7 @@ test("post-Surge concepts react only to the real empty-Hand draw and the require
     reason: "empty-hand",
     cardIds: ["river:1", "spell:1"],
   }, context), { placement: "center" });
+  assert.equal(emptyHand.blocksGameplayWhileVisible, true);
   assert.deepEqual(emptyHand.copy.glossaryTerms ?? [], []);
   assert.equal(emptyHand.evaluate({
     kind: "player.cardsDrawn",
@@ -477,8 +555,8 @@ test("post-Surge concepts react only to the real empty-Hand draw and the require
   }, context);
   assert.deepEqual(fifthSource, {
     highlights: [
-      { kind: "card", instanceId: "river:1" },
-      { kind: "surface", anchor: "player.archive" },
+      { kind: "card", instanceId: "river:1", role: "origin" },
+      { kind: "surface", anchor: "player.archive", role: "destination" },
     ],
   });
   assert.equal(returnSource.evaluate({
@@ -491,6 +569,67 @@ test("post-Surge concepts react only to the real empty-Hand draw and the require
   assert.equal(returnSource.revalidate(fifthSource, {
     game: { player: { hand: [{ instanceId: "spell:1", kinds: ["SPELL"] }] } },
   }), false);
+});
+
+test("combat traits frame only the enemy Echo and board concepts stay anchored to their subject", () => {
+  const daunting = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "daunting-defense");
+  const furtive = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "furtive-defense-restriction");
+  const lethal = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "lethal-defense-warning");
+  const poison = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "poison");
+  const support = PRODUCT_CONTEXTUAL_CONCEPTS.find((concept) => concept.id === "host-support");
+  const game = buildGuidedScenario(LEARN_TO_PLAY_PROLOGUE_SCENARIO, contentCatalog).game;
+  const attacker = game.host.field.find((card) => card.kinds.includes("ECHO"));
+  const blocker = game.player.field.find((card) => card.kinds.includes("ECHO"));
+  game.host.poisonCounters = 1;
+
+  const originalTraits = [...attacker.traits];
+  attacker.traits = [...originalTraits, "DAUNTING"];
+  assert.deepEqual(daunting.evaluate({
+    kind: "action.committed",
+    receipt: { kind: "blocker.assigned", cardId: blocker.instanceId, targetId: attacker.instanceId },
+  }, { game }), {
+    highlights: [{ kind: "card", instanceId: attacker.instanceId, padding: 18 }],
+    placement: "center",
+  });
+
+  assert.deepEqual(furtive.evaluate({
+    kind: "action.denied",
+    code: "FURTIVE_BLOCK_RESTRICTION",
+    intent: { kind: "combat.assignBlocker", cardId: blocker.instanceId, targetId: attacker.instanceId },
+  }, { game }), {
+    highlights: [{ kind: "card", instanceId: attacker.instanceId, padding: 18 }],
+    placement: "center",
+  });
+
+  attacker.traits = [...originalTraits, "LETHAL"];
+  assert.deepEqual(lethal.prevent({
+    kind: "combat.assignBlocker",
+    cardId: blocker.instanceId,
+    targetId: attacker.instanceId,
+    selected: true,
+  }, { game }), {
+    highlights: [{ kind: "card", instanceId: attacker.instanceId, padding: 18 }],
+    placement: "center",
+  });
+
+  attacker.definitionId = "hydra_of_the_black_bough";
+  assert.deepEqual(poison.evaluate({
+    kind: "action.committed",
+    receipt: { kind: "archiveAttack.confirmed", targetIds: [attacker.instanceId] },
+  }, { game }), {
+    highlights: [
+      { kind: "card", instanceId: attacker.instanceId, padding: 18 },
+      { kind: "surface", anchor: "host.poison", padding: 8 },
+    ],
+    placement: "bottom",
+    placementAnchor: { kind: "surface", anchor: "host.poison", showHighlight: false },
+  });
+
+  attacker.definitionId = "the_broken_headstone";
+  assert.deepEqual(support.evaluate({ kind: "host.cardsRevealed", cardIds: [attacker.instanceId] }, { game }), {
+    highlights: [{ kind: "card", instanceId: attacker.instanceId, padding: 18 }],
+    placement: "bottom",
+  });
 });
 
 test("authored Host-turn policies are scoped and reject invalid reveal plans", () => {
@@ -522,7 +661,7 @@ test("App exposes both launchers, disables Continue, and hands the journey to it
   assert.match(app, /HOW_TO_PLAY_CATALOG\.map/u);
   assert.match(app, /onLaunch: launchLearnToPlayJourney/u);
   assert.match(app, /function launchLearnToPlayJourney\(\)\s*\{\s*setLearnToPlayIntroOpen\(true\);\s*\}/u);
-  assert.match(app, /chroniclerName=\{playerName\}/u);
+  assert.doesNotMatch(app, /<LearnToPlayIntroModal[\s\S]*?chroniclerName=/u);
   assert.match(app, /onComplete=\{beginLearnToPlayJourney\}/u);
   assert.match(app, /function beginLearnToPlayJourney\(\)[\s\S]*?learnToPlayJourneyLifecycle\.start\(\)[\s\S]*?setScreen\("journey"\)/u);
   assert.match(app, /howToPlayEntries=\{howToPlayEntries\}/u);
@@ -538,23 +677,55 @@ test("App exposes both launchers, disables Continue, and hands the journey to it
   assert.match(board, /sessionPolicy\.showStandardOutcome && defeatReady/u);
   assert.match(board, /sessionPolicy\.showJourneyDefeat && defeatReady && onContemplateFuture/u);
   assert.match(board, /!sessionPolicy\.showPhaseBanner/u);
-  assert.equal((intro.match(/body: "guided\.learnToPlay\.intro\.beat(?:One|Two|Three|Four|Five)"/gu) ?? []).length, 5);
-  assert.match(intro, /chroniclerName\.trim\(\) \|\| t\("guided\.learnToPlay\.intro\.chronicler"\)/u);
-  assert.match(intro, /finalBeat[\s\S]*?onComplete\(\)/u);
+  assert.match(intro, /t\("guided\.learnToPlay\.intro\.body"\)/u);
+  assert.doesNotMatch(intro, /INTRO_BEATS|beatIndex|chroniclerName/u);
+  assert.match(intro, /onClick=\{onComplete\}/u);
   assert.match(intro, /<GuidedTutorialDialog/u);
-  assert.match(intro, /learn-to-play-intro-progress/u);
+  assert.doesNotMatch(intro, /learn-to-play-intro-progress/u);
   assert.doesNotMatch(intro, /old-panel|old-title|game-home-dialog/u);
 });
 
-test("Learn to Play frames Energy before revealing the nested Reserve", () => {
+test("Learn to Play shows Reserve transfer, explains it, then draws Flor before free Echo play", () => {
   const step = (id) => LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps.find((candidate) => candidate.id === id);
 
-  assert.equal(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.revision, 3);
+  assert.equal(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.revision, 5);
+  assert.deepEqual(LEARN_TO_PLAY_PLAYER_RETURN_INTERVENTION.steps.map(({ id }) => id), [
+    "player-turn-returned",
+    "wait-for-energy-renewal",
+    "explain-renewed-energy",
+    "wait-for-flor-entry",
+    "use-energy-for-echoes",
+  ]);
   assert.deepEqual(step("player-turn-returned").highlights, [
     { kind: "surface", anchor: "player.sources" },
   ]);
+  assert.equal(step("player-turn-returned").nextStepId, "wait-for-energy-renewal");
+  assert.deepEqual(step("wait-for-energy-renewal").deferredHandAliases, ["dawn_flower"]);
+  assert.equal(step("wait-for-energy-renewal").nextStepId, "explain-renewed-energy");
   assert.deepEqual(step("explain-renewed-energy").highlights, [
     { kind: "surface", anchor: "player.sources" },
     { kind: "surface", anchor: "player.reserve" },
   ]);
+  assert.deepEqual(step("explain-renewed-energy").deferredHandAliases, ["dawn_flower"]);
+  assert.equal(step("explain-renewed-energy").nextStepId, "wait-for-flor-entry");
+  assert.equal(step("wait-for-flor-entry").callout, "hidden");
+  assert.equal(step("wait-for-flor-entry").nextStepId, "use-energy-for-echoes");
+});
+
+test("Learn to Play highlights Mi Turno only at the settled pre-Surge handoff", () => {
+  const built = buildGuidedScenario(LEARN_TO_PLAY_PROLOGUE_SCENARIO, contentCatalog);
+  const game = structuredClone(built.game);
+  game.activeSide = "host";
+  game.hostTurnNumber = game.hostRules.surgeTurn - 1;
+  game.combat.hostAttackers = [];
+
+  assert.equal(learnToPlayPlayerTurnActionCueReady(game, "free-play", false), true);
+  assert.equal(learnToPlayPlayerTurnActionCueReady(game, "free-play", true), false);
+  assert.equal(learnToPlayPlayerTurnActionCueReady(game, "defense-intro", false), false);
+
+  game.combat.hostAttackers = [game.host.field[0].instanceId];
+  assert.equal(learnToPlayPlayerTurnActionCueReady(game, "free-play", false), false);
+  game.combat.hostAttackers = [];
+  game.hostTurnNumber = game.hostRules.surgeTurn;
+  assert.equal(learnToPlayPlayerTurnActionCueReady(game, "free-play", false), false);
 });
