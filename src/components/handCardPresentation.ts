@@ -17,6 +17,17 @@ export function getHandCardPresentationState({
   return { raised: false, zIndex: index + 1 };
 }
 
+/** Initial Hand cards mount directly in their settled pose (`initial={false}`). Tracking them as
+ * an entry activity can leave guidance waiting for an animation-complete callback that already
+ * fired before the activity token existed, especially in production without StrictMode's
+ * development-only effect replay. */
+export function shouldTrackHandEntryActivity(
+  cardId: string,
+  initialHandIds: ReadonlySet<string>,
+): boolean {
+  return !initialHandIds.has(cardId);
+}
+
 type HandArchiveEntryLayout = {
   archiveCenter: { x: number; y: number };
   handCenterX: number;

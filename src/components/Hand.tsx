@@ -19,7 +19,11 @@ import {
   HAND_HOVER_CARD_DISPLAY_HEIGHT,
   HAND_HOVER_CARD_DISPLAY_WIDTH,
 } from "./cardDisplayGeometry";
-import { getHandCardPresentationState, handArchiveEntryOffset } from "./handCardPresentation";
+import {
+  getHandCardPresentationState,
+  handArchiveEntryOffset,
+  shouldTrackHandEntryActivity,
+} from "./handCardPresentation";
 import { energyRecycleDropZoneContains, type EnergyRecycleDropBounds } from "./energyRecycleDropTarget";
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion, motionValue, type MotionValue, type PanInfo, type Variants } from "framer-motion";
@@ -194,7 +198,9 @@ export function Hand({ game }: { game: GameState }) {
     for (const id of visibleIds) {
       if (animatedHandIds.current.has(id)) continue;
       animatedHandIds.current.add(id);
-      handEntryActivities.current.set(id, guidedPresentationActivity.begin("hand.entry", id));
+      if (shouldTrackHandEntryActivity(id, initialHandIds.current)) {
+        handEntryActivities.current.set(id, guidedPresentationActivity.begin("hand.entry", id));
+      }
     }
     previousVisibleHandIds.current = new Set(visibleHand.map((card) => card.instanceId));
   }, [handLayoutSignature]);
