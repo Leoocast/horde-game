@@ -57,7 +57,7 @@ const fontFiles = await collectFiles(path.join(resourcesPath, "fonts"));
 assert.equal(audioFiles.length, stagedManifest.categories.audio.files);
 assert.equal(cardFiles.length, stagedManifest.categories.cards.files);
 assert.equal(fontFiles.length, stagedManifest.categories.fonts.files);
-assert.equal(cardFiles.filter((file) => file.toLowerCase().endsWith(".png")).length, 61);
+assert.equal(cardFiles.filter((file) => file.toLowerCase().endsWith(".png")).length, 122);
 assert.equal(fontFiles.filter((file) => file.toLowerCase().endsWith(".woff2")).length, 6);
 
 const rendererBundleEntry = asarEntries.find((entry) => /^\.vite\/renderer\/main_window\/assets\/index-.*\.js$/u.test(entry));

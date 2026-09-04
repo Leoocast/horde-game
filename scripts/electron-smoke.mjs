@@ -81,6 +81,7 @@ try {
   assert.equal(rendererBoundary.requireType, "undefined");
   assert.equal(rendererBoundary.processType, "undefined");
   assert.deepEqual(rendererBoundary.bridgeKeys, [
+    "captureViewport",
     "deleteResumeSave",
     "getBootstrap",
     "getWindowState",
@@ -279,6 +280,40 @@ try {
   assert.deepEqual(remoteRequests, []);
   assert.deepEqual(rendererErrors, []);
 
+  const onboardingDialog = window.locator(".chronicler-name-modal");
+  if (await onboardingDialog.count()) {
+    await onboardingDialog.locator("input").fill("Smoke Chronicler");
+    await onboardingDialog.locator("button[type='submit']").click();
+    await onboardingDialog.waitFor({ state: "hidden", timeout: 5_000 });
+  }
+  await window.getByRole("button", { name: /How to Play|Cómo jugar/iu }).click();
+  await window.locator(".how-to-play-chapter.is-primary").click();
+  await window.locator(".learn-to-play-intro-footer .guided-tutorial-continue").click();
+  const tutorialOverlay = window.locator("#guided-tutorial-overlay[data-step-id]");
+  await tutorialOverlay.waitFor({ state: "visible", timeout: 15_000 });
+  const tutorialContinue = tutorialOverlay.locator(".guided-tutorial-continue");
+  await tutorialContinue.waitFor({ state: "visible", timeout: 15_000 });
+  await window.waitForFunction(() => {
+    const button = document.querySelector("#guided-tutorial-overlay .guided-tutorial-continue");
+    return button instanceof HTMLButtonElement
+      && !button.disabled
+      && getComputedStyle(button).cursor !== "wait";
+  }, undefined, { timeout: 15_000 });
+  const tutorialState = await window.evaluate(() => {
+    const overlay = document.querySelector("#guided-tutorial-overlay");
+    const button = overlay?.querySelector(".guided-tutorial-continue");
+    return {
+      stepId: overlay?.getAttribute("data-step-id"),
+      continueDisabled: button instanceof HTMLButtonElement ? button.disabled : undefined,
+      continueCursor: button instanceof HTMLElement ? getComputedStyle(button).cursor : undefined,
+    };
+  });
+  assert.equal(tutorialState.stepId, "evy-fourth-source-briefing");
+  assert.equal(tutorialState.continueDisabled, false);
+  assert.notEqual(tutorialState.continueCursor, "wait");
+  assert.deepEqual(remoteRequests, []);
+  assert.deepEqual(rendererErrors, []);
+
   await application.close();
   application = undefined;
 
@@ -317,6 +352,7 @@ try {
     desktopState,
     persistedWindowState,
     mediaState,
+    tutorialState,
     releaseBoot,
     offline: remoteRequests.length === 0,
   }, null, 2));

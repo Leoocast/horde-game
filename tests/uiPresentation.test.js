@@ -27,6 +27,7 @@ import {
   hostMillOriginSelector,
 } from "../src/components/hostArchiveCounter";
 import { hostAttackPlayerHitDelay } from "../src/components/hostAttackPresentation";
+import { shouldTrackHandEntryActivity } from "../src/components/handCardPresentation";
 import { memoryCardsNewestFirst, newestMemoryCard } from "../src/components/memoryPresentation";
 import { playerAttackHostHitDelay } from "../src/components/playerAttackPresentation";
 import {
@@ -200,6 +201,12 @@ test("Preparation actions distinguish continuing from awakening the Host", () =>
   assert.equal(setupJustCompleted(1, 0), true);
   assert.equal(setupJustCompleted(2, 1), false);
   assert.equal(setupJustCompleted(0, 0), false);
+});
+
+test("an initially settled Hand cannot keep guided presentation waiting in production", () => {
+  const initialHandIds = new Set(["initial-a", "initial-b"]);
+  assert.equal(shouldTrackHandEntryActivity("initial-a", initialHandIds), false);
+  assert.equal(shouldTrackHandEntryActivity("drawn-later", initialHandIds), true);
 });
 
 test("Memory, Archive and Life share one row of equal boxes and the Archive owns the draw origin", () => {
